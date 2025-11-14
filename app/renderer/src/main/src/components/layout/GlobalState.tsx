@@ -287,6 +287,126 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
         })
     })
+    const showManualInstallGuide = useMemoizedFn(() => {
+        setShow(false)
+        const m = showYakitModal({
+            title: t("home.cert.manualInstallTitle"),
+            width: "600px",
+            centered: true,
+            content: (
+                <div
+                    style={{
+                        padding: 15,
+                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                    }}
+                >
+                    {t("home.cert.manualInstallSteps")}
+                    <br />
+                    <br />
+                    1. {t("home.cert.manualInstallStep1")}
+                    <br />
+                    2. {t("home.cert.manualInstallStep2")}
+                    <br />
+                    3. {t("home.cert.manualInstallStep3")}
+                    <br />
+                    <br />
+                    {t("home.cert.manualInstallSafeHint")}
+                    <br />
+                    {t("home.cert.manualInstallReadyHint", {name: t("YakitRoute.MITM")})}
+                    <br />
+                    <br />
+                    {t("Home.contactForHelp")}
+                </div>
+            ),
+            onOk: () => {
+                ipcRenderer
+                    .invoke("generate-install-script", {})
+                    .then((p: string) => {
+                        if (p) {
+                            openABSFileLocated(p)
+                        } else {
+                            failed(t("YakitNotification.generationFailed"))
+                        }
+                    })
+                    .catch(() => {})
+                m.destroy()
+            }
+        })
+    })
+
+    const renderAutoInstallSuggestion = (reason?: string) => {
+        if (!reason) return null
+        const lower = reason.toLowerCase()
+        if (lower.includes("pkexec not found")) {
+            return (
+                <>
+                    <br />
+                    {t("home.cert.autoInstallPkexecHint")}
+                </>
+            )
+        }
+        if (lower.includes("authentication agent")) {
+            return (
+                <>
+                    <br />
+                    {t("home.cert.autoInstallAuthAgentHint")}
+                </>
+            )
+        }
+        return null
+    }
+
+    const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
+        setShow(false)
+        const modal = showYakitModal({
+            title: t("home.cert.autoInstallFailedTitle"),
+            width: "520px",
+            centered: true,
+            okText: t("home.cert.autoInstallFailedManualBtn"),
+            cancelText: t("common.cancel"),
+            content: (
+                <div
+                    style={{
+                        padding: 15,
+                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                    }}
+                >
+                    <div style={{marginBottom: 10}}>{t("home.cert.autoInstallFailedDesc")}</div>
+                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>
+                        {reason || t("home.cert.autoInstallUnknownError")}
+                    </div>
+                    {renderAutoInstallSuggestion(reason)}
+                    <div style={{marginTop: 16}}>{t("home.cert.autoInstallGuideHint")}</div>
+                </div>
+            ),
+            onOk: () => {
+                modal.destroy()
+                showManualInstallGuide()
+            }
+        })
+    })
+
+    const handleAutoInstallMITMCertificate = useMemoizedFn(() => {
+        setShow(false)
+        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求")
+        ipcRenderer
+            .invoke("InstallMITMCertificate", {})
+            .then((res: {Ok: boolean; Reason?: string}) => {
+                if (res?.Ok) {
+                    yakitNotify("success", "MITM 证书安装成功")
+                    updateMITMCert()
+                } else {
+                    const reason = res?.Reason || "未知错误"
+                    yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                    showAutoInstallFailure(reason)
+                }
+            })
+            .catch((e) => {
+                const reason = `${e}`
+                yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                showAutoInstallFailure(reason)
+            })
+    })
 
     // 校验引擎是否为官方发布版本
     const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
@@ -654,58 +774,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </div>
                             </div>
                             <div className={styles["info-right"]}>
-                                <YakitButton
-                                    type='text'
-                                    className={styles["btn-style"]}
-                                    onClick={() => {
-                                        setShow(false)
-                                        const m = showYakitModal({
-                                            title: t("Home.generateAutoInstallScript"),
-                                            width: "600px",
-                                            centered: true,
-                                            content: (
-                                                <div
-                                                    style={{
-                                                        padding: 15,
-                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
-                                                    }}
-                                                >
-                                                    {t("Home.pleaseFollowSteps")}
-                                                    <br />
-                                                    <br />
-                                                    1. {t("Home.openScriptDir")}
-                                                    <br />
-                                                    2. {t("Home.runAutoInstallScript")}
-                                                    <br />
-                                                    3. {t("Home.installSuccessMessage")}
-                                                    <br />
-                                                    <br />
-                                                    {t("Home.closeAppsBeforeRun")}
-                                                    <br />
-                                                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
-                                                    <br />
-                                                    <br />
-                                                    {t("Home.contactForHelp")}
-                                                </div>
-                                            ),
-                                            onOk: () => {
-                                                ipcRenderer
-                                                    .invoke("generate-install-script", {})
-                                                    .then((p: string) => {
-                                                        if (p) {
-                                                            openABSFileLocated(p)
-                                                        } else {
-                                                            failed(t("YakitNotification.generationFailed"))
-                                                        }
-                                                    })
-                                                    .catch(() => {})
-                                                m.destroy()
-                                            }
-                                        })
-                                    }}
-                                >
-                                    下载安装
-                                </YakitButton>
+                                <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                    <YakitButton
+                                        type='text'
+                                        className={styles["btn-style"]}
+                                        onClick={handleAutoInstallMITMCertificate}
+                                    >
+                                        {t("home.cert.autoInstallButton")}
+                                    </YakitButton>
+                                    <YakitButton
+                                        type='text'
+                                        className={styles["btn-style"]}
+                                        onClick={() => showManualInstallGuide()}
+                                    >
+                                        {t("home.cert.manualInstallButton")}
+                                    </YakitButton>
+                                </div>
                             </div>
                         </div>
                     )}

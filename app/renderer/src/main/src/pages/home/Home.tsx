@@ -470,10 +470,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 })
         })
     })
-
-    // 下载安装MITM证书
-    const handleDownMitmCert = (e) => {
-        e.stopPropagation()
+    const showManualInstallGuide = useMemoizedFn(() => {
         const m = showYakitModal({
             type: "white",
             title: t("Home.generateAutoInstallScript"),
@@ -513,7 +510,83 @@ const Home: React.FC<HomeProp> = (props) => {
                 m.destroy()
             }
         })
+    })
+
+    const renderAutoInstallSuggestion = (reason?: string) => {
+        if (!reason) return null
+        const lower = reason.toLowerCase()
+        if (lower.includes("pkexec not found")) {
+            return (
+                <>
+                    <br />
+                    {t("home.cert.autoInstallPkexecHint")}
+                </>
+            )
+        }
+        if (lower.includes("authentication agent")) {
+            return (
+                <>
+                    <br />
+                    {t("home.cert.autoInstallAuthAgentHint")}
+                </>
+            )
+        }
+        return null
     }
+
+    const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
+        const modal = showYakitModal({
+            type: "white",
+            title: t("home.cert.autoInstallFailedTitle"),
+            width: "520px",
+            centered: true,
+            okText: t("home.cert.autoInstallFailedManualBtn"),
+            cancelText: t("common.cancel"),
+            content: (
+                <div style={{padding: 15}}>
+                    <div style={{marginBottom: 10}}>{t("home.cert.autoInstallFailedDesc")}</div>
+                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>
+                        {reason || t("home.cert.autoInstallUnknownError")}
+                    </div>
+                    {renderAutoInstallSuggestion(reason)}
+                    <div style={{marginTop: 16}}>{t("home.cert.autoInstallGuideHint")}</div>
+                </div>
+            ),
+            onOk: () => {
+                modal.destroy()
+                showManualInstallGuide()
+            }
+        })
+    })
+
+    // 下载安装MITM证书
+    const handleAutoInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
+        e?.stopPropagation()
+        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求")
+        ipcRenderer
+            .invoke("InstallMITMCertificate", {})
+            .then((res: {Ok: boolean; Reason?: string}) => {
+                if (res?.Ok) {
+                    yakitNotify("success", "MITM 证书安装成功")
+                    updateMITMCert()
+                } else {
+                    const reason = res?.Reason || "未知错误"
+                    yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                    showAutoInstallFailure(reason)
+                }
+            })
+            .catch((err) => {
+                const reason = `${err}`
+                yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                showAutoInstallFailure(reason)
+            })
+    })
+
+    const handleManualInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
+        e?.stopPropagation()
+        showManualInstallGuide()
+    })
+
 
     // 爆破示例
     const handleBlastingExample = (animationType: string) => {
@@ -816,13 +889,22 @@ const Home: React.FC<HomeProp> = (props) => {
                                             <SolidExclamationIcon className={styles["exclamation-icon"]} />
                                             {t("Home.certNotConfigured")}
                                         </div>
-                                        <YakitButton
-                                            type='text'
-                                            className={styles["config-detection-btn"]}
-                                            onClick={handleDownMitmCert}
-                                        >
-                                            {t("YakitButton.downloadInstall")}
-                                        </YakitButton>
+                                        <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                            <YakitButton
+                                                type='text'
+                                                className={styles["config-detection-btn"]}
+                                                onClick={handleAutoInstall}
+                                            >
+                                                {t("home.cert.autoInstallButton")}
+                                            </YakitButton>
+                                            <YakitButton
+                                                type='text'
+                                                className={styles["config-detection-btn"]}
+                                                onClick={handleManualInstall}
+                                            >
+                                                {t("home.cert.manualInstallButton")}
+                                            </YakitButton>
+                                        </div>
                                     </div>
                                 )}
                                 <div

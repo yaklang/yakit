@@ -64,5 +64,25 @@
         "projectDatabase": "Project Database",
         "databaseTooLarge": "The database is too large. To avoid performance issues, it is recommended to create a new project.",
         "vulnerabilityData": "Vulnerability Data"
+    },
+    "home": {
+        "cert": {
+            "manualInstallTitle": "Generate Auto-Install Script",
+            "manualInstallSteps": "Please follow the steps below:",
+            "manualInstallStep1": "After clicking OK, the directory containing the script will open.",
+            "manualInstallStep2": "Double-click the file \"auto-install-cert.bat/auto-install-cert.sh\" to run the installation.",
+            "manualInstallStep3": "If the installation is successful, you will see \"Certificate successfully installed.\"",
+            "manualInstallSafeHint": "Please make sure to close any applications that may block the installation before running the script.",
+            "manualInstallReadyHint": "After installation is complete, you will be able to use {name} smoothly.",
+            "autoInstallPkexecHint": "Hint: pkexec is missing. Install policykit (e.g. sudo apt install policykit-1) and try again.",
+            "autoInstallAuthAgentHint": "Hint: No authentication agent detected. Ensure a polkit authentication agent (e.g. polkit-gnome-authentication-agent-1) is running, or use manual installation.",
+            "autoInstallFailedTitle": "Automatic Installation Failed",
+            "autoInstallFailedManualBtn": "View Manual Steps",
+            "autoInstallFailedDesc": "An error occurred during automatic installation:",
+            "autoInstallUnknownError": "Unknown error",
+            "autoInstallGuideHint": "You can continue via manual installation steps.",
+            "autoInstallButton": "Auto Install",
+            "manualInstallButton": "Manual Install"
+        }
     }
 }

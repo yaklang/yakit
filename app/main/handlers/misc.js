@@ -745,6 +745,21 @@ module.exports = (win, getClient) => {
         return await asyncVerifySystemCertificate(params)
     })
 
+    const asyncInstallMITMCertificate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().InstallMITMCertificate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("InstallMITMCertificate", async (e, params) => {
+        return await asyncInstallMITMCertificate(params)
+    })
+
     ipcMain.handle("YaklangLanguageFind", async (e, params) => {
         return await asyncYaklangLanguageFind(params)
     })
