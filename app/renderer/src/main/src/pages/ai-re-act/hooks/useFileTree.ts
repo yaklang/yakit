@@ -26,6 +26,8 @@ export interface UseFileTreeState {
 export interface UseFileTreeEvents {
     /** 主动加载指定文件夹下的子集 */
     onLoadFolderChildren: (folderPath: string) => Promise<void>
+    /** 刷新整棵文件树数据 */
+    onResetTree: () => Promise<void>
 }
 // #endregion
 
@@ -363,9 +365,10 @@ function useFileTree(params?: UseFileTreeParams) {
                     updateTreeNodeData({...parentNode, children: childs})
                 }
                 folderNodeSet.current.add(parentPath)
-
+            } catch (error) {
+            } finally {
                 cb && cb()
-            } catch (error) {}
+            }
         }
     )
 
@@ -451,10 +454,20 @@ function useFileTree(params?: UseFileTreeParams) {
     // 重置
     const handleReset = useMemoizedFn(() => {
         treeData.current = undefined
-        nodeDetailMap.current.clear()
         folderNodeSet.current.clear()
+        nodeDetailMap.current.clear()
         pendingFolderList.current = []
         executingQueue.current = []
+    })
+
+    // 刷新整棵文件树
+    const onResetTree = useMemoizedFn(async () => {
+        return new Promise<void>((resolve, reject) => {
+            stopPolling()
+            handleReset()
+            initData()
+            resolve()
+        })
     })
 
     useEffect(() => {
@@ -471,7 +484,10 @@ function useFileTree(params?: UseFileTreeParams) {
         }
     }, [])
 
-    return [{treeData: treeData, folderChildrenSet: folderNodeSet}, {onLoadFolderChildren: loadFolderChildren}]
+    return [
+        {treeData: treeData, folderChildrenSet: folderNodeSet},
+        {onLoadFolderChildren: loadFolderChildren, onResetTree}
+    ]
 }
 
 export default useFileTree
