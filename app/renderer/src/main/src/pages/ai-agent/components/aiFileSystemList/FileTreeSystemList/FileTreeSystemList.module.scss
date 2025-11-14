@@ -10,18 +10,12 @@
         height: 32px;
         justify-content: space-between;
         align-items: center;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         line-height: 16px;
-        &:hover &-icon {
-            display: block;
-        }
-        &-icon{
-            display: none;
-            svg {
-                width: 16px;
-                height: 16px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            }
+        &-icon svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     :global {

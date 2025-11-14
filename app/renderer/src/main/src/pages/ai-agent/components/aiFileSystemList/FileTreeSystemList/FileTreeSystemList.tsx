@@ -1,23 +1,21 @@
 import {OutlineChevrondownIcon, OutlineFolderopenIcon} from "@/assets/icon/outline"
 import {Tree} from "antd"
 import FileTreeSystemItem from "../FileTreeSystemItem/FileTreeSystemIem"
-import {Dispatch, FC, SetStateAction, useCallback, useState, useTransition} from "react"
+import {FC, useCallback, useMemo, useState, useTransition} from "react"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import useFileTree from "@/pages/ai-re-act/hooks/useFileTree"
 import {cloneDeep} from "lodash"
 import styles from "./FileTreeSystemList.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {openFolder} from "@/pages/yakRunner/RunnerFileTree/RunnerFileTree"
-import emiter from "@/utils/eventBus/eventBus"
-import {useMount} from "ahooks"
 import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import {useMemoizedFn} from "ahooks"
 
 interface FileTreeSystemListWapperProps {
     path: string[]
     title: string
     isOpen?: boolean
     setSelected: (v: FileNodeProps) => void
-    setOpenFolder?: (v:string)=> void
+    setOpenFolder?: (v: string) => void
 }
 const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     path,
@@ -33,6 +31,18 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
         setOpenFolder?.(absolutePath)
     }
 
+    const renderContent = useMemoizedFn(() => {
+        if (isOpen && path.length === 0) {
+            return (
+                <YakitButton onClick={onOpenFileFolder} style={{width: "100%"}} type='outline2'>
+                    点击打开文件夹
+                </YakitButton>
+            )
+        }
+        return path.map((item, index) => (
+            <FileTreeSystemList key={index} path={item} isOpen={isOpen} setSelected={setSelected} />
+        ))
+    })
     return (
         <div className={styles["file-tree-system"]}>
             <div className={styles["file-tree-system-title"]}>
@@ -47,18 +57,17 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                     onClick={onOpenFileFolder}
                 />
             </div>
-            {path.map((item, index) => {
-                return <FileTreeSystemList key={index} path={item} setSelected={setSelected} />
-            })}
+            {renderContent()}
         </div>
     )
 }
 
 interface FileTreeSystemListProps {
     path: string
+    isOpen?: boolean
     setSelected: (v: FileNodeProps) => void
 }
-const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, setSelected}) => {
+const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelected}) => {
     const [expandedKeys, setExpandedKeys] = useState<string[]>([])
     const [data, setData] = useState<FileNodeProps[]>([])
     const [_, startTransition] = useTransition()
@@ -82,14 +91,15 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, setSelected}) =>
 
     const loadData = async (nodeData) => {
         try {
-            if (!fileTree.folderChildrenSet.current.has(nodeData.path)) {
-                await onLoadFolderChildren(nodeData.path)
+            const path = nodeData.path
+            if (!fileTree.folderChildrenSet.current.has(path)) {
+                await onLoadFolderChildren(path)
             }
             updateData()
-            return Promise.resolve()
-        } catch {
-            return Promise.reject()
+        } catch (error) {
+            return Promise.reject(error)
         }
+        return Promise.resolve(true)
     }
 
     return (
@@ -109,7 +119,7 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, setSelected}) =>
             }}
             loadData={loadData}
             titleRender={(nodeData) => (
-                <FileTreeSystemItem data={nodeData} expanded={expandedKeys.includes(nodeData.path)} />
+                <FileTreeSystemItem data={nodeData} isOpen={isOpen} expanded={expandedKeys.includes(nodeData.path)} />
             )}
         />
     )
