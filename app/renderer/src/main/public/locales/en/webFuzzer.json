@@ -89,7 +89,8 @@
     "success_failure_count": "Success: {success} -- Failed: ${failed}",
     "send_request": "Send Request",
     "parameter": "Parameter",
-    "trafficAnalysisMode": "TrafficAnalysis"
+    "trafficAnalysisMode": "TrafficAnalysis Mode",
+    "trafficAnalysis": "TrafficAnalysis"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{droppedCount}] responses",
@@ -401,6 +402,8 @@
     "random_delay": "Random Delay",
     "concurrency_config": "Concurrency Configuration",
     "disable_connection_pool": "Disable Connection Pool",
+    "disable_Advanced_set": "Disable Advanced Set",
+    "disable_Advanced_set_tip": "After being disabled, the tab configuration item will be used",
     "repeat_send": "Repeat Send",
     "concurrency_test_tip": "Generally used to test race conditions or high concurrency scenarios",
     "concurrent_threads": "Concurrent Threads",
@@ -530,7 +533,10 @@
     "debugExecute": "Debug Execute",
     "matching_extraction_tip": "Added <count>{{num}}</count> items",
     "extractionResult": "Extraction Result",
-    "save_changes_prompt": "Save the modified content?"
+    "save_changes_prompt": "Save the modified content?",
+    "useInstructions": "Instructions for use",
+    "WebFuzzerUseInstructions": "Instructions for Using Web Fuzzer Matchers and Extractors"
+
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
@@ -558,6 +564,7 @@
   },
   "MatcherItem": {
     "match_type": "Match Type",
+    "match_range": "Match Range",
     "match_position": "Match Position",
     "status_code": "Status Code",
     "response_header": "Response Header",

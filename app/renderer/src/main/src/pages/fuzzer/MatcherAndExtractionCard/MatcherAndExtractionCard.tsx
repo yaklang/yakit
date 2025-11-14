@@ -47,6 +47,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
@@ -61,7 +62,8 @@ import {
     matchersConditionOptions,
     matcherTypeList,
     extractorTypeList,
-    defaultSubMatcherItem
+    defaultSubMatcherItem,
+    ScopeList
 } from "./constants"
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
@@ -136,7 +138,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             httpResponse,
             defActiveType,
             defActiveKeyAndOrder,
-            hasApplyBtn = false
+            hasApplyBtn = false,
+            setDefActiveType
         } = props
         const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
         const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
@@ -432,7 +435,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                     value={type}
                                     onChange={(e) => {
                                         const {value} = e.target
-                                        setType(value)
+                                        //这里需要设置父组件的type
+                                        setDefActiveType ? setDefActiveType(value) : setType(value)
                                         if (value === "matchers" && matcher.matchersList.length === 0) {
                                             setMatcher({
                                                 ...matcher,
@@ -473,6 +477,21 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                             : extractor.extractorList.length
                                 }}
                             />
+                            {/* TODO: heJiaHui - 下周上 */}
+                            {/* <YakitButton 
+                                type='text' 
+                                onClick={() => {
+                                    showYakitModal({
+                                        title: t("MatcherAndExtraction.WebFuzzerUseInstructions"),
+                                        width: 600,
+                                        footer: null,
+                                        content: <div>111111</div>
+                                    })
+                                }}
+                                style={{marginLeft: 8}}
+                            >
+                                {t("MatcherAndExtraction.useInstructions")}
+                            </YakitButton> */}
                         </div>
                         <div className={styles["matching-extraction-extra"]}>
                             <>
@@ -864,20 +883,34 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                         options={matcherTypeList(t)}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label={t("MatcherItem.match_type")} column={isSmallMode}>
-                    <YakitRadioButtons
-                        value={matcherItem.Scope}
-                        onChange={(e) => {
-                            onEdit("Scope", e.target.value)
-                        }}
-                        buttonStyle='solid'
-                        options={[
-                            {label: t("MatcherItem.status_code"), value: "status_code"},
-                            {label: t("MatcherItem.response_header"), value: "all_headers"},
-                            {label: t("MatcherItem.response_body"), value: "body"},
-                            {label: t("MatcherItem.all_responses"), value: "raw"}
-                        ]}
-                    />
+                <LabelNodeItem label={t("MatcherItem.match_range")} column={isSmallMode}>
+                    <div style={{display: 'flex'}}>
+                        <YakitRadioButtons
+                            value={matcherItem.Scope}
+                            onChange={(e) => {
+                                onEdit("Scope", e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {label: t("MatcherItem.status_code"), value: "status_code"},
+                                {label: t("MatcherItem.response_header"), value: "all_headers"},
+                                {label: t("MatcherItem.response_body"), value: "body"},
+                                {label: t("MatcherItem.all_responses"), value: "raw"}
+                            ]}
+                        />
+                        <div className={styles["scope-select"]}>
+                            <YakitSelect
+                                value={ScopeList.map(item => item.value).includes(matcherItem.Scope) ? matcherItem.Scope : undefined}
+                                placeholder="更多"
+                                onChange={(value) => {
+                                    onEdit("Scope", value)
+                                }}
+                                style={{ width: 100, marginLeft: -2 }}
+                                size='small'
+                                options={ScopeList}
+                            />
+                        </div>
+                    </div>
                 </LabelNodeItem>
                 <LabelNodeItem label={t("MatcherItem.condition_relation")} column={isSmallMode}>
                     <YakitRadioButtons
@@ -1358,7 +1391,8 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
         onClose,
         onSave,
         defActiveKeyAndOrder,
-        hasApplyBtn
+        hasApplyBtn,
+        setDefActiveType
     } = props
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
@@ -1392,6 +1426,7 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
                 onSave={onSave}
                 defActiveKeyAndOrder={defActiveKeyAndOrder}
                 hasApplyBtn={hasApplyBtn}
+                setDefActiveType={setDefActiveType}
             />
         </YakitDrawer>
     )

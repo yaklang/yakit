@@ -89,7 +89,8 @@
     "success_failure_count": "成功：{success}——失败：${failed}",
     "send_request": "发送请求",
     "parameter": "参数",
-    "trafficAnalysisMode": "流量分析"
+    "trafficAnalysisMode": "流量分析模式",
+    "trafficAnalysis": "流量分析"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{droppedCount}]个响应",
@@ -401,6 +402,8 @@
     "random_delay": "随机延时",
     "concurrency_config": "并发配置",
     "disable_connection_pool": "禁用连接池",
+    "disable_Advanced_set": "禁用组配置",
+    "disable_Advanced_set_tip": "禁用后将使用标签页配置项",
     "repeat_send": "重复发包",
     "concurrency_test_tip": "一般用来测试条件竞争或者大并发的情况",
     "concurrent_threads": "并发线程",
@@ -530,7 +533,10 @@
     "debugExecute": "调试执行",
     "matching_extraction_tip": "已添加 <count>{{num}}</count> 条",
     "extractionResult": "提取结果",
-    "save_changes_prompt": "是否保存修改的内容"
+    "save_changes_prompt": "是否保存修改的内容",
+    "useInstructions": "使用说明",
+    "WebFuzzerUseInstructions": "Web Fuzzer 匹配器和提取器使用说明"
+
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "该匹配器已有空匹配器条件",
@@ -558,6 +564,7 @@
   },
   "MatcherItem": {
     "match_type": "匹配类型",
+    "match_range": "匹配范围",
     "match_position": "匹配位置",
     "status_code": "状态码",
     "response_header": "响应头",

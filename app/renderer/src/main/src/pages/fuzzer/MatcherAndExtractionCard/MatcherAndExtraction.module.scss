@@ -362,3 +362,15 @@
     max-height: 60vh;
     overflow-y: auto;
 }
+
+.scope-select {
+    :global {
+        .ant-select-selector {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+        }
+        .ant-select-selection-item {
+            color: var(--Colors-Use-Main-Primary) !important;
+        }
+    }
+}

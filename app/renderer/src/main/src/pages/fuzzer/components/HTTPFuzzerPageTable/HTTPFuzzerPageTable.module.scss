@@ -86,6 +86,14 @@
 .filter-icon {
     color: var(--Colors-Use-Neutral-Disable);
     @extend .display-flex-center;
+     svg {
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        &:hover {
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
 }
 .search-icon {
     svg {
@@ -114,6 +122,10 @@
             }
         }
     }
+}
+
+.status-code-input-filter {
+    padding: 8px;
 }
 
 .extracted-checkbox {
@@ -222,5 +234,50 @@
         align-items: center;
         gap: 4px;
         padding: 4px;
+    }
+}
+
+.filter-box {
+    padding: 6px 4px;
+    .filter-item {
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        .icon {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            width: 16px;
+            height: 16px;
+            display: flex;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .content {
+            font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-weight: 400;
+            line-height: 16px;
+            user-select: none;
+        }
+    }
+    .hover-filter-item {
+        &:hover {
+            border-radius: 4px;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+    }
+    .active-filter-item {
+        .icon {
+            color: var(--Colors-Use-Main-Primary);
+        }
+        .content {
+            color: var(--Colors-Use-Main-Primary);
+        }
+        border-radius: 4px;
+        background: var(--Colors-Use-Basic-Background);
     }
 }

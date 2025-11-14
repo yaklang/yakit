@@ -9,6 +9,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import { HTTPResponseMatcher } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
@@ -123,6 +124,7 @@ export interface HTTPHistoryAnalysisPageInfo {
     runtimeId?: string[]
     sourceType?: string
     pageId?: string
+    matchers?: HTTPResponseMatcher[]
 }
 
 export interface PluginBatchExecutorPageInfoProps {
