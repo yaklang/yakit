@@ -39,8 +39,8 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                 </YakitButton>
             )
         }
-        return path.map((item, index) => (
-            <FileTreeSystemList key={index} path={item} isOpen={isOpen} setSelected={setSelected} />
+        return path.map((item) => (
+            <FileTreeSystemList key={item} path={item} isOpen={isOpen} setSelected={setSelected} />
         ))
     })
     return (
