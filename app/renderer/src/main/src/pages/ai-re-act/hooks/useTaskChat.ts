@@ -596,6 +596,8 @@ function useTaskChat(params?: UseTaskChatParams) {
     // 任务开始执行的节点数据生成
     const handleTaskStartNode = useMemoizedFn((res: AIOutputEvent, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
         try {
+            // 任务树根节点不进行节点展示
+            if (nodeInfo.task.index === "1") return
             setStreams((old) => {
                 const newArr = [...old]
                 newArr.push({
