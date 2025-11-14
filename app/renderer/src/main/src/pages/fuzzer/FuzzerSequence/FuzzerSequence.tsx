@@ -116,7 +116,7 @@ import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelecti
 import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { isEmpty } from "lodash"
-import { AdvancedSet, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurrency"
+import { AdvancedSet, AdvancedSetV2, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurrency"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -1060,7 +1060,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const params = {
                 Requests: httpParams,
             }
-            if(ConcurrencyAdvancedConfigValue){
+            if(ConcurrencyAdvancedConfigValue && !ConcurrencyAdvancedConfigValue.disableAdvancedSet){
                 const { repeatTimes, disableUseConnPool, concurrent, minDelaySeconds, maxDelaySeconds } = ConcurrencyAdvancedConfigValue
                 Object.assign(params, {
                     Concurrent: 0,
@@ -1454,7 +1454,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const handleAdvancedSetSave = useMemoizedFn((values) => {
         const pageData = queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
-        if (!pageData?.pageParamsInfo?.webFuzzerPageInfo) return
+        if (!pageData) return
         
         const newCurrentItem: PageNodeItemProps = {
             ...pageData,
@@ -1518,6 +1518,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
 
     const emptyMap = useMemo(() => new Map(), [])
+    const AdvancedConfigActive = useMemo(()=> pageGroupData?.pageParamsInfo.ConcurrencyAdvancedConfigValue && !pageGroupData?.pageParamsInfo.ConcurrencyAdvancedConfigValue.disableAdvancedSet,[pageGroupData?.pageParamsInfo.ConcurrencyAdvancedConfigValue])
 
     return (
         <>
@@ -1560,7 +1561,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         >
                             {isConcurrency ? <>
                                 {pageGroupData?.pageName}
-                                <OutlineCogIcon 
+                                {/* <OutlineCogIcon 
                                     onClick={() => setAdvancedSetVisible(true)} 
                                     className={styles["fuzzer-sequence-left-heard-setting"]}
                                 />
@@ -1569,7 +1570,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     visible={advancedSetVisible}
                                     onSave={handleAdvancedSetSave}
                                     onCancel={()=> setAdvancedSetVisible(false)}
-                                />
+                                /> */}
+                                <AdvancedSetV2
+                                    advancedConfigValue={pageGroupData?.pageParamsInfo.ConcurrencyAdvancedConfigValue || initSetValue}
+                                    visible={advancedSetVisible}
+                                    onSave={handleAdvancedSetSave}
+                                    onCancel={()=> setAdvancedSetVisible(false)}
+                                >
+                                    <OutlineCogIcon 
+                                        onClick={() => setAdvancedSetVisible(true)} 
+                                        className={classNames(styles["fuzzer-sequence-left-heard-setting"],{
+                                            [styles["fuzzer-sequence-left-heard-active"]]: AdvancedConfigActive
+                                        })}
+                                    />
+                                </AdvancedSetV2>
                             </> : 
                             <>
                                 {t("FuzzerSequence.sequence_configuration")} 
