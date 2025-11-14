@@ -151,12 +151,9 @@
             height: 100%;
             overflow: hidden;
             border: 1px solid var(--Colors-Use-Neutral-Border);
-            // border-right: 0;
             border-radius: 4px;
         }
         .tab-content {
-            display: flex;
-            justify-content: center;
             flex: 1;
             width: 100%;
             overflow: hidden;

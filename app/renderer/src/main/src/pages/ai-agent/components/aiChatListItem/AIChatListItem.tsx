@@ -87,6 +87,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                             callToolId: data.callToolId,
                             title: item.AIService
                         }}
+                        execError={data.execError}
                     />
                 )
             case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:

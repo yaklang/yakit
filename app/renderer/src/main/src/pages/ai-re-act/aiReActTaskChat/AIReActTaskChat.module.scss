@@ -23,6 +23,7 @@
     align-items: flex-start;
     flex: 1;
     overflow: hidden;
+    height: 100%;
     @include AIReActChat.content-side("left");
     .chat-content-wrapper {
         @extend %display-column-center;

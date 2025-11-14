@@ -131,7 +131,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 )
             case AITabsEnum.HTTP:
                 return !!runTimeIDs.length ? (
-                    <PluginExecuteHttpFlow runtimeId={runTimeIDs.join(",")} website={false} />
+                    <PluginExecuteHttpFlow runtimeId={runTimeIDs.join(",")} website={true} />
                 ) : (
                     <>
                         <YakitEmpty style={{paddingTop: 48}} />
@@ -188,6 +188,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const {onOpenLogWindow} = useAiChatLog()
 
+    const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
+        setActiveKey((per) => (per === key ? undefined : key))
+    })
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
@@ -267,7 +270,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                     type='vertical-right'
                     yakitTabs={yakitTabs}
                     activeKey={activeKey}
-                    onActiveKey={(v) => setActiveKey(v as AITabsEnumType)}
+                    onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
                     onTabPaneRender={(ele, node) => tabBarRender(ele, node, showRiskTotal)}
                     className={styles["tab-wrap"]}
                     show={true}
