@@ -362,8 +362,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                 onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
                                 isHover={isHover}
                                 radius={true}
+                                style={{overflow: "hidden"}}
                             >
-                                {ele.prompt || ele.prompt_title}
+                                <span className='content-ellipsis'> {ele.prompt || ele.prompt_title}</span>
                             </YakitButton>
                         )
                     })}

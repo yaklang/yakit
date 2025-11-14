@@ -81,13 +81,14 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             ) : (
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
-                        {showStop && <RoundedStopButton onClick={onStopTask} />}
+                        {showStop && <RoundedStopButton onClick={onStopTask} size='large' />}
                         <YakitButton
                             type='outline2'
                             icon={<OutlinePositionIcon />}
                             radius='50%'
                             onClick={onScrollToBottom}
                             className={styles["position-button"]}
+                            size='large'
                         />
                     </div>
                 )
