@@ -21,6 +21,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
                     <CopyComponents copyText={content} />
                 </div>
             }
+            trigger={"click"}
         >
             <div className={styles["ai-stream-chat-content-wrapper"]}>
                 <div className={styles["title"]}>
