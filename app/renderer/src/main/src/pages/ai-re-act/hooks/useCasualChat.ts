@@ -30,7 +30,6 @@ import {
     ToolStreamSelectors
 } from "./aiRender"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
-import emiter from "@/utils/eventBus/eventBus"
 
 // 属于该 hook 处理数据的类型
 export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_require"]
@@ -38,7 +37,7 @@ export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_req
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease} = params || {}
+    const {pushLog, getRequest, onReviewRelease, onGrpcFolder} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -639,7 +638,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return newArr
             })
             if (res.Type === "filesystem_pin_directory") {
-                emiter.emit("onTriggerAddFolderTree", path)
+                onGrpcFolder && onGrpcFolder(path)
             }
         } catch (error) {
             handleGrpcDataPushLog({

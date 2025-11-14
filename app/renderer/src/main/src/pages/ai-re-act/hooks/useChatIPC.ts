@@ -78,6 +78,17 @@ function useChatIPC(params?: UseChatIPCParams) {
     // RunTimeIDs
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>([])
 
+    // 接口流里的文件树路径集合
+    const [grpcFolders, setGrpcFolders] = useState<string[]>([])
+    const handleSetGrpcFolders = useMemoizedFn((path: string) => {
+        setGrpcFolders((old) => {
+            if (old.includes(path)) {
+                return old
+            }
+            return [...old, path]
+        })
+    })
+
     // 日志
     const logEvents = useAIChatLog()
 
@@ -93,7 +104,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [casualChat, casualChatEvent] = useCasualChat({
         pushLog: logEvents.pushLog,
         getRequest: fetchRequestParams,
-        onReviewRelease: handleCasualReviewRelease
+        onReviewRelease: handleCasualReviewRelease,
+        onGrpcFolder: handleSetGrpcFolders
     })
 
     // 任务规划相关数据和逻辑
@@ -103,7 +115,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
-        sendRequest: sendRequest
+        sendRequest: sendRequest,
+        onGrpcFolder: handleSetGrpcFolders
     })
     // #endregion
 
@@ -148,6 +161,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatID.current = ""
         setExecute(false)
         setRunTimeIDs([])
+        setGrpcFolders([])
         // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
@@ -192,7 +206,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                     }
                     return
                 }
-
 
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
@@ -326,7 +339,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     }, [])
 
     return [
-        {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat},
+        {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders},
         {fetchToken, onStart, onSend, onClose, onReset}
     ] as const
 }

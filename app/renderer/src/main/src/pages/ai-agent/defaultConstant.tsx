@@ -218,7 +218,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     taskChat: {
         plan: [],
         streams: []
-    }
+    },
+    grpcFolders: []
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},
