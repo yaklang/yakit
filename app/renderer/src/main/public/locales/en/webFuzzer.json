@@ -558,6 +558,7 @@
   },
   "MatcherItem": {
     "match_type": "Match Type",
+    "match_range": "Match Range",
     "match_position": "Match Position",
     "status_code": "Status Code",
     "response_header": "Response Header",
@@ -565,7 +566,12 @@
     "all_responses": "All Responses",
     "condition_relation": "Condition Relation",
     "no_match_invert": "No Match (Invert)",
-    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones"
+    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
+    "more": "more",
+    "request_header": "Request Header",
+    "request_body": "Request Body",
+    "all_requests": "ALL Request",
+    "request_url": "Request URL"
   },
   "MatcherAndExtractionValueList": {
     "add_match_content": "Add Match Content"

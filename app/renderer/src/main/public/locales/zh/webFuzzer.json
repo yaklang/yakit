@@ -558,6 +558,7 @@
   },
   "MatcherItem": {
     "match_type": "匹配类型",
+    "match_range": "匹配范围",
     "match_position": "匹配位置",
     "status_code": "状态码",
     "response_header": "响应头",
@@ -565,7 +566,12 @@
     "all_responses": "全部响应",
     "condition_relation": "条件关系",
     "no_match_invert": "不匹配（取反）",
-    "complete_conditions_before_adding": "请将已添加条件配置完成后再新增"
+    "complete_conditions_before_adding": "请将已添加条件配置完成后再新增",
+    "more": "更多",
+    "request_header": "请求头",
+    "request_body": "请求体",
+    "all_requests": "全部请求",
+    "request_url": "请求URL"
   },
   "MatcherAndExtractionValueList": {
     "add_match_content": "添加匹配内容"

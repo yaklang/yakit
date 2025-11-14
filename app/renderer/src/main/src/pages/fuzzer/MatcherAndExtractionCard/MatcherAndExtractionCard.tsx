@@ -47,6 +47,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
@@ -61,7 +62,8 @@ import {
     matchersConditionOptions,
     matcherTypeList,
     extractorTypeList,
-    defaultSubMatcherItem
+    defaultSubMatcherItem,
+    ScopeList
 } from "./constants"
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
@@ -864,7 +866,8 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                         options={matcherTypeList(t)}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label={t("MatcherItem.match_type")} column={isSmallMode}>
+                <LabelNodeItem label={t("MatcherItem.match_range")} column={isSmallMode}>
+                    <div style={{display: 'flex'}}>
                     <YakitRadioButtons
                         value={matcherItem.Scope}
                         onChange={(e) => {
@@ -878,6 +881,19 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                             {label: t("MatcherItem.all_responses"), value: "raw"}
                         ]}
                     />
+                        <div className={styles["scope-select"]}>
+                            <YakitSelect
+                                value={ScopeList(t).map(item => item.value).includes(matcherItem.Scope) ? matcherItem.Scope : undefined}
+                                placeholder={t("MatcherItem.more")}
+                                onChange={(value) => {
+                                    onEdit("Scope", value)
+                                }}
+                                style={{ width: 100, marginLeft: -2 }}
+                                size='small'
+                                options={ScopeList(t)}
+                            />
+                        </div>
+                    </div>
                 </LabelNodeItem>
                 <LabelNodeItem label={t("MatcherItem.condition_relation")} column={isSmallMode}>
                     <YakitRadioButtons
@@ -1175,6 +1191,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                     />
                 </LabelNodeItem>
                 <LabelNodeItem label={t("ExtractorItem.extraction_scope")} column={isSmallMode}>
+                    <div style={{display: 'flex'}}>
                     <YakitRadioButtons
                         value={extractorItem.Scope}
                         onChange={(e) => {
@@ -1187,6 +1204,19 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                             {label: "Raw", value: "raw"}
                         ]}
                     />
+                        <div className={styles["scope-select"]}>
+                            <YakitSelect
+                                value={ScopeList(t).map(item => item.value).includes(extractorItem.Scope) ? extractorItem.Scope : undefined}
+                                placeholder={t("MatcherItem.more")}
+                                onChange={(value) => {
+                                    onEdit("Scope", value)
+                                }}
+                                style={{ width: 100, marginLeft: -2 }}
+                                size='small'
+                                options={ScopeList(t)}
+                            />
+                        </div>
+                    </div>
                 </LabelNodeItem>
                 {onRenderTypeExtra}
             </div>

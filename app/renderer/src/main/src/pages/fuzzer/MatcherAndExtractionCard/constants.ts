@@ -94,6 +94,15 @@ export const extractorTypeList = (t: (text: string) => string) => {
     ]
 }
 
+export const ScopeList = (t: (text: string) => string) => {
+    return [
+        {label: t("MatcherItem.request_header"), value: "request_header"},
+        {label: t("MatcherItem.request_body"), value: "request_body"},
+        {label: t("MatcherItem.all_requests"), value: "request_raw"},
+        {label: t("MatcherItem.request_url"), value: "request_url"}
+    ]
+}
+
 export const defMatcherAndExtractionCode =
     "HTTP/1.1 200 OK\r\n" +
     "Date: Mon, 23 May 2005 22:38:34 GMT\r\n" +
