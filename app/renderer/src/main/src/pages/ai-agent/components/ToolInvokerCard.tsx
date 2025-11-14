@@ -19,6 +19,7 @@ interface ToolInvokerCardProps {
     params: string
     fileList?: AIYakExecFileRecord[]
     modalInfo?: ModalInfoProps
+    execError?: string
 }
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
@@ -29,7 +30,8 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     desc,
     status = "fail",
     fileList,
-    modalInfo
+    modalInfo,
+    execError
 }) => {
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
@@ -83,6 +85,11 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
                     {content && (
                         <pre className={styles["file-system-wrapper"]}>
                             <code>{content}</code>
+                        </pre>
+                    )}
+                    {execError && (
+                        <pre className={styles["file-system-wrapper"]}>
+                            <code>{execError}</code>
                         </pre>
                     )}
                 </div>

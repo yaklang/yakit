@@ -3,7 +3,7 @@ import {AIReActTaskChatContentProps, AIReActTaskChatLeftSideProps, AIReActTaskCh
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
 import {AIAgentChatStream, AIChatLeftSide} from "@/pages/ai-agent/chatTemplate/AIAgentChatTemplate"
-import {useControllableValue, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
@@ -13,6 +13,7 @@ import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
+import {AIChatQSDataTypeEnum} from "../hooks/aiRender"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const [leftExpand, setLeftExpand] = useState(true)
@@ -36,7 +37,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                     <div className={styles["extra"]}>
                         <YakitButton
                             type='text2'
-                            icon={expand ? <OutlineArrowsexpandIcon /> : <OutlineArrowscollapseIcon />}
+                            icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
                             onClick={onIsExpand}
                         />
                     </div>
@@ -50,7 +51,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 export default AIReActTaskChat
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
+    const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
     const {taskChat} = useAIChatUIData()
 
     const {streams} = taskChat
@@ -62,6 +63,9 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const onStopTask = useMemoizedFn(() => {
         yakitNotify("info", "开发中...")
     })
+    const hiddenStop = useCreation(() => {
+        return chatIPCData.execute && streams[streams.length - 1]?.type === AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
+    }, [streams.length, chatIPCData.execute])
     return (
         <>
             <div className={styles["tab-content"]}>
@@ -75,16 +79,18 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                     onStopTask={onStopTask}
                 />
             ) : (
-                <div className={styles["footer"]}>
-                    <RoundedStopButton onClick={onStopTask} />
-                    <YakitButton
-                        type='outline2'
-                        icon={<OutlinePositionIcon />}
-                        radius='50%'
-                        onClick={onScrollToBottom}
-                        className={styles["position-button"]}
-                    />
-                </div>
+                streams.length > 0 && (
+                    <div className={styles["footer"]}>
+                        {!hiddenStop && <RoundedStopButton onClick={onStopTask} />}
+                        <YakitButton
+                            type='outline2'
+                            icon={<OutlinePositionIcon />}
+                            radius='50%'
+                            onClick={onScrollToBottom}
+                            className={styles["position-button"]}
+                        />
+                    </div>
+                )
             )}
         </>
     )
