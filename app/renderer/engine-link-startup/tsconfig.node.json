@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    "noEmit": true, // ✅ 只检查类型，不生成任何文件
+    "composite": false, // ✅ 关闭 project reference 模式
+    "declaration": false, // ✅ 禁止 .d.ts 输出
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "vite.config.ts",
+    "scripts",
+    "build"
+  ]
+}

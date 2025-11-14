@@ -26,7 +26,8 @@ const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
-        const {setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
+        const {setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion, setOldLink, openEngineLinkWin} =
+            props
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
@@ -276,8 +277,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 .then(() => {
                     info("解压内置引擎成功")
                     ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
-                        onCancelUpdateYak(true)
+                        // onCancelUpdateYak(true)
                     })
+                    setYakitStatus("")
+                    setOldLink(false)
+                    openEngineLinkWin("local")
                 })
                 .catch((e) => {
                     failed(`恢复引擎失败：${e}`)
@@ -480,9 +484,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     .invoke("RestoreEngineAndPlugin", {})
                     .then(() => {
                         info(`解压内置引擎成功`)
+                        ipcRenderer.invoke("write-engine-key-to-yakit-projects")
                         setVersionAbnormalVisible(false)
-                        setLog((old) => old.concat(["解压完成, 准备连接引擎"]))
-                        handleLinkLocalEnging()
+                        setYakitStatus("")
+                        setOldLink(false)
+                        openEngineLinkWin("local")
                     })
                     .catch((e) => {
                         failed(`初始化内置引擎失败：${e}`)
@@ -541,6 +547,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     buildIn={buildInYak.current}
                     visible={showYak}
                     onCallback={onCancelUpdateYak}
+                    setOldLink={setOldLink}
+                    openEngineLinkWin={openEngineLinkWin}
+                    setYakitStatus={setYakitStatus}
                 />
 
                 {/* 引擎非官方版本提示 */}

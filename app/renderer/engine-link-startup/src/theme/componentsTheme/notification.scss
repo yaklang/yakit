@@ -1,0 +1,195 @@
+// ========================== notification start ==========================
+.yakit-notification-failed,
+.yakit-notification-error {
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    padding: 0;
+
+    .ant-notification-notice-content {
+        background: var(--Colors-Use-Error-Bg-Hover);
+        border: 1px solid var(--Colors-Use-Error-Border);
+        border-radius: 4px;
+        padding: 16px 12px;
+    }
+
+    .ant-notification-notice-message {
+        margin-bottom: 4px;
+        margin-left: 28px;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        line-height: 20px;
+    }
+
+    .ant-notification-notice-icon {
+        color: var(--Colors-Use-Error-Primary);
+        margin-left: 0;
+        font-size: 20px;
+        line-height: 20px;
+        height: 20px;
+    }
+
+    .ant-notification-notice-closable .ant-notification-notice-message {
+        padding-right: 32px;
+    }
+
+    .ant-notification-notice-with-icon .ant-notification-notice-description {
+        margin-left: 28px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        padding-right: 32px;
+    }
+}
+
+.yakit-notification-success {
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    padding: 0;
+
+    .ant-notification-notice-content {
+        background: var(--Colors-Use-Success-Bg);
+        border: 1px solid var(--Colors-Use-Success-Border);
+        border-radius: 4px;
+        padding: 16px 12px;
+    }
+
+    .ant-notification-notice-message {
+        margin-bottom: 4px;
+        margin-left: 28px;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        line-height: 20px;
+    }
+
+    .ant-notification-notice-icon {
+        color: var(--Colors-Use-Success-Primary);
+        margin-left: 0;
+        font-size: 20px;
+        line-height: 20px;
+        height: 20px;
+    }
+
+    .ant-notification-notice-closable .ant-notification-notice-message {
+        padding-right: 32px;
+    }
+
+    .ant-notification-notice-with-icon .ant-notification-notice-description {
+        margin-left: 28px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        padding-right: 32px;
+    }
+}
+
+.yakit-notification-warning {
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    padding: 0;
+
+    .ant-notification-notice-content {
+        background: var(--Colors-Use-Warning-Bg);
+        border: 1px solid var(--Colors-Use-Warning-Border);
+        border-radius: 4px;
+        padding: 16px 12px;
+    }
+
+    .ant-notification-notice-message {
+        margin-bottom: 4px;
+        margin-left: 28px;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        line-height: 20px;
+    }
+
+    .ant-notification-notice-icon {
+        color: var(--Colors-Use-Warning-Primary);
+        margin-left: 0;
+        font-size: 20px;
+        line-height: 20px;
+        height: 20px;
+    }
+
+    .ant-notification-notice-closable .ant-notification-notice-message {
+        padding-right: 32px;
+    }
+
+    .ant-notification-notice-with-icon .ant-notification-notice-description {
+        margin-left: 28px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        padding-right: 32px;
+    }
+}
+
+.yakit-notification-info {
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    padding: 0;
+
+    .ant-notification-notice-content {
+        border-radius: 4px;
+        padding: 16px 12px;
+    }
+
+    .ant-notification-notice-message {
+        margin-bottom: 4px;
+        margin-left: 0;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        line-height: 20px;
+    }
+
+    .ant-notification-notice-icon {
+        margin-left: 0;
+        font-size: 20px;
+        line-height: 20px;
+        height: 20px;
+    }
+
+    .ant-notification-notice-closable .ant-notification-notice-message {
+        padding-right: 32px;
+    }
+
+    .ant-notification-notice-with-icon .ant-notification-notice-description {
+        margin-left: 28px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        padding-right: 32px;
+    }
+}
+
+.yakit-notify-icon {
+    width: 20px;
+    height: 20px;
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+.yakit-notify-error-icon {
+    color: var(--Colors-Use-Error-Primary);
+}
+
+.yakit-notify-success-icon {
+    color: var(--Colors-Use-Success-Primary);
+}
+
+.yakit-notify-warning-icon {
+    color: var(--Colors-Use-Warning-Primary);
+}
+
+.ant-notification-notice {
+    border-radius: 4px;
+    background-color: var(--Colors-Use-Neutral-Bg);
+    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+}
+.ant-notification-notice-close{
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    &:hover {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+}
+// ========================== notification end ==========================

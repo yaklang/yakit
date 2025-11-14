@@ -7,6 +7,8 @@ export interface LocalEngineProps {
     onLinkEngine: (port: number) => any
     setYakitStatus: (v: YakitStatusType) => any
     checkEngineDownloadLatestVersion: () => any
+    setOldLink: (v: boolean) => any
+    openEngineLinkWin: (type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => any
 }
 
 export interface LocalEngineLinkFuncProps {

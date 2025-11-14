@@ -56,6 +56,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         ipcRenderer
             .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
+                ipcRenderer.invoke("write-engine-key-to-yakit-projects")
                 info(`解压内置引擎成功`)
                 showYakitModal({
                     closable: false,

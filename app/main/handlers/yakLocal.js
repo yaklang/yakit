@@ -311,5 +311,22 @@ module.exports = {
                 }
             })
         })
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {
+        ipcMain.handle(ipcEventPre + "ps-yak-grpc", async (e, params) => {
+            if (isWindows) {
+                return await fetchWindowsYakProcess()
+            } else {
+                return await fetchGeneralYakProcess()
+            }
+        })
+
+        ipcMain.handle(ipcEventPre + "kill-yak-grpc", async (e, pid) => {
+            try {
+                return await asyncKillYakGRPC(pid)
+            } catch (e) {
+                return "failed"
+            }
+        })
     }
 }

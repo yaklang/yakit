@@ -56,6 +56,7 @@ export const EngineModeVerbose = (m: YaklangEngineMode, n?: DynamicStatusProps) 
 }
 
 export interface YakitLoadingProp {
+    oldLink: boolean
     /** yakit模式 */
     yakitStatus: YakitStatusType
     /** 引擎模式 */
@@ -77,6 +78,7 @@ export interface YakitLoadingProp {
 
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     const {
+        oldLink,
         yakitStatus,
         engineMode,
         showEngineLog,
@@ -90,6 +92,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     const [form] = Form.useForm()
 
     const changePortBtn = () => {
+        if (!oldLink) return null
         return (
             <Dropdown
                 trigger={["click"]}
@@ -138,6 +141,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }
 
     const btns = useMemo(() => {
+        if (!oldLink) return null
+
         if (yakitStatus === "checkError") {
             return (
                 <>
@@ -319,7 +324,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 )}
             </div>
         )
-    }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog])
+    }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog, oldLink])
 
     /** 加载页随机宣传语 */
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
@@ -389,20 +394,21 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     )}
 
                     <div className={styles["yakit-loading-content"]}>
-                        <div className={styles["log-wrapper"]}>
-                            <div className={styles["log-body"]}>
-                                {checkLog.map((item, index) => {
-                                    return (
-                                        <div key={item} className={styles["log-item"]}>
-                                            {item}
-                                        </div>
-                                    )
-                                })}
+                        {oldLink && (
+                            <div className={styles["log-wrapper"]}>
+                                <div className={styles["log-body"]}>
+                                    {checkLog.map((item, index) => {
+                                        return (
+                                            <div key={item} className={styles["log-item"]}>
+                                                {item}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
-                        </div>
-
+                        )}
                         <div className={styles["engine-log-btn"]}>
-                            {btns}
+                            {oldLink && btns}
                             <div
                                 className={styles["engine-help-wrapper"]}
                                 onClick={() => {

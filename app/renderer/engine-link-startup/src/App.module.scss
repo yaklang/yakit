@@ -1,0 +1,45 @@
+.app {
+  width: 100%;
+  height: 100%;
+}
+
+.yakit-mask-drag-wrapper {
+  width: 100vh;
+  height: 36px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  -webkit-app-region: drag;
+}
+
+.yakit-agr-modal-body {
+  .body-title {
+    height: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .body-content {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 24px;
+    text-align: justify;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+
+    .sign-content {
+      color: var(--Colors-Use-Error-Primary);
+    }
+
+    .underline-content {
+      color: var(--Colors-Use-Error-Primary);
+      text-decoration: underline;
+    }
+
+    .sign-bold-content {
+      color: var(--Colors-Use-Error-Primary);
+      font-weight: 500;
+    }
+  }
+}

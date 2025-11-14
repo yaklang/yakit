@@ -53,7 +53,7 @@ function setExtraLocalCache(key, value) {
 /**
  * 退出时的缓存
  */
-function setCloeseExtraLocalCache(key, value){
+function setCloeseExtraLocalCache(key, value) {
     extraKVCache.set(key, value)
     return new Promise((resolve, reject) => {
         try {
@@ -207,6 +207,16 @@ module.exports = {
         /** 设置本地拓展缓存数据 */
         ipcMain.handle("set-extra-cache", (e, key, value) => {
             setExtraLocalCache(key, value)
+        })
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {
+        /** 获取本地缓存数据 */
+        ipcMain.handle(ipcEventPre + "fetch-local-cache", async (e, key) => {
+            return getLocalCacheValue(key)
+        })
+        /** 设置本地缓存数据 */
+        ipcMain.handle(ipcEventPre + "set-local-cache", (e, key, value) => {
+            setLocalCache(key, value)
         })
     }
 }

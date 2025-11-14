@@ -190,9 +190,9 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     accountAdmin: {key: "account-admin", label: "用户管理"},
     setPassword: {key: "set-password", label: "修改密码"},
     uploadData: {key: "upload-data", label: "上传数据"},
-    controlAdmin: {key: "control-admin", label: "远程管理"},
-    dynamicControl: {key: "dynamic-control", label: "发起远程"},
-    closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
+    // controlAdmin: {key: "control-admin", label: "远程管理"},
+    // dynamicControl: {key: "dynamic-control", label: "发起远程"},
+    // closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
     holeCollect: {key: "hole-collect", label: "漏洞汇总"},
     systemConfig: {key: "system-config", label: "系统配置"}
 }
@@ -213,6 +213,8 @@ export interface FuncDomainProp {
     showProjectManage?: boolean
     /** @name 操作系统类型 */
     system: YakitSystem
+
+    onDevToolRefresh: () => void
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -226,7 +228,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         typeCallback,
         showProjectManage = false,
         system,
-        isJudgeLicense
+        isJudgeLicense,
+        onDevToolRefresh
     } = props
 
     /** 登录用户信息 */
@@ -343,9 +346,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     let cacheMenus: YakitMenuItemType[] = [
                         ...userAvatar,
                         UserMenusMap["uploadData"],
-                        UserMenusMap["dynamicControl"],
-                        UserMenusMap["controlAdmin"],
-                        UserMenusMap["closeDynamicControl"],
+                        // UserMenusMap["dynamicControl"],
+                        // UserMenusMap["controlAdmin"],
+                        // UserMenusMap["closeDynamicControl"],
                         UserMenusMap["roleAdmin"],
                         UserMenusMap["accountAdmin"],
                         UserMenusMap["setPassword"],
@@ -378,8 +381,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 let cacheMenus: YakitMenuItemType[] = [
                     ...userAvatar,
                     UserMenusMap["uploadData"],
-                    UserMenusMap["dynamicControl"],
-                    UserMenusMap["closeDynamicControl"],
+                    // UserMenusMap["dynamicControl"],
+                    // UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
                     UserMenusMap["pluginAudit"],
                     UserMenusMap["misstatement"],
@@ -524,7 +527,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
-                {showDevTool() && <UIDevTool />}
+                {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
 
                 <ScreenAndScreenshot
                     system={system}
@@ -1316,7 +1319,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     )
 })
 
-const UIDevTool: React.FC = React.memo(() => {
+interface UIDevTool {
+    onDevToolRefresh: () => void
+}
+const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
+    const {onDevToolRefresh} = props
     const [show, setShow] = useState<boolean>(false)
 
     const {delTemporaryProject} = useTemporaryProjectStore()
@@ -1328,11 +1335,17 @@ const UIDevTool: React.FC = React.memo(() => {
                 return
             case "reload":
                 await delTemporaryProject()
-                ipcRenderer.invoke("trigger-reload")
+                onDevToolRefresh()
+                setTimeout(() => {
+                    ipcRenderer.invoke("trigger-reload")
+                }, 1000)
                 return
             case "reloadCache":
                 await delTemporaryProject()
-                ipcRenderer.invoke("trigger-reload-cache")
+                onDevToolRefresh()
+                setTimeout(() => {
+                    ipcRenderer.invoke("trigger-reload-cache")
+                }, 1000)
                 return
 
             default:

@@ -27,6 +27,7 @@ export interface YaklangEngineWatchDogCredential {
 const {ipcRenderer} = window.require("electron")
 
 export interface YaklangEngineWatchDogProps {
+    oldLink: boolean
     credential: YaklangEngineWatchDogCredential
     keepalive: boolean
     engineLink: boolean

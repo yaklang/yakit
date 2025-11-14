@@ -1,0 +1,604 @@
+// ========================== input ==========================
+.yakit-input-wrapper {
+    display: inline-flex;
+    width: 100%;
+
+    :global {
+        .ant-input-borderless {
+            border: none;
+            box-shadow: none !important;
+        }
+        .ant-input:has(+ .ant-input-group-addon) {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input-group {
+            display: flex;
+        }
+        .ant-input-group-wrapper {
+            padding: 0 !important;
+            background: var(--Colors-Use-Basic-Background);
+        }
+
+        .ant-input-group-addon {
+            border-radius: 4px;
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            width: auto;
+        }
+
+        .ant-input-group > .ant-input:first-child,
+        .ant-input-group-addon:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .ant-input-group > .ant-input:last-child,
+        .ant-input-group-addon:last-child {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            min-width: 24px;
+            padding: 0 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .ant-input {
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background);
+            border-radius: 4px;
+        }
+
+        .ant-input:hover {
+            border-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
+        }
+        .ant-input-affix-wrapper {
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background) !important;
+            border-radius: 4px;
+            input {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                background-color: var(--Colors-Use-Basic-Background) !important;
+            }
+        }
+        .ant-input-suffix {
+            .ant-input-show-count-suffix {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+        }
+        .ant-input:focus,
+        .ant-input-focused,
+        .ant-input-affix-wrapper:hover,
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
+        .ant-input-affix-wrapper-focused,
+        .ant-input-affix-wrapper:focus {
+            border-color: var(--Colors-Use-Main-Hover);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+        }
+    }
+
+    .yakit-input-addonAfter {
+        background: var(--Colors-Use-Neutral-Bg);
+        height: 100%;
+        padding: 0 12px;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        display: flex;
+        align-items: center;
+        border-radius: 0 4px 4px 0;
+    }
+
+    .yakit-input-addonBefore {
+        background: var(--Colors-Use-Neutral-Bg);
+        height: 100%;
+        padding: 0 12px;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        display: flex;
+        align-items: center;
+        border-radius: 4px 0 0 4px;
+    }
+}
+
+// ========================== disabled ==========================
+.yakit-input-disabled {
+    :global {
+        .ant-input[disabled] {
+            color: var(--Colors-Use-Neutral-Disable);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+    }
+}
+
+// ========================== middle ==========================
+
+.yakit-input-middle {
+    height: 28px;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border-color: var(--Colors-Use-Neutral-Border);
+    :global {
+        .ant-input {
+            font-size: 12px;
+            height: 26px;
+        }
+    }
+}
+
+// ========================== small ==========================
+
+.yakit-input-wrapper-small {
+    height: 24px;
+    :global {
+        .ant-input-affix-wrapper .ant-input {
+            height: 16px;
+            line-height: 16px;
+        }
+    }
+}
+
+.yakit-input-small {
+    height: 24px;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 16px;
+
+    :global {
+        .ant-input {
+            height: 24px;
+        }
+    }
+}
+
+// ========================== large ==========================
+.yakit-input-wrapper-large {
+    height: 32px;
+}
+
+.yakit-input-large {
+    height: 32px;
+    font-size: 14px;
+
+    :global {
+        .ant-input {
+            font-size: 14px;
+        }
+    }
+}
+
+// ========================== search ==========================
+.yakit-search-wrapper {
+    --search-box-shadow-color: var(--Colors-Use-Main-Focus);
+
+    --search-background-color: var(--Colors-Use-Main-Primary);
+    --search-background-hover-color: var(--Colors-Use-Main-Hover);
+    --search-background-focus-color: var(--Colors-Use-Main-Pressed);
+
+    --search-border-color: var(--Colors-Use-Neutral-Border);
+    --search-border-hover-color: var(--Colors-Use-Main-Hover);
+    --search-border-focus-color: var(--Colors-Use-Main-Pressed);
+
+    border-radius: 4px;
+    height: 24px;
+
+    :global {
+        .ant-input,
+        .ant-input-affix-wrapper {
+            border-right: 0;
+            border-radius: 4px;
+            border-color: var(--search-border-color);
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input-affix-wrapper {
+            padding: 0 8px;
+            height: 24px;
+            .ant-input {
+                height: 100%;
+            }
+        }
+
+        .ant-btn-primary {
+            border-color: var(--search-border-color);
+            background-color: var(--search-background-color);
+            background: var(--search-background-color);
+        }
+
+        .ant-input-search .ant-input:hover,
+        .ant-input-search .ant-input:focus {
+            border-color: var(--search-border-hover-color);
+        }
+        .ant-input-affix-wrapper {
+            background: var(--Colors-Use-Basic-Background);
+        }
+        .ant-input-affix-wrapper > input {
+            background: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input-suffix {
+            .ant-input-show-count-suffix {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+        }
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
+            border-color: var(--search-border-hover-color);
+        }
+
+        .ant-input-affix-wrapper:focus,
+        .ant-input-affix-wrapper-focused,
+        .ant-input:focus,
+        .ant-input-focused {
+            box-shadow: none;
+        }
+
+        .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child {
+            left: 0;
+            background: var(--Colors-Use-Basic-Background);
+        }
+
+        // .ant-input-group .ant-input:hover {
+        //     border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        // }
+
+        // .ant-input-clear-icon{
+        //     // color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        //     // background-color: var(--Colors-Use-Neutral-Disable);
+        // }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
+        }
+
+        .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button {
+            border-radius: 0 4px 4px 0;
+            border: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ant-input-group-addon {
+            border-radius: 4px;
+        }
+
+        .ant-btn-primary {
+            padding: 0;
+            text-shadow: none;
+            box-shadow: none;
+        }
+        .ant-input-search .ant-input-group .ant-input-affix-wrapper:not(:last-child) {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        .ant-input-search-button .anticon-search {
+            height: 16px;
+        }
+    }
+}
+
+.yakit-search-wrapper-focus {
+    border-color: var(--search-border-focus-color);
+    box-shadow: 0 0 0 2px var(--search-box-shadow-color);
+    border-radius: 4px !important;
+    :global {
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled) {
+            border-color: var(--search-border-focus-color);
+            border-radius: 4px 0 0 4px;
+        }
+    }
+}
+
+// ========================== search-middle ==========================
+.yakit-search-middle {
+    :global {
+        .ant-input {
+            height: 24px;
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 24px;
+            height: 24px;
+        }
+
+        .ant-btn-primary {
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 24px;
+            line-height: 18px;
+        }
+    }
+}
+
+// ========================== search-small ==========================
+.yakit-search-wrapper-small {
+    height: 20px;
+    :global {
+        .ant-input-wrapper {
+            display: inline-flex;
+            height: 20px;
+        }
+        .ant-input-affix-wrapper {
+            padding: 0 8px;
+            height: 20px;
+            width: calc(100% - 20px);
+            .ant-input {
+                height: 18px;
+            }
+        }
+        .ant-input-search-button .anticon-search {
+            height: 12px;
+        }
+    }
+}
+
+.yakit-search-small {
+    :global {
+        .ant-input {
+            height: 20px;
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 20px;
+            height: 20px;
+        }
+
+        .anticon-search {
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 20px;
+            line-height: 20px;
+        }
+    }
+}
+
+// ========================== search-large ==========================
+.yakit-search-wrapper-large {
+    height: 28px;
+    :global {
+        .ant-input-affix-wrapper {
+            padding: 0 8px;
+            height: 28px;
+            .ant-input {
+                height: 26px;
+            }
+        }
+    }
+}
+
+.yakit-search-large {
+    :global {
+        .ant-input {
+            height: 28px;
+            padding: 7px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 28px;
+            height: 28px;
+        }
+
+        .anticon-search {
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 28px;
+            // line-height: 28px;
+        }
+    }
+}
+
+// ========================== search-maxLarge ==========================
+.yakit-search-wrapper-maxLarge {
+    height: 32px;
+    :global {
+        .ant-input-affix-wrapper {
+            padding: 0 8px;
+            height: 32px;
+            .ant-input {
+                height: 30px;
+            }
+        }
+    }
+}
+
+.yakit-search-maxLarge {
+    :global {
+        .ant-input {
+            height: 32px;
+            padding: 7px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 32px;
+            height: 32px;
+        }
+
+        .anticon-search {
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 32px;
+            // line-height: 28px;
+        }
+    }
+}
+
+// ========================== textArea ==========================
+.yakit-textArea-wrapper {
+    width: 100%;
+    position: relative;
+
+    :global {
+        .ant-input-affix-wrapper {
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+        .anticon.ant-input-clear-icon,
+        .ant-input-clear-icon {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input {
+            border-radius: 4px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input:hover {
+            border-color: var(--Colors-Use-Main-Hover);
+        }
+
+        .ant-input:focus,
+        .ant-input-focused {
+            border-color: var(--Colors-Use-Main-Hover);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+        }
+        .ant-input-suffix {
+            .ant-input-show-count-suffix {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+        }
+
+        .ant-input-textarea-show-count::after {
+            font-size: 14px;
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
+        }
+        .textArea-resizer-icon {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            z-index: 1;
+            pointer-events: none;
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+        .ant-input-disabled + .textArea-resizer-icon {
+            background-color: var(--Colors-Use-Neutral-Bg);
+        }
+    }
+}
+.yakit-textArea-resize-hide {
+    textarea {
+        resize: none;
+    }
+}
+
+// ========================== textArea disabled ==========================
+.yakit-textArea-disabled {
+    :global {
+        .ant-input[disabled]:hover {
+            border-color: var(--Colors-Use-Neutral-Border);
+        }
+
+        .ant-input[disabled] {
+            background-color: var(--Colors-Use-Neutral-Bg);
+            border-color: var(--Colors-Use-Neutral-Border);
+        }
+    }
+}
+// ========================== password ==========================
+.yakit-password-wrapper-middle {
+    :global {
+        .ant-input-affix-wrapper {
+            border-radius: 4px;
+            height: 28px;
+            border-color: var(--Colors-Use-Neutral-Border);
+            font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background-color: var(--Colors-Use-Basic-Background) !important;
+            .ant-input {
+                background-color: var(--Colors-Use-Basic-Background);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+        .ant-input-password-icon.anticon {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
+            border-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
+        }
+        .ant-input-affix-wrapper:focus,
+        .ant-input-affix-wrapper-focused {
+            border-color: var(--Colors-Use-Main-Primary);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+        }
+    }
+}
+
+.yakit-password-large {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 28px;
+            font-size: 14px;
+        }
+    }
+}
+.yakit-password-small {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 24px;
+        }
+    }
+}
+
+.yakit-password-maxLarge {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 32px;
+            font-size: 14px;
+        }
+    }
+}
+.yakit-password-disabled {
+    :global {
+        .ant-input[disabled]:hover {
+            border-color: var(--Colors-Use-Neutral-Border);
+        }
+
+        .ant-input[disabled] {
+            background-color: var(--Colors-Use-Neutral-Bg);
+            border-color: var(--Colors-Use-Neutral-Border);
+        }
+    }
+}

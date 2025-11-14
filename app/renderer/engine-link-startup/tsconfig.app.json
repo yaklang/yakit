@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "downlevelIteration": true,
+    "noEmit": true, // ✅ 不输出任何 .js 或 .d.ts 文件
+    "declaration": false, // ✅ 禁止生成声明文件
+    "composite": false // ✅ 彻底关闭 project reference 机制
+  },
+  "exclude": [
+    "./env-cmdrc"
+  ],
+  "include": [
+    "src"
+  ]
+}

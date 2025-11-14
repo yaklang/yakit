@@ -9,6 +9,7 @@ fi
 
 item="$1"
 
+rm -rf ./app/renderer/engine-link-startup/dist
 rm -rf ./app/renderer/pages
 rm -rf ./release
 

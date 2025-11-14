@@ -1,0 +1,112 @@
+/** -------------------- 类型 start -------------------- */
+// gray类型
+.yakit-modal-gray {
+    --modal-header-footer-background: var(--Colors-Use-Neutral-Bg);
+    --modal-header-footer-border: var(--Colors-Use-Neutral-Border);
+}
+// white类型
+.yakit-modal-white {
+    --modal-header-footer-background: transparent;
+    --modal-header-footer-border: transparent;
+}
+/** -------------------- 类型 end -------------------- */
+
+/** -------------------- 尺寸 start -------------------- */
+// small尺寸
+.yakit-modal-small {
+    --modal-header-padding: 8px 16px;
+    &.yakit-modal-gray {
+        --modal-content-padding: 16px;
+        --modal-footer-padding: 8px 16px;
+    }
+    &.yakit-modal-white {
+        --modal-content-padding: 8px 16px;
+        --modal-footer-padding: 8px 16px 16px 16px;
+    }
+}
+// large尺寸
+.yakit-modal-large {
+    --modal-header-padding: 10px 24px;
+    &.yakit-modal-gray {
+        --modal-content-padding: 24px;
+        --modal-footer-padding: 10px 24px;
+    }
+    &.yakit-modal-white {
+        --modal-content-padding: 8px 24px;
+        --modal-footer-padding: 12px 24px 24px 24px;
+    }
+}
+/** -------------------- 尺寸 end -------------------- */
+
+.yakit-modal-wrapper {
+    :global {
+        .ant-modal-body {
+            padding: 0;
+        }
+    }
+}
+
+.yakit-modal-body {
+    overflow: hidden;
+    background: var(--Colors-Use-Basic-Background);
+    border-radius: 4px;
+}
+
+// header
+.header-body {
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-header-padding);
+    background-color: var(--modal-header-footer-background);
+    border-bottom: 1px solid var(--modal-header-footer-border);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    .title-wrapper {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        .subtitle-style {
+            flex: 1;
+            overflow: hidden;
+            margin-left: 16px;
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+    }
+}
+// body
+.content-body {
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-content-padding);
+    background-color: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+// footer
+.footer-body {
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-footer-padding);
+    background-color: var(--modal-header-footer-background);
+    border-top: 1px solid var(--modal-header-footer-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .footer-extra {
+        flex: 1;
+        overflow: hidden;
+    }
+    .footer-btn-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}

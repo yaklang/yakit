@@ -15,6 +15,7 @@ import ChildNewApp from "./ChildNewApp"
 import {getRemoteValue} from "./utils/kv"
 import {getRemoteI18nGV} from "./utils/envfile"
 import i18n from "@/i18n/i18n"
+const {ipcRenderer} = window.require("electron")
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -44,10 +45,40 @@ const getQueryParam = (param) => {
     return new URLSearchParams(window.location.search).get(param)
 }
 
+function showMaskOverlay() {
+    let mask = document.getElementById("modal-mask-overlay")
+    if (!mask) {
+        mask = document.createElement("div")
+        mask.id = "modal-mask-overlay"
+        Object.assign(mask.style, {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.3)",
+            zIndex: 9999
+        })
+        document.body.appendChild(mask)
+    }
+}
+
+function hideMaskOverlay() {
+    const mask = document.getElementById("modal-mask-overlay")
+    if (mask) mask.remove()
+}
+
 const App = () => {
     const [windowType, setWindowType] = useState(getQueryParam("window"))
 
     useEffect(() => {
+        ipcRenderer.on("modal-mask:show", () => {
+            showMaskOverlay()
+        })
+        ipcRenderer.on("modal-mask:hide", () => {
+            hideMaskOverlay()
+        })
+        
         getRemoteValue(getRemoteI18nGV())
             .then((savedLang) => {
                 if (savedLang) {
@@ -61,7 +92,11 @@ const App = () => {
         }
 
         window.addEventListener("popstate", onPopState)
-        return () => window.removeEventListener("popstate", onPopState)
+        return () => {
+            ipcRenderer.removeAllListeners("modal-mask:show")
+            ipcRenderer.removeAllListeners("modal-mask:hide")
+            window.removeEventListener("popstate", onPopState)
+        }
     }, [])
     return windowType === "child" ? <ChildNewApp /> : <NewApp />
 }

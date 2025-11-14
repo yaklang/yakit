@@ -1,0 +1,138 @@
+.ui-layout-wrapper {
+  width: 100%;
+  height: 100%;
+
+  .ui-layout-header {
+    width: 100%;
+    height: 37px;
+    background-color: var(--Colors-Use-Basic-Background);
+    -webkit-user-select: none;
+    user-select: none;
+
+    .short-divider-wrapper {
+      width: 1px;
+      height: 100%;
+      padding: 10px 0;
+
+      .divider-style {
+        height: 100%;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+      }
+    }
+
+    .divider-wrapper {
+      width: 1px;
+      height: 100%;
+      border-left: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+
+    .header-body {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      position: relative;
+
+      .header-border-yakit-mask {
+        position: absolute;
+        bottom: -1px;
+        width: 45px;
+        height: 1px;
+        background: var(--Colors-Use-Neutral-Bg);
+      }
+
+      .yakit-header-title {
+        height: 36px;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, 0);
+        line-height: 36px;
+        font-weight: 600;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        text-align: center;
+        -webkit-app-region: drag;
+      }
+
+      .header-left {
+        height: 100%;
+        display: flex;
+        align-items: center;
+      }
+
+      .header-title {
+        flex: 1;
+        height: 100%;
+      }
+
+      .header-title-drop {
+        -webkit-app-region: drag;
+      }
+
+      .header-right {
+        height: 100%;
+        display: flex;
+        align-items: center;
+      }
+
+      .yakit-mode-icon {
+        box-sizing: border-box;
+        padding: 8px 12px;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .yakit-mode-icon:hover {
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+      }
+
+      .yakit-mode-selected {
+        background: var(--Colors-Use-Neutral-Bg);
+
+        .mode-icon-selected {
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+      }
+    }
+  }
+
+  .ui-layout-container {
+    height: calc(100% - 37px);
+    background-color: var(--Colors-Use-Neutral-Bg);
+    overflow: hidden auto;
+
+    .container-wrapper {
+      height: 100%;
+
+      .ui-layout-body {
+        width: 70%;
+        height: 100%;
+        position: relative;
+      }
+
+      .uilayout-log {
+        width: 30%;
+        position: absolute;
+        right: 10px;
+        bottom: 0;
+      }
+
+      .uilayout-noshow-log {
+        display: none;
+      }
+    }
+  }
+}
+
+.relaunch-hint {
+  height: 80px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,447 @@
+@use "../../../theme/themeify" as *;
+
+@mixin generateMenuSelect($type: "primary") {
+    --menu-select-color: #{fetch-color($type, "color-5")};
+    --menu-select-icon-color: #{fetch-color($type, "color-5")};
+    --menu-select-background: #{fetch-color($type, "color-1")};
+}
+// 专门给menu-item用的
+@mixin generateItemPrimary($type: "primary") {
+    --menu-color: #{fetch-color($type, "color-5")};
+    --menu-icon-color: #{fetch-color($type, "color-5")};
+    --menu-background: var(--Colors-Use-Basic-Background);
+    // TODO：该处不确定取值
+    --menu-active-color: var(--Colors-Use-Basic-Background);
+    --menu-active-icon-color: var(--Colors-Use-Basic-Background);
+    --menu-active-background: #{fetch-color($type, "color-6")};
+    @include generateMenuSelect($type);
+}
+// 专门给menu-item用的
+@mixin generateItemGrey($type: "primary") {
+    --menu-color: #{fetch-color($type, "color-5")};
+    --menu-icon-color: #{fetch-color($type, "color-5")};
+    --menu-background: var(--Colors-Use-Basic-Background);
+    --menu-active-color: #{var(--Colors-Use-Neutral-Text-1-Title)};
+    --menu-active-icon-color: #{fetch-color($type, "color-5")};
+    --menu-active-background: var(--Colors-Use-Neutral-Bg-Hover);
+    @include generateMenuSelect($type);
+}
+
+// 置灰可点击使用的menu-item
+@mixin generateItemInfo() {
+    --menu-color: #{var(--Colors-Use-Neutral-Disable)};
+    --menu-icon-color: #{var(--Colors-Use-Neutral-Disable)};
+    --menu-background: var(--Colors-Use-Basic-Background);
+    --menu-active-color: #{var(--Colors-Use-Neutral-Text-1-Title)};
+    --menu-active-icon-color: #{var(--Colors-Use-Neutral-Disable)};
+    --menu-active-background: var(--Colors-Use-Neutral-Bg-Hover);
+    --menu-select-color: #{var(--Colors-Use-Neutral-Disable)};
+    --menu-select-icon-color: #{var(--Colors-Use-Neutral-Disable)};
+    --menu-select-background: var(--Colors-Use-Neutral-Bg);
+}
+
+// 无色透明样式使用的menu-item(给自定义菜单单项使用)
+@mixin generateItemColourless() {
+    --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    --menu-background: var(--Colors-Use-Basic-Background);
+    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-active-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    --menu-active-background: var(--Colors-Use-Neutral-Bg-Hover);
+    --menu-select-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-select-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    --menu-select-background: var(--Colors-Use-Basic-Background);
+}
+
+@mixin generateItemText($type: "primary") {
+    --menu-color: #{fetch-color($type, "color-5")};
+    --menu-icon-color: #{fetch-color($type, "color-5")};
+    --menu-background: var(--Colors-Use-Basic-Background);
+    // TODO：该处不确定取值
+    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-active-icon-color: #{fetch-color($type, "color-5")};
+    --menu-active-background: var(--Colors-Use-Main-Focus);
+    @include generateMenuSelect($type);
+}
+
+/* ---------- 类型类 ----------*/
+.yakit-menu-primary {
+    --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    --menu-background: var(--Colors-Use-Basic-Background);
+    --menu-active-color: #{fetch-color("primary", "color-7")};
+    --menu-active-icon-color: var(--Colors-Use-Basic-Background);
+    --menu-active-background: #{fetch-color("primary", "color-5")};
+    @include generateMenuSelect();
+
+    :global {
+        li:has(.yakit-menu-item-danger) {
+            @include generateItemPrimary("danger");
+        }
+
+        li:has(.yakit-menu-item-success) {
+            @include generateItemPrimary("success");
+        }
+
+        li:has(.yakit-menu-item-info) {
+            @include generateItemInfo();
+        }
+
+        li:has(.yakit-menu-item-no-style) {
+            @include generateItemColourless();
+        }
+
+        li:has(.yakit-menu-item-text) {
+            @include generateItemPrimary();
+        }
+    }
+}
+.yakit-menu-grey {
+    --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    --menu-background: var(--Colors-Use-Basic-Background);
+    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --menu-active-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    --menu-active-background: var(--Colors-Use-Neutral-Bg-Hover);
+    @include generateMenuSelect();
+
+    :global {
+        li:has(.yakit-menu-item-danger) {
+            @include generateItemGrey("danger");
+        }
+
+        li:has(.yakit-menu-item-success) {
+            @include generateItemGrey("danger");
+        }
+
+        li:has(.yakit-menu-item-info) {
+            @include generateItemInfo();
+        }
+
+        li:has(.yakit-menu-item-no-style) {
+            @include generateItemColourless();
+        }
+
+        li:has(.yakit-menu-item-text) {
+            @include generateItemText();
+        }
+    }
+}
+/* ---------- 尺寸类 ----------*/
+.yakit-menu-default-size {
+    --menu-height: 28px;
+    --menu-content-height: 16px;
+    --menu-padding: 6px 8px;
+}
+.yakit-menu-right-menu-size {
+    --menu-height: 24px;
+    --menu-content-height: 16px;
+    --menu-padding: 4px 8px;
+}
+// yakit-menu外层装饰类
+.yakit-menu-div-wrapper {
+    display: inline-block;
+    :global {
+        .ant-dropdown-menu {
+            padding: 4px;
+        }
+        .ant-popover-inner-content {
+            border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+            background: var(--Colors-Use-Basic-Background);
+            /* Shadows/lg 16 */
+            box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+            .ant-dropdown-menu {
+                box-shadow: none;
+            }
+        }
+    }
+}
+
+@mixin generateMenuStyle($kind: "") {
+    .ant-#{$kind}menu-item.ant-#{$kind}menu-item-only-child {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        border-radius: 4px;
+        color: var(--menu-color);
+        background-color: var(--menu-background);
+        span.anticon {
+            color: var(--menu-icon-color);
+            svg {
+                width: 16px;
+                height: 16px;
+                path {
+                    stroke-width: 1.5;
+                }
+            }
+        }
+        .keys-style {
+            color: var(--menu-icon-color);
+        }
+        :global {
+            .ai-plugin-menu-icon-default {
+                margin-right: 4px;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+            .ai-plugin-menu-icon-hover {
+                display: none;
+            }
+        }
+    }
+    .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
+    .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
+        color: var(--menu-active-color);
+        background-color: var(--menu-active-background);
+        span.anticon {
+             color: var(--menu-active-color);
+        }
+        .keys-style {
+            color: var(--menu-active-icon-color);
+        }
+        :global {
+            .ai-plugin-menu-icon-default {
+                display: none;
+            }
+            .ai-plugin-menu-icon-hover {
+                display: block;
+                margin-right: 4px;
+                margin-left: 0px;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+        }
+    }
+    .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-only-child {
+        color: var(--menu-select-color);
+        background-color: var(--menu-select-background);
+        span.anticon {
+            color: var(--menu-select-icon-color);
+        }
+        .keys-style {
+            color: var(--menu-select-icon-color);
+        }
+    }
+    .ant-#{$kind}menu-item.ant-#{$kind}menu-item-disabled.ant-#{$kind}menu-item-only-child {
+        // 此处添加强制颜色，原因为 antd 的.ant-meun-item-disabled 类名下存在一个 !important
+        color: var(--Colors-Use-Neutral-Disable) !important;
+        span.anticon {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .keys-style {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+    }
+
+    .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical {
+        border-radius: 4px;
+        background-color: var(--menu-background);
+        span.anticon {
+            color: var(--menu-icon-color);
+            svg {
+                width: 16px;
+                height: 16px;
+                path {
+                    stroke-width: 1.5;
+                }
+            }
+        }
+        .keys-style {
+            color: var(--menu-icon-color);
+        }
+        .ant-#{$kind}menu-submenu-title {
+            color: var(--menu-color);
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .ant-#{$kind}menu-submenu-title:hover {
+            color: var(--menu-color);
+        }
+        .ant-#{$kind}menu-submenu-title:active {
+            background: unset;
+        }
+        :global {
+            .ai-plugin-menu-icon-default {
+                margin-right: 4px;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+            .ai-plugin-menu-icon-hover {
+                display: none;
+            }
+        }
+    }
+    .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-active,
+    .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active,
+    .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active.ant-#{$kind}menu-submenu-selected {
+        background-color: var(--menu-active-background);
+        span.anticon {
+            color: var(--menu-active-color);
+        }
+        .keys-style {
+            color: var(--Colors-Use-Main-On-Primary);
+        }
+        .ant-#{$kind}menu-submenu-title {
+            color: var(--menu-active-color);
+        }
+        .ant-#{$kind}menu-submenu-title:hover {
+            background-color: unset;
+        }
+        :global {
+            .ai-plugin-menu-icon-default {
+                display: none;
+            }
+            .ai-plugin-menu-icon-hover {
+                display: block;
+                margin-right: 4px;
+                margin-left: 0px;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+        }
+    }
+    .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-selected {
+        span.anticon {
+            color: var(--menu-select-icon-color);
+        }
+        .keys-style {
+            color: var(--menu-select-icon-color);
+        }
+        .ant-#{$kind}menu-submenu-title {
+            color: var(--menu-select-color);
+        }
+    }
+    .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-disabled {
+        span.anticon {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .keys-style {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .ant-#{$kind}menu-submenu-title {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+    }
+
+    .ant-#{$kind}menu-item-divider {
+        background-color: var(--Colors-Use-Neutral-Border);
+        border-color: var(--Colors-Use-Neutral-Border);
+    }
+}
+
+/* ---------- 一级菜单相关类 ----------*/
+.yakit-menu-wrapper {
+    background: var(--Colors-Use-Basic-Background);
+    border-color: var(--Colors-Use-Basic-Background);
+
+    :global {
+        // 普通模式下
+        @include generateMenuStyle();
+        .ant-menu-submenu-arrow {
+            display: none;
+        }
+        // dropdown组件组合下
+        // 注意! 该样式限制菜单层级为两层及以内
+        @include generateMenuStyle("dropdown-");
+        .ant-dropdown-menu-submenu-expand-icon {
+            display: none;
+        }
+    }
+}
+/* ---------- 二级及以上菜单相关类 ----------*/
+// 暂时css效果只考虑两层结构菜单，多层结构菜单暂未考虑
+.yakit-menu-submenu {
+    padding: 0px;
+    :global {
+        ul {
+            margin: 0;
+        }
+
+        .ant-menu {
+            padding: 6px 4px 8px 4px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
+            @include generateMenuStyle();
+            &-submenu-arrow {
+                display: none;
+            }
+            &.ant-menu-sub.ant-menu-vertical {
+                min-width: 128px;
+                background: var(--Colors-Use-Basic-Background);
+            }
+        }
+
+        // 兼容dropdown组件菜单样式(该样式限制菜单层级为两层及以内)
+        .ant-dropdown-menu {
+            background-color: var(--Colors-Use-Basic-Background);
+            padding: 6px 4px 8px 4px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
+            @include generateMenuStyle("dropdown-");
+            &-submenu-expand-icon {
+                display: none;
+            }
+            &.ant-dropdown-menu-sub.ant-dropdown-menu-vertical {
+                min-width: 128px;
+            }
+        }
+    }
+}
+
+.yakit-menu-item {
+    height: var(--menu-height);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--menu-padding);
+    border-radius: 4px;
+
+    .yakit-submenu-item-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--menu-content-height);
+    }
+
+    .yakit-menu-item-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--menu-content-height);
+        max-width: 100%;
+        flex: 1;
+        path {
+            stroke-width: 1.5px;
+        }
+    }
+
+    .yakit-menu-item-title {
+        width: 100%;
+        height: var(--menu-content-height);
+        display: flex;
+        align-items: center;
+    }
+}
+
+// 取消固定高度
+.yakit-menu-item-no-style {
+    height: 100%;
+    padding: 0;
+    .yakit-menu-item-content {
+        height: 100%;
+    }
+    .yakit-menu-item-title {
+        height: 100%;
+    }
+}

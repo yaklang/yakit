@@ -55,10 +55,10 @@ import cloneDeep from "lodash/cloneDeep"
 import {failed, success, warn} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
 import {Tooltip} from "antd"
-import {getYakitEngineMode} from "@/constants/software"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import {SystemInfo} from "@/constants/hardware"
 
 export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
     const {setAbsolutePath} = props
@@ -83,7 +83,7 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
 
 // 打开文件夹
 export const openFolder = () => {
-    if (getYakitEngineMode() === "remote") {
+    if (SystemInfo.mode === "remote") {
         let absolutePath = ""
         const m = showYakitModal({
             title: "请输入文件夹路径",
@@ -105,13 +105,12 @@ export const openFolder = () => {
             }
         })
     } else {
-        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-            .then((data) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFileTree", absolutePath)
-                }
-            })
+        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+            if (data.filePaths.length) {
+                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                emiter.emit("onOpenFileTree", absolutePath)
+            }
+        })
     }
 }
 
