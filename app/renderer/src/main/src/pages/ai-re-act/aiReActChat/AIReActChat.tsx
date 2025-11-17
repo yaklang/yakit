@@ -138,14 +138,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                 自由对话
                             </div>
                             <div className={styles["chat-header-extra"]}>
-                                {/* <YakitButton
-                                    type='secondary2'
-                                    isHover={logVisible}
-                                    icon={<OutlineNewspaperIcon />}
-                                    onClick={() => setLogVisible((v) => !v)}
-                                >
-                                    日志
-                                </YakitButton> */}
                                 {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}
                             </div>
                         </div>
