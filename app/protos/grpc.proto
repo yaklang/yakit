@@ -7242,8 +7242,7 @@ message SSAProgramFilter{
   int64 AfterID = 8;
   int64 BeforeID = 9;
 
-  repeated string ProjectNames = 10; // abort
-  repeated int64 ProjectIds = 11;
+  repeated uint64 ProjectIds = 10;
 }
 
 
@@ -7420,7 +7419,7 @@ message SyntaxFlowScanTaskFilter{
   int64  UntilId = 5;
   string Keyword = 6; // fuzz search program-name
   repeated string Kind = 7; // "debug" | "scan";
-  repeated string ProjectNames = 8;
+  repeated uint64 ProjectIds = 8;
   bool HaveRisk = 17; // 是否有风险
 }
 
@@ -8318,7 +8317,6 @@ message GenerateSSAReportResponse {
   string Message = 2;       // 消息
   string ReportData = 3;    // 报告数据（当格式不是yakit时）
 }
-
 // SSA Project Messages
 message SSAProject {
   int64 ID = 1;
@@ -8343,6 +8341,8 @@ message SSAProject {
   int64 RiskNumber = 13;
   // 编译次数
   int64 CompileTimes = 14;
+  // 本地路径或者远程代码仓库路径
+  string URL = 15;
 }
 
 message SSAProjectCompileConfig{
@@ -8392,6 +8392,11 @@ message UpdateSSAProjectResponse {
 
 message DeleteSSAProjectRequest {
   SSAProjectFilter Filter = 1;
+  // 删除模式:
+  // "clear_compile_history" - 只清空编译历史（删除 IrProgram，保留 SSAProject）
+  // "delete_all" 或 空字符串 - 清空编译历史和项目信息（删除 IrProgram 和 SSAProject）
+  // 默认为 "delete_all"
+  string DeleteMode = 2;
 }
 
 message DeleteSSAProjectResponse {
