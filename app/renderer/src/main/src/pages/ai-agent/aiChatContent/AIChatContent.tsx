@@ -9,7 +9,6 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {AITabs, AITabsEnum} from "../defaultConstant"
 import {AITabsEnumType} from "../aiAgentType"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
-import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import {AIFileSystemList} from "../components/aiFileSystemList/AIFileSystemList"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
@@ -28,22 +27,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
-const {TabPane} = PluginTabs
 
-const getCardData = () => {
-    const data = Array.from({length: 20}).map((_, index) => ({
-        tag: `标签${index + 1}`,
-        info: [
-            {
-                Id: `${index + 1}`,
-                Data: `数据内容${index + 1}`,
-                Timestamp: Date.now() + index * 1000,
-                Tag: `标签${index + 1}`
-            }
-        ]
-    }))
-    return data
-}
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs, yakExecResult, aiPerfData} = useAIChatUIData()
 

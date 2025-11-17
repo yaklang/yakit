@@ -1,9 +1,15 @@
 import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
-import {AIEventQueryRequest, AIEventQueryResponse} from "../ai-re-act/hooks/grpcApi"
+import {
+    AIEventQueryRequest,
+    AIEventQueryResponse,
+    GetRandomAIMaterialsRequest,
+    GetRandomAIMaterialsResponse
+} from "../ai-re-act/hooks/grpcApi"
 import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/forge"
-import { YakQueryHTTPFlowResponse } from "@/components/HTTPFlowTable/HTTPFlowTable"
-import { YakQueryHTTPFlowRequest } from "@/utils/yakQueryHTTPFlow"
+import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
+import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -87,7 +93,10 @@ export const grpcGetAIForge: APIFunc<GetAIForgeRequest, AIForge> = (param, hidde
 }
 
 /** @name 获取 HTTP 流列表 */
-export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFlowResponse> = async (param, hiddenError) => {
+export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFlowResponse> = async (
+    param,
+    hiddenError
+) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("QueryHTTPFlows", param)
@@ -99,3 +108,48 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
     })
 }
 // #endregion
+
+export const grpcGetChangeQuestionPlugin: () => Promise<YakScript | null> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            const query: QueryYakScriptRequest = {
+                Pagination: {
+                    Page: 1,
+                    Limit: 1,
+                    Order: "",
+                    OrderBy: ""
+                },
+                IncludedScriptNames: ["首页换一换问题"]
+            }
+            ipcRenderer
+                .invoke("QueryYakScript", query)
+                .then((item: QueryYakScriptsResponse) => {
+                    if (item.Data?.length > 0) {
+                        resolve(item.Data[0])
+                    } else {
+                        resolve(null)
+                    }
+                })
+                .catch((e: any) => {
+                    reject(e)
+                })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+export const grpcGetRandomAIMaterials: APIFunc<GetRandomAIMaterialsRequest, GetRandomAIMaterialsResponse> = (
+    param,
+    hiddenError
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("GetRandomAIMaterials", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询 GetRandomAIMaterials 失败:" + e)
+                reject(e)
+            })
+    })
+}

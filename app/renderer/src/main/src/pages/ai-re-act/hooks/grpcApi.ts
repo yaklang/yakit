@@ -2,6 +2,9 @@ import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHol
 import {KVPair} from "@/models/kv"
 import {ExecResult} from "@/pages/invoker/schema"
 import {AITaskInfoProps} from "./aiRender"
+import {AITool} from "@/pages/ai-agent/type/aiTool"
+import {AIForge} from "@/pages/ai-agent/type/forge"
+import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -498,5 +501,15 @@ export interface AIEventQueryRequest {
 /** QueryAIEvent 接口响应 */
 export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
+}
+
+/**GetRandomAIMaterials 接口请求 */
+export interface GetRandomAIMaterialsRequest {
+    Limit: number
+}
+export interface GetRandomAIMaterialsResponse {
+    KnowledgeBaseEntries: KnowledgeBaseEntry[]
+    AITools: AITool[]
+    AIForges: AIForge[]
 }
 // #endregion

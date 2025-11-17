@@ -12,8 +12,32 @@ export interface AIRecommendProps extends Omit<AIRecommendItemProps, "item"> {
 }
 
 export interface AIRecommendItemProps {
-    item: string
+    item: {
+        name: string
+        description: string
+    }
     lineStartDOMRect?: DOMRect
-    checkItems: string[]
-    onCheckItem: (item: string) => void
+    checkItems: AIRecommendItemProps["item"][]
+    onCheckItem: (item: AIRecommendItemProps["item"]) => void
+}
+
+export interface RandomAIMaterialsDataProps {
+    tools: {
+        type: string
+        data: AIRecommendItemProps["item"][]
+        icon: ReactNode
+        hoverIcon: ReactNode
+    }
+    forges: {
+        type: string
+        data: AIRecommendItemProps["item"][]
+        icon: ReactNode
+        hoverIcon: ReactNode
+    }
+    knowledgeBases: {
+        type: string
+        data: AIRecommendItemProps["item"][]
+        icon: ReactNode
+        hoverIcon: ReactNode
+    }
 }
