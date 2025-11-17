@@ -14,6 +14,7 @@ interface FileTreeSystemListWapperProps {
     path: string[]
     title: string
     isOpen?: boolean
+    selected?: FileNodeProps
     setSelected: (v?: FileNodeProps) => void
     setOpenFolder?: (v: string) => void
 }
@@ -21,6 +22,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     path,
     title,
     isOpen,
+    selected,
     setOpenFolder,
     setSelected
 }) => {
@@ -40,7 +42,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             )
         }
         return path.map((item) => (
-            <FileTreeSystemList key={item} path={item} isOpen={isOpen} setSelected={setSelected} />
+            <FileTreeSystemList key={item} path={item} isOpen={isOpen} selected={selected} setSelected={setSelected} />
         ))
     })
     return (
@@ -65,11 +67,12 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
 interface FileTreeSystemListProps {
     path: string
     isOpen?: boolean
+    selected?: FileTreeSystemListWapperProps["selected"]
     setSelected: FileTreeSystemListWapperProps["setSelected"]
 }
-const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelected}) => {
+const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen,selected, setSelected}) => {
     const [expandedKeys, setExpandedKeys] = useState<string[]>([])
-    const [loadedKeys,setLoadedKeys] = useState<string[]>([])
+    const [loadedKeys, setLoadedKeys] = useState<string[]>([])
     const [data, setData] = useState<FileNodeProps[]>([])
     const [_, startTransition] = useTransition()
     const [fileTree, {onLoadFolderChildren, onResetTree}] = useFileTree({
@@ -116,12 +119,11 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelec
             fieldNames={{title: "name", key: "path", children: "children"}}
             treeData={data}
             showIcon={false}
+            selectedKeys={selected?.path?[selected?.path]:[]}
             onExpand={(keys) => {
                 setExpandedKeys(keys as string[])
             }}
             onSelect={(_, {node}) => {
-                // 过滤文件夹
-                if (node.isFolder) return
                 setSelected(node)
             }}
             loadedKeys={loadedKeys}

@@ -90,7 +90,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         () => ({
             Item: ({children, style, "data-index": dataIndex}) => (
                 <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                    {children}
+                    <div className={styles["item-inner"]}>{children}</div>
                 </div>
             )
         }),

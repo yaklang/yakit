@@ -37,8 +37,8 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
         return KeyToIcon[icon]?.iconPath ?? ""
     }, [icon])
 
-    const fetchFileInfo = useMemoizedFn(async (targetPath:string) => {
-         if (!targetPath) return
+    const fetchFileInfo = useMemoizedFn(async (targetPath: string) => {
+        if (!targetPath) return
         try {
             setLoading(true)
             const {size, isPlainText} = await getCodeSizeByPath(path)
@@ -114,7 +114,7 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
                             value={fileInfo?.content}
                             readOnly
                             editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
-                            type={fileInfo?.language}
+                            type={fileInfo?.language || "yak"}
                         />
                     )}
                 </YakitSpin>

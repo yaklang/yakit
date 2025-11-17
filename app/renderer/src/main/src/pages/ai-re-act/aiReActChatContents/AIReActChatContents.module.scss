@@ -14,10 +14,12 @@
         height: 100%;
     }
     .item-wrapper {
-        padding-bottom: 4px;
         width: 100%;
         box-sizing: border-box;
-        padding-right: 12px;
+        padding-right: 12px;    
+        .item-inner {
+            padding: 2px 0;
+        }
         &:last-child {
             padding-bottom: 0;
         }

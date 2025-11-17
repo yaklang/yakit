@@ -155,8 +155,10 @@
     .item-wrapper {
         width: 100%;
         box-sizing: border-box;
-        padding-bottom: 4px;
         padding-right: 12px;
+        .item-inner {
+            padding: 2px 0;
+        }
         &:last-child {
             padding-bottom: 48px;
         }

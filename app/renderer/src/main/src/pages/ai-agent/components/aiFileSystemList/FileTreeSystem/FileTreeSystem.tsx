@@ -1,6 +1,6 @@
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
-import {FC, useState} from "react"
+import {useMemo, useState} from "react"
 import FilePreview from "../FilePreview/FilePreview"
 import FileTreeSystemListWapper from "../FileTreeSystemList/FileTreeSystemList"
 import {useMemoizedFn} from "ahooks"
@@ -19,6 +19,7 @@ const FileTreeSystem = () => {
             <FileTreeSystemListWapper
                 key='aiFolder'
                 path={grpcFolders}
+                selected={selected}
                 setSelected={setSelected}
                 title='ai生成文件夹'
                 isOpen={false}
@@ -30,6 +31,7 @@ const FileTreeSystem = () => {
                 isOpen
                 key='customFolder'
                 title='本地文件夹'
+                selected={selected}
                 path={Array.from(customFolder)}
                 setOpenFolder={customFolderStore.addCustomFolder}
                 setSelected={setSelected}
@@ -37,6 +39,11 @@ const FileTreeSystem = () => {
         )
         return [aiFolderDom, customFolderDom]
     })
+
+    const filePreviewData = useMemo(() => {
+      if(selected?.isFolder) return undefined
+      return selected
+    }, [selected])
 
     return (
         <YakitResizeBox
@@ -46,7 +53,7 @@ const FileTreeSystem = () => {
             firstMinSize={200}
             lineStyle={{width: 4}}
             firstNode={filstNode}
-            secondNode={<FilePreview data={selected} />}
+            secondNode={<FilePreview data={filePreviewData} />}
         />
     )
 }

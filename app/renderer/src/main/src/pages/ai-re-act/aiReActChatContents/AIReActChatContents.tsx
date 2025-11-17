@@ -74,7 +74,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         () => ({
             Item: ({children, style, "data-index": dataIndex}) => (
                 <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                    {children}
+                    <div className={styles["item-inner"]}>{children}</div>
                 </div>
             )
         }),
