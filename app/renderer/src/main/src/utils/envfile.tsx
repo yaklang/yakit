@@ -170,6 +170,8 @@ export const getRemoteHttpSettingGV = () => {
             return RemotePrivateDomainGV.eeIRifyHttpSetting
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basHttpSetting
+        case PRODUCT_RELEASE_EDITION.AIAgent:
+            return RemotePrivateDomainGV.ceHttpSetting
     }
 }
 
@@ -204,6 +206,8 @@ export const getRemoteI18nGV = () => {
             return RemoteI18nGV.eeIRifyI18n
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemoteI18nGV.basI18n
+        case PRODUCT_RELEASE_EDITION.AIAgent:
+            return RemoteI18nGV.ceAII18n
     }
 }
 
