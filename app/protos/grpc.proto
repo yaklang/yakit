@@ -887,6 +887,7 @@ service Yak {
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
   rpc QueryAIEvent(AIEventQueryRequest) returns (AIEventQueryResponse);
+  rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
 
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
@@ -1854,6 +1855,16 @@ message AITaskQueryResponse {
 
 message AITaskDeleteRequest {
   AITaskFilter Filter = 1;
+}
+
+message GetRandomAIMaterialsRequest {
+  int64 Limit = 1;
+}
+
+message GetRandomAIMaterialsResponse {
+  repeated KnowledgeBaseEntry KnowledgeBaseEntries = 1;
+  repeated AITool AITools = 2;
+  repeated AIForge AIForges = 3;
 }
 
 message AITask {
