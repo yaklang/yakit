@@ -14,7 +14,9 @@ export enum PRODUCT_RELEASE_EDITION {
     /**@name IRify扫描(IRify独立于企业版社区版之外,其自身拥有企业版) */
     IRify = 4,
     /**@name IRify扫描-企业版 */
-    IRifyEnpriTrace = 5
+    IRifyEnpriTrace = 5,
+    /**@name AIAgent(AIAgent独立于企业版社区版之外) */
+    AIAgent = 6
 }
 
 export const getReleaseEditionName = () => {
@@ -77,6 +79,11 @@ export const isIRify = () => {
     )
 }
 
+/** AI Agent 独立于Yakit企业版社区版之外  */
+export const isAIAgent = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
+}
+
 export const isEnterpriseOrSimpleEdition = () => {
     switch (GetReleaseEdition()) {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
@@ -102,6 +109,8 @@ export const GetReleaseEdition = () => {
             return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
         case "breachtrace":
             return PRODUCT_RELEASE_EDITION.BreachTrace
+        case "aiagent":
+            return PRODUCT_RELEASE_EDITION.AIAgent
         default:
             return PRODUCT_RELEASE_EDITION.Yakit
     }
