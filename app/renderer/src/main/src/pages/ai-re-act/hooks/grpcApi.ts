@@ -271,7 +271,10 @@ export declare namespace AIAgentGrpcApi {
         name: string
         /** 正文 */
         goal: string
-        /** 后端发送的任务状态 */
+        /**
+         * 后端发送的任务状态
+         * progress: "processing" | "completed" | "aborted"
+         */
         progress?: string
         subtasks?: AITaskInfoProps[]
         /**评阅时树节点是否被删 */
@@ -462,7 +465,15 @@ export declare namespace AIAgentGrpcApi {
         /** 移除队列的原因 */
         reason?: string
     }
-    /** 问题队列里单个问题信息 */
+    /**
+     * 问题队列里单个问题信息
+     * @description status的可能值有:
+     * - AITaskState_Created created
+     * - AITaskState_Queueing queueing
+     * - AITaskState_Processing processing
+     * - AITaskState_Completed completed
+     * - AITaskState_Aborted aborted
+     */
     export interface QuestionQueueItem {
         created_at: string
         id: string
@@ -489,9 +500,3 @@ export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
 }
 // #endregion
-
-// AITaskState_Created    AITaskState = "created"
-// AITaskState_Queueing   AITaskState = "queueing"
-// AITaskState_Processing AITaskState = "processing"
-// AITaskState_Completed  AITaskState = "completed"
-// AITaskState_Aborted    AITaskState = "aborted"

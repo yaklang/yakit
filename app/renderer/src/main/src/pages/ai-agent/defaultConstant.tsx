@@ -94,7 +94,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         index: "",
         name: "",
         goal: "",
-        progress: "wait",
+        progress: "",
         isRemove: false,
         tools: [],
         description: "",
@@ -107,7 +107,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         data.index = info.index || ""
         data.name = info.name || ""
         data.goal = info.goal || ""
-        data.progress = info.progress || "wait"
+        data.progress = info.progress || ""
         data.isRemove = info.isRemove || false
         data.tools = info.tools || []
         data.description = info.description || ""

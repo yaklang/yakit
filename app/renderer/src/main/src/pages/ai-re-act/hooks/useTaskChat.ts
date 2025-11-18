@@ -631,8 +631,8 @@ function useTaskChat(params?: UseTaskChatParams) {
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
-                if (item.progress === "in-progress") {
-                    item.progress = "error"
+                if (item.progress === "processing") {
+                    item.progress = "aborted"
                 }
                 return item
             })
@@ -729,13 +729,13 @@ function useTaskChat(params?: UseTaskChatParams) {
                     // 开始任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
                     handleTaskStartNode(res, data)
-                    handleUpdateTaskState(data.task.index, "in-progress")
+                    handleUpdateTaskState(data.task.index, "processing")
                     return
                 }
                 if (obj.type && obj.type === "pop_task") {
                     // 结束任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
-                    handleUpdateTaskState(data.task.index, "success")
+                    handleUpdateTaskState(data.task.index, "completed")
                     // 更新任务树数据
                     sendRequest && sendRequest({IsSyncMessage: true, SyncType: "plan"})
                     return
