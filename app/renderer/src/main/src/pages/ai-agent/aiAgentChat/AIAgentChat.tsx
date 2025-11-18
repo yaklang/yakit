@@ -239,10 +239,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     /**发送 IsSyncMessage 消息 */
     const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
         if (!activeID) return
-        const {syncType, params} = data
+        const {syncType, SyncJsonInput, params} = data
         const info: AIInputEvent = {
             IsSyncMessage: true,
             SyncType: syncType,
+            SyncJsonInput,
             Params: {
                 UserQuery: "",
                 ...params
@@ -652,7 +653,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
-                    <RoundedStopButton onClick={onStopTask} size='large'/>
+                    <RoundedStopButton onClick={onStopTask} size='large' />
                     {node}
                 </div>
             </div>

@@ -21,6 +21,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import emiter from "@/utils/eventBus/eventBus"
+import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -147,7 +148,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
                                 {/*  TODO 队列切换任务 */}
-                                {/* <AITaskQuery /> */}
+                                <AITaskQuery />
                                 <AIChatTextarea
                                     loading={false}
                                     question={question}

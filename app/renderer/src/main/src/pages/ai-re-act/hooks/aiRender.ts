@@ -1,5 +1,6 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIAgentGrpcApi, AIOutputEvent, AIOutputI18n} from "./grpcApi"
+import {AIQuestionQueues} from "./type"
 
 // #region 基础通用数据字段
 interface AIOutputBaseInfo {
@@ -103,6 +104,15 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
     /** 层级(代表在树里的第几层) */
     level: number
 }
+
+/** 问题队列状态变化 */
+export interface AIQuestionQueueStatusChange extends AIAgentGrpcApi.QuestionQueueStatusChange {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    type: "enqueue" | "dequeue"
+    queues: AIQuestionQueues
+}
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
@@ -133,7 +143,9 @@ export enum AIChatQSDataTypeEnum {
     /**工具决策 */
     TOOL_CALL_DECISION = "tool_call_decision",
     /**当前任务规划结束标志 */
-    END_PLAN_AND_EXECUTION = "end_plan_and_execution"
+    END_PLAN_AND_EXECUTION = "end_plan_and_execution",
+    /** 问题队列状态变化信息 */
+    QUESTION_QUEUE_STATUS_CHANGE = "question_queue_status_change"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -145,6 +157,7 @@ interface AIChatQSDataBase<T extends string, U> {
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
+/** @deprecated 日志类型已无用，迁移成一个新页面 */
 type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
@@ -162,6 +175,10 @@ type ChatFileSystemPin = AIChatQSDataBase<AIChatQSDataTypeEnum.FILE_SYSTEM_PIN, 
 type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
+type ChatQuestionQueueStatusChange = AIChatQSDataBase<
+    AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE,
+    AIQuestionQueueStatusChange
+>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -179,4 +196,5 @@ export type AIChatQSData =
     | ChatTaskIndexNode
     | ChatToolCallDecision
     | ChatPlanExecEnd
+    | ChatQuestionQueueStatusChange
 // #endregion

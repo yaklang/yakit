@@ -1,7 +1,7 @@
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
 import {ExecResult} from "@/pages/invoker/schema"
-import { AITaskInfoProps } from "./aiRender"
+import {AITaskInfoProps} from "./aiRender"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -137,6 +137,7 @@ export interface AIInputEvent {
     IsSyncMessage?: boolean
     SyncType?: string
     SyncJsonInput?: string
+    SyncID?: string
 
     IsFreeInput?: boolean
     FreeInput?: string // 自由输入的文本
@@ -451,6 +452,31 @@ export declare namespace AIAgentGrpcApi {
         summary: string
         i18n: {zh: string; en: string}
     }
+
+    /** 问题队列状态变化 */
+    export interface QuestionQueueStatusChange {
+        /** 问题ID */
+        react_task_id: string
+        /** 问题内容 */
+        react_task_input: string
+        /** 移除队列的原因 */
+        reason?: string
+    }
+    /** 问题队列里单个问题信息 */
+    export interface QuestionQueueItem {
+        created_at: string
+        id: string
+        status: string
+        user_input: string
+    }
+    /** 问题队列信息 */
+    export interface QuestionQueues {
+        is_processing: boolean
+        queue_empty: boolean
+        queue_name: string
+        tasks: QuestionQueueItem[]
+        total_tasks: number
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构
@@ -463,3 +489,9 @@ export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
 }
 // #endregion
+
+// AITaskState_Created    AITaskState = "created"
+// AITaskState_Queueing   AITaskState = "queueing"
+// AITaskState_Processing AITaskState = "processing"
+// AITaskState_Completed  AITaskState = "completed"
+// AITaskState_Aborted    AITaskState = "aborted"

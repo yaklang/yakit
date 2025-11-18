@@ -1,5 +1,6 @@
 import {AIToolResult} from "./aiRender"
 import {AIOutputI18n} from "./grpcApi"
+import {AIQuestionQueues} from "./type"
 
 export const DefaultAIToolResult: AIToolResult = {
     callToolId: "",
@@ -82,4 +83,9 @@ export enum AIStreamContentType {
     LOG_TOOL = "log/tool",
     /**tool 错误输出 */
     LOG_TOOL_ERROR_OUTPUT = "log/tool-error-output"
+}
+
+export const DeafultAIQuestionQueues: AIQuestionQueues = {
+    total: 0,
+    data: []
 }

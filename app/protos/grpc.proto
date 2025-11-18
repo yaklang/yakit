@@ -1710,6 +1710,7 @@ message AIInputEvent {
   bool IsSyncMessage = 6;
   string SyncType = 7;
   string SyncJsonInput = 10;
+  string SyncID = 13; // SyncID for sync message
 
   bool IsFreeInput = 11;
   string FreeInput = 12;

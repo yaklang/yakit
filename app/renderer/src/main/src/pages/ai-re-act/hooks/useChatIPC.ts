@@ -8,9 +8,18 @@ import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
 import {handleGrpcDataPushLog} from "./utils"
-import {AIChatSendParams, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
+import {
+    AIChatSendParams,
+    AIQuestionQueues,
+    UseCasualChatEvents,
+    UseChatIPCEvents,
+    UseChatIPCParams,
+    UseChatIPCState
+} from "./type"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
+import cloneDeep from "lodash/cloneDeep"
+import {DeafultAIQuestionQueues} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -89,6 +98,28 @@ function useChatIPC(params?: UseChatIPCParams) {
         })
     })
 
+    // 请求问题队列的循环定时器
+    const questionQueueTimer = useRef<NodeJS.Timeout | null>(null)
+    const handleResetQuestionQueueTimer = useMemoizedFn(() => {
+        if (!questionQueueTimer.current) return
+        clearInterval(questionQueueTimer.current)
+        questionQueueTimer.current = null
+    })
+    // 问题队列
+    const [questionQueue, setQuestionQueue, getQuestionQueue] = useGetSetState<AIQuestionQueues>(
+        cloneDeep(DeafultAIQuestionQueues)
+    )
+    // 开始定时循环获取问题队列
+    const handleStartQuestionQueue = useMemoizedFn(() => {
+        setTimeout(() => {
+            sendRequest({IsSyncMessage: true, SyncType: "queue_info"})
+        }, 50)
+        handleResetQuestionQueueTimer()
+        questionQueueTimer.current = setInterval(() => {
+            sendRequest({IsSyncMessage: true, SyncType: "queue_info"})
+        }, 5000)
+    })
+
     // 日志
     const logEvents = useAIChatLog()
 
@@ -105,7 +136,9 @@ function useChatIPC(params?: UseChatIPCParams) {
         pushLog: logEvents.pushLog,
         getRequest: fetchRequestParams,
         onReviewRelease: handleCasualReviewRelease,
-        onGrpcFolder: handleSetGrpcFolders
+        onGrpcFolder: handleSetGrpcFolders,
+        sendRequest: sendRequest,
+        getQuestionQueue
     })
 
     // 任务规划相关数据和逻辑
@@ -162,6 +195,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         setExecute(false)
         setRunTimeIDs([])
         setGrpcFolders([])
+        handleResetQuestionQueueTimer()
+        setQuestionQueue(cloneDeep(DeafultAIQuestionQueues))
         // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
@@ -242,6 +277,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
+                    } else if (res.NodeId === "queue_info") {
+                        // 问题队列信息由chatIPC-hook进行收集
+                        const {tasks, total_tasks} = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
+                        setQuestionQueue({
+                            total: total_tasks,
+                            data: tasks ?? []
+                        })
+                        return
                     } else {
                         // 因为流数据有日志类型，所以都放入日志逻辑过滤一遍
                         if (res.NodeId === "stream-finished") {
@@ -316,6 +359,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         casualChatEvent.handleSend({request: {IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""}})
 
         ipcRenderer.invoke("start-ai-re-act", token, params)
+        handleStartQuestionQueue()
     })
 
     const onClose = useMemoizedFn((token: string, option?: {tip: () => void}) => {
@@ -339,7 +383,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     }, [])
 
     return [
-        {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders},
+        {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders, questionQueue},
         {fetchToken, onStart, onSend, onClose, onReset}
     ] as const
 }

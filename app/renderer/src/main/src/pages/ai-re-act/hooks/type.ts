@@ -45,6 +45,10 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     onReviewRelease?: (id: string) => void
     /** 接口里返回文件夹路径时的回调事件 */
     onGrpcFolder?: (path: string) => void
+    /** 向接口发送消息 */
+    sendRequest?: (request: AIInputEvent) => void
+    /** 获取问题队列信息 */
+    getQuestionQueue?: () => AIQuestionQueues
 }
 
 export interface UseCasualChatState {
@@ -107,6 +111,11 @@ export interface UseChatIPCParams {
     onEnd?: () => void
 }
 
+export interface AIQuestionQueues {
+    total: number
+    data: AIAgentGrpcApi.QuestionQueueItem[]
+}
+
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
@@ -122,6 +131,8 @@ export interface UseChatIPCState {
     taskChat: UseTaskChatState
     /** 接口运行过程中的数据文件夹合集 */
     grpcFolders: string[]
+    /** 问题队列信息 */
+    questionQueue: AIQuestionQueues
 }
 
 /** 执行流途中发送消息的参数 */

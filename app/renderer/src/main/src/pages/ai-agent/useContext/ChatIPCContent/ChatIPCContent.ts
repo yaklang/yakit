@@ -2,7 +2,7 @@ import {createContext} from "react"
 import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
-import {AIAgentGrpcApi, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface ChatIPCContextStore {
@@ -23,6 +23,7 @@ export interface AIChatIPCSendParams {
 type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export interface AISendSyncMessageParams {
     syncType: string
+    SyncJsonInput?: AIInputEvent["SyncJsonInput"]
     params: MakeOptional<AIStartParams, "UserQuery">
 }
 export interface ChatIPCContextDispatcher {

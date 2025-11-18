@@ -1,5 +1,5 @@
 import {useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {
@@ -17,6 +17,7 @@ import {
     AIReviewJudgeLevelMap,
     CasualDefaultToolResultSummary,
     convertNodeIdToVerbose,
+    DeafultAIQuestionQueues,
     DefaultAIToolResult
 } from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
@@ -24,6 +25,7 @@ import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,
+    AIQuestionQueueStatusChange,
     AIReviewType,
     AIStreamOutput,
     AIToolResult,
@@ -37,7 +39,7 @@ export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_req
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease, onGrpcFolder} = params || {}
+    const {pushLog, getRequest, onReviewRelease, onGrpcFolder, sendRequest, getQuestionQueue} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -678,6 +680,52 @@ function useCasualChat(params?: UseCasualChatParams) {
         }
     })
 
+    // #region 问题队列状态变化相关逻辑处理
+    const handleTriggerQuestionQueueRequest = useThrottleFn(
+        () => {
+            // 更新任务树数据
+            sendRequest && sendRequest({IsSyncMessage: true, SyncType: "queue_info"})
+        },
+        {wait: 50, leading: false}
+    ).run
+    // 状态变化处理
+    const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {NodeId, NodeIdVerbose, Content} = res
+            const ipcContent = Uint8ArrayToString(Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+
+            const queues = getQuestionQueue?.() ?? cloneDeep(DeafultAIQuestionQueues)
+
+            setContents((old) => {
+                const newArr = [...old]
+                const info: AIQuestionQueueStatusChange = {
+                    react_task_id: data.react_task_id,
+                    react_task_input: data.react_task_input,
+                    reason: data.reason ?? "",
+                    NodeId,
+                    NodeIdVerbose,
+                    type: NodeId === "react_task_enqueue" ? "enqueue" : "dequeue",
+                    queues: cloneDeep(queues)
+                }
+                newArr.push({
+                    ...genBaseAIChatData(res),
+                    type: AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE,
+                    data: info
+                })
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: handlePushLog
+            })
+        } finally {
+            handleTriggerQuestionQueueRequest()
+        }
+    })
+    // #endregion
+
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -705,6 +753,12 @@ function useCasualChat(params?: UseCasualChatParams) {
                         throw new Error("stream-finished data is invalid")
                     }
                     handleUpdateStreamStatus(event_writer_id)
+                    return
+                }
+
+                if (["react_task_enqueue", "react_task_dequeue"].includes(res.NodeId)) {
+                    // 问题(入|出)队列状态变化
+                    handleQuestionQueueStatusChange(res)
                     return
                 }
 
