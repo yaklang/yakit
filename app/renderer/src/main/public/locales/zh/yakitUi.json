@@ -169,7 +169,8 @@
         "orange": "橙色",
         "purple": "紫色",
         "cyan": "青色",
-        "grey": "灰色"
+        "grey": "灰色",
+        "filter": "筛选"
     },
     "YakitModal": {
         "friendlyReminder": "温馨提示",
