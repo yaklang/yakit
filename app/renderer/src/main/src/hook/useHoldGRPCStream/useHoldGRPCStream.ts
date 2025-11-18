@@ -333,7 +333,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            yakitFailed(`[Mod] ${taskName} error: ${error}`, true)
+            isShowError && yakitFailed(`[Mod] ${taskName} error: ${error}`, true)
             if (onError) {
                 onError(error)
             }

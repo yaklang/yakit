@@ -3,41 +3,33 @@ import {ReactNode} from "react"
 export interface AIChatWelcomeProps {
     onTriageSubmit: (question: string) => void
 }
+interface AIRecommendItem {
+    name: string
+    description: string
+}
 export interface AIRecommendProps extends Omit<AIRecommendItemProps, "item"> {
     icon: ReactNode
     hoverIcon: ReactNode
     title: ReactNode
-    data: AIRecommendItemProps["item"][]
+    data: AIRecommendItem[]
     onMore: () => void
 }
 
 export interface AIRecommendItemProps {
-    item: {
-        name: string
-        description: string
-    }
+    item: AIRecommendItem
     lineStartDOMRect?: DOMRect
-    checkItems: AIRecommendItemProps["item"][]
-    onCheckItem: (item: AIRecommendItemProps["item"]) => void
+    checkItems: AIRecommendItem[]
+    onCheckItem: (item: AIRecommendItem) => void
 }
 
+export interface AIMaterialsData {
+    type: string
+    data: AIRecommendItem[]
+    icon: ReactNode
+    hoverIcon: ReactNode
+}
 export interface RandomAIMaterialsDataProps {
-    tools: {
-        type: string
-        data: AIRecommendItemProps["item"][]
-        icon: ReactNode
-        hoverIcon: ReactNode
-    }
-    forges: {
-        type: string
-        data: AIRecommendItemProps["item"][]
-        icon: ReactNode
-        hoverIcon: ReactNode
-    }
-    knowledgeBases: {
-        type: string
-        data: AIRecommendItemProps["item"][]
-        icon: ReactNode
-        hoverIcon: ReactNode
-    }
+    tools: AIMaterialsData
+    forges: AIMaterialsData
+    knowledgeBases: AIMaterialsData
 }

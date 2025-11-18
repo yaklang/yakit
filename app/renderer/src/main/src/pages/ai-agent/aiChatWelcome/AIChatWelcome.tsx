@@ -1,5 +1,11 @@
 import React, {useEffect, useId, useRef, useState} from "react"
-import {AIChatWelcomeProps, AIRecommendItemProps, AIRecommendProps} from "./type"
+import {
+    AIChatWelcomeProps,
+    AIMaterialsData,
+    AIRecommendItemProps,
+    AIRecommendProps,
+    RandomAIMaterialsDataProps
+} from "./type"
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
 import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
@@ -35,6 +41,8 @@ import {GetRandomAIMaterialsResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {isEqual} from "lodash"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -67,6 +75,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
     const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
     const [questionList, setQuestionList] = useState<string[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
+    const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
 
     let codeRef = useRef<YakScript | null>(null)
     const lineStartRef = useRef<HTMLDivElement>(null)
@@ -84,6 +94,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         isShowEnd: false,
         isLimitLogs: false,
         onEnd: () => {
+            setLoading(false)
             debugPluginStreamEvent.stop()
         }
     })
@@ -100,7 +111,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             const list = streamInfo.logState.filter((i) => i.level === "text").map((i) => i.data)
             questionListAllRef.current = [...list]
             const randList = list.slice(0, 3)
-            if (questionList.length < 3) {
+            if (list.length > 0 && !isEqual(randList, questionList)) {
                 setQuestionList([...randList])
             }
         },
@@ -110,7 +121,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     useDebounceEffect(
         () => {
-            onStartExecute()
+            if (checkItems.length > 0) {
+                onStartExecute()
+            }
         },
         [checkItems],
         {wait: 1000, leading: true}
@@ -140,6 +153,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             token: tokenRef.current
         }).then(() => {
             debugPluginStreamEvent.start()
+            setTimeout(() => {
+                setLoading(true)
+            }, 100)
         })
     })
 
@@ -151,7 +167,15 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
 
     const getRandomAIMaterials = useMemoizedFn(() => {
-        grpcGetRandomAIMaterials({Limit: 3}).then(setRandomAIMaterials)
+        if (loadingAIMaterials) return
+        setLoadingAIMaterials(true)
+        grpcGetRandomAIMaterials({Limit: 3})
+            .then(setRandomAIMaterials)
+            .finally(() =>
+                setTimeout(() => {
+                    setLoadingAIMaterials(false)
+                }, 200)
+            )
     })
 
     const resizeUpdate = useMemoizedFn(() => {
@@ -197,30 +221,30 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         }
     })
 
-    const randomAIMaterialsData = useCreation(() => {
-        const tools = {
+    const randomAIMaterialsData: RandomAIMaterialsDataProps = useCreation(() => {
+        const tools: AIMaterialsData = {
             type: "工具",
             data: (randomAIMaterials?.AITools || []).map((tool) => ({
                 name: tool.VerboseName || tool.Name,
-                description: tool.Description
+                description: tool.Description || ""
             })),
             icon: <AIToolIcon />,
             hoverIcon: <HoverAIToolIcon />
         }
-        const forges = {
+        const forges: AIMaterialsData = {
             type: "智能体",
             data: (randomAIMaterials?.AIForges || []).map((forge) => ({
                 name: forge.ForgeVerboseName || forge.ForgeName,
-                description: forge.Description
+                description: forge.Description || ""
             })),
             icon: <AIForgeIcon />,
             hoverIcon: <HoverAIForgeIcon />
         }
-        const knowledgeBaseEntries = {
+        const knowledgeBases: AIMaterialsData = {
             type: "知识库",
             data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
                 name: knowledgeBase.KnowledgeTitle,
-                description: knowledgeBase.KnowledgeDetails
+                description: knowledgeBase.KnowledgeDetails || ""
             })),
             icon: <AIKnowledgeBaseIcon />,
             hoverIcon: <HoverAIKnowledgeBaseIcon />
@@ -228,16 +252,16 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         return {
             tools,
             forges,
-            knowledgeBaseEntries
+            knowledgeBases
         }
     }, [randomAIMaterials])
     const isEmptyAIMaterials = useCreation(() => {
         return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
     }, [randomAIMaterials])
     const onSwitchQuestion = useMemoizedFn(() => {
+        console.log("questionListAllRef.current", questionListAllRef.current)
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
-
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
             <div className={styles["content"]}>
@@ -283,19 +307,29 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <div className={styles["suggestion-tips-wrapper"]}>
                                 <div className={styles["suggestion-tips-title"]}>
                                     <span>你可能想问:</span>
-                                    <YakitButton
-                                        icon={<OutlineRefreshIcon />}
-                                        size='small'
-                                        type='text'
-                                        className={styles["line2-btn"]}
-                                        onClick={onSwitchQuestion}
-                                    >
-                                        换一换
-                                    </YakitButton>
+                                    {loading ? (
+                                        <YakitSpin size='small' />
+                                    ) : (
+                                        questionList.length > 2 && (
+                                            <YakitButton
+                                                icon={<OutlineRefreshIcon />}
+                                                size='small'
+                                                type='text'
+                                                className={styles["line2-btn"]}
+                                                onClick={onSwitchQuestion}
+                                            >
+                                                换一换
+                                            </YakitButton>
+                                        )
+                                    )}
                                 </div>
                                 <div className={styles["suggestion-tips-list"]}>
                                     {questionList.map((item) => (
-                                        <div key={item} className={styles["suggestion-tips-item"]}>
+                                        <div
+                                            key={item}
+                                            className={styles["suggestion-tips-item"]}
+                                            onClick={() => setQuestion(item)}
+                                        >
                                             <div className={styles["suggestion-tips-item-text"]}>{item}</div>
                                         </div>
                                     ))}
@@ -316,30 +350,34 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                     size='small'
                                     type='text'
                                     className={styles["line2-btn"]}
+                                    onClick={getRandomAIMaterials}
                                 >
                                     换一换
                                 </YakitButton>
                             </div>
-                            <div className={styles["recommend-body"]}>
-                                {Object.keys(randomAIMaterialsData).map((key) => {
-                                    const aiItem = randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
-                                    return aiItem.data.map((item) => {
-                                        return (
+                            <YakitSpin spinning={loadingAIMaterials}>
+                                <div className={styles["recommend-body"]}>
+                                    {Object.keys(randomAIMaterialsData).map((key) => {
+                                        const aiItem: AIMaterialsData =
+                                            randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
+                                        return aiItem.data.length > 0 ? (
                                             <AIRecommend
-                                                icon={item.icon}
-                                                hoverIcon={item.hoverIcon}
+                                                icon={aiItem.icon}
+                                                hoverIcon={aiItem.hoverIcon}
                                                 key={aiItem.type}
                                                 title={aiItem.type}
-                                                data={item.data}
+                                                data={aiItem.data}
                                                 lineStartDOMRect={lineStartDOMRect}
-                                                onMore={() => onMore(item)}
+                                                onMore={() => onMore(aiItem.type)}
                                                 onCheckItem={onCheckItem}
                                                 checkItems={checkItems}
                                             />
+                                        ) : (
+                                            <React.Fragment key={aiItem.type}></React.Fragment>
                                         )
-                                    })
-                                })}
-                            </div>
+                                    })}
+                                </div>
+                            </YakitSpin>
                         </div>
                     )}
                 </div>
