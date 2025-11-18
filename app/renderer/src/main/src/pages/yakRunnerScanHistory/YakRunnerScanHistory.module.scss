@@ -1,87 +1,160 @@
 .YakRunnerScanHistory {
-  padding: 8px;
-  height: calc(100% - 34px);
+    padding: 8px;
+    // height: calc(100% - 34px);
+    height: 100%;
 
-  .YakRunnerScanHistory-table-title {
-    font-size: 18px;
-    font-weight: bold;
-  }
+    .YakRunnerScanHistory-table-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
 
-  .risk-tag-wrapper {
+    .risk-tag-wrapper {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+
+        .risk-tag {
+            display: flex;
+            margin-right: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            flex-shrink: 0;
+
+            .risk-text {
+                padding: 2px 6px;
+            }
+
+            .risk-num {
+                padding: 2px 6px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+
+        .info {
+            border: 1px solid var(--Colors-Use-Orange-Border);
+
+            .risk-text {
+                border-radius: 4px 0 0 4px;
+                color: var(--Colors-Use-Orange-Primary);
+                border-right: 1px solid var(--Colors-Use-Orange-Border);
+                background-color: var(--Colors-Use-Orange-Bg-Hover);
+            }
+        }
+
+        .critical {
+            border: 1px solid var(--Colors-Use-Error-Border);
+
+            .risk-text {
+                border-radius: 4px 0 0 4px;
+                color: var(--Colors-Use-Status-Serious);
+                border-right: 1px solid var(--Colors-Use-Error-Border);
+                background-color: var(--Colors-Use-Error-Bg-Hover);
+            }
+        }
+
+        .high {
+            border: 1px solid var(--Colors-Use-Error-Border);
+
+            .risk-text {
+                color: var(--Colors-Use-Error-Primary);
+                border-radius: 4px 0 0 4px;
+                border-right: 1px solid var(--Colors-Use-Error-Border);
+                background-color: var(--Colors-Use-Error-Bg-Hover);
+            }
+        }
+
+        .warning {
+            border: 1px solid var(--Colors-Use-Warning-Border);
+
+            .risk-text {
+                border-radius: 4px 0 0 4px;
+                color: var(--Colors-Use-Warning-Primary);
+                border-right: 1px solid var(--Colors-Use-Warning-Border);
+                background-color: var(--Colors-Use-Warning-Bg-Hover);
+            }
+        }
+
+        .low {
+            border: 1px solid var(--Colors-Use-Yellow-Border);
+
+            .risk-text {
+                border-radius: 4px 0 0 4px;
+                color: var(--Colors-Use-Yellow-Primary);
+                border-right: 1px solid var(--Colors-Use-Yellow-Border);
+                background-color: var(--Colors-Use-Yellow-Bg);
+            }
+        }
+    }
+}
+
+.compile-history {
     display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
-
-    .risk-tag {
-      display: flex;
-      margin-right: 4px;
-      border-radius: 4px;
-      font-size: 12px;
-      flex-shrink: 0;
-
-      .risk-text {
-        padding: 2px 6px;
-      }
-
-      .risk-num {
-        padding: 2px 6px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-      }
+    flex-direction: column;
+    height: 100%;
+    .compile-history-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        .compile-history-title {
+            font-size: 18px;
+            font-weight: bold;
+            overflow: hidden;
+        }
+        .compile-history-sub-title {
+        }
     }
+    .compile-history-list-container {
+        flex: 1;
 
-    .info {
-      border: 1px solid var(--Colors-Use-Orange-Border);
+        .history-item-box {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
+            height: 36px;
+            padding: 0px 16px;
+            cursor: pointer;
 
-      .risk-text {
-        border-radius: 4px 0 0 4px;
-        color: var(--Colors-Use-Orange-Primary);
-        border-right: 1px solid var(--Colors-Use-Orange-Border);
-        background-color: var(--Colors-Use-Orange-Bg-Hover);
-      }
+            .header {
+                display: flex;
+                gap: 6px;
+                flex-direction: row;
+                align-items: center;
+                .time-active {
+                    color: var(--Colors-Use-Basic-White);
+                }
+            }
+            .option {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                .icon-wrapper {
+                    cursor: pointer;
+                    color: var(--Colors-Use-Main-Primary);
+                    display: flex;
+                    align-items: center;
+                    padding: 2px;
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+                .icon-wrapper-error {
+                    color: var(--Colors-Use-Error-Primary);
+                }
+                .icon-wrapper-active {
+                    color: var(--Colors-Use-Basic-White);
+                }
+            }
+        }
+        .history-item-box-no-active {
+            &:hover {
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            }
+        }
+        .history-item-box-active {
+            background-color: var(--Colors-Use-Main-Primary);
+        }
     }
-
-    .critical {
-      border: 1px solid var(--Colors-Use-Error-Border);
-
-      .risk-text {
-        border-radius: 4px 0 0 4px;
-        color: var(--Colors-Use-Status-Serious);
-        border-right: 1px solid var(--Colors-Use-Error-Border);
-        background-color: var(--Colors-Use-Error-Bg-Hover);
-      }
-    }
-
-    .high {
-      border: 1px solid var(--Colors-Use-Error-Border);
-
-      .risk-text {
-        color: var(--Colors-Use-Error-Primary);
-        border-radius: 4px 0 0 4px;
-        border-right: 1px solid var(--Colors-Use-Error-Border);
-        background-color: var(--Colors-Use-Error-Bg-Hover);
-      }
-    }
-
-    .warning {
-      border: 1px solid var(--Colors-Use-Warning-Border);
-
-      .risk-text {
-        border-radius: 4px 0 0 4px;
-        color: var(--Colors-Use-Warning-Primary);
-        border-right: 1px solid var(--Colors-Use-Warning-Border);
-        background-color: var(--Colors-Use-Warning-Bg-Hover);
-      }
-    }
-
-    .low {
-      border: 1px solid var(--Colors-Use-Yellow-Border);
-
-      .risk-text {
-        border-radius: 4px 0 0 4px;
-        color: var(--Colors-Use-Yellow-Primary);
-        border-right: 1px solid var(--Colors-Use-Yellow-Border);
-        background-color: var(--Colors-Use-Yellow-Bg);
-      }
-    }
-  }
 }

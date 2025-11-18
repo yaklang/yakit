@@ -555,25 +555,6 @@
         }
     }
 }
-.compile-history-list-container {
-    min-height: 260px;
-    max-height: 600px;
-    overflow: auto;
-    .history-item-box {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        border-top: 1px solid var(--Colors-Use-Neutral-Border);
-        height: 36px;
-        padding: 0px 16px;
-        .option {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-    }
-}
 
 .modal-sub-title {
     display: flex;

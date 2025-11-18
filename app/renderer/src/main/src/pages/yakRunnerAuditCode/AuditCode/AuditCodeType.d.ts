@@ -263,12 +263,6 @@ export interface AuditHistoryListProps {
     setQuery: (v: QuerySyntaxFlowResultRequest) => void
 }
 
-export interface CompileHistoryProps {
-    info: SSAProjectResponse
-    pageType: "auditCode" | "projectManager"
-    onClose?: () => void
-}
-
 export interface ResultDataProps {
     description: string;
     language: string;

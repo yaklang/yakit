@@ -268,6 +268,7 @@ export interface ModifyNotepadPageInfoProps {
 
 export interface YakRunnerScanHistoryPageInfoProps {
     Programs: string[]
+    ProjectIds: number[]
 }
 
 export interface RuleManagementPageInfoProps {
