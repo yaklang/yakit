@@ -36,7 +36,9 @@ import {
     isEnterpriseEdition,
     isIRify,
     isCommunityIRify,
-    isEnpriTraceIRify
+    isEnpriTraceIRify,
+    isAIAgent,
+    isYakit
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -402,6 +404,19 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
         ]
     }
 
+    if (isAIAgent()) {
+        return [
+            {
+                routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
+                verbose: "AIAgent",
+                menuName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
+                route: YakitRoute.AI_Agent,
+                singleNode: true,
+                multipleNode: []
+            }
+        ]
+    }
+
     const time = new Date().getTime().toString()
     const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
     const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
@@ -459,6 +474,10 @@ export const getInitActiveTabKey = () => {
     }
     if (isBreachTrace()) {
         return YakitRoute.DB_ChaosMaker
+    }
+
+    if (isAIAgent()) {
+        return YakitRoute.AI_Agent
     }
 
     return YakitRoute.NewHome
@@ -2160,7 +2179,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
-        if (!isIRify()) {
+        if (isYakit()) {
             unFuzzerCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
                 (selectedState, previousSelectedState) => {

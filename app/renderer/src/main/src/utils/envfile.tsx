@@ -10,6 +10,7 @@ export enum PRODUCT_RELEASE_EDITION {
     EnpriTrace = 1,
     /**@name 便携版/简易版 */
     EnpriTraceAgent = 2,
+    /**@deprecated BAS实验性功能 */
     BreachTrace = 3,
     /**@name IRify扫描(IRify独立于企业版社区版之外,其自身拥有企业版) */
     IRify = 4,
@@ -53,12 +54,14 @@ export const isBreachTrace = () => {
 /** CE */
 export const isCommunityEdition = () => {
     return (
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
     )
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition() && !isCommunityIRify()
+    return !isCommunityEdition() && !isCommunityIRify() && !isCommunityAIAgent()
 }
 
 /** CE IRify Scan  */
@@ -79,9 +82,21 @@ export const isIRify = () => {
     )
 }
 
+/** CE AIAgent  */
+export const isCommunityAIAgent = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
+}
+
 /** AI Agent 独立于Yakit企业版社区版之外  */
 export const isAIAgent = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
+}
+
+export const isYakit = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+    )
 }
 
 export const isEnterpriseOrSimpleEdition = () => {

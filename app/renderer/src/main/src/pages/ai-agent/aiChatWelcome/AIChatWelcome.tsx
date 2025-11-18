@@ -34,6 +34,7 @@ import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {GetRandomAIMaterialsResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import classNames from "classnames"
+import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -124,20 +125,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             PluginType: "yak",
             Input: "",
             HTTPRequestTemplate: {
-                IsHttps: false,
-                IsRawHTTPRequest: false,
-                Method: "",
-                Path: [],
-                GetParams: [],
-                Headers: [],
-                Cookie: [],
-                PostParams: [],
-                MultipartParams: [],
-                MultipartFileParams: [],
-                IsHttpFlowId: false,
-                HTTPFlowId: [],
-                RawHTTPRequest: new Uint8Array(),
-                Body: new Uint8Array()
+                ...defPluginExecuteFormValue
             },
             ExecParams: [
                 {

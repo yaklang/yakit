@@ -117,6 +117,8 @@
     "createTool": "Create Tool",
     "editTool": "Edit Tool",
     "domain": "Domain",
-    "manageAllDiscoveredDomainAssets": "Manage All Discovered Domain Assets"
+    "manageAllDiscoveredDomainAssets": "Manage All Discovered Domain Assets",
+    "ai": "AI",
+    "ai-repository": "Knowledge base"
   }
 }
