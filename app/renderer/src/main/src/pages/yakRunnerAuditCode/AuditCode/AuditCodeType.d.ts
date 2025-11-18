@@ -159,11 +159,19 @@ export interface AfreshAuditModalProps {
     warrpId?: HTMLElement | null
 }
 
-export interface QuerySSAProjectProps {
+export interface SSAProjectFilter {
     IDs?: number[]
     ProjectNames?: string[]
     SearchKeyword?: string
     Languages?: string[]
+}
+
+export interface DeleteSSAProjectRequest {
+    Filter?: SSAProjectFilter
+    // "clear_compile_history" - 只清空编译历史（删除 IrProgram，保留 SSAProject）
+    // "delete_all" 或 空字符串 - 清空编译历史和项目信息（删除 IrProgram 和 SSAProject）
+    // 默认为 "delete_all"
+    DeleteMode?:"clear_compile_history" | "delete_all" 
 }
 
 interface SSAProjectScanRuleConfig {

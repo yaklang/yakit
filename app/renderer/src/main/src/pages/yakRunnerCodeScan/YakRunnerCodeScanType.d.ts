@@ -85,7 +85,7 @@ export interface CodeScaMainExecuteContentProps {
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     // 项目名称列表
-    auditCodeList: {label: string; value: string; language: string}[]
+    auditCodeList: {label: string; value: number; language: string}[]
     getAduitList: () => void
     pageInfo: CodeScanPageInfoProps
     executeType: "new" | "old"
@@ -134,6 +134,8 @@ export interface SyntaxFlowScanRequest {
     /** 并发，默认5 */
     Concurrency?: number
     Memory?: boolean
+    // 根据项目扫描
+    SSAProjectId?: number
 }
 
 export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
@@ -227,7 +229,7 @@ export interface CodeScanAuditExecuteRefProps {
 export interface CodeScanAuditExecuteFormProps {
     ref?: React.ForwardedRef<CodeScanAuditExecuteRefProps>
     plugin?: YakScript
-    onStartExecute: (v: {project: string[]}, is?: boolean) => void
+    onStartExecute: (v: {project: number}, is?: boolean) => void
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     pushNewLogs: (log: StreamResult.Message[]) => void
@@ -251,6 +253,15 @@ export interface VerifyStartProps {
     error: ErrorProps
     program_name: string
     compile_immediately: boolean
+    project_exists: boolean
+    BaseInfo: {
+        program_names: string[]
+        project_id: number
+        project_name: string
+        project_description: string
+        language: string
+        tags: string[] | null
+    }
 }
 
 type CodeScanTabKeys = "keyword" | "group"
@@ -258,4 +269,36 @@ export interface CodeScanTabsItem {
     key: CodeScanTabKeys
     label: ReactElement | string
     contShow: boolean
+}
+
+export interface SSAProject {
+    ID: number
+    CreatedAt: number
+    UpdatedAt: number
+    // 项目基础信息
+    ProjectName: string
+    Language: string
+    Description: string
+    Tags: string[]
+    // 源代码来源
+    CodeSourceConfig: string
+    // 编译配置选项
+    CompileConfig: SSAProjectCompileConfig
+    // 扫描配置选项
+    ScanConfig: SSAProjectScanConfig
+    // 规则策略配置
+    RuleConfig: SSAProjectScanRuleConfig
+
+    JSONStringConfig: string
+    // 漏洞个数
+    RiskNumber: number
+    // 编译次数
+    CompileTimes: number
+    // 本地路径或者远程代码仓库路径
+    URL: string
+}
+
+export interface CreateSSAProjectResponse {
+    Project: SSAProject
+    Message: DbOperateMessage
 }

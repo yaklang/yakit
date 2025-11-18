@@ -20,7 +20,8 @@ import {
     VerifyStartProps,
     YakRunnerCodeScanProps,
     CodeScanRuleByGroupProps,
-    CodeScanRuleByKeyWordProps
+    CodeScanRuleByKeyWordProps,
+    CreateSSAProjectResponse
 } from "./YakRunnerCodeScanType"
 import {Col, Divider, Form, Radio, Row, Slider, Tooltip} from "antd"
 import {
@@ -34,7 +35,7 @@ import {
     useUpdateEffect
 } from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
-import {failed, warn, info, yakitNotify} from "@/utils/notification"
+import {failed, warn, info, yakitNotify, success} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -43,7 +44,7 @@ import {
     OutlineArrowsexpandIcon,
     OutlineClipboardlistIcon,
     OutlineQuestionmarkcircleIcon,
-    OutlineTerminalIcon,
+    OutlineTerminalIcon
 } from "@/assets/icon/outline"
 import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -51,7 +52,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {RemoteGV} from "@/yakitGV"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {YakScript} from "../invoker/schema"
+import {genDefaultPagination, QueryGeneralResponse, YakScript} from "../invoker/schema"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {
     FormContentItemByType,
@@ -102,6 +103,7 @@ import moment from "moment"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon, FolderOpenIcon} from "@/assets/newIcon"
+import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -636,7 +638,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         {
             key: "keyword",
             label: <>按关键词</>,
-            contShow: false 
+            contShow: false
         }
     ])
     const [type, setType] = useState<"keyword" | "group">("group")
@@ -882,9 +884,11 @@ const CodeScanByExecute: React.FC<CodeScanByExecuteProps> = React.memo((props) =
                                 <span className='content-ellipsis'>项目名 : {info.ProgramName}</span>
                                 <span className='content-ellipsis'>Info : {info.Info}</span>
                                 <span className={styles["footer"]}>
-                                    <span className={classNames(styles["progress"],{
-                                    [styles["progress-gray"]]: info.Progress === 1,
-                                    }) }>
+                                    <span
+                                        className={classNames(styles["progress"], {
+                                            [styles["progress-gray"]]: info.Progress === 1
+                                        })}
+                                    >
                                         百分比: {Math.round(info.Progress * 100)}%
                                     </span>
                                     <span className={classNames(styles["time"])}>{time}</span>
@@ -1003,19 +1007,29 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         codeScanExecuteContentRef.current?.onStopAuditExecute()
     })
 
-    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string; language: string}[]>([])
+    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: number; language: string}[]>([])
 
     const getAduitList = useMemoizedFn(async () => {
         try {
-            const {res} = await grpcFetchAuditTree("/")
-            if (res.Resources.length > 0) {
-                const list = res.Resources.map((item) => {
-                    let language = item.Extra.find((item) => item.Key === "Language")?.Value || ""
-                    return {label: item.ResourceName, value: item.ResourceName, language}
+            // QuerySSAProject
+            ipcRenderer
+                .invoke("QuerySSAProject", {
+                    Pagination: {
+                        ...genDefaultPagination(500),
+                        Order: "asc",
+                        OrderBy: "created_at"
+                    }
                 })
-                // setExecuteType("old")
-                setAuditCodeList(list)
-            }
+                .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
+                    item.Data = (item as any)?.Projects || []
+                    if (item.Data.length > 0) {
+                        const list = item.Data.map((item) => {
+                            const {ProjectName, ID, Language} = item
+                            return {label: ProjectName, value: ID, language: Language}
+                        })
+                        setAuditCodeList(list)
+                    }
+                })
         } catch (error) {}
     })
 
@@ -1461,7 +1475,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             valuePropName: "continueLoading",
             trigger: "setContinueLoading"
         })
-        /**已编译项目-执行状态 */
+        /**项目列表-执行状态 */
         const [executeStatus, setExecuteStatus] = useControllableValue<SyntaxFlowScanExecuteState>(props, {
             defaultValue: "default",
             valuePropName: "executeStatus",
@@ -1702,7 +1716,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
-            if ((pageInfo.selectTotal||0) === 0) {
+            if ((pageInfo.selectTotal || 0) === 0) {
                 warn("请选择扫描规则")
                 return
             }
@@ -1722,7 +1736,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             const params: SyntaxFlowScanRequest = {
                 ...extraParamsValue,
                 ControlMode: "start",
-                ProgramName: project,
+                SSAProjectId: project,
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -1902,7 +1916,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     },
                                     {
                                         value: "old",
-                                        label: "已编译项目"
+                                        label: "项目列表"
                                     }
                                 ]}
                             />
@@ -1948,7 +1962,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     showSearch
                                     placeholder='请选择项目名称'
                                     options={auditCodeList}
-                                    onChange={async(arr: string[]) => {
+                                    onChange={async (arr: number[]) => {
                                         let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
                                         arr.forEach((item) => {
                                             let language = auditCodeList.find((itemIn) => itemIn.value === item)
@@ -1960,7 +1974,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                         })
                                         const newSelectGroup = filter(selectGroup)
                                         const selectTotal = await getGroupNamesTotal(newSelectGroup)
-                                        setPageInfo({...pageInfo,...clearRuleByPageInfo, GroupNames: newSelectGroup, selectTotal})
+                                        setPageInfo({
+                                            ...pageInfo,
+                                            ...clearRuleByPageInfo,
+                                            GroupNames: newSelectGroup,
+                                            selectTotal
+                                        })
                                     }}
                                 />
                             </Form.Item>
@@ -2031,7 +2050,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             rulesState: []
                         }}
                         // 后端建议没有则传任意数字填充
-                        runtimeId={runtimeId||"1111111111"}
+                        runtimeId={runtimeId || "1111111111"}
                         loading={isExecuting}
                         defaultActiveKey={undefined}
                     />
@@ -2106,6 +2125,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
         const isRealStartRef = useRef<boolean>(false)
 
+        /** 选填参数 */
+        const groupParams = useMemo(() => {
+            const arr =
+                plugin?.Params.filter(
+                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
+                ) || []
+            return ParamsToGroupByGroupName(arr)
+        }, [plugin?.Params])
+
         /** 填充表单默认值 */
         const handleInitFormValue = useMemoizedFn((arr: YakParamProps[]) => {
             // 表单内数据
@@ -2115,23 +2143,19 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             let newFormValue = {}
             arr.forEach((ele) => {
                 let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
-                const value = getValueByType(initValue, ele.TypeVerbose)
+                let value = getValueByType(initValue, ele.TypeVerbose)
                 newFormValue = {
                     ...newFormValue,
                     [ele.Field]: value
                 }
             })
-            form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
+            let fieldsValue = {...cloneDeep(defaultValue || {}), ...newFormValue}
+            // compile-immediately 特例处理（应后端要求）
+            if ((plugin?.Params || []).filter((item) => item.Field === "compile-immediately").length > 0) {
+                fieldsValue["compile-immediately"] = true
+            }
+            form.setFieldsValue(fieldsValue)
         })
-
-        /** 选填参数 */
-        const groupParams = useMemo(() => {
-            const arr =
-                plugin?.Params.filter(
-                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
-                ) || []
-            return ParamsToGroupByGroupName(arr)
-        }, [plugin?.Params])
 
         /** 选填参数（无需折叠） */
         const groupParamsShow = useMemo(() => {
@@ -2208,12 +2232,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             }
         })
-        const runnerProject = useRef<string>()
+        const projectIdCacheRef = useRef<number>()
+        const jsonCacheRef = useRef<string>("")
 
         // 执行审计
         const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
             setAuditError(false)
             debugPluginStreamEvent.reset()
+            debugCompilePluginStreamEvent.reset()
             apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
                 isRealStartRef.current = false
                 resetStreamInfo()
@@ -2244,6 +2270,103 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             []
         )
 
+        const tokenCompileRef = useRef<string>(randomString(40))
+        const [streamCompileInfo, debugCompilePluginStreamEvent] = useHoldGRPCStream({
+            taskName: "debug-plugin",
+            apiKey: "DebugPlugin",
+            token: tokenCompileRef.current,
+            onEnd: (getStreamInfo) => {
+                debugCompilePluginStreamEvent.stop()
+                setTimeout(() => {
+                    if (getStreamInfo) {
+                        const errorLog = getStreamInfo.logState.find((item) => item.level === "error")
+                        if (errorLog) {
+                            setExecuteStatus("error")
+                            setAuditError(true)
+                        }
+                    }
+                    setAuditsExecuting(false)
+                    setProgressShow(undefined)
+                }, 300)
+            },
+            onError: () => {
+                setExecuteStatus("error")
+            },
+            setRuntimeId: (rId) => {
+                yakitNotify("info", `Compile调试任务启动成功，运行时 ID: ${rId}`)
+            }
+        })
+        // 通过插件（SSA 项目编译）执行
+        const onCompileByPlugin = useMemoizedFn(() => {
+            const requestParams: DebugPluginRequest = {
+                Code: "",
+                PluginType: "yak",
+                Input: "",
+                HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+                ExecParams: [
+                    {
+                        Key: "config",
+                        Value: jsonCacheRef.current
+                    }
+                ],
+                PluginName: "SSA 项目编译"
+            }
+            apiDebugPlugin({params: requestParams, token: tokenCompileRef.current})
+                .then(() => {
+                    isStartExecuteRef.current = false
+                    debugCompilePluginStreamEvent.start()
+                })
+                .catch(() => {})
+        })
+
+        const isStartExecuteRef = useRef<boolean>(false)
+        useUpdateEffect(() => {
+            // 插件执行 SSA 项目编译
+            const progress =
+                Math.floor((streamCompileInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+            // 当任务结束时 跳转打开编译列表
+            if (progress === 1) {
+                setTimeout(() => {
+                    if (projectIdCacheRef.current) {
+                        isStartExecuteRef.current = true
+                        setExecuteType("old")
+                        onStartExecute(
+                            {
+                                // project: [programNameCacheRef.current],
+                                project: projectIdCacheRef.current
+                            },
+                            true
+                        )
+                    } else {
+                        failed("项目名获取失败")
+                    }
+                }, 300)
+            }
+
+            let newLog = streamCompileInfo.logState.slice(0, 100).map((item) => ({
+                type: "log",
+                content: item
+            }))
+            pushNewLogs(newLog)
+
+            setProgressShow({
+                type: "new",
+                progress: progress
+            })
+        }, [streamCompileInfo])
+
+        const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
+            try {
+                const result: CreateSSAProjectResponse = await ipcRenderer.invoke("CreateSSAProject", {
+                    JSONStringConfig
+                })
+                projectIdCacheRef.current = result.Project.ID
+                jsonCacheRef.current = result.Project.JSONStringConfig
+            } catch (error) {
+                yakitNotify("error", "创建项目管理数据失败")
+            }
+        })
+
         useUpdateEffect(() => {
             // 此处为真正的启动
             if (!isRealStartRef.current) {
@@ -2253,7 +2376,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
                         const {kind, msg} = verifyStart.error
                         setVerifyForm(false)
-                        runnerProject.current = verifyStart.program_name
+                        // CreateSSAProject 创建项目管理数据
+                        projectIdCacheRef.current = verifyStart?.BaseInfo?.project_id
+                        jsonCacheRef.current = startLog?.data || ""
+
+                        if (verifyStart?.project_exists === false) {
+                            onCreateSSAProject(startLog?.data || "")
+                        }
+
                         switch (kind) {
                             // 链接错误
                             case "connectFailException":
@@ -2326,38 +2456,13 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 setIsExpand(false)
                                 setAuditsExecuting(true)
                                 setExecuteStatus("process")
+                                onCompileByPlugin()
                                 break
                         }
                     } catch (error) {
                         failed("启动解析失败")
                     }
                 }
-            }
-
-            if (isRealStartRef.current) {
-                const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
-                // 当任务结束时 跳转打开编译列表
-                if (progress === 1) {
-                    setTimeout(() => {
-                        if (runnerProject.current) {
-                            setExecuteType("old")
-                            onStartExecute({project: [runnerProject.current]}, true)
-                        } else {
-                            failed("项目名获取失败")
-                        }
-                    }, 300)
-                }
-
-                let newLog = streamInfo.logState.slice(0, 100).map((item) => ({
-                    type: "log",
-                    content: item
-                }))
-                pushNewLogs(newLog)
-
-                setProgressShow({
-                    type: "new",
-                    progress: progress
-                })
             }
         }, [streamInfo])
 

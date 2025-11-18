@@ -14,11 +14,12 @@ import {
     AuditTreeProps,
     AuditYakUrlProps,
     ProjectManagerEditFormProps,
-    QuerySSAProjectProps,
+    SSAProjectFilter,
     SSAProjectResponse,
     AuditDetailItemProps,
     CompileHistoryProps,
-    ResultDataProps
+    ResultDataProps,
+    DeleteSSAProjectRequest
 } from "./AuditCodeType"
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
@@ -1711,7 +1712,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     取消
                 </YakitButton>
                 <YakitButton onClick={onStartExecute} loading={isVerifyForm}>
-                    {isVerifyForm ? "正在校验" : "开始编译"}
+                    {isVerifyForm ? "正在校验" : "添加项目"}
                 </YakitButton>
             </div>
             <AgentConfigModal
@@ -1734,7 +1735,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     /** 是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
-    const pathCacheRef = useRef<string>("")
+    const programNameCacheRef = useRef<string>("")
     const isCompileImmediatelyRef = useRef<boolean>(false)
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
@@ -1796,7 +1797,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
                     const {kind, msg} = verifyStart.error
                     setVerifyForm(false)
-                    pathCacheRef.current = verifyStart.program_name
+                    programNameCacheRef.current = verifyStart.program_name
                     // CreateSSAProject 创建项目管理数据
                     ipcRenderer
                         .invoke("CreateSSAProject", {
@@ -1899,7 +1900,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                 setTimeout(() => {
                     logInfoRef.current = []
                     setShowRunAuditModal(false)
-                    onSuccee(pathCacheRef.current)
+                    onSuccee(programNameCacheRef.current)
                 }, 300)
             }
 
@@ -1922,7 +1923,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                 getContainer={warrpId || document.getElementById("audit-code") || document.body}
                 visible={isShowCompileModal}
                 bodyStyle={{padding: 0}}
-                title={title || "编译项目"}
+                title={title || "添加项目"}
                 footer={null}
                 onCancel={onCancel}
                 maskClosable={false}
@@ -2249,7 +2250,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         valuePropName: "refresh",
         trigger: "setRefresh"
     })
-    const [params, setParams] = useState<QuerySSAProjectProps>({
+    const [params, setParams] = useState<SSAProjectFilter>({
         SearchKeyword: ""
     })
     const [pagination, setPagination] = useState<Paging>({
@@ -2335,12 +2336,10 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             })
             .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
                 item.Data = (item as any).Projects
-
                 const newData = reload ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
                 if (isAllSelect) setSelectedRowKeys(newData.map((item) => item.ID))
-
                 setData(newData)
                 setPagination(item.Pagination || genDefaultPagination(200))
                 if (reload) {
@@ -2376,7 +2375,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             })
     })
 
-    const onDelete = useMemoizedFn(async (params: {Filter?: QuerySSAProjectProps}) => {
+    const onDelete = useMemoizedFn(async (params: DeleteSSAProjectRequest) => {
         try {
             setLoading(true)
             ipcRenderer
@@ -2424,28 +2423,21 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         },
         {
             title: "项目路径",
-            dataIndex: "CodeSourceConfig",
+            dataIndex: "URL",
             render: (text) => {
-                try {
-                    const codeSourceConfig = JSON.parse(text)
-                    const {local_file, url} = codeSourceConfig
-                    const path = local_file || url || "未知路径"
-                    // local_file url
-                    return (
-                        <>
-                            <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
-                                {path}
+                const path = text || "未知路径"
+                return (
+                    <>
+                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
+                            {path}
+                        </div>
+                        <Tooltip title={"复制"}>
+                            <div className={styles["extra-icon"]} onClick={() => setClipboardText(path)}>
+                                <OutlineDocumentduplicateIcon />
                             </div>
-                            <Tooltip title={"复制"}>
-                                <div className={styles["extra-icon"]} onClick={() => setClipboardText(path)}>
-                                    <OutlineDocumentduplicateIcon />
-                                </div>
-                            </Tooltip>
-                        </>
-                    )
-                } catch (error) {
-                    return text
-                }
+                        </Tooltip>
+                    </>
+                )
             }
         },
         {
