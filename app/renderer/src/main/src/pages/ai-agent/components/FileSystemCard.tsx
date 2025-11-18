@@ -45,7 +45,7 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, sho
                 <div className={styles["file-system-title"]}>
                     <div>
                         {getFileIcon(type, isDir)}
-                        {name}
+                        <p>{name}</p>
                         {suffix}
                     </div>
                     <YakitButton hidden={!showDetail} type='text' onClick={switchAIActTab}>
