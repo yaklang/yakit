@@ -124,11 +124,11 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             </div>
         )
         switch (data.progress) {
-            case "success":
+            case "completed":
                 return [<TaskSuccessIcon key='success' />, getWrapper(styles["node-wrapper-success"])]
-            case "error":
+            case "aborted":
                 return [<TaskErrorIcon key='error' />, getWrapper(styles["node-wrapper-error"])]
-            case "in-progress":
+            case "processing":
                 return [<TaskInProgressIcon key='in-progress' />, getWrapper(styles["node-wrapper-in-progress"])]
             default:
                 return [
