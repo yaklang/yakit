@@ -771,6 +771,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         order: 0,
         defActiveKey: ""
     }) // 匹配器
+    const [hasExtractorRules, setHasExtractorRules] = useState(false) // 已经点击匹配/提取
 
     const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
@@ -1183,6 +1184,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "", 10)}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
+                setHasExtractorRules(false);
                 setIsPause(true)
             }
         } else if (matchRef.current) {
@@ -1191,8 +1193,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             setLoadingText(t("HTTPFuzzerPage.matchingInProgress"))
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
+            setHasExtractorRules(true);
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
+            setHasExtractorRules(false);
         }
         onSaveHTTPFuzzerByPageId()
         logger(
@@ -2470,7 +2474,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         moreLimtAlertMsg={moreLimtAlertMsg}
                                                         noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
-                                                        hasExtractorRules={!!advancedConfigValue.extractors.length}
+                                                        hasExtractorRules={hasExtractorRules}
                                                     />
                                                 )}
                                                 {showSuccess === "false" && (
