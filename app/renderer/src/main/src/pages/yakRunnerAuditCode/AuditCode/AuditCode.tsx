@@ -2265,6 +2265,10 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+    const [deleteParams, setDeleteParams] = useState<{
+        titile: string
+        params: DeleteSSAProjectRequest
+    }>()
     // 接口是否正在请求
     const isGrpcRef = useRef<boolean>(false)
     const afterId = useRef<number>()
@@ -2386,6 +2390,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     update(true)
                     setIsAllSelect(false)
                     setSelectedRowKeys([])
+                    setDeleteParams(undefined)
+                    success("删除成功")
                 })
         } catch (error) {
             setLoading(false)
@@ -2428,9 +2434,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 const path = text || "未知路径"
                 return (
                     <>
-                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
-                            {path}
-                        </div>
+                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>{path}</div>
                         <Tooltip title={"复制"}>
                             <div className={styles["extra-icon"]} onClick={() => setClipboardText(path)}>
                                 <OutlineDocumentduplicateIcon />
@@ -2549,19 +2553,22 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 }}
                             />
                         </Tooltip>
-                        <YakitPopconfirm
-                            title={`确认删除${record.ProjectName}？`}
-                            onConfirm={(e) => {
+                        <YakitButton
+                            type='text'
+                            danger
+                            icon={<OutlineTrashIcon />}
+                            onClick={(e) => {
                                 e?.stopPropagation()
-                                onDelete({
-                                    Filter: {
-                                        IDs: [parseInt(record.ID + "")]
+                                setDeleteParams({
+                                    titile: `确认删除${record.ProjectName}？`,
+                                    params: {
+                                        Filter: {
+                                            IDs: [parseInt(record.ID + "")]
+                                        }
                                     }
                                 })
                             }}
-                        >
-                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
-                        </YakitPopconfirm>
+                        />
                     </div>
                 )
             }
@@ -2575,6 +2582,13 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         }
     })
 
+    const onDeleteHistoryOnly = useMemoizedFn(() => {
+        deleteParams && onDelete({...deleteParams.params, DeleteMode: "clear_compile_history"})
+    })
+
+    const onDeleteAll = useMemoizedFn(() => {
+        deleteParams && onDelete({...deleteParams.params, DeleteMode: "delete_all"})
+    })
     return (
         <div
             className={styles["audit-history-table"]}
@@ -2608,25 +2622,28 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             }, 100)
                         }}
                     />
-                    <YakitPopconfirm
-                        title={selectedRowKeys.length > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
-                        onConfirm={() => {
-                            onDelete(
-                                selectedRowKeys.length === 0
-                                    ? {}
-                                    : {
-                                          Filter: {
-                                              IDs: selectedRowKeys.map((item) => parseInt(item + ""))
+
+                    <YakitButton
+                        type='outline1'
+                        colors='danger'
+                        icon={<TrashIcon />}
+                        onClick={() => {
+                            setDeleteParams({
+                                titile: selectedRowKeys.length === 0 ? "确认清空列表数据？" : "确认删除勾选数据？",
+                                params:
+                                    selectedRowKeys.length === 0
+                                        ? {}
+                                        : {
+                                              Filter: {
+                                                  IDs: selectedRowKeys.map((item) => parseInt(item + ""))
+                                              }
                                           }
-                                      }
-                            )
+                            })
                         }}
-                        placement='bottomRight'
                     >
-                        <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
-                            {selectedRowKeys.length > 0 ? "删除" : "清空"}
-                        </YakitButton>
-                    </YakitPopconfirm>
+                        {selectedRowKeys.length > 0 ? "删除" : "清空"}
+                    </YakitButton>
+
                     <YakitButton
                         icon={<SolidPluscircleIcon />}
                         onClick={() => {
@@ -2671,6 +2688,28 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 setAfreshName={setAfreshName}
                 onSuccee={() => update(true)}
                 warrpId={warrpId || document.getElementById("audit-history-table")}
+            />
+
+            <YakitHint
+                visible={!!deleteParams}
+                title={deleteParams?.titile}
+                content={"请选择删除模式"}
+                width={520}
+                footer={
+                    <div className={styles["hint-right-btn"]}>
+                        <YakitButton size='max' type='outline2' onClick={() => setDeleteParams(undefined)}>
+                            取消
+                        </YakitButton>
+                        <div className={styles["btn-group-wrapper"]}>
+                            <YakitButton size='max' danger onClick={onDeleteHistoryOnly}>
+                                只清空编译历史
+                            </YakitButton>
+                            <YakitButton size='max' danger onClick={onDeleteAll}>
+                                清空编译历史和项目信息
+                            </YakitButton>
+                        </div>
+                    </div>
+                }
             />
 
             {/* <YakitModal

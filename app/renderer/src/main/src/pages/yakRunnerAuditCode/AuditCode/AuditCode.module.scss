@@ -590,3 +590,14 @@
     display: inline-flex;
     cursor: pointer;
 }
+
+.hint-right-btn {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+
+    .btn-group-wrapper {
+        display: flex;
+        gap: 8px;
+    }
+}
