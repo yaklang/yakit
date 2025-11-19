@@ -190,7 +190,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["critical"]}
+                                            params: {Severity: ["critical"]}
                                         })
                                     }
                                 >
@@ -204,7 +204,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["high"]}
+                                            params: {Severity: ["high"]}
                                         })
                                     }
                                 >
@@ -218,7 +218,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["middle"]}
+                                            params: {Severity: ["middle"]}
                                         })
                                     }
                                 >
@@ -232,7 +232,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["low"]}
+                                            params: {Severity: ["low"]}
                                         })
                                     }
                                 >

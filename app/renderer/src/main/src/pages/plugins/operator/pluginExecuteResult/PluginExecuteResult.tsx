@@ -500,10 +500,12 @@ export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.mem
     const [allTotal, setAllTotal] = useState<number>(0)
 
     const onJumpAuditHole = useMemoizedFn(() => {
-        const info: RouteToPageProps = {
-            route: YakitRoute.YakRunner_Audit_Hole
-        }
-        emiter.emit("menuOpenPage", JSON.stringify(info))
+        emiter.emit("openPage", JSON.stringify({
+            route: YakitRoute.YakRunner_Audit_Hole,
+            params: {
+                RuntimeID: [runtimeId]
+            }
+        }))
     })
     return (
         <div className={styles["risks-table"]}>

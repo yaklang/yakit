@@ -136,7 +136,8 @@ import {
     AIForgeEditorPageInfoProps,
     AIToolEditorPageInfoProps,
     YakRunnerScanHistoryPageInfoProps,
-    RuleManagementPageInfoProps
+    RuleManagementPageInfoProps,
+    AuditHoleInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -587,6 +588,7 @@ export interface ComponentParams {
     hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
     /**代码审计页面 */
     auditCodePageInfo?: AuditCodePageInfoProps
+    auditHolePageInfo?: AuditHoleInfoProps
     /**代码扫描页面 */
     codeScanPageInfo?: CodeScanPageInfoProps
     /**记事本编辑页面 */

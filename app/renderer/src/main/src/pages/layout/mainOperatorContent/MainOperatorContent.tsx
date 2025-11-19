@@ -124,7 +124,8 @@ import {
     AIForgeEditorPageInfoProps,
     AIToolEditorPageInfoProps,
     YakRunnerScanHistoryPageInfoProps,
-    RuleManagementPageInfoProps
+    RuleManagementPageInfoProps,
+    AuditHoleInfoProps
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
@@ -861,12 +862,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    const addYakRunnerAuditHolePage = useMemoizedFn((data: RiskPageInfoProps) => {
+    const addYakRunnerAuditHolePage = useMemoizedFn((data: AuditHoleInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Hole).length
         if (isExist) {
-            if (data.SeverityList) {
-                emiter.emit("auditHoleVulnerabilityLevel", JSON.stringify(data.SeverityList))
-            }
+            emiter.emit("auditHoleVulnerabilityLevel", JSON.stringify(data))
         }
         const pageNodeInfo: PageProps = {
             ...cloneDeep(defPage),
@@ -878,7 +877,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pageId: YakitRoute.YakRunner_Audit_Hole,
                     pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]?.label || "",
                     pageParamsInfo: {
-                        riskPageInfo: data
+                        auditHoleInfo: data
                     },
                     sortFieId: 0
                 }
@@ -891,7 +890,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {route: YakitRoute.YakRunner_Audit_Hole},
             {
                 pageParams: {
-                    riskPageInfoProps: {
+                    auditHolePageInfo: {
                         ...data
                     }
                 }

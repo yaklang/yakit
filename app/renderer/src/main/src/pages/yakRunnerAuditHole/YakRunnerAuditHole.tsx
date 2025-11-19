@@ -28,9 +28,9 @@ import {YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
 import {apiGetSSARiskFieldGroupEx} from "./YakitAuditHoleTable/utils"
 import {shallow} from "zustand/shallow"
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, AuditHoleInfoProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {defaultRiskPageInfo} from "@/defaultConstants/RiskPage"
+import {defaultAuditHolePageInfo} from "@/defaultConstants/defaultAuditHolePageInfo"
 import {LeftSideHoleType} from "./LeftSideHoleBar/LeftSideHoleBarType"
 import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -49,18 +49,18 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
             YakitRoute.YakRunner_Audit_Hole,
             YakitRoute.YakRunner_Audit_Hole
         )
-        if (currentItem && currentItem.pageParamsInfo.riskPageInfo) {
-            return currentItem.pageParamsInfo.riskPageInfo
+        if (currentItem && currentItem.pageParamsInfo.auditHoleInfo) {
+            return currentItem.pageParamsInfo.auditHoleInfo
         } else {
-            return {...defaultRiskPageInfo}
+            return {...defaultAuditHolePageInfo}
         }
     })
 
     useEffect(() => {
         const auditHoleVulnerabilityLevel = (params: string) => {
             try {
-                const Severity = JSON.parse(params) || []
-                setQuery((query) => ({...query, Severity}))
+                const data:AuditHoleInfoProps = JSON.parse(params)
+                setQuery((query) => ({...query, ...data}))
             } catch (error) {}
         }
         emiter.on("auditHoleVulnerabilityLevel", auditHoleVulnerabilityLevel)
@@ -71,7 +71,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
 
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [query, setQuery] = useState<SSARisksFilter>({
-        Severity: initPageInfo().SeverityList || []
+        ...initPageInfo()
     })
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)

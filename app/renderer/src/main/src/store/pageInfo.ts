@@ -86,6 +86,8 @@ interface PageParamsInfoProps {
     ConcurrencyAdvancedConfigValue?: ConcurrencyAdvancedConfigValue
     /** 规则管理页面 */
     ruleManagementPageInfo?: RuleManagementPageInfoProps
+    /** 审计漏洞页面 */
+    auditHoleInfo?: AuditHoleInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -206,6 +208,13 @@ export interface RiskPageInfoProps {
     /**漏洞危险等级 */
     SeverityList?: string[]
 }
+
+export interface AuditHoleInfoProps {
+    /** 漏洞危险等级 */
+    Severity?: string[]
+    RuntimeID?: string[]
+}
+
 interface ImmediatelyLaunchedInfo {
     host: string
     port: string

@@ -808,6 +808,16 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                                     {selectNum}
                                                 </span>
                                             </div>
+                                            {(query.RuntimeID||"").length > 0 && <YakitTag
+                                                className={styles['virtual-table-heard-right-tag']}
+                                                color='info'
+                                                closable
+                                                onClose={() => {
+                                                    setQuery && setQuery({RuntimeID: []})
+                                                }}
+                                            >
+                                                {query.RuntimeID} 
+                                            </YakitTag>}
                                         </div>
                                     </div>
                                     <div className={styles["table-head-extra"]}>
