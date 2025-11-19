@@ -1650,8 +1650,8 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                             <YakitHint
                                 visible={updateHint}
                                 title='更新提示'
-                                content='更新Yakit可同步更新引擎，建议先更新Yakit'
-                                okButtonText='更新Yakit'
+                                content={`更新${getReleaseEditionName}可同步更新引擎，建议先更新${getReleaseEditionName}`}
+                                okButtonText={`更新${getReleaseEditionName}`}
                                 cancelButtonText='更新引擎'
                                 footerExtra={
                                     <YakitButton
