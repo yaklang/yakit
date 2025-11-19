@@ -2519,6 +2519,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                             help='可将项目文件拖入框内或点击此处'
                             disabled={false}
                             // accept=""
+                            cacheFilePathKey="CodeScan_File_Path"
+                            cacheFolderPathKey="CodeScan_Folder_Path"
                         />
                     </Form.Item>
 

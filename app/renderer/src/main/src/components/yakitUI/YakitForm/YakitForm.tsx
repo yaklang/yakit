@@ -102,7 +102,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         isShowPathNumber = true,
         multiple = true,
         fileExtensionIsExist = false,
-        showExtraHelp = ""
+        showExtraHelp = "",
+        cacheFilePathKey,
+        cacheFolderPathKey
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -341,6 +343,28 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             </Spin>
         )
     })
+
+
+    const cacheFilePathRef = useRef<string>("") 
+    const cacheFolderPathRef = useRef<string>("") 
+    // 获取缓存的文件路径
+    useEffect(()=>{
+        if (cacheFilePathKey) {
+            getRemoteValue(cacheFilePathKey).then((value) => {
+                if (value) {
+                    cacheFilePathRef.current = value
+                }
+            })
+        }
+        if (cacheFolderPathKey) {
+            getRemoteValue(cacheFolderPathKey).then((value) => {
+                if (value) {
+                    cacheFolderPathRef.current = value
+                }
+            })
+        }
+    },[])
+
     /**
      * @description 选择文件夹
      */
@@ -350,14 +374,26 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFolder"), properties}).then((data) => {
-            const filesLength = data.filePaths.length
-            if (filesLength) {
-                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
-                // 设置名字
-                if (setFileName) setFileName(absolutePath)
-            }
-        })
+        let option: OpenDialogOptions = {
+            title: t("YakitFormDragger.selectFolder"),
+            properties
+        }
+        if(cacheFolderPathRef.current){
+            option.defaultPath = cacheFolderPathRef.current
+        }
+        handleOpenFileSystemDialog(option)
+            .then((data) => {
+                const filesLength = data.filePaths.length
+                if (filesLength) {
+                    const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
+                    if (cacheFolderPathKey && !multiple) {
+                        cacheFolderPathRef.current = absolutePath
+                        setRemoteValue(cacheFolderPathKey, absolutePath)
+                    }
+                    // 设置名字
+                    if (setFileName) setFileName(absolutePath)
+                }
+            })
     })
     /**选择文件 */
     const onUploadFile = useMemoizedFn(() => {
@@ -366,15 +402,28 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties}).then((data) => {
-            const filesLength = data.filePaths.length
-            let acceptFlag = true
-            if (filesLength) {
-                const absolutePath: string[] = []
-                data.filePaths.forEach((p) => {
-                    const path = p.replace(/\\/g, "\\")
-                    if (fileExtensionIsExist || !!props.accept) {
-                        if (isAcceptEligible(path, props.accept || ".*")) {
+        let option: OpenDialogOptions = {
+            title: t("YakitFormDragger.selectFile"),
+            properties
+        }
+        if(cacheFilePathRef.current){
+            option.defaultPath = cacheFilePathRef.current
+        }
+            handleOpenFileSystemDialog(option)
+            .then((data) => {
+                const filesLength = data.filePaths.length
+                let acceptFlag = true
+                if (filesLength) {
+                    const absolutePath: string[] = []
+                    data.filePaths.forEach((p) => {
+                        const path = p.replace(/\\/g, "\\")
+                        if (fileExtensionIsExist || !!props.accept) {
+                            if (isAcceptEligible(path, props.accept || ".*")) {
+                                absolutePath.push(path)
+                            } else {
+                                acceptFlag = false
+                            }
+                        } else {
                             absolutePath.push(path)
                         } else {
                             acceptFlag = false
@@ -382,10 +431,13 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     } else {
                         absolutePath.push(path)
                     }
-                })
-
-                if (props.accept && !acceptFlag) {
-                    failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
+                    const result = absolutePath.join(",")
+                    if (cacheFilePathKey && !multiple) {
+                        cacheFilePathRef.current = result
+                        setRemoteValue(cacheFilePathKey, result)
+                    }
+                    // 设置名字
+                    if (setFileName) setFileName(result)
                 }
 
                 // 设置名字
