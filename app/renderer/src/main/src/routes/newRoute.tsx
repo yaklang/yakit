@@ -112,7 +112,7 @@ import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/Mat
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
-import {isAIAgent, isCommunityEdition, isIRify} from "@/utils/envfile"
+import {isMemfit, isCommunityEdition, isIRify} from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
@@ -493,7 +493,7 @@ export const NoScrollRoutes: YakitRoute[] = [
 
 /** 通过版本获取一级tab固定展示tab  */
 const getDefaultFixedTabs = () => {
-    if (isAIAgent()) {
+    if (isMemfit()) {
         return [YakitRoute.AI_Agent]
     }
     return [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
@@ -1011,7 +1011,7 @@ const getPublicRouteMenu = () => {
             //   }
         ]
     }
-    if (isAIAgent())
+    if (isMemfit())
         return [
             {
                 page: undefined,

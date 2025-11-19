@@ -37,7 +37,7 @@ import {
     isIRify,
     isCommunityIRify,
     isEnpriTraceIRify,
-    isAIAgent,
+    isMemfit,
     isYakit
 } from "@/utils/envfile"
 import {
@@ -404,7 +404,7 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
         ]
     }
 
-    if (isAIAgent()) {
+    if (isMemfit()) {
         return [
             {
                 routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
@@ -476,7 +476,7 @@ export const getInitActiveTabKey = () => {
         return YakitRoute.DB_ChaosMaker
     }
 
-    if (isAIAgent()) {
+    if (isMemfit()) {
         return YakitRoute.AI_Agent
     }
 

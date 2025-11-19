@@ -17,7 +17,7 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
-import {isAIAgent, isIRify} from "@/utils/envfile"
+import {isMemfit, isIRify} from "@/utils/envfile"
 import {NotepadMenu} from "../NotepadMenu/NotepadMenu"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
@@ -167,7 +167,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 </YakitButton>
             )
         }
-        if (isAIAgent()) {
+        if (isMemfit()) {
             return (
                 <>
                     <YakitButton

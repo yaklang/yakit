@@ -44,7 +44,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {usePluginToId} from "@/store/publicMenu"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {isAIAgent} from "@/utils/envfile"
+import {isMemfit} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -540,7 +540,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         />
                     )}
 
-                    {!isAIAgent() && (
+                    {!isMemfit() && (
                         <>
                             {defaultMenu[activeMenu]?.label !== "插件" ? (
                                 <div className={styles["divider-style"]}></div>

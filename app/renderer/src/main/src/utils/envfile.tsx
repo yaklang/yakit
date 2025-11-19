@@ -16,8 +16,8 @@ export enum PRODUCT_RELEASE_EDITION {
     IRify = 4,
     /**@name IRify扫描-企业版 */
     IRifyEnpriTrace = 5,
-    /**@name AIAgent(AIAgent独立于企业版社区版之外) */
-    AIAgent = 6
+    /**@name memfit (AIAgent独立于企业版社区版之外) */
+    MEMFIT = 6
 }
 
 export const getReleaseEditionName = () => {
@@ -56,12 +56,12 @@ export const isCommunityEdition = () => {
     return (
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify ||
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
     )
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition() && !isCommunityIRify() && !isCommunityAIAgent()
+    return !isCommunityEdition() && !isCommunityIRify() && !isCommunityMemfit()
 }
 
 /** CE IRify Scan  */
@@ -82,14 +82,14 @@ export const isIRify = () => {
     )
 }
 
-/** CE AIAgent  */
-export const isCommunityAIAgent = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
+/** CE Memfit AIAgent  */
+export const isCommunityMemfit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
 }
 
-/** AI Agent 独立于Yakit企业版社区版之外  */
-export const isAIAgent = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.AIAgent
+/** Memfit 独立于Yakit企业版社区版之外  */
+export const isMemfit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
 }
 
 export const isYakit = () => {
@@ -124,8 +124,8 @@ export const GetReleaseEdition = () => {
             return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
         case "breachtrace":
             return PRODUCT_RELEASE_EDITION.BreachTrace
-        case "aiagent":
-            return PRODUCT_RELEASE_EDITION.AIAgent
+        case "memfit":
+            return PRODUCT_RELEASE_EDITION.MEMFIT
         default:
             return PRODUCT_RELEASE_EDITION.Yakit
     }
@@ -185,7 +185,7 @@ export const getRemoteHttpSettingGV = () => {
             return RemotePrivateDomainGV.eeIRifyHttpSetting
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basHttpSetting
-        case PRODUCT_RELEASE_EDITION.AIAgent:
+        case PRODUCT_RELEASE_EDITION.MEMFIT:
             return RemotePrivateDomainGV.ceHttpSetting
     }
 }
@@ -221,7 +221,7 @@ export const getRemoteI18nGV = () => {
             return RemoteI18nGV.eeIRifyI18n
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemoteI18nGV.basI18n
-        case PRODUCT_RELEASE_EDITION.AIAgent:
+        case PRODUCT_RELEASE_EDITION.MEMFIT:
             return RemoteI18nGV.ceAII18n
     }
 }
