@@ -263,6 +263,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                                 clickHttpFlow={memoClickedHttpFlow}
                                 firstHttpFlow={memoFirstHttpFlow}
                                 downstreamProxy={downstreamProxy}
+                                initialMatchers={pageInfo.matchers}
                             />
                         )}
                     </div>
@@ -325,6 +326,7 @@ interface AnalysisMainProps {
     clickHttpFlow?: HTTPFlow
     firstHttpFlow?: HTTPFlow
     downstreamProxy: string
+    initialMatchers?: HTTPResponseMatcher[]
 }
 const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const {
@@ -338,7 +340,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         httpFlowIds,
         clickHttpFlow,
         firstHttpFlow,
-        downstreamProxy
+        downstreamProxy,
+        initialMatchers
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "HTTPHistoryAnalysis", "webFuzzer"])
 
@@ -502,7 +505,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         order: 0,
         defActiveKey: ""
     }) // 匹配器
-    const [matchersList, setMatchersList] = useState<HTTPResponseMatcher[]>([])
+    // 回显从 params 传入的 matchers
+    const [matchersList, setMatchersList] = useState<HTTPResponseMatcher[]>(initialMatchers || [])
     const matcherValue = useCreation(() => {
         return {matchersList: matchersList}
     }, [matchersList])

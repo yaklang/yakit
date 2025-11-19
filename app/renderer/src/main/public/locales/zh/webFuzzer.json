@@ -89,7 +89,8 @@
     "success_failure_count": "成功：{success}——失败：${failed}",
     "send_request": "发送请求",
     "parameter": "参数",
-    "trafficAnalysisMode": "流量分析"
+    "trafficAnalysisMode": "流量分析模式",
+    "trafficAnalysis": "流量分析"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{droppedCount}]个响应",

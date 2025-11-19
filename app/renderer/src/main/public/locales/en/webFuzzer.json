@@ -89,7 +89,8 @@
     "success_failure_count": "Success: {success} -- Failed: ${failed}",
     "send_request": "Send Request",
     "parameter": "Parameter",
-    "trafficAnalysisMode": "TrafficAnalysis"
+    "trafficAnalysisMode": "TrafficAnalysis Mode",
+    "trafficAnalysis": "TrafficAnalysis"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{droppedCount}] responses",

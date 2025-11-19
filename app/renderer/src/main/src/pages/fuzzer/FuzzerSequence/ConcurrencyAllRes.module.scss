@@ -1,0 +1,85 @@
+.concurrency-all-res {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
+
+    .concurrency-header {
+        padding: 12px;
+        width: 100%;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        
+        .header-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 24px;
+        }
+    }
+
+    .yakit-resize-box {
+        flex: 1;
+        height: calc(100% - 40px);
+    }
+
+    .left-panel {
+        margin-right: -2px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--Colors-Use-Neutral-Bg);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        border-radius: 4px 0 0 4px;
+
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+
+            .to-end {
+                text-align: center;
+                padding: 16px 0;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                font-size: 12px;
+            }
+        }
+    }
+
+    .right-panel {
+        height: 100%;
+        flex: 1;
+        overflow: hidden;
+        background-color: var(--Colors-Use-Basic-Background);
+        border-radius: 0 4px 4px 0;
+
+        .response-list {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            .response-header {
+                padding: 12px 12px 12px 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px 16px;
+                width: 100%;
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
+                .response-extra {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+
+            .response-body {
+                flex: 1;
+                overflow: hidden;
+                background-color: var(--Colors-Use-Basic-Background);
+                border-radius: 4px;
+            }
+        }
+    }
+}
