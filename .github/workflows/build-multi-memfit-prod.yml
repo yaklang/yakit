@@ -1,0 +1,145 @@
+name: Build Memfit Prod
+
+on:
+    push:
+        tags:
+            - "v*-memfit"
+
+jobs:
+    build_memfit:
+        runs-on: macos-13
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+        steps:
+            - name: Check version format
+              run: |
+                  VERSION_INPUT=$GITHUB_REF_NAME
+                  if [[ $VERSION_INPUT != v*-memfit ]]; then
+                    echo "Error: Version must start with 'v' and end with '-memfit'." >&2
+                    exit 1
+                  fi
+                  echo "Version OK: $VERSION_INPUT"
+
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - run: echo ${{ github.ref_name }}
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: Download chrome extension
+              run: |
+                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
+                      echo "Failed to download!" >&2
+                      exit 1
+                  }
+                  wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+
+            - name: Fetch Engine Version
+              run: |
+                  wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
+                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+
+            - name: Download Yak Engine Linux AMD64
+              run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_amd64 && zip bins/yak_linux_amd64.zip bins/yak_linux_amd64 && rm bins/yak_linux_amd64
+            - name: Download Yak Engine Linux ARM64
+              run: wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_arm64 && zip bins/yak_linux_arm64.zip bins/yak_linux_arm64 && rm bins/yak_linux_arm64
+
+            - name: Download Yak Engine Windows
+              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe && zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe && rm bins/yak_windows_amd64.exe
+            - name: Download Yak Engine Windows Legacy
+              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe && rm bins/yak_windows_amd64.exe
+
+            - name: Download Yak Engine Mac AMD64
+              run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
+            - name: Download Yak Engine Mac ARM64
+              run: wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
+
+            - name: Sign Mac Engine
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
+
+            - name: Download Mac SHA256
+              run: |
+                  wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
+                  wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
+
+            - name: Extract version from tag
+              run: |
+                  TAG=${{ github.ref_name }}
+                  TAG=${TAG#v}
+                  TAG=${TAG%-memfit}
+                  echo "ENV_TAG=$TAG" >> $GITHUB_ENV
+
+            - run: yarn install
+              working-directory: ./
+              name: "Install Dependencies"
+
+            - name: Build Pre Script
+              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh memfit
+
+            - name: Build Memfit (MultiPlatform)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: ./packageScript/script/electron-memfit-builder.sh memfit || { exit 1; }
+              shell: bash
+
+            - name: Show built files
+              run: ls ./release
+
+            - name: Check Memfit if the output is correct
+              run: (./packageScript/script/check-build-package.sh Memfit) || { exit 1; }
+              shell: bash
+            - name: Upload Memfit artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: Memfit-artifacts
+                  path: |
+                      ./release/Memfit-${{ env.ENV_TAG }}-*.exe
+                      ./release/Memfit-${{ env.ENV_TAG }}-*.dmg
+                      ./release/Memfit-${{ env.ENV_TAG }}-*.AppImage
+                  if-no-files-found: error
+                  retention-days: 1
+
+                  
+    publish_memfit_to_oss:
+        needs: build_memfit
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Extract version
+              run: |
+                  TAG=${{ github.ref_name }}
+                  TAG=${TAG#v}
+                  TAG=${TAG%-memfit}
+                  echo "ENV_TAG=$TAG" >> $GITHUB_ENV
+
+            - name: Download Memfit artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: Memfit-artifacts
+                  merge-multiple: true
+
+            - run: ls
+              name: List downloaded artifacts
+
+            - name: Upload Memfit to OSS
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      *:/memfit/${{ env.ENV_TAG }}/

@@ -2,7 +2,7 @@ yarn add -D dmg-license
 
 # 新增参数处理逻辑
 if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 [irify|yakit]"
+    echo "Usage: $0 [irify|yakit|memfit]"
     exit 1
 fi
 
@@ -35,6 +35,16 @@ case "$1" in
         # 获取渲染端最新版本号
         renderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/yak/render/version.txt") || {
             echo "Failed to obtain render version" >&2
+            exit 1
+        }
+        ;;
+    memfit)
+        chmod +x ./packageScript/script/installMemfitRender.sh
+        chmod +x ./packageScript/script/electron-memfit-builder.sh
+
+        # 渲染端版本号
+        renderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/memfit/render/version.txt") || {
+            echo "Failed to obtain Memfit render version" >&2
             exit 1
         }
         ;;

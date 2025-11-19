@@ -29,6 +29,7 @@ on:
                     - se
                     - irify
                     - irifyee
+                    - memfit
             engine:
                 description: "Is there a built-in engine"
                 required: false
@@ -181,6 +182,11 @@ jobs:
               working-directory: ./
               run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-irify-enterprise
 
+            - name: "Build Memfit Render"
+              if: ${{ inputs.version == 'memfit' }}
+              working-directory: ./
+              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-memfit
+
             - name: Generate software prefix name
               run: |
                   if [ "${{ inputs.version }}" = "ce" ]; then
@@ -193,6 +199,8 @@ jobs:
                     echo "ENV_Software_Name=IRify" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    echo "ENV_Software_Name=Memfit" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2
                     exit 1
@@ -217,6 +225,8 @@ jobs:
                     yarn electron-publish-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn electron-publish-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    yarn electron-publish-memfit${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -238,6 +248,8 @@ jobs:
                     yarn pack-mac-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-mac-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    yarn pack-mac-memfit${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -259,6 +271,8 @@ jobs:
                     yarn pack-linux-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-linux-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    yarn pack-linux-memfit${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -280,6 +294,8 @@ jobs:
                     yarn pack-win-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-win-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    yarn pack-win-memfit${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -302,6 +318,8 @@ jobs:
                     yarn pack-linux-irify${{ env.LEGACY_SUFFIX }}
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-linux-irify-ee${{ env.LEGACY_SUFFIX }}
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    yarn pack-linux-memfit${{ env.LEGACY_SUFFIX }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1

@@ -7,6 +7,7 @@ on:
             - "!v*-render"
             - "!v*-irify"
             - "!v*-link-render"
+            - "!v*-memfit"
 
 jobs:
     build_yakit:
