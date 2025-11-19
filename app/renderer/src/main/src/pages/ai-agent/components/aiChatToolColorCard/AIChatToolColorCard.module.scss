@@ -16,6 +16,7 @@
         display: flex;
         justify-content: space-between;
         gap: 4px;
+        overflow: hidden;
         svg {
             width: 16px;
             height: 16px;
@@ -32,6 +33,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-shrink: 0;
         .extra-btn {
             display: flex;
             padding: 3px 6px;

@@ -49,7 +49,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
             <div className={styles["card-header"]}>
                 <div className={styles["card-title"]}>
                     <OutlineSparklesColorsIcon />
-                    <div>{title}</div>
+                    <div className="content-ellipsis">{title}</div>
                 </div>
                 {isToolStdoutStream(NodeId) && selectors?.selectors && (
                     <div className={styles["card-extra"]}>
