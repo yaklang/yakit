@@ -6,9 +6,9 @@ import classNames from "classnames"
 import {TaskInProgressIcon, TaskSuccessIcon} from "../aiTree/icon"
 
 export enum StreamsStatus {
-    success = "success",
-    inProgress = "in-progress",
-    error = "error"
+    success = "completed",
+    inProgress = "processing",
+    error = "aborted"
 }
 
 interface SuccessStatus {
