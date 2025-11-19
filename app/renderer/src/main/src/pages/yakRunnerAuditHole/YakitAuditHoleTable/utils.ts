@@ -9,7 +9,7 @@ import {
 } from "./YakitAuditHoleTableType"
 import {FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
 import {FieldName} from "@/pages/risks/RiskTable"
-import { DbOperateMessage } from "@/pages/layout/mainOperatorContent/utils"
+import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 const {ipcRenderer} = window.require("electron")
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
@@ -69,7 +69,10 @@ export interface GetSSARiskDisposalResponse {
     Data: SSARiskDisposalData[]
 }
 
-export const apiGetSSARiskDisposal: (params: {RiskId?: number, RiskHash?: string}) => Promise<GetSSARiskDisposalResponse> = (params) => {
+export const apiGetSSARiskDisposal: (params: {
+    RiskId?: number
+    RiskHash?: string
+}) => Promise<GetSSARiskDisposalResponse> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("GetSSARiskDisposal", params)
@@ -89,14 +92,16 @@ export interface SSARiskDisposalsFilter {
 }
 
 export interface DeleteSSARiskDisposalsRequest {
-    Filter:SSARiskDisposalsFilter
+    Filter: SSARiskDisposalsFilter
 }
 
 export interface DeleteSSARiskDisposalsResponse {
     Message: DbOperateMessage
 }
 
-export const apiDeleteSSARiskDisposals: (params: DeleteSSARiskDisposalsRequest) => Promise<DeleteSSARiskDisposalsResponse> = (params) => {
+export const apiDeleteSSARiskDisposals: (
+    params: DeleteSSARiskDisposalsRequest
+) => Promise<DeleteSSARiskDisposalsResponse> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("DeleteSSARiskDisposals", params)
@@ -108,16 +113,22 @@ export const apiDeleteSSARiskDisposals: (params: DeleteSSARiskDisposalsRequest) 
     })
 }
 
-export interface GetSSARiskFieldGroupResponse {
+export interface GetSSARiskFieldGroupRequest {
+    Filter: SSARisksFilter
+}
+
+export interface GetSSARiskFieldGroupExResponse {
     FileField: FieldGroup[]
     SeverityField: FieldName[]
     RiskTypeField: FieldName[]
 }
-/** GetSSARiskFieldGroup */
-export const apiGetSSARiskFieldGroup: () => Promise<GetSSARiskFieldGroupResponse> = () => {
+/** GetSSARiskFieldGroupEx */
+export const apiGetSSARiskFieldGroupEx: (
+    params?: GetSSARiskFieldGroupRequest
+) => Promise<GetSSARiskFieldGroupExResponse> = (params = {Filter:{}}) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("GetSSARiskFieldGroup")
+            .invoke("GetSSARiskFieldGroupEx", params)
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `查询失败: ${e}`)

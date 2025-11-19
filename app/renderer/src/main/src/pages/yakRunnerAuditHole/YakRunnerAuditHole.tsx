@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import styles from "./YakRunnerAuditHole.module.scss"
 import {
     HoleQueryProps,
@@ -26,7 +26,7 @@ import {VulnerabilityTypePieRefProps} from "../risks/VulnerabilityTypePie/Vulner
 import {VulnerabilityTypePie} from "../risks/VulnerabilityTypePie/VulnerabilityTypePie"
 import {YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
-import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
+import {apiGetSSARiskFieldGroupEx} from "./YakitAuditHoleTable/utils"
 import {shallow} from "zustand/shallow"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -149,22 +149,30 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const [typeList, setTypeList] = useState<FieldName[]>([])
     useEffect(() => {
         if (!inViewport) return
-        getGroups()
         emiter.on("onRefRiskFieldGroup", onRefRiskFieldGroup)
         return () => {
             emiter.off("onRefRiskFieldGroup", onRefRiskFieldGroup)
         }
-    }, [inViewport])
+    }, [])
+
     const onRefRiskFieldGroup = useMemoizedFn(() => {
         getGroups()
     })
-    const getGroups = useMemoizedFn(() => {
-        apiGetSSARiskFieldGroup().then((res) => {
+
+    useDebounceEffect(()=>{
+        if (!inViewport) return
+        getGroups(false)
+    },[inViewport,query],{
+        wait: 200
+    })
+
+    const getGroups = useMemoizedFn((option: boolean = true) => {
+        apiGetSSARiskFieldGroupEx({Filter:query}).then((res) => {
             const {FileField, SeverityField, RiskTypeField} = res
             setProgramList(FileField.sort((a, b) => b.Total - a.Total))
             setLevelList(SeverityField)
             setTypeList(RiskTypeField)
-            if (FileField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {
+            if (FileField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0 && option) {
                 onOperateSide(false)
             }
         })

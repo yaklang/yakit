@@ -20,7 +20,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {FieldName, Fields} from "../risks/RiskTable"
 import {QueryGeneralResponse} from "../invoker/schema"
 import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
-import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {apiGetSSARiskFieldGroupEx} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 interface IRifyHomeProps {}
@@ -45,7 +45,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
 
     // 更新漏洞数据
     const undateRiskLevel = () => {
-        apiGetSSARiskFieldGroup().then((res) => {
+        apiGetSSARiskFieldGroupEx().then((res) => {
             setRiskLevelData(res.SeverityField)
         })
     }
