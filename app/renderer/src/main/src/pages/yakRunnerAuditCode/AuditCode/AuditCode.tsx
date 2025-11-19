@@ -2475,7 +2475,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             width: 200,
             render: (text, record) => {
                 return (
-                    <div className={styles["audit-opt"]}>
+                    <div className={styles["audit-opt"]} onClick={(e) => e.stopPropagation()}>
                         <Tooltip title={"编译"}>
                             <YakitPopconfirm
                                 title={
@@ -2485,9 +2485,15 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         请问是否重新编译？
                                     </>
                                 }
-                                onConfirm={() => setAfreshName(record.ProjectName)}
+                                onConfirm={() => {
+                                    setAfreshName(record.ProjectName)
+                                }}
                             >
-                                <YakitButton type='text' icon={<OutlineReloadScanIcon />} />
+                                <YakitButton
+                                    type='text'
+                                    icon={<OutlineReloadScanIcon />}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
                             </YakitPopconfirm>
                         </Tooltip>
 
@@ -2495,7 +2501,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             <YakitButton
                                 type='text'
                                 icon={<OutlineScanIcon />}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation()
                                     emiter.emit(
                                         "openPage",
                                         JSON.stringify({
@@ -2516,7 +2523,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             <YakitButton
                                 type='text'
                                 icon={<OutlineClockIcon />}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation()
                                     emiter.emit(
                                         "openPage",
                                         JSON.stringify({
@@ -2534,7 +2542,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             <YakitButton
                                 type='text'
                                 icon={<OutlinePencilaltIcon />}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation()
                                     const m = showYakitModal({
                                         title: "编辑项目",
                                         width: 600,
@@ -2588,6 +2597,20 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
     const onDeleteAll = useMemoizedFn(() => {
         deleteParams && onDelete({...deleteParams.params, DeleteMode: "delete_all"})
+    })
+
+    const onClickRow = useMemoizedFn((record: SSAProjectResponse) => {
+        console.log("Clicked row:", record)
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.YakRunner_ScanHistory,
+                params: {
+                    Programs: [record.ProjectName],
+                    ProjectIds: [record.ID]
+                }
+            })
+        )
     })
     return (
         <div
@@ -2680,6 +2703,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                         onSelectAll: onSelectAll,
                         onChangeCheckboxSingle: onSelectChange
                     }}
+                    onClickRow={onClickRow}
                 />
             </div>
 
