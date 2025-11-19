@@ -105,7 +105,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         clearInterval(questionQueueTimer.current)
         questionQueueTimer.current = null
     })
-    // 问题队列
+    // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
     const [questionQueue, setQuestionQueue, getQuestionQueue] = useGetSetState<AIQuestionQueues>(
         cloneDeep(DeafultAIQuestionQueues)
     )
@@ -278,6 +278,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
                     } else if (res.NodeId === "queue_info") {
+                        // 因为问题队列也分自由对话和任务规划队列，所以需要先屏蔽处理任务规划的队列信息
+                        if (planCoordinatorId.current === res.CoordinatorId) return
                         // 问题队列信息由chatIPC-hook进行收集
                         const {tasks, total_tasks} = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
                         setQuestionQueue({

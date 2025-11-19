@@ -724,6 +724,31 @@ function useCasualChat(params?: UseCasualChatParams) {
             handleTriggerQuestionQueueRequest()
         }
     })
+
+    // 问题队列清空处理
+    const handleClearQuestionQueue = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {NodeId, NodeIdVerbose} = res
+
+            setContents((old) => {
+                const newArr = [...old]
+                newArr.push({
+                    ...genBaseAIChatData(res),
+                    type: AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED,
+                    data: {
+                        NodeId,
+                        NodeIdVerbose
+                    }
+                })
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
     // #endregion
 
     // 处理数据方法
@@ -759,6 +784,11 @@ function useCasualChat(params?: UseCasualChatParams) {
                 if (["react_task_enqueue", "react_task_dequeue"].includes(res.NodeId)) {
                     // 问题(入|出)队列状态变化
                     handleQuestionQueueStatusChange(res)
+                    return
+                }
+
+                if (res.NodeId === "react_task_cleared") {
+                    handleClearQuestionQueue(res)
                     return
                 }
 

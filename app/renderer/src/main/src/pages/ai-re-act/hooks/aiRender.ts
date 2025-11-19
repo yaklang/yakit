@@ -113,6 +113,12 @@ export interface AIQuestionQueueStatusChange extends AIAgentGrpcApi.QuestionQueu
     queues: AIQuestionQueues
 }
 
+/** 自由对话-问题队列清空消息 */
+export interface AIQuestionQueueCleared {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+}
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
@@ -145,7 +151,9 @@ export enum AIChatQSDataTypeEnum {
     /**当前任务规划结束标志 */
     END_PLAN_AND_EXECUTION = "end_plan_and_execution",
     /** 问题队列状态变化信息 */
-    QUESTION_QUEUE_STATUS_CHANGE = "question_queue_status_change"
+    QUESTION_QUEUE_STATUS_CHANGE = "question_queue_status_change",
+    /** 问题队列清空消息 */
+    QUESTION_QUEUE_CLEARED = "question_queue_cleared"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -179,6 +187,7 @@ type ChatQuestionQueueStatusChange = AIChatQSDataBase<
     AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE,
     AIQuestionQueueStatusChange
 >
+type ChatQuestionQueueCleared = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED, AIQuestionQueueCleared>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -197,4 +206,5 @@ export type AIChatQSData =
     | ChatToolCallDecision
     | ChatPlanExecEnd
     | ChatQuestionQueueStatusChange
+    | ChatQuestionQueueCleared
 // #endregion
