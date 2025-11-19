@@ -207,7 +207,8 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
     return (
         <YakitPopover
             title={t("AdvancedSet.advancedConfig")}
-            onVisibleChange={onCancel}
+            onVisibleChange={(visible) => !visible && onCancel()}
+            trigger='click'
             overlayInnerStyle={{width: 350}}
             overlayClassName={styles["history-advanced-set-wrapper"]}
             visible={visible}
