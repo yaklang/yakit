@@ -165,8 +165,8 @@
 }
 
 .chat-footer {
-    height: 104px;
-    padding: 8px 12px 0 12px;
+    height: 96px;
+    padding: 0px 12px 0 12px;
     display: flex;
     justify-content: center;
     .footer-body {
@@ -185,6 +185,7 @@
         flex-direction: column;
         justify-content: flex-end;
         gap: 4px;
+        z-index: 9;
         .clear-context {
             width: 100%;
             display: flex;
@@ -194,6 +195,10 @@
             }
         }
     }
+}
+.chat-footer-query {
+    height: 124px;
+    padding: 8px 12px 0 12px;
 }
 // #endregion
 

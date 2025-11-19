@@ -14,6 +14,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {AIStartParams} from "../hooks/grpcApi"
+import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 
 const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props) => {
     const {setting} = useAIAgentStore()
@@ -48,7 +49,7 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
         setOpen(v)
         if (!v && chatIPCData.execute) {
             handleSendSyncMessage({
-                syncType: "update_config",
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_UPDATE_CONFIG,
                 params: {
                     ReviewPolicy: modelValue
                 }

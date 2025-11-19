@@ -7,6 +7,7 @@
     flex-direction: column;
 }
 .ai-task-query {
+    min-height: 24px;
     .list-todo-icon {
         svg {
             width: 16px;
@@ -56,6 +57,8 @@
         .task-query-list {
             @extend %display-column-center;
             gap: 8px;
+            max-height: 15vh;
+            overflow-y: auto;
             .task-query-list-item {
                 @extend %display-flex-center;
                 justify-content: space-between;

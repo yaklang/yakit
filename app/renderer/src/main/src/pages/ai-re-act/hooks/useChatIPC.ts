@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from "react"
 import {yakitNotify} from "@/utils/notification"
-import {useMemoizedFn} from "ahooks"
+import {useInterval, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
@@ -19,7 +19,7 @@ import {
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
 import cloneDeep from "lodash/cloneDeep"
-import {DeafultAIQuestionQueues} from "./defaultConstant"
+import {AIInputEventSyncTypeEnum, DeafultAIQuestionQueues} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -98,13 +98,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         })
     })
 
-    // 请求问题队列的循环定时器
-    const questionQueueTimer = useRef<NodeJS.Timeout | null>(null)
-    const handleResetQuestionQueueTimer = useMemoizedFn(() => {
-        if (!questionQueueTimer.current) return
-        clearInterval(questionQueueTimer.current)
-        questionQueueTimer.current = null
-    })
     // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
     const [questionQueue, setQuestionQueue, getQuestionQueue] = useGetSetState<AIQuestionQueues>(
         cloneDeep(DeafultAIQuestionQueues)
@@ -112,13 +105,16 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 开始定时循环获取问题队列
     const handleStartQuestionQueue = useMemoizedFn(() => {
         setTimeout(() => {
-            sendRequest({IsSyncMessage: true, SyncType: "queue_info"})
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
         }, 50)
-        handleResetQuestionQueueTimer()
-        questionQueueTimer.current = setInterval(() => {
-            sendRequest({IsSyncMessage: true, SyncType: "queue_info"})
-        }, 5000)
     })
+
+    useInterval(
+        () => {
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+        },
+        execute ? 5000 : undefined
+    )
 
     // 日志
     const logEvents = useAIChatLog()
@@ -195,7 +191,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setExecute(false)
         setRunTimeIDs([])
         setGrpcFolders([])
-        handleResetQuestionQueueTimer()
+        // handleResetQuestionQueueTimer()
         setQuestionQueue(cloneDeep(DeafultAIQuestionQueues))
         // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
@@ -264,9 +260,9 @@ function useChatIPC(params?: UseChatIPCParams) {
 
                 if (res.Type === "structured") {
                     const obj = JSON.parse(ipcContent) || ""
-                    if (!obj || typeof obj !== "object") return
+                    // if (!obj || typeof obj !== "object") return
 
-                    if (obj.level) {
+                    if (obj?.level) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
                         logEvents.pushLog({

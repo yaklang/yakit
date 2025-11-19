@@ -5,6 +5,7 @@ import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
+import {AIInputEventSyncTypeEnum} from "./defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -98,37 +99,6 @@ export interface AIStartParams {
     TimelineSessionID?: string
 }
 
-/**
- * - SyncType类型:
- *
- *  SYNC_TYPE_PLAN                      = "plan"
- *
- *  SYNC_TYPE_CONSUMPTION               = "consumption"
- *
- *  SYNC_TYPE_PING                      = "ping"
- *
- *  SYNC_TYPE_SET_CONFIG                = "set_config"
- *
- *  SYNC_TYPE_PROCESS_EVENT             = "sync_process_event"
- *
- *  SYNC_TYPE_QUEUE_INFO                = "queue_info"
- *
- *  SYNC_TYPE_TIMELINE                  = "timeline"
- *
- *  SYNC_TYPE_KNOWLEDGE                 = "enhance_knowledge"
- *
- *  SYNC_TYPE_UPDATE_CONFIG             = "update_config"
- *
- *  SYNC_TYPE_MEMORY_CONTEXT            = "memory_sync"
- *
- *  SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_
- *
- *  SYNC_TYPE_REACT_JUMP_QUEUE          = "react_jump_queue"
- *
- *  SYNC_TYPE_REACT_REMOVE_TASK         = "react_remove_task"
- *
- */
-
 export interface AIInputEvent {
     IsStart?: boolean
     Params?: AIStartParams // 提问问题相关
@@ -138,7 +108,7 @@ export interface AIInputEvent {
     InteractiveJSONInput?: string // {suggestion:"continue"}|{suggestion:"adjust_plan",extra_prompt:"xxx"}
 
     IsSyncMessage?: boolean
-    SyncType?: string
+    SyncType?: `${AIInputEventSyncTypeEnum}`
     SyncJsonInput?: string
     SyncID?: string
 

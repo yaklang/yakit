@@ -22,7 +22,7 @@ export interface AIChatIPCSendParams {
 }
 type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export interface AISendSyncMessageParams {
-    syncType: string
+    syncType: AIInputEvent['SyncType']
     SyncJsonInput?: AIInputEvent["SyncJsonInput"]
     params: MakeOptional<AIStartParams, "UserQuery">
 }

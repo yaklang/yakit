@@ -15,6 +15,7 @@ import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     //#region AI model
@@ -58,7 +59,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         setOpen(v)
         if (!v && chatIPCData.execute) {
             handleSendSyncMessage({
-                syncType: "update_config",
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_UPDATE_CONFIG,
                 params: {
                     AIService: modelValue
                 }

@@ -12,8 +12,8 @@ import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlinePositionIcon}
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
-import {yakitNotify} from "@/utils/notification"
-import {AIChatQSDataTypeEnum} from "../hooks/aiRender"
+import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const [leftExpand, setLeftExpand] = useState(true)
@@ -53,7 +53,11 @@ export default AIReActTaskChat
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
     const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
     const {taskChat} = useAIChatUIData()
+    const {handleSendSyncMessage} = useChatIPCDispatcher()
 
+    const questionQueue = useCreation(() => {
+        return chatIPCData.questionQueue
+    }, [chatIPCData.questionQueue])
     const {streams} = taskChat
 
     const [scrollToBottom, setScrollToBottom] = useState(false)
@@ -61,11 +65,21 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         setScrollToBottom((v) => !v)
     })
     const onStopTask = useMemoizedFn(() => {
-        yakitNotify("info", "开发中...")
+        if (questionQueue.data.length > 0) {
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_JUMP_QUEUE,
+                SyncJsonInput: JSON.stringify({task_id: questionQueue.data[0].id}),
+                params: {}
+            })
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+                params: {}
+            })
+        }
     })
     const showStop = useCreation(() => {
-        return chatIPCData.execute && streams[streams.length - 1]?.type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
-    }, [streams.length, chatIPCData.execute])
+        return chatIPCData.execute && questionQueue?.total > 0
+    }, [streams.length, questionQueue])
     return (
         <>
             <div className={styles["tab-content"]}>

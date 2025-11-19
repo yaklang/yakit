@@ -13,6 +13,7 @@ import DividerCard, {StreamsStatus} from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
+import {AITaskClearNotice, AITaskUpdateNotice} from "../aiTaskUpdateNotice/AITaskUpdateNotice"
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
@@ -144,8 +145,11 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         error={0}
                     />
                 )
-            // TODO 更新任务队列
-            // <AITaskUpdateNotice/>
+
+            case AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE:
+                return <AITaskUpdateNotice item={data} />
+            case AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED:
+                return <AITaskClearNotice item={data} />
             default:
                 return <></>
         }

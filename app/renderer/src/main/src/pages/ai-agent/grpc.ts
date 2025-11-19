@@ -119,7 +119,7 @@ export const grpcGetChangeQuestionPlugin: () => Promise<YakScript | null> = () =
                     Order: "",
                     OrderBy: ""
                 },
-                IncludedScriptNames: ["首页换一换问题"]
+                IncludedScriptNames: ["简易意图识别"]
             }
             ipcRenderer
                 .invoke("QueryYakScript", query)

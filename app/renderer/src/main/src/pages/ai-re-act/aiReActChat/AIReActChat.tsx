@@ -22,6 +22,8 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import emiter from "@/utils/eventBus/eventBus"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
+import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
+import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -30,8 +32,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
-    const {chatIPCEvents, handleStart, handleStop, setTimelineMessage} = useChatIPCDispatcher()
-    const {execute} = chatIPCData
+    const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
+    const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -42,6 +44,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {activeChat, setting} = useAIAgentStore()
 
+    const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
     const [question, setQuestion] = useState<string>("")
     const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
@@ -106,12 +109,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             if (!timelineVisibleLoading) {
                 setTimelineVisibleLoading(true)
             }
-            const info: AIInputEvent = {
-                IsSyncMessage: true,
-                SyncType: "timeline",
-                InteractiveJSONInput: ""
+            const info: AISendSyncMessageParams = {
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+                params: {}
             }
-            chatIPCEvents.onSend({token: activeChat.id, type: "", params: info})
+            handleSendSyncMessage(info)
         }),
         {wait: 300, leading: true}
     ).run
@@ -144,11 +146,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         </div>
                         <AIReActChatContents chats={casualChat.contents} />
                     </div>
-                    <div className={styles["chat-footer"]}>
+                    <div
+                        className={classNames(styles["chat-footer"], {
+                            [styles["chat-footer-query"]]: execute && questionQueue?.total > 0
+                        })}
+                    >
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
-                                {/*  TODO 队列切换任务 */}
-                                <AITaskQuery />
+                                {execute && questionQueue?.total > 0 && <AITaskQuery />}
                                 <AIChatTextarea
                                     loading={false}
                                     question={question}

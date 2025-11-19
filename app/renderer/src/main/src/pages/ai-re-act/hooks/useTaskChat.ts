@@ -3,6 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {
+    AIInputEventSyncTypeEnum,
     AIReviewJudgeLevelMap,
     convertNodeIdToVerbose,
     DefaultAIToolResult,
@@ -737,7 +738,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     const data = obj as AIAgentGrpcApi.ChangeTask
                     handleUpdateTaskState(data.task.index, "completed")
                     // 更新任务树数据
-                    sendRequest && sendRequest({IsSyncMessage: true, SyncType: "plan"})
+                    sendRequest && sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN})
                     return
                 }
 

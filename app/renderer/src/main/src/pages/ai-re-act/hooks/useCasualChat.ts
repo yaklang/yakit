@@ -14,6 +14,7 @@ import {
 import {v4 as uuidv4} from "uuid"
 import {AIChatLogData, handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
 import {
+    AIInputEventSyncTypeEnum,
     AIReviewJudgeLevelMap,
     CasualDefaultToolResultSummary,
     convertNodeIdToVerbose,
@@ -684,7 +685,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     const handleTriggerQuestionQueueRequest = useThrottleFn(
         () => {
             // 更新任务树数据
-            sendRequest && sendRequest({IsSyncMessage: true, SyncType: "queue_info"})
+            sendRequest && sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
         },
         {wait: 50, leading: false}
     ).run
