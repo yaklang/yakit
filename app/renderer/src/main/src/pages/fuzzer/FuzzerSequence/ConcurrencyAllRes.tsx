@@ -272,7 +272,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
             setQuery={(q) => {
                 setQuery({...q})
             }}
-            // isShowMatch // TODO: 隐藏匹配/提取按钮 
+            isShowMatch // TODO: 隐藏匹配/提取按钮 
             sendPayloadsType='concurrencyAllRes'
             setShowExtra={setShowExtra}
             showResponseInfoSecondEditor={showResponseInfoSecondEditor}
@@ -288,9 +288,9 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
             </div>
             <YakitResizeBox
                 lineDirection='right'
-                firstMinSize={0} //TODO: 隐藏匹配/提取按钮 300
-                firstRatio='0'  //TODO: 隐藏匹配/提取按钮 300px
-                freeze={false} //TODO: 隐藏匹配/提取按钮 
+                firstMinSize={300} //TODO: 隐藏匹配/提取按钮 300
+                firstRatio='300px'  //TODO: 隐藏匹配/提取按钮 300px
+                freeze={true} //TODO: 隐藏匹配/提取按钮 
                 firstNode={ 
                     <div className={styles["left-panel"]}>
                         <div className={styles["panel-body"]}>

@@ -2810,7 +2810,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             onOpenMatcherDrawer?.()
                         }
                     }}
-                    // isShowMatch // TODO: 隐藏匹配/提取按钮 
+                    isShowMatch // TODO: 隐藏匹配/提取按钮 
                 />
                 <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                     {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}

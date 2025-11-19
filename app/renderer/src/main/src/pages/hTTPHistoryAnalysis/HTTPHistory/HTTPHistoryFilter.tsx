@@ -479,6 +479,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         OrderBy: "Id"
     })
 
+    useEffect(()=>{
+        console.log(data,'ssssssssssss');
+    },[data])
+
     // #region 网站树、进程
     const campareProcessName = useCampare(ProcessName)
     useDebounceEffect(
