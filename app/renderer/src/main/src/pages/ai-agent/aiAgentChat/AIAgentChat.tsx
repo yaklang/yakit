@@ -99,12 +99,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const onSetKeyTask = useMemoizedFn(() => {
         setMode("task")
-        emiter.emit("switchAIActTab", AITabsEnum.Task_Content)
+        setTimeout(() => {
+            emiter.emit("switchAIActTab", AITabsEnum.Task_Content)
+        }, 100)
     })
 
     const onSetReAct = useMemoizedFn(() => {
         setMode("re-act")
-        emiter.emit("switchAIActTab")
+        setTimeout(() => {
+            emiter.emit("switchAIActTab")
+        }, 100)
     })
 
     // review数据中树的数据中需要的解释和关键词工具

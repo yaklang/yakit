@@ -157,6 +157,12 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         })
         return {data, xAxis}
     }, [aiPerfData.firstCost])
+    // 最新的首字符延迟
+    const lastFirstCost = useCreation(() => {
+        const length = currentCostEcharts.data.length
+        if (length === 0) return 0
+        return currentCostEcharts.data[length - 1] || 0
+    }, [currentCostEcharts])
     // AI的Token消耗
     const token = useCreation(() => {
         let input = 0
@@ -175,6 +181,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
         setActiveKey((per) => (per === key ? undefined : key))
     })
+    const onOpenLog = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onOpenLogWindow()
+    })
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
@@ -186,6 +196,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 animationWrapperClassName={classNames(styles["expand-retract-animation-wrapper"], {
                     [styles["expand-retract-animation-wrapper-hidden"]]: !yakExecResult.card.length
                 })}
+                expandText='展开'
+                retractText='收起'
             >
                 <div className={styles["expand-retract-content"]}>
                     <div className={styles["header"]}>
@@ -206,11 +218,13 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                     />
                                 </div>
                             )}
-                            {currentPressuresEcharts?.data?.length > 0 && (
+                            {currentCostEcharts?.data?.length > 0 && (
                                 <div className={styles["echarts-wrapper"]}>
                                     <div className={styles["title"]}>
                                         响应速度
-                                        <span className={styles["cost"]}> {formatNumberUnits(lastPressure)}</span>
+                                        <span className={styles["cost"]}>{`${
+                                            lastFirstCost < 0 ? "-" : lastFirstCost
+                                        }ms`}</span>
                                     </div>
                                     <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
                                 </div>
@@ -228,7 +242,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                 <div className={styles["divider-style"]}></div>
                             </div>
 
-                            <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLogWindow}>
+                            <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                 日志
                             </YakitButton>
                         </div>

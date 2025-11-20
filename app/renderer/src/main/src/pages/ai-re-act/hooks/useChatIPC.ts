@@ -178,6 +178,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     break
 
                 default:
+                    console.log("send-ai-re-act---\n", token, params)
                     ipcRenderer.invoke("send-ai-re-act", token, params)
                     break
             }

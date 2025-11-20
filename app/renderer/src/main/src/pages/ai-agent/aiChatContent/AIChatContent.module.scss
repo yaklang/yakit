@@ -19,6 +19,11 @@
             width: 100%;
             flex: 1;
         }
+        &:hover {
+            .expand-retract-animation-wrapper {
+                width: 54px;
+            }
+        }
     }
     .expand-retract-wrapper-collapsed {
         &:hover {
