@@ -391,7 +391,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: t("HTTPFuzzerPageTable.responseSize"),
                           dataKey: "BodyLength",
-                          width: 99,
+                          width: 120,
                           filterProps: {
                               filterKey: "bodyLength",
                               filterIcon: (
@@ -439,7 +439,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: t("HTTPFuzzerPageTable.latencyMs"),
                           dataKey: "DurationMs",
-                          width: 99,
+                          width: 120,
                           filterProps: {
                               filterKey: "durationMs",
                               filterIcon: (
@@ -771,8 +771,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         let colorIsPush = true
                         // 搜索满足条件 交集
                         // 颜色搜索
-                        // 去掉record.MatchedByMatcher bug：有些MatchedByMatcher为false的也需要被筛选掉
-                        if (query?.Color && query?.Color?.length > 0) {
+                        if (record.MatchedByMatcher && query?.Color && query?.Color?.length > 0) {
                             const cLength = query.Color
                             let colorFlag = false
                             for (let index = 0; index < cLength.length; index++) {

@@ -259,7 +259,7 @@
     "responseSize": "响应大小",
     "responseSimilarity": "响应相似度",
     "httpHeaderSimilarity": "HTTP头相似度",
-    "latencyMs": "延迟(ms)",
+    "latencyMs": "延迟（ms）",
     "failureReason": "失败原因",
     "failureContentNotice": "如果请求失败才会有内容~"
   },
@@ -346,7 +346,7 @@
     "request": "请求",
     "status": "状态",
     "responseSize": "响应大小",
-    "latencyMs": "延迟(ms)",
+    "latencyMs": "延迟（ms）",
     "extractData": "提取数据",
     "responseSimilarity": "响应相似度",
     "httpHeaderSimilarity": "HTTP头相似度",

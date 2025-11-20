@@ -401,7 +401,7 @@
             overflow: hidden;
         }
         .ant-drawer-header-title{
-            flex-direction: row-reverse;
+            justify-content: end;
         }
     }
 }
