@@ -250,6 +250,8 @@ export interface AuditCodePageInfoProps {
 
 export interface CodeScanPageInfoProps {
     projectName?: string[]
+    projectId?: number[]
+    historyName?: string[]
     codeScanMode?: SyntaxFlowScanModeType
     runtimeId?: string
 

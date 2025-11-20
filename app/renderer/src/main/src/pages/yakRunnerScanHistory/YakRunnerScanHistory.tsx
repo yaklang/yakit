@@ -445,6 +445,8 @@ export interface SSAProgram {
     WarnRiskNumber: number
     LowRiskNumber: number
     InfoRiskNumber: number
+
+    SSAProjectID: number
 }
 
 export type QuerySSAProgramResponse = QueryGeneralResponse<SSAProgram>
@@ -709,7 +711,9 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                                     JSON.stringify({
                                                         route: YakitRoute.YakRunner_Code_Scan,
                                                         params: {
-                                                            projectName: [rowData.Name],
+                                                            projectName:pageInfo.Programs,
+                                                            projectId: pageInfo.ProjectIds,
+                                                            historyName: [rowData.Name],
                                                             GroupNames: [rowData.Language]
                                                         }
                                                     })

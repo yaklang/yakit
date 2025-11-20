@@ -1967,7 +1967,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 
 // 公共封装组件用于(重新)编译
 export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
-    const {afreshName, setAfreshName, onSuccee, warrpId, type = "afresh_compile",JSONStringConfig = ""} = props
+    const {afreshName, setAfreshName, onSuccee, warrpId, type = "afresh_compile", JSONStringConfig = ""} = props
     const tokenRef = useRef<string>(randomString(40))
     /** 是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
@@ -2006,18 +2006,16 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
                 PluginType: "yak",
                 Input: "",
                 HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-                ExecParams: [
-                   
-                ],
+                ExecParams: [],
                 PluginName: type === "afresh_compile" ? "SSA 项目重新编译" : "SSA 项目编译"
             }
-            if(type === "afresh_compile"){
+            if (type === "afresh_compile") {
                 requestParams.ExecParams.push({
                     Key: "programName",
                     Value: afreshName
                 })
             }
-            if(type === "compile"){
+            if (type === "compile") {
                 requestParams.ExecParams.push({
                     Key: "config",
                     Value: JSONStringConfig
@@ -2521,6 +2519,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                             route: YakitRoute.YakRunner_Code_Scan,
                                             params: {
                                                 projectName: [record.ProjectName],
+                                                projectId: [record.ID],
                                                 GroupNames: [record.Language]
                                             }
                                         })
@@ -2724,7 +2723,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 setAfreshName={setCompileName}
                 onSuccee={() => update(true)}
                 warrpId={warrpId || document.getElementById("audit-history-table")}
-                type="compile"
+                type='compile'
             />
 
             <YakitHint

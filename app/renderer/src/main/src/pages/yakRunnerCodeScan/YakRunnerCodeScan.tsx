@@ -104,9 +104,9 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon, FolderOpenIcon} from "@/assets/newIcon"
 import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
-import { QuerySSAProgramRequest } from "../yakRunnerScanHistory/YakRunnerScanHistory"
-import { apiQuerySSAPrograms } from "../yakRunnerScanHistory/utils"
-import { formatTimestamp } from "@/utils/timeUtil"
+import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHistory"
+import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
+import {formatTimestamp} from "@/utils/timeUtil"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -1026,10 +1026,10 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                 .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
                     item.Data = (item as any)?.Projects || []
                     if (item.Data.length > 0) {
-                        let projectId:number[] = []
+                        let projectId: number[] = []
                         const list = item.Data.map((item) => {
                             const {ProjectName, ID, Language} = item
-                            if((pageInfo.projectName||[]).includes(ProjectName)){
+                            if ((pageInfo.projectId || []).includes(ID)) {
                                 projectId.push(ID)
                             }
                             return {label: ProjectName, value: ID, language: Language}
@@ -1370,11 +1370,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         }, [])
 
         useEffect(() => {
-            const {projectName, codeScanMode, runtimeId} = pageInfo
-            if (projectName) {
+            const {projectId, historyName, codeScanMode, runtimeId} = pageInfo
+            if (projectId) {
                 setExecuteType("old")
                 form.setFieldsValue({
-                    project: projectName
+                    project: projectId,
+                    history: historyName
                 })
             }
             if (codeScanMode && runtimeId) {
@@ -1730,7 +1731,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 warn("请选择扫描规则")
                 return
             }
-            const {project,history} = value
+            const {project, history = []} = value
             if (!project) {
                 warn("请输入项目名称")
                 return
@@ -1740,14 +1741,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 getAduitList()
                 form.setFieldsValue({project})
             }
-            let ProgramName:string[] = []
-            if(history && Array.isArray(history)){
-                compileHistoryList.forEach((item)=>{
-                    if(history.includes(item.value)){
-                        ProgramName.push(item.label)
-                    }
-                })
-            }
 
             // 清空已展示的规则执行数据
             CodeScanByExecuteLastDataRef.current = []
@@ -1756,7 +1749,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 ...extraParamsValue,
                 ControlMode: "start",
                 SSAProjectId: project,
-                ProgramName,
+                ProgramName: history,
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -1766,12 +1759,15 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Tag: [],
                     Keyword: "",
                     FilterLibRuleKind: filterLibRuleKind
-                },
+                }
             }
+            console.log("params:", params)
+
             apiSyntaxFlowScan(params, token).then(() => {
                 pageInfoCacheRef.current = {
                     ...pageInfo,
-                    projectName: project
+                    projectId: project,
+                    historyName: history
                 }
                 setIsExpand(false)
                 setExecuteStatus("process")
@@ -1916,33 +1912,34 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             valuePropName: "selectProjectId",
             trigger: "setSelectProjectId"
         })
-        const [compileHistoryList, setCompileHistoryList] = useState<{ label: string; value: number }[]>([])
+        const [compileHistoryList, setCompileHistoryList] = useState<{label: string; value: string}[]>([])
         const getCompileHistoryList = useMemoizedFn(async (ProjectIds: number[]) => {
-           const finalParams: QuerySSAProgramRequest = {
-                       Filter: {
-                           ProjectIds
-                       },
-                       Pagination: {...genDefaultPagination(500),OrderBy: "created_at",}
-                   }
-            apiQuerySSAPrograms(finalParams)
-            .then((res) => {
-                setCompileHistoryList(res.Data.map((item)=>{
-                    return {
-                        label: formatTimestamp(item.UpdateAt),
-                        value: item.Id
-                    }
-                }))
+            const finalParams: QuerySSAProgramRequest = {
+                Filter: {
+                    ProjectIds
+                },
+                Pagination: {...genDefaultPagination(500), OrderBy: "created_at"}
+            }
+            apiQuerySSAPrograms(finalParams).then((res) => {
+                setCompileHistoryList(
+                    res.Data.map((item) => {
+                        return {
+                            label: formatTimestamp(item.UpdateAt),
+                            value: item.Name
+                        }
+                    })
+                )
             })
         })
 
-        useUpdateEffect(()=>{
-            if(selectProjectId.length === 0){
+        useUpdateEffect(() => {
+            if (selectProjectId.length === 0) {
                 setCompileHistoryList([])
                 return
             }
             getCompileHistoryList(selectProjectId)
-        },[selectProjectId])
-        
+        }, [selectProjectId])
+
         return (
             <>
                 <div
@@ -2009,21 +2006,19 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 rules={[{required: true, message: "请选择项目名称"}]}
                             >
                                 <YakitSelect
-                                    mode='multiple'
                                     allowClear
                                     showSearch
                                     placeholder='请选择项目名称'
                                     options={auditCodeList}
-                                    onChange={async (arr: number[]) => {
+                                    onChange={async (item: number) => {
                                         let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
-                                        arr.forEach((item) => {
-                                            let language = auditCodeList.find((itemIn) => itemIn.value === item)
-                                                ?.language
-                                            if (language) {
-                                                selectGroup.push(language)
-                                                selectGroup.push("general")
-                                            }
-                                        })
+
+                                        let language = auditCodeList.find((itemIn) => itemIn.value === item)?.language
+                                        if (language) {
+                                            selectGroup.push(language)
+                                            selectGroup.push("general")
+                                        }
+
                                         const newSelectGroup = filter(selectGroup)
                                         const selectTotal = await getGroupNamesTotal(newSelectGroup)
                                         setPageInfo({
@@ -2032,22 +2027,19 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                             GroupNames: newSelectGroup,
                                             selectTotal
                                         })
-                                        setSelectProjectId(arr)
+                                        setSelectProjectId(item ? [item] : [])
                                     }}
                                 />
                             </Form.Item>
 
-                            <Form.Item
-                                label='编译历史'
-                                name='history'
-                            >
+                            <Form.Item label='编译历史' name='history'>
                                 <YakitSelect
                                     mode='multiple'
                                     allowClear
                                     showSearch
                                     placeholder='请选择编译历史'
                                     options={compileHistoryList}
-                                    disabled={compileHistoryList.length===0}
+                                    disabled={compileHistoryList.length === 0}
                                 />
                             </Form.Item>
 
@@ -2586,8 +2578,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                             help='可将项目文件拖入框内或点击此处'
                             disabled={false}
                             // accept=""
-                            cacheFilePathKey="CodeScan_File_Path"
-                            cacheFolderPathKey="CodeScan_Folder_Path"
+                            cacheFilePathKey='CodeScan_File_Path'
+                            cacheFolderPathKey='CodeScan_Folder_Path'
                         />
                     </Form.Item>
 

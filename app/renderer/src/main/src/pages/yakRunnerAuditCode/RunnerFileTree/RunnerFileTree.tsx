@@ -51,6 +51,9 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import moment from "moment"
+import {apiQuerySSAPrograms} from "@/pages/yakRunnerScanHistory/utils"
+import {genDefaultPagination} from "@/pages/invoker/schema"
+import {warn} from "@/utils/notification"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
 
@@ -235,15 +238,37 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
         switch (key) {
             case "codeScan":
-                emiter.emit(
-                    "openPage",
-                    JSON.stringify({
-                        route: YakitRoute.YakRunner_Code_Scan,
-                        params: {
-                            projectName: [projectName]
-                        }
-                    })
-                )
+                apiQuerySSAPrograms({
+                    Filter: {
+                        ProgramNames: projectName ? [projectName] : []
+                    },
+                    Pagination: {...genDefaultPagination()}
+                }).then((res) => {
+                    let projectId = 0
+                    let compileProjectName = ""
+                    if (res.Data.length > 0) {
+                        projectId = res.Data[0].SSAProjectID
+                        compileProjectName = res.Data[0].Name
+                    }
+                    if (parseInt(String(projectId)) === 0) {
+                        warn("未找到对应的项目配置，由于项目管理功能更新，请重新编译项目")
+                        return
+                    }
+                    
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.YakRunner_Code_Scan,
+                            params: {
+                                // 此处由接口查出来
+                                projectName:compileProjectName,
+                                projectId,
+                                historyName: [projectName]
+                            }
+                        })
+                    )
+                })
+
                 break
             case "auditCode":
                 auditCode()
