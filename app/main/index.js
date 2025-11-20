@@ -209,6 +209,13 @@ function mainWinHide() {
 
 // 主窗口显示
 function mainWinShow() {
+    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
+        const engineLinkWinBounds = engineLinkWin.getBounds()
+        const x = engineLinkWinBounds.x
+        const y = engineLinkWinBounds.y
+        win.setBounds({x, y})
+    }
+
     if (win && !win.isDestroyed()) {
         win.setOpacity(1)
         win.show()
@@ -235,10 +242,13 @@ function engineLinkWinShow() {
         const y = winBounds.y + Math.round((winBounds.height - linkBounds.height) / 2)
         engineLinkWin.setBounds({x, y, width: linkBounds.width, height: linkBounds.height})
     }
-    engineLinkWin.setOpacity(1)
-    engineLinkWin.show()
-    engineLinkWin.focus()
-    engineLinkWin.setSkipTaskbar(false)
+
+    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
+        engineLinkWin.setOpacity(1)
+        engineLinkWin.show()
+        engineLinkWin.focus()
+        engineLinkWin.setSkipTaskbar(false)
+    }
 }
 
 /**
