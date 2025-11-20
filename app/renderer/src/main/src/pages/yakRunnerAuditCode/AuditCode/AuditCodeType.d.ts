@@ -157,6 +157,10 @@ export interface AfreshAuditModalProps {
     onSuccee: () => void
     // 绑定容器
     warrpId?: HTMLElement | null
+    // 区分重新编译和全新编译
+    type?: "compile" | "afresh_compile"
+    // 全新编译时所需的配置项
+    JSONStringConfig?: string
 }
 
 export interface SSAProjectFilter {

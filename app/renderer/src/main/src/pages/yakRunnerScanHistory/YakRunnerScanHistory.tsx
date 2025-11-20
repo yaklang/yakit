@@ -28,11 +28,17 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {Tooltip} from "antd"
-import {OutlineArrowcirclerightIcon, OutlineScanIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowcirclerightIcon,
+    OutlineReloadScanIcon,
+    OutlineScanIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
+import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 const {ipcRenderer} = window.require("electron")
 export interface GenerateSSAReportResponse {
     Success: boolean
@@ -365,7 +371,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         return p
     }, [])
     return (
-        <div className={styles["YakRunnerScanHistory"]} ref={yakRunnerScanHistoryRef}>
+        <div className={styles["YakRunnerScanHistory"]} ref={yakRunnerScanHistoryRef} id='yakrunner-scan-history'>
             <YakitResizeBox
                 firstMinSize={"280px"}
                 firstNode={<CompileHistoryList pageInfo={pageInfo} clickItem={clickItem} setClickItem={setClickItem} />}
@@ -479,7 +485,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
         Data: [],
         Total: 0
     })
-
+    const [afreshName, setAfreshName] = useState<string>()
     useEffect(() => {
         update(1)
     }, [pageInfo])
@@ -666,6 +672,32 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                 </div>
 
                                 <div className={styles["option"]}>
+                                    <Tooltip title={"编译"}>
+                                        <YakitPopconfirm
+                                            title={
+                                                <>
+                                                    编译将会重新拉取代码,并删除该项目所有数据后再编译
+                                                    <br />
+                                                    请问是否重新编译？
+                                                </>
+                                            }
+                                            onConfirm={() => {
+                                                setAfreshName(rowData.Name)
+                                            }}
+                                        >
+                                            <div
+                                                className={classNames(styles["icon-wrapper"], {
+                                                    [styles["icon-wrapper-active"]]: isClick
+                                                })}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                }}
+                                            >
+                                                <OutlineReloadScanIcon />
+                                            </div>
+                                        </YakitPopconfirm>
+                                    </Tooltip>
+
                                     <Tooltip title={"代码扫描"}>
                                         <div
                                             className={classNames(styles["icon-wrapper"], {
@@ -736,6 +768,13 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                     }}
                 />
             </div>
+
+            <AfreshAuditModal
+                afreshName={afreshName}
+                setAfreshName={setAfreshName}
+                onSuccee={() => update(1)}
+                warrpId={document.getElementById("yakrunner-scan-history")}
+            />
         </div>
     )
 }

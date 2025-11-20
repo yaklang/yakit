@@ -1965,9 +1965,9 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     )
 }
 
-// 公共封装组件用于重新编译
+// 公共封装组件用于(重新)编译
 export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
-    const {afreshName, setAfreshName, onSuccee, warrpId} = props
+    const {afreshName, setAfreshName, onSuccee, warrpId, type = "afresh_compile",JSONStringConfig = ""} = props
     const tokenRef = useRef<string>(randomString(40))
     /** 是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
@@ -2007,14 +2007,22 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
                 Input: "",
                 HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
                 ExecParams: [
-                    {
-                        Key: "programName",
-                        Value: afreshName
-                    }
+                   
                 ],
-                PluginName: "SSA 项目重编译"
+                PluginName: type === "afresh_compile" ? "SSA 项目重新编译" : "SSA 项目编译"
             }
-
+            if(type === "afresh_compile"){
+                requestParams.ExecParams.push({
+                    Key: "programName",
+                    Value: afreshName
+                })
+            }
+            if(type === "compile"){
+                requestParams.ExecParams.push({
+                    Key: "config",
+                    Value: JSONStringConfig
+                })
+            }
             debugPluginStreamEvent.reset()
             setRuntimeId("")
             apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
@@ -2064,7 +2072,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
                 bodyStyle={{padding: 0}}
             >
                 <AuditCodeStatusInfo
-                    title={"项目重新编译中..."}
+                    title={type === "afresh_compile" ? "项目重新编译中..." : "项目编译中..."}
                     streamData={exportStreamData}
                     cancelRun={() => {
                         onCancelAudit()
@@ -2242,8 +2250,8 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
     const {pageType, onClose, onExecuteAudit, warrpId} = props
-    const {projectName} = useStore()
-    const [afreshName, setAfreshName] = useState<string>()
+    const [compileName, setCompileName] = useState<string>()
+    const [JSONStringConfig, setJSONStringConfig] = useState<string>()
     const [refresh, setRefresh] = useControllableValue<boolean>(props, {
         defaultValue: false,
         valuePropName: "refresh",
@@ -2477,7 +2485,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 return (
                     <div className={styles["audit-opt"]} onClick={(e) => e.stopPropagation()}>
                         <Tooltip title={"编译"}>
-                            <YakitPopconfirm
+                            {/* <YakitPopconfirm
                                 title={
                                     <>
                                         编译将会重新拉取代码,并删除该项目所有数据后再编译
@@ -2486,15 +2494,19 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     </>
                                 }
                                 onConfirm={() => {
-                                    setAfreshName(record.ProjectName)
+                                    setCompileName(record.ProjectName)
                                 }}
-                            >
-                                <YakitButton
-                                    type='text'
-                                    icon={<OutlineReloadScanIcon />}
-                                    onClick={(e) => e.stopPropagation()}
-                                />
-                            </YakitPopconfirm>
+                            > */}
+                            <YakitButton
+                                type='text'
+                                icon={<OutlineReloadScanIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setCompileName(record.ProjectName)
+                                    setJSONStringConfig(record.JSONStringConfig)
+                                }}
+                            />
+                            {/* </YakitPopconfirm> */}
                         </Tooltip>
 
                         <Tooltip title={"代码扫描"}>
@@ -2600,7 +2612,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     })
 
     const onClickRow = useMemoizedFn((record: SSAProjectResponse) => {
-        console.log("Clicked row:", record)
         emiter.emit(
             "openPage",
             JSON.stringify({
@@ -2708,10 +2719,12 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             </div>
 
             <AfreshAuditModal
-                afreshName={afreshName}
-                setAfreshName={setAfreshName}
+                afreshName={compileName}
+                JSONStringConfig={JSONStringConfig}
+                setAfreshName={setCompileName}
                 onSuccee={() => update(true)}
                 warrpId={warrpId || document.getElementById("audit-history-table")}
+                type="compile"
             />
 
             <YakitHint

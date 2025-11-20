@@ -2,7 +2,6 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     AreaInfoProps,
     AuditCodeStatusInfoProps,
-    AuditCodeStreamData,
     AuditEmiterYakUrlProps,
     OpenFileByPathProps,
     YakRunnerAuditCodeProps,
