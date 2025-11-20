@@ -348,7 +348,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
     const [remotePath, setRemotePath] = useState<string>("")
     useEffect(() => {
         ipcRenderer
-            .invoke("fetch-remote-file-path")
+            .invoke(ipcEventPre + "fetch-remote-file-path")
             .then((path: string) => {
                 setRemotePath(path)
             })
@@ -356,7 +356,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
     }, [])
 
     const openFile = () => {
-        ipcRenderer.invoke("open-remote-link")
+        ipcRenderer.invoke(ipcEventPre + "open-remote-link")
     }
 
     const content = (

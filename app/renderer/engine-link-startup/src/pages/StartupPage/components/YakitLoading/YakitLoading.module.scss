@@ -70,7 +70,6 @@
     font-style: normal;
     line-height: 20px;
     letter-spacing: 0.1px;
-    font-family: "PingFang SC";
 
     .log-body {
       width: 100%;
@@ -115,6 +114,9 @@
     .open-engine-path {
       cursor: pointer;
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      &:hover {
+        color: var(--Colors-Use-Main-Primary);
+      }
     }
 
     .go-remote {

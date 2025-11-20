@@ -305,10 +305,10 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
                 info(`解压内置引擎成功`)
                 ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
                     // onCallback(true)
+                    setYakitStatus("")
+                    setOldLink(false)
+                    openEngineLinkWin("local")
                 })
-                setYakitStatus("")
-                setOldLink(false)
-                openEngineLinkWin("local")
             })
             .catch((e) => {
                 failed(`初始化内置引擎失败：${e}`)

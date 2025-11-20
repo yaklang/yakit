@@ -278,10 +278,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     info("解压内置引擎成功")
                     ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
                         // onCancelUpdateYak(true)
+                        setYakitStatus("")
+                        setOldLink(false)
+                        openEngineLinkWin("local")
                     })
-                    setYakitStatus("")
-                    setOldLink(false)
-                    openEngineLinkWin("local")
                 })
                 .catch((e) => {
                     failed(`恢复引擎失败：${e}`)
@@ -484,11 +484,12 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     .invoke("RestoreEngineAndPlugin", {})
                     .then(() => {
                         info(`解压内置引擎成功`)
-                        ipcRenderer.invoke("write-engine-key-to-yakit-projects")
-                        setVersionAbnormalVisible(false)
-                        setYakitStatus("")
-                        setOldLink(false)
-                        openEngineLinkWin("local")
+                        ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                            setVersionAbnormalVisible(false)
+                            setYakitStatus("")
+                            setOldLink(false)
+                            openEngineLinkWin("local")
+                        })
                     })
                     .catch((e) => {
                         failed(`初始化内置引擎失败：${e}`)

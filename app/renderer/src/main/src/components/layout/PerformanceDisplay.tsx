@@ -226,9 +226,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                     ipcRenderer
                                         .invoke("RestoreEngineAndPlugin", {})
                                         .finally(() => {
-                                            ipcRenderer.invoke("write-engine-key-to-yakit-projects")
-                                            info("恢复引擎成功")
-                                            ipcRenderer.invoke("relaunch")
+                                            ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                                                info("恢复引擎成功")
+                                                ipcRenderer.invoke("relaunch")
+                                            })
                                         })
                                         .catch((e) => {
                                             failed(`恢复引擎失败：${e}`)

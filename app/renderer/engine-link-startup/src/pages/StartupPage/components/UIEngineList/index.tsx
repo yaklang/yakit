@@ -127,9 +127,10 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                     })
                                     grpcUnpackBuildInYak()
                                         .then(() => {
-                                            grpcWriteEngineKeyToYakitProjects({}, true)
-                                            yakitNotify("info", "恢复引擎成功")
-                                            grpcRelaunch()
+                                            grpcWriteEngineKeyToYakitProjects({}, true).finally(() => {
+                                                yakitNotify("info", "恢复引擎成功")
+                                                grpcRelaunch()
+                                            })
                                         })
                                         .catch((err) => {
                                             typeCallback("skipAgreement_InstallNetWork", {message: err + ""})

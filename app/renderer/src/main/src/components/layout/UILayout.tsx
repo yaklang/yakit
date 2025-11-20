@@ -739,22 +739,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const killCurrentProcess = useMemoizedFn(async (callback: () => void, extraPorts?: number[]) => {
         let finalPorts: number[] = []
-        // ========== 1. 获取 fetch-yaklang-engine-addr 的端口 ==========
-        let fetchPort = 0
+
+        // ---------- 1. 获取 fetch-yaklang-engine-addr 的端口 ----------
         try {
             const data = await ipcRenderer.invoke("fetch-yaklang-engine-addr")
             const parts = (data.addr as string).split(":")
             if (parts.length === 2) {
-                fetchPort = Number(parts[1]) || 0
+                const fetchPort = Number(parts[1]) || 0
+                if (fetchPort) finalPorts.push(fetchPort)
             }
         } catch (err) {}
 
-        if (fetchPort) {
-            // 必须删除的端口
-            finalPorts.push(fetchPort)
-        }
-
-        // ========== 2. 合并额外传入的端口 ==========
+        // 合并额外端口
         if (Array.isArray(extraPorts)) {
             finalPorts.push(...extraPorts)
         }
@@ -762,36 +758,36 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         // 去重
         finalPorts = Array.from(new Set(finalPorts))
 
-        // ========== 3. PS 查询所有 yak 进程 ==========
-        let processList: yakProcess[] = []
-        try {
-            processList = await ipcRenderer.invoke("ps-yak-grpc")
-        } catch (err) {
-            callback()
-            return
-        }
+        // ---------- 2. PS 查询所有 yak 进程 ----------
+        ipcRenderer
+            .invoke("ps-yak-grpc")
+            .then(async (res) => {
+                // 查找 PID
+                const pidsToKill = res
+                    .filter((p) => finalPorts.includes(Number(p.port)))
+                    .map((p) => p.pid)
+                    .filter(Boolean)
 
-        // ========== 4. 查找所有匹配端口的 PID ==========
-        const pidsToKill = processList
-            .filter((p) => finalPorts.includes(Number(p.port)))
-            .map((p) => p.pid)
-            .filter(Boolean)
-        if (pidsToKill.length === 0) {
-            callback()
-            return
-        }
+                if (pidsToKill.length === 0) {
+                    callback()
+                    return
+                }
 
-        // ========== 5. kill 所有进程 ==========
-        for (const pid of pidsToKill) {
-            try {
-                await ipcRenderer.invoke("kill-yak-grpc", pid)
-                info(`KILL yak PROCESS: ${pid}`)
-            } catch (err) {
-                failed(`Kill yak process failed: ${err}`)
-            }
-        }
+                // ---------- 4. kill ----------
+                for (const pid of pidsToKill) {
+                    try {
+                        await ipcRenderer.invoke("kill-yak-grpc", pid)
+                        info(`KILL yak PROCESS: ${pid}`)
+                    } catch (err) {
+                        failed(`Kill yak process failed: ${err}`)
+                    }
+                }
 
-        callback()
+                callback()
+            })
+            .catch(() => {
+                callback()
+            })
     })
 
     const handleOperations = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode) => {
@@ -899,18 +895,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
     const yaklangLastVersionRef = useRef<string>("")
     useEffect(() => {
-        const waitTime: number = 20000
-        const id = setInterval(() => {
-            grpcFetchLatestYakVersion(true)
-                .then((data: string) => {
-                    const v = data
-                    yaklangLastVersionRef.current = v
-                })
-                .catch((err) => {})
-        }, waitTime)
-        return () => {
-            clearInterval(id)
-        }
+        grpcFetchLatestYakVersion(true)
+            .then((data: string) => {
+                const v = data
+                yaklangLastVersionRef.current = v
+            })
+            .catch((err) => {})
     }, [])
     // 监听UI上的更新yakit或yaklang更新功能
     const handleActiveDownloadModal = useMemoizedFn((type: string) => {
@@ -1000,31 +990,32 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer
             .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
-                ipcRenderer.invoke("write-engine-key-to-yakit-projects")
-                yakitNotify("info", "解压内置引擎成功")
-                showYakitModal({
-                    closable: false,
-                    maskClosable: false,
-                    keyboard: false,
-                    type: "white",
-                    title: "引擎解压成功，需要重启",
-                    content: (
-                        <div style={{height: 80, padding: 24, display: "flex", alignItems: "center"}}>
-                            <YakitButton
-                                onClick={() => {
-                                    ipcRenderer
-                                        .invoke("relaunch")
-                                        .then(() => {})
-                                        .catch((e) => {
-                                            failed(`重启失败: ${e}`)
-                                        })
-                                }}
-                            >
-                                点此立即重启
-                            </YakitButton>
-                        </div>
-                    ),
-                    footer: null
+                ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                    yakitNotify("info", "解压内置引擎成功")
+                    showYakitModal({
+                        closable: false,
+                        maskClosable: false,
+                        keyboard: false,
+                        type: "white",
+                        title: "引擎解压成功，需要重启",
+                        content: (
+                            <div style={{height: 80, padding: 24, display: "flex", alignItems: "center"}}>
+                                <YakitButton
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("relaunch")
+                                            .then(() => {})
+                                            .catch((e) => {
+                                                failed(`重启失败: ${e}`)
+                                            })
+                                    }}
+                                >
+                                    点此立即重启
+                                </YakitButton>
+                            </div>
+                        ),
+                        footer: null
+                    })
                 })
             })
             .catch((e) => {

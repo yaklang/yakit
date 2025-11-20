@@ -1,4 +1,4 @@
-import {useRef, useEffect, useState, Suspense, lazy} from "react"
+import {useRef, useEffect, Suspense, lazy} from "react"
 // by types
 import {failed, warn, yakitFailed} from "./utils/notification"
 import {getRemoteValue, setRemoteValue} from "./utils/kv"
@@ -8,9 +8,8 @@ import {API} from "./services/swagger/resposeType"
 import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
+import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
-import styles from "./app.module.scss"
 import {coordinate, setChartsColorList} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
@@ -21,9 +20,6 @@ import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalSho
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
 import {useUploadInfoByEnpriTrace} from "./components/layout/utils"
 import emiter from "./utils/eventBus/eventBus"
-import message from "antd/lib/message"
-import notification from "antd/lib/notification"
-import {Modal} from "antd"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))

@@ -66,19 +66,19 @@ jobs:
             - name: Generate OSS File Path
               run: echo "FILE_PATH=link" >> $GITHUB_ENV
 
-            # - name: Upload Multi-Platform Render Zip
-            #   run: |
-            #       bucket="yaklang"
+            - name: Upload Multi-Platform Render Zip
+              run: |
+                  bucket="yaklang"
 
-            #       array=("ce" "ee" "irify" "irifyee")
+                  array=("ce" "ee" "irify" "irifyee")
 
-            #       for item in "${array[@]}"; do
-            #         file_name="${item}.zip"
-            #         echo "Start to upload ${file_name}"
-            #         ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/${{ env.FILE_PATH }}/render/${{ env.TAG_VERSION }}/${file_name}
-            #       done
+                  for item in "${array[@]}"; do
+                    file_name="${item}.zip"
+                    echo "Start to upload ${file_name}"
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/${{ env.FILE_PATH }}/render/${{ env.TAG_VERSION }}/${file_name}
+                  done
 
-            # - name: Update OSS latest file
-            #   run: echo ${{ env.TAG_VERSION }} > ./version.txt
-            # - name: Update OSS latest file
-            #   run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/${{ env.FILE_PATH }}/render/version.txt'
+            - name: Update OSS latest file
+              run: echo ${{ env.TAG_VERSION }} > ./version.txt
+            - name: Update OSS latest file
+              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/${{ env.FILE_PATH }}/render/version.txt'

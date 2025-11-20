@@ -56,31 +56,32 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         ipcRenderer
             .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
-                ipcRenderer.invoke("write-engine-key-to-yakit-projects")
-                info(`解压内置引擎成功`)
-                showYakitModal({
-                    closable: false,
-                    maskClosable: false,
-                    keyboard: false,
-                    type: "white",
-                    title: "引擎解压成功，需要重启",
-                    content: (
-                        <div className={styles["relaunch-hint"]}>
-                            <YakitButton
-                                onClick={() => {
-                                    ipcRenderer
-                                        .invoke("relaunch")
-                                        .then(() => {})
-                                        .catch((e) => {
-                                            failed(`重启失败: ${e}`)
-                                        })
-                                }}
-                            >
-                                点此立即重启
-                            </YakitButton>
-                        </div>
-                    ),
-                    footer: null
+                ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                    info(`解压内置引擎成功`)
+                    showYakitModal({
+                        closable: false,
+                        maskClosable: false,
+                        keyboard: false,
+                        type: "white",
+                        title: "引擎解压成功，需要重启",
+                        content: (
+                            <div className={styles["relaunch-hint"]}>
+                                <YakitButton
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("relaunch")
+                                            .then(() => {})
+                                            .catch((e) => {
+                                                failed(`重启失败: ${e}`)
+                                            })
+                                    }}
+                                >
+                                    点此立即重启
+                                </YakitButton>
+                            </div>
+                        ),
+                        footer: null
+                    })
                 })
             })
             .catch((e) => {

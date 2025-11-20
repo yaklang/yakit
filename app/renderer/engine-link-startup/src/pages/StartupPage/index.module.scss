@@ -4,6 +4,15 @@
   padding: 12px 12px 12px 32px;
   background-color: var(--Colors-Use-Basic-Background);
 
+  .startup-header-drap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 50px;
+    -webkit-app-region: drag;
+  }
+
   &-left {
     width: 400px;
     padding: 20px 0;
@@ -19,7 +28,6 @@
       .startup-desc {
         color: var(--Colors-Use-Neutral-Disable);
         letter-spacing: 2px;
-        font-family: "PingFang HK";
         font-size: 20px;
         font-style: normal;
         font-weight: 200;
@@ -47,6 +55,7 @@
     width: 432px;
     height: 576px;
     border-radius: 12px;
+
     img {
       width: 100%;
       height: 100%;

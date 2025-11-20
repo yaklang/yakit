@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, SystemInfo} from "./utils"
 import {
     grpcFetchBuildInYakVersion,
@@ -354,9 +354,10 @@ export const StartupPage: React.FC = () => {
         setTimeout(async () => {
             try {
                 await grpcUnpackBuildInYak(true)
-                grpcWriteEngineKeyToYakitProjects({}, true)
-                setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功，即将重启`])
-                grpcRelaunch()
+                grpcWriteEngineKeyToYakitProjects({}, true).finally(() => {
+                    setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功，即将重启`])
+                    grpcRelaunch()
+                })
             } catch (error) {
                 setCheckLog([
                     isInitLocalLink.current
@@ -374,24 +375,28 @@ export const StartupPage: React.FC = () => {
     const [dbPath, setDbPath] = useState<string[]>([])
     const handleFixupDatabase = useMemoizedFn(async () => {
         setCheckLog(["开始修复数据库中..."])
-        const res = await grpcFixupDatabase({isIRify: isIRify()})
-        setRestartLoading(false)
-        if (res.ok && res.status === "success") {
-            setCheckLog((arr) => arr.concat(["修复数据库成功"]))
-            setYakitStatus("")
-            setDbPath([])
-            handleStartLocalLink(true)
-            return
-        }
-        switch (res.status) {
-            case "timeout":
-                setCheckLog((arr) => arr.concat(["命令执行超时，可查看日志详细信息..."]))
-                setYakitStatus("fix_database_timeout")
-                break
-            default:
-                setDbPath(res.json.path)
-                setCheckLog((arr) => arr.concat(["修复失败，可将日志信息发送给工作人员处理..."]))
-                setYakitStatus("fix_database_error")
+        try {
+            const res = await grpcFixupDatabase({isIRify: isIRify()})
+            setRestartLoading(false)
+            if (res.ok && res.status === "success") {
+                setCheckLog((arr) => arr.concat(["修复数据库成功"]))
+                setYakitStatus("")
+                setDbPath([])
+                handleStartLocalLink(true)
+                return
+            }
+            switch (res.status) {
+                case "timeout":
+                    setCheckLog((arr) => arr.concat(["命令执行超时，可查看日志详细信息..."]))
+                    setYakitStatus("fix_database_timeout")
+                    break
+                default:
+                    setDbPath(res.json.path)
+                    setCheckLog((arr) => arr.concat(["修复失败，可将日志信息发送给工作人员处理..."]))
+                    setYakitStatus("fix_database_error")
+            }
+        } catch (error) {
+            yakitNotify("error", "fix db：" + error + "，建议重启软件")
         }
     })
     // #endregion
@@ -665,6 +670,7 @@ export const StartupPage: React.FC = () => {
 
     return (
         <div className={styles["startup-wrapper"]}>
+            <div className={styles["startup-header-drap"]}></div>
             <div className={styles["startup-wrapper-left"]}>
                 <div className={styles["startup-title"]}>
                     <div className={styles["startup-logo"]}>
