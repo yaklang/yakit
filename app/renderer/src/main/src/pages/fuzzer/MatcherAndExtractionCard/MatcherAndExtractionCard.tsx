@@ -35,7 +35,7 @@ import {
 } from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Alert, Descriptions} from "antd"
+import {Alert, Descriptions, Divider} from "antd"
 import classNames from "classnames"
 import {useCreation, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
@@ -61,7 +61,9 @@ import {
     matchersConditionOptions,
     matcherTypeList,
     extractorTypeList,
-    defaultSubMatcherItem
+    defaultSubMatcherItem,
+    ScopeList,
+    MatchersAndExtractorsUseInstructions
 } from "./constants"
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
@@ -71,6 +73,9 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
 import i18n from "@/i18n/i18n"
+import MDEditor from "@uiw/react-md-editor"
+import { YakitSegmented } from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+const {Markdown} = MDEditor
 
 const {ipcRenderer} = window.require("electron")
 
@@ -145,6 +150,23 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         const [executeLoading, setExecuteLoading] = useState<boolean>(false)
 
         const contentRef = useRef<any>(null)
+        
+        const onShowUseInstructions = useMemoizedFn(() => {
+            const m = showYakitModal({
+                title: t("MatcherAndExtraction.matchersAndExtractorsUseInstructions"),
+                type: "white",
+                onOkText: "我知道了",
+                onOk: () => m.destroy(),
+                cancelButtonProps: {style: {display: "none"}},
+                width: "60%",
+                maskClosable: false,
+                content: (
+                    <div className={styles["extract-results"]}>
+                        <Markdown source={MatchersAndExtractorsUseInstructions} />
+                    </div>
+                )
+            })
+        })
         const matcherCollapseRef = useRef<MatcherCollapseRefProps>({
             setActiveKey: () => {}
         })
@@ -473,6 +495,12 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                             : extractor.extractorList.length
                                 }}
                             />
+                            <YakitButton 
+                                type="text" 
+                                onClick={onShowUseInstructions}
+                            >
+                                    {t("MatcherAndExtraction.useInstructions")}
+                            </YakitButton>
                         </div>
                         <div className={styles["matching-extraction-extra"]}>
                             <>
@@ -847,6 +875,9 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
 export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
     const {notEditable, matcherItem, onEdit, httpResponse, isSmallMode} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
+
+    const requestList = ScopeList(t),
+        isRequest = requestList.some(({value})=> value === matcherItem.Scope)
     return (
         <>
             <div
@@ -864,20 +895,35 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                         options={matcherTypeList(t)}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label={t("MatcherItem.match_type")} column={isSmallMode}>
+                <LabelNodeItem label={t("MatcherItem.match_range")} column={isSmallMode}>
+                    <div style={{display: 'flex', alignItems: 'center'}}>
+                        <YakitSegmented
+                            size='small'
+                            value={isRequest ? t("HTTPFuzzerPageTable.request") : t("HTTPFuzzerPageTable.response")}
+                            onChange={(value) => {
+                                // 选中响应选中响应体，选中请求选中请求体
+                                onEdit("Scope", value ===  t("HTTPFuzzerPageTable.request") ? "request_body" : "body")
+                            }}
+                            options={[
+                                t("HTTPFuzzerPageTable.response"),
+                                t("HTTPFuzzerPageTable.request")
+                            ]}
+                        />
+                    <Divider type={"vertical"} />
                     <YakitRadioButtons
                         value={matcherItem.Scope}
                         onChange={(e) => {
                             onEdit("Scope", e.target.value)
                         }}
                         buttonStyle='solid'
-                        options={[
+                        options={isRequest ? requestList : [
                             {label: t("MatcherItem.status_code"), value: "status_code"},
                             {label: t("MatcherItem.response_header"), value: "all_headers"},
                             {label: t("MatcherItem.response_body"), value: "body"},
                             {label: t("MatcherItem.all_responses"), value: "raw"}
                         ]}
                     />
+                    </div>
                 </LabelNodeItem>
                 <LabelNodeItem label={t("MatcherItem.condition_relation")} column={isSmallMode}>
                     <YakitRadioButtons
@@ -1129,6 +1175,9 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
 export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) => {
     const {notEditable, extractorItem, onEdit, httpResponse, isSmallMode} = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer"])
+
+    const requestList = ScopeList(t),
+        isRequest = requestList.some(({value})=> value === extractorItem.Scope)
     const onRenderTypeExtra: ReactNode = useCreation(() => {
         switch (extractorItem.Type) {
             case "regex":
@@ -1175,18 +1224,33 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                     />
                 </LabelNodeItem>
                 <LabelNodeItem label={t("ExtractorItem.extraction_scope")} column={isSmallMode}>
+                   <div style={{display: 'flex', alignItems: 'center'}}>
+                        <YakitSegmented
+                            size='small'
+                            value={isRequest ? t("HTTPFuzzerPageTable.request") : t("HTTPFuzzerPageTable.response")}
+                            onChange={(value) => {
+                                // 选中响应选中响应体，选中请求选中请求体
+                                onEdit("Scope", value ===  t("HTTPFuzzerPageTable.request") ? "request_body" : "body")
+                            }}
+                            options={[
+                                t("HTTPFuzzerPageTable.response"),
+                                t("HTTPFuzzerPageTable.request")
+                            ]}
+                        />
+                    <Divider type={"vertical"} />
                     <YakitRadioButtons
                         value={extractorItem.Scope}
                         onChange={(e) => {
                             onEdit("Scope", e.target.value)
                         }}
                         buttonStyle='solid'
-                        options={[
+                        options={isRequest ? requestList :[
                             {label: t("ExtractorItem.response_header"), value: "header"},
                             {label: t("ExtractorItem.response_body"), value: "body"},
                             {label: "Raw", value: "raw"}
                         ]}
                     />
+                    </div>
                 </LabelNodeItem>
                 {onRenderTypeExtra}
             </div>

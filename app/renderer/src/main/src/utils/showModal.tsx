@@ -44,6 +44,7 @@ export interface ShowModalProps extends BaseModalProp {
     type?: string
     hiddenHeader?: boolean
     subTitle?: string
+    onOkText?: string //这个版本的antd modal没有这个属性声明
 }
 
 export const showModal = (props: ShowModalProps) => {
