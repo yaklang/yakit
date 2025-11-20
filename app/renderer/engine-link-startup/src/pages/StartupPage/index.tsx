@@ -100,7 +100,7 @@ export const StartupPage: React.FC = () => {
     // 是否持续监听引擎进程的连接状态
     const [keepalive, setKeepalive, getKeepalive] = useGetSetState<boolean>(false)
     /** 本地连接自定义端口号 */
-    const customPort = useRef<number>(GetConnectPort())
+    const [customPort, setCustomPort, getCustomPort] = useGetSetState<number>(GetConnectPort())
 
     // #region 软件开始进行逻辑启动
     useEffect(() => {
@@ -202,9 +202,9 @@ export const StartupPage: React.FC = () => {
     // 本地连接的两种模式
     const handleStartLocalLink = useMemoizedFn((isInit: boolean) => {
         if (isInit) {
-            if (localEngineRef.current) localEngineRef.current.init(customPort.current)
+            if (localEngineRef.current) localEngineRef.current.init(getCustomPort())
         } else {
-            if (localEngineRef.current) localEngineRef.current.link(customPort.current)
+            if (localEngineRef.current) localEngineRef.current.link(getCustomPort())
         }
     })
 
@@ -306,7 +306,7 @@ export const StartupPage: React.FC = () => {
                 case "port_occupied":
                     // 端口被占用
                     setRestartLoading(true)
-                    customPort.current = extra.port
+                    setCustomPort(extra.port)
                     handleStartLocalLink(true)
                     return
                 case "start_timeout":
@@ -714,6 +714,7 @@ export const StartupPage: React.FC = () => {
                                     remoteControlRefreshLoading={remoteControlRefreshLoading}
                                     dbPath={dbPath}
                                     btnClickCallback={loadingClickCallback}
+                                    port={customPort}
                                 />
                             )}
                             {!engineLink && yaklangDownload && (

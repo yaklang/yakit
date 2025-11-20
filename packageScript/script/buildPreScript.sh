@@ -14,8 +14,8 @@ case "$1" in
         chmod +x ./packageScript/script/installIRifyRender.sh
         chmod +x ./packageScript/script/electron-irify-builder.sh
         # 获取渲染端最新版本号
-        linkRenderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/linkirify/render/version.txt") || {
-            echo "Failed to obtain linkirify render version" >&2
+        linkRenderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/link/render/version.txt") || {
+            echo "Failed to obtain link render version" >&2
             exit 1
         }
         # 获取渲染端最新版本号

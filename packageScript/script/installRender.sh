@@ -9,7 +9,7 @@ fi
 
 link_file_name="$1.zip"
 echo "Start to download link render: ${link_file_name}"
-wget -O ${link_file_name} https://oss-qn.yaklang.com/link/render/${LINK_RENDER_VERSION}/${link_file_name} || {
+wget -O ${link_file_name} https://yaklang.oss-accelerate.aliyuncs.com/link/render/${LINK_RENDER_VERSION}/${link_file_name} || {
     echo "Error: Download link render Failed" >&2
     exit 1
 }

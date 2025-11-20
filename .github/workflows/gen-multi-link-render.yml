@@ -1,17 +1,5 @@
 name: Gen-Multi-Platform-Link-Render
 
-on:
-    workflow_dispatch:
-        inputs:
-            version:
-                description: "Select version type"
-                required: true
-                type: choice
-                default: ce&ee
-                options:
-                    - ce&ee
-                    - irify&irifyee
-
 jobs:
     build_yakit:
         if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-link-render') }}
@@ -43,64 +31,43 @@ jobs:
               working-directory: ./
 
             - name: "Build CE Link Render"
-              if: ${{ inputs.version == 'ce&ee' }}
               working-directory: ./
               run: yarn build-link-render
             - name: "zip CE Link Render"
-              if: ${{ inputs.version == 'ce&ee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r ce.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
             - name: "Build EE Link Render"
-              if: ${{ inputs.version == 'ce&ee' }}
               working-directory: ./
               run: yarn build-link-render-enterprise
             - name: "zip EE Link Render"
-              if: ${{ inputs.version == 'ce&ee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
             - name: "Build IRify Link Render"
-              if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
               run: yarn build-link-render-irify
             - name: "zip IRify Link Render"
-              if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
             - name: "Build IRifyEE Link Render"
-              if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
               run: yarn build-link-render-irify-enterprise
             - name: "zip IRifyEE Link Render"
-              if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
 
             - name: Download CI Needed Yak Linux(amd64) Version to operator
-              run: wget -q -O './yak' https://oss-qn.yaklang.com/yak/ci/yak_linux_amd64 && chmod +x ./yak
+              run: wget -q -O './yak' https://yaklang.oss-accelerate.aliyuncs.com/yak/ci/yak_linux_amd64 && chmod +x ./yak
 
             - name: Generate OSS File Path
-              run: |
-                  if [ "${{ inputs.version }}" = "ce&ee" ]; then
-                    echo "FILE_PATH=link" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
-                    echo "FILE_PATH=linkirify" >> $GITHUB_ENV
-                  else
-                    echo "No corresponding file path" >&2
-                    exit 1
-                  fi
+              run: echo "FILE_PATH=link" >> $GITHUB_ENV
 
             # - name: Upload Multi-Platform Render Zip
             #   run: |
             #       bucket="yaklang"
 
-            #       if [ "${{ inputs.version }}" = "ce&ee" ]; then
-            #         array=("ce" "ee")
-            #       elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
-            #         array=("irify" "irifyee")
-            #       else
-            #         echo "No corresponding version" >&2
-            #         exit 1
-            #       fi
+            #       array=("ce" "ee" "irify" "irifyee")
 
             #       for item in "${array[@]}"; do
             #         file_name="${item}.zip"

@@ -38,6 +38,9 @@ export interface YakitLoadingProp {
     /** 数据库修复失败时，数据库路径 */
     dbPath: string[]
 
+    /** 当前连接端口号 */
+    port: number
+
     btnClickCallback: (type: YaklangEngineMode | YakitStatusType, extra?: LoadingClickExtra) => void
 }
 
@@ -53,7 +56,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         remoteControlRefreshLoading,
         btnClickCallback,
         checkLog,
-        dbPath
+        dbPath,
+        port
     } = props
 
     const [form] = Form.useForm()
@@ -124,6 +128,10 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         }
         return true
     })
+
+    useEffect(() => {
+        form.setFieldsValue({newLinkport: port})
+    }, [port])
 
     const btns = useMemo(() => {
         if (yakitStatus === "install") {
