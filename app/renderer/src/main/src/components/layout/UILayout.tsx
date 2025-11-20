@@ -197,7 +197,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 setTimeout(() => {
                     setNewCheckLog([])
-                }, 3000)
+                }, 2000)
             } else {
                 setShowLoadingPage(false)
             }
@@ -735,6 +735,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 emiter.emit("destroyMainWinAntdUiEvent")
                 ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type})
             }, 1000)
+            setTimeout(() => {
+                setNewCheckLog([])
+            }, 2000)
         }, [GetConnectPort()])
     })
     const killCurrentProcess = useMemoizedFn(async (callback: () => void, extraPorts?: number[]) => {

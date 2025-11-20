@@ -129,10 +129,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         return true
     })
 
-    useEffect(() => {
-        form.setFieldsValue({newLinkport: port})
-    }, [port])
-
     const btns = useMemo(() => {
         if (yakitStatus === "install") {
             return (
@@ -237,29 +233,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         if (yakitStatus === "port_occupied") {
             return (
                 <>
-                    <Form
-                        form={form}
-                        requiredMark={false}
-                        colon={false}
-                        layout={"horizontal"}
-                        labelCol={{span: 0}}
-                        wrapperCol={{span: 24}}
-                    >
-                        <Form.Item
-                            label={""}
-                            rules={[
-                                {required: true, message: `请输入端口号`},
-                                {
-                                    pattern:
-                                        /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
-                                    message: "请输入正确的端口号"
-                                }
-                            ]}
-                            name={"newLinkport"}
-                        >
-                            <YakitInput placeholder='切换端口...' disabled={restartLoading} />
-                        </Form.Item>
-                    </Form>
                     <YakitButton
                         className={styles["btn-style"]}
                         size='large'
@@ -432,6 +405,10 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         return !["install", "installNetWork", "ready", "link"].includes(yakitStatus)
     }, [yakitStatus])
 
+    useEffect(() => {
+        form.setFieldsValue({newLinkport: port})
+    }, [port])
+
     return (
         <>
             <div className={styles["startup-loading-wrapper"]}>
@@ -451,7 +428,33 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         })}
                     </div>
                 </div>
-                <div className={styles["engine-log-btn"]}>{btns}</div>
+                <div className={styles["engine-log-btn"]}>
+                    <Form
+                        form={form}
+                        requiredMark={false}
+                        colon={false}
+                        layout={"horizontal"}
+                        labelCol={{span: 0}}
+                        wrapperCol={{span: 24}}
+                        style={{display: yakitStatus === "port_occupied" ? "block" : "none"}}
+                    >
+                        <Form.Item
+                            label={""}
+                            rules={[
+                                {required: true, message: `请输入端口号`},
+                                {
+                                    pattern:
+                                        /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+                                    message: "请输入正确的端口号"
+                                }
+                            ]}
+                            name={"newLinkport"}
+                        >
+                            <YakitInput placeholder='切换端口...' disabled={restartLoading} />
+                        </Form.Item>
+                    </Form>
+                    {btns}
+                </div>
                 {["install", "installNetWork"].includes(yakitStatus) ? (
                     <>{agreement()}</>
                 ) : (
