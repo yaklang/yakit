@@ -952,7 +952,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [progressShow, setProgressShow] = useState<{type: "new" | "old"; progress: number}>()
 
-    const [executeType, setExecuteType] = useState<"new" | "old">("new")
+    const [executeType, setExecuteType] = useState<"new" | "old">("old")
     /**暂停 */
     const [pauseLoading, setPauseLoading] = useState<boolean>(false)
     /**停止 */

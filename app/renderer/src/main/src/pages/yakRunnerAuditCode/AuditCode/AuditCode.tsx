@@ -1840,7 +1840,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
             }, 300)
         }
 
-        logInfoRef.current = streamInfo.logState.slice(0, 8)
+        logInfoRef.current = streamCompileInfo.logState.slice(0, 8)
         setExportStreamData({
             ...exportStreamData,
             Progress: progress
@@ -2063,7 +2063,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
                 Input: "",
                 HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
                 ExecParams: [],
-                PluginName: type === "afresh_compile" ? "SSA 项目重新编译" : "SSA 项目编译"
+                PluginName: type === "afresh_compile" ? "SSA 项目重编译" : "SSA 项目编译"
             }
             if (type === "afresh_compile") {
                 requestParams.ExecParams.push({
