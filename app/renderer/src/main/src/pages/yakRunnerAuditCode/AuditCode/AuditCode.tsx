@@ -85,6 +85,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {apiDeleteQuerySyntaxFlowResult, apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {
+    CreateSSAProjectResponse,
     DeleteSyntaxFlowResultRequest,
     DeleteSyntaxFlowResultResponse,
     QuerySyntaxFlowResultRequest,
@@ -1582,8 +1583,8 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         ExecParams: [],
                         PluginName: ""
                     }
-
-                    requestParams.ExecParams = getYakExecutorParam({...value})
+                    // compile-immediately 特例处理（应后端要求）
+                    requestParams.ExecParams = getYakExecutorParam({"compile-immediately": true, ...value})
                     if (customParams.peepholeArr.data.length > 0) {
                         requestParams.ExecParams = requestParams.ExecParams.map((item) => {
                             if (item.Key === "peephole") {
@@ -1768,6 +1769,9 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
     const isRealStartRef = useRef<boolean>(false)
 
+    const projectIdCacheRef = useRef<number>()
+    const jsonCacheRef = useRef<string>("")
+
     // 执行审计
     const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
         debugPluginStreamEvent.reset()
@@ -1788,6 +1792,75 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         onCancel()
     }
 
+    const tokenCompileRef = useRef<string>(randomString(40))
+    const [streamCompileInfo, debugCompilePluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenCompileRef.current,
+        onEnd: (getStreamInfo) => {
+            debugCompilePluginStreamEvent.stop()
+        },
+        onError: () => {},
+        setRuntimeId: (rId) => {
+            yakitNotify("info", `Compile调试任务启动成功，运行时 ID: ${rId}`)
+        }
+    })
+    // 通过插件（SSA 项目编译）执行
+    const onCompileByPlugin = useMemoizedFn(() => {
+        const requestParams: DebugPluginRequest = {
+            Code: "",
+            PluginType: "yak",
+            Input: "",
+            HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+            ExecParams: [
+                {
+                    Key: "config",
+                    Value: jsonCacheRef.current
+                }
+            ],
+            PluginName: "SSA 项目编译"
+        }
+        apiDebugPlugin({params: requestParams, token: tokenCompileRef.current})
+            .then(() => {
+                isStartExecuteRef.current = false
+                debugCompilePluginStreamEvent.start()
+            })
+            .catch(() => {})
+    })
+    const isStartExecuteRef = useRef<boolean>(false)
+    useUpdateEffect(() => {
+        // 插件执行 SSA 项目编译
+        const progress = Math.floor((streamCompileInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+        // 当任务结束时 跳转打开编译列表
+        if (progress === 1) {
+            setTimeout(() => {
+                logInfoRef.current = []
+                setShowRunAuditModal(false)
+                onSuccee(programNameCacheRef.current)
+            }, 300)
+        }
+
+        logInfoRef.current = streamInfo.logState.slice(0, 8)
+        setExportStreamData({
+            ...exportStreamData,
+            Progress: progress
+        })
+    }, [streamCompileInfo])
+
+    const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
+        try {
+            const result: CreateSSAProjectResponse = await ipcRenderer
+                .invoke("CreateSSAProject", {
+                    JSONStringConfig
+                })
+            onRefresh?.()
+            projectIdCacheRef.current = result.Project.ID
+            jsonCacheRef.current = result.Project.JSONStringConfig
+        } catch (error) {
+            yakitNotify("error", "创建项目管理数据失败")
+        }
+    })
+
     useUpdateEffect(() => {
         if (!isRealStartRef.current) {
             const startLog = streamInfo.logState.find((item) => item.level === "code")
@@ -1796,15 +1869,14 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
                     const {kind, msg} = verifyStart.error
                     setVerifyForm(false)
-                    programNameCacheRef.current = verifyStart.program_name
+                    programNameCacheRef.current = verifyStart.BaseInfo.program_names[0]
                     // CreateSSAProject 创建项目管理数据
-                    ipcRenderer
-                        .invoke("CreateSSAProject", {
-                            JSONStringConfig: startLog?.data || ""
-                        })
-                        .then(() => {
-                            onRefresh?.()
-                        })
+                    projectIdCacheRef.current = verifyStart?.BaseInfo?.project_id
+                    jsonCacheRef.current = startLog?.data || ""
+
+                    if (verifyStart?.project_exists === false) {
+                        onCreateSSAProject(startLog?.data || "")
+                    }
                     // 参数中是否勾选了立即编译
                     isCompileImmediatelyRef.current = verifyStart.compile_immediately
                     switch (kind) {
@@ -1877,6 +1949,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                             if (!isCompileImmediatelyRef.current) {
                                 success("创建项目成功，请手动编译")
                                 setShowCompileModal(false)
+                                onCancel()
                                 return
                             }
                             //  真正的启动
@@ -1884,30 +1957,13 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                             setIsExecuting(true)
                             setShowCompileModal(false)
                             setShowRunAuditModal(true)
+                            onCompileByPlugin()
                             break
                     }
                 } catch (error) {
                     failed("启动解析失败")
                 }
             }
-        }
-
-        if (isRealStartRef.current) {
-            const progress = Number((streamInfo.progressState.map((item) => item.progress)[0] || 0).toFixed(4))
-            // 当任务结束时 跳转打开编译列表
-            if (progress === 1) {
-                setTimeout(() => {
-                    logInfoRef.current = []
-                    setShowRunAuditModal(false)
-                    onSuccee(programNameCacheRef.current)
-                }, 300)
-            }
-
-            logInfoRef.current = streamInfo.logState.slice(0, 8)
-            setExportStreamData({
-                ...exportStreamData,
-                Progress: progress
-            })
         }
     }, [streamInfo])
 

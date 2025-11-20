@@ -2391,7 +2391,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         setExecuteType("old")
                         onStartExecute(
                             {
-                                // project: [programNameCacheRef.current],
                                 project: projectIdCacheRef.current
                             },
                             true
