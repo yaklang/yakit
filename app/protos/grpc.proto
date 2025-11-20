@@ -7201,6 +7201,7 @@ message SSAProgram{
   int64 WarnRiskNumber = 11;
   int64 LowRiskNumber = 12;
   int64 InfoRiskNumber = 14;
+  uint64  SSAProjectID = 15;
 }
 
 message SSARiskDiffItem{
