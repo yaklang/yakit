@@ -453,9 +453,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 disabled: false
             }))
             setCurrentList([...newList])
-            setTimeout(() => {
-                onClearRef()
-            }, 1000)
         }
     }, [loading, isConcurrency]) //加上isConcurrency 是判断切换tab时 对应的loading为false 应该去掉disabled
     useEffect(() => {
@@ -728,8 +725,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const handleSetDroppedCount = useMemoizedFn((content: string) => {
         try {
             const data: WebFuzzerDroppedProps = JSON.parse(content)
-            const isExist = !!currentList.find((ele) => ele.id === data.fuzzer_index)
-            if (isExist) {
+            // 直接记录丢包数据，不管是不是在当前list中
+            // const isExist = !!currentList.find((ele) => ele.id === data.fuzzer_index)
+            // if (isExist) {
                 const current: Map<string, number> =
                     droppedSequenceIndexMapRef.current.get(data.fuzzer_index) || new Map()
                 current.set(data.fuzzer_sequence_index, data.discard_count)
@@ -738,7 +736,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     setDroppedCount(data.fuzzer_index, sum)
                 }
                 droppedSequenceIndexMapRef.current.set(data.fuzzer_index, current)
-            }
+            // }
         } catch (error) {}
     })
 
@@ -765,23 +763,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     })
 
-    useEffect(() => {
-        const id = setInterval(() => {
-            fuzzerIndexArr.current.map((fuzzerIndex) => {
-                let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-                let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
-                let lastSuccessCount = getResponse(fuzzerIndex)?.successCount || 0
-                let lastFailedCount = getResponse(fuzzerIndex)?.failedCount || 0
-                // 判断是否有更新
-                if (currentSuccessCount !== lastSuccessCount || currentFailedCount !== lastFailedCount) {
-                    updateData(fuzzerIndex)
-                }
-            })
-        }, 500)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
 
     const updateData = useThrottleFn(
         (fuzzerIndex: string) => {
@@ -839,10 +820,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 failedFuzzer: [...failedBuffer],
                 runtimeIdFuzzer: [...runtimeIdBuffer],
                 fuzzerTableMaxData: fuzzerTableMaxData,
-                fuzzerResChartData: []
-            }
-            if (inViewportRef.current) {
-                newResponse.fuzzerResChartData = fuzzerResChartDataBuffer
+                // 直接保存图表数据，不判断inViewport
+                fuzzerResChartData: fuzzerResChartDataBuffer
             }
             if (!isEqual(prevResponse, newResponse)) {
                 setResponse(fuzzerIndex, newResponse)
@@ -850,15 +829,47 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         },
         {wait: 350}
     ).run
+    
+    const getResponseRef = useRef(getResponse)
+    const updateDataRef = useRef<(fuzzerIndex: string) => void>(() => {})
+    
+    useEffect(() => {
+        getResponseRef.current = getResponse
+    }, [getResponse])
+
+    useEffect(() => {
+        updateDataRef.current = updateData
+    }, [updateData])
+
+    useEffect(() => {
+        const id = setInterval(() => {
+            fuzzerIndexArr.current.forEach((fuzzerIndex) => {
+                let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+                let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+                let lastSuccessCount = getResponseRef.current(fuzzerIndex)?.successCount || 0
+                let lastFailedCount = getResponseRef.current(fuzzerIndex)?.failedCount || 0
+                // 判断是否有更新
+                if (currentSuccessCount !== lastSuccessCount || currentFailedCount !== lastFailedCount) {
+                    updateDataRef.current(fuzzerIndex)
+                }
+            })
+        }, 500)
+        return () => {
+            clearInterval(id)
+        }
+    }, [])
     const onClearRef = useMemoizedFn(() => {
         fuzzerIndexArr.current = []
-        successCountRef.current.clear()
-        failedCountRef.current.clear()
-        successBufferRef.current.clear()
-        failedBufferRef.current.clear()
-        countRef.current.clear()
-        runtimeIdBufferRef.current.clear()
-        fuzzerResChartDataBufferRef.current.clear()
+        // 清除当前模式的fuzzerIndex数组
+        currentList.forEach((item) => {
+            successCountRef.current.delete(item.id)
+            failedCountRef.current.delete(item.id)
+            successBufferRef.current.delete(item.id)
+            failedBufferRef.current.delete(item.id)
+            countRef.current.delete(item.id)
+            runtimeIdBufferRef.current.delete(item.id)
+            fuzzerResChartDataBufferRef.current.delete(item.id)
+        })
     })
     /**
      * 组内的webFuzzer页面高级配置或者request发生变化，或者组发生变化，
@@ -1071,7 +1082,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         !isConcurrency && setLoading(true)
         onClearRef()
-        fuzzerTableMaxDataRef.current.clear()
+        // 只清除当前的buffer配置，不影响另一个
+        currentList.forEach((item) => {
+            fuzzerTableMaxDataRef.current.delete(item.id)
+        })
         resetResponse()
 
         updateConcurrentLoad("rps", [])
@@ -1135,7 +1149,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
         try {
             onClearRef()
-            fuzzerTableMaxDataRef.current.clear()
+            // 只清除当前的buffer配置，不影响另一个
+            currentList.forEach((item) => {
+                fuzzerTableMaxDataRef.current.delete(item.id)
+            })
             resetResponse()
             resetDroppedCount()
             droppedSequenceIndexMapRef.current.clear()
@@ -1953,7 +1970,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                             </Droppable>
                         </DragDropContext>
 
-                        {!loading && !isConcurrency &&  (
+                        {!loading && (
                             <div className={styles["plus-sm-icon-body"]}>
                                 {currentList.length > 0 && (
                                     <div className={classNames(styles["inherit-line-icon"])}>
@@ -1971,7 +1988,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 </div>
                 <div
                     className={classNames(styles["fuzzer-sequence-midden"], {
-                        [styles["fuzzer-sequence-midden-hidden"]]: !isShowSetting || !currentSequenceItem
+                        [styles["fuzzer-sequence-midden-hidden"]]: !isShowSetting || !currentSequenceItem || isConcurrencyShowAllRes
                     })}
                 >
                     <div className={styles["setting-heard"]}>

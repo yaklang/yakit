@@ -230,6 +230,7 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
                             label={t("HttpQueryAdvancedConfig.disable_connection_pool")}
                             className={styles["form-item-with-reset-button"]}
                             valuePropName='checked'
+                            name={"disableUseConnPool"}
                         >
                             <YakitSwitch />
                         </Form.Item>
