@@ -41,10 +41,11 @@ const LoadingTitle: string[] = [
 export interface NewYakitLoadingProp {
     /** yakit模式 */
     yakitStatus: YakitStatusType
+    checkLog: string[]
 }
 
 export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
-    const {yakitStatus} = props
+    const {yakitStatus, checkLog} = props
     const {theme} = useTheme()
 
     /** 加载页随机宣传语 */
@@ -128,7 +129,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
 
                         <div className={styles["log-wrapper"]}>
                             <div className={styles["log-body"]}>
-                                {["引擎连接中..."].map((item, index) => {
+                                {checkLog.map((item, index) => {
                                     return (
                                         <div key={item} className={styles["log-item"]}>
                                             {item}

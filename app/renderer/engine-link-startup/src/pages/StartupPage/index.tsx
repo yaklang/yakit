@@ -601,7 +601,7 @@ export const StartupPage: React.FC = () => {
                     handleLinkLocalMode()
                 }, 500)
                 return
-            case "installNetWork": // 旧版本 下载
+            case "installNetWork":
                 onDisconnect()
                 onSetEngineMode(undefined)
                 setYakitStatus("skipAgreement_InstallNetWork")

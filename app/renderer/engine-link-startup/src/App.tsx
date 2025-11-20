@@ -45,7 +45,6 @@ const App: React.FC = memo(() => {
     if (!agreed) {
         return (
             <>
-                <div className={styles["yakit-mask-drag-wrapper"]}></div>
                 <YakitModal
                     title='用户协议'
                     centered={true}
@@ -60,6 +59,7 @@ const App: React.FC = memo(() => {
                     }}
                     okText='我已认真阅读本协议，认同协议内容'
                     bodyStyle={{padding: "16px 24px 24px 24px"}}
+                    maskClosable={false}
                 >
                     <div className={styles["yakit-agr-modal-body"]}>
                         <div className={styles["body-title"]}>免责声明</div>

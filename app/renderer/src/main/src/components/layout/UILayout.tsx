@@ -175,12 +175,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
     const [oldLink, setOldLink, getOldLink] = useGetSetState<boolean>(false)
-    const [showLoadingPage, setShowLoadingPage] = useState<boolean>(true)
+    const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
+    /** 本地引擎自检输出日志 */
+    const [newCheckLog, setNewCheckLog] = useState<string[]>([])
     useEffect(() => {
         ipcRenderer.on("from-engineLinkWin", (e, data) => {
-            setShowLoadingPage(true)
             setOldLink(data.useOldLink)
             if (!data.useOldLink) {
+                setNewCheckLog(["引擎连接中..."])
+                setShowLoadingPage(true)
                 handleFetchBaseInfo()
                 setCredential(data.credential)
                 onSetEngineMode(data.credential.Mode)
@@ -192,6 +195,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 } else {
                     setKeepalive(true)
                 }
+                setTimeout(() => {
+                    setNewCheckLog([])
+                }, 3000)
+            } else {
+                setShowLoadingPage(false)
             }
         })
         return () => {
@@ -540,7 +548,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 props.linkSuccess()
                 // 下面的三行为以前的老逻辑
                 setYakitStatus("link")
-                setShowEngineLog(false)
+                if (getOldLink()) {
+                    setShowEngineLog(false)
+                }
             }
 
             setLocalValue(LocalGV.YaklangEngineMode, getEngineMode())
@@ -718,12 +728,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const openEngineLinkWin = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => {
         setShowLoadingPage(true)
+        setNewCheckLog(["即将退出..."])
         killCurrentProcess(() => {
-            // 先销毁 antd 消息通知 弹窗
-            emiter.emit("destroyMainWinAntdUiEvent")
             setTimeout(() => {
+                // 先销毁 antd 消息通知 弹窗
+                emiter.emit("destroyMainWinAntdUiEvent")
                 ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type})
-            }, 500)
+            }, 1000)
         }, [GetConnectPort()])
     })
     const killCurrentProcess = useMemoizedFn(async (callback: () => void, extraPorts?: number[]) => {
@@ -2042,7 +2053,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 setShowEngineLog={setShowEngineLog}
                             />
                         )}
-                        {!engineLink && showLoadingPage && !oldLink && <NewYakitLoading yakitStatus={yakitStatus} />}
+                        {!engineLink && showLoadingPage && !oldLink && (
+                            <NewYakitLoading yakitStatus={yakitStatus} checkLog={newCheckLog} />
+                        )}
                         {engineLink && (
                             <YakitSpin spinning={switchEngineLoading}>
                                 {isJudgeLicense ? (
