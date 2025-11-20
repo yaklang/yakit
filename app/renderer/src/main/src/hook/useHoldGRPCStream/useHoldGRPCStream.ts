@@ -3,7 +3,10 @@ import {failed, info, yakitFailed} from "../../utils/notification"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "./useHoldGRPCStreamType"
 import {DefaultTabs} from "./constant"
+import {DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME} from "@/defaultConstants/HoldGRPCStream"
 import {v4 as uuidv4} from "uuid"
+import { getRemoteValue } from "@/utils/kv"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -88,6 +91,18 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         isLimitLogs = true
     } = params
 
+    // 插件日志条数
+    const [limitLogNum, setLimitLogNum] = useState<number>(DEFAULT_LOG_LIMIT)
+
+    useEffect(() => {
+        getRemoteValue(LIMIT_LOG_NUM_NAME).then((num) => {
+            if (num) setLimitLogNum(Number(num))
+        })
+
+        emiter.on("onUpdateLimitLogNum", setLimitLogNum)
+        return () => emiter.off("onUpdateLimitLogNum", setLimitLogNum)
+    }, [])
+
     const [streamInfo, setStreamInfo, getStreamInfo] = useGetState<HoldGRPCStreamInfo>({
         progressState: [],
         cardState: [],
@@ -138,8 +153,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     /** 放入日志队列 */
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
         messages.current.unshift({...log, content: {...log.content, id: uuidv4()}})
-        // 只缓存 100 条结果（日志类型 + 数据类型）
-        if (messages.current.length > 100 && isLimitLogs) {
+        // 只缓存 全局配置的插件日志条数的结果（日志类型 + 数据类型）
+        if (messages.current.length > limitLogNum && isLimitLogs) {
             messages.current.pop()
         }
     })
