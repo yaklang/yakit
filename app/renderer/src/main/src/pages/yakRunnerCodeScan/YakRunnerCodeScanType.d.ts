@@ -104,6 +104,8 @@ export interface CodeScaMainExecuteContentProps {
     extraParamsValue: CodeScanExtraParam
     setActiveTask: (v: SyntaxFlowScanActiveTask[]) => void
     CodeScanByExecuteLastDataRef: React.MutableRefObject<SyntaxFlowScanActiveTaskShow[] | null>
+    selectProjectId: number[]
+    setSelectProjectId: (v: number[]) => void
 }
 
 export interface FlowRuleDetailsListItemProps {

@@ -39,6 +39,7 @@ import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import { apiQuerySSAPrograms } from "./utils"
 const {ipcRenderer} = window.require("electron")
 export interface GenerateSSAReportResponse {
     Success: boolean
@@ -424,7 +425,7 @@ export interface QuerySSAProgramRequest {
     Filter: SSAProgramFilter
 }
 
-interface SSAProgram {
+export interface SSAProgram {
     // basic info
     CreateAt: number
     UpdateAt: number
@@ -506,10 +507,8 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
         }
 
         const isInit = page === 1
-        ipcRenderer
-            .invoke("QuerySSAPrograms", finalParams)
+        apiQuerySSAPrograms(finalParams)
             .then((res: QuerySSAProgramResponse) => {
-                console.log("finalParams---", finalParams, res)
                 const resData = res?.Data || []
                 if (resData.length > 0) {
                     setQuery((prevQuery) => ({
