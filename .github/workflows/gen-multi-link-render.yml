@@ -1,5 +1,10 @@
 name: Gen-Multi-Platform-Link-Render
 
+on:
+  push:
+    tags:
+      - "v*-link-render"
+
 jobs:
     build_yakit:
         if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-link-render') }}
@@ -11,8 +16,6 @@ jobs:
             RETURN_PATH: ../../../
 
         steps:
-            - name: Display incoming configuration parameters
-              run: echo $GITHUB_REF_NAME "${{ inputs.version }}"
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
