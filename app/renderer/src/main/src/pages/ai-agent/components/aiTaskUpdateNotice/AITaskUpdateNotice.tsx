@@ -40,7 +40,7 @@ export const AITaskUpdateNotice: React.FC<AITaskUpdateNoticeProps> = React.memo(
                         {queues.map((item) => (
                             <div key={item.id} className={styles["latest-query-list-item"]}>
                                 <OutlineChatIcon />
-                                <span>{item.user_input}</span>
+                                <span className='content-ellipsis'>{item.user_input}</span>
                             </div>
                         ))}
                     </div>
