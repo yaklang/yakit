@@ -829,7 +829,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 info(`引擎状态切换为: ${EngineModeVerbose("remote")}`)
                 delTemporaryProject()
                 onSetEngineMode(undefined)
-                handleLinkRemoteMode()
+                setTimeout(() => {
+                    handleLinkRemoteMode()
+                }, 500)
                 return
 
             case "changeProject":
