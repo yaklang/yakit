@@ -383,6 +383,8 @@ export interface FuzzerRequestProps {
 
     /** 是否由引擎进行丢弃包逻辑 */
     EngineDropPacket?: boolean
+    /** 是否对历史流量重新匹配提取 */
+    ReMatch?: boolean
     // Random Chunked
     EnableRandomChunked?: boolean
     RandomChunkedMinLength?: number
@@ -598,7 +600,7 @@ export const newWebFuzzerTab = (params: {
 /**@description 插入 yak.fuzz 语法 */
 export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
     const stringFuzzerRef = createRef<StringFuzzerRef>()
-    
+
     const m = showYakitModal({
         title: i18n.language === "zh" ? "Fuzzer Tag 调试工具" : "Fuzzer Tag Debug Tool",
         width: "70%",
@@ -1292,10 +1294,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             if (
                 failedFuzzerRef.current.length +
-                    successFuzzerRef.current.length +
-                    failedCount +
-                    successCount +
-                    fuzzerResChartDataBufferRef.current.length ===
+                successFuzzerRef.current.length +
+                failedCount +
+                successCount +
+                fuzzerResChartDataBufferRef.current.length ===
                 0
             ) {
                 return
@@ -1725,14 +1727,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <ChevronLeftIcon
                         className={classNames(styles["chevron-icon"], {
                             [styles["chevron-icon-disable"]]:
-                                !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
+                            !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
                         })}
                         onClick={() => onPrePage()}
                     />
                     <ChevronRightIcon
                         className={classNames(styles["chevron-icon"], {
                             [styles["chevron-icon-disable"]]:
-                                !isbuttonIsSendReqStatus || currentPage >= Number(total) || !Number(total)
+                            !isbuttonIsSendReqStatus || currentPage >= Number(total) || !Number(total)
                         })}
                         onClick={() => onNextPage()}
                     />
@@ -2088,7 +2090,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             pageId: currentItem.pageId
         }
         return (
-             <YakitDrawer
+            <YakitDrawer
                 title={`${t('HTTPFuzzerPage.trafficAnalysisMode')}-${currentItem.pageName}`}
                 getContainer={fuzzerRef.current || document.body}
                 placement='bottom'
@@ -2099,13 +2101,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onClose={() => setTrafficAnalysisVisible(false)}
                 className={styles["http-traffic-analysis-overlay"]}
             >
-                    <React.Suspense fallback={<YakitSpin spinning={true} />}>
-                        <HTTPHistoryAnalysis
-                            pageId={currentItem.pageId}
-                            params={params}
-                            closable={false}
-                        />
-                    </React.Suspense>
+                <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                    <HTTPHistoryAnalysis
+                        pageId={currentItem.pageId}
+                        params={params}
+                        closable={false}
+                    />
+                </React.Suspense>
             </YakitDrawer>
         )
     })
@@ -2399,9 +2401,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 oneResponseValue={
                                     onlyOneResponse
                                         ? {
-                                              originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
-                                              originalPackage: httpResponse.ResponseRaw
-                                          }
+                                            originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
+                                            originalPackage: httpResponse.ResponseRaw
+                                        }
                                         : undefined
                                 }
                             />
@@ -3231,14 +3233,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         />
                     </Tooltip>
                 )} */}
-                {onShowAll ? (+(secondNodeSize?.width || 0) >= 610 ? 
+                {onShowAll ? (+(secondNodeSize?.width || 0) >= 610 ?
                     <YakitButton type='outline2' size={"small"} onClick={onShowAll} >
                         {t("HTTPFuzzerPage.trafficAnalysis")}
                     </YakitButton>
-                : 
-                <Tooltip title={t("HTTPFuzzerPage.trafficAnalysis")}>
-                    <YakitButton type='outline2' onClick={onShowAll} icon={<PublicHTTPHistoryIcon />} size={size} />
-                </Tooltip>): null}
+                    :
+                    <Tooltip title={t("HTTPFuzzerPage.trafficAnalysis")}>
+                        <YakitButton type='outline2' onClick={onShowAll} icon={<PublicHTTPHistoryIcon />} size={size} />
+                    </Tooltip>): null}
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitPopover
                         title={t("SecondNodeExtra.exportData")}
@@ -3669,7 +3671,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 setReason(r)
                 setShowExtra(
                     (fuzzerResponse.Payloads && fuzzerResponse.Payloads.length > 0) ||
-                        fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
+                    fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
                 )
             } catch (e) {}
         }, [fuzzerResponse, i18n.language])
@@ -4074,10 +4076,10 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
 })
 
 export const ByteCountTag: React.FC<{selectionByteCount?: number; itemKey: string; style?: CSSProperties}> = ({
-    selectionByteCount = 0,
-    itemKey,
-    style = {}
-}) => {
+                                                                                                                  selectionByteCount = 0,
+                                                                                                                  itemKey,
+                                                                                                                  style = {}
+                                                                                                              }) => {
     return selectionByteCount > 0 ? (
         <YakitTag key={itemKey} style={style}>
             {selectionByteCount} bytes
