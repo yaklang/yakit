@@ -2089,6 +2089,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         return (
              <YakitDrawer
+                title={`${t('HTTPFuzzerPage.trafficAnalysisMode')}-${currentItem.pageName}`}
                 getContainer={fuzzerRef.current || document.body}
                 placement='bottom'
                 mask={false}
