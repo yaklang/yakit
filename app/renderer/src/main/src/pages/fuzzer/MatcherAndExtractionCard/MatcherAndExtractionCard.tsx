@@ -932,7 +932,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                             {label: t("MatcherItem.status_code"), value: "status_code"},
                             {label: t("MatcherItem.response_header"), value: "all_headers"},
                             {label: t("MatcherItem.response_body"), value: "body"},
-                            {label: t("MatcherItem.all_responses"), value: "raw"}
+                            {label: t("MatcherItem.all_requests"), value: "raw"}
                         ]}
                     />
                     </div>
