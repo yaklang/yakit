@@ -775,35 +775,42 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     const [debugForm] = Form.useForm()
     // 项目列表
-    const [project, setProject] = useState<{label: string; value: string}[]>([])
+    const [project, setProject] = useState<{label: string; value: number; language: string}[]>([])
     const projectLoading = useRef<boolean>(false)
     const handleFetchProject = useMemoizedFn((search?: string) => {
         if (projectLoading.current) return
 
         const request = {
-            Filter: {Keyword: search || ""},
-            Pagination: genDefaultPagination(100)
+            Filter: {SearchKeyword: search || ""},
+            Pagination: {
+                ...genDefaultPagination(500),
+                Order: "asc",
+                OrderBy: "created_at"
+            }
         }
         projectLoading.current = true
         // TODO: 规则管理-执行结果与代码扫描项目名称控件一致
-        // ipcRenderer
-        //     .invoke("QuerySSAProject", request)
-        //     .then((res: QueryGeneralResponse<SSAProjectResponse>) => {
-        //         if (!res || !Array.isArray(res.Data)) {
-        //             return
-        //         }
-        //         setProject(
-        //             res.Data.map((item) => {
-        //                 return {label: item.Name, value: item.Name}
-        //             })
-        //         )
-        //     })
-        //     .catch(() => {})
-        //     .finally(() => {
-        //         setTimeout(() => {
-        //             projectLoading.current = false
-        //         }, 200)
-        //     })
+        ipcRenderer
+            .invoke("QuerySSAProject", request)
+            .then((res: QueryGeneralResponse<SSAProjectResponse>) => {
+                res.Data = (res as any)?.Projects || []
+                if (!res || !Array.isArray(res.Data)) {
+                    return
+                }
+
+                setProject(
+                    res.Data.map((item) => {
+                        const {ProjectName, ID, Language} = item
+                        return {label: ProjectName, value: ID, language: Language}
+                    })
+                )
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    projectLoading.current = false
+                }, 200)
+            })
     })
     const handleSearchProject = useDebounceFn(
         (val?: string) => {
@@ -845,14 +852,14 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 .validateFields()
                 .then((values) => {
                     const {project} = values || {}
-                    if (!project || !Array.isArray(project)) {
+                    if (!project) {
                         return
                     }
                     setExpand(false)
                     if (activeTab !== "debug") setActiveTab("debug")
                     onStart({
                         ControlMode: "start",
-                        ProgramName: cloneDeep(project),
+                        SSAProjectId: cloneDeep(project),
                         RuleInput: data
                     })
                 })
@@ -1164,9 +1171,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                 form={debugForm}
                                                 className={styles["params-form"]}
                                             >
-                                                <Form.Item label={"项目名称"} name={"project"} rules={[{required: true, message: "该项为必填"}]}>
+                                                <Form.Item
+                                                    label={"项目名称"}
+                                                    name={"project"}
+                                                    rules={[{required: true, message: "该项为必填"}]}
+                                                >
                                                     <YakitSelect
-                                                        mode='multiple'
                                                         showSearch={true}
                                                         placeholder='请选择项目后调试'
                                                         options={project}
