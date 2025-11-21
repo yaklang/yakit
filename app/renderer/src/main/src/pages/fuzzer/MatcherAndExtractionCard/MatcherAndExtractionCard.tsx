@@ -139,6 +139,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             matcherValue,
             defActiveKey,
             httpResponse,
+            httpRequest = "",
+            isHttps = false,
             defActiveType,
             defActiveKeyAndOrder,
             hasApplyBtn = false
@@ -308,6 +310,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             ipcRenderer
                 .invoke("ExtractHTTPResponse", {
                     HTTPResponse: httpResponse,
+                    HTTPRequest: httpRequest,
+                    IsHTTPS: isHttps,
                     Extractors: extractor.extractorList
                 })
                 .then((obj: {Values: {Key: string; Value: string}[]}) => {
@@ -661,6 +665,8 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
             const matchers = matcher.matchersList[number]
             const matchHTTPResponseParams: MatchHTTPResponseParams = {
                 HTTPResponse: httpResponse,
+                HTTPRequest: httpRequest,
+                IsHTTPS: isHttps,
                 Matchers: matchers.SubMatchers,
                 MatcherCondition: matchers.SubMatcherCondition
             }
@@ -1416,6 +1422,8 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
         visibleDrawer,
         defActiveType,
         httpResponse,
+        httpRequest,
+        isHttps,
         defActiveKey,
         matcherValue,
         extractorValue,
@@ -1449,6 +1457,8 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
                 pageType={pageType}
                 defActiveType={defActiveType}
                 httpResponse={httpResponse}
+                httpRequest={httpRequest}
+                isHttps={isHttps}
                 defActiveKey={defActiveKey}
                 matcherValue={matcherValue}
                 extractorValue={extractorValue}

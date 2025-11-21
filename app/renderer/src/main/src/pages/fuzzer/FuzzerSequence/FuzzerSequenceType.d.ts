@@ -9,6 +9,7 @@ import {
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
+import {HTTPFuzzerPageTableDebugPayload} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 /**
  * @description 序列props
  * @property {string} pageId页面节点id
@@ -143,7 +144,7 @@ export interface SequenceResponseProps {
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
     onShowAll: () => void
-    onDebug: (s: string) => void
+    onDebug: (payload: HTTPFuzzerPageTableDebugPayload) => void
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     showMatcherAndExtraction?: boolean
