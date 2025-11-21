@@ -1019,7 +1019,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         let projectId: number[] = []
                         const list = item.Data.map((item) => {
                             const {ProjectName, ID, Language} = item
-                            if ((pageInfo.projectId || []).includes(ID)) {
+                            if (pageInfo.projectId === ID) {
                                 projectId.push(ID)
                             }
                             return {label: ProjectName, value: ID, language: Language}
@@ -1598,8 +1598,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
             let reportName = ""
-            if (pageInfo.projectName && pageInfo.projectName.length > 0) {
-                reportName = `${pageInfo.projectName[0]}代码扫描报告`
+            if (pageInfo.projectName) {
+                reportName = `${pageInfo.projectName}代码扫描报告`
             }
 
             const params: CreateReportContentProps = {

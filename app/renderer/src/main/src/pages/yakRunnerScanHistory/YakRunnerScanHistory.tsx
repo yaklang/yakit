@@ -713,8 +713,8 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                                         JSON.stringify({
                                                             route: YakitRoute.YakRunner_Code_Scan,
                                                             params: {
-                                                                projectName: pageInfo.Programs,
-                                                                projectId: pageInfo.ProjectIds,
+                                                                projectName: pageInfo.Programs.length > 0 ? pageInfo.Programs[0] : "项目名异常",
+                                                                projectId: pageInfo.ProjectIds.length > 0 ? pageInfo.ProjectIds[0] : 0,
                                                                 historyName: [rowData.Name],
                                                                 GroupNames: [rowData.Language],
                                                                 selectTotal
