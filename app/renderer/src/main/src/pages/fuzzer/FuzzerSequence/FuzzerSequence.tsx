@@ -1187,7 +1187,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
             startConcurrency(params)
             setHasExtractorRules(true);
-        } catch (error) { }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
     })
 
 
@@ -1243,7 +1245,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 ipcRenderer.invoke("HTTPFuzzerSequence", params, fuzzTokenRef.current)
             }
             setHasExtractorRules(true);
-        } catch (error) {}
+        } catch (error) {
+            yakitFailed(error + "")
+        }
     })
 
     const onAddSequenceNode = useMemoizedFn(() => {
