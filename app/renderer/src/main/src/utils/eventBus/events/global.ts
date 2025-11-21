@@ -37,4 +37,6 @@ export type GlobalEventProps = {
     onUpdateSubMenuNameFormPage: string
     /**二级标签页数量限制 */
     onUpdateSecondaryTabsNum: number
+    /**日志数量限制 */
+    onUpdateLimitLogNum: number
 }

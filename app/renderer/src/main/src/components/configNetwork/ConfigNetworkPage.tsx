@@ -41,6 +41,7 @@ import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import emiter from "@/utils/eventBus/eventBus"
 import {CodeCustomize} from "./CustomizeCode"
 import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT} from "@/defaultConstants/HoldGRPCStream"
 
 export interface ConfigNetworkPageProp {}
 
@@ -316,6 +317,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
         // 更新 二级页签数量
         onSetSecondaryTabsNum()
+
+        // 更新插件日志条数
+        onSetLimitLogNum()
 
         const newParams: GlobalNetworkConfig = {
             ...params,
@@ -634,6 +638,35 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         setSecondaryTabsNum(100)
         setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, 100 + "")
     }
+
+    const [limitLogNum, setLimitLogNum] = useState<number | string>(DEFAULT_LOG_LIMIT)
+
+    useEffect(() => {
+        getRemoteValue(LIMIT_LOG_NUM_NAME).then((num) => {
+            if (num) setLimitLogNum(Number(num))
+        })
+    }, [])
+
+    const onSetLimitLogNum = useMemoizedFn(() => {
+        const value = Number(limitLogNum)
+        setRemoteValue(LIMIT_LOG_NUM_NAME, value + "")
+        emiter.emit("onUpdateLimitLogNum", value)
+    })
+
+    const onResetLimitLogNum = useMemoizedFn(() => {
+        setLimitLogNum(DEFAULT_LOG_LIMIT)
+        setTimeout(() => {
+            onSetLimitLogNum()
+        }, 100)
+    })
+
+    const onLimitLogNumEnter = useMemoizedFn(() => {
+        let value = parseInt(limitLogNum + "" || "0", 10)
+        if (!value || value === 0) {
+            value = 100
+        }
+        setLimitLogNum(value)
+    })
 
     return (
         <>
@@ -1103,6 +1136,21 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }}
                                     />
                                 </Form.Item>
+                                <Form.Item label={"插件日志条数"} labelCol={{span: 5}} wrapperCol={{span: 2}}>
+                                    <YakitInput
+                                        size='small'
+                                        value={limitLogNum}
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, "")
+                                            if (value.length > 1 && value.startsWith("0")) {
+                                                value = value.replace(/^0+/, "")
+                                            }
+                                            setLimitLogNum(value)
+                                        }}
+                                        onPressEnter={onLimitLogNumEnter}
+                                        onBlur={onLimitLogNumEnter}
+                                    />
+                                </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     SYN 扫描网卡配置
                                 </Divider>
@@ -1140,6 +1188,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 onResetChromePath()
                                                 onResetPprofFileAutoAnalyze()
                                                 onResetSecondaryTabsNum()
+                                                onResetLimitLogNum()
                                                 ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
                                                     cerFormRef.current?.resetFields()
                                                     update()
