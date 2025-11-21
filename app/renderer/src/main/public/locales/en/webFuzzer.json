@@ -534,7 +534,8 @@
     "extractionResult": "Extraction Result",
     "save_changes_prompt": "Save the modified content?",
     "useInstructions": "Instructions for Use",
-    "matchersAndExtractorsUseInstructions": "Instructions for Using Web Fuzzer Matchers and Extractors"
+    "matchersAndExtractorsUseInstructions": "Instructions for Using Web Fuzzer Matchers and Extractors",
+    "understand": "I understand"
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
@@ -575,7 +576,7 @@
     "request_header": "Request Header",
     "request_body": "Request Body",
     "all_requests": "Raw",
-    "request_url": "Request URL"
+    "request_url": "URL"
   },
   "MatcherAndExtractionValueList": {
     "add_match_content": "Add Match Content"

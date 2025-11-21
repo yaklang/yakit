@@ -157,7 +157,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             const m = showYakitModal({
                 title: t("MatcherAndExtraction.matchersAndExtractorsUseInstructions"),
                 type: "white",
-                onOkText: "我知道了",
+                onOkText: t("MatcherAndExtraction.understand"),
                 onOk: () => m.destroy(),
                 cancelButtonProps: {style: {display: "none"}},
                 width: "60%",
@@ -239,10 +239,12 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         onOk: () => {
                             resolve(data)
                             m.destroy()
+                            onClose()
                         },
                         onCancel: () => {
                             reject(false)
                             // m.destroy()
+                            onClose()
                         },
                         content: t("MatcherAndExtraction.apply_changes_prompt")
                     })
