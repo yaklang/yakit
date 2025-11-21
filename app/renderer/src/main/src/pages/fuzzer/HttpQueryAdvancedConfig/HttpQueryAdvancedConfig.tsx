@@ -121,6 +121,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         onInsertYakFuzzer,
         onValuesChange,
         defaultHttpResponse,
+        webFuzzerValue,
         outsideShowResponseMatcherAndExtraction,
         onShowResponseMatcherAndExtraction,
         inViewportCurrent,
@@ -1412,6 +1413,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 visibleDrawer={visibleDrawer}
                 defActiveType={type}
                 httpResponse={httpResponse}
+                httpRequest={webFuzzerValue}
+                isHttps={advancedConfigValue.isHttps}
                 defActiveKey={defActiveKey}
                 defActiveKeyAndOrder={defActiveKeyAndOrder}
                 matcherValue={{matchersList: matchersList || []}}
