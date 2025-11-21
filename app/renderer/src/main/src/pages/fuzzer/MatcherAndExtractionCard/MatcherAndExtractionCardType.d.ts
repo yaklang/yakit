@@ -52,6 +52,8 @@ export interface MatcherCollapseProps extends MatcherAndExtractorProps {
     matcher: MatcherValueProps
     setMatcher: (m: MatcherValueProps) => void
     httpResponse: string
+    httpRequest?: string
+    isHttps?: boolean
     defActiveKeyAndOrder: MatcherActiveKey
 }
 

@@ -561,6 +561,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         setMatcher={setMatcher}
                         defActiveKeyAndOrder={defActiveKeyAndOrder}
                         httpResponse={httpResponse}
+                        httpRequest={httpRequest}
+                        isHttps={isHttps}
                         isSmallMode={isSmallMode}
                         pageType={pageType}
                     />
@@ -599,7 +601,7 @@ export const onFilterEmptySubMatcher = (param: FilterEmptySubMatcherFunctionProp
 }
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
     forwardRef((props, ref) => {
-        const {type, matcher, setMatcher, notEditable, defActiveKeyAndOrder, httpResponse, isSmallMode, pageType} =
+        const {type, matcher, setMatcher, notEditable, defActiveKeyAndOrder, httpResponse, httpRequest, isHttps, isSmallMode, pageType} =
             props
         const {t, i18n} = useI18nNamespaces(["webFuzzer"])
         const [activeKey, {set: setActiveKey, get: getActiveKey}] = useMap<number, string>(
