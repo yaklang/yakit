@@ -95,7 +95,7 @@ import {
 } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
-import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
@@ -1848,22 +1848,28 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     }, [streamCompileInfo])
 
     const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
-        try {
-            const result: CreateSSAProjectResponse = await ipcRenderer
-                .invoke("CreateSSAProject", {
-                    JSONStringConfig
-                })
-            onRefresh?.()
-            projectIdCacheRef.current = result.Project.ID
-            jsonCacheRef.current = result.Project.JSONStringConfig
-        } catch (error) {
-            yakitNotify("error", "创建项目管理数据失败")
-        }
+        return new Promise((resolve, reject) => {
+            try {
+                ipcRenderer
+                    .invoke("CreateSSAProject", {
+                        JSONStringConfig
+                    })
+                    .then((res: CreateSSAProjectResponse) => {
+                        onRefresh?.()
+                        projectIdCacheRef.current = res.Project.ID
+                        jsonCacheRef.current = res.Project.JSONStringConfig
+                        resolve(null)
+                    })
+            } catch (error) {
+                yakitNotify("error", "创建项目管理数据失败")
+                reject(error)
+            }
+        })
     })
 
-    useUpdateEffect(() => {
+    const onStreamInfoFun = useMemoizedFn(async (newStreamInfo: HoldGRPCStreamInfo) => {
         if (!isRealStartRef.current) {
-            const startLog = streamInfo.logState.find((item) => item.level === "code")
+            const startLog = newStreamInfo.logState.find((item) => item.level === "code")
             if (startLog && startLog.data) {
                 try {
                     const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
@@ -1875,7 +1881,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     jsonCacheRef.current = startLog?.data || ""
 
                     if (verifyStart?.project_exists === false) {
-                        onCreateSSAProject(startLog?.data || "")
+                        await onCreateSSAProject(startLog?.data || "")
                     }
                     // 参数中是否勾选了立即编译
                     isCompileImmediatelyRef.current = verifyStart.compile_immediately
@@ -1965,6 +1971,10 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                 }
             }
         }
+    })
+
+    useUpdateEffect(() => {
+        onStreamInfoFun(streamInfo)
     }, [streamInfo])
 
     useEffect(() => {
@@ -2539,18 +2549,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 return (
                     <div className={styles["audit-opt"]} onClick={(e) => e.stopPropagation()}>
                         <Tooltip title={"编译"}>
-                            {/* <YakitPopconfirm
-                                title={
-                                    <>
-                                        编译将会重新拉取代码,并删除该项目所有数据后再编译
-                                        <br />
-                                        请问是否重新编译？
-                                    </>
-                                }
-                                onConfirm={() => {
-                                    setCompileName(record.ProjectName)
-                                }}
-                            > */}
                             <YakitButton
                                 type='text'
                                 icon={<OutlineReloadScanIcon />}
@@ -2560,7 +2558,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     setJSONStringConfig(record.JSONStringConfig)
                                 }}
                             />
-                            {/* </YakitPopconfirm> */}
                         </Tooltip>
 
                         <Tooltip title={"代码扫描"}>

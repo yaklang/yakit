@@ -69,7 +69,7 @@ import {shallow} from "zustand/shallow"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import useHoldGRPCStream, {convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {v4 as uuidv4} from "uuid"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
@@ -2414,21 +2414,28 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         }, [streamCompileInfo])
 
         const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
-            try {
-                const result: CreateSSAProjectResponse = await ipcRenderer.invoke("CreateSSAProject", {
+            return new Promise((resolve, reject) => {
+               try {
+                ipcRenderer.invoke("CreateSSAProject", {
                     JSONStringConfig
+                }).then((res: CreateSSAProjectResponse) => {
+                    projectIdCacheRef.current = res.Project.ID
+                    jsonCacheRef.current = res.Project.JSONStringConfig
+                    resolve(null)
                 })
-                projectIdCacheRef.current = result.Project.ID
-                jsonCacheRef.current = result.Project.JSONStringConfig
+                
             } catch (error) {
                 yakitNotify("error", "创建项目管理数据失败")
-            }
+                reject(error)
+            } 
+            })
+            
         })
 
-        useUpdateEffect(() => {
+        const onStreamInfoFun = useMemoizedFn(async(newStreamInfo: HoldGRPCStreamInfo) => {
             // 此处为真正的启动
             if (!isRealStartRef.current) {
-                const startLog = streamInfo.logState.find((item) => item.level === "code")
+                const startLog = newStreamInfo.logState.find((item) => item.level === "code")
                 if (startLog && startLog.data) {
                     try {
                         const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
@@ -2439,7 +2446,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         jsonCacheRef.current = startLog?.data || ""
 
                         if (verifyStart?.project_exists === false) {
-                            onCreateSSAProject(startLog?.data || "")
+                            await onCreateSSAProject(startLog?.data || "")
                         }
 
                         switch (kind) {
@@ -2522,6 +2529,10 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     }
                 }
             }
+        })
+
+        useUpdateEffect(() => {
+            onStreamInfoFun(streamInfo)
         }, [streamInfo])
 
         const onStartAuditFun = useMemoizedFn(async (value) => {
