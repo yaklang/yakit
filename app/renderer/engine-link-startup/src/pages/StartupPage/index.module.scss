@@ -1,0 +1,64 @@
+.startup-wrapper {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 12px 12px 32px;
+  background-color: var(--Colors-Use-Basic-Background);
+
+  .startup-header-drap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 50px;
+    -webkit-app-region: drag;
+  }
+
+  &-left {
+    width: 400px;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    .startup-title {
+      .startup-logo {
+        margin-bottom: 8px;
+      }
+
+      .startup-desc {
+        color: var(--Colors-Use-Neutral-Disable);
+        letter-spacing: 2px;
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 200;
+        line-height: 20px;
+      }
+    }
+
+    .startup-engine-log {
+      background-color: var(--Colors-Use-Basic-Background);
+      padding: 12px 0;
+      border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+      border-bottom: 1px dashed var(--Colors-Use-Neutral-Border);
+      height: 232px;
+      width: 100%;
+    }
+
+    .startup-content-wrapper {
+      position: relative;
+      flex: 1;
+      background-color: var(--Colors-Use-Basic-Background);
+    }
+  }
+
+  &-right {
+    width: 432px;
+    height: 576px;
+    border-radius: 12px;
+
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

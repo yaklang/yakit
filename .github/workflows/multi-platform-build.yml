@@ -69,6 +69,7 @@ jobs:
                   cache-dependency-path: |
                       yarn.lock
                       app/renderer/src/main/yarn.lock
+                      app/renderer/engine-link-startup/yarn.lock
 
             - run: echo ${{ github.ref_name }}
             - run: cp buildutil/zip /usr/local/bin/zip
@@ -148,7 +149,7 @@ jobs:
               run: echo "SOFTWARE_VERSION=${{ steps.package_version.outputs.value }}" >> $GITHUB_ENV
 
             - name: "Install Dependencies"
-              run: yarn install && yarn install-render
+              run: yarn install && yarn install-render && yarn install-link-render
               working-directory: ./
             - name: "Install Legacy Electron"
               run: yarn remove electron && yarn add electron@22.3.27 --dev
@@ -158,27 +159,27 @@ jobs:
             - name: "Build CE Render"
               if: ${{ inputs.version == 'ce' }}
               working-directory: ./
-              run: yarn build${{ inputs.devTool && '-test' || '' }}-render
+              run: yarn build${{ inputs.devTool && '-test' || '' }}-renders
 
             - name: "Build EE Render"
               if: ${{ inputs.version == 'ee' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-enterprise
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-enterprise
 
             - name: "Build SE Render"
               if: ${{ inputs.version == 'se' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-simple-enterprise
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-simple-enterprise
 
             - name: "Build IRify Render"
               if: ${{ inputs.version == 'irify' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-irify
 
             - name: "Build IRifyEE Render"
               if: ${{ inputs.version == 'irifyee' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify-enterprise
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-irify-enterprise
 
             - name: Generate software prefix name
               run: |

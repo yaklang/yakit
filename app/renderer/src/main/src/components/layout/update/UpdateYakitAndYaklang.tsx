@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Progress} from "antd"
-import {DownloadingState} from "@/yakitGVDefine"
+import {DownloadingState, YakitSettingCallbackType, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {failed, info, success} from "@/utils/notification"
@@ -272,10 +272,13 @@ interface UpdateYakHintProps {
     buildIn: string
     visible: boolean
     onCallback: (result: boolean) => void
+    setOldLink: (v: boolean) => any
+    openEngineLinkWin: (type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => any
+    setYakitStatus: (v: YakitStatusType) => any
 }
 /** 引擎更新弹框-更新为内置版本引擎 */
 export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) => {
-    const {current, buildIn, visible, onCallback} = props
+    const {current, buildIn, visible, onCallback, setOldLink, openEngineLinkWin, setYakitStatus} = props
 
     useEffect(() => {
         if (visible) {
@@ -301,7 +304,10 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
             .then(() => {
                 info(`解压内置引擎成功`)
                 ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
-                    onCallback(true)
+                    // onCallback(true)
+                    setYakitStatus("")
+                    setOldLink(false)
+                    openEngineLinkWin("local")
                 })
             })
             .catch((e) => {

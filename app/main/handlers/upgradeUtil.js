@@ -883,53 +883,6 @@ module.exports = {
             return await asyncInitBuildInEngine({})
         })
 
-        // 解压 start-engine.zip
-        const generateStartEngineGRPC = () => {
-            return new Promise((resolve, reject) => {
-                const all = "start-engine.zip"
-                const output_name = isWindows ? `start-engine-grpc.bat` : `start-engine-grpc.sh`
-
-                // 如果存在就不在解压
-                if (fs.existsSync(path.join(yaklangEngineDir, output_name))) {
-                    resolve("")
-                    return
-                }
-
-                if (!fs.existsSync(loadExtraFilePath(path.join("bins/scripts", all)))) {
-                    reject(all + " not found")
-                    return
-                }
-                const zipHandler = new zip({
-                    file: loadExtraFilePath(path.join("bins/scripts", all)),
-                    storeEntries: true
-                })
-                zipHandler.on("ready", () => {
-                    const targetPath = path.join(yaklangEngineDir, output_name)
-                    zipHandler.extract(output_name, targetPath, (err, res) => {
-                        if (!fs.existsSync(targetPath)) {
-                            reject(`Extract Start Engine GRPC Script Failed`)
-                        } else {
-                            // 如果不是 Windows，给脚本文件添加执行权限
-                            if (!isWindows) {
-                                fs.chmodSync(targetPath, 0o755)
-                            }
-                            resolve("")
-                        }
-                        zipHandler.close()
-                    })
-                })
-                zipHandler.on("error", (err) => {
-                    console.info(err)
-                    reject(`${err}`)
-                    zipHandler.close()
-                })
-            })
-        }
-
-        ipcMain.handle("generate-start-engine", async (e) => {
-            return await generateStartEngineGRPC()
-        })
-
         // 插件压缩包和解压目录
         const generateChromePlugin = () => {
             return new Promise((resolve, reject) => {
@@ -973,6 +926,397 @@ module.exports = {
 
         ipcMain.handle("generate-chrome-plugin", async (e) => {
             return await generateChromePlugin()
+        })
+
+        // 解压 start-engine.zip
+        const generateStartEngineGRPC = () => {
+            return new Promise((resolve, reject) => {
+                const all = "start-engine.zip"
+                const output_name = isWindows ? `start-engine-grpc.bat` : `start-engine-grpc.sh`
+
+                // 如果存在就不在解压
+                if (fs.existsSync(path.join(yaklangEngineDir, output_name))) {
+                    resolve("")
+                    return
+                }
+
+                if (!fs.existsSync(loadExtraFilePath(path.join("bins/scripts", all)))) {
+                    reject(all + " not found")
+                    return
+                }
+                const zipHandler = new zip({
+                    file: loadExtraFilePath(path.join("bins/scripts", all)),
+                    storeEntries: true
+                })
+                zipHandler.on("ready", () => {
+                    const targetPath = path.join(yaklangEngineDir, output_name)
+                    zipHandler.extract(output_name, targetPath, (err, res) => {
+                        if (!fs.existsSync(targetPath)) {
+                            reject(`Extract Start Engine GRPC Script Failed`)
+                        } else {
+                            // 如果不是 Windows，给脚本文件添加执行权限
+                            if (!isWindows) {
+                                fs.chmodSync(targetPath, 0o755)
+                            }
+                            resolve("")
+                        }
+                        zipHandler.close()
+                    })
+                })
+                zipHandler.on("error", (err) => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+        ipcMain.handle("generate-start-engine", async (e) => {
+            return await generateStartEngineGRPC()
+        })
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {
+        let latestVersionCache = null
+
+        // 解压 start-engine.zip
+        const generateStartEngineGRPC = () => {
+            return new Promise((resolve, reject) => {
+                const all = "start-engine.zip"
+                const output_name = isWindows ? `start-engine-grpc.bat` : `start-engine-grpc.sh`
+
+                // 如果存在就不在解压
+                if (fs.existsSync(path.join(yaklangEngineDir, output_name))) {
+                    resolve("")
+                    return
+                }
+
+                if (!fs.existsSync(loadExtraFilePath(path.join("bins/scripts", all)))) {
+                    reject(all + " not found")
+                    return
+                }
+                const zipHandler = new zip({
+                    file: loadExtraFilePath(path.join("bins/scripts", all)),
+                    storeEntries: true
+                })
+                zipHandler.on("ready", () => {
+                    const targetPath = path.join(yaklangEngineDir, output_name)
+                    zipHandler.extract(output_name, targetPath, (err, res) => {
+                        if (!fs.existsSync(targetPath)) {
+                            reject(`Extract Start Engine GRPC Script Failed`)
+                        } else {
+                            // 如果不是 Windows，给脚本文件添加执行权限
+                            if (!isWindows) {
+                                fs.chmodSync(targetPath, 0o755)
+                            }
+                            resolve("")
+                        }
+                        zipHandler.close()
+                    })
+                })
+                zipHandler.on("error", (err) => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+        ipcMain.handle(ipcEventPre + "generate-start-engine", async (e) => {
+            return await generateStartEngineGRPC()
+        })
+
+        // 尝试初始化数据库
+        ipcMain.handle(ipcEventPre + "InitCVEDatabase", async (e) => {
+            const targetFile = path.join(YakitProjectPath, "default-cve.db.gzip")
+            if (fs.existsSync(targetFile)) {
+                return
+            }
+            const buildinDBFile = loadExtraFilePath(path.join("bins", "database", "default-cve.db.gzip"))
+            if (fs.existsSync(buildinDBFile)) {
+                fs.copyFileSync(buildinDBFile, targetFile)
+            }
+        })
+        // 获取内置引擎版本
+        ipcMain.handle(
+            ipcEventPre + "GetBuildInEngineVersion",
+            /*"IsBinsExisted"*/ async (e) => {
+                const yakZipPath = path.join("bins", "yak.zip")
+                if (!fs.existsSync(loadExtraFilePath(yakZipPath))) {
+                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(yakZipPath)}`)
+                }
+                const versionPath = path.join("bins", "engine-version.txt")
+                let buildInVersion = fs.readFileSync(loadExtraFilePath(versionPath)).toString("utf8")
+                // 去除换行符
+                buildInVersion = (buildInVersion || "").replace(/\r?\n/g, "")
+                // 去除首尾空格
+                buildInVersion = buildInVersion.trim()
+                return buildInVersion
+            }
+        )
+        // asyncInitBuildInEngine wrapper
+        const asyncInitBuildInEngine = (params) => {
+            return new Promise((resolve, reject) => {
+                if (!fs.existsSync(loadExtraFilePath(path.join("bins", "yak.zip")))) {
+                    reject("BuildIn Engine Not Found!")
+                    return
+                }
+
+                console.info("Start to Extract yak.zip")
+                const zipHandler = new zip({
+                    file: loadExtraFilePath(path.join("bins", "yak.zip")),
+                    storeEntries: true
+                })
+                console.info("Start to Extract yak.zip: Set `ready`")
+                zipHandler.on("ready", () => {
+                    const buildInPath = path.join(yaklangEngineDir, "yak.build-in")
+
+                    console.log("Entries read: " + zipHandler.entriesCount)
+                    for (const entry of Object.values(zipHandler.entries())) {
+                        const desc = entry.isDirectory ? "directory" : `${entry.size} bytes`
+                        console.log(`Entry ${entry.name}: ${desc}`)
+                    }
+
+                    console.info("we will extract file to: " + buildInPath)
+                    const extractedFile = (() => {
+                        switch (os.platform()) {
+                            case "darwin":
+                                switch (os.arch()) {
+                                    case "arm64":
+                                        return "bins/yak_darwin_arm64"
+                                    default:
+                                        return "bins/yak_darwin_amd64"
+                                }
+                            case "win32":
+                                return "bins/yak_windows_amd64.exe"
+                            case "linux":
+                                switch (os.arch()) {
+                                    case "arm64":
+                                        return "bins/yak_linux_arm64"
+                                    default:
+                                        return "bins/yak_linux_amd64"
+                                }
+                            default:
+                                return ""
+                        }
+                    })()
+                    zipHandler.extract(extractedFile, buildInPath, (err, res) => {
+                        if (!fs.existsSync(buildInPath)) {
+                            reject(`Extract BuildIn Engine Failed`)
+                        } else {
+                            /**
+                             * 复制引擎到真实地址
+                             * */
+                            try {
+                                let targetEngine = path.join(yaklangEngineDir, isWindows ? "yak.exe" : "yak")
+                                if (!isWindows) {
+                                    gracefulfs.copyFileSync(buildInPath, targetEngine)
+                                    fs.chmodSync(targetEngine, 0o755)
+                                } else {
+                                    gracefulfs.copyFileSync(buildInPath, targetEngine)
+                                }
+                                resolve()
+                            } catch (e) {
+                                reject(e)
+                            }
+                        }
+                        console.info("zipHandler closing...")
+                        zipHandler.close()
+                    })
+                })
+                console.info("Start to Extract yak.zip: Set `error`")
+                zipHandler.on("error", (err) => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+
+        // asyncRestoreEngineAndPlugin wrapper
+        ipcMain.handle(ipcEventPre + "RestoreEngineAndPlugin", async (e, params) => {
+            latestVersionCache = null
+            const engineTarget = isWindows ? path.join(yaklangEngineDir, "yak.exe") : path.join(yaklangEngineDir, "yak")
+            const buidinEngine = path.join(yaklangEngineDir, "yak.build-in")
+            const cacheFlagLock = path.join(basicDir, "flag.txt")
+            try {
+                // remove old engine
+                if (fs.existsSync(buidinEngine)) {
+                    fs.unlinkSync(buidinEngine)
+                }
+                if (isWindows && fs.existsSync(engineTarget)) {
+                    // access write will fetch delete!
+                    fs.accessSync(engineTarget, fs.constants.F_OK | fs.constants.W_OK)
+                }
+
+                if (fs.existsSync(cacheFlagLock)) {
+                    fs.unlinkSync(cacheFlagLock)
+                }
+            } catch (e) {
+                throw e
+            }
+
+            function tryUnlink(retriesLeft) {
+                try {
+                    if (fs.existsSync(engineTarget)) {
+                        fs.unlinkSync(engineTarget)
+                    }
+                } catch (err) {
+                    if (err.message.indexOf("operation not permitted") > -1) {
+                        if (retriesLeft > 0) {
+                            setTimeout(() => tryUnlink(retriesLeft - 1), 500)
+                        } else {
+                            throw e
+                        }
+                    }
+                }
+            }
+            tryUnlink(2)
+            return await asyncInitBuildInEngine({})
+        })
+
+        // asyncDownloadLatestYak wrapper
+        const asyncDownloadLatestYak = (version) => {
+            return new Promise(async (resolve, reject) => {
+                const dest = path.join(
+                    yaklangEngineDir,
+                    version.startsWith("dev/") ? "yak-" + version.replace("dev/", "dev-") : `yak-${version}`
+                )
+                try {
+                    fs.unlinkSync(dest)
+                } catch (e) {}
+                await downloadYakEngine(
+                    version,
+                    dest,
+                    (state) => {
+                        win.webContents.send("download-yak-engine-progress", state)
+                    },
+                    resolve,
+                    reject
+                )
+            })
+        }
+        ipcMain.handle(ipcEventPre + "download-latest-yak", async (e, version) => {
+            return await asyncDownloadLatestYak(version)
+        })
+
+        /** clear latestVersionCache value */
+        ipcMain.handle(ipcEventPre + "clear-local-yaklang-version-cache", async (e) => {
+            latestVersionCache = null
+            return
+        })
+        const asyncWriteEngineKeyToYakitProjects = async (version) => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    if (process.platform === "darwin") {
+                        const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
+                        // 先行删除
+                        if (fs.existsSync(yakKeyFile)) {
+                            fs.unlinkSync(yakKeyFile)
+                        }
+                        // macOS下正常下载引擎时注入
+                        if (version) {
+                            const hashData = await fetchSpecifiedYakVersionHash(version, {timeout: 2000})
+                            fs.writeFileSync(yakKeyFile, hashData)
+                        }
+                        // macOS下解压内置引擎时注入
+                        else {
+                            const hashTxt = path.join("bins", "engine-sha256.txt")
+                            if (fs.existsSync(loadExtraFilePath(hashTxt))) {
+                                let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+                                // 去除换行符
+                                hashData = (hashData || "").replace(/\r?\n/g, "")
+                                // 去除首尾空格
+                                hashData = hashData.trim()
+                                fs.writeFileSync(yakKeyFile, hashData)
+                            }
+                        }
+                    }
+                    resolve()
+                } catch (error) {
+                    reject(error)
+                }
+            })
+        }
+
+        ipcMain.handle(ipcEventPre + "write-engine-key-to-yakit-projects", async (e, version) => {
+            return await asyncWriteEngineKeyToYakitProjects(version)
+        })
+
+        const installYakEngine = (version) => {
+            return new Promise((resolve, reject) => {
+                let origin = path.join(
+                    yaklangEngineDir,
+                    version.startsWith("dev/") ? "yak-" + version.replace("dev/", "dev-") : `yak-${version}`
+                )
+                origin = origin.replaceAll(`"`, `\"`)
+
+                let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+                dest = dest.replaceAll(`"`, `\"`)
+                // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
+                let flag = false
+                function tryUnlink(retriesLeft) {
+                    if (flag) return
+                    try {
+                        fs.unlinkSync(dest)
+                    } catch (err) {
+                        if (err.message.indexOf("operation not permitted") > -1) {
+                            if (retriesLeft > 0) {
+                                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
+                            } else {
+                                reject("operation not permitted")
+                            }
+                        }
+                    }
+                }
+                tryUnlink(2)
+                childProcess.exec(
+                    isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
+                    (err) => {
+                        flag = true
+                        if (err) {
+                            if (
+                                err.message.indexOf(
+                                    "The process cannot access the file because it is being used by another process"
+                                ) !== -1
+                            ) {
+                                reject("operation not permitted")
+                            } else {
+                                reject(err)
+                            }
+                            return
+                        }
+                        resolve()
+                    }
+                )
+            })
+        }
+
+        ipcMain.handle(ipcEventPre + "install-yak-engine", async (e, version) => {
+            return await installYakEngine(version)
+        })
+
+        ipcMain.handle(ipcEventPre + "cancel-download-yak-engine-version", async (e, version) => {
+            return await engineCancelRequestWithProgress(version)
+        })
+
+        ipcMain.handle(ipcEventPre + "get-yakit-remote-auth-all", async (e, name) => {
+            loadSecrets()
+            return authMeta
+        })
+
+        ipcMain.handle(ipcEventPre + "save-yakit-remote-auth", async (e, params) => {
+            let {name, host, port, tls, caPem, password} = params
+            name = name || `${host}:${port}`
+            saveAllSecret([
+                ...authMeta.filter((i) => {
+                    return i.name !== name
+                })
+            ])
+            loadSecrets()
+            saveSecret(name, host, port, tls, password, caPem)
+        })
+
+        // 打开指定路径文件
+        ipcMain.handle(ipcEventPre + "open-specified-file", async (e, path) => {
+            return shell.showItemInFolder(path)
         })
     }
 }

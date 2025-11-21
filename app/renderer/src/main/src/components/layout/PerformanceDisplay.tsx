@@ -226,8 +226,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                     ipcRenderer
                                         .invoke("RestoreEngineAndPlugin", {})
                                         .finally(() => {
-                                            info("恢复引擎成功")
-                                            ipcRenderer.invoke("relaunch")
+                                            ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                                                info("恢复引擎成功")
+                                                ipcRenderer.invoke("relaunch")
+                                            })
                                         })
                                         .catch((e) => {
                                             failed(`恢复引擎失败：${e}`)
@@ -279,7 +281,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                             <YakitPopconfirm
                                                 title={<>确定是否切换连接的引擎</>}
                                                 onConfirm={async () => {
-                                                    if (+i.port !== port) {
+                                                    let oldPort = port
+                                                    if (+i.port !== oldPort) {
                                                         await delTemporaryProject()
                                                     }
                                                     const switchEngine: YaklangEngineWatchDogCredential = {
@@ -293,7 +296,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                         .then(() => {
                                                             setTimeout(() => {
                                                                 success(`切换核心引擎成功！`)
-                                                                if (!isEnpriTraceAgent() && +i.port !== port) {
+                                                                if (!isEnpriTraceAgent() && +i.port !== oldPort) {
                                                                     emiter.emit("onSwitchEngine")
                                                                 }
                                                                 ipcRenderer.invoke("switch-conn-refresh", false)
@@ -303,7 +306,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                             failed("切换引擎失败，请尝试切换其他端口重连")
                                                             if (isLocal) {
                                                                 process.forEach((item) => {
-                                                                    if (item.port == port) {
+                                                                    if (item.port == oldPort) {
                                                                         ipcRenderer
                                                                             .invoke(`kill-yak-grpc`, item.pid)
                                                                             .then((val) => {

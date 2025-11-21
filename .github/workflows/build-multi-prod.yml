@@ -6,6 +6,7 @@ on:
             - "v*-*"
             - "!v*-render"
             - "!v*-irify"
+            - "!v*-link-render"
 
 jobs:
     build_yakit:

@@ -1,0 +1,84 @@
+name: Gen-Multi-Platform-Link-Render
+
+on:
+  push:
+    tags:
+      - "v*-link-render"
+
+jobs:
+    build_yakit:
+        if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-link-render') }}
+        runs-on: ubuntu-latest
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+            RENDER_PATH: ./app/renderer/engine-link-startup
+            RETURN_PATH: ../../../
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - name: Generate tag version
+              run: |
+                  echo $GITHUB_REF_NAME
+                  tag=${GITHUB_REF_NAME#v}
+                  tag=${tag%-link-render}
+                  echo ${tag}
+                  echo "TAG_VERSION=$tag" >> $GITHUB_ENV
+
+            - name: "Install Link Render Dependencies"
+              run: yarn install-link-render
+              working-directory: ./
+
+            - name: "Build CE Link Render"
+              working-directory: ./
+              run: yarn build-link-render
+            - name: "zip CE Link Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r ce.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
+            - name: "Build EE Link Render"
+              working-directory: ./
+              run: yarn build-link-render-enterprise
+            - name: "zip EE Link Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
+            - name: "Build IRify Link Render"
+              working-directory: ./
+              run: yarn build-link-render-irify
+            - name: "zip IRify Link Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
+            - name: "Build IRifyEE Link Render"
+              working-directory: ./
+              run: yarn build-link-render-irify-enterprise
+            - name: "zip IRifyEE Link Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
+            - name: View Published Content
+              run: ls ${{ env.RENDER_PATH }}
+
+            - name: Download CI Needed Yak Linux(amd64) Version to operator
+              run: wget -q -O './yak' https://yaklang.oss-accelerate.aliyuncs.com/yak/ci/yak_linux_amd64 && chmod +x ./yak
+
+            - name: Generate OSS File Path
+              run: echo "FILE_PATH=link" >> $GITHUB_ENV
+
+            - name: Upload Multi-Platform Render Zip
+              run: |
+                  bucket="yaklang"
+
+                  array=("ce" "ee" "irify" "irifyee")
+
+                  for item in "${array[@]}"; do
+                    file_name="${item}.zip"
+                    echo "Start to upload ${file_name}"
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/${{ env.FILE_PATH }}/render/${{ env.TAG_VERSION }}/${file_name}
+                  done
+
+            - name: Update OSS latest file
+              run: echo ${{ env.TAG_VERSION }} > ./version.txt
+            - name: Update OSS latest file
+              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/${{ env.FILE_PATH }}/render/version.txt'

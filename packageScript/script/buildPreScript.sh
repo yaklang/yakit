@@ -14,6 +14,11 @@ case "$1" in
         chmod +x ./packageScript/script/installIRifyRender.sh
         chmod +x ./packageScript/script/electron-irify-builder.sh
         # 获取渲染端最新版本号
+        linkRenderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/link/render/version.txt") || {
+            echo "Failed to obtain link render version" >&2
+            exit 1
+        }
+        # 获取渲染端最新版本号
         renderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/irify/render/version.txt") || {
             echo "Failed to obtain render version" >&2
             exit 1
@@ -22,6 +27,11 @@ case "$1" in
     yakit)
         chmod +x ./packageScript/script/installRender.sh
         chmod +x ./packageScript/script/electron-builder.sh
+        # 获取渲染端最新版本号
+        linkRenderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/link/render/version.txt") || {
+            echo "Failed to obtain link render version" >&2
+            exit 1
+        }
         # 获取渲染端最新版本号
         renderVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/yak/render/version.txt") || {
             echo "Failed to obtain render version" >&2
@@ -37,3 +47,4 @@ esac
 
 # 设置渲染端最新版本号, 用于后续下载
 echo "RENDER_VERSION=${renderVersion}" >>$GITHUB_ENV
+echo "LINK_RENDER_VERSION=${linkRenderVersion}" >>$GITHUB_ENV

@@ -1,0 +1,276 @@
+.yakit-tag-middle {
+    height: 20px;
+    border-radius: 4px;
+    padding: 2px 6px;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    border: none;
+
+    path {
+        stroke-width: 1.5;
+    }
+
+    :global {
+        .ant-tag-close-icon {
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            width: 12px;
+            height: 12px;
+
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+
+            .anticon {
+                height: 12px;
+            }
+
+            &:hover {
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+    }
+}
+
+.yakit-tag-small {
+    height: 16px;
+    border-radius: 2px;
+    padding: 0px 6px;
+    font-size: 11px;
+}
+
+.yakit-tag-large {
+    height: 24px;
+    padding: 4px 8px;
+    font-size: 12px;
+
+    :global {
+        .ant-tag-close-icon {
+            width: 14px;
+            height: 14px;
+
+            svg {
+                width: 14px;
+                height: 14px;
+            }
+        }
+
+        .anticon {
+            height: 14px;
+        }
+    }
+}
+
+.yakit-tag-border {
+    border: 1px solid;
+}
+
+.yakit-tag-fullRadius {
+    border-radius: 9999px;
+}
+
+.yakit-tag-default-color {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+    svg {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+}
+
+.yakit-tag-danger {
+    background: var(--Colors-Use-Error-Bg-Hover);
+    border-color: var(--Colors-Use-Error-Border);
+    color: var(--Colors-Use-Status-Serious);
+
+    svg {
+        color: var(--Colors-Use-Status-Serious);
+    }
+}
+
+.yakit-tag-serious {
+    background: var(--Colors-Use-Error-Bg-Hover);
+    border-color: var(--Colors-Use-Error-Border);
+    color: var(--Colors-Use-Error-Primary);
+
+    svg {
+        color: var(--Colors-Use-Error-Primary);
+    }
+}
+
+.yakit-tag-info {
+    background: var(--Colors-Use-Orange-Bg);
+    border-color: var(--Colors-Use-Orange-Border);
+    border: 1px solid var(--Colors-Use-Orange-Border);
+    color: var(--Colors-Use-Orange-Primary);
+
+    svg {
+        color: var(--Colors-Use-Orange-Primary);
+    }
+}
+
+.yakit-tag-success {
+    background: var(--Colors-Use-Success-Bg-Hover);
+    border-color: var(--Colors-Use-Success-Border);
+    color: var(--Colors-Use-Success-Primary);
+
+    svg {
+        color: var(--Colors-Use-Success-Primary);
+    }
+}
+
+.yakit-tag-warning {
+    background: var(--Colors-Use-Warning-Bg-Hover);
+    border-color: var(--Colors-Use-Warning-Border);
+    color: var(--Colors-Use-Warning-Primary);
+
+    svg {
+        color: var(--Colors-Use-Warning-Primary);
+    }
+}
+
+.yakit-tag-purple {
+    background: var(--Colors-Use-Purple-Bg);
+    border-color: var(--Colors-Use-Purple-Border);
+    color: var(--Colors-Use-Purple-Primary);
+
+    svg {
+        color: var(--Colors-Use-Purple-Primary);
+    }
+}
+
+.yakit-tag-blue {
+    background: var(--Colors-Use-Blue-Bg);
+    border-color: var(--Colors-Use-Blue-Border);
+    color: var(--Colors-Use-Blue-Primary);
+
+    svg {
+        color: var(--Colors-Use-Blue-Primary);
+    }
+}
+
+.yakit-tag-cyan {
+    background: var(--Colors-Use-Cyan-Bg);
+    border-color: var(--Colors-Use-Cyan-Border);
+    color: var(--Colors-Use-Cyan-Primary);
+
+    svg {
+        color: var(--Colors-Use-Cyan-Primary);
+    }
+}
+
+.yakit-tag-bluePurple {
+    background: var(--Colors-Use-Magenta-Bg);
+    border-color: var(--Colors-Use-Magenta-Border);
+    color: var(--Colors-Use-Magenta-Primary);
+
+    svg {
+        color: var(--Colors-Use-Magenta-Primary);
+    }
+}
+
+.yakit-tag-yellow {
+    color: var(--Colors-Use-Yellow-Primary);
+    border-color: var(--Colors-Use-Yellow-Border);
+    background-color: var(--Colors-Use-Yellow-Bg);
+
+    svg {
+        color: var(--Colors-Use-Yellow-Primary);
+    }
+}
+
+.yakit-tag-white {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.yakit-tag-disable {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Disable);
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-close-icon {
+            cursor: not-allowed;
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+    }
+}
+
+// ========================== copy ==========================
+.yakit-copy {
+    margin-left: 4px;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+// ========================== yakit-checked-tag   start ==========================
+.yakit-checked-tag-wrap {
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+
+    :global {
+        .ant-tag {
+            line-height: 18px;
+            height: 20px;
+        }
+
+        .ant-tag-checkable {
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .ant-tag-checkable-checked {
+            background: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
+        }
+
+        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
+}
+
+.yakit-checked-tag-disable {
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-checkable {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+
+        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+    }
+}
+
+.yakit-checked-tag-checked-disable {
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-checkable-checked {
+            color: #fff;
+            background-color: var(--Colors-Use-Neutral-Disable);
+        }
+
+        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+            color: #fff;
+        }
+    }
+}
+
+// ========================== yakit-checked-tag   end ==========================

@@ -1,0 +1,102 @@
+// ========================== ant form ==========================
+.ant-form-item-label > label {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+.ant-form-item-with-help {
+    margin-bottom: 16px;
+}
+
+.ant-form-item {
+    margin-bottom: 16px;
+}
+.ant-form-item-control-input-content {
+    .ant-input-number {
+        width: 100%;
+    }
+}
+
+.ant-form-item-label > label .ant-form-item-tooltip {
+    color: var(--Colors-Use-Neutral-Disable);
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.ant-form-item-with-help .ant-form-item-explain{
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.ant-form-item-explain-error {
+    color: var(--Colors-Use-Error-Primary);
+}
+
+.ant-form-item-extra {
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+// ----------------- textArea
+.ant-form {
+    .textArea-resizer-icon {
+        bottom: 5px;
+    }
+}
+
+// --------------input
+.ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input {
+    border-color: var(--Colors-Use-Error-Primary);
+    background: var(--Colors-Use-Basic-Background);
+    &:hover {
+        border-color: var(--Colors-Use-Error-Border);
+        background: var(--Colors-Use-Basic-Background);
+    }
+    &:focus {
+        border-color: var(--Colors-Use-Error-Primary);
+        background: var(--Colors-Use-Basic-Background);
+    }
+}
+
+.ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input-focused {
+    border-color: var(--Colors-Use-Error-Primary);
+}
+
+// ----------inputNumber
+.ant-input-number-status-error:not(.ant-input-number-disabled):not(.ant-input-number-borderless).ant-input-number {
+    border-color: var(--Colors-Use-Error-Primary);
+    &:hover {
+        border-color: var(--Colors-Use-Error-Border);
+    }
+    &:focus {
+        border-color: var(--Colors-Use-Error-Primary);
+    }
+}
+.ant-input-number-status-error:not(.ant-input-number-disabled):not(
+        .ant-input-number-borderless
+    ).ant-input-number-focused {
+    border-color: var(--Colors-Use-Error-Primary);
+}
+
+// ----------select
+.ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input) .ant-select-selector {
+    border-color: var(--Colors-Use-Error-Primary) !important;
+    background-color: var(--Colors-Use-Basic-Background);
+}
+.ant-select-arrow{
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+.ant-select-clear:hover{
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    background: var(--Colors-Use-Basic-Background);
+}
+.ant-select-clear{
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    background: transparent;
+}
+
+.ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input).ant-select-open
+    .ant-select-selector,
+.ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input).ant-select-focused
+    .ant-select-selector {
+    border-color: var(--Colors-Use-Error-Primary);
+}
