@@ -214,28 +214,43 @@ export const grpcCheckAllowSecretLocal: APIFunc<CheckAllowSecretLocal, AllowSecr
     params,
     hiddenError
 ) => {
-    return new Promise(async (resolve) => {
-        ipcRenderer.invoke(ipcEventPre + "check-allow-secret-local-yaklang-engine", params).then((res) => {
-            resolve(res)
-        })
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "check-allow-secret-local-yaklang-engine", params)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch((err) => {
+                reject(err)
+            })
     })
 }
 
 /** @name 修复数据库 */
 export const grpcFixupDatabase: APIFunc<FixupDatabase, FixupDatabaseExecResult> = (params, hiddenError) => {
-    return new Promise(async (resolve) => {
-        ipcRenderer.invoke(ipcEventPre + "fixup-database", params).then((res) => {
-            resolve(res)
-        })
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "fixup-database", params)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch((err) => {
+                reject(err)
+            })
     })
 }
 
 /** @name 引擎启动 */
 export const grpcStartLocalEngine: APIFunc<StartLocalEngine, ExecResult> = (params, hiddenError) => {
-    return new Promise(async (resolve) => {
-        ipcRenderer.invoke(ipcEventPre + "start-secret-local-yaklang-engine", params).then((res) => {
-            resolve(res)
-        })
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "start-secret-local-yaklang-engine", params)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch((err) => {
+                reject(err)
+            })
     })
 }
 
