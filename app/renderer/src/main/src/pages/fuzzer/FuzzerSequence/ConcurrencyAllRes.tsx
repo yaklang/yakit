@@ -23,6 +23,7 @@ import {SecondNodeTitle, SecondNodeExtra, FuzzerShowSuccess} from "../HTTPFuzzer
 import {emptyFuzzer} from "@/defaultConstants/HTTPFuzzerPage"
 
 import styles from "./ConcurrencyAllRes.module.scss"
+import { DebugProps } from "./FuzzerPageSetting"
 
 export interface ConcurrencyAllResProps {
     responseInfo?: ResponseProps
@@ -30,7 +31,7 @@ export interface ConcurrencyAllResProps {
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     groupPageId: string
-    onDebug: (params: {httpResponse: string; type: MatchingAndExtraction; activeKey: string; order?: number}) => void
+    onDebug: (params: DebugProps) => void
     onShowAll: () => void
     inViewport: boolean
     onMatchSubmit?: () => void
@@ -368,7 +369,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
                                         isEnd={loading}
                                         onDebug={(response) => {
                                             onDebug({
-                                                httpResponse: response,
+                                                ...response,
                                                 type: "matchers",
                                                 activeKey: "ID:0",
                                                 order: 0
