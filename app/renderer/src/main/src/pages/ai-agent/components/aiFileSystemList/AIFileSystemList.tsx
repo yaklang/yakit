@@ -1,10 +1,10 @@
 import React, {useMemo, useState} from "react"
 import {AIFileSystemListProps} from "./type"
 import {useCreation} from "ahooks"
-import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import styles from "./AIFileSystemList.module.scss"
 import FileTreeSystem from "./FileTreeSystem/FileTreeSystem"
+import OperationLog from "./OperationLog/OperationLog"
 
 enum TabKey {
     FileTree = "file-tree",
@@ -28,7 +28,7 @@ export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({ex
     const tabContent: Record<TabKey, React.ReactNode> = useMemo(
         () => ({
             [TabKey.FileTree]: <FileTreeSystem />,
-            [TabKey.OperationLog]: <LocalPluginLog loading={false} list={list} />
+            [TabKey.OperationLog]: <OperationLog loading={false} list={list} />
         }),
         [list]
     )
