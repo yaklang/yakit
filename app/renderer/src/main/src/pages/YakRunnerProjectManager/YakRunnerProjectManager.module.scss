@@ -11,3 +11,75 @@
         }
     }
 }
+
+.yaklang-engine-hint-wrapper {
+    width: 100%;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    position: relative;
+
+    .hint-left-wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+
+        .hint-icon {
+            width: 32px;
+            height: 32px;
+            color: var(--Colors-Use-Main-Primary);
+            svg {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    }
+
+    .hint-right-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .hint-right-title {
+            height: 24px;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            margin-bottom: 8px;
+        }
+
+        .hint-right-content {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .hint-right-download {
+            .download-progress {
+                .progress-title {
+                    margin-top: 6px;
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 600;
+                    line-height: 16px;
+                }
+            }
+            .log-info {
+                margin-top: 16px;
+                .log-item {
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 24px;
+                }
+            }
+            .download-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: right;
+                gap: 8px;
+            }
+        }
+    }
+}

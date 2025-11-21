@@ -374,6 +374,17 @@ module.exports = (win, getClient) => {
         return await asyncUpdateSSAProject(params)
     })
 
+    // IRify数据同步
+    const streamMigrateSSAProject = new Map()
+    ipcMain.handle(
+        "cancel-MigrateSSAProject",
+        handlerHelper.cancelHandler(streamMigrateSSAProject)
+    )
+    ipcMain.handle("MigrateSSAProject", async (e, token) => {
+        let stream = getClient().MigrateSSAProject()
+        handlerHelper.registerHandler(win, stream, streamMigrateSSAProject, token)
+    })
+
 
     const asyncUpdateSSAProgram = (params) => {
         return new Promise((resolve, reject) => {
