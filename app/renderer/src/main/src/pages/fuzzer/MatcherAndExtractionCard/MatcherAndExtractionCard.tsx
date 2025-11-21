@@ -143,7 +143,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             isHttps = false,
             defActiveType,
             defActiveKeyAndOrder,
-            hasApplyBtn = false
+            hasApplyBtn = false,
+            setDefActiveType
         } = props
         const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
         const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
@@ -460,7 +461,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                     value={type}
                                     onChange={(e) => {
                                         const {value} = e.target
-                                        setType(value)
+                                        //这里需要设置父组件的type
+                                        setDefActiveType ? setDefActiveType(value) : setType(value)
                                         if (value === "matchers" && matcher.matchersList.length === 0) {
                                             setMatcher({
                                                 ...matcher,
@@ -1434,7 +1436,8 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
         onClose,
         onSave,
         defActiveKeyAndOrder,
-        hasApplyBtn
+        hasApplyBtn,
+        setDefActiveType
     } = props
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
@@ -1470,6 +1473,7 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
                 onSave={onSave}
                 defActiveKeyAndOrder={defActiveKeyAndOrder}
                 hasApplyBtn={hasApplyBtn}
+                setDefActiveType={setDefActiveType}
             />
         </YakitDrawer>
     )

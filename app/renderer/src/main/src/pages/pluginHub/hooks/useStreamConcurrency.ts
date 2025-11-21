@@ -1,4 +1,4 @@
-import {useEffect, useRef} from "react"
+import {useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import { randomString } from "@/utils/randomUtil"
 
@@ -15,10 +15,12 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
 }: StreamConcurrencyConfig<TData>) => {
     const cleanupRef = useRef<(() => void) | null>(null)
     const tokenRef = useRef<string>(randomString(40))
+    const [loading, setLoading] = useState<boolean>(false)
     const startConcurrency = useMemoizedFn((params: TParams) => {
         if (cleanupRef.current) {
             cleanupRef.current()
         }
+        setLoading(true)
 
         const token = tokenRef.current
 
@@ -35,6 +37,7 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
         }
 
         const handleEnd = () => {
+            setLoading(false)
             onStreamEnd?.()
             if (cleanupRef.current) {
                 cleanupRef.current()
@@ -67,6 +70,7 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
             cleanupRef.current()
             cleanupRef.current = null
         }
+        setLoading(false)
     })
 
     
@@ -76,7 +80,11 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
         }
     }, [])
 
-    return {startConcurrency, cancelConcurrency}
+    return { 
+        startConcurrency, 
+        cancelConcurrency, 
+        loading
+    }
 }
 
 

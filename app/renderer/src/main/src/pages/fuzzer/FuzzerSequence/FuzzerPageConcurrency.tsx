@@ -207,7 +207,8 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
     return (
         <YakitPopover
             title={t("AdvancedSet.advancedConfig")}
-            onVisibleChange={onCancel}
+            onVisibleChange={(visible) => !visible && onCancel()}
+            trigger='click'
             overlayInnerStyle={{width: 350}}
             overlayClassName={styles["history-advanced-set-wrapper"]}
             visible={visible}
@@ -229,6 +230,7 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
                             label={t("HttpQueryAdvancedConfig.disable_connection_pool")}
                             className={styles["form-item-with-reset-button"]}
                             valuePropName='checked'
+                            name={"disableUseConnPool"}
                         >
                             <YakitSwitch />
                         </Form.Item>

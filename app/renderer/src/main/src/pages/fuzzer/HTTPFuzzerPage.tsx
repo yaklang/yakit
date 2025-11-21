@@ -167,6 +167,7 @@ import i18n from "@/i18n/i18n"
 import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import { ExportDataType } from "@/utils/exporter"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import { PublicHTTPHistoryIcon } from "@/routes/publicIcon"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -771,6 +772,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         order: 0,
         defActiveKey: ""
     }) // 匹配器
+    const [hasExtractorRules, setHasExtractorRules] = useState(false) // 已经点击匹配/提取
 
     const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
@@ -1183,6 +1185,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "", 10)}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
+                setHasExtractorRules(false);
                 setIsPause(true)
             }
         } else if (matchRef.current) {
@@ -1191,8 +1194,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             setLoadingText(t("HTTPFuzzerPage.matchingInProgress"))
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
+            setHasExtractorRules(true);
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
+            setHasExtractorRules(false);
         }
         onSaveHTTPFuzzerByPageId()
         logger(
@@ -1920,6 +1925,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 retryNoPopconfirm={!canPlayAgain}
                 cancelCurrentHTTPFuzzer={cancelCurrentHTTPFuzzer}
                 resumeAndPause={resumeAndPause}
+                onShowAll={jumpHTTPHistoryAnalysis}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -2083,6 +2089,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         return (
              <YakitDrawer
+                title={`${t('HTTPFuzzerPage.trafficAnalysisMode')}-${currentItem.pageName}`}
                 getContainer={fuzzerRef.current || document.body}
                 placement='bottom'
                 mask={false}
@@ -2108,7 +2115,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             <div style={{fontSize: 12}}>
                 {t("HTTPFuzzerPage.response_overflow", {maxData: fuzzerTableMaxData})}
                 <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
-                    {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                    {t("HTTPFuzzerPage.trafficAnalysis")}
                 </YakitButton>
                 {t("HTTPFuzzerPage.view_all_suffix")}
             </div>
@@ -2446,13 +2453,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <div className={classNames(styles["resize-card-heard"])}>
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
                                             <div className={styles["resize-card-heard-extra"]}></div>
-                                            {cachedTotal >= 1 && <YakitButton
-                                                type='outline2'
-                                                onClick={jumpHTTPHistoryAnalysis}
-                                                className={styles["resize-card-heard-btn"]}
-                                            >
-                                                {t("HTTPFuzzerPage.trafficAnalysisMode")}
-                                            </YakitButton>}
                                             {secondNodeExtra()}
                                         </div>
                                         {cachedTotal >= 1 ? (
@@ -2471,7 +2471,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         moreLimtAlertMsg={moreLimtAlertMsg}
                                                         noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
-                                                        hasExtractorRules={!!advancedConfigValue.extractors.length}
+                                                        hasExtractorRules={hasExtractorRules}
                                                     />
                                                 )}
                                                 {showSuccess === "false" && (
@@ -2727,6 +2727,7 @@ interface SecondNodeExtraProps {
     resumeAndPause?: () => void
     isHttps?: boolean
     request?: string
+    onShowAll?: () => void
 }
 
 /**
@@ -2760,7 +2761,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         pageId,
         noPopconfirm = true,
         retryNoPopconfirm = true,
-        cancelCurrentHTTPFuzzer
+        cancelCurrentHTTPFuzzer,
+        onShowAll
     } = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer", "history", "yakitUi"])
     const [color, setColor] = useState<string[]>()
@@ -2988,7 +2990,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </div>
         )
     }
-    if (!onlyOneResponse && cachedTotal > 1 && showSuccess === "true") {
+    if ((!onlyOneResponse && cachedTotal > 1 && showSuccess === "true") || sendPayloadsType === 'concurrencyAllRes') {
         const searchNode = (
             <YakitInput.Search
                 size={size === "small" ? "small" : "middle"}
@@ -3230,6 +3232,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         />
                     </Tooltip>
                 )} */}
+                {onShowAll ? (+(secondNodeSize?.width || 0) >= 610 ? 
+                    <YakitButton type='outline2' size={"small"} onClick={onShowAll} >
+                        {t("HTTPFuzzerPage.trafficAnalysis")}
+                    </YakitButton>
+                : 
+                <Tooltip title={t("HTTPFuzzerPage.trafficAnalysis")}>
+                    <YakitButton type='outline2' onClick={onShowAll} icon={<PublicHTTPHistoryIcon />} size={size} />
+                </Tooltip>): null}
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitPopover
                         title={t("SecondNodeExtra.exportData")}

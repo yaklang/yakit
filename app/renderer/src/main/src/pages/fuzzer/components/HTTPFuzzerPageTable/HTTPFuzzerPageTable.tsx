@@ -41,7 +41,7 @@ import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { ExportDataType } from "@/utils/exporter"
-import ExtractedFilter from "./extractedFilter"
+import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from "./extractedFilter"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -251,7 +251,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             const extractedResultsColumn: ColumnsTypeProps = {
                 title: t("HTTPFuzzerPageTable.extractData"),
                 dataKey: "ExtractedResults",
-                width: 300,
+                width: 200,
                 filterProps: {
                     filterIcon: (
                         <OutlineSelectorIcon
@@ -350,61 +350,94 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               ) : (
                                   "-"
                               ),
-                          width: 100,
-                          sorterProps: {
-                              sorter: true
-                          },
+                          width: 80,
                           filterProps: {
                               filterKey: "StatusCode",
                               filtersType: "input",
                               filterIcon: (
-                                  <OutlineSearchIcon
-                                      className={classNames(styles["search-icon"], styles["filter-icon"], {
-                                          [styles["active-icon"]]: !!query?.StatusCode?.length
+                                  <OutlineSelectorIcon
+                                      className={classNames(styles["filter-icon"], {
+                                          [styles["active-icon"]]: 
+                                              !!query?.StatusCode?.length ||
+                                              sorterTable?.orderBy === "StatusCode"
                                       })}
                                   />
                               ),
-                              filterInputProps: {
-                                  placeholder: t("YakitInput.supportInputFormat"),
-                                  wrapperStyle: {width: 270},
-                                  onRegular: (value) => {
-                                      // 只允许输入数字、逗号和连字符，去掉所有其他字符
-                                      return value.replace(/[^0-9,-]/g, "")
-                                  }
-                              }
+                              filterRender: () => (
+                                  <TableFilterAndSorter
+                                      sortStatus={sorterTable?.orderBy === "StatusCode" ? sorterTable?.order : "none"}
+                                      handleSort={(status) => {
+                                          setSorterTable(
+                                              status === "none" 
+                                                  ? undefined 
+                                                  : {orderBy: "StatusCode", order: status}
+                                          )
+                                      }}
+                                      filterType={'search'}
+                                      filterActive={!!query?.StatusCode}
+                                      filterNode={
+                                          <StatusCodeInputFilter
+                                              query={query}
+                                              setQuery={(q) => {
+                                                  setQuery({
+                                                      ...q
+                                                  })
+                                              }}
+                                              onSure={() => {
+                                                  setTimeout(() => {
+                                                      update()
+                                                  }, 100)
+                                              }}
+                                          />
+                                      }
+                                  />
+                              )
                           }
                       },
                       {
                           title: t("HTTPFuzzerPageTable.responseSize"),
                           dataKey: "BodyLength",
-                          width: 150,
-                          sorterProps: {
-                              sorter: true
-                          },
+                          width: 99,
                           filterProps: {
                               filterKey: "bodyLength",
                               filterIcon: (
-                                  <FilterIcon
+                                  <OutlineSelectorIcon
                                       className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]: query?.afterBodyLength || query?.beforeBodyLength
+                                          [styles["active-icon"]]: 
+                                              query?.afterBodyLength || 
+                                              query?.beforeBodyLength ||
+                                              sorterTable?.orderBy === "BodyLength"
                                       })}
                                   />
                               ),
                               filterRender: () => (
-                                  <BodyLengthInputNumber
-                                      ref={bodyLengthRef}
-                                      query={query}
-                                      setQuery={(q) => {
-                                          setQuery({
-                                              ...q
-                                          })
+                                  <TableFilterAndSorter
+                                      sortStatus={sorterTable?.orderBy === "BodyLength" ? sorterTable?.order : "none"}
+                                      handleSort={(status) => {
+                                          setSorterTable(
+                                              status === "none" 
+                                                  ? undefined 
+                                                  : {orderBy: "BodyLength", order: status}
+                                          )
                                       }}
-                                      onSure={() => {
-                                          setTimeout(() => {
-                                              update()
-                                          }, 100)
-                                      }}
-                                      showFooter={true}
+                                      filterActive={!!(query?.afterBodyLength || query?.beforeBodyLength)}
+                                      filterNode={
+                                        <BodyLengthInputNumber
+                                             ref={bodyLengthRef}
+                                              query={query}
+                                              setQuery={(q) => {
+                                                  setQuery({
+                                                      ...q
+                                                  })
+                                              }}
+                                              onSure={() => {
+                                                  setTimeout(() => {
+                                                      update()
+                                                  }, 100)
+                                              }}
+                                              showFooter={true}
+                                          />
+                                      }
                                   />
                               )
                           }
@@ -412,34 +445,47 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: t("HTTPFuzzerPageTable.latencyMs"),
                           dataKey: "DurationMs",
-                          width: 150,
-                          sorterProps: {
-                              sorter: true
-                          },
+                          width: 99,
                           filterProps: {
                               filterKey: "durationMs",
                               filterIcon: (
-                                  <FilterIcon
+                                  <OutlineSelectorIcon
                                       className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]: query?.afterDurationMs || query?.beforeDurationMs
+                                          [styles["active-icon"]]: 
+                                              query?.afterDurationMs || 
+                                              query?.beforeDurationMs ||
+                                              sorterTable?.orderBy === "DurationMs"
                                       })}
                                   />
                               ),
                               filterRender: () => (
-                                  <DurationMsInputNumber
-                                      ref={durationMsRef}
-                                      query={query}
-                                      setQuery={(q) => {
-                                          setQuery({
-                                              ...q
-                                          })
+                                  <TableFilterAndSorter
+                                      sortStatus={sorterTable?.orderBy === "DurationMs" ? sorterTable?.order : "none"}
+                                      handleSort={(status) => {
+                                          setSorterTable(
+                                              status === "none" 
+                                                  ? undefined 
+                                                  : {orderBy: "DurationMs", order: status}
+                                          )
                                       }}
-                                      onSure={() => {
-                                          setTimeout(() => {
-                                              update()
-                                          }, 100)
-                                      }}
-                                      showFooter={true}
+                                      filterActive={!!(query?.afterDurationMs || query?.beforeDurationMs)}
+                                      filterNode={
+                                          <DurationMsInputNumber
+                                              ref={durationMsRef}
+                                              query={query}
+                                              setQuery={(q) => {
+                                                  setQuery({
+                                                      ...q
+                                                  })
+                                              }}
+                                              onSure={() => {
+                                                  setTimeout(() => {
+                                                      update()
+                                                  }, 100)
+                                              }}
+                                              showFooter={true}
+                                          />
+                                      }
                                   />
                               )
                           },
@@ -459,7 +505,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "Payloads",
                           dataKey: "Payloads",
-                          width: 300,
+                          width: 150,
                           sorterProps: {
                               sorter: true
                           },
@@ -506,7 +552,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "Content-Type",
                           dataKey: "ContentType",
-                          width: 140
+                          width: 120
                       },
                       {
                           title: "time",
@@ -621,7 +667,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             extractedMap,
             query?.ExtractedResults,
             isShowDebug,
-            i18n.language
+            i18n.language,
+            sorterTable?.orderBy,
+            sorterTable?.order
         ])
 
         const compareSorterTable = useCampare(sorterTable)
@@ -670,7 +718,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     ...l,
                     ...d
                 })
-                setSorterTable(sorter)
+                // 当 sorter 有 orderBy 时才更新，避免关闭筛选框时传入空 sorter 导致重置
+                if (sorter?.orderBy) {
+                    setSorterTable(sorter)
+                }
             }
         )
 
@@ -732,7 +783,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         let colorIsPush = true
                         // 搜索满足条件 交集
                         // 颜色搜索
-                        if (record.MatchedByMatcher && query?.Color && query?.Color?.length > 0) {
+                        // 去掉record.MatchedByMatcher bug：有些MatchedByMatcher为false的也需要被筛选掉
+                        if (query?.Color && query?.Color?.length > 0) {
                             const cLength = query.Color
                             let colorFlag = false
                             for (let index = 0; index < cLength.length; index++) {

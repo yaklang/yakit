@@ -68,6 +68,14 @@
                 svg {
                     color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
+
+
+            }
+
+            &-active {
+                svg {
+                    color: var(--Colors-Use-Warning-Primary);
+                }
             }
 
             &-active {
@@ -280,6 +288,10 @@
         padding: 12px;
         overflow: hidden;
         background-color: var(--Colors-Use-Basic-Background);
+
+        &-no-padding {
+            padding: 0;
+        }
 
         .sequence-response-heard {
             @extend .display-flex-center;
@@ -580,6 +592,18 @@
             }
         }
     }
+    .advanced-config-form-label {
+        display: flex;
+        align-items: center;
+
+        .info-icon {
+            margin-left: 4px;
+            svg {
+                    color: var(--Colors-Use-Neutral-Disable);
+                }
+            }
+        }
+
 }
 
 .http-traffic-analysis-overlay{
@@ -592,7 +616,7 @@
             overflow: hidden;
         }
         .ant-drawer-header-title{
-            justify-content: end;
+            flex-direction: row-reverse;
         }
     }
 }

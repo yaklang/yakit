@@ -37,9 +37,11 @@ interface FuzzerPageSettingProps {
     triggerOut: boolean
     setTriggerOut: (b: boolean) => void
     onDebug: (v: DebugProps) => void
+    /** 点击应用按钮 */
+    onApply: () => void
 }
 const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) => {
-    const {pageId, defaultHttpResponse, onDebug, triggerIn, triggerOut, setTriggerOut} = props
+    const {pageId, defaultHttpResponse, onDebug, triggerIn, triggerOut, setTriggerOut, onApply} = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -198,12 +200,14 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
                         onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                         onEdit={onEditMatchers}
                         onSetValue={onSetValue}
+                        onApply={onApply}
                     />
                     <ExtractorsPanel
                         key='数据提取器'
                         onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                         onEdit={onEditExtractors}
                         onSetValue={onSetValue}
+                        onApply={onApply}
                     />
                     <VariablePanel
                         pageId={pageId}

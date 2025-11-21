@@ -156,6 +156,9 @@ export interface SequenceResponseProps {
     webFuzzerNewEditorRef: any
     inViewport: boolean
     isConcurrency: boolean
+    onMatchSubmit?: () => void
+    onOpenMatcherDrawer?: () => void
+    hasExtractorRules?: boolean
 }
 
 export interface SequenceResponseRefProps {
@@ -184,6 +187,8 @@ export interface SequenceResponseHeardProps {
     getHttpParams: () => FuzzerRequestProps[]
     onPluginDebugger: (code: string) => void
     isConcurrency: boolean
+    onMatchSubmit?: () => void
+    onOpenMatcherDrawer?: () => void
 }
 
 /**

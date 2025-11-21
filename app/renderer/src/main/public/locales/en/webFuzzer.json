@@ -89,7 +89,8 @@
     "success_failure_count": "Success: {success} -- Failed: ${failed}",
     "send_request": "Send Request",
     "parameter": "Parameter",
-    "trafficAnalysisMode": "TrafficAnalysis"
+    "trafficAnalysisMode": "TrafficAnalysis Mode",
+    "trafficAnalysis": "TrafficAnalysis"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{droppedCount}] responses",
@@ -258,7 +259,7 @@
     "responseSize": "Response Size",
     "responseSimilarity": "Response Similarity",
     "httpHeaderSimilarity": "HTTP Header Similarity",
-    "latencyMs": "Latency (ms)",
+    "latencyMs": "Latency(ms)",
     "failureReason": "Failure Reason",
     "failureContentNotice": "Content will only appear if the request failed~"
   },
@@ -345,7 +346,7 @@
     "request": "Request",
     "status": "Status",
     "responseSize": "Response Size",
-    "latencyMs": "Latency (ms)",
+    "latencyMs": "Latency(ms)",
     "extractData": "Extract Data",
     "responseSimilarity": "Response Similarity",
     "httpHeaderSimilarity": "HTTP Header Similarity",
