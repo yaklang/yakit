@@ -569,7 +569,7 @@
     "status_code": "状态码",
     "response_header": "响应头",
     "response_body": "响应体",
-    "all_responses": "Raw",
+    "all_responses": "全部响应",
     "condition_relation": "条件关系",
     "no_match_invert": "不匹配（取反）",
     "complete_conditions_before_adding": "请将已添加条件配置完成后再新增",
@@ -649,5 +649,8 @@
   },
   "ConcurrencyResponse": {
     "view_after_executing_concurrency": "请执行并发后进行查看"
+  },
+  "ConcurrencyAllRes": {
+    "get_config_key_failed": "获取并发配置折叠面板的激活key失败："
   }
 }

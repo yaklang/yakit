@@ -1135,7 +1135,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         } else {
             ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
         }
-        setHasExtractorRules(false);
+        setHasExtractorRules(httpParams.some(({Extractors,Matchers}) => !!(Extractors.length || Matchers.length)))
     })
     const onForcedStop = useMemoizedFn(() => {
         if (isConcurrency) {

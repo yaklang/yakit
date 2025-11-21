@@ -1177,7 +1177,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(FuzzerRemoteGV.FuzzerNoSystemProxy, advancedConfigValue.noSystemProxy + "")
         setRemoteValue(FuzzerRemoteGV.FuzzerDisableUseConnPool, advancedConfigValue.disableUseConnPool + "")
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
-
         if (retryRef.current) {
             retryRef.current = false
             const retryTaskID = failedFuzzer?.length > 0 ? failedFuzzer[0]?.TaskId : undefined
@@ -1185,7 +1184,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "", 10)}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
-                setHasExtractorRules(false);
                 setIsPause(true)
             }
         } else if (matchRef.current) {
@@ -1194,11 +1192,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             setLoadingText(t("HTTPFuzzerPage.matchingInProgress"))
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
-            setHasExtractorRules(true);
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
-            setHasExtractorRules(false);
         }
+        setHasExtractorRules(!!(httpParams?.Matchers?.length || httpParams?.Extractors?.length))
         onSaveHTTPFuzzerByPageId()
         logger(
             httpFuzzerLog({

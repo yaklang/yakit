@@ -569,7 +569,7 @@
     "status_code": "Status Code",
     "response_header": "Response Header",
     "response_body": "Response Body",
-    "all_responses": "Raw",
+    "all_responses": "All Responses",
     "condition_relation": "Condition Relation",
     "no_match_invert": "No Match (Invert)",
     "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
@@ -649,5 +649,8 @@
   },
   "ConcurrencyResponse": {
     "view_after_executing_concurrency": "Please execute the concurrency before viewing"
+  },
+  "ConcurrencyAllRes": {
+    "get_config_key_failed": "Failed to get activation key for concurrency config collapsible panel:"
   }
 }
