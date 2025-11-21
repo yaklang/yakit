@@ -23,6 +23,8 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface DebugProps {
     httpResponse: string
+    httpRequest?: string
+    isHttps?: boolean
     type: MatchingAndExtraction
     activeKey: string
     /**匹配器的排序 */
@@ -52,6 +54,13 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
             return currentItem.pageParamsInfo.webFuzzerPageInfo
         } else {
             return cloneDeep(defaultWebFuzzerPageInfo)
+        }
+    })
+    const getCurrentRequestInfo = useMemoizedFn(() => {
+        const currentInfo = initWebFuzzerPageInfo()
+        return {
+            request: currentInfo?.request || "",
+            isHttps: currentInfo?.advancedConfigValue?.isHttps ?? false
         }
     })
     const [form] = Form.useForm()
@@ -118,8 +127,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
     })
     /**修改提取器 */
     const onEditExtractors = useMemoizedFn((index, type: MatchingAndExtraction) => {
+        const currentRequestInfo = getCurrentRequestInfo()
         onDebug({
             httpResponse: defaultHttpResponse,
+            httpRequest: currentRequestInfo.request,
+            isHttps: currentRequestInfo.isHttps,
             type,
             activeKey: `ID:${index}`
         })
@@ -127,8 +139,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
     /**修改匹配器 */
     const onEditMatchers = useMemoizedFn((params: MatchersPanelEditProps) => {
         const {order, type, subIndex} = params
+        const currentRequestInfo = getCurrentRequestInfo()
         onDebug({
             httpResponse: defaultHttpResponse,
+            httpRequest: currentRequestInfo.request,
+            isHttps: currentRequestInfo.isHttps,
             type,
             activeKey: `ID:${subIndex}`,
             order
@@ -142,8 +157,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
             onSwitchCollapse([...activeKey, keyMap[type]])
         }
+        const currentRequestInfo = getCurrentRequestInfo()
         onDebug({
             httpResponse: defaultHttpResponse,
+            httpRequest: currentRequestInfo.request,
+            isHttps: currentRequestInfo.isHttps,
             type,
             activeKey: `ID:0`
         })

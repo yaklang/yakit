@@ -45,6 +45,12 @@ import ExtractedFilter from "./extractedFilter"
 
 const {ipcRenderer} = window.require("electron")
 
+export interface HTTPFuzzerPageTableDebugPayload {
+    httpResponse: string
+    httpRequest?: string
+    isHttps?: boolean
+}
+
 interface HTTPFuzzerPageTableProps {
     ref?: any
     query?: HTTPFuzzerPageTableQuery
@@ -61,7 +67,7 @@ interface HTTPFuzzerPageTableProps {
     /**@name 是否可以调试匹配器或提取器 */
     isShowDebug?: boolean
     /**点击调试回调 */
-    onDebug?: (res: string) => void
+    onDebug?: (payload: HTTPFuzzerPageTableDebugPayload) => void
     pageId?: string
     /**超过限制数据，alert文案显示 */
     moreLimtAlertMsg?: React.ReactNode
@@ -526,7 +532,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                       onClick={(e) => {
                                                           e.stopPropagation()
                                                           if (onDebug) {
-                                                              onDebug(Uint8ArrayToString(record.ResponseRaw))
+                                                              onDebug({
+                                                                  httpResponse: Uint8ArrayToString(record.ResponseRaw),
+                                                                  httpRequest: record.RequestRaw
+                                                                      ? Uint8ArrayToString(record.RequestRaw)
+                                                                      : undefined,
+                                                                  isHttps: record?.IsHTTPS
+                                                              })
                                                           } else {
                                                               const value = {
                                                                   httpResponseCode: Uint8ArrayToString(

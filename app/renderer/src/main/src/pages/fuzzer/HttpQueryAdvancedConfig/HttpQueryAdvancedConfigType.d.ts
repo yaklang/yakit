@@ -112,6 +112,8 @@ export interface HttpQueryAdvancedConfigProps {
     onValuesChange: (v: AdvancedConfigValueProps) => void
     /**匹配器和提取器里面的响应 */
     defaultHttpResponse: string
+    /**匹配器和提取器里面的请求 */
+    webFuzzerValue?: string
     /**@name 与onShowShowResponseMatcherAndExtraction配合使用 */
     outsideShowResponseMatcherAndExtraction?: boolean
     /**@name  webfuzzer如果有响应信息,就在响应信息下方展示匹配器和提取器;需与outsideShowResponseMatcherAndExtraction配合使用*/

@@ -70,7 +70,11 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor} from "@/utils/editors"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {
+    HTTPFuzzerPageTable,
+    HTTPFuzzerPageTableDebugPayload,
+    HTTPFuzzerPageTableQuery
+} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {
     MatcherValueProps,
     ExtractorValueProps,
@@ -198,6 +202,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         defActiveKey: "ID:0"
     }) // 匹配器
     const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
+    const [matcherAndExtractionHttpRequest, setMatcherAndExtractionHttpRequest] = useState<string>("")
+    const [matcherAndExtractionIsHttps, setMatcherAndExtractionIsHttps] = useState<boolean>(false)
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
 
     const [triggerPageSetting, setTriggerPageSetting] = useState<boolean>(false) // 刷新FuzzerPageSetting中的值
@@ -1250,7 +1256,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }
     /**调试匹配器和提取器 */
     const onDebug = useMemoizedFn((value: DebugProps) => {
-        setMatcherAndExtractionHttpResponse(value.httpResponse)
+        const { 
+            httpResponse, 
+            httpRequest = currentSelectRequest?.request || '', 
+            isHttps =  !!currentSelectRequest?.advancedConfigValue?.isHttps,
+        }
+         = value;
+        setMatcherAndExtractionHttpResponse(httpResponse)
+        setMatcherAndExtractionHttpRequest(httpRequest)
+        setMatcherAndExtractionIsHttps(isHttps)
         setActiveType(value.type)
         switch (value.type) {
             case "extractors":
@@ -1448,8 +1462,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         // )
     })
 
-    const onDebugSequenceResponse = useMemoizedFn((response) => {
-        onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0", order: 0})
+    const onDebugSequenceResponse = useMemoizedFn((payload: HTTPFuzzerPageTableDebugPayload) => {
+        onDebug({ ...payload, type: "matchers", activeKey: "ID:0", order: 0})
     })
 
     const handleAdvancedSetSave = useMemoizedFn((values) => {
@@ -1786,6 +1800,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 visibleDrawer={visibleDrawer}
                 defActiveType={activeType}
                 httpResponse={matcherAndExtractionHttpResponse}
+                httpRequest={matcherAndExtractionHttpRequest}
+                isHttps={matcherAndExtractionIsHttps}
                 defActiveKey={activeKey}
                 matcherValue={matcherAndExtractionValue.matcher}
                 extractorValue={matcherAndExtractionValue.extractor}
@@ -2594,6 +2610,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     fuzzerResponse={httpResponse}
                                     defaultResponseSearch={defaultResponseSearch}
                                     request={requestHttpRef.current}
+                                    isHttps={advancedConfigValue.isHttps}
                                     webFuzzerValue={Uint8ArrayToString(httpResponse.ResponseRaw)}
                                     showMatcherAndExtraction={showMatcherAndExtraction}
                                     setShowMatcherAndExtraction={setShowMatcherAndExtraction}

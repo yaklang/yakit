@@ -17,6 +17,8 @@ export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps
 export interface MatcherAndExtractionProps {
     ref?: React.ForwardedRef<MatcherAndExtractionRefProps>
     httpResponse: string
+    httpRequest?: string
+    isHttps?: boolean
     onClose: () => void
     onSave: (m: MatcherValueProps, e: ExtractorValueProps, isApply: boolean) => void
     matcherValue: MatcherValueProps
@@ -50,6 +52,8 @@ export interface MatcherCollapseProps extends MatcherAndExtractorProps {
     matcher: MatcherValueProps
     setMatcher: (m: MatcherValueProps) => void
     httpResponse: string
+    httpRequest?: string
+    isHttps?: boolean
     defActiveKeyAndOrder: MatcherActiveKey
 }
 
@@ -157,6 +161,8 @@ export interface MatcherAndExtractionDrawerProps {
     visibleDrawer: boolean
     defActiveType: MatchingAndExtraction
     httpResponse: string
+    httpRequest?: string
+    isHttps?: boolean
     /**提取器默认选中 */
     defActiveKey: string
     matcherValue: MatcherValueProps

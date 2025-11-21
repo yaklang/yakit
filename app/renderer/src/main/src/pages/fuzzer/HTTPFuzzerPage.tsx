@@ -2149,6 +2149,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         defaultHttpResponse={
                             Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
                         }
+                        webFuzzerValue={requestRef.current}
                         outsideShowResponseMatcherAndExtraction={
                             onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                         }
@@ -3909,6 +3910,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     onClose={onClose}
                                     onSave={onSaveMatcherAndExtraction}
                                     httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                    httpRequest={request}
+                                    isHttps={isHttps}
                                     matcherValue={matcherValue}
                                     extractorValue={extractorValue}
                                     defActiveKey={activeKey}

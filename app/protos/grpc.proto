@@ -5730,6 +5730,8 @@ message ExtractHTTPResponseResult {
 message ExtractHTTPResponseParams {
   repeated HTTPResponseExtractor Extractors = 1;
   string HTTPResponse = 2;
+  string HTTPRequest = 3;
+  bool IsHTTPS = 4;
 }
 
 message PreloadHTTPFuzzerParamsRequest {
