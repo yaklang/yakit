@@ -83,7 +83,11 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
-import {apiDeleteQuerySyntaxFlowResult, apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
+import {
+    apiDeleteQuerySyntaxFlowResult,
+    apiFetchQuerySyntaxFlowResult,
+    getGroupNamesTotal
+} from "@/pages/yakRunnerCodeScan/utils"
 import {
     CreateSSAProjectResponse,
     DeleteSyntaxFlowResultRequest,
@@ -2564,21 +2568,27 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             <YakitButton
                                 type='text'
                                 icon={<OutlineScanIcon />}
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                     e.stopPropagation()
-                                    emiter.emit(
-                                        "openPage",
-                                        JSON.stringify({
-                                            route: YakitRoute.YakRunner_Code_Scan,
-                                            params: {
-                                                projectName: [record.ProjectName],
-                                                projectId: [record.ID],
-                                                GroupNames: [record.Language]
-                                            }
-                                        })
-                                    )
-                                    if (pageType === "auditCode") {
-                                        onClose && onClose()
+                                    try {
+                                        const selectTotal = await getGroupNamesTotal([record.Language])
+                                        emiter.emit(
+                                            "openPage",
+                                            JSON.stringify({
+                                                route: YakitRoute.YakRunner_Code_Scan,
+                                                params: {
+                                                    projectName: [record.ProjectName],
+                                                    projectId: [record.ID],
+                                                    GroupNames: [record.Language],
+                                                    selectTotal
+                                                }
+                                            })
+                                        )
+                                        if (pageType === "auditCode") {
+                                            onClose && onClose()
+                                        }
+                                    } catch (error) {
+                                        failed(`跳转代码扫描页失败${error}`)
                                     }
                                 }}
                             />

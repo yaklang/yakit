@@ -39,7 +39,8 @@ import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
-import { apiQuerySSAPrograms } from "./utils"
+import {apiQuerySSAPrograms} from "./utils"
+import {getGroupNamesTotal} from "../yakRunnerCodeScan/utils"
 const {ipcRenderer} = window.require("electron")
 export interface GenerateSSAReportResponse {
     Success: boolean
@@ -166,7 +167,6 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         ipcRenderer
             .invoke("QuerySyntaxFlowScanTask", params)
             .then((res: QuerySyntaxFlowScanTaskResponse) => {
-                console.log("QuerySyntaxFlowScanTask---", params, res)
                 const d = isInit ? res.Data : response.Data.concat(res.Data)
                 setResponse({
                     ...res,
@@ -704,20 +704,26 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                             className={classNames(styles["icon-wrapper"], {
                                                 [styles["icon-wrapper-active"]]: isClick
                                             })}
-                                            onClick={(e) => {
+                                            onClick={async (e) => {
                                                 e.stopPropagation()
-                                                emiter.emit(
-                                                    "openPage",
-                                                    JSON.stringify({
-                                                        route: YakitRoute.YakRunner_Code_Scan,
-                                                        params: {
-                                                            projectName:pageInfo.Programs,
-                                                            projectId: pageInfo.ProjectIds,
-                                                            historyName: [rowData.Name],
-                                                            GroupNames: [rowData.Language]
-                                                        }
-                                                    })
-                                                )
+                                                try {
+                                                    const selectTotal = await getGroupNamesTotal([rowData.Language])
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.YakRunner_Code_Scan,
+                                                            params: {
+                                                                projectName: pageInfo.Programs,
+                                                                projectId: pageInfo.ProjectIds,
+                                                                historyName: [rowData.Name],
+                                                                GroupNames: [rowData.Language],
+                                                                selectTotal
+                                                            }
+                                                        })
+                                                    )
+                                                } catch (error) {
+                                                    failed(`跳转代码扫描页失败${error}`)
+                                                }
                                             }}
                                         >
                                             <OutlineScanIcon />

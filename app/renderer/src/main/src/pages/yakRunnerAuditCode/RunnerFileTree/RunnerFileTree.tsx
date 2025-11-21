@@ -100,9 +100,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const [fileRefresh, setFileRefresh] = useState<boolean>(false)
     const [ruleRefresh, setRuleRefresh] = useState<boolean>(false)
 
-    // 打开已有项目
-    const onCodeAuditHistoryExpandedFun = useMemoizedFn(() => {
-        setVisible(true)
+    // 打开/关闭已有项目
+    const onCodeAuditHistoryExpandedFun = useMemoizedFn((is:boolean) => {
+        setVisible(is)
     })
 
     const onRefreshFileOrRuleTreeFun = useMemoizedFn(() => {

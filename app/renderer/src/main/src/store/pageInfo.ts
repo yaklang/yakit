@@ -260,7 +260,7 @@ export interface CodeScanPageInfoProps {
     GroupNames?: string[]
     Keyword?: string
     FilterLibRuleKind?: FilterLibRuleKind
-    // 所选规则总数
+    // 所选规则总数(PS：在页面跳转时如若存在GroupNames则需要查询其total进行展示)
     selectTotal?: number
 }
 

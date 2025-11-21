@@ -1398,7 +1398,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
 
     // 打开已有项目
     const openHistoryExpanded = useMemoizedFn(async () => {
-        emiter.emit("onCodeAuditHistoryExpanded")
+        emiter.emit("onCodeAuditHistoryExpanded", true)
     })
 
     // 打开编译项目

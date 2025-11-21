@@ -88,6 +88,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             const {Location} = newPageInfo
             setProjectName(Location)
             onInitTreeFun(`/${Location}`)
+            emiter.emit("onCodeAuditHistoryExpanded", false)
         } catch (error) {}
     })
     useEffect(() => {

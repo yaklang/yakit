@@ -277,17 +277,6 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         } catch (error) {}
     })
 
-    // 是否展示选中
-    const isShowSelect = useCreation(() => {
-        if (
-            (pageInfo.Keyword || "").length > 0 ||
-            pageInfo.FilterLibRuleKind !== "" ||
-            (pageInfo.RuleNames || []).length > 0
-        ) {
-            return false
-        }
-        return true
-    }, [pageInfo])
     return (
         <>
             <div
@@ -325,7 +314,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                             <span className={styles["count-num"]}>
                                 Selected
                                 <span className={styles["num-style"]}>
-                                    {isShowSelect ? (pageInfo.GroupNames || []).length : 0}
+                                    {(pageInfo.GroupNames || []).length}
                                 </span>
                             </span>
                         </div>
@@ -341,7 +330,8 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     data={response}
                     loadMoreData={() => {}}
                     renderRow={(rowData: SyntaxFlowGroup, index: number) => {
-                        const checked = isShowSelect && (pageInfo.GroupNames || []).includes(rowData.GroupName)
+                        const checked = (pageInfo.GroupNames || []).includes(rowData.GroupName)
+                        
                         return <CodeScanGroupByKeyWordItem item={rowData} onSelect={onSelect} selected={checked} />
                     }}
                     page={1}
@@ -1761,8 +1751,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     FilterLibRuleKind: filterLibRuleKind
                 }
             }
-            console.log("params:", params)
-
             apiSyntaxFlowScan(params, token).then(() => {
                 pageInfoCacheRef.current = {
                     ...pageInfo,
