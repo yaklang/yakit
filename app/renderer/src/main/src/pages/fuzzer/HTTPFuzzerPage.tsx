@@ -2149,6 +2149,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         defaultHttpResponse={
                             Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
                         }
+                        webFuzzerValue={requestRef.current}
                         outsideShowResponseMatcherAndExtraction={
                             onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                         }
