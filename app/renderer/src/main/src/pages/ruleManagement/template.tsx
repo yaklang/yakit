@@ -108,6 +108,8 @@ import {CodeScoreModal} from "../plugins/funcTemplate"
 import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import { QuerySSAProgramResponse } from "../yakRunnerScanHistory/YakRunnerScanHistory"
+import { apiQuerySSAPrograms } from "../yakRunnerScanHistory/utils"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -712,7 +714,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const onSubmitApi = useMemoizedFn((request: SyntaxFlowRuleInput) => {
         setLoading(true)
         const api = isEdit ? grpcUpdateLocalRule : grpcCreateLocalRule
-        console.log("提交数据", request)
         api({SyntaxFlowInput: request})
             .then(({Rule}) => {
                 onCallback(true, Rule)
@@ -775,33 +776,25 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     const [debugForm] = Form.useForm()
     // 项目列表
-    const [project, setProject] = useState<{label: string; value: number; language: string}[]>([])
+    const [project, setProject] = useState<{label: string; value: string}[]>([])
     const projectLoading = useRef<boolean>(false)
     const handleFetchProject = useMemoizedFn((search?: string) => {
         if (projectLoading.current) return
 
         const request = {
-            Filter: {SearchKeyword: search || ""},
-            Pagination: {
-                ...genDefaultPagination(500),
-                Order: "asc",
-                OrderBy: "created_at"
-            }
+            Filter: {Keyword: search || ""},
+            Pagination: genDefaultPagination(100)
         }
         projectLoading.current = true
         // TODO: 规则管理-执行结果与代码扫描项目名称控件一致
-        ipcRenderer
-            .invoke("QuerySSAProject", request)
-            .then((res: QueryGeneralResponse<SSAProjectResponse>) => {
-                res.Data = (res as any)?.Projects || []
+        apiQuerySSAPrograms(request)
+            .then((res) => {
                 if (!res || !Array.isArray(res.Data)) {
                     return
                 }
-
                 setProject(
                     res.Data.map((item) => {
-                        const {ProjectName, ID, Language} = item
-                        return {label: ProjectName, value: ID, language: Language}
+                        return {label: item.Name, value: item.Name}
                     })
                 )
             })
@@ -852,14 +845,14 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 .validateFields()
                 .then((values) => {
                     const {project} = values || {}
-                    if (!project) {
+                    if (!project || !Array.isArray(project)) {
                         return
                     }
                     setExpand(false)
                     if (activeTab !== "debug") setActiveTab("debug")
                     onStart({
                         ControlMode: "start",
-                        SSAProjectId: cloneDeep(project),
+                        ProgramName: cloneDeep(project),
                         RuleInput: data
                     })
                 })
@@ -1177,6 +1170,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                     rules={[{required: true, message: "该项为必填"}]}
                                                 >
                                                     <YakitSelect
+                                                        mode='multiple'
                                                         showSearch={true}
                                                         placeholder='请选择项目后调试'
                                                         options={project}
