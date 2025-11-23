@@ -291,7 +291,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             style={{borderRadius: "40px 0 0 40px"}}
                             onClick={handleStartChromeBefore}
                         >
-                            启动免配置 Chorme
+                            启动免配置 Chrome
                         </div>
                         <div
                             className={style["operation-btn-right"]}
