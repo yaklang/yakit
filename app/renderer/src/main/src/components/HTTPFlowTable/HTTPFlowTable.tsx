@@ -4169,6 +4169,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 setSearchVal={setSearchVal}
                                                 showPopoverSearch={size?.width ? size?.width <= 1200 : true}
                                                 handleSearch={handleSearch}
+                                                addonBeforeOption={[
+                                                    {
+                                                        label: t("HistorySearch.keyword"),
+                                                        value: "all"
+                                                    },
+                                                    {
+                                                        label: t("HistorySearch.request"),
+                                                        value: "request"
+                                                    },
+                                                    {
+                                                        label: t("HistorySearch.response"),
+                                                        value: "response"
+                                                    }
+                                                ]}
                                             />
                                         )}
                                         {showColorSwatch && (
@@ -4820,21 +4834,25 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
 
     // valueChanged判断用户输入值 点击其他区域触发筛选列表
     const [_, setValueChanged, getValueChanged] = useGetSetState<boolean>(false)
-    
+
     const onchangeValued = useMemoizedFn(() => {
         setValueChanged(true)
     })
 
-    const [inViewport] = useInViewport(ref);
+    const [inViewport] = useInViewport(ref)
 
-    useUpdateEffect(()=>{
-        if(!inViewport && getValueChanged()){
+    useUpdateEffect(() => {
+        if (!inViewport && getValueChanged()) {
             onSure?.()
         }
-    },[inViewport])
+    }, [inViewport])
 
     return (
-        <div className={style["rangeInputNumberTableWrapper"]} style={{padding: show ? undefined : "0 8px 8px"}} ref={ref}>
+        <div
+            className={style["rangeInputNumberTableWrapper"]}
+            style={{padding: show ? undefined : "0 8px 8px"}}
+            ref={ref}
+        >
             {show ? (
                 <RangeInputNumberTable
                     {...reset}
@@ -4911,7 +4929,7 @@ interface RangeInputNumberProps {
     onReset?: () => void
     onSure?: () => void
     showFooter?: boolean
-    onchangeValued?: () => void 
+    onchangeValued?: () => void
 }
 
 export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo((props) => {
@@ -4926,7 +4944,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
                     value={minNumber}
                     onChange={(v) => {
                         if (setMinNumber) setMinNumber(v as number)
-                        onchangeValued?.();
+                        onchangeValued?.()
                     }}
                     size='small'
                 />
@@ -4938,7 +4956,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
                     value={maxNumber}
                     onChange={(v) => {
                         if (setMaxNumber) setMaxNumber(v as number)
-                        onchangeValued?.();
+                        onchangeValued?.()
                     }}
                     size='small'
                 />
