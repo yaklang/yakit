@@ -4,6 +4,7 @@ export interface AIChatWelcomeProps {
     onTriageSubmit: (question: string) => void
 }
 interface AIRecommendItem {
+    type: string
     name: string
     description: string
 }

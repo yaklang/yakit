@@ -1,4 +1,4 @@
-import {APIFunc} from "@/apiUtils/type"
+import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
     AIEventQueryRequest,
@@ -109,33 +109,31 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
 }
 // #endregion
 
-export const grpcGetChangeQuestionPlugin: () => Promise<YakScript | null> = () => {
+export const grpcGetChangeQuestionPlugin: APINoRequestFunc<YakScript | null> = (hiddenError) => {
     return new Promise((resolve, reject) => {
-        try {
-            const query: QueryYakScriptRequest = {
-                Pagination: {
-                    Page: 1,
-                    Limit: 1,
-                    Order: "",
-                    OrderBy: ""
-                },
-                IncludedScriptNames: ["简易意图识别"]
-            }
-            ipcRenderer
-                .invoke("QueryYakScript", query)
-                .then((item: QueryYakScriptsResponse) => {
-                    if (item.Data?.length > 0) {
-                        resolve(item.Data[0])
-                    } else {
-                        resolve(null)
-                    }
-                })
-                .catch((e: any) => {
-                    reject(e)
-                })
-        } catch (error) {
-            reject(error)
+        const query: QueryYakScriptRequest = {
+            Pagination: {
+                Page: 1,
+                Limit: 1,
+                Order: "",
+                OrderBy: ""
+            },
+            IncludedScriptNames: ["简易意图识别"]
         }
+        ipcRenderer
+            .invoke("QueryYakScript", query)
+            .then((item: QueryYakScriptsResponse) => {
+                console.log("item", item)
+                if (item.Data?.length > 0) {
+                    resolve(item.Data[0])
+                } else {
+                    resolve(null)
+                }
+            })
+            .catch((e: any) => {
+                if (!hiddenError) yakitNotify("error", "grpcGetAIForge 查询Forge详情失败:" + e)
+                reject(e)
+            })
     })
 }
 

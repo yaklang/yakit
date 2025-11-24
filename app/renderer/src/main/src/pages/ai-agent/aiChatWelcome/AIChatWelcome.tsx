@@ -78,7 +78,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
 
-    let codeRef = useRef<YakScript | null>(null)
+    const codeRef = useRef<YakScript | null>(null)
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
@@ -132,7 +132,26 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.stop()
         debugPluginStreamEvent.reset()
+        console.log("onStartExecute", codeRef.current)
         if (!codeRef.current) return
+        const toolNames: string[] = []
+        const forgeNames: string[] = []
+        const knowledgeNames: string[] = []
+        checkItems.forEach((item) => {
+            switch (item.type) {
+                case "工具":
+                    toolNames.push(item.name)
+                    break
+                case "智能体":
+                    forgeNames.push(item.name)
+                    break
+                case "知识库":
+                    knowledgeNames.push(item.name)
+                    break
+                default:
+                    break
+            }
+        })
         const params: DebugPluginRequest = {
             Code: codeRef.current.Content,
             PluginType: "yak",
@@ -143,11 +162,16 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             ExecParams: [
                 {
                     Key: "query",
-                    Value: "tool:Yak插件调用器;forge:流量日志分析生成报告"
+                    Value: JSON.stringify({
+                        tools: toolNames,
+                        forges: forgeNames,
+                        knowledge_bases: knowledgeNames
+                    })
                 }
             ],
             PluginName: ""
         }
+        console.log("apiDebugPlugin", params)
         apiDebugPlugin({
             params: params,
             token: tokenRef.current
@@ -225,6 +249,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         const tools: AIMaterialsData = {
             type: "工具",
             data: (randomAIMaterials?.AITools || []).map((tool) => ({
+                type: "工具",
                 name: tool.VerboseName || tool.Name,
                 description: tool.Description || ""
             })),
@@ -234,6 +259,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         const forges: AIMaterialsData = {
             type: "智能体",
             data: (randomAIMaterials?.AIForges || []).map((forge) => ({
+                type: "智能体",
                 name: forge.ForgeVerboseName || forge.ForgeName,
                 description: forge.Description || ""
             })),
@@ -243,6 +269,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         const knowledgeBases: AIMaterialsData = {
             type: "知识库",
             data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
+                type: "知识库",
                 name: knowledgeBase.KnowledgeTitle,
                 description: knowledgeBase.KnowledgeDetails || ""
             })),
