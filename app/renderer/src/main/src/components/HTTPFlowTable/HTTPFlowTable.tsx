@@ -4846,6 +4846,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
         if (!inViewport && getValueChanged()) {
             onSure?.()
         }
+        !inViewport && setShow(false)
     }, [inViewport])
 
     return (
@@ -4861,12 +4862,12 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                     maxNumber={maxNumber}
                     onSure={() => {
                         setValueChanged(false)
-                        setShow(false)
+                        // setShow(false)
                         onSure?.()
                     }}
                     onReset={() => {
                         setValueChanged(false)
-                        setShow(false)
+                        // setShow(false)
                         onReset?.()
                     }}
                     onchangeValued={onchangeValued}
