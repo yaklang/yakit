@@ -242,7 +242,7 @@ module.exports = {
 
                     let stdout = ""
                     let stderr = ""
-                    const timeoutMs = 10000
+                    const timeoutMs = 11000
                     let killed = false
 
                     const timeoutId = setTimeout(() => {
@@ -433,7 +433,7 @@ module.exports = {
                     let stderr = ""
                     let successDetected = false
                     let killed = false
-                    const timeoutMs = 10000
+                    const timeoutMs = 11000
 
                     const timeoutId = setTimeout(() => {
                         if (successDetected || killed) return

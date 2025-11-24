@@ -736,6 +736,7 @@ export const StartupPage: React.FC = () => {
                     onFailed={onFailed}
                     failedCallback={onWatchDogCallback}
                     setYakitStatus={setYakitStatus}
+                    setCheckLog={setCheckLog}
                 />
                 <div className={styles["startup-engine-log"]} style={{display: isRemoteEngine ? "none" : "block"}}>
                     <EngineLog />
