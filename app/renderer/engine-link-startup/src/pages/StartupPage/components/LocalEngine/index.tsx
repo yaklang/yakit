@@ -47,7 +47,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         break
                     case "port_occupied":
                         setLog((arr) => arr.concat(["端口不可用，可查看日志报错信息进行处理..."]))
-                        setYakitStatus("port_occupied")
+                        setYakitStatus("port_occupied_prev")
                         break
                     case "antivirus_blocked":
                         setLog((arr) => arr.concat(["被杀软拦截，可将应用加入白名单后重启..."]))

@@ -38,6 +38,7 @@ export type YakitStatusType =
     | "current_version" // 使用当前版本 直接跳旧的yakit连接逻辑 后续可能会被下掉
     | "skipAgreement_InstallNetWork" // 下载yak引擎 不需要勾选用户协议
     | "skipAgreement_Install" // 重置yak引擎 不需要勾选用户协议
+    | "port_occupied_prev" // 端口被占用前操作
     | "port_occupied" // 端口被占用
     | "database_error" // 数据库错误
     | "fix_database_timeout" // 数据库修复超时
@@ -95,6 +96,7 @@ export type ModalIsTop = 0 | 1 | 2
 
 export interface LoadingClickExtra {
     port?: number
+    killCurProcess?: boolean
 }
 
 export interface StartLocalEngine {

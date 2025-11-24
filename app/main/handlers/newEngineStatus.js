@@ -11,7 +11,7 @@ module.exports = {
         const dbFileEnv = {
             YAK_DEFAULT_PROFILE_DATABASE_NAME: "irify-profile-rule.db",
             YAK_DEFAULT_PROJECT_DATABASE_NAME: "default-irify.db",
-            SSA_DATABASE_RAW: "default-ssa.db"
+            SSA_DATABASE_RAW: "default-yakssa.db"
         }
 
         /** 输出到欢迎界面的日志中 */
@@ -242,7 +242,7 @@ module.exports = {
 
                     let stdout = ""
                     let stderr = ""
-                    const timeoutMs = 10000
+                    const timeoutMs = 11000
                     let killed = false
 
                     const timeoutId = setTimeout(() => {
@@ -433,7 +433,7 @@ module.exports = {
                     let stderr = ""
                     let successDetected = false
                     let killed = false
-                    const timeoutMs = 10000
+                    const timeoutMs = 11000
 
                     const timeoutId = setTimeout(() => {
                         if (successDetected || killed) return
@@ -469,6 +469,17 @@ module.exports = {
                         const output = data.toString("utf-8")
                         stderr += output
                         engineLogOutputFileAndUI(win, output)
+                    })
+
+                    process.on("exit", () => {
+                        subprocess.kill()
+                        try {
+                            if (process.platform === "win32") {
+                                childProcess.exec(`taskkill /PID ${subprocess.pid} /T /F`)
+                            } else {
+                                process.kill(subprocess.pid, "SIGKILL")
+                            }
+                        } catch {}
                     })
 
                     subprocess.on("error", (err) => {

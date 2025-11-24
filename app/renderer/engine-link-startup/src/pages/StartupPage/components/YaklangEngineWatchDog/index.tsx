@@ -23,6 +23,8 @@ export interface YaklangEngineWatchDogProps {
     failedCallback: (type: EngineWatchDogCallbackType) => void
 
     setYakitStatus: (v: YakitStatusType) => void
+
+    setCheckLog: (log: string[]) => void
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo((props) => {
@@ -129,6 +131,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             }
                         } else {
                             if (res.status === "timeout") {
+                                props.setCheckLog(["命令执行超时，请点击重新执行"])
                                 props.setYakitStatus("start_timeout")
                             } else {
                                 outputToWelcomeConsole("引擎启动失败:" + res.status + ":" + res.message)
