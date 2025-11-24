@@ -500,11 +500,13 @@ module.exports = {
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
-                const {isEnterprise, isIRify} = type
+                const {isEnterprise, isIRify, isMemfit} = type
                 const IRifyCE = isIRify && !isEnterprise
                 const IRifyEE = isIRify && isEnterprise
                 const YakitCE = !isIRify && !isEnterprise
                 const YakitEE = !isIRify && isEnterprise
+                const MemfitCE = isMemfit && !isEnterprise
+                const MemfitEE = isMemfit && isEnterprise
                 // format version，下载的版本号里不能存在 V
                 if (version.startsWith("v")) {
                     version = version.substr(1)
@@ -518,6 +520,10 @@ module.exports = {
                     downloadUrl = await getDownloadUrl(version, "IRifyEE")
                 } else if (YakitEE) {
                     downloadUrl = await getDownloadUrl(version, "YakitEE")
+                } else if (MemfitCE) {
+                    downloadUrl = await getDownloadUrl(version, "Memfit")
+                } else if (MemfitEE) {
+                    downloadUrl = await getDownloadUrl(version, "Memfit")
                 } else {
                     downloadUrl = await getDownloadUrl(version, "YakitCE")
                 }
@@ -530,7 +536,7 @@ module.exports = {
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
                 // 企业版下载
-                if (YakitEE || IRifyEE) {
+                if (YakitEE || IRifyEE || MemfitEE) {
                     await downloadYakitEE(
                         version,
                         isIRify,
@@ -548,6 +554,7 @@ module.exports = {
                     await downloadYakitCommunity(
                         version,
                         isIRify,
+                        isMemfit,
                         dest,
                         (state) => {
                             if (!!state) {

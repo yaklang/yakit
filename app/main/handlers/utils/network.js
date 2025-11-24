@@ -189,98 +189,38 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
     })
 }
 /** 获取最新 yak 版本号 */
-const fetchLatestYakEngineVersion = async () => {
-    const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/yak/latest/version.txt`
-    return axios
-        .get(versionUrl, {
-            httpsAgent: getHttpsAgentByDomain(domain),
-            ...(agent ? {httpsAgent: agent, proxy: false} : {})
-        })
-        .then((response) => {
-            const versionData = `${response.data}`.trim()
-            if (versionData.length > 0) {
-                return versionData.startsWith("v") ? versionData : `v${versionData}`
-            } else {
-                throw new Error("Failed to fetch version data")
-            }
-        })
-}
+const fetchLatestYakEngineVersion = () => fetchLatestVersionCommon("yak/latest/version.txt")
 /** 获取最新 yakit 版本号 */
-const fetchLatestYakitVersion = async (requestConfig) => {
-    const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
-    return axios
-        .get(versionUrl, {
-            ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
-            ...(agent ? {httpsAgent: agent, proxy: false} : {})
-        })
-        .then((response) => {
-            const versionData = `${response.data}`.trim()
-            if (versionData.length > 0) {
-                return versionData.startsWith("v") ? versionData : `v${versionData}`
-            } else {
-                throw new Error("Failed to fetch version data")
-            }
-        })
-}
+const fetchLatestYakitVersion = (requestConfig) =>
+    fetchLatestVersionCommon("yak/latest/yakit-version.txt", requestConfig)
 /** 获取最新 yakit EE 版本号 */
-const fetchLatestYakitEEVersion = async (requestConfig) => {
-    const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/vip/latest/yakit-version.txt`
-    return axios
-        .get(versionUrl, {
-            ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
-            ...(agent ? {httpsAgent: agent, proxy: false} : {})
-        })
-        .then((response) => {
-            const versionData = `${response.data}`.trim()
-            if (versionData.length > 0) {
-                return versionData.startsWith("v") ? versionData : `v${versionData}`
-            } else {
-                throw new Error("Failed to fetch version data")
-            }
-        })
-}
+const fetchLatestYakitEEVersion = (requestConfig) =>
+    fetchLatestVersionCommon("vip/latest/yakit-version.txt", requestConfig)
 /** 获取最新 IRify Scan 版本号 */
-const fetchLatestYakitIRifyVersion = async (requestConfig) => {
-    const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/irify/latest/yakit-version.txt`
-    return axios
-        .get(versionUrl, {
-            ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
-            ...(agent ? {httpsAgent: agent, proxy: false} : {})
-        })
-        .then((response) => {
-            const versionData = `${response.data}`.trim()
-            if (versionData.length > 0) {
-                return versionData.startsWith("v") ? versionData : `v${versionData}`
-            } else {
-                throw new Error("Failed to fetch version data")
-            }
-        })
-}
+const fetchLatestYakitIRifyVersion = (requestConfig) =>
+    fetchLatestVersionCommon("irify/latest/yakit-version.txt", requestConfig)
 /** 获取最新 IRify Scan EE版本号 */
-const fetchLatestYakitIRifyEEVersion = async (requestConfig) => {
+const fetchLatestYakitIRifyEEVersion = (requestConfig) =>
+    fetchLatestVersionCommon("svip/latest/yakit-version.txt", requestConfig)
+
+/** 获取最新 IRify Scan 版本号 */
+const fetchLatestYakitMemfitVersion = (requestConfig) =>
+    fetchLatestVersionCommon("memfit/latest/yakit-version.txt", requestConfig)
+/** 获取最新版本号 */
+const fetchLatestVersionCommon = async (path, requestConfig = {}) => {
     const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/svip/latest/yakit-version.txt`
-    return axios
-        .get(versionUrl, {
-            ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
-            ...(agent ? {httpsAgent: agent, proxy: false} : {})
-        })
-        .then((response) => {
-            const versionData = `${response.data}`.trim()
-            if (versionData.length > 0) {
-                return versionData.startsWith("v") ? versionData : `v${versionData}`
-            } else {
-                throw new Error("Failed to fetch version data")
-            }
-        })
+    const versionUrl = `https://${domain}/${path}`
+    const config = {
+        ...requestConfig,
+        httpsAgent: getHttpsAgentByDomain(domain),
+        ...(agent ? {httpsAgent: agent, proxy: false} : {})
+    }
+    const response = await axios.get(versionUrl, config)
+    const versionData = `${response.data}`.trim()
+    if (!versionData) {
+        throw new Error("Failed to fetch version data")
+    }
+    return versionData.startsWith("v") ? versionData : `v${versionData}`
 }
 /** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
@@ -350,6 +290,11 @@ const DownloadUrlByType = {
         name: "IRifyEnpriTrace",
         dir: "svip",
         suffix: getSuffix()
+    },
+    Memfit: {
+        name: "Memfit",
+        dir: "memfit",
+        suffix: getSuffix()
     }
 }
 
@@ -392,8 +337,22 @@ const downloadYakEngine = async (version, destination, progressHandler, onFinish
     )
 }
 /** 下载 Yakit CE 进度 */
-const downloadYakitCommunity = async (version, isIRify, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = await getDownloadUrl(version, isIRify ? "IRifyCE" : "YakitCE")
+const downloadYakitCommunity = async (
+    version,
+    isIRify,
+    isMemfit,
+    destination,
+    progressHandler,
+    onFinished,
+    onError
+) => {
+    let versionType = "YakitCE"
+    if (isIRify) {
+        versionType = "IRifyCE"
+    } else if (isMemfit) {
+        versionType = "Memfit"
+    }
+    const downloadUrl = await getDownloadUrl(version, versionType)
     console.info(`start to download yakit community: ${downloadUrl}`)
     requestWithProgress(
         downloadUrl,
@@ -446,6 +405,7 @@ module.exports = {
     fetchLatestYakitEEVersion,
     fetchLatestYakitIRifyVersion,
     fetchLatestYakitIRifyEEVersion,
+    fetchLatestYakitMemfitVersion,
     downloadYakitCommunity,
     downloadYakEngine,
     downloadYakitEE,

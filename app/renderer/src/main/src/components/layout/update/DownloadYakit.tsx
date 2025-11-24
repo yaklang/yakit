@@ -1,6 +1,13 @@
 import React, {useState, useRef, useEffect} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName, isEnpriTrace, isIRify} from "@/utils/envfile"
+import {
+    isCommunityEdition,
+    isEnterpriseEdition,
+    getReleaseEditionName,
+    isEnpriTrace,
+    isIRify,
+    isMemfit
+} from "@/utils/envfile"
 import {success, failed} from "@/utils/notification"
 import {YakitSystem, DownloadingState} from "@/yakitGVDefine"
 import Draggable from "react-draggable"
@@ -94,7 +101,8 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                         ipcRenderer
                             .invoke("download-latest-yakit", version, {
                                 isEnterprise: isEnterpriseEdition(),
-                                isIRify: isIRify()
+                                isIRify: isIRify(),
+                                isMemfit: isMemfit()
                             })
                             .then(() => {
                                 if (!isBreakRef.current) return
