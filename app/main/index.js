@@ -1,8 +1,6 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu, screen} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
-const fs = require("fs")
-const {debounce} = require("throttle-debounce")
 const url = require("url")
 const {registerIPC, registerNewIPC} = require("./ipc")
 const process = require("process")
@@ -158,15 +156,9 @@ function createWindow() {
         require("./handlers/logger").saveLogs()
     })
 
-    const updateStateDebounced = debounce(200, () => {
-        saveWindowStateNow(win)
-    })
-    win.on("resize", updateStateDebounced)
-    win.on("move", updateStateDebounced)
-
     win.on("close", (e) => {
         e.preventDefault()
-        saveWindowStateNow(win)
+        state.saveState(win)
         win.webContents.send("close-windows-renderer")
     })
 
@@ -187,30 +179,6 @@ function createWindow() {
 /**
  * ---------------- 通用方法 ----------------
  */
-// 更新窗口位置大小
-function saveWindowStateNow(win) {
-    const targetPath = path.join(windowStatePatch, "yakit-window-state.json")
-
-    const bounds = win.getBounds()
-    const display = screen.getDisplayMatching(bounds)
-
-    const data = {
-        width: bounds.width,
-        height: bounds.height,
-        x: bounds.x,
-        y: bounds.y,
-        isMaximized: win.isMaximized(),
-        isFullScreen: win.isFullScreen(),
-        displayBounds: {
-            x: display.bounds.x,
-            y: display.bounds.y,
-            width: display.bounds.width,
-            height: display.bounds.height
-        }
-    }
-
-    fs.writeFileSync(targetPath, JSON.stringify(data, null, 2))
-}
 // 窗口加载完再发送数据
 function safeSend(targetWin, channel, data) {
     if (!targetWin || targetWin.isDestroyed()) return
@@ -241,6 +209,13 @@ function mainWinHide() {
 
 // 主窗口显示
 function mainWinShow() {
+    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
+        const engineLinkWinBounds = engineLinkWin.getBounds()
+        const x = engineLinkWinBounds.x
+        const y = engineLinkWinBounds.y
+        win.setBounds({x, y})
+    }
+
     if (win && !win.isDestroyed()) {
         win.setOpacity(1)
         win.show()
