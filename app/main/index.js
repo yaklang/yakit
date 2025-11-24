@@ -1,6 +1,7 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu, screen} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
+const fs = require("fs")
 const url = require("url")
 const {registerIPC, registerNewIPC} = require("./ipc")
 const process = require("process")
@@ -158,7 +159,16 @@ function createWindow() {
 
     win.on("close", (e) => {
         e.preventDefault()
-        state.saveState(win)
+        const isMac = process.platform === "darwin"
+        const isMax = win.isMaximized()
+        const isFull = win.isFullScreen()
+        // 只有在 macOS 的最大化/全屏，window-state-keeper 不保存，因此补丁
+        if (isMac && (isMax || isFull)) {
+            const bounds = win.getBounds()
+            saveWindowState(bounds)
+        } else {
+            state.saveState(win)
+        }
         win.webContents.send("close-windows-renderer")
     })
 
@@ -179,6 +189,35 @@ function createWindow() {
 /**
  * ---------------- 通用方法 ----------------
  */
+function saveWindowState(win) {
+    const targetPath = path.join(windowStatePatch, "yakit-window-state.json")
+
+    let prev = {}
+    try {
+        prev = JSON.parse(fs.readFileSync(targetPath, "utf-8"))
+    } catch (_) {}
+
+    const bounds = win.getBounds()
+    const display = screen.getDisplayMatching(bounds)
+
+    const next = {
+        ...prev,
+        width: bounds.width,
+        height: bounds.height,
+        x: bounds.x,
+        y: bounds.y,
+        isMaximized: win.isMaximized(),
+        isFullScreen: win.isFullScreen(),
+        displayBounds: {
+            x: display.bounds.x,
+            y: display.bounds.y,
+            width: display.bounds.width,
+            height: display.bounds.height
+        }
+    }
+
+    fs.writeFileSync(targetPath, JSON.stringify(next, null, 2))
+}
 // 窗口加载完再发送数据
 function safeSend(targetWin, channel, data) {
     if (!targetWin || targetWin.isDestroyed()) return
