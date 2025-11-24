@@ -151,6 +151,91 @@ const getYakitPlatform = () => {
     }
 }
 
+const diagnosingYakVersion = () => {
+    return new Promise((resolve, reject) => {
+        const commandPath = getLatestYakLocalEngine()
+        fs.access(commandPath, fs.constants.X_OK, (err) => {
+            if (err) {
+                if (err.code === "ENOENT") {
+                    engineLogOutputFileAndUI(win, `命令未找到: ${commandPath}`)
+                    reject(new Error(`命令未找到: ${commandPath}`))
+                } else if (err.code === "EACCES") {
+                    engineLogOutputFileAndUI(win, `命令无法执行(无权限): ${commandPath}`)
+                    reject(new Error(`命令无法执行(无权限): ${commandPath}`))
+                } else {
+                    engineLogOutputFileAndUI(win, `命令无法执行: ${commandPath}`)
+                    reject(new Error(`命令无法执行: ${commandPath}`))
+                }
+                return
+            }
+
+            const child = spawn(commandPath, ["-v"], {timeout: 20200})
+            let stdout = ""
+            let stderr = ""
+            let finished = false
+            const timer = setTimeout(() => {
+                if (!finished) {
+                    finished = true
+                    child.kill()
+                    try {
+                        if (process.platform === "win32") {
+                            childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                        } else {
+                            process.kill(child.pid, "SIGKILL")
+                        }
+                    } catch (e) {
+                    } finally {
+                        let errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                        engineLogOutputFileAndUI(win, `${errorMessage}`)
+                        reject(new Error(errorMessage))
+                    }
+                }
+            }, 20000)
+            child.stdout.on("data", (data) => {
+                stdout += data.toString()
+            })
+            child.stderr.on("data", (data) => {
+                stderr += data.toString()
+            })
+            child.on("error", (error) => {
+                if (finished) return
+                finished = true
+                clearTimeout(timer)
+                let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
+                if (error.code === "ENOENT") {
+                    errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
+                } else if (error.killed) {
+                    errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
+                } else if (error.signal) {
+                    errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
+                }
+                engineLogOutputFileAndUI(win, `${errorMessage}`)
+                reject(new Error(errorMessage))
+            })
+            child.on("close", (code, signal) => {
+                if (finished) return
+                if (code !== 0) {
+                    let errorMessage = `命令执行失败: 退出码 ${code}\nStdout: ${stdout}\nStderr: ${stderr}`
+                    if (signal) {
+                        errorMessage = `引擎由于信号而终止: ${signal}\nStderr: ${stderr}`
+                    }
+                    engineLogOutputFileAndUI(win, `${errorMessage}`)
+                    reject(new Error(errorMessage))
+                    return
+                }
+                if (stderr) {
+                    engineLogOutputFileAndUI(win, `Stderr: ${stderr}`)
+                    reject(new Error(stderr))
+                    return
+                }
+                finished = true
+                clearTimeout(timer)
+                resolve(stdout)
+            })
+        })
+    })
+}
+
 module.exports = {
     getLatestYakLocalEngine,
     initial: async () => {
@@ -298,89 +383,6 @@ module.exports = {
             return await asyncGetCurrentLatestYakVersion(params)
         })
 
-        const diagnosingYakVersion = () =>
-            new Promise((resolve, reject) => {
-                const commandPath = getLatestYakLocalEngine()
-                fs.access(commandPath, fs.constants.X_OK, (err) => {
-                    if (err) {
-                        if (err.code === "ENOENT") {
-                            engineLogOutputFileAndUI(win, `命令未找到: ${commandPath}`)
-                            reject(new Error(`命令未找到: ${commandPath}`))
-                        } else if (err.code === "EACCES") {
-                            engineLogOutputFileAndUI(win, `命令无法执行(无权限): ${commandPath}`)
-                            reject(new Error(`命令无法执行(无权限): ${commandPath}`))
-                        } else {
-                            engineLogOutputFileAndUI(win, `命令无法执行: ${commandPath}`)
-                            reject(new Error(`命令无法执行: ${commandPath}`))
-                        }
-                        return
-                    }
-
-                    const child = spawn(commandPath, ["-v"], {timeout: 20200})
-                    let stdout = ""
-                    let stderr = ""
-                    let finished = false
-                    const timer = setTimeout(() => {
-                        if (!finished) {
-                            finished = true
-                            child.kill()
-                            try {
-                                if (process.platform === "win32") {
-                                    childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
-                                } else {
-                                    process.kill(child.pid, "SIGKILL")
-                                }
-                            } catch (e) {
-                            } finally {
-                                let errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
-                                engineLogOutputFileAndUI(win, `${errorMessage}`)
-                                reject(new Error(errorMessage))
-                            }
-                        }
-                    }, 20000)
-                    child.stdout.on("data", (data) => {
-                        stdout += data.toString()
-                    })
-                    child.stderr.on("data", (data) => {
-                        stderr += data.toString()
-                    })
-                    child.on("error", (error) => {
-                        if (finished) return
-                        finished = true
-                        clearTimeout(timer)
-                        let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
-                        if (error.code === "ENOENT") {
-                            errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
-                        } else if (error.killed) {
-                            errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
-                        } else if (error.signal) {
-                            errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
-                        }
-                        engineLogOutputFileAndUI(win, `${errorMessage}`)
-                        reject(new Error(errorMessage))
-                    })
-                    child.on("close", (code, signal) => {
-                        if (finished) return
-                        if (code !== 0) {
-                            let errorMessage = `命令执行失败: 退出码 ${code}\nStdout: ${stdout}\nStderr: ${stderr}`
-                            if (signal) {
-                                errorMessage = `引擎由于信号而终止: ${signal}\nStderr: ${stderr}`
-                            }
-                            engineLogOutputFileAndUI(win, `${errorMessage}`)
-                            reject(new Error(errorMessage))
-                            return
-                        }
-                        if (stderr) {
-                            engineLogOutputFileAndUI(win, `Stderr: ${stderr}`)
-                            reject(new Error(stderr))
-                            return
-                        }
-                        finished = true
-                        clearTimeout(timer)
-                        resolve(stdout)
-                    })
-                })
-            })
         ipcMain.handle("diagnosing-yak-version", async (e, params) => {
             return diagnosingYakVersion()
         })
@@ -982,7 +984,10 @@ module.exports = {
         })
     },
     registerNewIPC: (win, getClient, ipcEventPre) => {
+        class YakVersionEmitter extends EventEmitter {}
+        const yakVersionEmitter = new YakVersionEmitter()
         let latestVersionCache = null
+        let isFetchingVersion = false
 
         // 解压 start-engine.zip
         const generateStartEngineGRPC = () => {
@@ -1324,6 +1329,186 @@ module.exports = {
         // 打开指定路径文件
         ipcMain.handle(ipcEventPre + "open-specified-file", async (e, path) => {
             return shell.showItemInFolder(path)
+        })
+
+        // asyncDownloadLatestYakit wrapper
+        async function asyncDownloadLatestYakit(version, type) {
+            return new Promise(async (resolve, reject) => {
+                const {isEnterprise, isIRify, isMemfit} = type
+                const IRifyCE = isIRify && !isEnterprise
+                const IRifyEE = isIRify && isEnterprise
+                const YakitCE = !isIRify && !isEnterprise
+                const YakitEE = !isIRify && isEnterprise
+                const MemfitCE = isMemfit && !isEnterprise
+                const MemfitEE = isMemfit && isEnterprise
+                // format version，下载的版本号里不能存在 V
+                if (version.startsWith("v")) {
+                    version = version.substr(1)
+                }
+
+                console.info("start to fetching download-url for yakit")
+                let downloadUrl = ""
+                if (IRifyCE) {
+                    downloadUrl = await getDownloadUrl(version, "IRifyCE")
+                } else if (IRifyEE) {
+                    downloadUrl = await getDownloadUrl(version, "IRifyEE")
+                } else if (YakitEE) {
+                    downloadUrl = await getDownloadUrl(version, "YakitEE")
+                } else if (MemfitCE) {
+                    downloadUrl = await getDownloadUrl(version, "Memfit")
+                } else if (MemfitEE) {
+                    downloadUrl = await getDownloadUrl(version, "Memfit")
+                } else {
+                    downloadUrl = await getDownloadUrl(version, "YakitCE")
+                }
+                // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
+                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+                const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
+                try {
+                    fs.unlinkSync(dest)
+                } catch (e) {}
+
+                console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
+                // 企业版下载
+                if (YakitEE || IRifyEE || MemfitEE) {
+                    await downloadYakitEE(
+                        version,
+                        isIRify,
+                        dest,
+                        (state) => {
+                            if (!!state) {
+                                win.webContents.send("download-yakit-engine-progress", state)
+                            }
+                        },
+                        resolve,
+                        reject
+                    )
+                } else {
+                    // 社区版下载
+                    await downloadYakitCommunity(
+                        version,
+                        isIRify,
+                        isMemfit,
+                        dest,
+                        (state) => {
+                            if (!!state) {
+                                win.webContents.send("download-yakit-engine-progress", state)
+                            }
+                        },
+                        resolve,
+                        reject
+                    )
+                }
+            })
+        }
+        ipcMain.handle(ipcEventPre + "download-latest-yakit", async (e, version, type) => {
+            return await asyncDownloadLatestYakit(version, type)
+        })
+
+        ipcMain.handle(ipcEventPre + "cancel-download-yakit-version", async (e) => {
+            return await yakitCancelRequestWithProgress()
+        })
+
+        // asyncQueryLatestYakEngineVersion wrapper
+        const asyncGetCurrentLatestYakVersion = (params) => {
+            return new Promise((resolve, reject) => {
+                if (latestVersionCache) {
+                    engineLogOutputFileAndUI(win, `----- 获取到yak版本(缓存): ${latestVersionCache} -----`)
+                    resolve(latestVersionCache)
+                    return
+                }
+
+                engineLogOutputFileAndUI(win, `----- 开始获取 yak 本地版本 -----`)
+                yakVersionEmitter.once("version", (err, version) => {
+                    if (err) {
+                        diagnosingYakVersion()
+                            .catch((err) => {
+                                console.info("YAK-VERSION(DIAG): fetch error: " + `${err}`)
+                                reject(err)
+                            })
+                            .then(() => {
+                                console.info("YAK-VERSION: fetch error: " + `${err}`)
+                                reject(err)
+                            })
+                    } else {
+                        console.info("YAK-VERSION: hit version: " + `${version}`)
+                        resolve(version)
+                    }
+                })
+                if (isFetchingVersion) {
+                    console.info("YAK-VERSION is executing...")
+                    return
+                }
+
+                console.info("YAK-VERSION process is executing...")
+                isFetchingVersion = true
+                const child = spawn(getLatestYakLocalEngine(), ["-v"], {timeout: 5200})
+                let stdout = ""
+                let stderr = ""
+                let finished = false
+                const timer = setTimeout(() => {
+                    if (!finished) {
+                        finished = true
+                        child.kill()
+                        try {
+                            if (process.platform === "win32") {
+                                childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                            } else {
+                                process.kill(child.pid, "SIGKILL")
+                            }
+                        } catch (e) {
+                        } finally {
+                            const error = new Error("[yak -v] 获取版本超时，已强制终止")
+                            engineLogOutputFileAndUI(win, error.toString())
+                            yakVersionEmitter.emit("version", error, null)
+                            isFetchingVersion = false
+                        }
+                    }
+                }, 5000)
+                child.stdout.on("data", (data) => {
+                    stdout += data.toString("utf-8")
+                })
+                child.stderr.on("data", (data) => {
+                    stderr += data.toString("utf-8")
+                })
+                child.on("error", (err) => {
+                    if (finished) return
+                    finished = true
+                    clearTimeout(timer)
+                    engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
+                    if (stderr) {
+                        engineLogOutputFileAndUI(win, `${stderr}`)
+                    }
+                    yakVersionEmitter.emit("version", err, null)
+                    isFetchingVersion = false
+                })
+                child.on("close", (code) => {
+                    if (finished) return
+                    engineLogOutputFileAndUI(win, `${stdout}`)
+                    const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout)
+                    const version = match && match[2]
+                    if (!version) {
+                        engineLogOutputFileAndUI(win, "----- 引擎无法获取yak本地版本 -----")
+                        if (code !== 0 || stderr) {
+                            engineLogOutputFileAndUI(win, `${stderr}` || `Process exited with code ${code}`)
+                            const error = new Error(`${stderr}` || `Process exited with code ${code}`)
+                            yakVersionEmitter.emit("version", error, null)
+                            isFetchingVersion = false
+                        }
+                    } else {
+                        finished = true
+                        clearTimeout(timer)
+                        engineLogOutputFileAndUI(win, `----- 获取到yak本地版本: ${version}-----`)
+                        latestVersionCache = version
+                        yakVersionEmitter.emit("version", null, version)
+                        isFetchingVersion = false
+                    }
+                })
+            })
+        }
+
+        ipcMain.handle(ipcEventPre + "get-current-yak", async (e, params) => {
+            return await asyncGetCurrentLatestYakVersion(params)
         })
     }
 }

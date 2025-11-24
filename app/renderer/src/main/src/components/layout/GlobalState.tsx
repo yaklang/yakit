@@ -430,7 +430,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         try {
             const [res1, res2] = await Promise.all([
                 grpcFetchSpecifiedYakVersionHash({version: localYaklang, config: {timeout: 3000}}, true),
-                grpcFetchLocalYakVersionHash()
+                grpcFetchLocalYakVersionHash(true)
             ])
 
             if (res1 === "" || !Array.isArray(res2) || res2.length === 0) {

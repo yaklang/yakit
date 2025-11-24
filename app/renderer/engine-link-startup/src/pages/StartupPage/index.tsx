@@ -3,6 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, SystemInfo} from "./utils"
 import {
     grpcFetchBuildInYakVersion,
+    grpcFetchLocalYakitVersion,
     grpcFetchYakInstallResult,
     grpcFixupDatabase,
     grpcInitCVEDatabase,
@@ -14,6 +15,7 @@ import {debugToPrintLog} from "@/utils/logCollection"
 import {LocalGVS} from "@/enums/yakitGV"
 import {
     EngineWatchDogCallbackType,
+    IgnoreYakit,
     LoadingClickExtra,
     ModalIsTop,
     System,
@@ -90,8 +92,10 @@ export const StartupPage: React.FC = () => {
     const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
     /** 是否阻止发送打开主窗口 */
     const isStopSend = useRef<boolean>(false)
-    /** 是否为初次启动本地连接 */
+    /** 是否初始启动连接 */
     const isInitLocalLink = useRef<boolean>(true)
+    /** 是否检查版本更新 */
+    const isCheckVersion = useRef<boolean>(true)
     // 本地连接ref
     const localEngineRef = useRef<LocalEngineLinkFuncProps>(null)
     /** 认证信息 */
@@ -132,6 +136,7 @@ export const StartupPage: React.FC = () => {
      * 3、cpu架构
      * 4、引擎是否存在
      * 5、内置引擎版本
+     * 6、本地软件版本号、更新yak版本检测状态
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
         debugToPrintLog(`------ 获取系统基础信息 ------`)
@@ -154,7 +159,17 @@ export const StartupPage: React.FC = () => {
             const version = await grpcFetchBuildInYakVersion(true)
             setBuildInEngineVersion(version)
         } catch (error) {}
-
+        try {
+            const appVersion = await grpcFetchLocalYakitVersion(true)
+            getLocalValue(LocalGVS.LocalAppVersion)
+                .then((res) => {
+                    if (res !== appVersion) {
+                        setLocalValue(LocalGVS.NoYakVersionCheck, false)
+                        setLocalValue(LocalGVS.LocalAppVersion, appVersion)
+                    }
+                })
+                .catch(() => {})
+        } catch (error) {}
         if (nextFunc) nextFunc()
     })
 
@@ -222,7 +237,7 @@ export const StartupPage: React.FC = () => {
         setYakitStatus("")
         onSetEngineMode("local")
         debugToPrintLog(`------ 启动环境检查逻辑 ------`)
-        handleStartLocalLink(isInitLocalLink.current)
+        handleStartLocalLink(isCheckVersion.current)
         isInitLocalLink.current = false
     })
 
@@ -250,22 +265,43 @@ export const StartupPage: React.FC = () => {
     })
     // #endregion
 
-    // #region Yak引擎下载更新逻辑
+    // #region Yak引擎、Yakit下载更新逻辑
+    // 检测到新版yakit的弹窗显示
+    const [yakitUpdate, setYakitUpdate] = useState<boolean>(false)
     // 更新yaklang-modal
     const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
-    // 指定下载版本yak引擎
-    const [specifyYakVersion, setSpecifyYakVersion] = useState<string>("")
     const onDownloadedYaklang = useMemoizedFn((isOk: boolean) => {
         setYaklangDownload(false)
         if (["installNetWork", "skipAgreement_InstallNetWork", "old_version"].includes(getYakitStatus())) {
             setRestartLoading(false)
+            isCheckVersion.current = true
             if (!isOk) {
                 return
             }
         } else {
-            setSpecifyYakVersion("")
+            isCheckVersion.current = false
         }
         setLinkLocalEngine()
+    })
+
+    // yakit不再提示更新
+    const noHintYakitUpdate = useMemoizedFn((ignoreYakit: IgnoreYakit) => {
+        setYakitStatus("")
+        if (ignoreYakit === "ignoreUpdates") {
+            setLocalValue(LocalGVS.NoAutobootLatestVersionCheck, true)
+        }
+        if (localEngineRef.current) {
+            localEngineRef.current.checkEngine()
+        }
+    })
+
+    // yak不再提示更新
+    const noHintYakUpdate = useMemoizedFn(() => {
+        setYakitStatus("")
+        setLocalValue(LocalGVS.NoYakVersionCheck, true)
+        if (localEngineRef.current) {
+            localEngineRef.current.checkEngineSource()
+        }
     })
     // #endregion
 
@@ -292,7 +328,10 @@ export const StartupPage: React.FC = () => {
             switch (type) {
                 case "install":
                     // 解压内置引擎
-                    initializeEngine()
+                    initializeEngine(() => {
+                        setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功，即将重启`])
+                        grpcRelaunch()
+                    })
                     return
                 case "installNetWork":
                     // 一键安装（联网）
@@ -302,14 +341,14 @@ export const StartupPage: React.FC = () => {
                 case "check_timeout":
                     // 超时手动校验引擎
                     setRestartLoading(true)
-                    handleStartLocalLink(true)
+                    handleStartLocalLink(isCheckVersion.current)
                     return
                 case "port_occupied_prev":
                     // 端口被占用前置操作
                     if (extra?.killCurProcess) {
                         setRestartLoading(true)
                         killCurrentProcess(() => {
-                            handleStartLocalLink(true)
+                            handleStartLocalLink(isCheckVersion.current)
                         }, [getCustomPort()])
                     } else {
                         setYakitStatus("port_occupied")
@@ -319,7 +358,7 @@ export const StartupPage: React.FC = () => {
                     // 端口被占用
                     setRestartLoading(true)
                     setCustomPort(extra.port)
-                    handleStartLocalLink(true)
+                    handleStartLocalLink(isCheckVersion.current)
                     return
                 case "start_timeout":
                     // 启动yak超时
@@ -342,16 +381,45 @@ export const StartupPage: React.FC = () => {
                     // 校验数据库出现错误或超时
                     handleFixupDatabase()
                     return
+                case "update_yakit":
+                    // 检测到新版本yakit
+                    if (extra?.downYakit) {
+                        setRestartLoading(true)
+                        setYakitUpdate(true)
+                    } else {
+                        noHintYakitUpdate(extra?.ignoreYakit)
+                    }
+                    return
+                case "update_yak":
+                    // 检测到当前版本低于内置版本
+                    if (extra?.downYak) {
+                        initializeEngine(() => {
+                            setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功`])
+                            if (localEngineRef.current) {
+                                localEngineRef.current.checkEngineSource(getBuildInEngineVersion())
+                            }
+                        })
+                    } else {
+                        noHintYakUpdate()
+                    }
+                    return
+                case "check_yak_version_error":
+                    // 引擎权限错误-手动重启引擎
+                    setRestartLoading(true)
+                    setLinkLocalEngine()
+                    return
                 case "error":
                     // 引擎连接超时或意外断掉连接
                     setTimeoutLoading(setRestartLoading)
                     handleStartLocalLink(false)
+                    isCheckVersion.current = false
                     setKeepalive(false)
                     return
                 case "break":
                     // 主动断开引擎
                     setTimeoutLoading(setRestartLoading)
                     handleStartLocalLink(false)
+                    isCheckVersion.current = false
                     return
                 default:
                     return
@@ -360,15 +428,15 @@ export const StartupPage: React.FC = () => {
     )
 
     // 解压内置引擎
-    const initializeEngine = useMemoizedFn(() => {
+    const initializeEngine = useMemoizedFn((callback = () => {}) => {
         setCheckLog([`准备解压内置引擎：${getBuildInEngineVersion()}...`])
         setRestartLoading(true)
         setTimeout(async () => {
             try {
                 await grpcUnpackBuildInYak(true)
                 grpcWriteEngineKeyToYakitProjects({}, true).finally(() => {
-                    setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功，即将重启`])
-                    grpcRelaunch()
+                    setYakitStatus("")
+                    callback()
                 })
             } catch (error) {
                 setCheckLog([
@@ -558,16 +626,17 @@ export const StartupPage: React.FC = () => {
                         if (isEngineInstalled.current === flag) return
                         isEngineInstalled.current = flag
                         isInitLocalLink.current = true
+                        isCheckVersion.current = true
                         // 清空主进程yaklang版本缓存
                         ipcRenderer.invoke(ipcEventPre + "clear-local-yaklang-version-cache")
                     })
-                    .catch()
+                    .catch(() => {})
 
                 grpcFetchBuildInYakVersion(true)
                     .then((version) => {
                         setBuildInEngineVersion(version)
                     })
-                    .catch()
+                    .catch(() => {})
             }, waitTime)
             return () => {
                 clearInterval(id)
@@ -663,17 +732,11 @@ export const StartupPage: React.FC = () => {
             case "local":
                 onDisconnect()
                 onSetEngineMode(undefined)
+                isCheckVersion.current = false
                 setTimeout(() => {
                     handleLinkLocalMode()
                 }, 500)
                 break
-            case "remote":
-                onSetEngineMode(undefined)
-                setTimeout(() => {
-                    handleLinkRemoteMode()
-                }, 500)
-                break
-
             default:
                 break
         }
@@ -752,6 +815,8 @@ export const StartupPage: React.FC = () => {
                                 setYakitStatus={setYakitStatus}
                                 buildInEngineVersion={buildInEngineVersion}
                                 setRestartLoading={setRestartLoading}
+                                yakitUpdate={yakitUpdate}
+                                setYakitUpdate={setYakitUpdate}
                             />
                             {!engineLink && (
                                 <YakitLoading
@@ -774,7 +839,7 @@ export const StartupPage: React.FC = () => {
                                 <DownloadYaklang
                                     isTop={isTop}
                                     setIsTop={setIsTop}
-                                    yaklangSpecifyVersion={specifyYakVersion}
+                                    yaklangSpecifyVersion={""}
                                     system={system}
                                     visible={yaklangDownload}
                                     onCancel={onDownloadedYaklang}

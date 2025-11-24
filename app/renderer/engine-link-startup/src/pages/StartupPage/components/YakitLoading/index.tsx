@@ -11,6 +11,7 @@ import {LocalGVS} from "@/enums/yakitGV"
 import {grpcOpenYaklangPath} from "../../grpc"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {EngineModeVerbose} from "../../utils"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 import classNames from "classnames"
 import styles from "./YakitLoading.module.scss"
@@ -376,6 +377,97 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         onClick={() => btnClickCallback("fix_database_timeout")}
                     >
                         重新执行
+                    </YakitButton>
+                </>
+            )
+        }
+
+        if (yakitStatus === "update_yakit") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yakit", {downYakit: true})}
+                    >
+                        下载更新
+                    </YakitButton>
+
+                    <YakitDropdownMenu
+                        menu={{
+                            data: [
+                                {key: "ignoreThisTime", label: "忽略本次"},
+                                {key: "ignoreUpdates", label: "不再提示"}
+                            ],
+                            onClick: ({key}) => {
+                                switch (key) {
+                                    case "ignoreThisTime":
+                                        btnClickCallback("update_yakit", {ignoreYakit: "ignoreThisTime"})
+                                        break
+                                    case "ignoreUpdates":
+                                        btnClickCallback("update_yakit", {ignoreYakit: "ignoreUpdates"})
+                                        break
+                                    default:
+                                        break
+                                }
+                            },
+                            menuWrapperClassName: styles["menuWrapper"],
+                            menuItemTitleClassName: styles['menuItemTitle']
+                        }}
+                        dropdown={{
+                            trigger: ["click"],
+                            placement: "bottom"
+                        }}
+                    >
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='large'
+                            type='secondary2'
+                            loading={restartLoading}
+                        >
+                            忽略
+                        </YakitButton>
+                    </YakitDropdownMenu>
+                </>
+            )
+        }
+
+        if (yakitStatus === "update_yak") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yak", {downYak: true})}
+                    >
+                        安装
+                    </YakitButton>
+
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        type='secondary2'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yak")}
+                    >
+                        忽略
+                    </YakitButton>
+                </>
+            )
+        }
+
+        if (yakitStatus === "check_yak_version_error") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("check_yak_version_error")}
+                    >
+                        手动连接引擎
                     </YakitButton>
                 </>
             )

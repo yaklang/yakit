@@ -77,6 +77,11 @@ export const isCommunityMemfit = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
 }
 
+/** Memfit 独立于Yakit企业版社区版之外  */
+export const isMemfit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
+}
+
 export const GetReleaseEdition = () => {
     switch (fetchEnv()) {
         case "enterprise":
