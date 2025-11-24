@@ -381,6 +381,71 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        if (yakitStatus === "update_yakit") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yakit", {downYakit: true})}
+                    >
+                        下载更新
+                    </YakitButton>
+
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        type='secondary2'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yakit")}
+                    >
+                        忽略
+                    </YakitButton>
+                </>
+            )
+        }
+
+        if (yakitStatus === "update_yak") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yak", {downYak: true})}
+                    >
+                        安装
+                    </YakitButton>
+
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        type='secondary2'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("update_yak")}
+                    >
+                        忽略
+                    </YakitButton>
+                </>
+            )
+        }
+
+        if (yakitStatus === "check_yak_version_error") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("check_yak_version_error")}
+                    >
+                        手动连接引擎
+                    </YakitButton>
+                </>
+            )
+        }
+
         if (yakitStatus === "break") {
             return (
                 <>

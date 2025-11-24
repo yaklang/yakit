@@ -1,0 +1,38 @@
+// ---------- UpdateYakitHint ----------
+.update-yakit-hint {
+  .content {
+    .download-info-wrapper {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      height: 16px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Disable);
+
+      .divider-wrapper {
+        margin: 0 8px;
+        width: 1px;
+        height: 12px;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+      }
+    }
+
+    .hint-right-content {
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+  }
+
+  .footer {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}

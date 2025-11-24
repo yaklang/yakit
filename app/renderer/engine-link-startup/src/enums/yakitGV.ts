@@ -8,4 +8,6 @@ export enum LocalGVS {
     IsCheckedUserAgreement = "is-checked-user-agreement",
     /** @name 缓存-远程连接的信息 */
     YaklangRemoteEngineCredential = "yaklang-remote-engine-credential",
+    /** @name 是否自启最新版本检测 */
+    NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check",
 }

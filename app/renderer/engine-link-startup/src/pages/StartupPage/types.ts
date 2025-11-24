@@ -45,6 +45,9 @@ export type YakitStatusType =
     | "fix_database_error" // 数据库修复失败
     | "antivirus_blocked" // 检查随机密码模式失败(杀软)
     | "allow-secret-error" // 检查随机密码模式失败(未知)
+    | "update_yakit" // 检测到新版yakit
+    | "update_yak" // 检测到新版yak
+    | "check_yak_version_error" // 检测新版yak出错
     | "ready" // 开始尝试连接引擎
     | "start_timeout" // 引擎启动超时
     | "error" // 引擎连接超时
@@ -97,6 +100,8 @@ export type ModalIsTop = 0 | 1 | 2
 export interface LoadingClickExtra {
     port?: number
     killCurProcess?: boolean
+    downYakit?: boolean
+    downYak?: boolean
 }
 
 export interface StartLocalEngine {
