@@ -185,7 +185,7 @@ jobs:
             - name: "Build Memfit Render"
               if: ${{ inputs.version == 'memfit' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-memfit
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-memfit
 
             - name: Generate software prefix name
               run: |

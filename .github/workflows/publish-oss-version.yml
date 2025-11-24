@@ -38,6 +38,9 @@ jobs:
                     # Remove '-irify' suffix if exists
                     SOFTWARE_VERSION="${SOFTWARE_VERSION%-irify}"
                     echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
+                    # Remove '-memfit' suffix if exists
+                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-memfit}"
+                    echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
                   fi
 
             - name: Generate OSS File Path

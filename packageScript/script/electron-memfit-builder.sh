@@ -1,6 +1,6 @@
 #!/bin/sh
 # 用法: ./electron-builder.sh <version>
-# 示例: ./electron-builder.sh irify
+# 示例: ./electron-builder.sh memfit
 
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <version>"
@@ -9,6 +9,7 @@ fi
 
 item="$1"
 
+rm -rf ./app/renderer/engine-link-startup/dist
 rm -rf ./app/renderer/pages
 rm -rf ./release
 
