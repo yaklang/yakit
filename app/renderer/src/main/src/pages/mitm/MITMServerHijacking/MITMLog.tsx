@@ -420,6 +420,20 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     setSearchVal={setSearchVal}
                     showPopoverSearch={headerSize?.width ? headerSize?.width <= 900 : true}
                     handleSearch={handleSearch}
+                    addonBeforeOption={[
+                        {
+                            label: t("HistorySearch.keyword"),
+                            value: "all"
+                        },
+                        {
+                            label: t("HistorySearch.request"),
+                            value: "request"
+                        },
+                        {
+                            label: t("HistorySearch.response"),
+                            value: "response"
+                        }
+                    ]}
                 />
                 <YakitButton
                     type='outline1'

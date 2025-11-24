@@ -1060,7 +1060,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setTriggerParamsWatch((old) => !old)
             sortRef.current = {
                 ...sort,
-                ...sort.orderBy === "DurationMs" ? { orderBy: "duration" } : {}
+                ...(sort.orderBy === "DurationMs" ? {orderBy: "duration"} : {})
             }
         },
         {wait: 500}
@@ -2033,7 +2033,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
-                                    {rowData.BodyLength}{rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）`: ''}
+                                    {rowData.BodyLength}
+                                    {rowData.BodySizeVerbose && rowData.BodyLength > 1024
+                                        ? `（${rowData.BodySizeVerbose}）`
+                                        : ""}
                                 </div>
                             )}
                         </>
@@ -2139,7 +2142,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 dataKey: "RequestSizeVerbose",
                 enableDrag: false,
                 width: 120,
-                render: (text, {RequestLength}) => `${RequestLength || text.slice(0,-1)}${RequestLength > 1024 ? `（${text}）` : '' }`
+                render: (text, {RequestLength}) =>
+                    `${RequestLength || text.slice(0, -1)}${RequestLength > 1024 ? `（${text}）` : ""}`
             },
             {
                 title: t("YakitTable.action"),
