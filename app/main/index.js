@@ -2,6 +2,7 @@ const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protoco
 const isDev = require("electron-is-dev")
 const path = require("path")
 const fs = require("fs")
+const {debounce} = require("throttle-debounce")
 const url = require("url")
 const {registerIPC, registerNewIPC} = require("./ipc")
 const process = require("process")
@@ -157,17 +158,15 @@ function createWindow() {
         require("./handlers/logger").saveLogs()
     })
 
+    const updateStateDebounced = debounce(200, () => {
+        saveWindowStateNow(win)
+    })
+    win.on("resize", updateStateDebounced)
+    win.on("move", updateStateDebounced)
+
     win.on("close", (e) => {
         e.preventDefault()
-        const isMac = process.platform === "darwin"
-        const isMax = win.isMaximized()
-        const isFull = win.isFullScreen()
-        // 只有在 macOS 的最大化/全屏，window-state-keeper 不保存，因此补丁
-        if (isMac && (isMax || isFull)) {
-            saveWindowState(win)
-        } else {
-            state.saveState(win)
-        }
+        saveWindowStateNow(win)
         win.webContents.send("close-windows-renderer")
     })
 
@@ -188,19 +187,14 @@ function createWindow() {
 /**
  * ---------------- 通用方法 ----------------
  */
-function saveWindowState(win) {
+// 更新窗口位置大小
+function saveWindowStateNow(win) {
     const targetPath = path.join(windowStatePatch, "yakit-window-state.json")
-
-    let prev = {}
-    try {
-        prev = JSON.parse(fs.readFileSync(targetPath, "utf-8"))
-    } catch (_) {}
 
     const bounds = win.getBounds()
     const display = screen.getDisplayMatching(bounds)
 
-    const next = {
-        ...prev,
+    const data = {
         width: bounds.width,
         height: bounds.height,
         x: bounds.x,
@@ -215,7 +209,7 @@ function saveWindowState(win) {
         }
     }
 
-    fs.writeFileSync(targetPath, JSON.stringify(next, null, 2))
+    fs.writeFileSync(targetPath, JSON.stringify(data, null, 2))
 }
 // 窗口加载完再发送数据
 function safeSend(targetWin, channel, data) {
@@ -247,13 +241,6 @@ function mainWinHide() {
 
 // 主窗口显示
 function mainWinShow() {
-    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
-        const engineLinkWinBounds = engineLinkWin.getBounds()
-        const x = engineLinkWinBounds.x
-        const y = engineLinkWinBounds.y
-        win.setBounds({x, y})
-    }
-
     if (win && !win.isDestroyed()) {
         win.setOpacity(1)
         win.show()
