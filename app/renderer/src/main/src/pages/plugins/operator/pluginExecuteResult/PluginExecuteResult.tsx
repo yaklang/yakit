@@ -348,7 +348,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
             .filter((i) => {
                 return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
             })
-            .splice(0, 25)
+            // .splice(0, 25)
             .reverse()
     }, [messageList])
 
