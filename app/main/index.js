@@ -164,8 +164,7 @@ function createWindow() {
         const isFull = win.isFullScreen()
         // 只有在 macOS 的最大化/全屏，window-state-keeper 不保存，因此补丁
         if (isMac && (isMax || isFull)) {
-            const bounds = win.getBounds()
-            saveWindowState(bounds)
+            saveWindowState(win)
         } else {
             state.saveState(win)
         }
