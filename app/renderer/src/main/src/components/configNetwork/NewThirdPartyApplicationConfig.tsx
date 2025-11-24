@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Form} from "antd"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {KVPair} from "@/models/kv"
@@ -12,6 +12,7 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import styles from "./ConfigNetworkPage.module.scss"
 const {ipcRenderer} = window.require("electron")
 
@@ -85,11 +86,13 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
     } = props
     const [form] = Form.useForm()
     const typeVal = Form.useWatch("Type", form)
+    const typeValRef = useRef<string>(typeVal)
     const [options, setOptions] = useState<SelectOptionsProps[]>([])
-    const [templates, setTemplates] = useState<GetThirdPartyAppConfigTemplate[]>([])
+    const [templates, setTemplates, getTemplates] = useGetSetState<GetThirdPartyAppConfigTemplate[]>([])
     const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
     const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
     const apiKeyWatch = Form.useWatch("api_key", form)
+    const execModelNameOption = useRef<boolean>(false)
 
     // 获取类型
     useEffect(() => {
@@ -109,19 +112,25 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
     }, [isOnlyShowAiType])
 
     useUpdateEffect(() => {
-        if (apiKeyWatch) {
+        const templatesobj = getTemplates().find((item) => item.Name === typeValRef.current)
+        const modelType = templatesobj?.Type
+        if (apiKeyWatch && modelType === "ai") {
+            execModelNameOption.current = true
             getModelNameOption()
         } else {
             handleDefaultModalNameOption()
         }
     }, [apiKeyWatch])
-    const getModelNameOption = useDebounceFn(
+
+    const {run: getModelNameOption, cancel: cancelModelNameOption} = useDebounceFn(
         useMemoizedFn(() => {
+            if (!execModelNameOption.current) return
             setModelOptionLoading(true)
             const v = form.getFieldsValue()
             ipcRenderer
                 .invoke("ListAiModel", {Config: JSON.stringify(v)})
                 .then((res) => {
+                    if (!execModelNameOption.current) return
                     const modalNamelist: SelectOptionsProps[] = res.ModelName.map((modelName: string) => ({
                         label: modelName,
                         value: modelName
@@ -138,6 +147,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                     yakitNotify("success", "获取成功")
                 })
                 .catch((error) => {
+                    if (!execModelNameOption.current) return
                     yakitNotify("error", error + "")
                     handleDefaultModalNameOption()
                 })
@@ -146,7 +156,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                 })
         }),
         {wait: 500}
-    ).run
+    )
     const getModelNameDefaultName = () => {
         const templatesobj = templates.find((item) => item.Name === typeVal)
         const formItems = templatesobj?.Items || []
@@ -169,6 +179,11 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         [typeVal],
         {wait: 300}
     )
+    useEffect(() => {
+        execModelNameOption.current = false
+        cancelModelNameOption()
+        typeValRef.current = typeVal
+    }, [typeVal])
 
     // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
     const renderAllFormItems = useMemoizedFn(() => {
@@ -216,6 +231,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                     <YakitButton
                                         type='text'
                                         onClick={() => {
+                                            execModelNameOption.current = true
                                             getModelNameOption()
                                         }}
                                         style={{padding: 0, fontSize: 14}}
@@ -228,7 +244,10 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                         >
                             <YakitAutoComplete
                                 options={modelNameAllOptions}
-                                onFocus={getModelNameOption}
+                                onFocus={() => {
+                                    execModelNameOption.current = true
+                                    getModelNameOption()
+                                }}
                                 dropdownRender={(menu) => {
                                     return (
                                         <>
