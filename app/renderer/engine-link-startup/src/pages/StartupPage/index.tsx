@@ -303,6 +303,17 @@ export const StartupPage: React.FC = () => {
                     setRestartLoading(true)
                     handleStartLocalLink(true)
                     return
+                case "port_occupied_prev":
+                    // 端口被占用前置操作
+                    if (extra?.killCurProcess) {
+                        setRestartLoading(true)
+                        killCurrentProcess(() => {
+                            handleStartLocalLink(true)
+                        }, [getCustomPort()])
+                    } else {
+                        setYakitStatus("port_occupied")
+                    }
+                    return
                 case "port_occupied":
                     // 端口被占用
                     setRestartLoading(true)
@@ -400,6 +411,39 @@ export const StartupPage: React.FC = () => {
         }
     })
     // #endregion
+
+    const killCurrentProcess = useMemoizedFn((callback: () => void, extraPorts?: number[]) => {
+        // ---------- 1. PS 查询所有 yak 进程 ----------
+        ipcRenderer
+            .invoke(ipcEventPre + "ps-yak-grpc")
+            .then(async (res) => {
+                // 查找 PID
+                const pidsToKill = res
+                    .filter((p) => extraPorts.includes(Number(p.port)))
+                    .map((p) => p.pid)
+                    .filter(Boolean)
+
+                if (pidsToKill.length === 0) {
+                    callback()
+                    return
+                }
+
+                // ---------- 2. kill ----------
+                for (const pid of pidsToKill) {
+                    try {
+                        await ipcRenderer.invoke(ipcEventPre + "kill-yak-grpc", pid)
+                        yakitNotify("info", `KILL yak PROCESS: ${pid}`)
+                    } catch (err) {
+                        yakitNotify("error", `Kill yak process failed: ${err}`)
+                    }
+                }
+
+                callback()
+            })
+            .catch(() => {
+                callback()
+            })
+    })
 
     // #region 远程连接&本地连接
     const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)

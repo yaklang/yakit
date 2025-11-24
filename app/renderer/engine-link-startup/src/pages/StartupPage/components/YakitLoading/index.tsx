@@ -230,6 +230,30 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        if (yakitStatus === "port_occupied_prev") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("port_occupied_prev", {killCurProcess: true})}
+                    >
+                        重新连接
+                    </YakitButton>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        type='secondary2'
+                        onClick={() => btnClickCallback("port_occupied_prev")}
+                    >
+                        切换端口
+                    </YakitButton>
+                </>
+            )
+        }
+
         if (yakitStatus === "port_occupied") {
             return (
                 <>
