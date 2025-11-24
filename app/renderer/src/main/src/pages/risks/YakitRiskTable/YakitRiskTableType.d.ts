@@ -76,6 +76,7 @@ export interface YakitRiskDetailsProps {
     isShowExtra?: boolean
     onRetest?: (info: Risk) => void
     boxStyle?: React.CSSProperties
+    detailClassName?: string
 }
 
 export interface YakitRiskSelectTagProps {

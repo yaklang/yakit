@@ -89,6 +89,8 @@ $keyColor: map-keys($tagColor);
 .yakit-risk-details-content {
     overflow-y: auto;
     border: 1px solid var(--Colors-Use-Neutral-Border);
+    display: flex;
+    flex-direction: column;
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
             table-layout: fixed;

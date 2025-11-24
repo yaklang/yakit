@@ -4,4 +4,13 @@
     min-height: 100%;
     margin: 0;
     overflow: hidden;
+    .child-new-app-content {
+        height: calc(100% - 37px);
+    }
+}
+.child-risk-wrapper {
+    height: 100%;
+    .child-risk-details-wrapper{
+        flex: 1;
+    }
 }
