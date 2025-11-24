@@ -1138,7 +1138,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
-                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                                    {rowData.BodyLength}{rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）`: ''}
                                 </div>
                             )}
                         </>
@@ -1249,7 +1249,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 width: 120,
                 sorterProps: {
                     sorter: true
-                }
+                },
+                render: (text, {RequestLength}) => `${RequestLength || text.slice(0,-1)}${RequestLength > 1024 ? `（${text}）` : '' }`
             },
             {
                 title: t("YakitTable.action"),

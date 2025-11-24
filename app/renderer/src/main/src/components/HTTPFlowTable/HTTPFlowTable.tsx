@@ -2033,7 +2033,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
-                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                                    {rowData.BodyLength}{rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）`: ''}
                                 </div>
                             )}
                         </>
@@ -2138,7 +2138,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 title: t("HTTPFlowTable.requestSizeVerbose"),
                 dataKey: "RequestSizeVerbose",
                 enableDrag: false,
-                width: 120
+                width: 120,
+                render: (text, {RequestLength}) => `${RequestLength || text.slice(0,-1)}${RequestLength > 1024 ? `（${text}）` : '' }`
             },
             {
                 title: t("YakitTable.action"),
