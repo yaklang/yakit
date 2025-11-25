@@ -126,13 +126,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             }
         },
         [checkItems],
-        {wait: 1000, leading: true}
+        {wait: 500, leading: true}
     )
     const onStartExecute = useMemoizedFn(() => {
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.stop()
         debugPluginStreamEvent.reset()
-        console.log("onStartExecute", codeRef.current)
         if (!codeRef.current) return
         const toolNames: string[] = []
         const forgeNames: string[] = []
@@ -171,10 +170,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             ],
             PluginName: ""
         }
-        console.log("apiDebugPlugin", params)
         apiDebugPlugin({
             params: params,
-            token: tokenRef.current
+            token: tokenRef.current,
+            isShowStartInfo: false
         }).then(() => {
             debugPluginStreamEvent.start()
             setTimeout(() => {
@@ -194,7 +193,13 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         if (loadingAIMaterials) return
         setLoadingAIMaterials(true)
         grpcGetRandomAIMaterials({Limit: 3})
-            .then(setRandomAIMaterials)
+            .then((res) => {
+                debugPluginStreamEvent.stop()
+                setRandomAIMaterials(res)
+                setCheckItems([])
+                setQuestionList([])
+                questionListAllRef.current = []
+            })
             .finally(() =>
                 setTimeout(() => {
                     setLoadingAIMaterials(false)
@@ -270,7 +275,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             type: "知识库",
             data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
                 type: "知识库",
-                name: knowledgeBase.KnowledgeTitle,
+                name: knowledgeBase.KnowledgeTitle || knowledgeBase.Summary,
                 description: knowledgeBase.KnowledgeDetails || ""
             })),
             icon: <AIKnowledgeBaseIcon />,
@@ -286,7 +291,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
     }, [randomAIMaterials])
     const onSwitchQuestion = useMemoizedFn(() => {
-        console.log("questionListAllRef.current", questionListAllRef.current)
+        setCheckItems([])
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
     return (
@@ -437,7 +442,7 @@ const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
             <div className={styles["recommend-list"]}>
                 {data.map((item, index) => (
                     <AIRecommendItem
-                        key={item.name}
+                        key={index} //不需要缓存，每次刷新重新渲染
                         item={item}
                         lineStartDOMRect={lineStartDOMRect}
                         onCheckItem={onCheckItem}
