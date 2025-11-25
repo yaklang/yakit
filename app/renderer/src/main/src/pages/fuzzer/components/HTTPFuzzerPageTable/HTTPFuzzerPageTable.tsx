@@ -1,4 +1,4 @@
-import {ArrowCircleRightSvgIcon, FilterIcon} from "@/assets/newIcon"
+import {ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon } from "@/assets/newIcon"
 import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -312,6 +312,28 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     )
             }
 
+            const afterIconExtra = (orderBy: string) => (
+                <div
+                    className={classNames(styles["virtual-table-sorter"], {
+                        [styles["virtual-table-sorter-active"]]:
+                            sorterTable?.orderBy === orderBy &&
+                            (sorterTable.order === "desc" || sorterTable.order === "asc")
+                    })}
+                    onClick={() => {
+                        const currentOrder = sorterTable?.orderBy === orderBy ? sorterTable.order : "none"
+                        let newOrder: "asc" | "desc" | "none" = "asc"
+                        if (currentOrder === "asc") {
+                            newOrder = "desc"
+                        } else if (currentOrder === "desc") {
+                            newOrder = "none"
+                        }
+                        setSorterTable(newOrder === "none" ? undefined : {orderBy, order: newOrder})
+                    }}
+                >
+                    {sorterTable?.order === "desc" ? <SorterDownIcon /> : <SorterUpIcon />}
+                </div>
+            )
+
             return success
                 ? [
                       {
@@ -321,9 +343,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               return v + 1
                           },
                           width: 72,
-                          sorterProps: {
-                              sorter: true
-                          },
+                          afterIconExtra: afterIconExtra("Count"),
                           fixed: "left"
                       },
                       ...(hasExtractorRules ? [extractedResultsColumn] : []),
@@ -331,9 +351,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "Method",
                           dataKey: "Method",
                           width: 93,
-                          sorterProps: {
-                              sorter: true
-                          }
+                          afterIconExtra: afterIconExtra("Method"),
                       },
                       {
                           title: t("HTTPFuzzerPageTable.status"),
@@ -506,9 +524,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "Payloads",
                           dataKey: "Payloads",
                           width: 150,
-                          sorterProps: {
-                              sorter: true
-                          },
+                          afterIconExtra: afterIconExtra("Payloads"),
                           render: (v) => {
                               return v ? v.join(",") : "-"
                           }
@@ -535,18 +551,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   "-"
                               )
                           },
-                          sorterProps: {
-                              sorter: true
-                          }
+                          afterIconExtra: afterIconExtra("BodySimilarity"),
                       },
                       {
                           title: t("HTTPFuzzerPageTable.httpHeaderSimilarity"),
                           dataKey: "HeaderSimilarity",
                           render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
                           width: 140,
-                          sorterProps: {
-                              sorter: true
-                          }
+                          afterIconExtra: afterIconExtra("HeaderSimilarity"),
+
                       },
 
                       {
@@ -559,9 +572,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           dataKey: "Timestamp",
                           width: 150,
                           render: (text) => (text ? formatTimestamp(text) : "-"),
-                          sorterProps: {
-                              sorter: true
-                          }
+                          afterIconExtra: afterIconExtra("Timestamp"),
+
                       },
                       {
                           title: t("YakitTable.action"),
@@ -627,9 +639,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "Method",
                           dataKey: "Method",
                           width: 100,
-                          sorterProps: {
-                              sorter: true
-                          }
+                          afterIconExtra: afterIconExtra("Method"),
                       },
                       {
                           title: t("HTTPFuzzerPageTable.failureReason"),
@@ -648,9 +658,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "Payloads",
                           dataKey: "Payloads",
-                          sorterProps: {
-                              sorter: true
-                          },
+                          afterIconExtra: afterIconExtra("Payloads"),
                           render: (v) => {
                               return v ? v.join(",") : "-"
                           }
