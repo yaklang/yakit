@@ -43,9 +43,9 @@ let ipcRegistered = false
 function createEngineLinkWindow() {
     const state = windowStateKeeper({
         defaultWidth: 900,
-        defaultHeight: 650,
+        defaultHeight: 600,
         path: windowStatePatch,
-        file: "yakit-window-state.json"
+        file: "link-window-state.json"
     })
     const hasPos = Number.isFinite(state.x) && Number.isFinite(state.y)
 
@@ -92,8 +92,13 @@ function createEngineLinkWindow() {
 
     engineLinkWin.webContents.on("will-navigate", (e) => e.preventDefault())
 
+    engineLinkWin.on("show", () => {
+        state.manage(engineLinkWin)
+    })
+
     engineLinkWin.on("close", (e) => {
         e.preventDefault()
+        state.saveState(engineLinkWin)
         engineLinkWin.webContents.send("close-engineLinkWin-renderer")
     })
 
@@ -134,9 +139,6 @@ function createWindow() {
         opacity: 0
     })
 
-    state.manage(win)
-    win.setSize(state.width, state.height)
-
     if (isDev) win.loadURL("http://127.0.0.1:3000")
     else win.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
 
@@ -154,6 +156,10 @@ function createWindow() {
         renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
         if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
         require("./handlers/logger").saveLogs()
+    })
+
+    win.on("show", () => {
+        state.manage(win)
     })
 
     win.on("close", (e) => {
@@ -209,13 +215,6 @@ function mainWinHide() {
 
 // 主窗口显示
 function mainWinShow() {
-    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
-        const engineLinkWinBounds = engineLinkWin.getBounds()
-        const x = engineLinkWinBounds.x
-        const y = engineLinkWinBounds.y
-        win.setBounds({x, y})
-    }
-
     if (win && !win.isDestroyed()) {
         win.setOpacity(1)
         win.show()
@@ -235,14 +234,6 @@ function engineLinkWinHide() {
 
 // 引擎连接窗口显示
 function engineLinkWinShow() {
-    if (win && !win.isDestroyed()) {
-        const winBounds = win.getBounds()
-        const linkBounds = engineLinkWin.getBounds()
-        const x = winBounds.x + Math.round((winBounds.width - linkBounds.width) / 2)
-        const y = winBounds.y + Math.round((winBounds.height - linkBounds.height) / 2)
-        engineLinkWin.setBounds({x, y, width: linkBounds.width, height: linkBounds.height})
-    }
-
     if (engineLinkWin && !engineLinkWin.isDestroyed()) {
         engineLinkWin.setOpacity(1)
         engineLinkWin.show()
@@ -458,9 +449,9 @@ app.whenReady().then(() => {
         getAllLogHandles()
     } catch (error) {}
 
+    createEngineLinkWindow()
     createWindow()
     mainWinHide()
-    createEngineLinkWindow()
 
     app.on("activate", function () {
         if (BrowserWindow.getAllWindows().length === 0) {
