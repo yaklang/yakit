@@ -87,7 +87,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
         }
     }, [props])
     return (
-        <div className={styles.divider}>
+        <div className={styles.divider} hidden={!dom}>
             <div />
             <div className={styles["divider-content"]}>
                 <div className={styles["divider-content-icon"]}>{icon}</div>
