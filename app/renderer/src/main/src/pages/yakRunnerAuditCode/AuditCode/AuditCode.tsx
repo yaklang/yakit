@@ -256,11 +256,11 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                     {info.ResourceType === "message" && showIcon(info.VerboseType)}
 
                     {info?.error ? (
-                        <div className={classNames(styles["node-error"], styles["icon-box"])} title={info.error}>
+                        <div className={classNames(styles["node-loading"], styles["node-error"])} title={info.error}>
                             <CloseOutlined />
                         </div>
                     ) : (
-                        <div className={classNames(styles["node-loading"], styles["icon-box"])}>
+                        <div className={styles["node-loading"]}>
                             <LoadingOutlined />
                         </div>
                     )}
