@@ -179,7 +179,10 @@ module.exports = {
 
                         if (!json && !stdout && !stderr) {
                             engineLogOutputFileAndUI(win, `----- 检查失败：可能被杀软或防火墙拦截或无法找到引擎 -----`)
-                            return reject({status: "antivirus_blocked", message: "可能被杀软或防火墙拦截或无法找到引擎"})
+                            return reject({
+                                status: "antivirus_blocked",
+                                message: "可能被杀软或防火墙拦截或无法找到引擎"
+                            })
                         }
 
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
@@ -432,8 +435,8 @@ module.exports = {
                     let stdout = ""
                     let stderr = ""
                     let successDetected = false
-                    let killed = false
-                    const timeoutMs = 11000
+                    let killed = false  
+                    const timeoutMs = 20000
 
                     const timeoutId = setTimeout(() => {
                         if (successDetected || killed) return
@@ -455,6 +458,17 @@ module.exports = {
                         const output = data.toString("utf-8")
                         stdout += output
                         engineLogOutputFileAndUI(win, output)
+
+                        const regex =
+                            /<json-f97f966eb7f8ba8fdb63e4d29109c058>(.*?)<json-f97f966eb7f8ba8fdb63e4d29109c058>/
+
+                        const match = output.match(regex)
+
+                        if (match) {
+                            // 数据库正在初始化中...
+                            engineLogOutputFileAndUI(win, `----- 数据库正在初始化中... -----`)
+                            win.webContents.send("db-init-ing", '数据库正在初始化中...')
+                        }
 
                         if (/yak grpc ok/i.test(output)) {
                             successDetected = true
