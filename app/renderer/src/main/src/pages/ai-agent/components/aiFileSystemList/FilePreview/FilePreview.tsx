@@ -14,6 +14,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {setClipboardText} from "@/utils/clipboard"
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 
 interface FileInfo {
     path: string
@@ -78,13 +79,9 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
                         <span>{name}</span>
                     </div>
                     <div className={styles["file-preview-title-icon-right"]}>
-                        <YakitButton
-                            type='text2'
-                            size='middle'
-                            icon={<DocumentDuplicateSvgIcon />}
-                            onClick={() => {
-                                setClipboardText(fileInfo?.content)
-                            }}
+                        <CopyComponents
+                            copyText={fileInfo?.content || ""}
+                            iconColor='var(--Colors-Use-Neutral-Text-3-Secondary)'
                         />
                         <YakitButton
                             type='text2'

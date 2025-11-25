@@ -1,6 +1,6 @@
 .file-preview {
     width: 100%;
-    height: 100%;   
+    height: 100%;
     display: flex;
     flex-direction: column;
     &-title {
@@ -26,10 +26,11 @@
             }
             &-right {
                 display: flex;
+                align-items: center;
                 gap: 4px;
-                svg {
-                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                }
+                // svg {
+                //     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                // }
             }
         }
         &-path {
@@ -41,7 +42,7 @@
             line-height: 16px;
         }
     }
-    &-content { 
+    &-content {
         width: 100%;
         flex: 1;
         height: 0;
