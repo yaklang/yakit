@@ -66,7 +66,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
-import {DeleteOutlined, LoadingOutlined, ReloadOutlined} from "@ant-design/icons"
+import {CloseOutlined, DeleteOutlined, LoadingOutlined, ReloadOutlined} from "@ant-design/icons"
 import {StringToUint8Array} from "@/utils/str"
 import {clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail} from "./AuditTree/AuditMap"
 import {clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail} from "./AuditTree/ChildMap"
@@ -255,9 +255,15 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                     )}
                     {info.ResourceType === "message" && showIcon(info.VerboseType)}
 
-                    <div className={styles["node-loading"]}>
-                        <LoadingOutlined />
-                    </div>
+                    {info?.error ? (
+                        <div className={classNames(styles["node-error"], styles["icon-box"])} title={info.error}>
+                            <CloseOutlined />
+                        </div>
+                    ) : (
+                        <div className={classNames(styles["node-loading"], styles["icon-box"])}>
+                            <LoadingOutlined />
+                        </div>
+                    )}
 
                     <div className={styles["node-content"]}>{customizeContent(info)}</div>
                 </div>
@@ -661,7 +667,16 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     }
                 }
             } catch (error) {
-                reject()
+                const errorAuditDetail = {
+                    ...getMapAuditDetail(id),
+                    error: `${error}`
+                }
+                setMapAuditDetail(id, errorAuditDetail)
+                setTimeout(() => {
+                    setRefreshTree(!getRefreshTree())
+                    failed(`加载数据错误: ${error}`)
+                    throw error
+                }, 300)
             }
         })
     })
@@ -736,7 +751,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     }, 300)
                 }
             }
-        } catch (error) {}
+        } catch (error) {
+            failed(`加载更多数据错误: ${error}`)
+        }
     })
 
     const onLoadData = useMemoizedFn((node: AuditNodeProps) => {

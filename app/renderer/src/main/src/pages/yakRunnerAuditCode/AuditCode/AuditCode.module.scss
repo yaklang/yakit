@@ -171,7 +171,7 @@
             }
         }
     }
-    .node-loading {
+    .node-icon{
         display: none;
         width: 16px;
         height: 16px;
@@ -180,7 +180,16 @@
         svg {
             width: 12px;
             height: 12px;
-            color: #f28b44;
+        }
+    }
+    .node-loading {
+        svg {
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
+    .node-error{
+        svg {
+            color: var(--Colors-Use-Error-Primary);
         }
     }
     .img-box {

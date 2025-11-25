@@ -62,6 +62,8 @@ export interface AuditNodeMapProps {
     page?: number
     // 是否未加载完毕
     hasMore?: boolean
+    // 加载是否失败
+    error?: string
 }
 
 export interface AuditNodeProps {
@@ -95,6 +97,8 @@ export interface AuditNodeProps {
     page?: number
     // 是否未加载完毕
     hasMore?: boolean
+    // 加载是否失败
+    error?: string
 }
 
 export interface AuditDetailItemProps {
