@@ -3,7 +3,7 @@ import {EngineWatchDogCallbackType, YakitStatusType, YaklangEngineWatchDogCreden
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {debugToPrintLog} from "@/utils/logCollection"
 import {yakitNotify} from "@/utils/notification"
-import {fetchEnv, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {fetchEnv, FetchSoftwareVersion, isEnpriTraceAgent} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
 import {ipcEventPre} from "@/utils/ipcEventPre"
 import {grpcStartLocalEngine, isEngineConnectionAlive} from "../../grpc"
@@ -122,7 +122,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         password: props.credential.Password,
                         version: fetchEnv(),
                         isEnpriTraceAgent: isEnpriTraceAgent(),
-                        isIRify: isIRify()
+                        softwareVersion: FetchSoftwareVersion()
                     }).then((res) => {
                         if (res.ok && res.status === "success") {
                             debugToPrintLog(`[INFO] 本地新引擎进程启动成功`)

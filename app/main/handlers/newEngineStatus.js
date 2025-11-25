@@ -6,14 +6,20 @@ const {engineLogOutputFileAndUI, engineLogOutputUI} = require("../logFile")
 
 const ECHO_TEST_MSG = "Hello Yakit!"
 
+/** 各版本下的数据库环境变量 */
+const DefaultDBFileEnv = {
+    irify: {
+        YAK_DEFAULT_PROFILE_DATABASE_NAME: "irify-profile-rule.db",
+        YAK_DEFAULT_PROJECT_DATABASE_NAME: "default-irify.db",
+        SSA_DATABASE_RAW: "default-yakssa.db"
+    },
+    memfit: {
+        YAK_DEFAULT_PROJECT_DATABASE_NAME: "default-memfit.db"
+    }
+}
+
 module.exports = {
     registerNewIPC: (win, callback, getClient, newClient, ipcEventPre) => {
-        const dbFileEnv = {
-            YAK_DEFAULT_PROFILE_DATABASE_NAME: "irify-profile-rule.db",
-            YAK_DEFAULT_PROJECT_DATABASE_NAME: "default-irify.db",
-            SSA_DATABASE_RAW: "default-yakssa.db"
-        }
-
         /** 输出到欢迎界面的日志中 */
         ipcMain.handle(ipcEventPre + "output-log-to-welcome-console", (e, msg) => {
             engineLogOutputUI(win, `${msg}`, true)
@@ -25,7 +31,7 @@ module.exports = {
 
             return new Promise((resolve, reject) => {
                 try {
-                    const {port, isIRify} = params
+                    const {port, softwareVersion} = params
                     const command = getLocalYaklangEngine()
                     const args = ["check-secret-local-grpc", "--port", String(port)]
 
@@ -35,7 +41,7 @@ module.exports = {
                     const defaltEnv = {...process.env, YAKIT_HOME: YakitProjectPath}
                     const subprocess = childProcess.spawn(command, args, {
                         stdio: ["ignore", "pipe", "pipe"],
-                        env: isIRify ? {...defaltEnv, ...dbFileEnv} : defaltEnv
+                        env: {...defaltEnv, ...(DefaultDBFileEnv[softwareVersion] || {})}
                     })
 
                     let stdout = ""
@@ -179,7 +185,10 @@ module.exports = {
 
                         if (!json && !stdout && !stderr) {
                             engineLogOutputFileAndUI(win, `----- 检查失败：可能被杀软或防火墙拦截或无法找到引擎 -----`)
-                            return reject({status: "antivirus_blocked", message: "可能被杀软或防火墙拦截或无法找到引擎"})
+                            return reject({
+                                status: "antivirus_blocked",
+                                message: "可能被杀软或防火墙拦截或无法找到引擎"
+                            })
                         }
 
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
@@ -227,7 +236,7 @@ module.exports = {
 
             return new Promise((resolve, reject) => {
                 try {
-                    const {isIRify} = params
+                    const {softwareVersion} = params
                     const command = getLocalYaklangEngine()
                     const args = ["fixup-database"]
 
@@ -237,7 +246,7 @@ module.exports = {
                     const defaltEnv = {...process.env, YAKIT_HOME: YakitProjectPath}
                     const subprocess = childProcess.spawn(command, args, {
                         stdio: ["ignore", "pipe", "pipe"],
-                        env: isIRify ? {...defaltEnv, ...dbFileEnv} : defaltEnv
+                        env: {...defaltEnv, ...(DefaultDBFileEnv[softwareVersion] || {})}
                     })
 
                     let stdout = ""
@@ -399,7 +408,7 @@ module.exports = {
         let currentStartId = 0 // 全局启动任务标识
         const asyncStartSecretLocalYakEngineServer = async (win, params, attempt = 1, maxRetry = 3) => {
             const checkId = ++currentStartId
-            const {version, port, password, isEnpriTraceAgent, isIRify} = params
+            const {version, port, password, isEnpriTraceAgent, softwareVersion} = params
 
             return new Promise((resolve, reject) => {
                 engineLogOutputFileAndUI(win, `----- 启动本地引擎进程 (Random Local Password, Port: ${port})  -----`)
@@ -424,7 +433,7 @@ module.exports = {
                         detached: false,
                         windowsHide: true,
                         stdio: ["ignore", "pipe", "pipe"],
-                        env: isIRify ? {...defaltEnv, ...dbFileEnv} : defaltEnv
+                        env: {...defaltEnv, ...(DefaultDBFileEnv[softwareVersion] || {})}
                     })
 
                     subprocess.unref()

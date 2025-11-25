@@ -3,7 +3,7 @@ import {AllowSecretLocalJson, LocalEngineProps} from "./LocalEngineType"
 import {useMemoizedFn} from "ahooks"
 import {debugToPrintLog} from "@/utils/logCollection"
 import {grpcCheckAllowSecretLocal} from "../../grpc"
-import {isIRify} from "@/utils/envfile"
+import {FetchSoftwareVersion} from "@/utils/envfile"
 import {yakitNotify} from "@/utils/notification"
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
@@ -14,7 +14,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleAllowSecretLocal = useMemoizedFn(async (port: number) => {
             setLog(["开始检查随机密码模式中..."])
             try {
-                const res = await grpcCheckAllowSecretLocal({port, isIRify: isIRify()})
+                const res = await grpcCheckAllowSecretLocal({port, softwareVersion: FetchSoftwareVersion()})
                 setRestartLoading(false)
                 if (res.ok && res.status === "success") {
                     setLog((arr) => arr.concat(["检查通过，已支持随机密码模式"]))

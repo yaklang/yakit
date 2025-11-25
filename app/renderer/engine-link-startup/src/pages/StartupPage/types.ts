@@ -1,3 +1,5 @@
+import {SoftwareVersion} from "@/utils/envfile"
+
 /** 当前启动yaklang引擎模式 */
 export type YaklangEngineMode = "local" | "remote"
 
@@ -104,7 +106,7 @@ export interface StartLocalEngine {
     password: string
     version: string
     isEnpriTraceAgent: boolean
-    isIRify: boolean
+    softwareVersion: SoftwareVersion
 }
 
 export interface TypeCallbackExtra {

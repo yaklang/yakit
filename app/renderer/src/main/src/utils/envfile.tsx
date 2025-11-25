@@ -238,6 +238,8 @@ export const GetConnectPort = () => {
             return 9014
         case "irify-enterprise":
             return 9015
+        case "memfit":
+            return 9016
         default:
             return 9011
     }
