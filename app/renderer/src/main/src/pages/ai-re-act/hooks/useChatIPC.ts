@@ -124,6 +124,15 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 执行过程中插件输出的卡片
     const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: logEvents.pushLog})
 
+    /**
+     * 触发任务规划的问题id(react_task_id)
+     * 用于取消任务规划
+     */
+    const reactTaskToAsync = useRef<string>("")
+    const fetchReactTaskToAsync = useMemoizedFn(() => {
+        return reactTaskToAsync.current
+    })
+
     // 设置任务规划的标识ID
     const planCoordinatorId = useRef<string>("")
 
@@ -236,6 +245,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (startInfo.coordinator_id && planCoordinatorId.current === startInfo.coordinator_id) {
                         taskChatEvent.handlePlanExecEnd(res)
                     }
+                    return
+                }
+
+                if (res.Type === "ai_task_switched_to_async") {
+                    // 准备执行任务规划的问题id(react_task_id)
+                    const reactTaskInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskToAsync
+                    reactTaskToAsync.current = reactTaskInfo.task_id
                     return
                 }
 
@@ -383,7 +399,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     return [
         {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders, questionQueue},
-        {fetchToken, onStart, onSend, onClose, onReset}
+        {fetchToken, fetchReactTaskToAsync, onStart, onSend, onClose, onReset}
     ] as const
 }
 

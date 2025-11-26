@@ -22,7 +22,7 @@ export interface AIChatIPCSendParams {
 }
 type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export interface AISendSyncMessageParams {
-    syncType: AIInputEvent['SyncType']
+    syncType: AIInputEvent["SyncType"]
     SyncJsonInput?: AIInputEvent["SyncJsonInput"]
     params: MakeOptional<AIStartParams, "UserQuery">
 }
@@ -53,6 +53,7 @@ export default createContext<ChatIPCContextValue>({
     dispatcher: {
         chatIPCEvents: {
             fetchToken: () => "",
+            fetchReactTaskToAsync: () => "",
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},

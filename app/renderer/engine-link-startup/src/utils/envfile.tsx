@@ -126,8 +126,8 @@ export const FetchSoftwareVersion: () => SoftwareVersion = () => {
         case "irify":
         case "irify-enterprise":
             return "irify"
-        case "memfit":
-            return "memfit"
+        // case "memfit":
+        //     return "memfit"
         default:
             return "yakit"
     }

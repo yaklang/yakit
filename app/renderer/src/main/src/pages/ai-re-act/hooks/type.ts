@@ -146,6 +146,8 @@ export interface AIChatSendParams {
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
+    /** 获取当前执行任务规划的问题id */
+    fetchReactTaskToAsync: () => string
     /** 开始执行接口流 */
     onStart: (token: string, params: AIInputEvent) => void
     /** 向执行中的接口流主动输入信息 */

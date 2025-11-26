@@ -461,6 +461,14 @@ export declare namespace AIAgentGrpcApi {
         tasks: QuestionQueueItem[]
         total_tasks: number
     }
+
+    /** 准备执行任务规划的问题id(react_task_id) */
+    export interface ReactTaskToAsync {
+        task_id: string
+        loop_name: string
+        task_index: string
+        task_user_input: string
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构
