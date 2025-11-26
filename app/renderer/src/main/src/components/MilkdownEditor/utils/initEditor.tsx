@@ -78,6 +78,7 @@ interface InitEditorHooksProps
     diffProps?: InitEditorHooksDiffProps
     localProps?: InitEditorHooksLocalProps
     inViewport?: boolean
+
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
     const {
@@ -90,7 +91,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
         diffProps,
         localProps,
         inViewport,
-        positionElementId
+        positionElementId,
+        isControlEditorType
     } = props
 
     const nodeViewFactory = useNodeViewFactory()
@@ -292,7 +294,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 ...codeCustomPlugin(),
                 $view(codeBlockSchema.node, () => {
                     return nodeViewFactory({
-                        component: CustomCodeComponent,
+                        component: () => <CustomCodeComponent isControlEditorType={isControlEditorType} />,
                         stopEvent: (e) => true
                     })
                 })

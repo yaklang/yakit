@@ -105,11 +105,9 @@ import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CodeScoreModal} from "../plugins/funcTemplate"
-import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
-import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
-import { QuerySSAProgramResponse } from "../yakRunnerScanHistory/YakRunnerScanHistory"
 import { apiQuerySSAPrograms } from "../yakRunnerScanHistory/utils"
+import { MilkdownEditorLocal } from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -2651,17 +2649,19 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                         />
                                     </Descriptions.Item>
                                     <Descriptions.Item label='漏洞描述' span={3}>
-                                        <MilkdownEditor
+                                        <MilkdownEditorLocal
                                             type='notepad'
                                             defaultValue={alert.Description}
                                             onMarkdownUpdated={(value) => onMarkdownUpdated("Description", value, key)}
+                                            isControlEditorType={false}
                                         />
                                     </Descriptions.Item>
                                     <Descriptions.Item label='修复建议' span={3}>
-                                        <MilkdownEditor
+                                        <MilkdownEditorLocal
                                             type='notepad'
                                             defaultValue={alert.Solution}
                                             onMarkdownUpdated={(value) => onMarkdownUpdated("Solution", value, key)}
+                                            isControlEditorType={false}
                                         />
                                     </Descriptions.Item>
                                 </Descriptions>

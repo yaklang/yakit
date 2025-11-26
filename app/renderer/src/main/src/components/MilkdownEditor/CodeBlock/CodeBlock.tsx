@@ -5,8 +5,11 @@ import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import React, {useState, useEffect, useRef} from "react"
 import {TextSelection} from "@milkdown/kit/prose/state"
 
-interface CustomCodeComponent {}
-export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
+interface CustomCodeComponentProps {
+    // 是否控制编辑器类型
+    isControlEditorType?: boolean
+}
+export const CustomCodeComponent: React.FC<CustomCodeComponentProps> = ({isControlEditorType = true}) => {
     const {node, view, getPos, contentRef} = useNodeViewContext()
     // 编辑器实例
     const [editor, setEditor] = useState<IMonacoEditor>()
@@ -54,7 +57,7 @@ export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
         <div className='milkdown-code' style={{height: 200, marginBottom: 20}} ref={codeRef}>
             {/* <div style={{display: "none"}} ref={contentRef}></div> */}
             <YakitEditor
-                type='yak'
+                type={isControlEditorType? 'yak' : undefined }
                 readOnly={readonly}
                 value={node.textContent}
                 setValue={updateEditorContent}
