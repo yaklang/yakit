@@ -22,6 +22,7 @@ interface GenerateKnowledgeProps {
     depth?: number
     knowledgeType?: "entity" | "knowledge"
     isAll?: boolean
+    children: React.ReactNode
 }
 
 const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
@@ -29,7 +30,8 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
     generateKnowledgeBaseItem,
     depth,
     knowledgeType,
-    isAll = false
+    isAll = false,
+    children
 }) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [dropdownMenuVisible, setDropdownMenuVisible] = useSafeState(false)
@@ -146,9 +148,11 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
                     visible: dropdownMenuVisible
                 }}
             >
-                <YakitButton icon={<OutlinePlay2Icon />} type='outline1'>
-                    从实体生成知识
-                </YakitButton>
+                {children ? (
+                    children
+                ) : (
+                    <YakitButton type='primary' size='large' icon={<OutlinePlay2Icon />} name='生成知识' />
+                )}
             </YakitDropdownMenu>
             <YakitModal
                 visible={additionalConditionsVisible}

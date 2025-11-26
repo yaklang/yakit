@@ -2,12 +2,12 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
 import {useAsyncEffect, useCreation, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
-import {useEffect, useRef, type FC} from "react"
+import React, {useEffect, useMemo, useRef, type FC} from "react"
 import ReactResizeDetector from "react-resize-detector"
 import styles from "../knowledgeBase.module.scss"
 
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {apiSearchKnowledgeBaseEntry, transformToGraphData} from "../utils"
+import {apiQueryEntity, apiSearchKnowledgeBaseEntry, transformToGraphData} from "../utils"
 
 import {KnowledgeBaseEntry, SearchKnowledgeBaseEntryRequest} from "../TKnowledgeBase"
 import {genDefaultPagination} from "@/pages/invoker/schema"
@@ -16,12 +16,18 @@ import {v4 as uuidv4} from "uuid"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {ArrowCircleRightSvgIcon, TrashIcon} from "@/assets/newIcon"
-import {Divider} from "antd"
+import {Divider, Tooltip} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import {failed, success} from "@/utils/notification"
 
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {OutlinePhotographIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {
+    OutlineExclamationIcon,
+    OutlinePhotographIcon,
+    OutlinePlay2Icon,
+    OutlineTerminalIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {GenerateERMDotResponse} from "@/components/playground/entityRepository"
@@ -29,6 +35,11 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {KnowledgeDetailDrawer} from "./KnowledgeDetailDrawer"
 import GraphChart from "./GraphChart"
 import {GenerateKnowledge} from "./GenerateKnowledge"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import classNames from "classnames"
+import {YakitCloseSvgIcon} from "@/components/basics/icon"
+import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
+import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -50,12 +61,12 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
 
     const [isRefresh, setIsRefresh] = useSafeState<boolean>(false)
 
-    // const [selectList, setSelectList] = useSafeState<any>([])
-    // const [allCheck, setAllCheck] = useSafeState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useSafeState<number>()
     const [type, setType] = useSafeState("svg")
     const [depth, setDepth] = useSafeState(2)
     const [currentIndex, setCurrentIndex] = useSafeState<number>()
+    const [selectedSubERMId, setSelectedSubERMId] = useSafeState<string>("")
+    const wrapperWidth = useListenWidth(tableBoxRef)
 
     const [knowledgeDrawerDetail, setKnowledgeDrawerDetail] = useSafeState<
         Partial<KnowledgeBaseEntry> & {visible: boolean}
@@ -86,24 +97,28 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
         setAllCheck(false)
     })
 
-    const [tableParams, tableData, tableTotal, pagination, tableLoading, offsetData, debugVirtualTableEvent] =
-        useVirtualTableHook<SearchKnowledgeBaseEntryRequest, KnowledgeBaseEntry, "KnowledgeBaseEntries", "ID">({
-            tableBoxRef,
-            tableRef,
-            boxHeightRef,
-            grpcFun: apiSearchKnowledgeBaseEntry,
-            onFirst,
-            // initResDataFun,
-            defaultParams: {
-                Filter: {
-                    KnowledgeBaseId: Number(knowledgeBaseItems?.ID)
-                },
-                Pagination: {
-                    ...genDefaultPagination(20)
-                }
+    const [tableParams, tableData, tableTotal, pagination, _, __, debugVirtualTableEvent] = useVirtualTableHook<
+        SearchKnowledgeBaseEntryRequest,
+        KnowledgeBaseEntry,
+        "KnowledgeBaseEntries",
+        "ID"
+    >({
+        tableBoxRef,
+        tableRef,
+        boxHeightRef,
+        grpcFun: apiSearchKnowledgeBaseEntry,
+        onFirst,
+        // initResDataFun,
+        defaultParams: {
+            Filter: {
+                KnowledgeBaseId: Number(knowledgeBaseItems?.ID)
             },
-            responseKey: {data: "KnowledgeBaseEntries", id: "ID"}
-        })
+            Pagination: {
+                ...genDefaultPagination(20)
+            }
+        },
+        responseKey: {data: "KnowledgeBaseEntries", id: "ID"}
+    })
 
     const {
         data: dotCode,
@@ -122,6 +137,27 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
         {
             manual: true,
             onError: (err) => failed(`获取实体关系图代码失败: ${err}`)
+        }
+    )
+
+    const {
+        data: QueryEntityDetail,
+        runAsync: QueryEntityDetailRunAsync,
+        loading: QueryEntityDetailLoading
+    } = useRequest(
+        async (HiddenIndex: string[]) => {
+            const response = await apiQueryEntity({
+                Pagination: genDefaultPagination(20),
+
+                Filter: {
+                    HiddenIndex
+                }
+            })
+            return response.Entities?.[0] ?? {}
+        },
+        {
+            manual: true,
+            onError: (err) => failed(`获取实体失败: ${err}`)
         }
     )
 
@@ -336,6 +372,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
     }, [tableProps.type, knowledgeBaseItems.ID])
 
     const ResizeBoxProps = useCreation(() => {
+        setSelectedSubERMId("")
         let p = {
             firstRatio: "50%",
             secondRatio: "50%"
@@ -401,9 +438,79 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
         }
     }, [linkId, tableData])
 
-    const onNodeClick = useMemoizedFn((id) => {
-        return id
+    const onNodeClick = useMemoizedFn(async (clickNode) => {
+        if (clickNode?.HiddenIndex?.length > 0) {
+            setSelectedSubERMId(clickNode.HiddenIndex)
+            await QueryEntityDetailRunAsync([clickNode.HiddenIndex])
+        } else {
+            setSelectedSubERMId("")
+        }
     })
+
+    const tableHeaderSize = useMemo(() => {
+        return (
+            <div className={styles["container"]}>
+                {allCheck ? (
+                    <React.Fragment>
+                        <Divider type='vertical' />
+                        <div className={styles["select-all"]}>
+                            Selected <span>all</span>{" "}
+                            <OutlineXIcon
+                                onClick={() => {
+                                    setSelectList([])
+                                    setAllCheck(false)
+                                }}
+                            />
+                        </div>
+                    </React.Fragment>
+                ) : (
+                    <React.Fragment>
+                        {selectList.length > 0 ? (
+                            <React.Fragment>
+                                <Divider type='vertical' />
+                                <YakitPopover
+                                    overlayClassName={styles["table-selected-filter-popover"]}
+                                    content={
+                                        <div className={styles["hub-outer-list-filter"]}>
+                                            {selectList.map((item) => {
+                                                return item ? (
+                                                    <YakitTag
+                                                        key={item.ID}
+                                                        closable
+                                                        onClose={() => {
+                                                            const result = selectList.filter((it) => it.ID !== item.ID)
+                                                            setSelectList(result)
+                                                            setAllCheck(false)
+                                                        }}
+                                                    >
+                                                        {item.ID}
+                                                    </YakitTag>
+                                                ) : null
+                                            })}
+                                        </div>
+                                    }
+                                    trigger='hover'
+                                    placement='bottomLeft'
+                                >
+                                    <div className={styles["tag-total"]}>
+                                        <span>
+                                            Selected <span className={styles["total-style"]}>{selectList.length}</span>
+                                        </span>
+                                        <OutlineXIcon
+                                            onClick={() => {
+                                                setSelectList([])
+                                                setAllCheck(false)
+                                            }}
+                                        />
+                                    </div>
+                                </YakitPopover>
+                            </React.Fragment>
+                        ) : null}
+                    </React.Fragment>
+                )}
+            </div>
+        )
+    }, [allCheck, selectList])
 
     return (
         <div ref={tableBoxRef} className={styles["knowledge-base-table"]}>
@@ -462,7 +569,20 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
                     <div className={styles["second-node-container"]} key={selectedRowKeys.join(",") + tableProps.type}>
                         <div className={styles["knowledge-table-second-node"]}>
                             <div className={styles["header"]}>
-                                <div>知识 - 知识 - 实体关系图</div>
+                                <div className={styles["header-left"]}>
+                                    <div>知识 - 知识 - 实体关系图</div>
+                                    {tableHeaderSize}
+                                    {data?.links?.length === 0 && wrapperWidth > 900 ? (
+                                        <React.Fragment>
+                                            <Divider type={"vertical"} />
+
+                                            <div className={styles["no-relationship-warning"]}>
+                                                <OutlineExclamationIcon />
+                                                图中只有实体没有关系，生成的知识精度低
+                                            </div>
+                                        </React.Fragment>
+                                    ) : null}
+                                </div>
                                 <div className={styles["operate"]}>
                                     <div className={styles["in-depth-description"]}>深度</div>
                                     <YakitInputNumber
@@ -481,19 +601,39 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
                                         depth={depth}
                                         knowledgeType='knowledge'
                                         isAll={allCheck}
+                                        children={
+                                            <HubButton
+                                                width={wrapperWidth}
+                                                iconWidth={900}
+                                                icon={<OutlinePlay2Icon />}
+                                                type='outline1'
+                                                name={"从实体生成知识"}
+                                            />
+                                        }
                                     />
 
                                     <Divider type={"vertical"} />
                                     <YakitRadioButtons
                                         buttonStyle='solid'
                                         value={type}
-                                        onChange={(e) => setType(e.target.value)}
+                                        onChange={(e) => {
+                                            setSelectedSubERMId("")
+                                            setType(e.target.value)
+                                        }}
                                         options={[
                                             {
                                                 label: (
                                                     <div className={styles["radio-buttons-label"]}>
-                                                        <OutlinePhotographIcon />
-                                                        SVG
+                                                        {wrapperWidth > 900 ? (
+                                                            <React.Fragment>
+                                                                <OutlinePhotographIcon />
+                                                                SVG
+                                                            </React.Fragment>
+                                                        ) : (
+                                                            <Tooltip title='SVG'>
+                                                                <OutlinePhotographIcon />
+                                                            </Tooltip>
+                                                        )}
                                                     </div>
                                                 ),
                                                 value: "svg"
@@ -501,8 +641,16 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
                                             {
                                                 label: (
                                                     <div className={styles["radio-buttons-label"]}>
-                                                        <OutlineTerminalIcon />
-                                                        Code
+                                                        {wrapperWidth > 900 ? (
+                                                            <React.Fragment>
+                                                                <OutlineTerminalIcon />
+                                                                Code
+                                                            </React.Fragment>
+                                                        ) : (
+                                                            <Tooltip title='Code'>
+                                                                <OutlineTerminalIcon />
+                                                            </Tooltip>
+                                                        )}
                                                     </div>
                                                 ),
                                                 value: "code"
@@ -511,20 +659,50 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
                                     />
                                 </div>
                             </div>
-                            <div className={styles["content"]}>
-                                {type === "svg" ? (
-                                    <YakitSpin spinning={loading}>
-                                        {data ? (
-                                            <GraphChart graphData={data} onNodeClick={onNodeClick} />
-                                        ) : (
-                                            <YakitEmpty />
-                                        )}
+                            <div className={classNames(styles["second-node-content"])}>
+                                <div className={styles["content"]}>
+                                    {type === "svg" ? (
+                                        <YakitSpin spinning={loading}>
+                                            {data ? (
+                                                <GraphChart graphData={data} onNodeClick={onNodeClick} />
+                                            ) : (
+                                                <YakitEmpty />
+                                            )}
+                                        </YakitSpin>
+                                    ) : (
+                                        <YakitSpin spinning={dotCodeLoading}>
+                                            <pre style={{padding: 12}}>{dotCode}</pre>
+                                        </YakitSpin>
+                                    )}
+                                </div>
+                                <div
+                                    className={classNames(styles["detail-box"], {
+                                        [styles["hidden"]]: !selectedSubERMId
+                                    })}
+                                >
+                                    <YakitSpin spinning={QueryEntityDetailLoading}>
+                                        <div className={styles["header"]}>
+                                            <div>实体信息</div>
+                                            <YakitCloseSvgIcon onClick={() => setSelectedSubERMId("")} />
+                                        </div>
+                                        <div className={styles["content"]}>
+                                            <div className={styles["inner-box"]}>
+                                                <div className={styles["title"]}>名称</div>
+                                                <div className={styles["detail"]}>{QueryEntityDetail?.Name}</div>
+                                            </div>
+                                            <div className={styles["inner-box"]}>
+                                                <div className={styles["title"]}>类型</div>
+                                                <div className={styles["detail"]}>
+                                                    <YakitTag color='blue'>{QueryEntityDetail?.Type}</YakitTag>
+                                                </div>
+                                            </div>
+                                            <div className={styles["inner-box"]}>
+                                                <div className={styles["title"]}>描述</div>
+                                                <div className={styles["detail"]}>{QueryEntityDetail?.Description}</div>
+                                            </div>
+                                        </div>
                                     </YakitSpin>
-                                ) : (
-                                    <YakitSpin spinning={dotCodeLoading}>
-                                        <pre style={{padding: 12}}>{dotCode}</pre>
-                                    </YakitSpin>
-                                )}
+                                </div>
                             </div>
                         </div>
                     </div>

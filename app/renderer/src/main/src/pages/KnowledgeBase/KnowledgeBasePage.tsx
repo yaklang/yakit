@@ -22,11 +22,17 @@ import styles from "./knowledgeBase.module.scss"
 import type {CreateKnowledgeBaseData, KnowledgeBaseContentProps} from "./TKnowledgeBase"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
 const KnowledgeBase: FC = () => {
     const [form] = Form.useForm()
+    const apiRef = useRef<KnowledgeBaseTableHeaderProps["api"]>()
+    const contentRef = useRef<any>(null)
+    const [visible, setVisible] = useSafeState(false)
+
     const {initialize, editKnowledgeBase, knowledgeBases, addKnowledgeBase, clearAll, previousKnowledgeBases} =
         useKnowledgeBase()
 
@@ -197,7 +203,16 @@ const KnowledgeBase: FC = () => {
     }, [])
 
     const onCloseKnowledgeRepository = () => {
-        emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+        if (apiRef?.current && apiRef.current.tokens.length > 0) {
+            setVisible(true)
+            return
+        } else {
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+        }
+    }
+
+    const onCancel = () => {
+        setVisible(false)
     }
 
     useEffect(() => {
@@ -236,6 +251,7 @@ const KnowledgeBase: FC = () => {
             default:
                 return (
                     <KnowledgeBaseContent
+                        ref={contentRef}
                         knowledgeBaseID={knowledgeBaseID}
                         setKnowledgeBaseID={setKnowledgeBaseID}
                         knowledgeBases={knowledgeBases}
@@ -243,6 +259,7 @@ const KnowledgeBase: FC = () => {
                         editKnowledgeBase={editKnowledgeBase}
                         clearAll={clearAll}
                         binariesToInstall={binariesToInstall}
+                        apiRef={apiRef}
                     />
                 )
         }
@@ -252,6 +269,16 @@ const KnowledgeBase: FC = () => {
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
             <div className={styles["repository-container"]}>{knowledgeBaseEntrance}</div>
+            <YakitHint
+                visible={visible}
+                // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
+                title={"知识库未构建完成"}
+                content={"知识未构建完成，是否确定关闭"}
+                okButtonText='立即关闭'
+                onOk={() => contentRef.current?.onOK?.()}
+                cancelButtonText='稍后再说'
+                onCancel={onCancel}
+            />
         </div>
     )
 }
