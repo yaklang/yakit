@@ -236,7 +236,7 @@ export interface AuditCodePageInfoProps {
     Value?: string
     // 正常操作查询
     Location: string
-    Query?: {Key: string; Value: number}[]
+    Query?: {Key: string; Value: any}[]
     // 文件与高亮信息
     CodeRange?: string
     // 漏洞/规则 树所选中的下拉列表

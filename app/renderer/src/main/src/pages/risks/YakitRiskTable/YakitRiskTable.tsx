@@ -2005,7 +2005,10 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                 Path: `/`,
                 Variable: SyntaxFlowVariable,
                 Value: value,
-                Query: [{Key: "result_id", Value: ResultID}]
+                Query: [
+                    {Key: "result_id", Value: ResultID},
+                    {Key: "risk_hash", Value: info.Hash || ""}
+                ]
             }
 
             emiter.emit(

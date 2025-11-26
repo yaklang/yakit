@@ -355,17 +355,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     const wrapper = useRef<HTMLDivElement>(null)
     const size = useSize(wrapper)
 
-    // PS: 之前的逻辑是匹配到此项时打开对应文件，可能会造成卡在欢迎页的情况，因此改为根据参数直接打开对应文件
-    const defaultOpenIdRef = useRef<string>()
-    useEffect(() => {
-        if (pageInfo) {
-            const {Path, Variable, Value} = pageInfo
-            if (Variable && Value) {
-                defaultOpenIdRef.current = `${Path}${Variable}${Value}`
-            }
-        }
-    }, [pageInfo])
-
     const handleSelect = useMemoizedFn((node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (onlyJump) {
             onJump(node)
@@ -485,10 +474,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 // 解决重复打开一个节点时 能加载
                 loadedKeys={[]}
                 titleRender={(nodeData) => {
-                    if (nodeData.id === defaultOpenIdRef.current) {
-                        defaultOpenIdRef.current = undefined
-                        handleSelect(nodeData, getDetailFun(nodeData))
-                    }
                     return (
                         <AuditTreeNode
                             info={nodeData}
