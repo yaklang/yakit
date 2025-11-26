@@ -2,10 +2,25 @@
     padding: 8px;
     // height: calc(100% - 34px);
     height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .YakRunnerScanHistory-title {
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        overflow: hidden;
+        padding-bottom: 8px;
+    }
+    .YakRunnerScanHistory-main{
+        flex: 1;
+        overflow: hidden;
+    }
 
     .YakRunnerScanHistory-table-title {
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 12px;
+        line-height: 24px;
     }
 
     .risk-tag-wrapper {
@@ -96,8 +111,8 @@
         flex-direction: row;
         justify-content: space-between;
         .compile-history-title {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 12px;
+            line-height: 24px;
             overflow: hidden;
         }
         .compile-history-sub-title {

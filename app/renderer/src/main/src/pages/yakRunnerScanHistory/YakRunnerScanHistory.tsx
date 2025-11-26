@@ -372,33 +372,40 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     }, [])
     return (
         <div className={styles["YakRunnerScanHistory"]} ref={yakRunnerScanHistoryRef} id='yakrunner-scan-history'>
-            <YakitResizeBox
-                firstMinSize={"280px"}
-                firstNode={<CompileHistoryList pageInfo={pageInfo} clickItem={clickItem} setClickItem={setClickItem} />}
-                secondNode={
-                    <TableVirtualResize<SyntaxFlowScanTask>
-                        loading={loading}
-                        query={query}
-                        isRefresh={isRefresh}
-                        titleHeight={42}
-                        renderTitle={<div className={styles["YakRunnerScanHistory-table-title"]}>扫描历史</div>}
-                        data={response.Data}
-                        enableDrag={false}
-                        renderKey='Id'
-                        columns={columns}
-                        useUpAndDown
-                        pagination={{
-                            total: response.Total,
-                            limit: response.Pagination.Limit,
-                            page: response.Pagination.Page,
-                            onChange: (page) => {
-                                update(page)
-                            }
-                        }}
-                    />
-                }
-                {...ResizeBoxProps}
-            />
+            <div className={classNames("yakit-content-single-ellipsis", styles["YakRunnerScanHistory-title"])}>
+                {pageInfo.Programs.length > 0 ? pageInfo.Programs[0] : "未识别项目名"}
+            </div>
+            <div className={styles["YakRunnerScanHistory-main"]}>
+                <YakitResizeBox
+                    firstMinSize={"280px"}
+                    firstNode={
+                        <CompileHistoryList pageInfo={pageInfo} clickItem={clickItem} setClickItem={setClickItem} />
+                    }
+                    secondNode={
+                        <TableVirtualResize<SyntaxFlowScanTask>
+                            loading={loading}
+                            query={query}
+                            isRefresh={isRefresh}
+                            titleHeight={42}
+                            renderTitle={<div className={styles["YakRunnerScanHistory-table-title"]}>扫描历史</div>}
+                            data={response.Data}
+                            enableDrag={false}
+                            renderKey='Id'
+                            columns={columns}
+                            useUpAndDown
+                            pagination={{
+                                total: response.Total,
+                                limit: response.Pagination.Limit,
+                                page: response.Pagination.Page,
+                                onChange: (page) => {
+                                    update(page)
+                                }
+                            }}
+                        />
+                    }
+                    {...ResizeBoxProps}
+                />
+            </div>
         </div>
     )
 }
@@ -602,7 +609,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
         <div className={styles["compile-history"]}>
             <div className={styles["compile-history-header"]}>
                 <div className={classNames("yakit-content-single-ellipsis", styles["compile-history-title"])}>
-                    {pageInfo.Programs.length > 0 ? pageInfo.Programs[0] : "编译历史"}
+                    编译历史
                 </div>
                 <div className={styles["compile-history-sub-title"]}>
                     <div className={styles["modal-sub-title"]}>
@@ -685,8 +692,14 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                                         JSON.stringify({
                                                             route: YakitRoute.YakRunner_Code_Scan,
                                                             params: {
-                                                                projectName: pageInfo.Programs.length > 0 ? pageInfo.Programs[0] : "项目名异常",
-                                                                projectId: pageInfo.ProjectIds.length > 0 ? pageInfo.ProjectIds[0] : 0,
+                                                                projectName:
+                                                                    pageInfo.Programs.length > 0
+                                                                        ? pageInfo.Programs[0]
+                                                                        : "项目名异常",
+                                                                projectId:
+                                                                    pageInfo.ProjectIds.length > 0
+                                                                        ? pageInfo.ProjectIds[0]
+                                                                        : 0,
                                                                 historyName: [rowData.Name],
                                                                 GroupNames: [rowData.Language],
                                                                 selectTotal
