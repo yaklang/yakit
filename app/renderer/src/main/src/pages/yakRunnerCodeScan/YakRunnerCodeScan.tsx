@@ -313,9 +313,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                             <Divider type='vertical' style={{margin: "0 4px"}} />
                             <span className={styles["count-num"]}>
                                 Selected
-                                <span className={styles["num-style"]}>
-                                    {(pageInfo.GroupNames || []).length}
-                                </span>
+                                <span className={styles["num-style"]}>{(pageInfo.GroupNames || []).length}</span>
                             </span>
                         </div>
                         <div className={styles["filter-body-right"]}>
@@ -331,7 +329,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     loadMoreData={() => {}}
                     renderRow={(rowData: SyntaxFlowGroup, index: number) => {
                         const checked = (pageInfo.GroupNames || []).includes(rowData.GroupName)
-                        
+
                         return <CodeScanGroupByKeyWordItem item={rowData} onSelect={onSelect} selected={checked} />
                     }}
                     page={1}
@@ -480,125 +478,142 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         setSelectedRules([])
     })
     return (
-        <div className={classNames(styles["code-scan-group-wrapper"])} style={{height: inViewport ? "100%" : "0px"}}>
-            <div className={styles["filter-wrapper"]}>
-                <div className={styles["header-filter-tag"]}>
-                    <YakitPopover
-                        overlayClassName={styles["code-scan-rule-group-popover"]}
-                        content={
-                            <div className={styles["code-scan-rule-list-filter"]}>
-                                {groupList.map((item) => {
-                                    return (
-                                        <div
-                                            className={styles["code-scan-rule-list-group-item"]}
-                                            key={item.GroupName}
-                                            onClick={() => onSelectGroup(item)}
-                                        >
-                                            <div
-                                                className={classNames(styles["name"], "yakit-content-single-ellipsis")}
-                                            >
-                                                {item.GroupName}
-                                            </div>
-                                            <div className={styles["count"]}>{item.Count}</div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        }
-                        trigger='hover'
-                        visible={groupTagShow}
-                        onVisibleChange={setGroupTagShow}
-                        placement='bottom'
-                    >
-                        <div
-                            className={classNames(styles["tag-total"], {
-                                [styles["tag-total-active"]]: groupTagShow
-                            })}
-                        >
-                            <FolderOpenIcon />
-                            <span>
-                                插件组 <span className={styles["total-style"]}>{groupList.length}</span>
-                            </span>
-                            {(groupTagShow && <ChevronUpIcon className={styles["chevron-down"]} />) || (
-                                <ChevronDownIcon className={styles["chevron-down"]} />
-                            )}
-                        </div>
-                    </YakitPopover>
-                    <div className={styles["header-filter-search"]}>
-                        <YakitInput.Search
-                            value={keywords}
-                            onChange={(e) => setKeywords(e.target.value)}
-                            placeholder='请输入关键字搜索'
-                            onSearch={onSearch}
-                            onPressEnter={onPressEnter}
-                        />
-                    </div>
+        <>
+            <div className={styles["left-header-search"]}>
+                <div className={styles["header-type-wrapper"]}>
+                    <span className={styles["header-text"]}>扫描规则</span>
                 </div>
-
-                <div className={styles["filter-body"]} style={{padding: "0px 8px 0px 7px"}}>
-                    <div className={styles["filter-body-left"]}>
-                        <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
-                            全选
-                        </YakitCheckbox>
-                        <span className={styles["count-num"]}>
-                            Total<span className={styles["num-style"]}>{response.Total}</span>
-                        </span>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <span className={styles["count-num"]}>
-                            Selected
-                            <span className={styles["num-style"]}>
-                                {checked ? response.Total : selectedRules.length}
-                            </span>
-                        </span>
-                    </div>
-                    <div className={styles["filter-body-right"]}>
-                        <YakitCheckbox
-                            checked={filterLibRuleKind !== "noLib"}
-                            onChange={(e) => onFilterLibRuleKindChange(e.target.checked ? "" : "noLib")}
-                        >
-                            包含Lib规则
-                        </YakitCheckbox>
-                        <YakitButton type='text' danger onClick={onClearSelect}>
-                            清空
-                        </YakitButton>
-                    </div>
+                <div className={styles["header-filter-search"]}>
+                    <YakitInput.Search
+                        value={keywords}
+                        onChange={(e) => setKeywords(e.target.value)}
+                        placeholder='请输入关键字搜索'
+                        onSearch={onSearch}
+                        onPressEnter={onPressEnter}
+                        size='large'
+                    />
                 </div>
-                {selectGroup.length > 0 && (
-                    <div className={styles["code-scan-rule-group-query-show"]}>
-                        {selectGroup.map((i) => {
-                            return (
-                                <YakitTag
-                                    key={i}
-                                    style={{marginBottom: 2}}
-                                    onClose={() => onCloseTag(i)}
-                                    closable={true}
-                                >
-                                    <FolderOpenIcon className={styles["folder-icon"]} />
-                                    <span
-                                        className={classNames(styles["code-scan-rule-group-name"], "content-ellipsis")}
-                                    >
-                                        {i}
-                                    </span>
-                                </YakitTag>
-                            )
-                        })}
-                    </div>
-                )}
             </div>
-            <CodeScanByGroup
-                hidden={false}
-                response={response}
-                setResponse={setResponse}
-                filterLibRuleKind={filterLibRuleKind}
-                selectedRules={selectedRules}
-                setSelectedRules={setSelectedRules}
-                allCheck={allCheck}
-                setAllCheck={setAllCheck}
-                selectGroup={selectGroup}
-                keywords={keywords}
-                isRefresh={isRefresh}
-            />
-        </div>
+            <div
+                className={classNames(styles["code-scan-group-wrapper"])}
+                style={{height: inViewport ? "100%" : "0px"}}
+            >
+                <div className={styles["filter-wrapper"]}>
+                    <div className={styles["header-filter-tag"]}>
+                        <YakitPopover
+                            overlayClassName={styles["code-scan-rule-group-popover"]}
+                            content={
+                                <div className={styles["code-scan-rule-list-filter"]}>
+                                    {groupList.map((item) => {
+                                        return (
+                                            <div
+                                                className={styles["code-scan-rule-list-group-item"]}
+                                                key={item.GroupName}
+                                                onClick={() => onSelectGroup(item)}
+                                            >
+                                                <div
+                                                    className={classNames(
+                                                        styles["name"],
+                                                        "yakit-content-single-ellipsis"
+                                                    )}
+                                                >
+                                                    {item.GroupName}
+                                                </div>
+                                                <div className={styles["count"]}>{item.Count}</div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            }
+                            trigger='hover'
+                            visible={groupTagShow}
+                            onVisibleChange={setGroupTagShow}
+                            placement='bottom'
+                        >
+                            <div
+                                className={classNames(styles["tag-total"], {
+                                    [styles["tag-total-active"]]: groupTagShow
+                                })}
+                            >
+                                <FolderOpenIcon />
+                                <span>
+                                    规则组 <span className={styles["total-style"]}>{groupList.length}</span>
+                                </span>
+                                {(groupTagShow && <ChevronUpIcon className={styles["chevron-down"]} />) || (
+                                    <ChevronDownIcon className={styles["chevron-down"]} />
+                                )}
+                            </div>
+                        </YakitPopover>
+                    </div>
+
+                    <div className={styles["filter-body"]} style={{padding: "0px 8px 0px 7px"}}>
+                        <div className={styles["filter-body-left"]}>
+                            <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
+                                全选
+                            </YakitCheckbox>
+                            <span className={styles["count-num"]}>
+                                Total<span className={styles["num-style"]}>{response.Total}</span>
+                            </span>
+                            <Divider type='vertical' style={{margin: "0 4px"}} />
+                            <span className={styles["count-num"]}>
+                                Selected
+                                <span className={styles["num-style"]}>
+                                    {checked ? response.Total : selectedRules.length}
+                                </span>
+                            </span>
+                        </div>
+                        <div className={styles["filter-body-right"]}>
+                            <YakitCheckbox
+                                checked={filterLibRuleKind !== "noLib"}
+                                onChange={(e) => onFilterLibRuleKindChange(e.target.checked ? "" : "noLib")}
+                            >
+                                包含Lib规则
+                            </YakitCheckbox>
+                            <YakitButton type='text' danger onClick={onClearSelect}>
+                                清空
+                            </YakitButton>
+                        </div>
+                    </div>
+                    {selectGroup.length > 0 && (
+                        <div className={styles["code-scan-rule-group-query-show"]}>
+                            {selectGroup.map((i) => {
+                                return (
+                                    <YakitTag
+                                        key={i}
+                                        style={{marginBottom: 2}}
+                                        onClose={() => onCloseTag(i)}
+                                        closable={true}
+                                    >
+                                        <FolderOpenIcon className={styles["folder-icon"]} />
+                                        <span
+                                            className={classNames(
+                                                styles["code-scan-rule-group-name"],
+                                                "content-ellipsis"
+                                            )}
+                                        >
+                                            {i}
+                                        </span>
+                                    </YakitTag>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+                <CodeScanByGroup
+                    hidden={false}
+                    response={response}
+                    setResponse={setResponse}
+                    filterLibRuleKind={filterLibRuleKind}
+                    selectedRules={selectedRules}
+                    setSelectedRules={setSelectedRules}
+                    allCheck={allCheck}
+                    setAllCheck={setAllCheck}
+                    selectGroup={selectGroup}
+                    keywords={keywords}
+                    isRefresh={isRefresh}
+                />
+            </div>
+        </>
     )
 })
 
@@ -697,12 +712,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                     [styles["left-wrapper-hidden"]]: hidden
                 })}
             >
-                <div className={styles["left-header-search"]}>
-                    <div className={styles["header-type-wrapper"]}>
-                        <span className={styles["header-text"]}>扫描规则</span>
-                    </div>
-                </div>
-
                 <CodeScanRuleByKeyWord
                     inViewport={type === "keyword"}
                     filterLibRuleKind={filterLibRuleKind}
@@ -882,7 +891,7 @@ const CodeScanByExecute: React.FC<CodeScanByExecuteProps> = React.memo((props) =
                                             [styles["progress-gray"]]: info.Progress === 1
                                         })}
                                     >
-                                        百分比: {Math.round(info.Progress * 100)}%
+                                        执行进度: {Math.round(info.Progress * 100)}%
                                     </span>
                                     <span className={classNames(styles["time"])}>{time}</span>
                                 </span>
@@ -2403,24 +2412,24 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 
         const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
             return new Promise((resolve, reject) => {
-               try {
-                ipcRenderer.invoke("CreateSSAProject", {
-                    JSONStringConfig
-                }).then((res: CreateSSAProjectResponse) => {
-                    projectIdCacheRef.current = res.Project.ID
-                    jsonCacheRef.current = res.Project.JSONStringConfig
-                    resolve(null)
-                })
-                
-            } catch (error) {
-                yakitNotify("error", "创建项目管理数据失败")
-                reject(error)
-            } 
+                try {
+                    ipcRenderer
+                        .invoke("CreateSSAProject", {
+                            JSONStringConfig
+                        })
+                        .then((res: CreateSSAProjectResponse) => {
+                            projectIdCacheRef.current = res.Project.ID
+                            jsonCacheRef.current = res.Project.JSONStringConfig
+                            resolve(null)
+                        })
+                } catch (error) {
+                    yakitNotify("error", "创建项目管理数据失败")
+                    reject(error)
+                }
             })
-            
         })
 
-        const onStreamInfoFun = useMemoizedFn(async(newStreamInfo: HoldGRPCStreamInfo) => {
+        const onStreamInfoFun = useMemoizedFn(async (newStreamInfo: HoldGRPCStreamInfo) => {
             // 此处为真正的启动
             if (!isRealStartRef.current) {
                 const startLog = newStreamInfo.logState.find((item) => item.level === "code")
