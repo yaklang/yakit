@@ -30,7 +30,7 @@
         "build-link-render": "cd app/renderer/engine-link-startup && yarn build",
         "build-link-render-enterprise": "cd app/renderer/engine-link-startup && yarn build-enterprise",
         "build-link-render-simple-enterprise": "cd app/renderer/engine-link-startup && yarn build-simple-enterprise",
-        "build-link-render-irify": "cd app/renderer/engine-`link-startup && yarn build-irify",
+        "build-link-render-irify": "cd app/renderer/engine-link-startup && yarn build-irify",
         "build-link-render-irify-enterprise": "cd app/renderer/engine-link-startup && yarn build-irify-enterprise",
         "build-link-render-memfit": "cd app/renderer/engine-link-startup && yarn build-memfit",
         "build-render": "cd app/renderer/src/main && yarn build",
