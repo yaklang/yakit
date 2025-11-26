@@ -9,6 +9,7 @@
     font-weight: 400;
     font-size: 11px;
     color: var(--Colors-Use-Warning-Primary);
+    cursor: pointer;
     .loading-icon {
         width: 18px;
         display: flex;
@@ -1079,6 +1080,95 @@
                     line-height: 16px;
                     height: 40px;
                     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    .header-left{
+                        display: flex;
+                        align-items: center;
+                        white-space: nowrap;
+                        .container{
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                            .caption{
+                                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                                font-size: 12px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 16px;
+                            }
+                            .number{
+                                color: var(--Colors-Use-Main-Primary);
+                                font-size: 12px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 16px;
+                            }
+                            .select-all{
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                                padding: 4px 8px;
+                                border-radius: 4px;
+                                border: none;
+                                background: var(--Colors-Use-Neutral-Bg-Hover);
+                                cursor: pointer;
+
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
+                                font-size: 12px;
+                                line-height: 16px;
+                                height: 24px;
+                                span{
+                                    color: var(--Colors-Use-Main-Primary);
+                                    svg{
+                                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                                    }
+                                }
+
+                            }
+                            .tag-total {
+                                padding: 4px 8px;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                border-radius: 4px;
+                                border: 1px solid var(--Colors-Use-Main-Border);
+                                background: var(--Colors-Use-Main-Bg);
+                                cursor: pointer;
+
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
+                                font-size: 12px;
+                                line-height: 16px;
+                                height: 24px;
+                                .total-style {
+                                    color: var(--Colors-Use-Main-Primary);
+                                }
+                                svg {
+                                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                                }
+                            }
+
+                            svg {
+                                width: 12px;
+                                height: 12px;
+                                cursor: pointer;
+                            }
+                        }
+                        .no-relationship-warning{
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                            color: var(--Colors-Use-Error-Primary);
+                            font-size: 11px;
+                            font-weight: 400;
+                            white-space: nowrap;
+                            span{
+                                svg{
+                                    width: 12px;
+                                    height: 12px;
+                                }
+                            }
+                        }
+
+                    }
                     .operate{
                         display: flex;
                         padding: 8px;
@@ -1105,15 +1195,92 @@
                         }
                     }
                 }
-                .content{
-                    background: var(--Colors-Use-Neutral-Bg);
-                    width: 100%;
-                    height: 100%;
-                    pre{
-                        max-height: calc(100% - 40px);
+                .second-node-content{
+                    display: flex;
+                    align-items: flex-start;
+                    flex: 1;
+                    align-self: stretch;                   
+                    .content{
+                        background: var(--Colors-Use-Neutral-Bg);
+                        width: 100%;
                         height: 100%;
+                        pre{
+                            max-height: calc(100% - 40px);
+                            height: 100%;
+                        }
+                    }
+                    .detail-box{
+                        display: flex;
+                        width: 30%;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        align-self: stretch;
+                        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+                        overflow: hidden;
+                        transition:
+                            width 0.2s ease,
+                            opacity 0.2s ease;
+                        &.hidden {
+                            width: 0px;
+                            height: 100%;
+                            transition:
+                                width 0.2s ease,
+                                opacity 0.2s ease;
+                            opacity: 0;
+                            pointer-events: none;
+                        }
+                        .header{
+                            display: flex;
+                            height: 32px;
+                            padding: 4px 8px;
+                            justify-content: space-between;
+                            align-items: center;
+                            align-self: stretch;
+                            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                            background: var(--Colors-Use-Neutral-Bg);
+                            span{
+                                cursor: pointer;
+                                svg:hover{
+                                    color: var(--Colors-Use-Main-Hover);
+                                }
+                                svg:focus{
+                                    color: var(--Colors-Use-Main-Focus);
+                                }
+                            }
+                        }
+                        .content{
+                            display: flex;
+                            padding: 12px;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 16px;
+                            flex: 1;
+                            align-self: stretch;
+                            .inner-box{
+                                display: flex;
+                                flex-direction: column;
+                                align-items: flex-start;
+                                gap: 4px;
+                                align-self: stretch;
+                                .title{
+                                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                                    font-size: 12px;
+                                    font-style: normal;
+                                    font-weight: 400;
+                                    line-height: 16px;
+                                }
+                                .name-detail{
+                                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                                    font-size: 14px;
+                                    font-style: normal;
+                                    font-weight: 500;
+                                    line-height: 20px;
+                                }
+                            }
+                        }
                     }
                 }
+
             }           
         }
     }
@@ -1646,179 +1813,181 @@
     :global{
         .ant-drawer-body{
             padding: 0 16px;
-            display: grid;
-            grid-template-columns: repeat(2, 50%);
         }
     }
-    .detail-left{
-        border-right: 1px solid var(--Colors-Use-Neutral-Border);
-        .detail-header{
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 24px 12px 12px 12px;
-            .header-buttons{
+    .detail-drawer-content{
+        display: grid;
+        grid-template-columns: repeat(2, 50%);
+        .detail-left{
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            .detail-header{
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                .caption{
-                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                    font-size: 12px;
-                    font-style: normal;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-                .number{
-                    color: var(--Colors-Use-Main-Primary);
-                    font-size: 12px;
-                    font-style: normal;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-            }
-        }
-        .detail-container{
-            padding: 12px 12px 16px 16px;
-            .related-knowledge-box{
-                overflow-y: scroll;
-                height: calc(100vh - 132px);
-                .related-box {
+                justify-content: space-between;
+                padding: 24px 12px 12px 12px;
+                .header-buttons{
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    margin-bottom: 16px;
-                    &:last-child{
-                        margin-bottom: 0px;
+                    .caption{
+                        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                        font-size: 12px;
+                        font-style: normal;
+                        font-weight: 400;
+                        line-height: 16px;
                     }
-                    .num-box {
+                    .number{
+                        color: var(--Colors-Use-Main-Primary);
+                        font-size: 12px;
+                        font-style: normal;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+            }
+            .detail-container{
+                padding: 12px 12px 16px 16px;
+                .related-knowledge-box{
+                    overflow-y: scroll;
+                    height: calc(100vh - 132px);
+                    .related-box {
                         display: flex;
-                        min-width: 32px;
-                        padding-top: 2px;
-                        flex-direction: column;
                         align-items: center;
-                        gap: 10px;
-                        align-self: stretch;
-                        .num-font{
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-start;
-                            background-color: var(--Colors-Use-Neutral-Border);
-                            border-radius: 12px;
-                            padding: 2px 6px;
-                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                            text-align: center;
-                            font-size: 11px;
-                            font-style: normal;
-                            font-weight: 400;
-                            line-height: 14px;
+                        gap: 8px;
+                        margin-bottom: 16px;
+                        &:last-child{
+                            margin-bottom: 0px;
                         }
-                    }
-                    .content{
-                        display: flex;
-                        gap: 4px;
-                        flex-direction: column;
-                        .title-box{
-                            color: var(--Colors-Use-Neutral-Text-1-Title);
-                            font-size: 14px;
-                            font-style: normal;
-                            font-weight: 400;
-                            line-height: 20px;
+                        .num-box {
                             display: flex;
+                            min-width: 32px;
+                            padding-top: 2px;
+                            flex-direction: column;
                             align-items: center;
-                            .title{
-                                margin-right: 8px;
+                            gap: 10px;
+                            align-self: stretch;
+                            .num-font{
+                                display: flex;
+                                flex-direction: column;
+                                align-items: flex-start;
+                                background-color: var(--Colors-Use-Neutral-Border);
+                                border-radius: 12px;
+                                padding: 2px 6px;
+                                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                                text-align: center;
+                                font-size: 11px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 14px;
                             }
                         }
-                        .description{
-                            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                            font-size: 12px;
-                            font-style: normal;
-                            font-weight: 400;
-                            line-height: 16px;
+                        .content{
+                            display: flex;
+                            gap: 4px;
+                            flex-direction: column;
+                            .title-box{
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 20px;
+                                display: flex;
+                                align-items: center;
+                                .title{
+                                    margin-right: 8px;
+                                }
+                            }
+                            .description{
+                                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                                font-size: 12px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 16px;
+                            }
+                        }
+
+                    }
+
+                }
+                .dnd-card{
+                    background: var(--Colors-Use-Basic-Background);
+                    border-radius: 8px;
+                    margin-bottom: 12px;
+                    padding: 12px 16px;
+                    position: relative;
+                    .dnd-delete-icon{
+                        position: absolute;
+                        right: -6px;
+                        top: 42px;
+                        svg{
+                            color: var(--Colors-Use-Error-Primary);
+                            &:hover{
+                                color: var(--Colors-Use-Error-Hover);
+                            }
+                            &:focus{
+                                color: var(--Colors-Use-Error-Focus);
+                            }
                         }
                     }
-
-                }
-
-            }
-            .dnd-card{
-                background: var(--Colors-Use-Basic-Background);
-                border-radius: 8px;
-                margin-bottom: 12px;
-                padding: 12px 16px;
-                position: relative;
-                .dnd-delete-icon{
-                    position: absolute;
-                    right: -6px;
-                    top: 42px;
-                    svg{
-                        color: var(--Colors-Use-Error-Primary);
-                        &:hover{
-                            color: var(--Colors-Use-Error-Hover);
-                        }
-                        &:focus{
-                            color: var(--Colors-Use-Error-Focus);
+                    .draggable-icon{
+                        position: absolute;
+                        left: -12px;
+                        top: 42px;
+                        svg{
+                            color: var(--Colors-Use-Neutral-Border);
                         }
                     }
                 }
-                .draggable-icon{
-                    position: absolute;
-                    left: -12px;
-                    top: 42px;
-                    svg{
-                        color: var(--Colors-Use-Neutral-Border);
-                    }
-                }
-            }
 
-        }       
-    }
-
-    .detail-right{
-        padding: 12px 0px 16px 12px;
-        .detail-header{
-            padding: 12px 0px 8px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            .title{
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
-                font-style: normal;
-                font-weight: 500;
-                line-height: 16px;
-            }
-            .in-depth-description{
-                white-space: nowrap;
-                margin-right: 4px;
-            }
-            .operate-inputNumber{
-                width: 80px;
-                height: 24px;
-            }
-            .header-buttons{
-                display: flex;
-                align-items: center;
-            }
-            .radio-buttons-label{
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                span{
-                    svg{
-                        width: 16px;
-                    }
-                }
-            }
-        }
-        .detail-diagram{
-            background-color: var(--Colors-Use-Neutral-Bg);
-            height: calc(100vh - 112px);
-            .content{
-                height: 100%;
-            }
+            }       
         }
 
+        .detail-right{
+            padding: 12px 0px 16px 12px;
+            .detail-header{
+                padding: 12px 0px 8px 0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                .title{
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 500;
+                    line-height: 16px;
+                }
+                .in-depth-description{
+                    white-space: nowrap;
+                    margin-right: 4px;
+                }
+                .operate-inputNumber{
+                    width: 80px;
+                    height: 24px;
+                }
+                .header-buttons{
+                    display: flex;
+                    align-items: center;
+                }
+                .radio-buttons-label{
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    span{
+                        svg{
+                            width: 16px;
+                        }
+                    }
+                }
+            }
+            .detail-diagram{
+                background-color: var(--Colors-Use-Neutral-Bg);
+                height: calc(100vh - 112px);
+                .content{
+                    height: 100%;
+                }
+            }
+
+        }
     }
 }
 
@@ -1826,135 +1995,136 @@
     :global{
         .ant-drawer-body{
             padding: 0 16px;
-            display: grid;
-            grid-template-columns: repeat(2, 50%);
         }
     }
-    .detail-left{
-        border-right: 1px solid var(--Colors-Use-Neutral-Border);
-        .detail-header{
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 24px 12px 12px 12px;
-            .header-buttons{
+    .detail-drawer-content{
+        display: grid;
+        grid-template-columns: repeat(2, 50%);
+        .detail-left{
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            .detail-header{
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                .caption{
-                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                    font-size: 12px;
-                    font-style: normal;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-                .number{
-                    color: var(--Colors-Use-Main-Primary);
-                    font-size: 12px;
-                    font-style: normal;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-            }
-        }
-        .detail-container{
-            padding: 12px 12px 16px 16px;
-            .related-knowledge-box{
-                overflow-y: scroll;
-                height: calc(100vh - 132px);
-                .related-box {
+                justify-content: space-between;
+                padding: 24px 12px 12px 12px;
+                .header-buttons{
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    margin-bottom: 16px;
-                    &:last-child{
-                        margin-bottom: 0px;
+                    .caption{
+                        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                        font-size: 12px;
+                        font-style: normal;
+                        font-weight: 400;
+                        line-height: 16px;
                     }
-                    .num-box {
+                    .number{
+                        color: var(--Colors-Use-Main-Primary);
+                        font-size: 12px;
+                        font-style: normal;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+            }
+            .detail-container{
+                padding: 12px 12px 16px 16px;
+                .related-knowledge-box{
+                    overflow-y: scroll;
+                    height: calc(100vh - 132px);
+                    .related-box {
                         display: flex;
-                        min-width: 32px;
-                        padding-top: 2px;
-                        flex-direction: column;
                         align-items: center;
-                        gap: 10px;
-                        align-self: stretch;
-                        .num-font{
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-start;
-                            background-color: var(--Colors-Use-Neutral-Border);
-                            border-radius: 12px;
-                            padding: 2px 6px;
-                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                            text-align: center;
-                            font-size: 11px;
-                            font-style: normal;
-                            font-weight: 400;
-                            line-height: 14px;
+                        gap: 8px;
+                        margin-bottom: 16px;
+                        &:last-child{
+                            margin-bottom: 0px;
                         }
-                    }
-                    .content{
-                        display: flex;
-                        gap: 4px;
-                        flex-direction: column;
-                        .title-box{
-                            color: var(--Colors-Use-Neutral-Text-1-Title);
-                            font-size: 14px;
-                            font-style: normal;
-                            font-weight: 400;
-                            line-height: 20px;
+                        .num-box {
                             display: flex;
+                            min-width: 32px;
+                            padding-top: 2px;
+                            flex-direction: column;
                             align-items: center;
-                            .title{
-                                margin-right: 8px;
+                            gap: 10px;
+                            align-self: stretch;
+                            .num-font{
+                                display: flex;
+                                flex-direction: column;
+                                align-items: flex-start;
+                                background-color: var(--Colors-Use-Neutral-Border);
+                                border-radius: 12px;
+                                padding: 2px 6px;
+                                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                                text-align: center;
+                                font-size: 11px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 14px;
                             }
                         }
-                        .description{
-                            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                            font-size: 12px;
-                            font-style: normal;
-                            font-weight: 400;
-                            line-height: 16px;
+                        .content{
+                            display: flex;
+                            gap: 4px;
+                            flex-direction: column;
+                            .title-box{
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 20px;
+                                display: flex;
+                                align-items: center;
+                                .title{
+                                    margin-right: 8px;
+                                }
+                            }
+                            .description{
+                                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                                font-size: 12px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 16px;
+                            }
                         }
+
                     }
 
                 }
-
-            }
-            .dnd-card{
-                background: var(--Colors-Use-Basic-Background);
-                border-radius: 8px;
-                // margin-bottom: 12px;
-                padding: 3px 16px;
-                position: relative;
-                .dnd-delete-icon{
-                    position: absolute;
-                    right: -6px;
-                    top: 10px;
-                    svg{
-                        color: var(--Colors-Use-Error-Primary);
-                        &:hover{
-                            color: var(--Colors-Use-Error-Hover);
+                .dnd-card{
+                    background: var(--Colors-Use-Basic-Background);
+                    border-radius: 8px;
+                    // margin-bottom: 12px;
+                    padding: 3px 16px;
+                    position: relative;
+                    .dnd-delete-icon{
+                        position: absolute;
+                        right: -6px;
+                        top: 10px;
+                        svg{
+                            color: var(--Colors-Use-Error-Primary);
+                            &:hover{
+                                color: var(--Colors-Use-Error-Hover);
+                            }
+                            &:focus{
+                                color: var(--Colors-Use-Error-Focus);
+                            }
                         }
-                        &:focus{
-                            color: var(--Colors-Use-Error-Focus);
+                    }
+                    .draggable-icon{
+                        position: absolute;
+                        left: -6px;
+                        top: 10px;
+                        svg{
+                            color: var(--Colors-Use-Neutral-Border);
+                            width: 16px;
+                            height: 16px;
                         }
                     }
                 }
-                .draggable-icon{
-                    position: absolute;
-                    left: -6px;
-                    top: 10px;
-                    svg{
-                        color: var(--Colors-Use-Neutral-Border);
-                        width: 16px;
-                        height: 16px;
-                    }
-                }
-            }
 
-        }       
-    }
+            }       
+        }
 
     .detail-right{
         padding: 12px 0px 16px 12px;
@@ -1965,7 +2135,7 @@
             justify-content: space-between;
             .title{
                 color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
+                font-size: 14px;
                 font-style: normal;
                 font-weight: 500;
                 line-height: 16px;
@@ -2002,6 +2172,8 @@
         }
 
     }
+    }
+
 }
 
 .dropdownMene-data-children{
@@ -2235,6 +2407,18 @@
         }
         .ant-popover-arrow {
             left: 6px;
+        }
+    }
+}
+.plugin-execute-detail-drawer{
+    :global {
+        .ant-drawer-body {
+            display: flex;
+        }
+        .ant-drawer-footer{
+            border-color: var(--Colors-Use-Neutral-Border);
+            display: flex;
+            justify-content: flex-end;
         }
     }
 }

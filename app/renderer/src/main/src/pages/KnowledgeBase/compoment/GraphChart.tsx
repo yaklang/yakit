@@ -1,19 +1,40 @@
 import React, {FC, useRef, useState, useMemo, memo} from "react"
 import ReactECharts from "echarts-for-react"
-import * as echarts from "echarts"
+import type {EChartsOption, ECElementEvent, ECharts} from "echarts"
 import {GraphData} from "../utils"
 import {getCssVar} from "@/utils/tool"
 import {useTheme} from "@/hook/useTheme"
 
 interface GraphChartProps {
     graphData: GraphData
-    onNodeClick?: (id: string | null) => void
+    onNodeClick?: (id: GraphNode | null) => void
+}
+
+/** 节点类型（根据你的 graphData.nodes 结构推断） */
+interface GraphNode {
+    id: string
+    name: string
+    value?: number
+    x?: number
+    y?: number
+    itemStyle?: {
+        borderColor?: string
+        color?: string
+    }
+}
+
+/** 链接类型（graphData.links） */
+interface GraphLink {
+    source: string
+    target: string
 }
 
 const GraphChart: FC<GraphChartProps> = ({graphData, onNodeClick}) => {
     const {theme} = useTheme()
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-    const chartRef = useRef<any>(null)
+
+    /** ref 类型补齐 */
+    const chartRef = useRef<ReactECharts | null>(null)
 
     const backgroundColor = getCssVar("--Colors-Use-Basic-Background")
     const textColor = getCssVar("--Colors-Use-Neutral-Text-3-Secondary")
@@ -23,46 +44,70 @@ const GraphChart: FC<GraphChartProps> = ({graphData, onNodeClick}) => {
     const tooltipBg = getCssVar("--Colors-Use-Neutral-Bg-Hover")
     const tooltipText = getCssVar("--Colors-Use-Neutral-Text-1-Title")
 
-    const onEvents = {
-        click: (params: any) => {
-            const chart = chartRef.current?.getEchartsInstance()
-            if (!chart) return
+    /** ==============================
+     *     onEvents — 类型完全补齐
+     * ============================== */
+    const onEvents = useMemo(() => {
+        if (!onNodeClick) {
+            return {} as Record<string, never>
+        }
 
-            if (params.data) {
-                const clickedId = params.data.id
-                const newSelectedId = selectedNodeId === clickedId ? null : clickedId
+        return {
+            click: (params: ECElementEvent) => {
+                const chart = chartRef.current?.getEchartsInstance()
+                if (!chart) return
 
-                setSelectedNodeId(newSelectedId)
-                onNodeClick?.(newSelectedId)
+                const data = params.data as GraphNode | undefined
 
-                const updatedData = graphData.nodes.map((node: any) => ({
-                    ...node,
-                    itemStyle: {
-                        borderColor: borderColor,
-                        color: node.id === clickedId ? selectedBg : backgroundColor
-                    }
-                }))
+                if (data && data.id) {
+                    const clickedId = data.id
+                    const newSelectedItem = selectedNodeId === clickedId ? null : data
 
-                chart.setOption({series: [{data: updatedData}]})
-            } else {
-                setSelectedNodeId(null)
-                onNodeClick?.(null)
+                    setSelectedNodeId(newSelectedItem?.id ?? null)
+                    onNodeClick(newSelectedItem)
 
-                const resetData = graphData.nodes.map((node: any) => ({
-                    ...node,
-                    itemStyle: {
-                        borderColor: borderColor,
-                        color: backgroundColor
-                    }
-                }))
+                    const updatedData: GraphNode[] = graphData.nodes.map((node) => ({
+                        ...node,
+                        itemStyle: {
+                            borderColor,
+                            color: node.id === clickedId ? selectedBg : backgroundColor
+                        }
+                    }))
 
-                chart.setOption({series: [{data: resetData}]})
+                    chart.setOption({series: [{data: updatedData}]})
+                } else {
+                    setSelectedNodeId(null)
+                    onNodeClick(null)
+
+                    const resetData: GraphNode[] = graphData.nodes.map((node) => ({
+                        ...node,
+                        itemStyle: {
+                            borderColor,
+                            color: backgroundColor
+                        }
+                    }))
+
+                    chart.setOption({series: [{data: resetData}]})
+                }
             }
         }
-    }
+    }, [onNodeClick, selectedNodeId, graphData])
 
-    const option = useMemo<echarts.EChartsOption>(
-        () => ({
+    /** ==============================
+     *     Option — 类型完全补齐
+     * ============================== */
+    const option = useMemo<EChartsOption>(() => {
+        const nodeData: GraphNode[] = graphData.nodes.map((node) => ({
+            ...node,
+            itemStyle: {
+                borderColor,
+                color: node.id === selectedNodeId ? selectedBg : backgroundColor
+            }
+        }))
+
+        const linkData: GraphLink[] = graphData.links
+
+        return {
             tooltip: {},
             animation: true,
             series: [
@@ -70,14 +115,8 @@ const GraphChart: FC<GraphChartProps> = ({graphData, onNodeClick}) => {
                     name: "Knowledge Graph",
                     type: "graph",
                     layout: "none",
-                    data: graphData.nodes.map((node: any) => ({
-                        ...node,
-                        itemStyle: {
-                            borderColor: borderColor,
-                            color: node.id === selectedNodeId ? selectedBg : backgroundColor
-                        }
-                    })),
-                    links: graphData.links,
+                    data: nodeData,
+                    links: linkData,
                     roam: true,
                     tooltip: {
                         backgroundColor: tooltipBg,
@@ -85,48 +124,6 @@ const GraphChart: FC<GraphChartProps> = ({graphData, onNodeClick}) => {
                         textStyle: {
                             color: tooltipText,
                             fontWeight: 400
-                        },
-                        formatter: (params: any) => {
-                            const data = params.data || {}
-                            const name = data.name ?? ""
-                            const value = data.value ?? ""
-
-                            return `
-                                <div style="display:flex; flex-direction:column; gap:6px;">
-
-                                    <!-- 行内容 -->
-                                    <div style="display:flex; align-items:center; gap:6px;">
-
-                                        <!-- 小圆点 -->
-                                        <span style="
-                                            width:8px;
-                                            height:8px;
-                                            display:inline-block;
-                                            border-radius:50%;
-                                            background:${getCssVar("--Colors-Use-Main-Primary")};
-                                        "></span>
-
-                                        <!-- 名称 -->
-                                        <span style="color:${getCssVar(
-                                            "--Colors-Use-Neutral-Text-1-Title"
-                                        )}; font-size:13px;">
-                                            ${name}
-                                        </span>
-
-                                        <!-- 数字 -->
-                                        <span style="
-                                            margin-left:auto;
-                                            font-weight:600;
-                                            font-size:13px;
-                                            color:${getCssVar("--Colors-Use-Neutral-Text-1-Title")};
-                                        ">
-                                            ${value}
-                                        </span>
-
-                                    </div>
-
-                                </div>
-                            `
                         }
                     },
                     label: {
@@ -139,7 +136,6 @@ const GraphChart: FC<GraphChartProps> = ({graphData, onNodeClick}) => {
                         repulsion: 200,
                         edgeLength: 100
                     },
-                    edgeLabel: {show: false},
                     labelLayout: {hideOverlap: true},
                     scaleLimit: {min: 0.4, max: 2},
                     edgeSymbol: ["none", "arrow"],
@@ -152,9 +148,8 @@ const GraphChart: FC<GraphChartProps> = ({graphData, onNodeClick}) => {
                     focusNodeAdjacency: true
                 }
             ]
-        }),
-        [graphData, selectedNodeId, theme]
-    )
+        }
+    }, [graphData, selectedNodeId, theme])
 
     return (
         <ReactECharts
