@@ -26,6 +26,10 @@ export interface AISendSyncMessageParams {
     SyncJsonInput?: AIInputEvent["SyncJsonInput"]
     params: MakeOptional<AIStartParams, "UserQuery">
 }
+export interface AISendConfigHotpatchParams {
+    hotpatchType: AIInputEvent["HotpatchType"]
+    params: MakeOptional<AIStartParams, "UserQuery">
+}
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
     handleSendCasual: (params: AIChatIPCSendParams) => void
@@ -35,6 +39,7 @@ export interface ChatIPCContextDispatcher {
     handleSend: (params: AIChatIPCSendParams) => void
     setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
     handleSendSyncMessage: (params: AISendSyncMessageParams) => void
+    handleSendConfigHotpatch: (params: AISendConfigHotpatchParams) => void
 }
 
 export interface ChatIPCContextValue {
@@ -65,6 +70,7 @@ export default createContext<ChatIPCContextValue>({
         handleStart: () => {},
         handleStop: () => {},
         setTimelineMessage: () => {},
-        handleSendSyncMessage: () => {}
+        handleSendSyncMessage: () => {},
+        handleSendConfigHotpatch: () => {}
     }
 })

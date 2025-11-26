@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {AIModelItemProps, AIModelSelectProps} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
@@ -15,19 +15,28 @@ import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
-import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {AIInputEventHotPatchTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {isEqual} from "lodash"
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     //#region AI model
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
     const {chatIPCData} = useChatIPCStore()
-    const {handleSendSyncMessage} = useChatIPCDispatcher()
+    const {handleSendConfigHotpatch} = useChatIPCDispatcher()
+
+    const modelValue = useCreation(() => {
+        return setting?.AIService || AIAgentSettingDefault.AIService
+    }, [setting?.AIService])
+
     const [aiModelOptions, setAIModelOptions] = useState<GetAIModelListResponse>({
         onlineModels: [],
         localModels: []
     })
     const [open, setOpen] = useState<boolean>(false)
+    const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
+
     useEffect(() => {
         getAIModelListOption()
     }, [])
@@ -57,19 +66,16 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
     const onSetOpen = useMemoizedFn((v: boolean) => {
         setOpen(v)
-        if (!v && chatIPCData.execute) {
-            handleSendSyncMessage({
-                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_UPDATE_CONFIG,
+        if (!v && chatIPCData.execute && !isEqual(selectAIServiceRef.current, modelValue)) {
+            handleSendConfigHotpatch({
+                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
                 params: {
                     AIService: modelValue
                 }
             })
         }
+        if (v) selectAIServiceRef.current = modelValue
     })
-
-    const modelValue = useCreation(() => {
-        return setting?.AIService || AIAgentSettingDefault.AIService
-    }, [setting?.AIService])
 
     const isHaveData = useCreation(() => {
         return aiModelOptions.onlineModels.length > 0 || aiModelOptions.localModels.length > 0
@@ -80,9 +86,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         <AIChatSelect
             value={modelValue}
             onSelect={onSelectModel}
-            dropdownRender={(menu, setOpen) => {
+            dropdownRender={(menu) => {
                 return (
-                    <div className={styles["drop-select-wrapper"]} onMouseLeave={() => setOpen(false)}>
+                    <div className={styles["drop-select-wrapper"]}>
                         <div className={styles["select-title"]}>AI 模型选择</div>
                         {menu}
                     </div>

@@ -102,7 +102,7 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
             .invoke("QueryHTTPFlows", param)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcGetAIForge 查询Forge详情失败:" + e)
+                if (!hiddenError) yakitNotify("error", "grpcQueryHTTPFlows 查询HTTP流失败:" + e)
                 reject(e)
             })
     })
@@ -123,7 +123,6 @@ export const grpcGetChangeQuestionPlugin: APINoRequestFunc<YakScript | null> = (
         ipcRenderer
             .invoke("QueryYakScript", query)
             .then((item: QueryYakScriptsResponse) => {
-                console.log("item", item)
                 if (item.Data?.length > 0) {
                     resolve(item.Data[0])
                 } else {
@@ -131,7 +130,7 @@ export const grpcGetChangeQuestionPlugin: APINoRequestFunc<YakScript | null> = (
                 }
             })
             .catch((e: any) => {
-                if (!hiddenError) yakitNotify("error", "grpcGetAIForge 查询Forge详情失败:" + e)
+                if (!hiddenError) yakitNotify("error", "grpcGetChangeQuestionPlugin 查询失败:" + e)
                 reject(e)
             })
     })

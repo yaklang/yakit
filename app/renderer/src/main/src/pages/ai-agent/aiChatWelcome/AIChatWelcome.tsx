@@ -340,7 +340,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                 <div className={styles["suggestion-tips-title"]}>
                                     <span>你可能想问:</span>
                                     {loading ? (
-                                        <YakitSpin size='small' />
+                                        <YakitSpin size='small' wrapperClassName={styles["loading-spinner"]} />
                                     ) : (
                                         questionList.length > 2 && (
                                             <YakitButton

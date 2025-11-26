@@ -15,13 +15,14 @@ import {randomString} from "@/utils/randomUtil"
 import {formatAIAgentSetting} from "../utils"
 import ChatIPCContent, {
     AIChatIPCSendParams,
+    AISendConfigHotpatchParams,
     AISendSyncMessageParams,
     ChatIPCContextDispatcher,
     ChatIPCContextStore
 } from "../useContext/ChatIPCContent/ChatIPCContent"
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
+import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon} from "@/assets/icon/outline"
 import {ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
@@ -255,6 +256,21 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
         events.onSend({token: activeID, type: "", params: info})
     })
+
+    /**发送 IsConfigHotpatch 消息 */
+    const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
+        if (!activeID) return
+        const {hotpatchType, params} = data
+        const info: AIInputEvent = {
+            IsConfigHotpatch: true,
+            HotpatchType: hotpatchType,
+            Params: {
+                ...params
+            }
+        }
+        events.onSend({token: activeID, type: "", params: info})
+    })
+
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
             events.onClose(activeID)
@@ -295,7 +311,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         onStop()
                         handleSaveChatInfo()
                         events.onReset()
-                        setMode("welcome")
+                        setTimeout(() => {
+                            setMode("welcome")
+                        }, 100)
                         break
                     // 替换当前使用的 forge 模板
                     case "open-forge-form":
@@ -311,12 +329,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
                     default:
                         break
-                }
-                // 新开聊天对话窗
-                if (data.type === "new-chat") {
-                }
-                // 替换当前使用的 forge 模板
-                if (data.type === "open-forge-form") {
                 }
             } catch (error) {}
         }
@@ -557,7 +569,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStop: onStop,
             handleSend,
             setTimelineMessage,
-            handleSendSyncMessage
+            handleSendSyncMessage,
+            handleSendConfigHotpatch
         }
     }, [events])
     useEffect(() => {
@@ -657,7 +670,9 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
-                    <RoundedStopButton onClick={onStopTask} size='large' />
+                    <YakitButton type='outline2' icon={<OutlineExitIcon />} onClick={onStopTask}>
+                        取消当前任务
+                    </YakitButton>
                     {node}
                 </div>
             </div>

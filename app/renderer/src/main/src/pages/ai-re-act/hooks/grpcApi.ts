@@ -5,7 +5,7 @@ import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
-import {AIInputEventSyncTypeEnum} from "./defaultConstant"
+import {AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum} from "./defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -20,7 +20,7 @@ export interface AIStartParams {
     McpServers?: McpConfig[]
 
     /** 问题 */
-    UserQuery: string
+    UserQuery?: string
     /** 是否允许使用文件系统工具权限 @default true */
     EnableSystemFileSystemOperator?: boolean
     /** 是否使用系统默认ai配置 @default true */
@@ -102,6 +102,9 @@ export interface AIStartParams {
 export interface AIInputEvent {
     IsStart?: boolean
     Params?: AIStartParams // 提问问题相关
+
+    IsConfigHotpatch?: boolean
+    HotpatchType?: `${AIInputEventHotPatchTypeEnum}`
 
     IsInteractiveMessage?: boolean // 是否为交互消息(review)
     InteractiveId?: string // id

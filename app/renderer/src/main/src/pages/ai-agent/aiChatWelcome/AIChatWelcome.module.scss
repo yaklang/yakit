@@ -103,6 +103,9 @@
             &:first-child span {
                 flex-shrink: 0;
             }
+            .loading-spinner {
+                height: 14px;
+            }
         }
         .suggestion-tips-list {
             @extend %display-column-center;

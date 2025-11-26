@@ -6,14 +6,21 @@ import {AIAgentChatStream, AIChatLeftSide} from "@/pages/ai-agent/chatTemplate/A
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
-import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
+import {ChevrondownButton} from "../aiReActChat/AIReActComponent"
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
-import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlinePositionIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowscollapseIcon,
+    OutlineArrowsexpandIcon,
+    OutlineExitIcon,
+    OutlinePositionIcon
+} from "@/assets/icon/outline"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
+import {AIChatQSDataTypeEnum} from "../hooks/aiRender"
+import {yakitNotify} from "@/utils/notification"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const [leftExpand, setLeftExpand] = useState(true)
@@ -66,20 +73,23 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     })
     const onStopTask = useMemoizedFn(() => {
         if (questionQueue.data.length > 0) {
-            handleSendSyncMessage({
-                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_JUMP_QUEUE,
-                SyncJsonInput: JSON.stringify({task_id: questionQueue.data[0].id}),
-                params: {}
-            })
-            handleSendSyncMessage({
-                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-                params: {}
-            })
+            yakitNotify("info", "等待后端...")
+            /**TODO - 等待后端 */
+            // handleSendSyncMessage({
+            //     syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_CURRENT_TASK,
+            //     // SyncJsonInput: JSON.stringify({task_id: questionQueue.data[0].id}),
+            //     params: {}
+            // })
+            // handleSendSyncMessage({
+            //     syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+            //     params: {}
+            // })
         }
     })
     const showStop = useCreation(() => {
-        return chatIPCData.execute && questionQueue?.total > 0
-    }, [streams.length, questionQueue])
+        if (streams.length === 0) return false
+        return chatIPCData.execute && streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
+    }, [streams.length, chatIPCData.execute])
     return (
         <>
             <div className={styles["tab-content"]}>
@@ -95,7 +105,19 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             ) : (
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
-                        {showStop && <RoundedStopButton onClick={onStopTask} size='large' />}
+                        {showStop && (
+                            <YakitButton
+                                type='outline1'
+                                icon={<OutlineExitIcon />}
+                                onClick={onStopTask}
+                                className={styles["task-button"]}
+                                radius='28px'
+                                size='large'
+                                colors='danger'
+                            >
+                                取消当前任务
+                            </YakitButton>
+                        )}
                         <YakitButton
                             type='outline2'
                             icon={<OutlinePositionIcon />}

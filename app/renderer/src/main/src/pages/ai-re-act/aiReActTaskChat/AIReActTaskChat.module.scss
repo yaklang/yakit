@@ -89,4 +89,11 @@
             }
         }
     }
+    .task-button {
+        border-color: var(--Colors-Use-Error-Border);
+        background: var(--Colors-Use-Basic-Background);
+        &:hover {
+            border-color: var(--Colors-Use-Error-Primary);
+        }
+    }
 }

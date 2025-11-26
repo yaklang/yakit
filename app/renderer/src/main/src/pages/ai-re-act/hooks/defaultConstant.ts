@@ -102,7 +102,7 @@ export enum AIInputEventSyncTypeEnum {
     /** 查看上下文 */
     SYNC_TYPE_TIMELINE = "timeline",
     SYNC_TYPE_KNOWLEDGE = "enhance_knowledge",
-    /** 更新AI配置 */
+    /**@deprecated 更新AI配置 更改为hotpatchType*/
     SYNC_TYPE_UPDATE_CONFIG = "update_config",
     SYNC_TYPE_MEMORY_CONTEXT = "memory_sync",
     SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_task",
@@ -112,4 +112,11 @@ export enum AIInputEventSyncTypeEnum {
     SYNC_TYPE_REACT_REMOVE_TASK = "react_remove_task",
     /** 清空队列 */
     SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task"
+}
+
+export enum AIInputEventHotPatchTypeEnum {
+    HotPatchType_AllowRequireForUserInteract = "AllowRequireForUserInteract",
+    HotPatchType_AgreePolicy = "AgreePolicy",
+    HotPatchType_AIService = "AIService",
+    HotPatchType_RiskControlScore = "RiskControlScore"
 }

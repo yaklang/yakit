@@ -14,17 +14,22 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {AIStartParams} from "../hooks/grpcApi"
-import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
+import {AIInputEventHotPatchTypeEnum} from "../hooks/defaultConstant"
+import isEqual from "lodash/isEqual"
 
 const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props) => {
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
 
     const {chatIPCData} = useChatIPCStore()
-    const {handleSendSyncMessage} = useChatIPCDispatcher()
+    const {handleSendConfigHotpatch} = useChatIPCDispatcher()
 
     const [visible, setVisible] = useState<boolean>(false)
     const [open, setOpen] = useState<boolean>(false)
+    const [selectAIReviewRiskControlScore, setAIReviewRiskControlScore] =
+        useState<AIStartParams["AIReviewRiskControlScore"]>()
+
+    const selectReviewPolicyRef = useRef<AIStartParams["ReviewPolicy"]>()
 
     const modelValue = useCreation(() => {
         return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
@@ -38,23 +43,34 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
         setSetting && setSetting((old) => ({...old, ReviewPolicy: value}))
     })
 
-    const onSetAIReviewRiskControlScore = useMemoizedFn((value: number) => {
-        setSetting && setSetting((old) => ({...old, AIReviewRiskControlScore: value}))
+    const onSetAIReviewRiskControlScore = useMemoizedFn((value?: number) => {
+        setSetting && setSetting((old) => ({...old, AIReviewRiskControlScore: value || 0}))
     })
 
-    const onVisibleChange = useMemoizedFn(() => {
-        setVisible((v) => !v)
+    const onVisibleChange = useMemoizedFn((v: boolean) => {
+        setVisible(v)
+        if (!v && chatIPCData.execute && !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)) {
+            handleSendConfigHotpatch({
+                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
+                params: {
+                    AIReviewRiskControlScore: selectAIReviewRiskControlScore
+                }
+            })
+            onSetAIReviewRiskControlScore(selectAIReviewRiskControlScore)
+        }
+        if (v) setAIReviewRiskControlScore(aiReviewRiskControlScore)
     })
     const onSetOpen = useMemoizedFn((v: boolean) => {
         setOpen(v)
-        if (!v && chatIPCData.execute) {
-            handleSendSyncMessage({
-                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_UPDATE_CONFIG,
+        if (!v && chatIPCData.execute && !isEqual(selectReviewPolicyRef.current, modelValue)) {
+            handleSendConfigHotpatch({
+                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
                 params: {
                     ReviewPolicy: modelValue
                 }
             })
         }
+        if (v) selectReviewPolicyRef.current = modelValue
     })
     return (
         <>
@@ -89,7 +105,7 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
                     >
                         <div
                             className={classNames(styles["select-option-wrapper"], {
-                                [styles["select-option-active-wrapper"]]: item.value === modelValue
+                                [styles["select-option-active-wrapper"]]: item.value === selectReviewPolicyRef.current
                             })}
                         >
                             <div className={styles["text"]}>{item.label}</div>
@@ -103,8 +119,8 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
                     content={
                         <div className={styles["popover-wrapper"]}>
                             <FormItemSlider
-                                value={aiReviewRiskControlScore}
-                                onChange={onSetAIReviewRiskControlScore}
+                                value={selectAIReviewRiskControlScore}
+                                onChange={setAIReviewRiskControlScore}
                                 min={0}
                                 max={1}
                                 step={0.01}
@@ -119,7 +135,9 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
                         type='text2'
                         isHover={visible}
                         icon={<OutlineSirenIcon />}
-                        disabled={chatIPCData.execute}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
                     />
                 </YakitPopover>
             )}
