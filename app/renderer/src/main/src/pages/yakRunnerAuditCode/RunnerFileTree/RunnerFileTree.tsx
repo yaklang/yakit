@@ -626,8 +626,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             </YakitDrawer>
 
             <AfreshAuditModal
-                afreshName={afreshName}
-                setAfreshName={setAfreshName}
+                nameOrConfig={afreshName}
+                setNameOrConfig={setAfreshName}
                 onSuccee={() => {
                     emiter.emit("onCodeAuditRefreshTree")
                 }}

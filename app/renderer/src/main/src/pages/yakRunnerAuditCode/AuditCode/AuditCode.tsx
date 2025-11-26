@@ -355,6 +355,16 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     const wrapper = useRef<HTMLDivElement>(null)
     const size = useSize(wrapper)
 
+    // PS: 之前的逻辑是根据参数在此处打开对应文件,现改为右边直接根据参数打开对应文件详情,左侧树节点只做高亮处理
+    useEffect(() => {
+        if (pageInfo) {
+            const {Path, Variable, Value} = pageInfo
+            if (Variable && Value) {
+                setFoucsedKey(`${Path}${Variable}${Value}`)
+            }
+        }
+    }, [pageInfo])
+
     const handleSelect = useMemoizedFn((node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (onlyJump) {
             onJump(node)
@@ -2039,7 +2049,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 
 // 公共封装组件用于(重新)编译
 export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
-    const {afreshName, setAfreshName, onSuccee, warrpId, type = "afresh_compile", JSONStringConfig = ""} = props
+    const {nameOrConfig, setNameOrConfig, onSuccee, warrpId, type = "afresh_compile"} = props
     const tokenRef = useRef<string>(randomString(40))
     /** 是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
@@ -2069,10 +2079,10 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
         Speed: "0"
     })
     const logInfoRef = useRef<StreamResult.Log[]>([])
-
+    
     useEffect(() => {
         // 初次打开时带参执行
-        if (afreshName) {
+        if (nameOrConfig) {
             const requestParams: DebugPluginRequest = {
                 Code: "",
                 PluginType: "yak",
@@ -2084,13 +2094,13 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
             if (type === "afresh_compile") {
                 requestParams.ExecParams.push({
                     Key: "programName",
-                    Value: afreshName
+                    Value: nameOrConfig
                 })
             }
             if (type === "compile") {
                 requestParams.ExecParams.push({
                     Key: "config",
-                    Value: JSONStringConfig
+                    Value: nameOrConfig
                 })
             }
             debugPluginStreamEvent.reset()
@@ -2100,13 +2110,13 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
                 debugPluginStreamEvent.start()
             })
         }
-    }, [afreshName])
+    }, [nameOrConfig])
 
     const onCancelAudit = () => {
         logInfoRef.current = []
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.reset()
-        setAfreshName(undefined)
+        setNameOrConfig(undefined)
     }
 
     useEffect(() => {
@@ -2132,7 +2142,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
             <YakitModal
                 centered
                 getContainer={warrpId || document.body}
-                visible={!!afreshName}
+                visible={!!nameOrConfig}
                 title={null}
                 footer={null}
                 width={520}
@@ -2783,9 +2793,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             </div>
 
             <AfreshAuditModal
-                afreshName={compileName}
-                JSONStringConfig={JSONStringConfig}
-                setAfreshName={setCompileName}
+                nameOrConfig={JSONStringConfig}
+                setNameOrConfig={setCompileName}
                 onSuccee={() => update(true)}
                 warrpId={warrpId || document.getElementById("audit-history-table")}
                 type='compile'

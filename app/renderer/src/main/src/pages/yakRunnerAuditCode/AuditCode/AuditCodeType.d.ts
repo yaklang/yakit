@@ -156,15 +156,14 @@ export interface AuditModalFormModalProps {
 }
 
 export interface AfreshAuditModalProps {
-    afreshName?: string
-    setAfreshName: (v?: string) => void
+    // 名称或配置
+    nameOrConfig?: string
+    setNameOrConfig: (v?: string) => void
     onSuccee: () => void
     // 绑定容器
     warrpId?: HTMLElement | null
     // 区分重新编译和全新编译
     type?: "compile" | "afresh_compile"
-    // 全新编译时所需的配置项
-    JSONStringConfig?: string
 }
 
 export interface SSAProjectFilter {

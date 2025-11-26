@@ -779,8 +779,8 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
             </div>
 
             <AfreshAuditModal
-                afreshName={afreshName}
-                setAfreshName={setAfreshName}
+                nameOrConfig={afreshName}
+                setNameOrConfig={setAfreshName}
                 onSuccee={() => update(1)}
                 warrpId={document.getElementById("yakrunner-scan-history")}
             />

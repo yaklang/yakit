@@ -107,6 +107,7 @@ import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHistory"
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {formatTimestamp} from "@/utils/timeUtil"
+import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -483,16 +484,17 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 <div className={styles["header-type-wrapper"]}>
                     <span className={styles["header-text"]}>扫描规则</span>
                 </div>
-                <div className={styles["header-filter-search"]}>
-                    <YakitInput.Search
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        placeholder='请输入关键字搜索'
-                        onSearch={onSearch}
-                        onPressEnter={onPressEnter}
-                        size='large'
-                    />
-                </div>
+                {inViewport && (
+                    <div className={styles["header-filter-search"]}>
+                        <YakitInput.Search
+                            value={keywords}
+                            onChange={(e) => setKeywords(e.target.value)}
+                            placeholder='请输入关键字搜索'
+                            onSearch={onSearch}
+                            onPressEnter={onPressEnter}
+                        />
+                    </div>
+                )}
             </div>
             <div
                 className={classNames(styles["code-scan-group-wrapper"])}
@@ -1009,7 +1011,9 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         codeScanExecuteContentRef.current?.onStopAuditExecute()
     })
 
-    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: number; language: string}[]>([])
+    const [auditCodeList, setAuditCodeList] = useState<
+        {label: string; value: number; Language: string; JSONStringConfig: string}[]
+    >([])
     const [selectProjectId, setSelectProjectId] = useState<number[]>([])
     const getAduitList = useMemoizedFn(async () => {
         try {
@@ -1027,11 +1031,11 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     if (item.Data.length > 0) {
                         let projectId: number[] = []
                         const list = item.Data.map((item) => {
-                            const {ProjectName, ID, Language} = item
+                            const {ProjectName, ID, Language, JSONStringConfig} = item
                             if (pageInfo.projectId === ID) {
                                 projectId.push(ID)
                             }
-                            return {label: ProjectName, value: ID, language: Language}
+                            return {label: ProjectName, value: ID, Language, JSONStringConfig}
                         })
                         setAuditCodeList(list)
                         setSelectProjectId(projectId)
@@ -1724,13 +1728,33 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             }
         }, [])
 
+        const [JSONStringConfig, setJSONStringConfig] = useState<string>()
+        const SyntaxFlowScanParamsRef = useRef<SyntaxFlowScanRequest>()
+        const onSyntaxFlowScan = useMemoizedFn(async () => {
+            if (!SyntaxFlowScanParamsRef.current) {
+                failed("获取扫描参数失败，请重试")
+                return
+            }
+            apiSyntaxFlowScan(SyntaxFlowScanParamsRef.current, token).then(() => {
+                pageInfoCacheRef.current = {
+                    ...pageInfo,
+                    projectId: SyntaxFlowScanParamsRef.current?.SSAProjectId,
+                    historyName: SyntaxFlowScanParamsRef.current?.ProgramName
+                }
+                setIsExpand(false)
+                setExecuteStatus("process")
+                resetStreamInfo()
+                if (setHidden) setHidden(true)
+            })
+        })
+
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
             if ((pageInfo.selectTotal || 0) === 0) {
                 warn("请选择扫描规则")
                 return
             }
-            const {project, history = []} = value
+            const {project, history} = value
             if (!project) {
                 warn("请输入项目名称")
                 return
@@ -1748,7 +1772,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 ...extraParamsValue,
                 ControlMode: "start",
                 SSAProjectId: project,
-                ProgramName: history,
+                ProgramName: history === "recompileAndScan" ? [] : [history],
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -1760,17 +1784,20 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     FilterLibRuleKind: filterLibRuleKind
                 }
             }
-            apiSyntaxFlowScan(params, token).then(() => {
-                pageInfoCacheRef.current = {
-                    ...pageInfo,
-                    projectId: project,
-                    historyName: history
+            SyntaxFlowScanParamsRef.current = params
+            // 先执行编译再扫描
+            if (history === "recompileAndScan") {
+                const JSONStringConfig = auditCodeList.find((item) => item.value === project)?.JSONStringConfig
+                if (!JSONStringConfig) {
+                    failed("未找到对应项目编译配置，请重试")
+                    return
                 }
-                setIsExpand(false)
-                setExecuteStatus("process")
-                resetStreamInfo()
-                if (setHidden) setHidden(true)
-            })
+                setJSONStringConfig(JSONStringConfig)
+            }
+            // 直接扫描
+            else {
+                onSyntaxFlowScan()
+            }
         })
 
         /**取消执行 */
@@ -1918,14 +1945,16 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 Pagination: {...genDefaultPagination(500), OrderBy: "created_at"}
             }
             apiQuerySSAPrograms(finalParams).then((res) => {
-                setCompileHistoryList(
-                    res.Data.map((item) => {
-                        return {
-                            label: formatTimestamp(item.UpdateAt),
-                            value: item.Name
-                        }
-                    })
-                )
+                const newCompileHistoryList = res.Data.map((item) => {
+                    return {
+                        label: formatTimestamp(item.UpdateAt),
+                        value: item.Name
+                    }
+                })
+                setCompileHistoryList([
+                    {label: "编译并扫描最新代码", value: "recompileAndScan"},
+                    ...newCompileHistoryList
+                ])
             })
         })
 
@@ -2010,7 +2039,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     onChange={async (item: number) => {
                                         let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
 
-                                        let language = auditCodeList.find((itemIn) => itemIn.value === item)?.language
+                                        let language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
                                         if (language) {
                                             selectGroup.push(language)
                                             selectGroup.push("general")
@@ -2031,7 +2060,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
                             <Form.Item label='编译历史' name='history'>
                                 <YakitSelect
-                                    mode='multiple'
                                     allowClear
                                     showSearch
                                     placeholder='请选择编译历史'
@@ -2151,6 +2179,14 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         </YakitDrawer>
                     )}
                 </React.Suspense>
+
+                <AfreshAuditModal
+                    nameOrConfig={JSONStringConfig}
+                    setNameOrConfig={setJSONStringConfig}
+                    onSuccee={onSyntaxFlowScan}
+                    warrpId={document.getElementById(`yakrunner-code-scan-${pageId}`)}
+                    type='compile'
+                />
             </>
         )
     })

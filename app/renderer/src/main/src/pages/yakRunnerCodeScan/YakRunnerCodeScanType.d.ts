@@ -85,7 +85,7 @@ export interface CodeScaMainExecuteContentProps {
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     // 项目名称列表
-    auditCodeList: {label: string; value: number; language: string}[]
+    auditCodeList: {label: string; value: number; Language: string; JSONStringConfig: string}[]
     getAduitList: () => void
     pageInfo: CodeScanPageInfoProps
     executeType: "new" | "old"
