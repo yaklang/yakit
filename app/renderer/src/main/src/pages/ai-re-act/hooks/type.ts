@@ -12,7 +12,12 @@ interface UseHookBaseEvents {
     handleSetData: (res: AIOutputEvent) => void
     handleResetData: () => void
 }
-export type handleSendFunc = (params: {request: AIInputEvent; optionValue?: string; cb?: () => void}) => void
+export type handleSendFunc = (params: {
+    request: AIInputEvent
+    optionValue?: string
+    extraValue?: AIChatIPCStartParams["extraValue"]
+    cb?: () => void
+}) => void
 
 // #region useAIPerfData相关定义
 export interface UseAIPerfDataParams extends UseHookBaseParams {}
@@ -135,12 +140,21 @@ export interface UseChatIPCState {
     questionQueue: AIQuestionQueues
 }
 
+/** 开始启动流接口的唯一token、请求参数和额外参数 */
+export interface AIChatIPCStartParams {
+    token: string
+    params: AIInputEvent
+    /** 供前端处理逻辑和UI的额外参数 */
+    extraValue?: Record<string, string | number>
+}
+
 /** 执行流途中发送消息的参数 */
 export interface AIChatSendParams {
     token: string
     type: ChatIPCSendType
     params: AIInputEvent
     optionValue?: string
+    extraValue?: AIChatIPCStartParams["extraValue"]
 }
 
 export interface UseChatIPCEvents {
@@ -149,7 +163,7 @@ export interface UseChatIPCEvents {
     /** 获取当前执行任务规划的问题id */
     fetchReactTaskToAsync: () => string
     /** 开始执行接口流 */
-    onStart: (token: string, params: AIInputEvent) => void
+    onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
     onSend: (AIChatSendParams) => void
     /** 主动结束正在执行中的接口流 */

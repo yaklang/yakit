@@ -34,7 +34,13 @@ import {
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
-export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "task_review_require", "plan"]
+export const UseTaskChatTypes = [
+    "plan_review_require",
+    "plan_task_analysis",
+    "task_review_require",
+    "plan",
+    "fail_plan_and_execution"
+]
 
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
@@ -877,6 +883,20 @@ function useTaskChat(params?: UseTaskChatParams) {
             if (res.Type === "tool_call_decision") {
                 // 工具决策
                 handleToolCallDecision(res)
+                return
+            }
+
+            if (res.Type === "fail_plan_and_execution") {
+                // 任务规划崩溃的错误信息
+                setStreams((old) => {
+                    const newArr = [...old]
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
+                        data: ipcContent
+                    })
+                    return newArr
+                })
                 return
             }
         } catch (error) {

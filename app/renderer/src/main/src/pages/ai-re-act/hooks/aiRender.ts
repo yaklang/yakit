@@ -153,7 +153,9 @@ export enum AIChatQSDataTypeEnum {
     /** 问题队列状态变化信息 */
     QUESTION_QUEUE_STATUS_CHANGE = "question_queue_status_change",
     /** 问题队列清空消息 */
-    QUESTION_QUEUE_CLEARED = "question_queue_cleared"
+    QUESTION_QUEUE_CLEARED = "question_queue_cleared",
+    /** 任务规划崩溃的错误信息 */
+    FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -162,6 +164,8 @@ interface AIChatQSDataBase<T extends string, U> {
     id: string
     AIService: AIOutputEvent["AIService"]
     Timestamp: AIOutputEvent["Timestamp"]
+    /** 前端专属数据，供前端逻辑和UI处理使用 */
+    extraValue?: Record<string, string | number>
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
@@ -188,6 +192,7 @@ type ChatQuestionQueueStatusChange = AIChatQSDataBase<
     AIQuestionQueueStatusChange
 >
 type ChatQuestionQueueCleared = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED, AIQuestionQueueCleared>
+type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, string>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -207,4 +212,5 @@ export type AIChatQSData =
     | ChatPlanExecEnd
     | ChatQuestionQueueStatusChange
     | ChatQuestionQueueCleared
+    | ChatFailPlanAndExecution
 // #endregion

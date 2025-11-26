@@ -215,7 +215,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 ...request
             }
         }
-        events.onStart(newChat.id, startParams)
+        events.onStart({token: newChat.id, params: startParams})
     })
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
         handleSendInteractiveMessage(params, "casual")

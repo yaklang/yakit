@@ -876,7 +876,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     // 用户问题或review的主动操作
-    const handleSend: handleSendFunc = useMemoizedFn(({request, optionValue, cb}) => {
+    const handleSend: handleSendFunc = useMemoizedFn(({request, optionValue, extraValue, cb}) => {
         try {
             const {IsInteractiveMessage, InteractiveId, IsFreeInput, FreeInput} = request
             if (IsInteractiveMessage && InteractiveId) {
@@ -910,7 +910,8 @@ function useCasualChat(params?: UseCasualChatParams) {
                         type: AIChatQSDataTypeEnum.QUESTION,
                         Timestamp: Date.now(),
                         data: FreeInput || "",
-                        AIService: ""
+                        AIService: "",
+                        extraValue: extraValue
                     })
                     return newArr
                 })
