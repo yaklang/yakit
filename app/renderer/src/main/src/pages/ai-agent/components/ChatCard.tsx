@@ -1,3 +1,4 @@
+import classNames from "classnames"
 import styles from "./ChatCard.module.scss"
 import {type FC, type ReactNode} from "react"
 
@@ -7,10 +8,11 @@ export interface ChatCardProps {
     titleExtra?: ReactNode
     children?: ReactNode
     footer?: ReactNode
+    className?: string
 }
-const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children, footer}) => {
+const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children, footer, className}) => {
     return (
-        <div className={styles["chat-card"]}>
+        <div className={classNames(styles["chat-card"], className)}>
             <div className={styles["chat-card-title"]}>
                 <div className={styles["chat-card-title-left"]}>
                     {titleIcon && <div className={styles["chat-card-title-icon"]}>{titleIcon}</div>}

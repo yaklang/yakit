@@ -34,6 +34,7 @@ import {genBaseAIChatData} from "@/pages/ai-re-act/hooks/utils"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -79,12 +80,16 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {streams, scrollToBottom} = props
     const {scrollerRef, virtuosoRef, scrollToIndex} = useVirtuosoAutoScroll(streams)
+    const {t} = useI18nNamespaces(["yakitUi"])
     useUpdateEffect(() => {
         scrollToIndex("LAST")
     }, [scrollToBottom])
     const renderItem = (stream: AIChatQSData) => {
         return <AIChatListItem item={stream} type='task-agent' />
     }
+    const loading = useMemo(() => {
+        return streams.some((i) => i.type === AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION)
+    }, [streams.length])
 
     const components = useMemo(
         () => ({
@@ -92,9 +97,18 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
                     <div className={styles["item-inner"]}>{children}</div>
                 </div>
+            ),
+            Footer: () => (
+                <div>
+                    <div style={{paddingBottom: "38px"}}>
+                        <YakitSpin spinning={!loading}>
+                            <div style={{marginTop:'38px', textAlign: "center"}}>{t("YakitSpin.loading")}...</div>
+                        </YakitSpin>
+                    </div>
+                </div>
             )
         }),
-        []
+        [t]
     )
 
     return (
@@ -109,6 +123,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
                 overscan={300}
+                initialTopMostItemIndex={{index:'LAST'}}
+                increaseViewportBy={{top: 300, bottom: 300}}
                 components={components}
             />
             {/* {streams.map(renderItem)} */}
