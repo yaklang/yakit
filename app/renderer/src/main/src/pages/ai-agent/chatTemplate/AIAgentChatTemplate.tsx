@@ -78,7 +78,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {streams, scrollToBottom} = props
+    const {streams, scrollToBottom, execute} = props
     const {scrollerRef, virtuosoRef, scrollToIndex} = useVirtuosoAutoScroll(streams)
     const {t} = useI18nNamespaces(["yakitUi"])
     useUpdateEffect(() => {
@@ -88,8 +88,9 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return <AIChatListItem item={stream} type='task-agent' />
     }
     const loading = useMemo(() => {
-        return streams.some((i) => i.type === AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION)
-    }, [streams.length])
+        if (!execute || !streams.length) return false
+        return streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
+    }, [streams.length, execute])
 
     const components = useMemo(
         () => ({
@@ -100,15 +101,19 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
             ),
             Footer: () => (
                 <div>
-                    <div style={{paddingBottom: "38px"}}>
-                        <YakitSpin spinning={!loading}>
-                            <div style={{marginTop:'38px', textAlign: "center"}}>{t("YakitSpin.loading")}...</div>
-                        </YakitSpin>
-                    </div>
+                    {loading ? (
+                        <div style={{paddingBottom: "38px"}}>
+                            <YakitSpin>
+                                <div style={{marginTop: "38px", textAlign: "center"}}>{t("YakitSpin.loading")}...</div>
+                            </YakitSpin>
+                        </div>
+                    ) : (
+                        <div style={{paddingBottom: "68px"}} />
+                    )}
                 </div>
             )
         }),
-        [t]
+        [loading, t]
     )
 
     return (
@@ -123,7 +128,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
                 overscan={300}
-                initialTopMostItemIndex={{index:'LAST'}}
+                initialTopMostItemIndex={{index: "LAST"}}
                 increaseViewportBy={{top: 300, bottom: 300}}
                 components={components}
             />

@@ -57,7 +57,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 export default AIReActTaskChat
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
+    const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
     const {taskChat} = useAIChatUIData()
     const {handleSendSyncMessage, chatIPCEvents} = useChatIPCDispatcher()
 
@@ -87,7 +87,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     return (
         <>
             <div className={styles["tab-content"]}>
-                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} />
+                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute}/>
             </div>
             {!!reviewInfo ? (
                 <AIReActTaskChatReview
