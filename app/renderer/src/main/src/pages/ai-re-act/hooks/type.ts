@@ -163,6 +163,8 @@ export interface UseChatIPCEvents {
     fetchToken: () => string
     /** 获取当前执行任务规划的问题id */
     fetchReactTaskToAsync: () => string
+    /** 清空当前执行任务规划的问题id */
+    clearReactTaskToAsync: () => void
     /** 开始执行接口流 */
     onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */

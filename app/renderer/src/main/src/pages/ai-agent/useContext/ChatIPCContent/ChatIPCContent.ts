@@ -59,6 +59,7 @@ export default createContext<ChatIPCContextValue>({
         chatIPCEvents: {
             fetchToken: () => "",
             fetchReactTaskToAsync: () => "",
+            clearReactTaskToAsync: () => {},
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},

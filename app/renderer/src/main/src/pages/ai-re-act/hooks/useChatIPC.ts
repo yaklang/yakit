@@ -133,6 +133,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     const fetchReactTaskToAsync = useMemoizedFn(() => {
         return reactTaskToAsync.current
     })
+    const clearReactTaskToAsync = useMemoizedFn(() => {
+        reactTaskToAsync.current = ""
+    })
 
     // 设置任务规划的标识ID
     const planCoordinatorId = useRef<string>("")
@@ -406,7 +409,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     return [
         {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders, questionQueue},
-        {fetchToken, fetchReactTaskToAsync, onStart, onSend, onClose, onReset}
+        {fetchToken, fetchReactTaskToAsync, clearReactTaskToAsync, onStart, onSend, onClose, onReset}
     ] as const
 }
 
