@@ -119,6 +119,13 @@ export interface AIQuestionQueueCleared {
     NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
 }
 
+/** 任务规划-执行崩溃后的错误信息展示 */
+export interface FailPlanAndExecutionError {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    content: string
+}
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
@@ -192,7 +199,10 @@ type ChatQuestionQueueStatusChange = AIChatQSDataBase<
     AIQuestionQueueStatusChange
 >
 type ChatQuestionQueueCleared = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED, AIQuestionQueueCleared>
-type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, string>
+type ChatFailPlanAndExecution = AIChatQSDataBase<
+    AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
+    FailPlanAndExecutionError
+>
 
 export type AIChatQSData =
     | ChatQuestion

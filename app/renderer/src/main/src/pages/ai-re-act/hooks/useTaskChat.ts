@@ -893,7 +893,11 @@ function useTaskChat(params?: UseTaskChatParams) {
                     newArr.push({
                         ...genBaseAIChatData(res),
                         type: AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
-                        data: ipcContent
+                        data: {
+                            content: ipcContent,
+                            NodeId: res.NodeId,
+                            NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                        }
                     })
                     return newArr
                 })
