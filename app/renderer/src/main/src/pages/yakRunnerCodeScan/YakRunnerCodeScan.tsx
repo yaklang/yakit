@@ -1780,7 +1780,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: "",
+                    Keyword: pageInfo.Keyword || "",
                     FilterLibRuleKind: filterLibRuleKind
                 }
             }
