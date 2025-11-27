@@ -867,6 +867,24 @@ function useCasualChat(params?: UseCasualChatParams) {
                 handleToolCallDecision(res)
                 return
             }
+
+            if (res.Type === "fail_plan_and_execution") {
+                // 任务规划崩溃的错误信息
+                setContents((old) => {
+                    const newArr = [...old]
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
+                        data: {
+                            content: ipcContent,
+                            NodeId: res.NodeId,
+                            NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                        }
+                    })
+                    return newArr
+                })
+                return
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
