@@ -434,8 +434,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams["extraValue"]) => {
         setMode("re-act")
-        const qs = `我要使用 ${request.ForgeName}forge执行任务,${
-            !!request.ForgeParams ? `参数:${JSON.stringify(request.ForgeParams)}` : ""
+        const qs = `我要使用 ${request.ForgeName}forge执行任务${
+            !!request.ForgeParams
+                ? `,参数:${JSON.stringify(request.ForgeParams)}`
+                : `${!!formValue?.UserQuery ? `,输入${formValue?.UserQuery!}` : ""}`
         }`
         handleStart(qs, {
             isForge: true,
