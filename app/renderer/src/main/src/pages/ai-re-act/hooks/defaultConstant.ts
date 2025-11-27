@@ -111,7 +111,9 @@ export enum AIInputEventSyncTypeEnum {
     /** 移除队列 */
     SYNC_TYPE_REACT_REMOVE_TASK = "react_remove_task",
     /** 清空队列 */
-    SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task"
+    SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task",
+    /** 取消指定任务 */
+    SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task"
 }
 
 export enum AIInputEventHotPatchTypeEnum {

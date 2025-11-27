@@ -19,8 +19,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
-import {AIChatQSDataTypeEnum} from "../hooks/aiRender"
-import {yakitNotify} from "@/utils/notification"
+import {AIReviewType} from "../hooks/aiRender"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const [leftExpand, setLeftExpand] = useState(true)
@@ -58,38 +57,33 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 export default AIReActTaskChat
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
+    const {reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
     const {taskChat} = useAIChatUIData()
-    const {handleSendSyncMessage} = useChatIPCDispatcher()
+    const {handleSendSyncMessage, chatIPCEvents} = useChatIPCDispatcher()
 
-    const questionQueue = useCreation(() => {
-        return chatIPCData.questionQueue
-    }, [chatIPCData.questionQueue])
-    const {streams} = taskChat
+    const streams = useCreation(() => {
+        return taskChat.streams
+    }, [taskChat.streams])
 
     const [scrollToBottom, setScrollToBottom] = useState(false)
     const onScrollToBottom = useMemoizedFn(() => {
         setScrollToBottom((v) => !v)
     })
-    const onStopTask = useMemoizedFn(() => {
-        if (questionQueue.data.length > 0) {
-            yakitNotify("info", "等待后端...")
-            /**TODO - 等待后端 */
-            // handleSendSyncMessage({
-            //     syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_CURRENT_TASK,
-            //     // SyncJsonInput: JSON.stringify({task_id: questionQueue.data[0].id}),
-            //     params: {}
-            // })
-            // handleSendSyncMessage({
-            //     syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-            //     params: {}
-            // })
-        }
+    const getTaskId = useMemoizedFn(() => {
+        return chatIPCEvents.fetchReactTaskToAsync()
     })
-    const showStop = useCreation(() => {
-        if (streams.length === 0) return false
-        return chatIPCData.execute && streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
-    }, [streams.length, chatIPCData.execute])
+    const onStopTask = useMemoizedFn(() => {
+        const taskId = getTaskId()
+        if (!taskId || !reviewInfo) {
+            return
+        }
+        handleSendSyncMessage({
+            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+            SyncJsonInput: JSON.stringify({task_id: taskId})
+        })
+        chatIPCEvents.clearReactTaskToAsync()
+        chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+    })
     return (
         <>
             <div className={styles["tab-content"]}>
@@ -105,7 +99,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             ) : (
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
-                        {showStop && (
+                        {!!getTaskId() && (
                             <YakitButton
                                 type='outline1'
                                 icon={<OutlineExitIcon />}

@@ -24,7 +24,7 @@ type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export interface AISendSyncMessageParams {
     syncType: AIInputEvent["SyncType"]
     SyncJsonInput?: AIInputEvent["SyncJsonInput"]
-    params: MakeOptional<AIStartParams, "UserQuery">
+    params?: MakeOptional<AIStartParams, "UserQuery">
 }
 export interface AISendConfigHotpatchParams {
     hotpatchType: AIInputEvent["HotpatchType"]
@@ -63,7 +63,8 @@ export default createContext<ChatIPCContextValue>({
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},
-            onReset: () => {}
+            onReset: () => {},
+            handleTaskReviewRelease: () => {}
         },
         handleSendCasual: () => {},
         handleSendTask: () => {},

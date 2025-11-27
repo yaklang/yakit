@@ -178,6 +178,8 @@ export interface UseChatIPCEvents {
     ) => void
     /** 重置所有数据 */
     onReset: () => void
+    /** 取消任务规划当前的Review */
+    handleTaskReviewRelease: (id: string) => void
 }
 // #endregion
 

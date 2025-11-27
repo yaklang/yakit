@@ -230,10 +230,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             IsSyncMessage: true,
             SyncType: syncType,
             SyncJsonInput,
-            Params: {
-                UserQuery: "",
-                ...params
-            }
+            Params: {...params}
         }
         events.onSend({token: activeID, type: "", params: info})
     })

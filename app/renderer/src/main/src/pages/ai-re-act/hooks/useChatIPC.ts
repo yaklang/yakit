@@ -409,7 +409,16 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     return [
         {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders, questionQueue},
-        {fetchToken, fetchReactTaskToAsync, clearReactTaskToAsync, onStart, onSend, onClose, onReset}
+        {
+            fetchToken,
+            fetchReactTaskToAsync,
+            clearReactTaskToAsync,
+            onStart,
+            onSend,
+            onClose,
+            onReset,
+            handleTaskReviewRelease
+        }
     ] as const
 }
 
