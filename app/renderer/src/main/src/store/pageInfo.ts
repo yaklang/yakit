@@ -256,7 +256,7 @@ export interface CodeScanPageInfoProps {
     runtimeId?: string
 
     // rule 相关过滤条件
-    RuleNames?: string[]
+    RuleIds?: number[]
     GroupNames?: string[]
     Keyword?: string
     FilterLibRuleKind?: FilterLibRuleKind

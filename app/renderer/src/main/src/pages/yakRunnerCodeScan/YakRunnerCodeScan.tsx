@@ -120,7 +120,7 @@ const clearRuleByPageInfo: CodeScanPageInfoProps = {
     Keyword: "",
     FilterLibRuleKind: "",
     selectTotal: 0,
-    RuleNames: []
+    RuleIds: []
 }
 export interface CodeScanStreamInfo {
     logState: StreamResult.Log[]
@@ -171,7 +171,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         if (
             (pageInfo.Keyword || "").length > 0 ||
             pageInfo.FilterLibRuleKind !== "" ||
-            (pageInfo.RuleNames || []).length > 0
+            (pageInfo.RuleIds || []).length > 0
         ) {
             return false
         }
@@ -184,7 +184,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         if (
             (pageInfo.Keyword || "").length > 0 ||
             pageInfo.FilterLibRuleKind !== "" ||
-            (pageInfo.RuleNames || []).length > 0
+            (pageInfo.RuleIds || []).length > 0
         ) {
             return false
         }
@@ -217,7 +217,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     Keyword: "",
                     FilterLibRuleKind: "",
                     selectTotal,
-                    RuleNames: []
+                    RuleIds: []
                 }))
             } else {
                 setPageInfo((prev) => ({
@@ -255,7 +255,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     Keyword: "",
                     FilterLibRuleKind: "",
                     selectTotal,
-                    RuleNames: []
+                    RuleIds: []
                 }))
                 setAllCheck(newList.length === response.length)
             } else {
@@ -269,7 +269,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     Keyword: "",
                     FilterLibRuleKind: "",
                     selectTotal,
-                    RuleNames: []
+                    RuleIds: []
                 }))
                 setAllCheck(newList.length === response.length)
             }
@@ -349,7 +349,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
 })
 
 const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((props) => {
-    const {inViewport} = props
+    const {inViewport, handleTabClick} = props
     const [pageInfo, setPageInfo] = useControllableValue<CodeScanPageInfoProps>(props, {
         defaultValue: {
             GroupNames: [],
@@ -452,17 +452,18 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 Keyword: keywords,
                 FilterLibRuleKind: filterLibRuleKind,
                 selectTotal: parseInt(response.Total + ""),
-                RuleNames: []
+                RuleIds: []
             }))
         } else {
             setPageInfo((prev: CodeScanPageInfoProps) => ({
                 ...prev,
                 ...clearRuleByPageInfo,
-                RuleNames: selectedRules.map((item) => item.RuleName),
+                RuleIds: selectedRules.map((item) => parseInt(item.Id+"")),
                 selectTotal: selectedRules.length
             }))
         }
     }, [allCheck, selectGroup, keywords, selectedRules, filterLibRuleKind])
+    
 
     // 如若在按组选择插件组，则清空关键词搜索和已选规则与所选组
     useUpdateEffect(() => {
@@ -478,6 +479,23 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         setAllCheck(false)
         setSelectedRules([])
     })
+
+    const onResetCodeScanProjectFun = useMemoizedFn(()=>{
+        handleTabClick({
+            key: "group",
+            label: <>按组选</>,
+            contShow: false
+        },)
+        setAllCheck(false)
+        setSelectedRules([])
+    })
+
+    useEffect(() => {
+        emiter.on("onResetCodeScanProject", onResetCodeScanProjectFun)
+        return () => {
+            emiter.off("onResetCodeScanProject", onResetCodeScanProjectFun)
+        }
+    }, [])
     return (
         <>
             <div className={styles["left-header-search"]}>
@@ -720,6 +738,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                     setFilterLibRuleKind={setFilterLibRuleKind}
                     pageInfo={pageInfo}
                     setPageInfo={setPageInfo}
+                    handleTabClick={handleTabClick}
                 />
 
                 <CodeScanRuleByGroup inViewport={type === "group"} pageInfo={pageInfo} setPageInfo={setPageInfo} />
@@ -1772,7 +1791,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 ...extraParamsValue,
                 ControlMode: "start",
                 SSAProjectId: project,
-                ProgramName: history === "recompileAndScan" ? [] : [history],
+                ProgramName: history === "recompileAndScan"||!history ? [] : [history],
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -1781,7 +1800,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Purpose: [],
                     Tag: [],
                     Keyword: pageInfo.Keyword || "",
-                    FilterLibRuleKind: filterLibRuleKind
+                    FilterLibRuleKind: filterLibRuleKind,
+                    Ids: pageInfo.RuleIds || []
                 }
             }
             SyntaxFlowScanParamsRef.current = params
@@ -2054,6 +2074,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                             selectTotal
                                         })
                                         setSelectProjectId(item ? [item] : [])
+                                        emiter.emit("onResetCodeScanProject");
                                     }}
                                 />
                             </Form.Item>
@@ -2791,7 +2812,7 @@ export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = R
                             "yakit-content-single-ellipsis"
                         )}
                     >
-                        {data.Title}
+                        {data.RuleName}
                     </div>
                 </div>
                 <div className={styles["flow-rule-item-show"]}>

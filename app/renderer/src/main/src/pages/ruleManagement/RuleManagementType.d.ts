@@ -159,6 +159,8 @@ export interface SyntaxFlowRuleFilter {
 
     FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
     FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
+
+    Ids?: number[]
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter

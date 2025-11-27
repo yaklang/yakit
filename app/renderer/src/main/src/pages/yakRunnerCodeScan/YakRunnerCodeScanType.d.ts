@@ -22,6 +22,7 @@ export interface CodeScanRuleByKeyWordProps {
     setFilterLibRuleKind: (v: "" | "noLib") => void
     pageInfo: CodeScanPageInfoProps
     setPageInfo: (v: CodeScanPageInfoProps) => void
+    handleTabClick: (tab: CodeScanTabsItem) => void
 }
 
 export interface CodeScanRuleByGroupProps {
