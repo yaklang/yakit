@@ -44,7 +44,9 @@ const UseCasualAndTaskTypes = [
     "filesystem_pin_directory",
     "filesystem_pin_filename",
     // 决策总结
-    "tool_call_decision"
+    "tool_call_decision",
+    // 任务规划崩溃的错误信息
+    "fail_plan_and_execution"
 ]
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]

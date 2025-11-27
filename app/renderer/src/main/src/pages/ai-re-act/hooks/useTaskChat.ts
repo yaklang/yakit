@@ -34,13 +34,7 @@ import {
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
-export const UseTaskChatTypes = [
-    "plan_review_require",
-    "plan_task_analysis",
-    "task_review_require",
-    "plan",
-    "fail_plan_and_execution"
-]
+export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "task_review_require", "plan"]
 
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
