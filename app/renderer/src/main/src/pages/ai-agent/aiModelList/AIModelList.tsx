@@ -321,8 +321,9 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             apiGetGlobalNetworkConfig()
                 .then((res) => {
                     configRef.current = res
-                    setList(res.AppConfigs || [])
-                    setOnlineTotal(res.AppConfigs?.length || 0)
+                    const appConfigs = res.AppConfigs.filter((ele) => res.AiApiPriority.includes(ele.Type))
+                    setList(appConfigs || [])
+                    setOnlineTotal(appConfigs?.length || 0)
                 })
                 .finally(() => {
                     setTimeout(() => {
