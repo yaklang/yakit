@@ -163,7 +163,7 @@ export const getAIModelList: APINoRequestFunc<GetAIModelListResponse> = (hiddenE
             let localModels: StartedLocalModelInfo[] = []
             const config = await apiGetGlobalNetworkConfig()
             if (!!config) {
-                onlineModels = config.AppConfigs || []
+                onlineModels = config.AppConfigs.filter((ele) => config.AiApiPriority.includes(ele.Type)) || []
             }
             const localModelsRes = await grpcGetAllStartedLocalModels()
             if (!!localModelsRes) {
