@@ -82,6 +82,8 @@
     "responseLimitExceeded": "The number of responses exceeds the frontend limit, please confirm to enable ",
     "saveHttpTrafficSettings": "Save HTTP Traffic Settings ",
     "matchingInProgress": "Matching in progress",
+    "waitCurrentTaskFinish": "A request is still running, please wait",
+    "retryNoFailedTask": "No failed requests require retry",
     "run_function_start": "Run Function - Start:",
     "run_function_end": "Run Function - End:",
     "send_complete": "Send Complete",
