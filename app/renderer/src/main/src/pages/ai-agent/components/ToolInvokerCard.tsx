@@ -21,7 +21,9 @@ interface ToolInvokerCardProps {
     modalInfo?: ModalInfoProps
     execError?: string
 }
-
+interface PreWrapperProps {
+    code: string
+}
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
     name,
@@ -82,16 +84,8 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
                 </div>
                 <div className={styles["file-system-content"]}>
                     <div>{desc}</div>
-                    {content && (
-                        <pre className={styles["file-system-wrapper"]}>
-                            <code>{content}</code>
-                        </pre>
-                    )}
-                    {execError && (
-                        <pre className={styles["file-system-wrapper"]}>
-                            <code>{execError}</code>
-                        </pre>
-                    )}
+                    {content && <PreWrapper code={content} />}
+                    {execError && <PreWrapper code={execError} />}
                 </div>
             </div>
             {!!fileList?.length && <FileList fileList={fileList} />}
@@ -100,3 +94,12 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
 }
 
 export default memo(ToolInvokerCard)
+
+export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
+    const {code} = props
+    return (
+        <pre className={styles["file-system-wrapper"]}>
+            <code>{code}</code>
+        </pre>
+    )
+})

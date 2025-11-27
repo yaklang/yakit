@@ -2,6 +2,7 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -145,7 +146,7 @@ export interface AIChatIPCStartParams {
     token: string
     params: AIInputEvent
     /** 供前端处理逻辑和UI的额外参数 */
-    extraValue?: Record<string, string | number>
+    extraValue?: CustomPluginExecuteFormValue
 }
 
 /** 执行流途中发送消息的参数 */

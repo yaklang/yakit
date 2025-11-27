@@ -23,7 +23,7 @@ import ChatIPCContent, {
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon} from "@/assets/icon/outline"
-import {ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
+import {AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -43,7 +43,6 @@ import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
-import {RoundedStopButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -74,24 +73,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             onSetReAct()
         }
     }, [activeChat])
-
-    /**欢迎页中 Forge 启动ai */
-    const handleStartTaskChatByForge = useMemoizedFn((request: AIStartParams) => {
-        setMode("re-act")
-        setSetting &&
-            setSetting((old) => {
-                return {
-                    ...old,
-                    ForgeName: request.ForgeName,
-                    ForgeParams: request.ForgeParams
-                }
-            })
-        handleStart(
-            `我要使用 ${request.ForgeName}forge执行任务,${
-                !!request.ForgeParams ? `参数是${JSON.stringify(request.ForgeParams)},` : request.UserQuery || "无参数"
-            }`
-        )
-    })
 
     /**自由对话中触发任务开始 */
     const handleTaskStart = useMemoizedFn(() => {
@@ -191,7 +172,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 })
         }
     })
-    const handleStart = useMemoizedFn((qs: string) => {
+    const handleStart = useMemoizedFn((qs: string, extraValue?: AIChatIPCStartParams["extraValue"]) => {
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
@@ -216,7 +197,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 ...request
             }
         }
-        events.onStart({token: newChat.id, params: startParams})
+        events.onStart({token: newChat.id, params: startParams, extraValue})
     })
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
         handleSendInteractiveMessage(params, "casual")
@@ -456,18 +437,28 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setActiveTool(undefined)
     })
 
-    const handleSubmitForge = useMemoizedFn((request: AIStartParams) => {
-        handleStartTaskChatByForge(request)
+    const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams["extraValue"]) => {
+        setMode("re-act")
+        const qs = `我要使用 ${request.ForgeName}forge执行任务,${
+            !!request.ForgeParams ? `参数:${JSON.stringify(request.ForgeParams)}` : ""
+        }`
+        handleStart(qs, {
+            isForge: true,
+            showForgeQuestion: `我要使用 ${request.ForgeName}forge执行任务`,
+            forgeParams: JSON.stringify(formValue, null, 2)
+        })
         handleClearActiveForge()
     })
 
-    const handleSubmitTool = useMemoizedFn(() => {
+    const handleSubmitTool = useMemoizedFn((question: string) => {
         if (!activeTool) {
             yakitNotify("warning", " tool 信息异常，请关闭重试")
             return
         }
         setMode("re-act")
-        handleStart(`我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务"`)
+        handleStart(
+            `我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务${question ? `,输入${question}` : ""}`
+        )
         handleClearActiveTool()
     })
 

@@ -34,8 +34,7 @@ import {AIAgentTabListEnum} from "../defaultConstant"
 import {YakitRoute} from "@/enums/yakitRoute"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
-import {grpcGetChangeQuestionPlugin, grpcGetRandomAIMaterials} from "../grpc"
-import {YakScript} from "@/pages/invoker/schema"
+import {grpcGetRandomAIMaterials} from "../grpc"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {GetRandomAIMaterialsResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -78,7 +77,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
 
-    const codeRef = useRef<YakScript | null>(null)
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
@@ -101,7 +99,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     useEffect(() => {
         if (inViewPort) {
-            getCode()
             getRandomAIMaterials()
         }
     }, [inViewPort])
@@ -132,7 +129,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.stop()
         debugPluginStreamEvent.reset()
-        if (!codeRef.current) return
         const toolNames: string[] = []
         const forgeNames: string[] = []
         const knowledgeNames: string[] = []
@@ -152,7 +148,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             }
         })
         const params: DebugPluginRequest = {
-            Code: codeRef.current.Content,
+            Code: "",
             PluginType: "yak",
             Input: "",
             HTTPRequestTemplate: {
@@ -168,7 +164,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                     })
                 }
             ],
-            PluginName: ""
+            PluginName: "简易意图识别"
         }
         apiDebugPlugin({
             params: params,
@@ -179,13 +175,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             setTimeout(() => {
                 setLoading(true)
             }, 100)
-        })
-    })
-
-    // 获取内置插件的代码，用于首页换一换问题
-    const getCode = useMemoizedFn(() => {
-        grpcGetChangeQuestionPlugin().then((plugin) => {
-            codeRef.current = plugin
         })
     })
 

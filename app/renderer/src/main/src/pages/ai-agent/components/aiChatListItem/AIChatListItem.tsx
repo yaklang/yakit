@@ -52,21 +52,25 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         return taskChat.plan.find((item) => item.index === id)
     }
     const renderContent = useMemoizedFn(() => {
-        const {id, type, Timestamp, data} = item
+        const {id, type, Timestamp, data, extraValue} = item
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
                 return (
-                    <AITriageChatContent isAnswer={false} loading={false} content={data} {...chatContentExtraProps} />
+                    <AITriageChatContent
+                        isAnswer={false}
+                        content={data}
+                        extraValue={extraValue}
+                        {...chatContentExtraProps}
+                    />
                 )
             case AIChatQSDataTypeEnum.STREAM:
                 return <AIStreamNode {...aiStreamNodeProps} stream={item} />
             case AIChatQSDataTypeEnum.RESULT:
-                return <AITriageChatContent isAnswer={true} loading={false} content={data} {...chatContentExtraProps} />
+                return <AITriageChatContent isAnswer={true} content={data} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.THOUGHT:
                 return (
                     <AITriageChatContent
                         isAnswer={true}
-                        loading={false}
                         content={`思考：${data}`}
                         {...chatContentExtraProps}
                     />

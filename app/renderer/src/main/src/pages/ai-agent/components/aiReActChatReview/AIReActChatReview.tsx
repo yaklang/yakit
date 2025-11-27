@@ -1,5 +1,5 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {AIReActChatReviewProps, ForgeReviewFormProps} from "./AIReActChatReviewType"
+import React, {forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState} from "react"
+import {AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps} from "./AIReActChatReviewType"
 import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
@@ -41,6 +41,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
     const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
     const [currentPlansId, setCurrentPlansId] = useState<string>("")
+    const [forgeOption, setForgeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
+    const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({validateFields: () => {}})
+
     const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
 
     useEffect(() => {
@@ -136,8 +139,8 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const forgeReview = useCreation(() => {
         if (type !== "exec_aiforge_review_require") return null
         const data = review as AIAgentGrpcApi.ExecForgeReview
-        return <ForgeReviewForm {...data} />
-    }, [review])
+        return <ForgeReviewForm ref={forgeReviewFormRef} editable={!forgeOption} {...data} />
+    }, [review, forgeOption])
     const aiRequireReview = useCreation(() => {
         if (type === "require_user_interactive") {
             const data = review as AIAgentGrpcApi.AIReviewRequire
@@ -280,6 +283,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             case "freedom-review":
                 setReviewTreeOption(info)
                 break
+            case "input_params":
+                setForgeOption(info)
+                break
             default:
                 if (editShow) return
                 if (!info.allow_extra_prompt) {
@@ -328,6 +334,21 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 "reviewed-task-tree": tree[0]
             }
             onSendAIByValue(JSON.stringify(jsonInput), reviewTreeOption.value)
+        }
+    })
+    /**智能应用用户自己修改ai得提交 */
+    const handleSubmitForge = useMemoizedFn(() => {
+        if (!!forgeOption) {
+            forgeReviewFormRef.current
+                .validateFields()
+                .then((value) => {
+                    const jsonInput = {
+                        suggestion: forgeOption.value,
+                        params: value
+                    }
+                    onSendAIByValue(JSON.stringify(jsonInput), forgeOption.value)
+                })
+                .catch(() => {})
         }
     })
     const aiOptionsLength = useCreation(() => {
@@ -405,44 +426,55 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     })
 
     const footerNode = useCreation(() => {
+        const renderFooterRightExtra = () => {
+            // forge和play不会同时存在
+            if (!!reviewTreeOption) {
+                return (
+                    <>
+                        <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={handleSubmitReviewTree}>
+                            提交
+                        </YakitButton>
+                    </>
+                )
+            }
+            if (!!forgeOption) {
+                return (
+                    <>
+                        <YakitButton type='outline2' onClick={() => setForgeOption(undefined)}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={handleSubmitForge}>
+                            提交表单内容
+                        </YakitButton>
+                    </>
+                )
+            }
+            return (
+                <>
+                    {!!noAIOptionsList.showButton.length && (
+                        <div className={styles["review-selectors-showButton-wrapper"]}>
+                            {noAIOptionsList.showButton.map((el) => {
+                                return (
+                                    <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
+                                        {el.prompt || el.value}
+                                    </YakitButton>
+                                )
+                            })}
+                        </div>
+                    )}
+                    <button className={styles["continue-btn"]} onClick={handleContinue}>
+                        立即执行
+                        <OutlineWarpColorsIcon />
+                    </button>
+                </>
+            )
+        }
         return (
             <div className={styles["btn-group"]}>
-                {isContinue && (
-                    <>
-                        {!!reviewTreeOption ? (
-                            <>
-                                <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
-                                    取消
-                                </YakitButton>
-                                <YakitButton type='primary' onClick={handleSubmitReviewTree}>
-                                    提交
-                                </YakitButton>
-                            </>
-                        ) : (
-                            <>
-                                {!!noAIOptionsList.showButton.length && (
-                                    <div className={styles["review-selectors-showButton-wrapper"]}>
-                                        {noAIOptionsList.showButton.map((el) => {
-                                            return (
-                                                <YakitButton
-                                                    key={el.value}
-                                                    type='outline2'
-                                                    onClick={() => handleShowEdit(el)}
-                                                >
-                                                    {el.prompt || el.value}
-                                                </YakitButton>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                                <button className={styles["continue-btn"]} onClick={handleContinue}>
-                                    立即执行
-                                    <OutlineWarpColorsIcon />
-                                </button>
-                            </>
-                        )}
-                    </>
-                )}
+                {isContinue && renderFooterRightExtra()}
                 {type === "require_user_interactive" && (
                     <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
                         提交
@@ -450,7 +482,16 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 )}
             </div>
         )
-    }, [isContinue, reviewTreeOption, type, aiOptionsLength, isRequireQS, requireLoading, noAIOptionsList.showButton])
+    }, [
+        isContinue,
+        reviewTreeOption,
+        forgeOption,
+        type,
+        aiOptionsLength,
+        isRequireQS,
+        requireLoading,
+        noAIOptionsList.showButton
+    ])
 
     const reviewHeardExtra = useCreation(() => {
         let node: ReactNode = <></>
@@ -578,108 +619,117 @@ const handleFetchParams = (jsonValue: string) => {
         return []
     }
 }
-const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo((props) => {
-    const {forge_name, forge_verbose_name, forge_desc, forge_params} = props
-    const [loading, setLoading] = useState<boolean>(false)
-    const [forge, setForge] = useState<AIForge>()
-    const [form] = Form.useForm()
+const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {forge_name, forge_verbose_name, forge_desc, forge_params, editable} = props
+        const [loading, setLoading] = useState<boolean>(false)
+        const [forge, setForge] = useState<AIForge>()
+        const [form] = Form.useForm()
 
-    useEffect(() => {
-        getGrpcGetAIForge()
-    }, [forge_name])
-    const getGrpcGetAIForge = useMemoizedFn(() => {
-        setLoading(true)
-        grpcGetAIForge({ForgeName: forge_name})
-            .then(setForge)
-            .finally(() =>
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            )
-    })
-    const params: YakParamProps[] = useCreation(() => {
-        if (!forge) return []
-        const {ParamsUIConfig} = forge
+        useImperativeHandle(
+            ref,
+            () => ({
+                validateFields: form.validateFields
+            }),
+            [form]
+        )
 
-        if (!ParamsUIConfig) {
-            return [
-                {
-                    Field: "query",
-                    FieldVerbose: "query",
-                    TypeVerbose: "text",
-                    DefaultValue: forge_params["query"] || "",
-                    Help: ""
-                }
-            ]
-        }
-        try {
-            const param: YakParamProps[] = handleFetchParams(ParamsUIConfig)
-            return param
-        } catch (error) {
-            return []
-        }
-    }, [forge, forge_params])
-    useEffect(() => {
-        if (!params) return
-        initRequiredFormValue()
-    }, [params])
-    const initRequiredFormValue = useMemoizedFn(() => {
-        if (!params) return
-        // 必填参数
-        let initRequiredFormValue: CustomPluginExecuteFormValue = {}
-        params.forEach((ele) => {
-            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            initRequiredFormValue = {
-                ...initRequiredFormValue,
-                [ele.Field]: value
-            }
+        useEffect(() => {
+            getGrpcGetAIForge()
+        }, [forge_name])
+        const getGrpcGetAIForge = useMemoizedFn(() => {
+            setLoading(true)
+            grpcGetAIForge({ForgeName: forge_name})
+                .then(setForge)
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                )
         })
-        if (!form) return
-        form.resetFields()
-        form.setFieldsValue({...initRequiredFormValue})
-    })
-    return (
-        <YakitSpin spinning={loading} tip='加载中...'>
-            <div className={styles["forge-wrapper"]}>
-                <div className={styles["forge-header"]}>
-                    <div className={styles["name"]}>
-                        {forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
-                    </div>
-                    <div className={styles["description"]}>描述:{forge?.Description || forge_desc}</div>
-                </div>
-                <div className={classNames(styles["forge-form-body"])}>
-                    {params?.length > 1 && (
-                        <div className={styles["forge-form-heard"]}>
-                            <SolidVariableIcon />
-                            参数组
+        const params: YakParamProps[] = useCreation(() => {
+            if (!forge) return []
+            const {ParamsUIConfig} = forge
+
+            if (!ParamsUIConfig) {
+                return [
+                    {
+                        Field: "query",
+                        FieldVerbose: "query",
+                        TypeVerbose: "text",
+                        DefaultValue: forge_params["query"] || "",
+                        Help: ""
+                    }
+                ]
+            }
+            try {
+                const param: YakParamProps[] = handleFetchParams(ParamsUIConfig)
+                return param
+            } catch (error) {
+                return []
+            }
+        }, [forge, forge_params])
+        useEffect(() => {
+            if (!params) return
+            initRequiredFormValue()
+        }, [params])
+        const initRequiredFormValue = useMemoizedFn(() => {
+            if (!params) return
+            let initRequiredFormValue: CustomPluginExecuteFormValue = {}
+            params.forEach((ele) => {
+                const value = getValueByType(forge_params[ele.Field], ele.TypeVerbose)
+                initRequiredFormValue = {
+                    ...initRequiredFormValue,
+                    [ele.Field]: value
+                }
+            })
+            if (!form) return
+            form.resetFields()
+            form.setFieldsValue({...initRequiredFormValue})
+        })
+        return (
+            <YakitSpin spinning={loading} tip='加载中...'>
+                <div className={styles["forge-wrapper"]}>
+                    <div className={styles["forge-header"]}>
+                        <div className={styles["name"]}>
+                            {forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
                         </div>
-                    )}
-                    <div
-                        className={classNames({
-                            [styles["forge-form-more"]]: params?.length > 1
-                        })}
-                    >
-                        <Form
-                            form={form}
-                            labelWrap={true}
-                            validateMessages={{
-                                /* eslint-disable no-template-curly-in-string */
-                                required: "${label} 是必填字段"
-                            }}
-                            disabled={true}
-                            layout='vertical'
+                        <div className={styles["description"]}>描述:{forge?.Description || forge_desc}</div>
+                    </div>
+                    <div className={classNames(styles["forge-form-body"])}>
+                        {params?.length > 1 && (
+                            <div className={styles["forge-form-heard"]}>
+                                <SolidVariableIcon />
+                                参数组
+                            </div>
+                        )}
+                        <div
+                            className={classNames({
+                                [styles["forge-form-more"]]: params?.length > 1
+                            })}
                         >
-                            {params && (
-                                <ExecuteEnterNodeByPluginParams
-                                    paramsList={params}
-                                    pluginType={"yak"}
-                                    isExecuting={false}
-                                />
-                            )}
-                        </Form>
+                            <Form
+                                form={form}
+                                labelWrap={true}
+                                validateMessages={{
+                                    /* eslint-disable no-template-curly-in-string */
+                                    required: "${label} 是必填字段"
+                                }}
+                                disabled={editable}
+                                layout='vertical'
+                            >
+                                {params && (
+                                    <ExecuteEnterNodeByPluginParams
+                                        paramsList={params}
+                                        pluginType={"yak"}
+                                        isExecuting={false}
+                                    />
+                                )}
+                            </Form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </YakitSpin>
-    )
-})
+            </YakitSpin>
+        )
+    })
+)

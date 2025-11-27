@@ -227,18 +227,26 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
                 form.validateFields()
                     .then(async (value: any) => {
                         const kvPair = getYakExecutorParam({...value})
-                        onSubmit({
-                            ...request,
-                            ForgeParams: kvPair
-                        })
+                        onSubmit(
+                            {
+                                ...request,
+                                ForgeParams: kvPair
+                            },
+                            value
+                        )
                     })
                     .catch(() => {})
             }
         } else {
-            onSubmit({
-                ...request,
-                UserQuery: question.trim() || ""
-            })
+            onSubmit(
+                {
+                    ...request,
+                    UserQuery: question.trim() || ""
+                },
+                {
+                    UserQuery: question.trim() || ""
+                }
+            )
         }
 
         setTimeout(() => {
@@ -326,7 +334,7 @@ export const AIToolForm: React.FC<AIToolFormProps> = memo((props) => {
         }
         if (loading) return
         setLoading(true)
-        onSubmit()
+        onSubmit(question)
         setTimeout(() => {
             setLoading(false)
         }, 150)
