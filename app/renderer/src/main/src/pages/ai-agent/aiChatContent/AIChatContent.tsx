@@ -85,7 +85,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const showRiskTotal = useCreation(() => {
         if (allTotal > 0) return allTotal
         return tempTotal
-    }, [])
+    }, [allTotal, tempTotal])
     const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[], length: number) => {
         const [label] = node
         if (tab.value === AITabsEnum.Risk) {
