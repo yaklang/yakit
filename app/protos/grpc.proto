@@ -7179,6 +7179,7 @@ message SyntaxFlowRuleFilter {
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
   string FilterLibRuleKind = 14; // "lib"library规则，"noLib"非library规则，空为所有规则
   repeated string RuleIds = 15;
+  repeated uint64 Ids = 16 ;
 }
 
 message SSAProgram{
