@@ -74,15 +74,15 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     })
     const onStopTask = useMemoizedFn(() => {
         const taskId = getTaskId()
-        if (!taskId || !reviewInfo) {
-            return
-        }
+        if (!taskId) return
         handleSendSyncMessage({
             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
             SyncJsonInput: JSON.stringify({task_id: taskId})
         })
         chatIPCEvents.clearReactTaskToAsync()
-        chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+        if (!!reviewInfo) {
+            chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+        }
     })
     return (
         <>

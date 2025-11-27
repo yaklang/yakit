@@ -230,7 +230,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             IsSyncMessage: true,
             SyncType: syncType,
             SyncJsonInput,
-            Params: {...params}
+            Params: params
         }
         events.onSend({token: activeID, type: "", params: info})
     })
@@ -242,9 +242,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         const info: AIInputEvent = {
             IsConfigHotpatch: true,
             HotpatchType: hotpatchType,
-            Params: {
-                ...params
-            }
+            Params: params
         }
         events.onSend({token: activeID, type: "", params: info})
     })
