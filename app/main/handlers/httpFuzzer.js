@@ -3,21 +3,37 @@ const handlerHelper = require("./handleStreamWithContext");
 
 
 module.exports = (win, getClient) => {
-    // asyncStringFuzzer wrapper
-    const asyncStringFuzzer = (params) => {
+    // asyncStringFuzzer wrapper with cancel support
+    const stringFuzzerCallMap = new Map();
+    
+    ipcMain.handle("cancel-StringFuzzer", async (e, token) => {
+        const call = stringFuzzerCallMap.get(token);
+        if (call) {
+            call.cancel();
+            stringFuzzerCallMap.delete(token);
+        }
+    });
+    
+    const asyncStringFuzzer = (params, token) => {
         return new Promise((resolve, reject) => {
-            getClient().StringFuzzer(params, (err, data) => {
+            const call = getClient().StringFuzzer(params, (err, data) => {
+                stringFuzzerCallMap.delete(token);
                 if (err) {
-                    reject(err)
-                    return
+                    reject(err);
+                    return;
                 }
-                resolve(data)
-            })
-        })
-    }
-    ipcMain.handle("StringFuzzer", async (e, params) => {
-        return await asyncStringFuzzer(params)
-    })
+                resolve(data);
+            });
+            
+            if (token) {
+                stringFuzzerCallMap.set(token, call);
+            }
+        });
+    };
+    
+    ipcMain.handle("StringFuzzer", async (e, params, token) => {
+        return await asyncStringFuzzer(params, token);
+    });
 
     const asyncSaveFuzzerLabel = (params) => {
         return new Promise((resolve, reject) => {

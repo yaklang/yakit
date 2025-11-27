@@ -102,6 +102,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const initHotPatchCodeOpen = useRef<boolean>(false)
     const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
     const tempNameRef = useRef<string>("")
+    const tokenRef = useRef<string>("")
 
     useEffect(() => {
         getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -198,12 +199,26 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
+                    if (loading) {
+                        // 如果正在执行，则取消
+                        if (tokenRef.current) {
+                            ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
+                            setLoading(false)
+                            tokenRef.current = ""
+                            yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
+                        }
+                        return
+                    }
+
                     saveCode(params.HotPatchCode)
                     props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
 
                     setLoading(true)
+                    // 生成唯一token
+                    tokenRef.current = `string-fuzzer-${Date.now()}-${Math.random()}`
+                    
                     ipcRenderer
-                        .invoke("StringFuzzer", {...params})
+                        .invoke("StringFuzzer", {...params}, tokenRef.current)
                         .then((response: {Results: Uint8Array[]}) => {
                             const data: string[] = (response.Results || []).map((buf) =>
                                 new Buffer(buf).toString("utf8")
@@ -247,7 +262,18 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 )
                             })
                         })
-                        .finally(() => setTimeout(() => setLoading(false), 300))
+                        .catch((err) => {
+                            // 只有非取消的错误才提示
+                            if (tokenRef.current) {
+                                yakitNotify("error", `${t("HTTPFuzzerHotPatch.debugFailed")}: ${err}`)
+                            }
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                setLoading(false)
+                                tokenRef.current = ""
+                            }, 300)
+                        })
                 }}
                 layout={"vertical"}
                 className={styles["http-fuzzer-hotPatch-form"]}
@@ -404,8 +430,12 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     </div>
                 </Form.Item>
                 <Form.Item help={t("HTTPFuzzerHotPatch.debugNotice")}>
-                    <YakitButton loading={loading} type='primary' htmlType='submit'>
-                        {t("YakitButton.debugExecution")}
+                    <YakitButton 
+                        type='primary' 
+                        htmlType='submit'
+                        danger={loading}
+                    >
+                        {loading ? t("YakitButton.cancel") : t("YakitButton.debugExecution")}
                     </YakitButton>
                     <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
                         <YakitButton
