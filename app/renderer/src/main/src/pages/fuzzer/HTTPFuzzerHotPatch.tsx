@@ -189,6 +189,15 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             })
     })
 
+    const onCancel = useMemoizedFn(() => {
+        if (tokenRef.current) {
+            ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
+            setLoading(false)
+            tokenRef.current = ""
+            yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
+        }
+    })
+
     return (
         <div className={styles["http-fuzzer-hotPatch"]}>
             <div className={styles["http-fuzzer-hotPatch-heard"]}>
@@ -199,16 +208,16 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
-                    if (loading) {
-                        // 如果正在执行，则取消
-                        if (tokenRef.current) {
-                            ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
-                            setLoading(false)
-                            tokenRef.current = ""
-                            yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
-                        }
-                        return
-                    }
+                    // if (loading) {
+                    //     // 如果正在执行，则取消
+                    //     if (tokenRef.current) {
+                    //         ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
+                    //         setLoading(false)
+                    //         tokenRef.current = ""
+                    //         yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
+                    //     }
+                    //     return
+                    // }
 
                     saveCode(params.HotPatchCode)
                     props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
@@ -430,21 +439,32 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     </div>
                 </Form.Item>
                 <Form.Item help={t("HTTPFuzzerHotPatch.debugNotice")}>
+                    <div className={styles["http-fuzzer-hotPatch-debugNotice"]} >
                     <YakitButton 
                         type='primary' 
                         htmlType='submit'
-                        danger={loading}
+                        loading={loading}
                     >
-                        {loading ? t("YakitButton.cancel") : t("YakitButton.debugExecution")}
+                        {t("YakitButton.debugExecution")}
                     </YakitButton>
+                    {loading && (
+                        <YakitButton 
+                            danger 
+                            onClick={onCancel}
+                            className={styles["btn-box"]}
+                        >
+                            {t("YakitButton.cancel")}
+                        </YakitButton>
+                    )}
                     <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
                         <YakitButton
                             type='text'
                             onClick={openConsoleNewWindow}
                             icon={<OutlineTerminalIcon className={styles["engineConsole-icon-style"]} />}
-                            style={{marginLeft: 8, marginTop: 5}}
+                            className={styles["btn-box"]}
                         ></YakitButton>
                     </Tooltip>
+                    </div>
                 </Form.Item>
             </Form>
         </div>

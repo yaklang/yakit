@@ -85,6 +85,13 @@
             }
         }
     }
+    .http-fuzzer-hotPatch-debugNotice {
+        display: flex;
+        align-items: center;
+        .btn-box {
+            margin-right: 8px;
+        }
+    }
 }
 
 .hotCodeTemp-save {
