@@ -33,7 +33,6 @@
     "select_export_fields": "Select Export Fields",
     "risk_and_vulnerabilities": "Risks and Vulnerabilities",
     "export_html_failed": "Export HTML failed:",
-    "delete_duplicate_title_data": "Delete duplicate title data",
     "expand_filter": "Expand Filter",
     "all": "All",
     "unread": "Unread",
@@ -45,7 +44,11 @@
     "confirm_feedback_prompt": "After confirming the feedback, the entire vulnerability information will be uploaded to the backend, and developers will use the information to fix the false positive. Do you confirm the feedback?",
     "export_csv": "Export CSV",
     "export_html": "Export HTML",
-    "vulnerability_detection": "Vulnerability Detection"
+    "vulnerability_detection": "Vulnerability Detection",
+    "RowContextMenu":{
+        "delete_duplicate_title_data": "Delete Duplicate Title Data",
+        "openInNewWindow": "Open in New Window"
+    }
   },
   "YakitRiskSelectTag": {
     "false_positive": "False Positive",

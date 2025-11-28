@@ -216,7 +216,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     enum: properties[key]?.enum,
                     render: (text) => {
                         if (type === "boolean") {
-                            return <YakitSwitch checked={text} disabled />
+                            return <YakitSwitch checked={text} style={{cursor: "not-allowed"}} />
                         }
                         if (newUiKeys?.[key]?.["ui:widget"] === "textarea") {
                             return (

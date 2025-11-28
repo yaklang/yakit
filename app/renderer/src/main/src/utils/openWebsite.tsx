@@ -8,6 +8,7 @@ import {
     engineConsoleWindowHash
 } from "@/components/layout/hooks/useEngineConsole/useEngineConsole"
 import i18n from "@/i18n/i18n"
+import { Risk } from "@/pages/risks/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,6 +27,19 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
         })
     }
 }
+
+export const openRiskNewWindow = (data?: Risk) => {
+    if (childWindowHash) {
+        minWinSendToChildWin({type: "openRiskNewWindow", data})
+    } else {
+        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
+        ipcRenderer.send("open-new-child-window", {
+            type: "openRiskNewWindow",
+            data: data
+        })
+    }
+}
+
 export const minWinSendToChildWin = (params) => {
     ipcRenderer.send("onTop-childWin")
     ipcRenderer.send("minWin-send-to-childWin", {

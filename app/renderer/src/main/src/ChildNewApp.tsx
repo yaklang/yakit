@@ -5,6 +5,7 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {coordinate} from "./pages/globalVariable"
 import {YakitSpin} from "./components/yakitUI/YakitSpin/YakitSpin"
 import TitleBar from "./components/BaseTitleBar"
+import {YakitRiskDetails} from "./pages/risks/YakitRiskTable/YakitRiskTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -51,6 +52,15 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
             switch (parentWinData.type) {
                 case "openPacketNewWindow":
                     return <OpenPacketNewWindow data={parentWinData.data} />
+                case "openRiskNewWindow":
+                    return (
+                        <YakitRiskDetails
+                            info={parentWinData.data}
+                            className={styles["child-risk-wrapper"]}
+                            detailClassName={styles["child-risk-details-wrapper"]}
+                            boxStyle={{flex: 1}}
+                        />
+                    )
             }
         }
         return null
@@ -59,7 +69,7 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
     return (
         <div className={styles["child-new-app-wrapper"]}>
             <TitleBar />
-            {childNewAppEle}
+            <div className={styles["child-new-app-content"]}>{childNewAppEle}</div>
         </div>
     )
 }

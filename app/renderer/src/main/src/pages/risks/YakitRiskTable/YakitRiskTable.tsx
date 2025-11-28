@@ -105,7 +105,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
-import {openPacketNewWindow} from "@/utils/openWebsite"
+import {minWinSendToChildWin, openPacketNewWindow, openRiskNewWindow} from "@/utils/openWebsite"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
@@ -1141,6 +1141,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         if (val?.Id !== currentSelectItem?.Id) {
             setCurrentSelectItem(val)
+            minWinSendToChildWin({
+                type: "openRiskNewWindow",
+                data: val
+            })
         }
         if (!val.IsRead) {
             apiNewRiskRead({Filter: {...query, Ids: [val.Id]}}).then(() => {
@@ -1171,7 +1175,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         if (!rowData) return
         showByRightContext({
             width: 180,
-            data: [{key: "delete-repeat-title", label: t("YakitRiskTable.delete_duplicate_title_data")}],
+            data: [
+                {key: "delete-repeat-title", label: t("YakitRiskTable.RowContextMenu.delete_duplicate_title_data")},
+                {key: "open-in-new-window", label: t("YakitRiskTable.RowContextMenu.openInNewWindow")}
+            ],
             onClick: ({key}) => onRightMenuSelect(key, rowData)
         })
     })
@@ -1179,6 +1186,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         switch (key) {
             case "delete-repeat-title":
                 onDeleteRepeatTitle(rowData)
+                break
+            case "open-in-new-window":
+                onRiskTableRowDoubleClick(rowData)
                 break
             default:
                 break
@@ -1247,6 +1257,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
             return
         }
+    })
+
+    const onRiskTableRowDoubleClick = useMemoizedFn((r?:Risk) => {
+        openRiskNewWindow(r)
     })
 
     return (
@@ -1434,6 +1448,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         useUpAndDown
                         onChange={onTableChange}
                         onRowContextMenu={onRowContextMenu}
+                        onRowDoubleClick={onRiskTableRowDoubleClick}
                         {...(tableVirtualResizeProps || {})}
                     />
                 }
@@ -1540,7 +1555,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest, boxStyle} = props
+    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest, boxStyle, detailClassName = ""} = props
     const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     // 目前可展示的请求和响应类型
     const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
@@ -1780,7 +1795,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     />
                 )}
                 {showType === "detail" && (
-                    <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                    <div className={classNames(styles["content-resize-second"],detailClassName)} ref={descriptionsRef}>
                         <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                             <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
                             <Descriptions.Item label={t("YakitRiskDetails.type")}>
