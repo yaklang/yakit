@@ -3175,3 +3175,88 @@ const PublicAIAgent = () => (
 export const PublicAIAgentIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PublicAIAgent} {...props} />
 }
+
+const PublicKnowledgeBase = () => (
+    <svg width='44' height='44' viewBox='0 0 44 44' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect
+            x='27.4541'
+            y='7.83624'
+            width='8'
+            height='30'
+            rx='2'
+            transform='rotate(-6 27.4541 7.83624)'
+            fill='var(--Colors-Use-Main-Primary)'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='6'
+            y='7'
+            width='9'
+            height='30'
+            rx='2'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='8.5'
+            y='16.5'
+            width='4'
+            height='2'
+            rx='0.5'
+            fill='var(--Colors-Use-Main-Primary)'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='8.5'
+            y='21.5'
+            width='4'
+            height='2'
+            rx='0.5'
+            fill='var(--Colors-Use-Main-Primary)'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='8.5'
+            y='26.5'
+            width='4'
+            height='2'
+            rx='0.5'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='17'
+            y='7'
+            width='9'
+            height='30'
+            rx='2'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='19.5'
+            y='16.5'
+            width='4'
+            height='2'
+            rx='0.5'
+            stroke='var(--Colors-Use-Main-Primary)'
+            strokeLinecap='round'
+        />
+        <rect
+            x='19.5'
+            y='21.5'
+            width='4'
+            height='2'
+            rx='0.5'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeLinecap='round'
+        />
+    </svg>
+)
+/**功能菜单/一级/项目管理 项目管理/知识库 */
+export const PublicKnowledgeBaseIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicKnowledgeBase} {...props} />
+}

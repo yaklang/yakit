@@ -1,0 +1,36 @@
+.ai-fail-plan-wrapper > div:first-child {
+    color: var(--Colors-Use-Error-Primary);
+}
+.ai-fail-plan-card {
+    width: 100%;
+    margin: 4px 0;
+    &-title {
+        height: 32px;
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 8px 8px 0 0;
+        background-color: var(--Colors-Use-Error-Focus);
+        color: var(--Colors-Use-Error-Primary);
+    }
+
+    &-content {
+        background: var(--Colors-Use-Basic-Background);
+        padding: 8px;
+        border-radius: 0 0 8px 8px;
+        border: 1px solid var(--Colors-Use-Error-Focus);
+    }
+    &-code {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding: 8px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        margin-bottom: 0;
+        margin-top: 4px;
+        border-radius: 4px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background-color: var(--Colors-Use-Neutral-Bg);
+    }
+}

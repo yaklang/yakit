@@ -14,7 +14,7 @@
 @use  "../theme/componentsTheme/PageHeader.scss";
 @use  "../theme/componentsTheme/card.scss";
 @use  "../theme/componentsTheme/result.scss";
-@use  "../theme/componentsTheme/alert.scss";
+@use "../theme/componentsTheme/alert.scss";
 @use  "../theme/componentsTheme/divider.scss";
 @use  "../theme/componentsTheme/typography.scss";
 
@@ -74,7 +74,7 @@ a {
 .divider-style {
     width: 1px;
     height: 16px;
-    background-color: #eaecf3;
+    background-color: var(--Colors-Use-Neutral-Border);
 }
 // ========================== color ==========================
 $colors: global.$colors;

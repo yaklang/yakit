@@ -53,6 +53,7 @@ export interface QueryRisksRequest {
     CreatedAt?: number[]
 
     RuntimeId?: string
+    RuntimeIds?: string[]
 }
 
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
@@ -60,8 +61,8 @@ export type QueryRisksResponse = QueryGeneralResponse<Risk>
 export interface YakitRiskDetailContentProps {
     info: Risk | SSARisk
     isShowCollapse: boolean
-    setIsShowCollapse: ((v: boolean) => void)
-    jumpCodeScanPage?: ((v: string) => void)
+    setIsShowCollapse: (v: boolean) => void
+    jumpCodeScanPage?: (v: string) => void
     isShowExtra?: boolean
     isScroll?: boolean
 }
@@ -97,5 +98,5 @@ export interface YakURLDataItemProps {
     index:string|number
     code_range:CodeRangeProps
     source: string
-    ResourceName:string
+    ResourceName: string
 }

@@ -1,3 +1,4 @@
+import {SoftwareVersion} from "@/utils/envfile"
 import React, {Dispatch, SetStateAction} from "react"
 
 export interface LocalEngineProps {
@@ -34,11 +35,11 @@ export interface LocalLinkParams {
 
 export interface CheckAllowSecretLocal {
     port: number
-    isIRify: boolean
+    softwareVersion: SoftwareVersion
 }
 
 export interface FixupDatabase {
-    isIRify: boolean
+    softwareVersion: SoftwareVersion
 }
 
 interface FixupDatabaseJson {

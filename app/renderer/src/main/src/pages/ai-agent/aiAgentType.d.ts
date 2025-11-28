@@ -4,7 +4,7 @@ import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AITabsEnum} from "./defaultConstant"
 import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
-import {AIChatQSData, AIStreamOutput} from "../ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIStreamOutput, AITaskInfoProps} from "../ai-re-act/hooks/aiRender"
 import {UseYakExecResultState} from "../ai-re-act/hooks/type"
 
 export interface AIAgentProps {}
@@ -23,8 +23,6 @@ export interface AIAgentTriggerEventInfo {
 
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
-// 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" | "forgeName" | "tool" | "AIModel" //  | "mcp"
 
 // 编辑对话名字
 export interface EditChatNameModalProps {
@@ -58,10 +56,7 @@ export interface ServerInfoModalProps {
 export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
-    tasks: AIAgentGrpcApi.PlanTask[]
-    pressure: AIAgentGrpcApi.Pressure[]
-    cost: AIAgentGrpcApi.AICostMS[]
-    card: AIAgentGrpcApi.AIInfoCard[]
+    tasks: AITaskInfoProps[]
 }
 
 export interface AICardListProps {
@@ -79,6 +74,8 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 export interface AIAgentChatStreamProps {
     streams: AIChatQSData[]
     defaultExpand?: boolean
+    scrollToBottom: boolean
+    execute?: boolean
 }
 export interface ChatStreamCollapseItemProps {
     expandKey: string

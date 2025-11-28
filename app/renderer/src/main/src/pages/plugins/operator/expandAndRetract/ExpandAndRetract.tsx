@@ -13,9 +13,22 @@ interface ExpandAndRetractProps {
     animationWrapperClassName?: string
     /**@description 默认/过程中/完成 根据状态显示过度动画 */
     status?: ExpandAndRetractExcessiveState
+    /**展开文案 */
+    expandText?: string
+    /**收起文案 */
+    retractText?: string
 }
 export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((props) => {
-    const {isExpand, onExpand, children, className = "", animationWrapperClassName = "", status = "default"} = props
+    const {
+        isExpand,
+        onExpand,
+        children,
+        className = "",
+        animationWrapperClassName = "",
+        status = "default",
+        expandText,
+        retractText
+    } = props
     return (
         <div
             className={classNames(
@@ -33,12 +46,16 @@ export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((pro
                 {isExpand ? (
                     <>
                         <OutlineChevrondoubleupIcon className={styles["expand-and-retract-icon"]} />
-                        <span className={styles["expand-and-retract-header-icon-text"]}>收起参数</span>
+                        <span className={styles["expand-and-retract-header-icon-text"]}>
+                            {retractText || "收起参数"}
+                        </span>
                     </>
                 ) : (
                     <>
                         <OutlineChevrondoubledownIcon className={styles["expand-and-retract-icon"]} />
-                        <span className={styles["expand-and-retract-header-icon-text"]}>展开参数</span>
+                        <span className={styles["expand-and-retract-header-icon-text"]}>
+                            {expandText || "展开参数"}
+                        </span>
                     </>
                 )}
             </div>

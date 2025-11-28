@@ -11,6 +11,7 @@ on:
                 options:
                     - ce&ee
                     - irify&irifyee
+                    - memfit
 
 jobs:
     build_yakit:
@@ -72,6 +73,15 @@ jobs:
               if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
+            # ================= Memfit =================
+            - name: Build Memfit Render
+              if: ${{ inputs.version == 'memfit' }}
+              working-directory: ./
+              run: yarn build-render-memfit
+            - name: zip Memfit Render
+              if: ${{ inputs.version == 'memfit' }}
+              run: cd ${{ env.RENDER_PATH }} && zip -r memfit.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
 
@@ -84,6 +94,8 @@ jobs:
                     echo "FILE_PATH=yak" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
                     echo "FILE_PATH=irify" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    echo "FILE_PATH=memfit" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
                     exit 1
@@ -97,6 +109,8 @@ jobs:
                     array=("ce" "ee")
                   elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
                     array=("irify" "irifyee")
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    array=("memfit")
                   else
                     echo "No corresponding version" >&2
                     exit 1

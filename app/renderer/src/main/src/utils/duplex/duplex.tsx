@@ -17,6 +17,7 @@ export interface FileMonitorItemProps {
 }
 
 export interface FileMonitorProps {
+    Id: string
     ChangeEvents: FileMonitorItemProps[]
     CreateEvents: FileMonitorItemProps[]
     DeleteEvents: FileMonitorItemProps[]

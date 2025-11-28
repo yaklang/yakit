@@ -1,6 +1,11 @@
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
 import {ExecResult} from "@/pages/invoker/schema"
+import {AITaskInfoProps} from "./aiRender"
+import {AITool} from "@/pages/ai-agent/type/aiTool"
+import {AIForge} from "@/pages/ai-agent/type/forge"
+import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
+import {AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum} from "./defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -15,7 +20,7 @@ export interface AIStartParams {
     McpServers?: McpConfig[]
 
     /** 问题 */
-    UserQuery: string
+    UserQuery?: string
     /** 是否允许使用文件系统工具权限 @default true */
     EnableSystemFileSystemOperator?: boolean
     /** 是否使用系统默认ai配置 @default true */
@@ -94,48 +99,21 @@ export interface AIStartParams {
     TimelineSessionID?: string
 }
 
-/**
- * - SyncType类型:
- *
- *  SYNC_TYPE_PLAN                      = "plan"
- *
- *  SYNC_TYPE_CONSUMPTION               = "consumption"
- *
- *  SYNC_TYPE_PING                      = "ping"
- *
- *  SYNC_TYPE_SET_CONFIG                = "set_config"
- *
- *  SYNC_TYPE_PROCESS_EVENT             = "sync_process_event"
- *
- *  SYNC_TYPE_QUEUE_INFO                = "queue_info"
- *
- *  SYNC_TYPE_TIMELINE                  = "timeline"
- *
- *  SYNC_TYPE_KNOWLEDGE                 = "enhance_knowledge"
- *
- *  SYNC_TYPE_UPDATE_CONFIG             = "update_config"
- *
- *  SYNC_TYPE_MEMORY_CONTEXT            = "memory_sync"
- *
- *  SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_
- *
- *  SYNC_TYPE_REACT_JUMP_QUEUE          = "react_jump_queue"
- *
- *  SYNC_TYPE_REACT_REMOVE_TASK         = "react_remove_task"
- *
- */
-
 export interface AIInputEvent {
     IsStart?: boolean
     Params?: AIStartParams // 提问问题相关
+
+    IsConfigHotpatch?: boolean
+    HotpatchType?: `${AIInputEventHotPatchTypeEnum}`
 
     IsInteractiveMessage?: boolean // 是否为交互消息(review)
     InteractiveId?: string // id
     InteractiveJSONInput?: string // {suggestion:"continue"}|{suggestion:"adjust_plan",extra_prompt:"xxx"}
 
     IsSyncMessage?: boolean
-    SyncType?: string
+    SyncType?: `${AIInputEventSyncTypeEnum}`
     SyncJsonInput?: string
+    SyncID?: string
 
     IsFreeInput?: boolean
     FreeInput?: string // 自由输入的文本
@@ -269,9 +247,12 @@ export declare namespace AIAgentGrpcApi {
         name: string
         /** 正文 */
         goal: string
-        /** 后端发送的任务状态 */
+        /**
+         * 后端发送的任务状态
+         * progress: "processing" | "completed" | "aborted"
+         */
         progress?: string
-        subtasks?: PlanTask[]
+        subtasks?: AITaskInfoProps[]
         /**评阅时树节点是否被删 */
         isRemove: boolean
         /**关联工具 */
@@ -450,6 +431,47 @@ export declare namespace AIAgentGrpcApi {
         summary: string
         i18n: {zh: string; en: string}
     }
+
+    /** 问题队列状态变化 */
+    export interface QuestionQueueStatusChange {
+        /** 问题ID */
+        react_task_id: string
+        /** 问题内容 */
+        react_task_input: string
+        /** 移除队列的原因 */
+        reason?: string
+    }
+    /**
+     * 问题队列里单个问题信息
+     * @description status的可能值有:
+     * - AITaskState_Created created
+     * - AITaskState_Queueing queueing
+     * - AITaskState_Processing processing
+     * - AITaskState_Completed completed
+     * - AITaskState_Aborted aborted
+     */
+    export interface QuestionQueueItem {
+        created_at: string
+        id: string
+        status: string
+        user_input: string
+    }
+    /** 问题队列信息 */
+    export interface QuestionQueues {
+        is_processing: boolean
+        queue_empty: boolean
+        queue_name: string
+        tasks: QuestionQueueItem[]
+        total_tasks: number
+    }
+
+    /** 准备执行任务规划的问题id(react_task_id) */
+    export interface ReactTaskToAsync {
+        task_id: string
+        loop_name: string
+        task_index: string
+        task_user_input: string
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构
@@ -460,5 +482,15 @@ export interface AIEventQueryRequest {
 /** QueryAIEvent 接口响应 */
 export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
+}
+
+/**GetRandomAIMaterials 接口请求 */
+export interface GetRandomAIMaterialsRequest {
+    Limit: number
+}
+export interface GetRandomAIMaterialsResponse {
+    KnowledgeBaseEntries: KnowledgeBaseEntry[]
+    AITools: AITool[]
+    AIForges: AIForge[]
 }
 // #endregion

@@ -75,7 +75,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 
         data.UseDefaultAIConfig = setting.UseDefaultAIConfig ?? AIAgentSettingDefault.UseDefaultAIConfig
 
-        data.ForgeName = setting.ForgeName || AIAgentSettingDefault.ForgeName
+        data.ForgeName = "" //不传
+        data.ForgeParams = undefined //不传
 
         data.DisallowRequireForUserPrompt =
             setting.DisallowRequireForUserPrompt ?? AIAgentSettingDefault.DisallowRequireForUserPrompt

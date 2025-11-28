@@ -4,5 +4,6 @@ export enum RemoteI18nGV {
     seI18n = "I18n_Yakit_se",
     ceIRifyI18n = "I18n_IRify",
     eeIRifyI18n = "I18n_IRify_ee",
-    basI18n = "I18n_BAS"
+    basI18n = "I18n_BAS",
+    ceAII18n = "I18n_AIAgent"
 }

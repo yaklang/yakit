@@ -1,5 +1,6 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIAgentGrpcApi, AIOutputEvent, AIOutputI18n} from "./grpcApi"
+import {AIChatIPCStartParams, AIQuestionQueues} from "./type"
 
 // #region 基础通用数据字段
 interface AIOutputBaseInfo {
@@ -49,6 +50,8 @@ export interface AIToolResult {
         /**@deprecated UI展示不显示 */
         isShowAll: boolean
     }
+    /** 执行错误相关信息 */
+    execError: string
 }
 
 /** 任务开始节点的信息 */
@@ -101,6 +104,28 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
     /** 层级(代表在树里的第几层) */
     level: number
 }
+
+/** 问题队列状态变化 */
+export interface AIQuestionQueueStatusChange extends AIAgentGrpcApi.QuestionQueueStatusChange {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    type: "enqueue" | "dequeue"
+    queues: AIQuestionQueues
+}
+
+/** 自由对话-问题队列清空消息 */
+export interface AIQuestionQueueCleared {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+}
+
+/** 任务规划-执行崩溃后的错误信息展示 */
+export interface FailPlanAndExecutionError {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    content: string
+}
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
@@ -131,7 +156,13 @@ export enum AIChatQSDataTypeEnum {
     /**工具决策 */
     TOOL_CALL_DECISION = "tool_call_decision",
     /**当前任务规划结束标志 */
-    END_PLAN_AND_EXECUTION = "end_plan_and_execution"
+    END_PLAN_AND_EXECUTION = "end_plan_and_execution",
+    /** 问题队列状态变化信息 */
+    QUESTION_QUEUE_STATUS_CHANGE = "question_queue_status_change",
+    /** 问题队列清空消息 */
+    QUESTION_QUEUE_CLEARED = "question_queue_cleared",
+    /** 任务规划崩溃的错误信息 */
+    FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -140,9 +171,12 @@ interface AIChatQSDataBase<T extends string, U> {
     id: string
     AIService: AIOutputEvent["AIService"]
     Timestamp: AIOutputEvent["Timestamp"]
+    /** 前端专属数据，供前端逻辑和UI处理使用 */
+    extraValue?: AIChatIPCStartParams["extraValue"]
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
+/** @deprecated 日志类型已无用，迁移成一个新页面 */
 type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
@@ -160,6 +194,15 @@ type ChatFileSystemPin = AIChatQSDataBase<AIChatQSDataTypeEnum.FILE_SYSTEM_PIN, 
 type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
+type ChatQuestionQueueStatusChange = AIChatQSDataBase<
+    AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE,
+    AIQuestionQueueStatusChange
+>
+type ChatQuestionQueueCleared = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED, AIQuestionQueueCleared>
+type ChatFailPlanAndExecution = AIChatQSDataBase<
+    AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
+    FailPlanAndExecutionError
+>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -177,4 +220,7 @@ export type AIChatQSData =
     | ChatTaskIndexNode
     | ChatToolCallDecision
     | ChatPlanExecEnd
+    | ChatQuestionQueueStatusChange
+    | ChatQuestionQueueCleared
+    | ChatFailPlanAndExecution
 // #endregion

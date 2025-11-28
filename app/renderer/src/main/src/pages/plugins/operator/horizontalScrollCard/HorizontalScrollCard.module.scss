@@ -199,6 +199,19 @@ $keyColor: map-keys($CardStatusColor);
                 line-height: 16px; /* 133.333% */
             }
         }
+        .card-item-small {
+            min-height: 50px;
+            padding: 8px 12px;
+            .horizontal-scroll-card-list-item-info-single-data {
+                font-size: 14px;
+                line-height: 20px;
+            }
+            .horizontal-scroll-card-list-item-info-single-id {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                font-size: 11px;
+                line-height: 14px;
+            }
+        }
     }
 }
 .card-item-compact {

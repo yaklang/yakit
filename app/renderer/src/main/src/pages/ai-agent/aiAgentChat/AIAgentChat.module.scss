@@ -4,10 +4,10 @@
     background: var(--Colors-Use-Neutral-Bg);
     position: relative;
     .footer-forge-form {
-        z-index: 2;
+        z-index: 99;
         position: absolute;
         left: 0;
-        bottom: 12px;
+        bottom: 24px;
         width: 100%;
         display: flex;
         align-items: flex-end;
@@ -31,6 +31,7 @@
     display: flex;
     justify-content: center;
     margin-bottom: 24px;
+    z-index: 9;
     .review-border-shadow {
         width: 100%;
         min-height: 50px;
@@ -57,6 +58,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            .review-footer-extra {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
         }
     }
     .review-mini {

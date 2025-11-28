@@ -288,4 +288,22 @@ module.exports = (win, getClient) => {
         return await asyncAIToolGenerateMetadata(param)
     })
     //#endregion
+
+    //#region ai 首页
+    const asyncGetRandomAIMaterials = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetRandomAIMaterials(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取首页随机列表数据
+    ipcMain.handle("GetRandomAIMaterials", async (e, params) => {
+        return await asyncGetRandomAIMaterials(params)
+    })
+    // #endregion
 }

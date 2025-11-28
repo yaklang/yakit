@@ -35,8 +35,8 @@ import {
     isEnterpriseOrSimpleEdition,
     isEnterpriseEdition,
     isIRify,
-    isCommunityIRify,
-    isEnpriTraceIRify
+    isMemfit,
+    isWFCacheEdition
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -404,6 +404,27 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
         ]
     }
 
+    if (isMemfit()) {
+        return [
+            {
+                routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
+                verbose: "AIAgent",
+                menuName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
+                route: YakitRoute.AI_Agent,
+                singleNode: true,
+                multipleNode: []
+            },
+            {
+                routeKey: routeConvertKey(YakitRoute.AI_REPOSITORY, ""),
+                verbose: "知识库",
+                menuName: YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY].label,
+                route: YakitRoute.AI_REPOSITORY,
+                singleNode: true,
+                multipleNode: []
+            }
+        ]
+    }
+
     const time = new Date().getTime().toString()
     const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
     const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
@@ -461,6 +482,10 @@ export const getInitActiveTabKey = () => {
     }
     if (isBreachTrace()) {
         return YakitRoute.DB_ChaosMaker
+    }
+
+    if (isMemfit()) {
+        return YakitRoute.AI_Agent
     }
 
     return YakitRoute.NewHome
@@ -2191,7 +2216,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
-        if (!isIRify()) {
+        if (isWFCacheEdition()) {
             unFuzzerCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
                 (selectedState, previousSelectedState) => {
@@ -2210,7 +2235,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
     const onInitFuzzer = useMemoizedFn(async () => {
-        if (!isEnpriTraceAgent() && !isCommunityIRify() && !isEnpriTraceIRify()) {
+        if (isWFCacheEdition()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存

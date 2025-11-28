@@ -112,7 +112,7 @@ import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/Mat
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
-import {isCommunityEdition, isIRify} from "@/utils/envfile"
+import {isMemfit, isCommunityEdition, isIRify} from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
@@ -428,7 +428,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-   
     YakitRoute.AI_REPOSITORY
 ]
 /** 不需要软件安全边距的页面路由 */
@@ -481,7 +480,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-  
     YakitRoute.AI_REPOSITORY
 ]
 /** 无滚动条的页面路由 */
@@ -494,12 +492,16 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.ShortcutKey,
     YakitRoute.YakRunner_ScanHistory
 ]
+
+/** 通过版本获取一级tab固定展示tab  */
+const getDefaultFixedTabs = () => {
+    if (isMemfit()) {
+        return [YakitRoute.AI_Agent, YakitRoute.AI_REPOSITORY]
+    }
+    return [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
+}
 /** 一级tab固定展示tab  */
-export const defaultFixedTabs: YakitRoute[] = [
-    YakitRoute.NewHome,
-    YakitRoute.DB_HTTPHistory,
-    YakitRoute.DB_HTTPHistoryAnalysis
-]
+export const defaultFixedTabs: YakitRoute[] = getDefaultFixedTabs()
 /** 一级tab固定展示tab支持多开页面 */
 export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = [YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
@@ -669,7 +671,7 @@ function withRouteToPage(WrappedComponent) {
                                     marginTop: "16px",
                                     padding: "8px 16px",
                                     background: "var(--Colors-Use-Blue-Primary)",
-                                    color:"var(--Colors-Use-Blue-On-Primary)",
+                                    color: "var(--Colors-Use-Blue-On-Primary)",
                                     border: "none",
                                     borderRadius: "4px",
                                     cursor: "pointer"
@@ -966,212 +968,249 @@ export interface PublicRouteMenuProps {
     yakScripName?: string
     children?: PublicRouteMenuProps[]
 }
+
+const getPublicRouteMenu = () => {
+    if (isIRify()) {
+        return [
+            {
+                page: undefined,
+                label: "代码审计",
+                labelUi: "YakitRoute.codeAudit",
+                children: [
+                    {
+                        page: YakitRoute.YakRunner_Project_Manager,
+                        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Project_Manager]
+                    },
+                    {
+                        page: YakitRoute.YakRunner_Audit_Code,
+                        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
+                    },
+                    {
+                        page: YakitRoute.YakRunner_Code_Scan,
+                        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
+                    },
+                    {
+                        page: YakitRoute.Rule_Management,
+                        ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
+                    },
+                    {
+                        page: YakitRoute.YakRunner_Audit_Hole,
+                        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
+                    },
+                    {
+                        page: YakitRoute.Yak_Java_Decompiler,
+                        ...YakitRouteToPageInfo[YakitRoute.Yak_Java_Decompiler]
+                    }
+                ]
+            },
+            {
+                page: undefined,
+                label: "数据库",
+                labelUi: "YakitRoute.database",
+                children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
+            }
+            //   {
+            //       page: undefined,
+            //       label: "AI",
+            //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
+            //   }
+        ]
+    }
+    if (isMemfit())
+        return [
+            {
+                page: undefined,
+                label: "AI",
+                labelUi: "YakitRoute.ai",
+                children: [
+                    {
+                        page: YakitRoute.AI_Agent,
+                        ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
+                    },
+                    {page: YakitRoute.AI_REPOSITORY, ...YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY]}
+                ]
+            },
+            {
+                page: undefined,
+                label: "数据库",
+                labelUi: "YakitRoute.database",
+                children: [
+                    {
+                        page: YakitRoute.DB_HTTPHistory,
+                        ...YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory]
+                    },
+                    {page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]},
+                    {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
+                    {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
+                    {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
+                    {page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]},
+                    {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
+                ]
+            }
+        ]
+    return [
+        {
+            page: undefined,
+            label: "渗透测试",
+            labelUi: "YakitRoute.penTest",
+            children: [
+                {
+                    page: YakitRoute.MITMHacker,
+                    ...YakitRouteToPageInfo[YakitRoute.MITMHacker]
+                },
+                {
+                    page: undefined,
+                    label: "Fuzzer",
+                    labelUi: "YakitRoute.fuzzer",
+                    children: [
+                        {
+                            page: YakitRoute.HTTPFuzzer,
+                            ...YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]
+                        },
+                        {
+                            page: YakitRoute.WebsocketFuzzer,
+                            ...YakitRouteToPageInfo[YakitRoute.WebsocketFuzzer]
+                        }
+                    ]
+                },
+                {page: YakitRoute.Codec, ...YakitRouteToPageInfo[YakitRoute.Codec]},
+                {
+                    page: YakitRoute.DataCompare,
+                    ...YakitRouteToPageInfo[YakitRoute.DataCompare]
+                }
+            ]
+        },
+        {
+            page: undefined,
+            label: "安全工具",
+            labelUi: "YakitRoute.securityTools",
+            children: [
+                {
+                    page: YakitRoute.Mod_ScanPort,
+                    ...YakitRouteToPageInfo[YakitRoute.Mod_ScanPort]
+                },
+                {page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC]},
+                {
+                    page: YakitRoute.Plugin_OP,
+                    label: "子域名收集",
+                    labelUi: "YakitRoute.subdomainCollection",
+                    yakScripName: ResidentPluginName.SubDomainCollection
+                },
+                {
+                    page: YakitRoute.Plugin_OP,
+                    label: "基础爬虫",
+                    labelUi: "YakitRoute.basicCrawler",
+                    yakScripName: ResidentPluginName.BasicCrawler
+                },
+                {page: YakitRoute.Space_Engine, ...YakitRouteToPageInfo[YakitRoute.Space_Engine]},
+                {
+                    page: undefined,
+                    label: "爆破与未授权检测",
+                    labelUi: "YakitRoute.bruteForceAndUnauthorizedCheck",
+                    children: [
+                        {
+                            page: YakitRoute.Mod_Brute,
+                            ...YakitRouteToPageInfo[YakitRoute.Mod_Brute]
+                        },
+                        {
+                            page: YakitRoute.Plugin_OP,
+                            label: "目录扫描",
+                            labelUi: "YakitRoute.directoryScan",
+                            yakScripName: ResidentPluginName.DirectoryScanning
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            page: undefined,
+            label: "插件",
+            labelUi: "YakitRoute.plugin",
+            children: [
+                {
+                    page: YakitRoute.Plugin_Hub,
+                    ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
+                },
+                {
+                    page: YakitRoute.BatchExecutorPage,
+                    ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
+                }
+            ]
+        },
+        {
+            page: undefined,
+            label: "反连",
+            labelUi: "YakitRoute.reverseConnection",
+            children: [
+                {
+                    page: undefined,
+                    label: "反连触发器",
+                    labelUi: "YakitRoute.reverseTrigger",
+                    children: [
+                        {
+                            page: YakitRoute.DNSLog,
+                            ...YakitRouteToPageInfo[YakitRoute.DNSLog]
+                        },
+                        {
+                            page: YakitRoute.ICMPSizeLog,
+                            ...YakitRouteToPageInfo[YakitRoute.ICMPSizeLog]
+                        },
+                        {
+                            page: YakitRoute.TCPPortLog,
+                            ...YakitRouteToPageInfo[YakitRoute.TCPPortLog]
+                        }
+                    ]
+                },
+                {
+                    page: undefined,
+                    label: "RevHack",
+                    labelUi: "YakitRoute.revHack",
+                    children: [
+                        {
+                            page: YakitRoute.PayloadGenerater_New,
+                            ...YakitRouteToPageInfo[YakitRoute.PayloadGenerater_New]
+                        },
+                        {
+                            page: YakitRoute.ReverseServer_New,
+                            ...YakitRouteToPageInfo[YakitRoute.ReverseServer_New]
+                        }
+                    ]
+                },
+                {
+                    page: YakitRoute.ShellReceiver,
+                    ...YakitRouteToPageInfo[YakitRoute.ShellReceiver]
+                }
+            ]
+        },
+        {
+            page: undefined,
+            label: "数据库",
+            labelUi: "YakitRoute.database",
+            children: [
+                {
+                    page: YakitRoute.DB_HTTPHistory,
+                    ...YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory]
+                },
+                {page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]},
+                {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
+                {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
+                {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
+                {page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]},
+                {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
+            ]
+        }
+        //   {
+        //       page: undefined,
+        //       label: "AI",
+        //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
+        //   }
+    ]
+}
 /**
  * @name public版菜单配置数据
  * @description 注意! 该数据只在折叠菜单时使用，展开菜单的渲染并未使用该数据，如需调整展开菜单，请在组件MenuMode内修改
  */
-export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
-    ? [
-          {
-              page: undefined,
-              label: "代码审计",
-              labelUi: "YakitRoute.codeAudit",
-              children: [
-                  {
-                      page: YakitRoute.YakRunner_Project_Manager,
-                      ...YakitRouteToPageInfo[YakitRoute.YakRunner_Project_Manager]
-                  },
-                  {
-                      page: YakitRoute.YakRunner_Audit_Code,
-                      ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
-                  },
-                  {
-                      page: YakitRoute.YakRunner_Code_Scan,
-                      ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
-                  },
-                  {
-                      page: YakitRoute.Rule_Management,
-                      ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
-                  },
-                  {
-                      page: YakitRoute.YakRunner_Audit_Hole,
-                      ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
-                  },
-                  {
-                      page: YakitRoute.Yak_Java_Decompiler,
-                      ...YakitRouteToPageInfo[YakitRoute.Yak_Java_Decompiler]
-                  }
-              ]
-          },
-          {
-              page: undefined,
-              label: "数据库",
-              labelUi: "YakitRoute.database",
-              children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
-          }
-          //   {
-          //       page: undefined,
-          //       label: "AI",
-          //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
-          //   }
-      ]
-    : [
-          {
-              page: undefined,
-              label: "渗透测试",
-              labelUi: "YakitRoute.penTest",
-              children: [
-                  {
-                      page: YakitRoute.MITMHacker,
-                      ...YakitRouteToPageInfo[YakitRoute.MITMHacker]
-                  },
-                  {
-                      page: undefined,
-                      label: "Fuzzer",
-                      labelUi: "YakitRoute.fuzzer",
-                      children: [
-                          {
-                              page: YakitRoute.HTTPFuzzer,
-                              ...YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]
-                          },
-                          {
-                              page: YakitRoute.WebsocketFuzzer,
-                              ...YakitRouteToPageInfo[YakitRoute.WebsocketFuzzer]
-                          }
-                      ]
-                  },
-                  {page: YakitRoute.Codec, ...YakitRouteToPageInfo[YakitRoute.Codec]},
-                  {
-                      page: YakitRoute.DataCompare,
-                      ...YakitRouteToPageInfo[YakitRoute.DataCompare]
-                  }
-              ]
-          },
-          {
-              page: undefined,
-              label: "安全工具",
-              labelUi: "YakitRoute.securityTools",
-              children: [
-                  {
-                      page: YakitRoute.Mod_ScanPort,
-                      ...YakitRouteToPageInfo[YakitRoute.Mod_ScanPort]
-                  },
-                  {page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC]},
-                  {
-                      page: YakitRoute.Plugin_OP,
-                      label: "子域名收集",
-                      labelUi: "YakitRoute.subdomainCollection",
-                      yakScripName: ResidentPluginName.SubDomainCollection
-                  },
-                  {
-                      page: YakitRoute.Plugin_OP,
-                      label: "基础爬虫",
-                      labelUi: "YakitRoute.basicCrawler",
-                      yakScripName: ResidentPluginName.BasicCrawler
-                  },
-                  {page: YakitRoute.Space_Engine, ...YakitRouteToPageInfo[YakitRoute.Space_Engine]},
-                  {
-                      page: undefined,
-                      label: "爆破与未授权检测",
-                      labelUi: "YakitRoute.bruteForceAndUnauthorizedCheck",
-                      children: [
-                          {
-                              page: YakitRoute.Mod_Brute,
-                              ...YakitRouteToPageInfo[YakitRoute.Mod_Brute]
-                          },
-                          {
-                              page: YakitRoute.Plugin_OP,
-                              label: "目录扫描",
-                              labelUi: "YakitRoute.directoryScan",
-                              yakScripName: ResidentPluginName.DirectoryScanning
-                          }
-                      ]
-                  }
-              ]
-          },
-          {
-              page: undefined,
-              label: "插件",
-              labelUi: "YakitRoute.plugin",
-              children: [
-                  {
-                      page: YakitRoute.Plugin_Hub,
-                      ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
-                  },
-                  {
-                      page: YakitRoute.BatchExecutorPage,
-                      ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
-                  }
-              ]
-          },
-          {
-              page: undefined,
-              label: "反连",
-              labelUi: "YakitRoute.reverseConnection",
-              children: [
-                  {
-                      page: undefined,
-                      label: "反连触发器",
-                      labelUi: "YakitRoute.reverseTrigger",
-                      children: [
-                          {
-                              page: YakitRoute.DNSLog,
-                              ...YakitRouteToPageInfo[YakitRoute.DNSLog]
-                          },
-                          {
-                              page: YakitRoute.ICMPSizeLog,
-                              ...YakitRouteToPageInfo[YakitRoute.ICMPSizeLog]
-                          },
-                          {
-                              page: YakitRoute.TCPPortLog,
-                              ...YakitRouteToPageInfo[YakitRoute.TCPPortLog]
-                          }
-                      ]
-                  },
-                  {
-                      page: undefined,
-                      label: "RevHack",
-                      labelUi: "YakitRoute.revHack",
-                      children: [
-                          {
-                              page: YakitRoute.PayloadGenerater_New,
-                              ...YakitRouteToPageInfo[YakitRoute.PayloadGenerater_New]
-                          },
-                          {
-                              page: YakitRoute.ReverseServer_New,
-                              ...YakitRouteToPageInfo[YakitRoute.ReverseServer_New]
-                          }
-                      ]
-                  },
-                  {
-                      page: YakitRoute.ShellReceiver,
-                      ...YakitRouteToPageInfo[YakitRoute.ShellReceiver]
-                  }
-              ]
-          },
-          {
-              page: undefined,
-              label: "数据库",
-              labelUi: "YakitRoute.database",
-              children: [
-                  {
-                      page: YakitRoute.DB_HTTPHistory,
-                      ...YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory]
-                  },
-                  {page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]},
-                  {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
-                  {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
-                  {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
-                  {page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]},
-                  {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
-              ]
-          }
-          //   {
-          //       page: undefined,
-          //       label: "AI",
-          //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
-          //   }
-      ]
+export const PublicRouteMenu: PublicRouteMenuProps[] = getPublicRouteMenu()
 /**
  * @name public版常用插件列表
  * @description 注意！该列表内保存的都为插件的名称

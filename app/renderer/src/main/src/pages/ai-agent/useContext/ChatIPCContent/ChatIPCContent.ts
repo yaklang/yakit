@@ -2,7 +2,7 @@ import {createContext} from "react"
 import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
-import {AIAgentGrpcApi, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface ChatIPCContextStore {
@@ -22,7 +22,12 @@ export interface AIChatIPCSendParams {
 }
 type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export interface AISendSyncMessageParams {
-    syncType: string
+    syncType: AIInputEvent["SyncType"]
+    SyncJsonInput?: AIInputEvent["SyncJsonInput"]
+    params?: MakeOptional<AIStartParams, "UserQuery">
+}
+export interface AISendConfigHotpatchParams {
+    hotpatchType: AIInputEvent["HotpatchType"]
     params: MakeOptional<AIStartParams, "UserQuery">
 }
 export interface ChatIPCContextDispatcher {
@@ -34,6 +39,7 @@ export interface ChatIPCContextDispatcher {
     handleSend: (params: AIChatIPCSendParams) => void
     setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
     handleSendSyncMessage: (params: AISendSyncMessageParams) => void
+    handleSendConfigHotpatch: (params: AISendConfigHotpatchParams) => void
 }
 
 export interface ChatIPCContextValue {
@@ -52,11 +58,13 @@ export default createContext<ChatIPCContextValue>({
     dispatcher: {
         chatIPCEvents: {
             fetchToken: () => "",
-            fetchRequest: () => undefined,
+            fetchReactTaskToAsync: () => "",
+            clearReactTaskToAsync: () => {},
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},
-            onReset: () => {}
+            onReset: () => {},
+            handleTaskReviewRelease: () => {}
         },
         handleSendCasual: () => {},
         handleSendTask: () => {},
@@ -64,6 +72,7 @@ export default createContext<ChatIPCContextValue>({
         handleStart: () => {},
         handleStop: () => {},
         setTimelineMessage: () => {},
-        handleSendSyncMessage: () => {}
+        handleSendSyncMessage: () => {},
+        handleSendConfigHotpatch: () => {}
     }
 })

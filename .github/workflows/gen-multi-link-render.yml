@@ -57,6 +57,12 @@ jobs:
             - name: "zip IRifyEE Link Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
+            - name: "Build Memfit Link Render"
+              working-directory: ./
+              run: yarn build-link-render-memfit
+            - name: "zip Memfit Link Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r memfit.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
+
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
 
@@ -70,7 +76,7 @@ jobs:
               run: |
                   bucket="yaklang"
 
-                  array=("ce" "ee" "irify" "irifyee")
+                  array=("ce" "ee" "irify" "irifyee" "memfit")
 
                   for item in "${array[@]}"; do
                     file_name="${item}.zip"

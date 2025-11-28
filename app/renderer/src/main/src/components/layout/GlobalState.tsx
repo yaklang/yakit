@@ -489,11 +489,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             count = count + 1
         }
         if (showMITMCertWarn) {
-            status = "error"
+            status = "warning"
             count = count + 1
         }
         if (showCheckEngine) {
-            status = "error"
+            status = "warning"
             count = count + 1
         }
         setState(status)
@@ -512,7 +512,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             count = count + 1
         }
         if (showCheckEngine) {
-            status = "error"
+            status = "warning"
             count = count + 1
         }
 

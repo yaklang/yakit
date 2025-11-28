@@ -1,5 +1,5 @@
 import {ReactNode} from "react"
-import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
+import {AIAgentSetting} from "./aiAgentType"
 import {
     OutlineChipIcon,
     OutlineCogIcon,
@@ -94,7 +94,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         index: "",
         name: "",
         goal: "",
-        progress: "wait",
+        progress: "",
         isRemove: false,
         tools: [],
         description: "",
@@ -107,7 +107,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         data.index = info.index || ""
         data.name = info.name || ""
         data.goal = info.goal || ""
-        data.progress = info.progress || "wait"
+        data.progress = info.progress || ""
         data.isRemove = info.isRemove || false
         data.tools = info.tools || []
         data.description = info.description || ""
@@ -200,16 +200,15 @@ export enum AIMCPServerTypeEnum {
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
     execute: false,
+    runTimeIDs: [],
     aiPerfData: {
         consumption: {},
         pressure: [],
         firstCost: [],
         totalCost: []
     },
-    logs: [],
     casualChat: {
-        contents: [],
-        coordinatorId: ""
+        contents: []
     },
     yakExecResult: {
         card: [],
@@ -217,9 +216,13 @@ export const defaultChatIPCData: UseChatIPCState = {
         yakExecResultLogs: []
     },
     taskChat: {
-        coordinatorId: "",
         plan: [],
         streams: []
+    },
+    grpcFolders: [],
+    questionQueue: {
+        total: 0,
+        data: []
     }
 }
 export const defaultAIPerfData: UseAIPerfDataState = {

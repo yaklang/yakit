@@ -28,6 +28,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitLoading} from "./components/YakitLoading"
 import {DownloadYaklang} from "./components/DownloadYaklang"
 import {
+    FetchSoftwareVersion,
     GetConnectPort,
     isCommunityEdition,
     isCommunityIRify,
@@ -387,7 +388,7 @@ export const StartupPage: React.FC = () => {
     const handleFixupDatabase = useMemoizedFn(async () => {
         setCheckLog(["开始修复数据库中..."])
         try {
-            const res = await grpcFixupDatabase({isIRify: isIRify()})
+            const res = await grpcFixupDatabase({softwareVersion: FetchSoftwareVersion()})
             setRestartLoading(false)
             if (res.ok && res.status === "success") {
                 setCheckLog((arr) => arr.concat(["修复数据库成功"]))

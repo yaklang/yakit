@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 
 import styles from "./AIReActChat.module.scss"
-import {AIReActChatProps, AIReActLogProps, AIReActTimelineMessageProps} from "./AIReActChatType"
+import {AIReActChatProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
@@ -9,7 +9,6 @@ import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "a
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
-import {OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {AIModelSelect} from "@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect"
 import classNames from "classnames"
@@ -20,22 +19,24 @@ import {AIInputEvent} from "../hooks/grpcApi"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
 import useAIChatUIData from "../hooks/useAIChatUIData"
+import emiter from "@/utils/eventBus/eventBus"
+import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
+import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
+import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {mode} = props
 
-    const {casualChat, logs} = useAIChatUIData()
+    const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
-    const {chatIPCEvents, handleStart, handleStop, setTimelineMessage} = useChatIPCDispatcher()
-    const {execute} = chatIPCData
+    const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
+    const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const [logVisible, setLogVisible] = useState<boolean>(false)
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
 
     const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
@@ -43,6 +44,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {activeChat, setting} = useAIAgentStore()
 
+    const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
     const [question, setQuestion] = useState<string>("")
     const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
@@ -82,14 +84,21 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     // #endregion
 
+    useEffect(() => {
+        emiter.on("switchReActShow", handleSwitchShowFreeChat)
+        return () => {
+            emiter.off("switchReActShow", handleSwitchShowFreeChat)
+        }
+    }, [])
+
     const isShowRetract = useCreation(() => {
         return mode === "task" && showFreeChat
     }, [mode, showFreeChat])
     const isShowExpand = useCreation(() => {
         return mode === "task" && !showFreeChat
     }, [mode, showFreeChat])
-    const handleCancelExpand = useMemoizedFn(() => {
-        setShowFreeChat(false)
+    const handleSwitchShowFreeChat = useMemoizedFn((v) => {
+        setShowFreeChat(v)
     })
     const onViewContext = useDebounceFn(
         useMemoizedFn(() => {
@@ -100,12 +109,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             if (!timelineVisibleLoading) {
                 setTimelineVisibleLoading(true)
             }
-            const info: AIInputEvent = {
-                IsSyncMessage: true,
-                SyncType: "timeline",
-                InteractiveJSONInput: ""
+            const info: AISendSyncMessageParams = {
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+                params: {}
             }
-            chatIPCEvents.onSend({token: activeChat.id, type: "", params: info})
+            handleSendSyncMessage(info)
         }),
         {wait: 300, leading: true}
     ).run
@@ -133,24 +141,19 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                 自由对话
                             </div>
                             <div className={styles["chat-header-extra"]}>
-                                <YakitButton
-                                    type='secondary2'
-                                    isHover={logVisible}
-                                    icon={<OutlineNewspaperIcon />}
-                                    onClick={() => setLogVisible((v) => !v)}
-                                >
-                                    日志
-                                </YakitButton>
-                                {isShowRetract && <ChevronleftButton onClick={handleCancelExpand} />}
+                                {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}
                             </div>
                         </div>
                         <AIReActChatContents chats={casualChat.contents} />
                     </div>
-                    <div className={styles["chat-footer"]}>
+                    <div
+                        className={classNames(styles["chat-footer"], {
+                            [styles["chat-footer-query"]]: execute && questionQueue?.total > 0
+                        })}
+                    >
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
-                                {/*  TODO 队列切换任务 */}
-                                {/* <AITaskQuery /> */}
+                                {execute && questionQueue?.total > 0 && <AITaskQuery />}
                                 <AIChatTextarea
                                     loading={false}
                                     question={question}
@@ -174,12 +177,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         </div>
                     </div>
                 </div>
-                <div className={styles["open-wrapper"]} onClick={() => setShowFreeChat(true)}>
+                <div className={styles["open-wrapper"]} onClick={() => handleSwitchShowFreeChat(true)}>
                     <ChevrondownButton />
                     <div className={styles["text"]}>自由对话</div>
                 </div>
             </div>
-            {logVisible && <AIReActLog logs={logs} setLogVisible={setLogVisible} />}
             <YakitDrawer
                 title='上下文信息'
                 visible={timelineVisible}
@@ -198,60 +200,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     )
 })
 
-const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
-    const {logs, setLogVisible} = props
-    const logListRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        scrollToBottom()
-    }, [logs])
-
-    const scrollToBottom = useMemoizedFn(() => {
-        const messagesWrapper = logListRef.current
-        if (!messagesWrapper) return
-        requestAnimationFrame(() => {
-            const {clientHeight, scrollHeight, scrollTop} = messagesWrapper
-            const scrollBottom = scrollHeight - scrollTop - clientHeight
-            if (scrollBottom > 80) return
-            if (scrollHeight > clientHeight) {
-                messagesWrapper.scrollTop = messagesWrapper.scrollHeight
-            }
-        })
-    })
-    return (
-        <div className={styles["ai-re-act-log"]}>
-            <div className={styles["ai-re-act-log-heard"]}>
-                <span>日志</span>
-                <YakitButton type='text' icon={<OutlineXIcon />} onClick={() => setLogVisible(false)} />
-            </div>
-            <div ref={logListRef} className={styles["ai-re-act-log-list"]}>
-                {logs.map((row) => {
-                    const {id, type, data} = row
-                    switch (type) {
-                        case "log":
-                            const {level, message} = data
-                            return (
-                                <div className={styles["ai-re-act-log-row"]} key={id}>
-                                    • {level}:{message}
-                                </div>
-                            )
-                        case "stream":
-                            return (
-                                <AIStreamChatContent
-                                    key={id}
-                                    content={data.content}
-                                    nodeIdVerbose={data.NodeIdVerbose}
-                                />
-                            )
-
-                        default:
-                            return <React.Fragment key={id}></React.Fragment>
-                    }
-                })}
-                <div className={styles["ai-re-act-log-no-more"]}>暂无更多数据</div>
-            </div>
-        </div>
-    )
-})
 const AIReActTimelineMessage: React.FC<AIReActTimelineMessageProps> = React.memo((props) => {
     const {message} = props
     const [loading, setLoading] = useControllableValue<boolean>(props, {

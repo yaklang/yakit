@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>引擎 Console</title>
-  <link rel="stylesheet" href="./xterm@5.3.0/xterm.css">
+  <link rel="stylesheet" href="../libs/xterm@5.3.0/xterm.css">
   <style>
     html,
     body {
@@ -22,8 +22,8 @@
 
 <body>
   <div id="terminal"></div>
-  <script src="./xterm@5.3.0/xterm.js"></script>
-  <script src="./xterm-addon-fit@0.7.0/xterm-addon-fit.js"></script>
+  <script src="../libs/xterm@5.3.0/xterm.js"></script>
+  <script src="../libs/xterm-addon-fit@0.7.0/xterm-addon-fit.js"></script>
   <script>
     const { ipcRenderer } = require('electron')
     const getLocalValue = async (k, defaultValue) => {

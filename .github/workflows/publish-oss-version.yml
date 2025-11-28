@@ -13,6 +13,7 @@ on:
                     - ee
                     - irify
                     - irifyee
+                    - memfit
 
 jobs:
     build_yakit:
@@ -37,6 +38,9 @@ jobs:
                     # Remove '-irify' suffix if exists
                     SOFTWARE_VERSION="${SOFTWARE_VERSION%-irify}"
                     echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
+                    # Remove '-memfit' suffix if exists
+                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-memfit}"
+                    echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
                   fi
 
             - name: Generate OSS File Path
@@ -49,6 +53,8 @@ jobs:
                     echo "FILE_PATH=irify" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "FILE_PATH=svip" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    echo "FILE_PATH=memfit" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
                     exit 1

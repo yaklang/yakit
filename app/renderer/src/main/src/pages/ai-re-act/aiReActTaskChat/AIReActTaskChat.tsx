@@ -1,48 +1,39 @@
-import React, {useEffect, useState} from "react"
+import React, {useState} from "react"
 import {AIReActTaskChatContentProps, AIReActTaskChatLeftSideProps, AIReActTaskChatProps} from "./AIReActTaskChatType"
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
 import {AIAgentChatStream, AIChatLeftSide} from "@/pages/ai-agent/chatTemplate/AIAgentChatTemplate"
-import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
-import {useCreation, useInterval, useMemoizedFn} from "ahooks"
-import {
-    PluginExecuteHttpFlow,
-    VulnerabilitiesRisksTable
-} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {AITabsEnumType} from "@/pages/ai-agent/aiAgentType"
-import {AITabs, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
-import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
-import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
-import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
+import {ChevrondownButton} from "../aiReActChat/AIReActComponent"
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
-import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
-import {formatNumberUnits} from "@/pages/ai-agent/utils"
-import {AIFileSystemList} from "@/pages/ai-agent/components/aiFileSystemList/AIFileSystemList"
+import {
+    OutlineArrowscollapseIcon,
+    OutlineArrowsexpandIcon,
+    OutlineExitIcon,
+    OutlinePositionIcon
+} from "@/assets/icon/outline"
 import useAIChatUIData from "../hooks/useAIChatUIData"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
+import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
+import {AIReviewType} from "../hooks/aiRender"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
-    const {execute, onStop} = props
-    const {aiPerfData} = useAIChatUIData()
-    // AI的Token消耗
-    const token = useCreation(() => {
-        let input = 0
-        let output = 0
-        const {consumption} = aiPerfData
-        const keys = Object.keys(consumption || {})
-        for (let name of keys) {
-            input += consumption[name]?.input_consumption || 0
-            output += consumption[name]?.output_consumption || 0
-        }
-        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-    }, [aiPerfData.consumption])
+    const [leftExpand, setLeftExpand] = useState(true)
+    const [expand, setExpand] = useState(false)
+
+    const onIsExpand = useMemoizedFn(() => {
+        setLeftExpand(expand)
+        emiter.emit("switchReActShow", expand)
+        setExpand((v) => !v)
+    })
+
     return (
         <div className={styles["ai-re-act-task-chat"]}>
-            <AIReActTaskChatLeftSide />
+            <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
             <div className={styles["chat-content-wrapper"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title"]}>
@@ -50,19 +41,11 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                         深度规划
                     </div>
                     <div className={styles["extra"]}>
-                        <div className={styles["info-token"]}>
-                            Tokens:
-                            <div className={classNames(styles["token-tag"], styles["upload-token"])}>
-                                <OutlineArrowupIcon />
-                                {token[0]}
-                            </div>
-                            <div className={classNames(styles["token-tag"], styles["download-token"])}>
-                                <OutlineArrowdownIcon />
-                                {token[1]}
-                            </div>
-                        </div>
-                        <div className={styles["divider-style"]}></div>
-                        {execute && <RoundedStopButton onClick={onStop} />}
+                        <YakitButton
+                            type='text2'
+                            icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                            onClick={onIsExpand}
+                        />
                     </div>
                 </div>
                 <AIReActTaskChatContent />
@@ -72,146 +55,92 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 })
 
 export default AIReActTaskChat
+
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
-    const {taskChat, yakExecResult} = useAIChatUIData()
-    const {chatIPCData} = useChatIPCStore()
-    const {coordinatorId, streams} = taskChat
+    const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
+    const {taskChat} = useAIChatUIData()
+    const {handleSendSyncMessage, chatIPCEvents} = useChatIPCDispatcher()
 
-    //#region AI tab 相关逻辑
-    const [activeKey, setActiveKey] = useState<AITabsEnumType>(AITabsEnum.Task_Content)
-    const [allTotal, setAllTotal] = useState<number>(0)
-    const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
-    const [interval, setInterval] = useState<number | undefined>(undefined)
-    useEffect(() => {
-        if (coordinatorId) {
-            setInterval(1000)
-        } else {
-            setAllTotal(0)
-            setTempTotal(0)
-            setActiveKey(AITabsEnum.Task_Content)
-        }
-    }, [coordinatorId])
-    useInterval(() => {
-        if (chatIPCData.execute) getTotal()
-    }, interval)
-    const getTotal = useMemoizedFn(() => {
-        if (!coordinatorId) return
-        apiQueryRisksTotalByRuntimeId(coordinatorId).then((allRes) => {
-            if (+allRes.Total > 0) {
-                setTempTotal(+allRes.Total)
-            }
+    const streams = useCreation(() => {
+        return taskChat.streams
+    }, [taskChat.streams])
+
+    const [scrollToBottom, setScrollToBottom] = useState(false)
+    const onScrollToBottom = useMemoizedFn(() => {
+        setScrollToBottom((v) => !v)
+    })
+    const getTaskId = useMemoizedFn(() => {
+        return chatIPCEvents.fetchReactTaskToAsync()
+    })
+    const onStopTask = useMemoizedFn(() => {
+        const taskId = getTaskId()
+        if (!taskId) return
+        handleSendSyncMessage({
+            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+            SyncJsonInput: JSON.stringify({task_id: taskId})
         })
-    })
-    const onSetRiskTotal = useMemoizedFn((total) => {
-        if (total > 0) {
-            setAllTotal(total)
-            if (interval) setInterval(undefined)
+        chatIPCEvents.clearReactTaskToAsync()
+        if (!!reviewInfo) {
+            chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
         }
     })
-
-    const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
-        switch (key) {
-            case AITabsEnum.Task_Content:
-                return (
-                    <>
-                        <AIAgentChatStream streams={streams} />
-                    </>
-                )
-            case AITabsEnum.File_System:
-                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
-            case AITabsEnum.Risk:
-                return !!coordinatorId ? (
-                    <VulnerabilitiesRisksTable
-                        runtimeId={coordinatorId}
-                        allTotal={allTotal}
-                        setAllTotal={onSetRiskTotal}
-                    />
-                ) : (
-                    <>
-                        <YakitEmpty />
-                    </>
-                )
-            case AITabsEnum.HTTP:
-                return !!coordinatorId ? (
-                    <PluginExecuteHttpFlow runtimeId={coordinatorId} website={false} />
-                ) : (
-                    <>
-                        <YakitEmpty />
-                    </>
-                )
-            default:
-                return <></>
-        }
-    })
-    const showRiskTotal = useCreation(() => {
-        if (allTotal > 0) return allTotal
-        return tempTotal
-    }, [allTotal, tempTotal])
-    const tabBarRender = useMemoizedFn((tab: YakitTabsProps, length: number) => {
-        if (tab.value === AITabsEnum.Risk) {
-            return (
-                <>
-                    {tab.label}
-                    {showRiskTotal ? <span className={styles["ai-tabBar"]}>{length}</span> : ""}
-                </>
-            )
-        }
-
-        return tab.label
-    })
-    const yakitTabs = useCreation(() => {
-        let tab = [...AITabs]
-        if (!tempTotal) {
-            tab = AITabs.filter((ele) => ele.value !== AITabsEnum.Risk)
-        }
-        return tab
-    }, [tempTotal])
-
-    useEffect(() => {
-        emiter.on("switchAIActTab", setActiveKey)
-        return () => {
-            emiter.off("switchAIActTab", setActiveKey)
-        }
-    }, [])
-
-    //#endregion
     return (
         <>
-            <YakitSideTab
-                type='horizontal'
-                yakitTabs={yakitTabs}
-                activeKey={activeKey}
-                onActiveKey={(v) => setActiveKey(v as AITabsEnumType)}
-                onTabPaneRender={(ele) => tabBarRender(ele, showRiskTotal)}
-                className={styles["tab-wrap"]}
-            >
-                <div className={styles["tab-content"]}>{renderTabContent(activeKey)}</div>
-            </YakitSideTab>
-            {!!reviewInfo && (
-                <AIReActTaskChatReview reviewInfo={reviewInfo} planReviewTreeKeywordsMap={planReviewTreeKeywordsMap} />
+            <div className={styles["tab-content"]}>
+                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute}/>
+            </div>
+            {!!reviewInfo ? (
+                <AIReActTaskChatReview
+                    reviewInfo={reviewInfo}
+                    planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+                    setScrollToBottom={setScrollToBottom}
+                    onStopTask={onStopTask}
+                />
+            ) : (
+                streams.length > 0 && (
+                    <div className={styles["footer"]}>
+                        {!!getTaskId() && (
+                            <YakitButton
+                                type='outline1'
+                                icon={<OutlineExitIcon />}
+                                onClick={onStopTask}
+                                className={styles["task-button"]}
+                                radius='28px'
+                                size='large'
+                                colors='danger'
+                            >
+                                取消当前任务
+                            </YakitButton>
+                        )}
+                        <YakitButton
+                            type='outline2'
+                            icon={<OutlinePositionIcon />}
+                            radius='50%'
+                            onClick={onScrollToBottom}
+                            className={styles["position-button"]}
+                            size='large'
+                        />
+                    </div>
+                )
             )}
         </>
     )
 })
 
-const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
-    const {aiPerfData, yakExecResult, taskChat} = useAIChatUIData()
-    const [leftExpand, setLeftExpand] = useState(true)
+export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
+    const {taskChat} = useAIChatUIData()
+    const [leftExpand, setLeftExpand] = useControllableValue(props, {
+        defaultValue: true,
+        valuePropName: "leftExpand",
+        trigger: "setLeftExpand"
+    })
     return (
         <div
             className={classNames(styles["content-left-side"], {
                 [styles["content-left-side-hidden"]]: !leftExpand
             })}
         >
-            <AIChatLeftSide
-                expand={leftExpand}
-                setExpand={setLeftExpand}
-                tasks={taskChat.plan}
-                pressure={aiPerfData.pressure}
-                cost={aiPerfData.firstCost}
-                card={yakExecResult.card}
-            />
+            <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} tasks={taskChat.plan} />
             <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>
                 <ChevrondownButton />
                 <div className={styles["text"]}>任务列表</div>

@@ -63,6 +63,19 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitsslogo.ico"
         nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
         break
+    case "memfit":
+        appInfoOption = {
+            appId: "io.yaklang.memfit",
+            extraMetadata: {name: "memfit"},
+            productName: "Memfit",
+            copyright: "Copyright © 2021 v1ll4n"
+        }
+        macIcon = "app/assets/yakitlogo.icns"
+        linuxIcon = "app/assets/yakitlogo.icns"
+        winIcon = "app/assets/yakitlogo.ico"
+        nsisInstallerIcon = "app/assets/yakitlogo.ico"
+        nsisUninstallerIcon = "app/assets/yakitlogo.ico"
+        break
 
     default:
         // ce

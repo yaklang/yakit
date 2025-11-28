@@ -12,4 +12,11 @@ export interface AIReActChatReviewProps {
     className?: string
 }
 
-export interface ForgeReviewFormProps extends AIAgentGrpcApi.ExecForgeReview {}
+export interface ForgeReviewFormRefProps {
+    validateFields: Promise
+}
+export interface ForgeReviewFormProps extends AIAgentGrpcApi.ExecForgeReview {
+    ref: React.ForwardedRef<ForgeReviewFormRefProps>
+    /**是否可编辑 */
+    editable: boolean
+}

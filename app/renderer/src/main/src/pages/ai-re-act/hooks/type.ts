@@ -1,19 +1,24 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
+import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
-import {Dispatch, SetStateAction} from "react"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
     /** 将数据推送到日志集合中 */
-    pushLog: (log: AIChatQSData) => void
+    pushLog: (log: AIChatLogData) => void
 }
 interface UseHookBaseEvents {
     handleSetData: (res: AIOutputEvent) => void
     handleResetData: () => void
 }
-export type handleSendFunc = (params: {request: AIInputEvent; optionValue?: string; cb?: () => void}) => void
+export type handleSendFunc = (params: {
+    request: AIInputEvent
+    optionValue?: string
+    extraValue?: AIChatIPCStartParams["extraValue"]
+    cb?: () => void
+}) => void
 
 // #region useAIPerfData相关定义
 export interface UseAIPerfDataParams extends UseHookBaseParams {}
@@ -40,21 +45,22 @@ export interface UseYakExecResultEvents extends UseHookBaseEvents {}
 
 // #region useCasualChat相关定义
 export interface UseCasualChatParams extends UseHookBaseParams {
-    /** 更新日志数据 */
-    updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** 获取流接口请求参数 */
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
+    /** 接口里返回文件夹路径时的回调事件 */
+    onGrpcFolder?: (path: string) => void
+    /** 向接口发送消息 */
+    sendRequest?: (request: AIInputEvent) => void
+    /** 获取问题队列信息 */
+    getQuestionQueue?: () => AIQuestionQueues
 }
 
 export interface UseCasualChatState {
-    /** 自由对话的 id */
-    coordinatorId: string
     contents: AIChatQSData[]
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
-    handleSetCoordinatorId: (id: string) => void
     handleSend: handleSendFunc
 }
 // #endregion
@@ -63,8 +69,6 @@ export interface UseCasualChatEvents extends UseHookBaseEvents {
 export interface UseTaskChatParams extends UseHookBaseParams {
     /** 获取流接口请求参数 */
     getRequest: () => AIAgentSetting | undefined
-    /** 更新日志数据 */
-    updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** review 触发回调事件 */
     onReview?: (data: AIChatQSData) => void
     /** plan_review 补充数据 */
@@ -73,18 +77,17 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onReviewRelease?: (id: string) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
+    /** 接口里返回文件夹路径时的回调事件 */
+    onGrpcFolder?: (path: string) => void
 }
 
 export interface UseTaskChatState {
-    /** 任务对话的 id */
-    coordinatorId: string
     /** 正在执行的任务列表 */
-    plan: AIAgentGrpcApi.PlanTask[]
+    plan: AITaskInfoProps[]
     /** 流式输出 */
     streams: AIChatQSData[]
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
-    handleSetCoordinatorId: (id: string) => void
     handleSend: handleSendFunc
     /** 获取原始任务列表树 */
     fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
@@ -114,11 +117,16 @@ export interface UseChatIPCParams {
     onEnd?: () => void
 }
 
+export interface AIQuestionQueues {
+    total: number
+    data: AIAgentGrpcApi.QuestionQueueItem[]
+}
+
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
-    /** 执行日志 */
-    logs: AIChatQSData[]
+    /** 运行时的runtimeid合集 */
+    runTimeIDs: string[]
     /** 插件输出的卡片数据 */
     yakExecResult: UseYakExecResultState
     /** AI性能相关数据 */
@@ -127,6 +135,18 @@ export interface UseChatIPCState {
     casualChat: UseCasualChatState
     /** 任务规划相关数据 */
     taskChat: UseTaskChatState
+    /** 接口运行过程中的数据文件夹合集 */
+    grpcFolders: string[]
+    /** 问题队列信息 */
+    questionQueue: AIQuestionQueues
+}
+
+/** 开始启动流接口的唯一token、请求参数和额外参数 */
+export interface AIChatIPCStartParams {
+    token: string
+    params: AIInputEvent
+    /** 供前端处理逻辑和UI的额外参数 */
+    extraValue?: CustomPluginExecuteFormValue
 }
 
 /** 执行流途中发送消息的参数 */
@@ -135,15 +155,18 @@ export interface AIChatSendParams {
     type: ChatIPCSendType
     params: AIInputEvent
     optionValue?: string
+    extraValue?: AIChatIPCStartParams["extraValue"]
 }
 
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
-    /** 获取当前执行接口流的请求参数 */
-    fetchRequest: () => AIStartParams | undefined
+    /** 获取当前执行任务规划的问题id */
+    fetchReactTaskToAsync: () => string
+    /** 清空当前执行任务规划的问题id */
+    clearReactTaskToAsync: () => void
     /** 开始执行接口流 */
-    onStart: (token: string, params: AIInputEvent) => void
+    onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
     onSend: (AIChatSendParams) => void
     /** 主动结束正在执行中的接口流 */
@@ -155,9 +178,33 @@ export interface UseChatIPCEvents {
     ) => void
     /** 重置所有数据 */
     onReset: () => void
+    /** 取消任务规划当前的Review */
+    handleTaskReviewRelease: (id: string) => void
 }
 // #endregion
 
-export interface AINodeLabelParams {
-    nodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+// #region useAIChatLog相关定义
+export interface AIChatLogToInfo {
+    type: "log"
+    Timestamp: AIOutputEvent["Timestamp"]
+    data: AIAgentGrpcApi.Log
 }
+export interface AIChatLogToStream {
+    type: "stream"
+    Timestamp: AIOutputEvent["Timestamp"]
+    data: AIStreamOutput
+}
+
+export type AIChatLogData = AIChatLogToInfo | AIChatLogToStream
+
+export interface UseAIChatLogEvents {
+    /** 获取当前执行接口流的唯一标识符 */
+    pushLog: (log: AIChatLogData) => string
+    /** 都劝我 */
+    sendStreamLog: (uuid: string) => void
+    /** 获取当前执行接口流的请求参数 */
+    clearLogs: () => AIStartParams | undefined
+    /** 关闭展示日志的页面窗口 */
+    cancelLogsWin: () => void
+}
+// #endregion

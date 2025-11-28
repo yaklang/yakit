@@ -1,0 +1,49 @@
+.file-tree-system {
+    overflow-y: auto;
+    height: fit-content;
+    width: 100%;
+    overflow-x: hidden;
+
+    &-title {
+        padding: 4px 0;
+        display: flex;
+        height: 32px;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        line-height: 16px;
+        &-icon svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+    }
+    :global {
+        .ant-tree-treenode {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+        }
+        .ant-tree-node-content-wrapper {
+            padding: 0;
+        }
+        .ant-tree-switcher {
+            width: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
+        }
+        .ant-tree.ant-tree-directory .ant-tree-treenode-selected:hover::before,
+        .ant-tree.ant-tree-directory .ant-tree-treenode-selected::before {
+            border: 1px solid var(--Colors-Use-Main-Primary);
+            background-color: rgba(242, 139, 68, 0.06);
+            border-radius: 4px;
+        }
+        .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
+            flex: 1;
+            width: 0;
+        }
+    }
+}

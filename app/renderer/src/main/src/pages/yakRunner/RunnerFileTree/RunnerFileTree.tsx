@@ -59,6 +59,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 import {SystemInfo} from "@/constants/hardware"
+import {WatchFolderID} from "../FileTreeMap/watchFolderID"
 
 export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
     const {setAbsolutePath} = props
@@ -514,6 +515,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const onRefreshYakRunnerFileTreeFun = useMemoizedFn((data) => {
         try {
             const event: FileMonitorProps = JSON.parse(data)
+            if (!WatchFolderID.Id || WatchFolderID.Id !== event.Id) return
+
             if (event.ChangeEvents) {
                 eventOperateFun(event.ChangeEvents)
             }

@@ -13,6 +13,9 @@ import DividerCard, {StreamsStatus} from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
+import {AITaskClearNotice, AITaskUpdateNotice} from "../aiTaskUpdateNotice/AITaskUpdateNotice"
+import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
+
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
@@ -51,21 +54,25 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         return taskChat.plan.find((item) => item.index === id)
     }
     const renderContent = useMemoizedFn(() => {
-        const {id, type, Timestamp, data} = item
+        const {id, type, Timestamp, data, extraValue} = item
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
                 return (
-                    <AITriageChatContent isAnswer={false} loading={false} content={data} {...chatContentExtraProps} />
+                    <AITriageChatContent
+                        isAnswer={false}
+                        content={data}
+                        extraValue={extraValue}
+                        {...chatContentExtraProps}
+                    />
                 )
             case AIChatQSDataTypeEnum.STREAM:
                 return <AIStreamNode {...aiStreamNodeProps} stream={item} />
             case AIChatQSDataTypeEnum.RESULT:
-                return <AITriageChatContent isAnswer={true} loading={false} content={data} {...chatContentExtraProps} />
+                return <AITriageChatContent isAnswer={true} content={data} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.THOUGHT:
                 return (
                     <AITriageChatContent
                         isAnswer={true}
-                        loading={false}
                         content={`思考：${data}`}
                         {...chatContentExtraProps}
                     />
@@ -87,6 +94,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                             callToolId: data.callToolId,
                             title: item.AIService
                         }}
+                        execError={data.execError}
                     />
                 )
             case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
@@ -136,15 +144,20 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
                 return (
                     <DividerCard
-                        status={StreamsStatus.success}
+                        status={StreamsStatus.cancel}
                         name='任务结束标志'
                         desc='当前任务已经结束，下面为新的任务数据'
                         success={0}
                         error={0}
                     />
                 )
-            // TODO 更新任务队列
-            // <AITaskUpdateNotice/>
+
+            case AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE:
+                return <AITaskUpdateNotice item={data} />
+            case AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED:
+                return <AITaskClearNotice item={data} />
+            case AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION:
+                return <AiFailPlanCard item={data} />
             default:
                 return <></>
         }

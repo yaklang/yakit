@@ -19,10 +19,11 @@ export interface AIChatInfo {
     request: AIStartParams
     /** 回答 */
     answer?: {
+        runTimeIDs: UseChatIPCState["runTimeIDs"]
         aiPerfData: UseChatIPCState["aiPerfData"]
-        logs: UseChatIPCState["logs"]
         casualChat: UseChatIPCState["casualChat"]
         taskChat: UseChatIPCState["taskChat"]
         yakExecResult: AIChatYakExecResult
+        grpcFolders: UseChatIPCState["grpcFolders"]
     }
 }

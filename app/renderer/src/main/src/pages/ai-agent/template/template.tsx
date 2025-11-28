@@ -44,7 +44,7 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
  * - !!! 调整行数只能通过 className 控制，style 会被 antd 逻辑覆盖
  */
 export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
-    const {loading, extraFooterLeft, extraFooterRight, onSubmit, textareaProps} = props
+    const {loading, extraFooterLeft, extraFooterRight, onSubmit, textareaProps, className, children} = props
 
     // icon的唯一id生成
     const iconId = useRef(uuidv4())
@@ -104,7 +104,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     // #endregion
 
     return (
-        <div className={styles["ai-chat-textarea"]} onClick={handleSetTextareaFocus}>
+        <div className={classNames(styles["ai-chat-textarea"], className)} onClick={handleSetTextareaFocus}>
             <div className={styles["textarea-body"]}>
                 <div className={styles["textarea-icon"]}>
                     {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
@@ -171,6 +171,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                     />
                 </div>
             </div>
+            {children}
         </div>
     )
 })

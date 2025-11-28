@@ -36,8 +36,34 @@ export const apiQueryRisksTotalByRuntimeId: (RuntimeId: string) => Promise<Query
                 yakitNotify(
                     "error",
                     i18n.language === "zh"
-                        ? "QueryRisks 获取总数失败："
-                        : "Failed to get total count in QueryRisks:" + `${e}`
+                        ? "apiQueryRisksTotalByRuntimeId 获取总数失败："
+                        : "Failed to get total count in apiQueryRisksTotalByRuntimeId:" + `${e}`
+                )
+                reject(e)
+            })
+    })
+}
+/** 获取风险与漏洞的总数 通过RuntimeIds */
+export const apiQueryRisksTotalByRuntimeIds: (RuntimeIds: string[]) => Promise<QueryRisksResponse> = (RuntimeIds) => {
+    return new Promise((resolve, reject) => {
+        const params: QueryRisksRequest = {
+            ...defQueryRisksRequest,
+            Pagination: {
+                ...defQueryRisksRequest.Pagination,
+                Page: 1,
+                Limit: 1
+            },
+            RuntimeIds
+        }
+        ipcRenderer
+            .invoke("QueryRisks", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify(
+                    "error",
+                    i18n.language === "zh"
+                        ? "apiQueryRisksTotalByRuntimeIds 获取总数失败："
+                        : "Failed to get total count in apiQueryRisksTotalByRuntimeIds:" + `${e}`
                 )
                 reject(e)
             })

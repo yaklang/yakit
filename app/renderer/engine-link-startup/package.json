@@ -9,11 +9,13 @@
     "electron-render-simple-enterprise": "vite --mode simpleEE",
     "electron-render-irify": "vite --mode irify",
     "electron-render-irify-enterprise": "vite --mode irifyEnterprise",
+    "electron-render-memfit": "vite --mode memfit",
     "build": "tsc --noEmit && vite build --mode default",
     "build-enterprise": "tsc --noEmit && vite build --mode enterprise",
     "build-simple-enterprise": "tsc --noEmit && vite build --mode simpleEE",
     "build-irify": "tsc --noEmit && vite build --mode irify",
     "build-irify-enterprise": "tsc --noEmit && vite build --mode irifyEnterprise",
+    "build-memfit": "tsc --noEmit && vite build --mode memfit",
     "preview": "vite preview",
     "release-render": "node scripts/release-render.cjs"
   },

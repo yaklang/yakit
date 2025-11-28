@@ -9,7 +9,8 @@ const {
     fetchLatestYakitIRifyVersion,
     fetchLatestYakitIRifyEEVersion,
     getAvailableOSSDomain,
-    fetchSpecifiedYakVersionHash
+    fetchSpecifiedYakVersionHash,
+    fetchLatestYakitMemfitVersion
 } = require("../handlers/utils/network")
 const {testEngineAvaiableVersion} = require("../ipc")
 const {engineLogOutputFileAndUI} = require("../logFile")
@@ -53,7 +54,8 @@ module.exports = (win, getClient) => {
                 Yakit: fetchLatestYakitVersion,
                 EnpriTrace: fetchLatestYakitEEVersion,
                 IRify: fetchLatestYakitIRifyVersion,
-                "IRify-EnpriTrace": fetchLatestYakitIRifyEEVersion
+                "IRify-EnpriTrace": fetchLatestYakitIRifyEEVersion,
+                Memfit: fetchLatestYakitMemfitVersion
             }
             const fetchPromise = versionFetchers[releaseEditionName]
                 ? versionFetchers[releaseEditionName]

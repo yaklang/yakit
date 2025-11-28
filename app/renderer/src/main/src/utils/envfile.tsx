@@ -10,11 +10,14 @@ export enum PRODUCT_RELEASE_EDITION {
     EnpriTrace = 1,
     /**@name 便携版/简易版 */
     EnpriTraceAgent = 2,
+    /**@deprecated BAS实验性功能 */
     BreachTrace = 3,
     /**@name IRify扫描(IRify独立于企业版社区版之外,其自身拥有企业版) */
     IRify = 4,
     /**@name IRify扫描-企业版 */
-    IRifyEnpriTrace = 5
+    IRifyEnpriTrace = 5,
+    /**@name memfit (AIAgent独立于企业版社区版之外) */
+    MEMFIT = 6
 }
 
 export const getReleaseEditionName = () => {
@@ -29,9 +32,18 @@ export const getReleaseEditionName = () => {
             return "IRify"
         case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
             return "IRify-EnpriTrace"
+        case PRODUCT_RELEASE_EDITION.MEMFIT:
+            return "Memfit"
         default:
             return "Yakit"
     }
+}
+/**只有yakit 社区版和企业版有WF缓存 */
+export const isWFCacheEdition = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+    )
 }
 /** EE */
 export const isEnpriTrace = () => {
@@ -51,12 +63,14 @@ export const isBreachTrace = () => {
 /** CE */
 export const isCommunityEdition = () => {
     return (
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
     )
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition() && !isCommunityIRify()
+    return !isCommunityEdition() && !isCommunityIRify() && !isCommunityMemfit()
 }
 
 /** CE IRify Scan  */
@@ -74,6 +88,24 @@ export const isIRify = () => {
     return (
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify ||
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
+    )
+}
+
+/** CE Memfit AIAgent  */
+export const isCommunityMemfit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
+}
+
+/** Memfit 独立于Yakit企业版社区版之外  */
+export const isMemfit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
+}
+
+export const isYakit = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTraceAgent
     )
 }
 
@@ -102,6 +134,8 @@ export const GetReleaseEdition = () => {
             return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
         case "breachtrace":
             return PRODUCT_RELEASE_EDITION.BreachTrace
+        case "memfit":
+            return PRODUCT_RELEASE_EDITION.MEMFIT
         default:
             return PRODUCT_RELEASE_EDITION.Yakit
     }
@@ -161,6 +195,8 @@ export const getRemoteHttpSettingGV = () => {
             return RemotePrivateDomainGV.eeIRifyHttpSetting
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basHttpSetting
+        case PRODUCT_RELEASE_EDITION.MEMFIT:
+            return RemotePrivateDomainGV.ceHttpSetting
     }
 }
 
@@ -195,6 +231,8 @@ export const getRemoteI18nGV = () => {
             return RemoteI18nGV.eeIRifyI18n
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemoteI18nGV.basI18n
+        case PRODUCT_RELEASE_EDITION.MEMFIT:
+            return RemoteI18nGV.ceAII18n
     }
 }
 
@@ -208,6 +246,8 @@ export const GetConnectPort = () => {
             return 9014
         case "irify-enterprise":
             return 9015
+        case "memfit":
+            return 9016
         default:
             return 9011
     }

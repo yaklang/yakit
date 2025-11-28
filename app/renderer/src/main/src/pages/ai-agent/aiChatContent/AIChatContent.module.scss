@@ -1,0 +1,170 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.ai-chat-content-wrapper {
+    @extend %display-column-center;
+    flex: 1;
+    overflow: hidden;
+    .expand-retract-wrapper {
+        width: 100%;
+        border-bottom: 0;
+        .expand-retract-content {
+            @extend %display-column-center;
+            width: 100%;
+            flex: 1;
+        }
+        &:hover {
+            .expand-retract-animation-wrapper {
+                width: 54px;
+            }
+        }
+    }
+    .expand-retract-wrapper-collapsed {
+        &:hover {
+            background-color: var(--Colors-Use-Basic-Background);
+            cursor: default;
+        }
+    }
+    .header {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        flex: 1;
+        .title {
+            @extend %display-flex-center;
+            gap: 4px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
+        .extra {
+            @extend %display-flex-center;
+            gap: 16px;
+        }
+        .info-token {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 12px;
+            font-weight: 400;
+            .token {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+            }
+            .token-tag {
+                height: 16px;
+                padding: 2px 6px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                border-radius: 2px;
+                svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+            .upload-token {
+                color: var(--Colors-Use-Error-Primary);
+                padding: 0 4px;
+                svg {
+                    color: var(--Colors-Use-Error-Primary);
+                }
+            }
+            .download-token {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                padding-left: 4px;
+                svg {
+                    color: var(--Colors-Use-Neutral-Text-2-Primary);
+                }
+            }
+        }
+
+        .echarts-wrapper {
+            @extend %display-flex-center;
+            gap: 4px;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            .title {
+                @extend %display-flex-center;
+                gap: 4px;
+            }
+            .pressure {
+                color: var(--Colors-Use-Error-Primary);
+            }
+            .cost {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+        .divider-style {
+            width: 1px;
+            height: 12px;
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+    }
+    .card-list-wrapper {
+        width: 100%;
+        opacity: 1;
+        transition: all 0.3s ease;
+        padding-top: 12px;
+        .card-item {
+            height: 50px;
+            font-size: 14px;
+        }
+    }
+    .card-list-wrapper-hidden {
+        padding-top: 0;
+        height: 0;
+        opacity: 0;
+    }
+    .expand-retract-animation-wrapper {
+        top: unset;
+        bottom: -12px;
+    }
+    .expand-retract-animation-wrapper-hidden {
+        display: none;
+    }
+    .ai-chat-tab-wrapper {
+        @extend %display-flex-center;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+        background-color: var(--Colors-Use-Basic-Background);
+        padding: 0 12px 12px 12px;
+        justify-content: flex-end;
+
+        .ai-chat-content {
+            display: flex;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            border-radius: 4px;
+        }
+        .tab-content {
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+    }
+}
+.tab-wrap {
+}

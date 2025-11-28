@@ -15,6 +15,7 @@
 }
 .tab-content {
     flex: 1;
+    width: 100%;
     overflow: hidden;
 }
 .ai-re-act-task-chat {
@@ -22,7 +23,7 @@
     align-items: flex-start;
     flex: 1;
     overflow: hidden;
-    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    height: 100%;
     @include AIReActChat.content-side("left");
     .chat-content-wrapper {
         @extend %display-column-center;
@@ -60,46 +61,39 @@
             @extend %display-flex-center;
             gap: 8px;
             flex-shrink: 0;
-            .info-token {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
-                font-weight: 400;
-            }
-            .token-tag {
-                height: 16px;
-                padding: 2px 6px;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                border-radius: 2px;
-                svg {
-                    width: 12px;
-                    height: 12px;
-                }
-            }
-            .upload-token {
-                background: var(--Colors-Use-Error-Bg-Hover);
-                color: var(--Colors-Use-Error-Primary);
-                svg {
-                    color: var(--Colors-Use-Error-Primary);
-                }
-            }
-            .download-token {
-                background: var(--Colors-Use-Neutral-Bg-Hover);
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                svg {
-                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                }
-            }
 
             .divider-style {
                 width: 1px;
                 height: 12px;
                 border-left: 1px solid var(--Colors-Use-Neutral-Border);
             }
+        }
+    }
+}
+.footer {
+    position: absolute;
+    bottom: 8px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    .position-button {
+        border-color: var(--Colors-Use-Neutral-Border);
+        box-shadow: 0 4px 8px 0 var(--Colors-Use-Basic-Shadow);
+        svg {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+        &:hover {
+            border-color: var(--Colors-Use-Main-Primary);
+            svg {
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+    }
+    .task-button {
+        border-color: var(--Colors-Use-Error-Border);
+        background: var(--Colors-Use-Basic-Background);
+        &:hover {
+            border-color: var(--Colors-Use-Error-Primary);
         }
     }
 }

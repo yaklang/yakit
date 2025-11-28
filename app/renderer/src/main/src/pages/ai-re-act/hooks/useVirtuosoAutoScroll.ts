@@ -1,49 +1,41 @@
-import { useMount, useThrottleEffect } from "ahooks"
-import { useCallback, useRef, useState } from "react"
-import { VirtuosoHandle } from "react-virtuoso"
+import {useMemoizedFn} from "ahooks"
+import {useCallback, useRef} from "react"
+import type {ScrollIntoViewLocation, VirtuosoHandle} from "react-virtuoso"
 
-const useVirtuosoAutoScroll = (streams) => {
+interface ScrollIntoViewArgs {
+    totalCount: number
+    scrollingInProgress: boolean
+}
+const useVirtuosoAutoScroll = () => {
     const virtuosoRef = useRef<VirtuosoHandle>(null)
-    const scrollerRef = useRef<HTMLDivElement>(null)
-    const [isNearBottom, setIsNearBottom] = useState(true)
+    const isAtBottomRef = useRef(true)
 
-    const handleScroll = useCallback(() => {
-        if (!scrollerRef.current) return
+    const setIsAtBottomRef  = (v) => {
+        isAtBottomRef.current = v
+    }
 
-        const el = scrollerRef.current
-        const scrollBottom = el.scrollHeight - el.scrollTop - el.clientHeight
-
-        // 距离底部小于等于阈值
-        const nearBottom = scrollBottom <= 100
-        setIsNearBottom(nearBottom)
-    }, [])
-
-    useMount(() => {
-        const el = scrollerRef.current
-        if (!el) return
-
-        el.addEventListener("scroll", handleScroll)
-        return () => el.removeEventListener("scroll", handleScroll)
-    })
-    useThrottleEffect(
-        () => {
-            if (!virtuosoRef.current || !isNearBottom) return
-            requestIdleCallback(() => {
-                virtuosoRef.current?.scrollToIndex({
-                    index: "LAST",
-                    align: "end",
-                    behavior: "smooth"
-                })
-            })
-        },
-        [streams],
-        {
-            wait: 100,
-            trailing: false
+    const scrollIntoViewOnChange = useMemoizedFn(
+        ({totalCount}: ScrollIntoViewArgs): ScrollIntoViewLocation | false => {
+            if (!isAtBottomRef.current) return false
+            return {
+                index: totalCount,
+                align: "end",
+                behavior: "auto"
+            }
         }
     )
 
-    return { virtuosoRef, scrollerRef }
+    const scrollToIndex = useCallback((index: "LAST" | number) => {
+        requestIdleCallback(() => {
+            virtuosoRef.current?.scrollToIndex({
+                index,
+                align: "end",
+                behavior: "smooth"
+            })
+        })
+    }, [])
+
+    return {virtuosoRef, setIsAtBottomRef, scrollIntoViewOnChange, scrollToIndex}
 }
 
 export default useVirtuosoAutoScroll

@@ -117,6 +117,8 @@
     "createTool": "新建 Tool",
     "editTool": "编辑 Tool",
     "domain": "域名",
-    "manageAllDiscoveredDomainAssets": "管理扫描出的所有域名资产"
+    "manageAllDiscoveredDomainAssets": "管理扫描出的所有域名资产",
+    "ai": "AI",
+    "ai-repository": "知识库"
   }
 }

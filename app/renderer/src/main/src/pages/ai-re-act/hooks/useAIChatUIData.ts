@@ -1,16 +1,28 @@
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useCreation} from "ahooks"
-import {AIOutputI18n} from "./grpcApi"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {defaultChatIPCData} from "@/pages/ai-agent/defaultConstant"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {isEmpty} from "lodash"
-import {AIChatQSData, AIYakExecFileRecord} from "./aiRender"
+import {AIYakExecFileRecord} from "./aiRender"
 import {UseAIPerfDataState, UseCasualChatState, UseTaskChatState, UseYakExecResultState} from "./type"
 
 function useAIChatUIData() {
     const {activeChat} = useAIAgentStore()
     const {chatIPCData} = useChatIPCStore()
+
+    const runTimeIDs: string[] = useCreation(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.runTimeIDs) {
+            return activeChat.answer.runTimeIDs
+        }
+        return chatIPCData.runTimeIDs || defaultChatIPCData.runTimeIDs
+    }, [activeChat, chatIPCData.runTimeIDs])
+
+    const grpcFolders: string[] = useCreation(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.grpcFolders) {
+            return activeChat.answer.grpcFolders
+        }
+        return chatIPCData.grpcFolders || defaultChatIPCData.grpcFolders
+    }, [activeChat, chatIPCData.grpcFolders])
 
     const taskChat: UseTaskChatState = useCreation(() => {
         if (activeChat && activeChat.answer && activeChat.answer.taskChat) {
@@ -45,13 +57,8 @@ function useAIChatUIData() {
         }
         return chatIPCData.casualChat
     }, [activeChat, chatIPCData.casualChat])
-    const logs: AIChatQSData[] = useCreation(() => {
-        if (!!activeChat?.answer?.logs) {
-            return activeChat?.answer?.logs
-        }
-        return chatIPCData.logs
-    }, [activeChat, chatIPCData.logs])
-    return {taskChat, yakExecResult, aiPerfData, casualChat, logs}
+
+    return {runTimeIDs, grpcFolders, taskChat, yakExecResult, aiPerfData, casualChat}
 }
 
 export default useAIChatUIData

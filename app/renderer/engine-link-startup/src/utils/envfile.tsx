@@ -7,7 +7,9 @@ export enum PRODUCT_RELEASE_EDITION {
     /**@name IRify扫描(IRify独立于企业版社区版之外,其自身拥有企业版) */
     IRify = 4,
     /**@name IRify扫描-企业版 */
-    IRifyEnpriTrace = 5
+    IRifyEnpriTrace = 5,
+    /**@name memfit (AIAgent独立于企业版社区版之外) */
+    MEMFIT = 6
 }
 
 export const getReleaseEditionName = () => {
@@ -20,6 +22,8 @@ export const getReleaseEditionName = () => {
             return "IRify"
         case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
             return "IRify-EnpriTrace"
+        case PRODUCT_RELEASE_EDITION.MEMFIT:
+            return "Memfit"
         default:
             return "Yakit"
     }
@@ -40,12 +44,14 @@ export const isEnpriTraceAgent = () => {
 /** CE */
 export const isCommunityEdition = () => {
     return (
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
     )
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition() && !isCommunityIRify()
+    return !isCommunityEdition() && !isCommunityIRify() && !isCommunityMemfit()
 }
 
 /** CE IRify Scan  */
@@ -66,6 +72,11 @@ export const isIRify = () => {
     )
 }
 
+/** CE Memfit AIAgent  */
+export const isCommunityMemfit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
+}
+
 export const GetReleaseEdition = () => {
     switch (fetchEnv()) {
         case "enterprise":
@@ -76,6 +87,8 @@ export const GetReleaseEdition = () => {
             return PRODUCT_RELEASE_EDITION.IRify
         case "irify-enterprise":
             return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
+        case "memfit":
+            return PRODUCT_RELEASE_EDITION.MEMFIT
         default:
             return PRODUCT_RELEASE_EDITION.Yakit
     }
@@ -99,7 +112,23 @@ export const GetConnectPort = () => {
             return 9014
         case "irify-enterprise":
             return 9015
+        case "memfit":
+            return 9016
         default:
             return 9011
+    }
+}
+
+export type SoftwareVersion = "yakit" | "irify" | "memfit"
+/** 获取软件是什么版本(yakit|irify|memfit) */
+export const FetchSoftwareVersion: () => SoftwareVersion = () => {
+    switch (fetchEnv()) {
+        case "irify":
+        case "irify-enterprise":
+            return "irify"
+        // case "memfit":
+        //     return "memfit"
+        default:
+            return "yakit"
     }
 }
