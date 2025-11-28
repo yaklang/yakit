@@ -8,7 +8,7 @@
         "install-link-render": "cd app/renderer/engine-link-startup && yarn install",
         "install-render": "cd app/renderer/src/main && yarn install",
         "render-yarn": "cd app/renderer/src/main && yarn",
-        "render-cli": "cd app/renderer/src/main && yarn render-cli",
+        "render-cli": "cd app/renderer/src/main && yarn cli",
         "start-link-render": "cd app/renderer/engine-link-startup && yarn electron-render",
         "start-link-render-enterprise": "cd app/renderer/engine-link-startup && yarn electron-render-enterprise",
         "start-link-render-simple-enterprise": "cd app/renderer/engine-link-startup && yarn electron-render-simple-enterprise",
