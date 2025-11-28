@@ -1,10 +1,11 @@
-import {forwardRef, memo, useImperativeHandle, useRef} from "react"
+import {forwardRef, memo, useEffect, useImperativeHandle, useRef} from "react"
 import {AllowSecretLocalJson, LocalEngineProps} from "./LocalEngineType"
 import {useMemoizedFn} from "ahooks"
 import {debugToPrintLog} from "@/utils/logCollection"
 import {grpcCheckAllowSecretLocal} from "../../grpc"
 import {isIRify} from "@/utils/envfile"
 import {yakitNotify} from "@/utils/notification"
+const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
@@ -90,6 +91,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 }
             } catch (err) {}
         })
+
+        // 监听数据库初始化中
+        useEffect(() => {
+            ipcRenderer.on("db-init-ing", (_, str: string) => {
+                setLog([str])
+            })
+            return () => {
+                ipcRenderer.removeAllListeners("db-init-ing")
+            }
+        }, [])
 
         // 全部流程
         const initLink = useMemoizedFn((port: number) => {
