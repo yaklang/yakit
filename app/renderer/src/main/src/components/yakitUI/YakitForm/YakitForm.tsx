@@ -979,7 +979,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                             >
                                 <OutlineUploadIcon className={styles["upload-icon"]} /> {t("YakitDraggerContent.click_here")}
                             </span>
-                            上传
+                            {t("YakitButton.upload")}
                         </label>
                         <div className={styles["divider-line"]}></div>
                         <YakitPopover
