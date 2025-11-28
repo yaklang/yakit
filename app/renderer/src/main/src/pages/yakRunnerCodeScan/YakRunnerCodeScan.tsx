@@ -458,12 +458,11 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
             setPageInfo((prev: CodeScanPageInfoProps) => ({
                 ...prev,
                 ...clearRuleByPageInfo,
-                RuleIds: selectedRules.map((item) => parseInt(item.Id+"")),
+                RuleIds: selectedRules.map((item) => parseInt(item.Id + "")),
                 selectTotal: selectedRules.length
             }))
         }
     }, [allCheck, selectGroup, keywords, selectedRules, filterLibRuleKind])
-    
 
     // 如若在按组选择插件组，则清空关键词搜索和已选规则与所选组
     useUpdateEffect(() => {
@@ -480,12 +479,12 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         setSelectedRules([])
     })
 
-    const onResetCodeScanProjectFun = useMemoizedFn(()=>{
+    const onResetCodeScanProjectFun = useMemoizedFn(() => {
         handleTabClick({
             key: "group",
             label: <>按组选</>,
             contShow: false
-        },)
+        })
         setAllCheck(false)
         setSelectedRules([])
     })
@@ -1791,7 +1790,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 ...extraParamsValue,
                 ControlMode: "start",
                 SSAProjectId: project,
-                ProgramName: history === "recompileAndScan"||!history ? [] : [history],
+                ProgramName: history === "recompileAndScan" || !history ? [] : [history],
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -2074,7 +2073,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                             selectTotal
                                         })
                                         setSelectProjectId(item ? [item] : [])
-                                        emiter.emit("onResetCodeScanProject");
+                                        emiter.emit("onResetCodeScanProject")
                                     }}
                                 />
                             </Form.Item>
@@ -2469,20 +2468,19 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 
         const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
             return new Promise((resolve, reject) => {
-                try {
-                    ipcRenderer
-                        .invoke("CreateSSAProject", {
-                            JSONStringConfig
-                        })
-                        .then((res: CreateSSAProjectResponse) => {
-                            projectIdCacheRef.current = res.Project.ID
-                            jsonCacheRef.current = res.Project.JSONStringConfig
-                            resolve(null)
-                        })
-                } catch (error) {
-                    yakitNotify("error", "创建项目管理数据失败")
-                    reject(error)
-                }
+                ipcRenderer
+                    .invoke("CreateSSAProject", {
+                        JSONStringConfig
+                    })
+                    .then((res: CreateSSAProjectResponse) => {
+                        projectIdCacheRef.current = res.Project.ID
+                        jsonCacheRef.current = res.Project.JSONStringConfig
+                        resolve(null)
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", "创建项目管理数据失败")
+                        reject(error)
+                    })
             })
         })
 

@@ -558,27 +558,28 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
 
     // 多个删除
     const onRemoveMultiple = useMemoizedFn(() => {
-        try {
-            setLoading(true)
-            let params: DeleteSSAProgramRequest = {
-                Filter: {
-                    Ids: checkedList
-                }
+        setLoading(true)
+        let params: DeleteSSAProgramRequest = {
+            Filter: {
+                Ids: checkedList
             }
-            if (checkedList.length === 0) {
-                params = {
-                    DeleteAll: true
-                }
+        }
+        if (checkedList.length === 0) {
+            params = {
+                DeleteAll: true
             }
-            ipcRenderer.invoke("DeleteSSAPrograms", params).then(() => {
+        }
+        ipcRenderer
+            .invoke("DeleteSSAPrograms", params)
+            .then(() => {
                 update(1)
                 setCheckedList([])
                 success("删除成功")
             })
-        } catch (error) {
-            setLoading(false)
-            failed(`删除失败${error}`)
-        }
+            .catch((error) => {
+                setLoading(false)
+                failed(`删除失败${error}`)
+            })
     })
 
     // 单个删除

@@ -135,7 +135,13 @@
         "data_fetch_failed": "数据获取失败：",
         "drag_file_tip": "可将文件拖入框内或",
         "click_here": "点击此处",
-        "drag_files_tip": "可将TXT、Excel文件拖入框内或"
+        "drag_files_tip": "可将TXT、Excel文件拖入框内或",
+        "reading_method": "读取方式",
+        "reading_method_tip": "为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径",
+        "file_content": "文件内容",
+        "path": "路径",
+        "setting": "设置",
+        "multi_select_not_allowed": "不允许多选"
     },
     "YakitForm": {
         "requiredField": "该项为必填项",

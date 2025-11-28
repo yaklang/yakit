@@ -102,7 +102,7 @@
     "codeScan": "Code Scan",
     "richRuleLibrary": "Comes with a rich built-in rule library, allowing you to freely select rule groups for code scanning to help analyze code structure and identify risky code fragments.",
     "projectManagement": "Project Management",
-    "scanHistory": "Scan History",
+    "projectHistory": "Project History",
     "ruleManagement": "Rule Management",
     "customAuditRules": "You can customize audit rules and rule groups as needed, with support for import/export and cloud uploads for sharing, making it easy to build your own rule library.",
     "auditVulnerability": "Audit Vulnerability",

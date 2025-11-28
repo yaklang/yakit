@@ -135,7 +135,13 @@
         "data_fetch_failed": "Data fetch failed:",
         "drag_file_tip": "You can drag files into the box or ",
         "click_here": "click here",
-        "drag_files_tip": "You can drag TXT or Excel files into the box or"
+        "drag_files_tip": "You can drag TXT or Excel files into the box or",
+        "reading_method": "Reading method",
+        "reading_method_tip": "To prevent the front-end rendering from failing due to reading large files, the file content reading is limited to 10MB. For files larger than 10MB, please select the path",
+        "file_content": "File Content",
+        "path": "Path",
+        "setting": "Setting",
+        "multi_select_not_allowed": "Multiple selection is not allowed"
     },
     "YakitForm": {
         "requiredField": "This is a required field",

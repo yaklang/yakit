@@ -1865,21 +1865,20 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 
     const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
         return new Promise((resolve, reject) => {
-            try {
-                ipcRenderer
-                    .invoke("CreateSSAProject", {
-                        JSONStringConfig
-                    })
-                    .then((res: CreateSSAProjectResponse) => {
-                        onRefresh?.()
-                        projectIdCacheRef.current = res.Project.ID
-                        jsonCacheRef.current = res.Project.JSONStringConfig
-                        resolve(null)
-                    })
-            } catch (error) {
-                yakitNotify("error", "创建项目管理数据失败")
-                reject(error)
-            }
+            ipcRenderer
+                .invoke("CreateSSAProject", {
+                    JSONStringConfig
+                })
+                .then((res: CreateSSAProjectResponse) => {
+                    onRefresh?.()
+                    projectIdCacheRef.current = res.Project.ID
+                    jsonCacheRef.current = res.Project.JSONStringConfig
+                    resolve(null)
+                })
+                .catch((error) => {
+                    yakitNotify("error", "创建项目管理数据失败")
+                    reject(error)
+                })
         })
     })
 
@@ -2079,7 +2078,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
         Speed: "0"
     })
     const logInfoRef = useRef<StreamResult.Log[]>([])
-    
+
     useEffect(() => {
         // 初次打开时带参执行
         if (nameOrConfig) {

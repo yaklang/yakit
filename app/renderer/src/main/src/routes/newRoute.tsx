@@ -355,7 +355,7 @@ export const YakitRouteToPageInfo: Record<
         describeUi: "YakitRoute.auditRuleCodeAnalysis"
     },
     "yakrunner-project-manager": {label: "项目管理", labelUi: "YakitRoute.projectManagement"},
-    yakrunner_scanHistory: {label: "项目历史", labelUi: "YakitRoute.scanHistory"},
+    yakrunner_scanHistory: {label: "项目历史", labelUi: "YakitRoute.projectHistory"},
     "rule-management": {
         label: "规则管理",
         labelUi: "YakitRoute.ruleManagement",
