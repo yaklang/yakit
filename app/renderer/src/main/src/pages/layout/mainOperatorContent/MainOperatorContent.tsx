@@ -35,10 +35,8 @@ import {
     isEnterpriseOrSimpleEdition,
     isEnterpriseEdition,
     isIRify,
-    isCommunityIRify,
-    isEnpriTraceIRify,
     isMemfit,
-    isYakit
+    isWFCacheEdition
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -2179,7 +2177,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
-        if (isYakit()) {
+        if (isWFCacheEdition()) {
             unFuzzerCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
                 (selectedState, previousSelectedState) => {
@@ -2198,7 +2196,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
     const onInitFuzzer = useMemoizedFn(async () => {
-        if (!isEnpriTraceAgent() && !isCommunityIRify() && !isEnpriTraceIRify()) {
+        if (isWFCacheEdition()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存

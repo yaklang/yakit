@@ -38,6 +38,13 @@ export const getReleaseEditionName = () => {
             return "Yakit"
     }
 }
+/**只有yakit 社区版和企业版有WF缓存 */
+export const isWFCacheEdition = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+    )
+}
 /** EE */
 export const isEnpriTrace = () => {
     return (
@@ -97,7 +104,8 @@ export const isMemfit = () => {
 export const isYakit = () => {
     return (
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTraceAgent
     )
 }
 
