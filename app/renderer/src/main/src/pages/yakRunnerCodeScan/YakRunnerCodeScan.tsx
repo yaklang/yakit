@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     CodeScaMainExecuteContentProps,
     CodeScanAuditExecuteFormProps,
@@ -1985,6 +1985,29 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             getCompileHistoryList(selectProjectId)
         }, [selectProjectId])
 
+        const onSelectProject = useMemoizedFn(async (item: number) => {
+            try {
+                let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
+
+                let language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
+                if (language) {
+                    selectGroup.push(language)
+                    selectGroup.push("general")
+                }
+
+                const newSelectGroup = filter(selectGroup)
+                const selectTotal = await getGroupNamesTotal(newSelectGroup)
+                setPageInfo({
+                    ...pageInfo,
+                    ...clearRuleByPageInfo,
+                    GroupNames: newSelectGroup,
+                    selectTotal
+                })
+                setSelectProjectId(item ? [item] : [])
+                emiter.emit("onResetCodeScanProject")
+            } catch (error) {}
+        })
+
         return (
             <>
                 <div
@@ -2055,26 +2078,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     showSearch
                                     placeholder='请选择项目名称'
                                     options={auditCodeList}
-                                    onChange={async (item: number) => {
-                                        let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
-
-                                        let language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
-                                        if (language) {
-                                            selectGroup.push(language)
-                                            selectGroup.push("general")
-                                        }
-
-                                        const newSelectGroup = filter(selectGroup)
-                                        const selectTotal = await getGroupNamesTotal(newSelectGroup)
-                                        setPageInfo({
-                                            ...pageInfo,
-                                            ...clearRuleByPageInfo,
-                                            GroupNames: newSelectGroup,
-                                            selectTotal
-                                        })
-                                        setSelectProjectId(item ? [item] : [])
-                                        emiter.emit("onResetCodeScanProject")
-                                    }}
+                                    onChange={onSelectProject}
                                 />
                             </Form.Item>
 

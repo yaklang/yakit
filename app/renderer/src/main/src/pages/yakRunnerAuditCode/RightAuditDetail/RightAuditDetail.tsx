@@ -518,10 +518,8 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         if (svgRef.current) {
             const svg = svgRef.current as SVGSVGElement
             svg.style.transform = `translate(${offset.x}px, ${offset.y}px) scale(${scale})`
-            svg.style.transformOrigin = "0 0"
-            svg.style.cursor = isDragging ? "grabbing" : "grab"
         }
-    }, [offset, scale, isDragging])
+    }, [offset, scale])
 
     return (
         <div className={styles["flow-chart-box"]} id={idBoxRef.current}>
