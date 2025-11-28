@@ -136,6 +136,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         return reactTaskToAsync.current
     })
     const clearReactTaskToAsync = useMemoizedFn(() => {
+        taskChatEvent.handleCloseGrpc()
         reactTaskToAsync.current = ""
     })
 
