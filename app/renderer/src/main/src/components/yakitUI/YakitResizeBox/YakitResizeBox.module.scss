@@ -60,7 +60,7 @@
         height: 20px;
         min-width: 20px;
         border-radius: 50%;
-        background: #fff;
+        background: var(--Colors-Use-Basic-Background);
         border: 1px solid var(--Colors-Use-Neutral-Border);
 
         svg {
