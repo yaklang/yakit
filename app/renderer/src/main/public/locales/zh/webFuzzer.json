@@ -200,6 +200,8 @@
     "saveTemplate": "保存模板",
     "enableSuccess": "启用成功",
     "debugNotice": "调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条",
+    "debugCancelled": "调试已取消",
+    "debugFailed": "调试失败",
     "engineConsole": "引擎Console",
     "bruteforce_aes_cbc": "爆破 AES-CBC",
     "bruteforce_rsa_oaep": "爆破 RSA-OAEP",

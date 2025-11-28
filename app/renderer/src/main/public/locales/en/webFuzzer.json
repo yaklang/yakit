@@ -200,6 +200,8 @@
     "saveTemplate": "Save Template",
     "enableSuccess": "Enabled successfully",
     "debugNotice": "Debugging Notice: Debug execution will run for a maximum of 20 seconds OR render a maximum of 300 Payloads.",
+    "debugCancelled": "Debug cancelled",
+    "debugFailed": "Debug failed",
     "engineConsole": "Engine Console",
     "bruteforce_aes_cbc": "Brute-Force AES-CBC",
     "bruteforce_rsa_oaep": "Brute-Force RSA-OAEP",

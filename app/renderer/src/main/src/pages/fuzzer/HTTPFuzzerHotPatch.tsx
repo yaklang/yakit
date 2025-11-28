@@ -102,6 +102,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const initHotPatchCodeOpen = useRef<boolean>(false)
     const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
     const tempNameRef = useRef<string>("")
+    const tokenRef = useRef<string>("")
 
     useEffect(() => {
         getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -188,6 +189,15 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             })
     })
 
+    const onCancel = useMemoizedFn(() => {
+        if (tokenRef.current) {
+            ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
+            setLoading(false)
+            tokenRef.current = ""
+            yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
+        }
+    })
+
     return (
         <div className={styles["http-fuzzer-hotPatch"]}>
             <div className={styles["http-fuzzer-hotPatch-heard"]}>
@@ -198,12 +208,26 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
+                    // if (loading) {
+                    //     // 如果正在执行，则取消
+                    //     if (tokenRef.current) {
+                    //         ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
+                    //         setLoading(false)
+                    //         tokenRef.current = ""
+                    //         yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
+                    //     }
+                    //     return
+                    // }
+
                     saveCode(params.HotPatchCode)
                     props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
 
                     setLoading(true)
+                    // 生成唯一token
+                    tokenRef.current = `string-fuzzer-${Date.now()}-${Math.random()}`
+                    
                     ipcRenderer
-                        .invoke("StringFuzzer", {...params})
+                        .invoke("StringFuzzer", {...params}, tokenRef.current)
                         .then((response: {Results: Uint8Array[]}) => {
                             const data: string[] = (response.Results || []).map((buf) =>
                                 new Buffer(buf).toString("utf8")
@@ -247,7 +271,18 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 )
                             })
                         })
-                        .finally(() => setTimeout(() => setLoading(false), 300))
+                        .catch((err) => {
+                            // 只有非取消的错误才提示
+                            if (tokenRef.current) {
+                                yakitNotify("error", `${t("HTTPFuzzerHotPatch.debugFailed")}: ${err}`)
+                            }
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                setLoading(false)
+                                tokenRef.current = ""
+                            }, 300)
+                        })
                 }}
                 layout={"vertical"}
                 className={styles["http-fuzzer-hotPatch-form"]}
@@ -404,17 +439,32 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     </div>
                 </Form.Item>
                 <Form.Item help={t("HTTPFuzzerHotPatch.debugNotice")}>
-                    <YakitButton loading={loading} type='primary' htmlType='submit'>
+                    <div className={styles["http-fuzzer-hotPatch-debugNotice"]} >
+                    <YakitButton 
+                        type='primary' 
+                        htmlType='submit'
+                        loading={loading}
+                    >
                         {t("YakitButton.debugExecution")}
                     </YakitButton>
+                    {loading && (
+                        <YakitButton 
+                            danger 
+                            onClick={onCancel}
+                            className={styles["btn-box"]}
+                        >
+                            {t("YakitButton.cancel")}
+                        </YakitButton>
+                    )}
                     <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
                         <YakitButton
                             type='text'
                             onClick={openConsoleNewWindow}
                             icon={<OutlineTerminalIcon className={styles["engineConsole-icon-style"]} />}
-                            style={{marginLeft: 8, marginTop: 5}}
+                            className={styles["btn-box"]}
                         ></YakitButton>
                     </Tooltip>
+                    </div>
                 </Form.Item>
             </Form>
         </div>
