@@ -2329,7 +2329,6 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
     const {pageType, onClose, onExecuteAudit, warrpId} = props
-    const [compileName, setCompileName] = useState<string>()
     const [JSONStringConfig, setJSONStringConfig] = useState<string>()
     const [refresh, setRefresh] = useControllableValue<boolean>(props, {
         defaultValue: false,
@@ -2569,7 +2568,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 icon={<OutlineReloadScanIcon />}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    setCompileName(record.ProjectName)
                                     setJSONStringConfig(record.JSONStringConfig)
                                 }}
                             />
@@ -2793,7 +2791,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
             <AfreshAuditModal
                 nameOrConfig={JSONStringConfig}
-                setNameOrConfig={setCompileName}
+                setNameOrConfig={setJSONStringConfig}
                 onSuccee={() => update(true)}
                 warrpId={warrpId || document.getElementById("audit-history-table")}
                 type='compile'
