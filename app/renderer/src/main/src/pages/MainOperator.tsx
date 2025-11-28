@@ -27,7 +27,8 @@ import {
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnterpriseOrSimpleEdition,
-    isIRify
+    isIRify,
+    isMemfit
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {CodeGV} from "@/yakitGV"
@@ -232,7 +233,13 @@ export interface fuzzerInfoProp {
     groupChildren?: MultipleNodeInfo[]
     id?: string
 }
-
+/**菜单展开收起默认值 */
+const getDefaultExpand = () => {
+    if (isMemfit()) {
+        return false
+    }
+    return true
+}
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [showRenderCrash, setShowRenderCrash] = useState(false)
     useEffect(() => {
@@ -452,8 +459,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         return ""
     }
 
-    const [defaultExpand, setDefaultExpand] = useState<boolean>(true)
+    const [defaultExpand, setDefaultExpand] = useState<boolean>(getDefaultExpand())
+
     useEffect(() => {
+        /** Memfit版本没有展开收起*/
+        if (isMemfit()) return
         getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
             if (!result) setDefaultExpand(true)
             try {

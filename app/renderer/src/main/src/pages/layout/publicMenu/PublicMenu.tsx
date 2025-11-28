@@ -518,7 +518,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 {!isExpand && <div className={styles["first-menu-body"]}>{noExpand}</div>}
                 <div className={styles["first-menu-extra-wrapper"]}>
                     <ExtraMenu onMenuSelect={onMenuSelect} />
-                    {!isExpand && (
+                    {!isMemfit() && !isExpand && (
                         <div className={styles["no-expand-wrapper"]} onClick={(e) => onSetIsExpand(true)}>
                             <SortDescendingIcon />
                         </div>
@@ -615,11 +615,13 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         </>
                     )}
                 </div>
-                <div className={styles["expand-wrapper"]}>
-                    <div className={styles["expand-body"]} onClick={(e) => onSetIsExpand(false)}>
-                        <SortAscendingIcon />
+                {!isMemfit() && (
+                    <div className={styles["expand-wrapper"]}>
+                        <div className={styles["expand-body"]} onClick={(e) => onSetIsExpand(false)}>
+                            <SortAscendingIcon />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     )

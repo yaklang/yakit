@@ -411,6 +411,14 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
                 route: YakitRoute.AI_Agent,
                 singleNode: true,
                 multipleNode: []
+            },
+            {
+                routeKey: routeConvertKey(YakitRoute.AI_REPOSITORY, ""),
+                verbose: "知识库",
+                menuName: YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY].label,
+                route: YakitRoute.AI_REPOSITORY,
+                singleNode: true,
+                multipleNode: []
             }
         ]
     }

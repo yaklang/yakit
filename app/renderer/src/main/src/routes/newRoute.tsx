@@ -494,7 +494,7 @@ export const NoScrollRoutes: YakitRoute[] = [
 /** 通过版本获取一级tab固定展示tab  */
 const getDefaultFixedTabs = () => {
     if (isMemfit()) {
-        return [YakitRoute.AI_Agent]
+        return [YakitRoute.AI_Agent, YakitRoute.AI_REPOSITORY]
     }
     return [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
 }
