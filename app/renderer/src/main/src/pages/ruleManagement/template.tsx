@@ -79,7 +79,7 @@ import {
     AuditNodeMapProps,
     AuditNodeProps,
     AuditYakUrlProps,
-    SSAProgramResponse
+    SSAProjectResponse
 } from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
@@ -105,9 +105,9 @@ import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CodeScoreModal} from "../plugins/funcTemplate"
-import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
-import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import { apiQuerySSAPrograms } from "../yakRunnerScanHistory/utils"
+import { MilkdownEditorLocal } from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -712,7 +712,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const onSubmitApi = useMemoizedFn((request: SyntaxFlowRuleInput) => {
         setLoading(true)
         const api = isEdit ? grpcUpdateLocalRule : grpcCreateLocalRule
-        console.log("提交数据", request)
         api({SyntaxFlowInput: request})
             .then(({Rule}) => {
                 onCallback(true, Rule)
@@ -785,9 +784,9 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             Pagination: genDefaultPagination(100)
         }
         projectLoading.current = true
-        ipcRenderer
-            .invoke("QuerySSAPrograms", request)
-            .then((res: QueryGeneralResponse<SSAProgramResponse>) => {
+        // TODO: 规则管理-执行结果与代码扫描项目名称控件一致
+        apiQuerySSAPrograms(request)
+            .then((res) => {
                 if (!res || !Array.isArray(res.Data)) {
                     return
                 }
@@ -1163,7 +1162,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                 form={debugForm}
                                                 className={styles["params-form"]}
                                             >
-                                                <Form.Item label={"项目名称"} name={"project"} rules={[{required: true, message: "该项为必填"}]}>
+                                                <Form.Item
+                                                    label={"项目名称"}
+                                                    name={"project"}
+                                                    rules={[{required: true, message: "该项为必填"}]}
+                                                >
                                                     <YakitSelect
                                                         mode='multiple'
                                                         showSearch={true}
@@ -2646,17 +2649,19 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                         />
                                     </Descriptions.Item>
                                     <Descriptions.Item label='漏洞描述' span={3}>
-                                        <MilkdownEditor
+                                        <MilkdownEditorLocal
                                             type='notepad'
                                             defaultValue={alert.Description}
                                             onMarkdownUpdated={(value) => onMarkdownUpdated("Description", value, key)}
+                                            isControlEditorType={false}
                                         />
                                     </Descriptions.Item>
                                     <Descriptions.Item label='修复建议' span={3}>
-                                        <MilkdownEditor
+                                        <MilkdownEditorLocal
                                             type='notepad'
                                             defaultValue={alert.Solution}
                                             onMarkdownUpdated={(value) => onMarkdownUpdated("Solution", value, key)}
+                                            isControlEditorType={false}
                                         />
                                     </Descriptions.Item>
                                 </Descriptions>

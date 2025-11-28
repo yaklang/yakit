@@ -69,7 +69,6 @@
                 font-weight: 400;
                 line-height: 16px;
                 gap: 8px;
-                cursor: pointer;
 
                 &:hover {
                     border-top-color: transparent;
@@ -88,6 +87,9 @@
                 .virtual-list-cell-flex {
                     flex: 1;
                 }
+            }
+            .virtual-list-item-click {
+                cursor: pointer;
             }
             .virtual-list-item:hover + .virtual-list-item {
                 border-top-color: transparent;

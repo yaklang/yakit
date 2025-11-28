@@ -180,7 +180,12 @@
         svg {
             width: 12px;
             height: 12px;
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
+    .node-error{
+        svg {
+            color: var(--Colors-Use-Error-Primary);
         }
     }
     .img-box {
@@ -223,7 +228,7 @@
 
                 flex-shrink: 1; /* 允许这个元素被压缩 */
             }
-            .name-active{
+            .name-active {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
@@ -380,10 +385,56 @@
         border-top: 1px dashed var(--Colors-Use-Neutral-Border);
     }
 }
+.project-manager-edit {
+    // 以下为jsonSchema样式特殊处理---start
+    .form-json-schema-wrapper {
+        padding: 0px 16px;
+        max-height: 600px;
+        overflow: auto;
+        *:has(> label[title="基础信息"]),*:has(> label[title="代码源配置"]),*:has(> label[title="编译配置"]) {
+            display: none;
+        }
+    }
+    .baseInfo {
+        fieldset[id="root"] > div:first-child > div:nth-child(2) {
+            height: 0px;
+            overflow: hidden;
+        }
+        fieldset[id="root"] > div:first-child > div:nth-child(3) {
+            height: 0px;
+            overflow: hidden;
+        }
+    }
+    .codeSource {
+        fieldset[id="root"] > div:first-child > div:first-child {
+            height: 0px;
+            overflow: hidden;
+        }
+        fieldset[id="root"] > div:first-child > div:nth-child(3) {
+            height: 0px;
+            overflow: hidden;
+        }
+    }
+    .compile {
+        fieldset[id="root"] > div:first-child > div:first-child {
+            height: 0px;
+            overflow: hidden;
+        }
+        fieldset[id="root"] > div:first-child > div:nth-child(2) {
+            height: 0px;
+            overflow: hidden;
+        }
+    }
+    // 以上为jsonSchema样式特殊处理---end
 
-.project-manager-edit-form {
-    padding: 8px 24px 8px 24px;
+    .form-type-radio {
+        padding: 0px 16px;
+    }
+    .project-manager-edit-form {
+        padding: 8px 24px 8px 24px;
+    }
     .opt-btn {
+        padding: 0px 24px;
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
@@ -507,5 +558,32 @@
         .ant-tooltip-inner {
             white-space: pre-wrap;
         }
+    }
+}
+
+.modal-sub-title {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    .clear-button {
+        padding: 0 12px 0 0;
+    }
+}
+
+.agent-down-stream-proxy {
+    color: var(--Colors-Use-Main-Primary);
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.hint-right-btn {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+
+    .btn-group-wrapper {
+        display: flex;
+        gap: 8px;
     }
 }

@@ -123,7 +123,9 @@ import {
     usePageInfo,
     AIForgeEditorPageInfoProps,
     AIToolEditorPageInfoProps,
-    YakRunnerScanHistoryPageInfoProps
+    YakRunnerScanHistoryPageInfoProps,
+    RuleManagementPageInfoProps,
+    AuditHoleInfoProps
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
@@ -701,7 +703,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 addModifyNotepad(params)
                 break
             case YakitRoute.Rule_Management:
-                addRuleManagement()
+                addRuleManagement(params)
                 break
             case YakitRoute.YakRunner_Project_Manager:
                 addProjectManager()
@@ -776,8 +778,39 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    const addRuleManagement = useMemoizedFn(() => {
-        openMenuPage({route: YakitRoute.Rule_Management})
+    const addRuleManagement = useMemoizedFn((data?: RuleManagementPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.Rule_Management).length
+        if (isExist && data) {
+            emiter.emit("onRuleManagementPageInfo", JSON.stringify(data))
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.Rule_Management,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.Rule_Management,
+                    pageName: YakitRouteToPageInfo[YakitRoute.Rule_Management]?.label || "",
+                    pageParamsInfo: {
+                        ruleManagementPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.Rule_Management,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.Rule_Management, pageNodeInfo)
+        openMenuPage({route: YakitRoute.Rule_Management},{
+                pageParams: {
+                    ruleManagementPageInfo: data
+                        ? {
+                              ...data
+                          }
+                        : undefined
+                }
+            })
     })
 
     const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {
@@ -829,12 +862,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    const addYakRunnerAuditHolePage = useMemoizedFn((data: RiskPageInfoProps) => {
+    const addYakRunnerAuditHolePage = useMemoizedFn((data: AuditHoleInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Hole).length
         if (isExist) {
-            if (data.SeverityList) {
-                emiter.emit("auditHoleVulnerabilityLevel", JSON.stringify(data.SeverityList))
-            }
+            emiter.emit("auditHoleVulnerabilityLevel", JSON.stringify(data))
         }
         const pageNodeInfo: PageProps = {
             ...cloneDeep(defPage),
@@ -846,7 +877,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pageId: YakitRoute.YakRunner_Audit_Hole,
                     pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]?.label || "",
                     pageParamsInfo: {
-                        riskPageInfo: data
+                        auditHoleInfo: data
                     },
                     sortFieId: 0
                 }
@@ -859,7 +890,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {route: YakitRoute.YakRunner_Audit_Hole},
             {
                 pageParams: {
-                    riskPageInfoProps: {
+                    auditHolePageInfo: {
                         ...data
                     }
                 }

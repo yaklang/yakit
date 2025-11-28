@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import styles from "./YakRunnerAuditHole.module.scss"
 import {
     HoleQueryProps,
@@ -26,11 +26,11 @@ import {VulnerabilityTypePieRefProps} from "../risks/VulnerabilityTypePie/Vulner
 import {VulnerabilityTypePie} from "../risks/VulnerabilityTypePie/VulnerabilityTypePie"
 import {YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
-import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
+import {apiGetSSARiskFieldGroupEx} from "./YakitAuditHoleTable/utils"
 import {shallow} from "zustand/shallow"
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, AuditHoleInfoProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {defaultRiskPageInfo} from "@/defaultConstants/RiskPage"
+import {defaultAuditHolePageInfo} from "@/defaultConstants/defaultAuditHolePageInfo"
 import {LeftSideHoleType} from "./LeftSideHoleBar/LeftSideHoleBarType"
 import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -49,18 +49,18 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
             YakitRoute.YakRunner_Audit_Hole,
             YakitRoute.YakRunner_Audit_Hole
         )
-        if (currentItem && currentItem.pageParamsInfo.riskPageInfo) {
-            return currentItem.pageParamsInfo.riskPageInfo
+        if (currentItem && currentItem.pageParamsInfo.auditHoleInfo) {
+            return currentItem.pageParamsInfo.auditHoleInfo
         } else {
-            return {...defaultRiskPageInfo}
+            return {...defaultAuditHolePageInfo}
         }
     })
 
     useEffect(() => {
         const auditHoleVulnerabilityLevel = (params: string) => {
             try {
-                const Severity = JSON.parse(params) || []
-                setQuery((query) => ({...query, Severity}))
+                const data:AuditHoleInfoProps = JSON.parse(params)
+                setQuery((query) => ({...query, ...data}))
             } catch (error) {}
         }
         emiter.on("auditHoleVulnerabilityLevel", auditHoleVulnerabilityLevel)
@@ -71,7 +71,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
 
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [query, setQuery] = useState<SSARisksFilter>({
-        Severity: initPageInfo().SeverityList || []
+        ...initPageInfo()
     })
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
@@ -149,22 +149,30 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const [typeList, setTypeList] = useState<FieldName[]>([])
     useEffect(() => {
         if (!inViewport) return
-        getGroups()
         emiter.on("onRefRiskFieldGroup", onRefRiskFieldGroup)
         return () => {
             emiter.off("onRefRiskFieldGroup", onRefRiskFieldGroup)
         }
-    }, [inViewport])
+    }, [])
+
     const onRefRiskFieldGroup = useMemoizedFn(() => {
         getGroups()
     })
-    const getGroups = useMemoizedFn(() => {
-        apiGetSSARiskFieldGroup().then((res) => {
+
+    useDebounceEffect(()=>{
+        if (!inViewport) return
+        getGroups(false)
+    },[inViewport,query],{
+        wait: 200
+    })
+
+    const getGroups = useMemoizedFn((option: boolean = true) => {
+        apiGetSSARiskFieldGroupEx({Filter:query}).then((res) => {
             const {FileField, SeverityField, RiskTypeField} = res
             setProgramList(FileField.sort((a, b) => b.Total - a.Total))
             setLevelList(SeverityField)
             setTypeList(RiskTypeField)
-            if (FileField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {
+            if (FileField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0 && option) {
                 onOperateSide(false)
             }
         })

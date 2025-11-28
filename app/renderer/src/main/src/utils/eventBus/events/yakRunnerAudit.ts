@@ -36,8 +36,8 @@ export type YakRunnerAuditEventProps = {
     onAuditRuleSubmit: string
     // 停止审计
     onStopAuditRule?: string
-    // 打开已有项目
-    onCodeAuditHistoryExpanded?: string
+    // 打开/关闭已有项目
+    onCodeAuditHistoryExpanded: boolean
     // 重新设置审计规则
     onResetAuditRule: string
     // 初始化 Widget

@@ -54,6 +54,10 @@ import {grpcOpenRenderLogFolder} from "@/utils/logCollection"
 
 import "./main.scss"
 import "./GlobalClass.scss"
+import {genDefaultPagination} from "./invoker/schema"
+import {apiQuerySSAPrograms} from "./yakRunnerScanHistory/utils"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import { IRifyUpdateProjectManagerModal } from "./YakRunnerProjectManager/YakRunnerProjectManager"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -539,6 +543,26 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // })
     /** -------------------- 更新前瞻 End -------------------- */
 
+    /** ---------- IRify start ---------- */
+    const [isAllowIRifyUpdate, setIsAllowIRifyUpdate] = useState<boolean>(false)
+    const [isShowIRifyHint, setIsShowIRifyHint] = useState<boolean>(false)
+    useEffect(() => {
+        // 检测是IRify中是否存在老数据，存在老数据则同步
+        if (isIRify()) {
+            apiQuerySSAPrograms({
+                Filter: {
+                    ProjectIds: [0]
+                },
+                Pagination: {...genDefaultPagination()}
+            }).then((res) => {
+                if (res.Data && res.Data.length > 0) {
+                    // 老数据同步
+                    setIsShowIRifyHint(true)
+                }
+            })
+        }
+    }, [])
+    /** ---------- IRify end ---------- */
     return (
         <>
             <WaterMark
@@ -645,6 +669,27 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 onOk={() => {}}
                 onCancel={() => {}}
             />
+
+            {/* irify-start */}
+            <YakitHint
+                visible={isShowIRifyHint}
+                title='迁移数据'
+                content='由于IRify功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。'
+                footer={
+                    <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "flex-end"}}>
+                        <YakitButton size='max' type='outline2' onClick={() => setIsShowIRifyHint(false)}>
+                            取消
+                        </YakitButton>
+                        <YakitButton size='max' onClick={() => {
+                            setIsShowIRifyHint(false)
+                            setIsAllowIRifyUpdate(true)}}>
+                            确定
+                        </YakitButton>
+                    </div>
+                }
+            />
+            <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
+            {/* irify-end */}
 
             {/* <UpdateForward
                 visible={updateShow}

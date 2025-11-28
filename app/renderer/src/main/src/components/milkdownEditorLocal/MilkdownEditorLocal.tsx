@@ -17,7 +17,8 @@ const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props, ref) => {
     }, [])
     const {get, loading, jumpToFifthLine} = useInitEditorHooks({
         ...props,
-        localProps: localParams
+        localProps: localParams,
+        
     })
     /**更新最新的editor */
     useEffect(() => {

@@ -46,6 +46,8 @@ export interface CustomMilkdownProps {
     readonly?: boolean
     /**编辑器默认值*/
     defaultValue?: string
+    /**编辑器是否传入type*/
+    isControlEditorType?: boolean
     editor?: EditorMilkdownProps
     setEditor?: (s: EditorMilkdownProps) => void
     /**自定义插件 */

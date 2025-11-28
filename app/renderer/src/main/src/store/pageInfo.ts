@@ -84,6 +84,10 @@ interface PageParamsInfoProps {
     yakRunnerScanHistory?: YakRunnerScanHistoryPageInfoProps
     /** 并发页面高级配置 */
     ConcurrencyAdvancedConfigValue?: ConcurrencyAdvancedConfigValue
+    /** 规则管理页面 */
+    ruleManagementPageInfo?: RuleManagementPageInfoProps
+    /** 审计漏洞页面 */
+    auditHoleInfo?: AuditHoleInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -204,6 +208,13 @@ export interface RiskPageInfoProps {
     /**漏洞危险等级 */
     SeverityList?: string[]
 }
+
+export interface AuditHoleInfoProps {
+    /** 漏洞危险等级 */
+    Severity?: string[]
+    RuntimeID?: string[]
+}
+
 interface ImmediatelyLaunchedInfo {
     host: string
     port: string
@@ -225,7 +236,7 @@ export interface AuditCodePageInfoProps {
     Value?: string
     // 正常操作查询
     Location: string
-    Query?: {Key: string; Value: number}[]
+    Query?: {Key: string; Value: any}[]
     // 文件与高亮信息
     CodeRange?: string
     // 漏洞/规则 树所选中的下拉列表
@@ -238,16 +249,18 @@ export interface AuditCodePageInfoProps {
 }
 
 export interface CodeScanPageInfoProps {
-    projectName?: string[]
+    projectName?: string
+    projectId?: number
+    historyName?: string[]
     codeScanMode?: SyntaxFlowScanModeType
     runtimeId?: string
 
     // rule 相关过滤条件
-    RuleNames?: string[]
+    RuleIds?: number[]
     GroupNames?: string[]
     Keyword?: string
     FilterLibRuleKind?: FilterLibRuleKind
-    // 所选规则总数
+    // 所选规则总数(PS：在页面跳转时如若存在GroupNames则需要查询其total进行展示)
     selectTotal?: number
 }
 
@@ -266,6 +279,11 @@ export interface ModifyNotepadPageInfoProps {
 
 export interface YakRunnerScanHistoryPageInfoProps {
     Programs: string[]
+    ProjectIds: number[]
+}
+
+export interface RuleManagementPageInfoProps {
+    RuleNames?: string[]
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>

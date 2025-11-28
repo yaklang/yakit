@@ -51,6 +51,9 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import moment from "moment"
+import {apiQuerySSAPrograms} from "@/pages/yakRunnerScanHistory/utils"
+import {genDefaultPagination} from "@/pages/invoker/schema"
+import {warn} from "@/utils/notification"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
 
@@ -97,9 +100,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const [fileRefresh, setFileRefresh] = useState<boolean>(false)
     const [ruleRefresh, setRuleRefresh] = useState<boolean>(false)
 
-    // 打开已有项目
-    const onCodeAuditHistoryExpandedFun = useMemoizedFn(() => {
-        setVisible(true)
+    // 打开/关闭已有项目
+    const onCodeAuditHistoryExpandedFun = useMemoizedFn((is:boolean) => {
+        setVisible(is)
     })
 
     const onRefreshFileOrRuleTreeFun = useMemoizedFn(() => {
@@ -235,15 +238,37 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
         switch (key) {
             case "codeScan":
-                emiter.emit(
-                    "openPage",
-                    JSON.stringify({
-                        route: YakitRoute.YakRunner_Code_Scan,
-                        params: {
-                            projectName: [projectName]
-                        }
-                    })
-                )
+                apiQuerySSAPrograms({
+                    Filter: {
+                        ProgramNames: projectName ? [projectName] : []
+                    },
+                    Pagination: {...genDefaultPagination()}
+                }).then((res) => {
+                    let projectId = 0
+                    let compileProjectName = ""
+                    if (res.Data.length > 0) {
+                        projectId = res.Data[0].SSAProjectID
+                        compileProjectName = res.Data[0].Name
+                    }
+                    if (parseInt(String(projectId)) === 0) {
+                        warn("未找到对应的项目配置，由于项目管理功能更新，请重新编译项目")
+                        return
+                    }
+                    
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.YakRunner_Code_Scan,
+                            params: {
+                                // 此处由接口查出来
+                                projectName:compileProjectName,
+                                projectId,
+                                historyName: [projectName]
+                            }
+                        })
+                    )
+                })
+
                 break
             case "auditCode":
                 auditCode()
@@ -594,15 +619,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 onClose={onCloseDrawer}
             >
                 <AuditHistoryTable
-                    pageType='aucitCode'
+                    pageType='auditCode'
                     onClose={() => setVisible(false)}
                     warrpId={document.getElementById("audit-code")}
                 />
             </YakitDrawer>
 
             <AfreshAuditModal
-                afreshName={afreshName}
-                setAfreshName={setAfreshName}
+                nameOrConfig={afreshName}
+                setNameOrConfig={setAfreshName}
                 onSuccee={() => {
                     emiter.emit("onCodeAuditRefreshTree")
                 }}

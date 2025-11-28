@@ -19,8 +19,8 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {FieldName, Fields} from "../risks/RiskTable"
 import {QueryGeneralResponse} from "../invoker/schema"
-import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
-import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {apiGetSSARiskFieldGroupEx} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 interface IRifyHomeProps {}
@@ -45,14 +45,14 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
 
     // 更新漏洞数据
     const undateRiskLevel = () => {
-        apiGetSSARiskFieldGroup().then((res) => {
+        apiGetSSARiskFieldGroupEx().then((res) => {
             setRiskLevelData(res.SeverityField)
         })
     }
 
     // 获取编译项目数
     const updateSSAPrograms = () => {
-        ipcRenderer.invoke("QuerySSAPrograms", {}).then((i: QueryGeneralResponse<SSAProgramResponse>) => {
+        ipcRenderer.invoke("QuerySSAProject", {}).then((i: QueryGeneralResponse<SSAProjectResponse>) => {
             setTotal(i.Total)
         })
     }
@@ -190,7 +190,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["critical"]}
+                                            params: {Severity: ["critical"]}
                                         })
                                     }
                                 >
@@ -204,7 +204,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["high"]}
+                                            params: {Severity: ["high"]}
                                         })
                                     }
                                 >
@@ -218,7 +218,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["middle"]}
+                                            params: {Severity: ["middle"]}
                                         })
                                     }
                                 >
@@ -232,7 +232,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     onClick={() =>
                                         onMenuParams({
                                             route: YakitRoute.YakRunner_Audit_Hole,
-                                            params: {SeverityList: ["low"]}
+                                            params: {Severity: ["low"]}
                                         })
                                     }
                                 >

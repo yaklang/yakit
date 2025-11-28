@@ -397,7 +397,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                         Path: `/`,
                                         Variable: record.Variable,
                                         Value: record.Index ? `/${record.Index}` : undefined,
-                                        Query: [{Key: "result_id", Value: record.ResultID || 0}],
+                                        Query: [
+                                            {Key: "result_id", Value: record.ResultID || 0},
+                                            {Key: "risk_hash", Value: record.Hash || ""}
+                                        ],
                                         CodeRange: record.CodeRange
                                     }
                                     emiter.emit(
@@ -808,6 +811,16 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                                     {selectNum}
                                                 </span>
                                             </div>
+                                            {(query.RuntimeID||"").length > 0 && <YakitTag
+                                                className={styles['virtual-table-heard-right-tag']}
+                                                color='info'
+                                                closable
+                                                onClose={() => {
+                                                    setQuery && setQuery({RuntimeID: []})
+                                                }}
+                                            >
+                                                {query.RuntimeID} 
+                                            </YakitTag>}
                                         </div>
                                     </div>
                                     <div className={styles["table-head-extra"]}>
@@ -1105,7 +1118,10 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 Path: `/`,
                 Variable,
                 Value: value,
-                Query: [{Key: "result_id", Value: ResultID}],
+                Query: [
+                    {Key: "result_id", Value: ResultID},
+                    {Key: "risk_hash", Value: info.Hash || ""}
+                ],
                 CodeRange
             }
             emiter.emit(

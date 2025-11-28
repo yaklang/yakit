@@ -1,8 +1,11 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 import {UserInfoProps} from "@/store"
+import {RuleManagementPageInfoProps} from "@/store/pageInfo";
 
-export interface RuleManagementProps {}
+export interface RuleManagementProps{
+    ruleManagementPageInfo?: RuleManagementPageInfoProps
+}
 
 export interface LocalRuleGroupListPropsRefProps {
     handleReset: () => void
@@ -156,6 +159,8 @@ export interface SyntaxFlowRuleFilter {
 
     FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
     FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
+
+    Ids?: number[]
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter

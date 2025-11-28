@@ -81,9 +81,9 @@ module.exports = (win, getClient) => {
         return await asyncDeleteSSARiskDisposals(params)
     })
 
-    const asyncGetSSARiskFieldGroup = (params) => {
+    const asyncGetSSARiskFieldGroupEx = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetSSARiskFieldGroup(params, (err, data) => {
+            getClient().GetSSARiskFieldGroupEx(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -92,9 +92,10 @@ module.exports = (win, getClient) => {
             })
         })
     }
+
     // 审计漏洞FieldGroup左边详情获取
-    ipcMain.handle("GetSSARiskFieldGroup", async (e, params) => {
-        return await asyncGetSSARiskFieldGroup(params)
+    ipcMain.handle("GetSSARiskFieldGroupEx", async (e, params) => {
+        return await asyncGetSSARiskFieldGroupEx(params)
     })
 
     const asyncNewSSARiskRead = (params) => {

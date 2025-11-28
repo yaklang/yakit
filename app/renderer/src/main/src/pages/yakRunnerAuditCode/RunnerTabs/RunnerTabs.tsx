@@ -1296,7 +1296,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onWidgetOpenAgainFun = useMemoizedFn((path) => {
         if (!editor) return
         if (activeFile?.path === path) {
-            editerMenuFun(editor)
+            // editerMenuFun(editor)
         }
     })
 
@@ -1312,7 +1312,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     useEffect(() => {
         if (!editor) return
         // 此处定时器作用为多文件切换时 需等待其内容渲染完毕，否则会导致位置信息错误
-        editerMenuFun(editor)
+        // editerMenuFun(editor)
     }, [editor, editorInfo])
 
     /** 代码审计 代码错误检查并显示提示标记 */
@@ -1398,7 +1398,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
 
     // 打开已有项目
     const openHistoryExpanded = useMemoizedFn(async () => {
-        emiter.emit("onCodeAuditHistoryExpanded")
+        emiter.emit("onCodeAuditHistoryExpanded", true)
     })
 
     // 打开编译项目

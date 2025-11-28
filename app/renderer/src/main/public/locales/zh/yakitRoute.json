@@ -102,7 +102,7 @@
     "codeScan": "代码扫描",
     "richRuleLibrary": "内置丰富规则库，可自由选择规则分组进行代码扫描，帮助分析代码结构和发现代码中的风险片段",
     "projectManagement": "项目管理",
-    "scanHistory": "扫描历史",
+    "projectHistory": "项目历史",
     "ruleManagement": "规则管理",
     "customAuditRules": "可根据需求自定义审计规则和规则分组，支持导入导出，上传云端等分享行为，便于积累属于自己的规则库",
     "auditVulnerability": "审计漏洞",

@@ -17,6 +17,7 @@ export interface YakitVirtualListProps<T> {
     page?: number
     /**加载下一页 */
     loadMoreData: () => void
+    onClickRow?: (ele:T) => void
 }
 
 export interface VirtualListColumns<T> {

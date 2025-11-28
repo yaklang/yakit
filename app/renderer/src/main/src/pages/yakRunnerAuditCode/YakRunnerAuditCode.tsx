@@ -2,7 +2,6 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     AreaInfoProps,
     AuditCodeStatusInfoProps,
-    AuditCodeStreamData,
     AuditEmiterYakUrlProps,
     OpenFileByPathProps,
     YakRunnerAuditCodeProps,
@@ -89,6 +88,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             const {Location} = newPageInfo
             setProjectName(Location)
             onInitTreeFun(`/${Location}`)
+            emiter.emit("onCodeAuditHistoryExpanded", false)
         } catch (error) {}
     })
     useEffect(() => {
@@ -681,6 +681,20 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
     const [active, setActive, getActive] = useGetState<LeftSideType>("audit")
+    const lastRiskHash = useRef<string>("")
+    useEffect(()=>{
+        const item = (pageInfo?.Query||[]).find((item)=>item.Key === "risk_hash")
+        if(item && item.Value && item.Value !== lastRiskHash.current){
+            lastRiskHash.current = item.Value
+            setAuditRightParams({
+                Schema: "syntaxflow",
+                Location: projectName || "",
+                Path:"/",
+                Query:[{Key:"risk_hash",Value:item.Value}]
+            })
+            setShowAuditDetail(true)
+        }
+    },[pageInfo?.Query])
 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {

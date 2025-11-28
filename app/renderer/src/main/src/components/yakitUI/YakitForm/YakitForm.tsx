@@ -102,7 +102,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         isShowPathNumber = true,
         multiple = true,
         fileExtensionIsExist = false,
-        showExtraHelp = ""
+        showExtraHelp = "",
+        cacheFilePathKey,
+        cacheFolderPathKey
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -341,6 +343,28 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             </Spin>
         )
     })
+
+
+    const cacheFilePathRef = useRef<string>("") 
+    const cacheFolderPathRef = useRef<string>("") 
+    // 获取缓存的文件路径
+    useEffect(()=>{
+        if (cacheFilePathKey) {
+            getRemoteValue(cacheFilePathKey).then((value) => {
+                if (value) {
+                    cacheFilePathRef.current = value
+                }
+            })
+        }
+        if (cacheFolderPathKey) {
+            getRemoteValue(cacheFolderPathKey).then((value) => {
+                if (value) {
+                    cacheFolderPathRef.current = value
+                }
+            })
+        }
+    },[])
+
     /**
      * @description 选择文件夹
      */
@@ -350,14 +374,26 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFolder"), properties}).then((data) => {
-            const filesLength = data.filePaths.length
-            if (filesLength) {
-                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
-                // 设置名字
-                if (setFileName) setFileName(absolutePath)
-            }
-        })
+        let option: OpenDialogOptions = {
+            title: t("YakitFormDragger.selectFolder"),
+            properties
+        }
+        if(cacheFolderPathRef.current){
+            option.defaultPath = cacheFolderPathRef.current
+        }
+        handleOpenFileSystemDialog(option)
+            .then((data) => {
+                const filesLength = data.filePaths.length
+                if (filesLength) {
+                    const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
+                    if (cacheFolderPathKey && !multiple) {
+                        cacheFolderPathRef.current = absolutePath
+                        setRemoteValue(cacheFolderPathKey, absolutePath)
+                    }
+                    // 设置名字
+                    if (setFileName) setFileName(absolutePath)
+                }
+            })
     })
     /**选择文件 */
     const onUploadFile = useMemoizedFn(() => {
@@ -366,32 +402,44 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties}).then((data) => {
-            const filesLength = data.filePaths.length
-            let acceptFlag = true
-            if (filesLength) {
-                const absolutePath: string[] = []
-                data.filePaths.forEach((p) => {
-                    const path = p.replace(/\\/g, "\\")
-                    if (fileExtensionIsExist || !!props.accept) {
-                        if (isAcceptEligible(path, props.accept || ".*")) {
-                            absolutePath.push(path)
+        let option: OpenDialogOptions = {
+            title: t("YakitFormDragger.selectFile"),
+            properties
+        }
+        if(cacheFilePathRef.current){
+            option.defaultPath = cacheFilePathRef.current
+        }
+            handleOpenFileSystemDialog(option)
+            .then((data) => {
+                const filesLength = data.filePaths.length
+                let acceptFlag = true
+                if (filesLength) {
+                    const absolutePath: string[] = []
+                    data.filePaths.forEach((p) => {
+                        const path = p.replace(/\\/g, "\\")
+                        if (fileExtensionIsExist || !!props.accept) {
+                            if (isAcceptEligible(path, props.accept || ".*")) {
+                                absolutePath.push(path)
+                            } else {
+                                acceptFlag = false
+                            }
                         } else {
-                            acceptFlag = false
+                            absolutePath.push(path)
                         }
-                    } else {
-                        absolutePath.push(path)
+                    })
+
+                    if (props.accept && !acceptFlag) {
+                        failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
                     }
-                })
-
-                if (props.accept && !acceptFlag) {
-                    failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
+                    const result = absolutePath.join(",")
+                    if (cacheFilePathKey && !multiple) {
+                        cacheFilePathRef.current = result
+                        setRemoteValue(cacheFilePathKey, result)
+                    }
+                    // 设置名字
+                    if (setFileName) setFileName(result)
                 }
-
-                // 设置名字
-                if (setFileName) setFileName(absolutePath.join(","))
-            }
-        })
+            })
     })
     /**拖拽文件夹后的路径回显文本处理 */
     const afterFolderDrop = useMemoizedFn((e) => {
@@ -668,25 +716,26 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties: ["openFile"]}).then((data) => {
-            const filesLength = data.filePaths.length
-            if (filesLength === 1) {
-                const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                ipcRenderer
-                    .invoke("fetch-file-info-by-path", path)
-                    .then((fileInfo) => {
-                        onHandlerFile({
-                            size: fileInfo.size,
-                            path
+            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties: ["openFile"]})
+            .then((data) => {
+                const filesLength = data.filePaths.length
+                if (filesLength === 1) {
+                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                    ipcRenderer
+                        .invoke("fetch-file-info-by-path", path)
+                        .then((fileInfo) => {
+                            onHandlerFile({
+                                size: fileInfo.size,
+                                path
+                            })
                         })
-                    })
-                    .catch((err) => {
-                        yakitNotify("error", t("YakitDraggerContent.file_read_error") + err)
-                    })
-            } else if (filesLength > 1) {
-                yakitNotify("error", t("YakitDraggerContent.single_file_only"))
-            }
-        })
+                        .catch((err) => {
+                            yakitNotify("error", t("YakitDraggerContent.file_read_error") + err)
+                        })
+                } else if (filesLength > 1) {
+                    yakitNotify("error", t("YakitDraggerContent.single_file_only"))
+                }
+            })
     })
     /**通过文件路径获取文件内容 */
     const onGetContent = useMemoizedFn((path: string) => {
@@ -736,8 +785,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                                 })}
                                 onClick={onUploadFile}
                             >
-                                <OutlineUploadIcon className={styles["upload-icon"]} />{" "}
-                                {t("YakitDraggerContent.click_here")}
+                                <OutlineUploadIcon className={styles["upload-icon"]} /> {t("YakitDraggerContent.click_here")}
                             </span>
                             {t("YakitButton.upload")}
                         </label>
@@ -783,12 +831,13 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
         onTextAreaType,
         ...restProps
     } = props
+    const {t} = useI18nNamespaces(["yakitUi"])
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const renderContent = useMemoizedFn((helpNode: ReactNode) => {
         return (
             <YakitSpin spinning={uploadLoading}>
                 <YakitInput.TextArea
-                    placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                    placeholder={t("YakitFormDragger.pathManualInput")}
                     value={value}
                     disabled={disabled}
                     {...textareaProps}
@@ -833,7 +882,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
         if (isAcceptEligible(path, props.accept || ".*")) {
             onGetContent(size, path)
         } else {
-            yakitNotify("error", "文件类型不支持")
+            yakitNotify("error", t("YakitDraggerContent.unsupported_file_type"))
         }
     })
     /**拖拽文件后的处理 */
@@ -842,7 +891,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
         const {files = []} = e.dataTransfer
         const filesLength = files.length
         if (filesLength > 1) {
-            yakitNotify("error", "多选的文件只会选择其中一个文件处理")
+            yakitNotify("error", t("YakitDraggerContent.multi_file_single_process"))
         }
         if (filesLength > 0) {
             const item = files[0]
@@ -853,25 +902,26 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]}).then((data) => {
-            const filesLength = data.filePaths.length
-            if (filesLength === 1) {
-                const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                ipcRenderer
-                    .invoke("fetch-file-info-by-path", path)
-                    .then((fileInfo) => {
-                        onHandlerFile({
-                            size: fileInfo.size,
-                            path
+            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties: ["openFile"]})
+            .then((data) => {
+                const filesLength = data.filePaths.length
+                if (filesLength === 1) {
+                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                    ipcRenderer
+                        .invoke("fetch-file-info-by-path", path)
+                        .then((fileInfo) => {
+                            onHandlerFile({
+                                size: fileInfo.size,
+                                path
+                            })
                         })
-                    })
-                    .catch((err) => {
-                        yakitNotify("error", "文件数据读取异常:" + err)
-                    })
-            } else if (filesLength > 1) {
-                yakitNotify("error", "只支持单文件上传")
-            }
-        })
+                        .catch((err) => {
+                            yakitNotify("error", t("YakitDraggerContent.file_read_error") + err)
+                        })
+                } else if (filesLength > 1) {
+                    yakitNotify("error", t("YakitDraggerContent.single_file_only"))
+                }
+            })
     })
     /**通过文件路径获取文件内容 */
     const onGetContent = useMemoizedFn((size: number, path: string) => {
@@ -899,7 +949,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                 }
             })
             .catch((err) => {
-                failed("数据获取失败：" + err)
+                failed(t("YakitDraggerContent.data_fetch_failed") + err)
             })
             .finally(() => setTimeout(() => setUploadLoading(false), 200))
     })
@@ -920,16 +970,16 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                 {renderContent(
                     <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
                         <label>
-                            {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
+                            {help ? help : showDefHelp ? t("YakitDraggerContent.drag_file_tip") : ""}
                             <span
                                 className={classNames(styles["dragger-help-active"], {
                                     [styles["dragger-help-active-disabled"]]: disabled
                                 })}
                                 onClick={onUploadFile}
                             >
-                                <OutlineUploadIcon className={styles["upload-icon"]} /> 点击此处
+                                <OutlineUploadIcon className={styles["upload-icon"]} /> {t("YakitDraggerContent.click_here")}
                             </span>
-                            上传
+                            {t("YakitButton.upload")}
                         </label>
                         <div className={styles["divider-line"]}></div>
                         <YakitPopover
@@ -939,8 +989,8 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                                 <div onClick={(e) => e.stopPropagation()} style={{padding: "0 8px"}}>
                                     <div className={styles["content"]}>
                                         <div className={styles["text"]}>
-                                            读取方式
-                                            <Tooltip title='为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径'>
+                                            {t("YakitDraggerContent.reading_method")}
+                                            <Tooltip title={t("YakitDraggerContent.reading_method_tip")}>
                                                 <QuestionMarkCircleIcon />
                                             </Tooltip>
                                             ：
@@ -955,11 +1005,11 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                                             options={[
                                                 {
                                                     value: "content",
-                                                    label: "文件内容"
+                                                    label: t("YakitDraggerContent.file_content")
                                                 },
                                                 {
                                                     value: "path",
-                                                    label: "路径"
+                                                    label: t("YakitDraggerContent.path")
                                                 }
                                             ]}
                                         />
@@ -975,7 +1025,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                         >
                             <span className={styles["form-item-setting"]} onClick={(e) => e.stopPropagation()}>
                                 <UISettingSvgIcon className={styles["form-item-setting-icon"]} />
-                                设置
+                                {t("YakitDraggerContent.setting")}
                             </span>
                         </YakitPopover>
                     </div>
@@ -1013,6 +1063,7 @@ export const YakitFormDraggerContentPath: React.FC<YakitFormDraggerContentPathPr
 
 const FileDragger: React.FC<FileDraggerProps> = React.memo((props) => {
     const {disabled, multiple, onDrop, className, children} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
     return (
         <div
             onDropCapture={(e) => {
@@ -1022,7 +1073,7 @@ const FileDragger: React.FC<FileDraggerProps> = React.memo((props) => {
                 const {files = []} = e.dataTransfer
                 const filesLength = files.length
                 if (multiple === false && filesLength > 1) {
-                    yakitNotify("error", "不允许多选")
+                    yakitNotify("error", t("YakitDraggerContent.multi_select_not_allowed"))
                     return
                 }
                 if (onDrop) onDrop(e)

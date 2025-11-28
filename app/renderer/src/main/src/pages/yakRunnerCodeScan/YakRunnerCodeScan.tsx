@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     CodeScaMainExecuteContentProps,
     CodeScanAuditExecuteFormProps,
@@ -20,7 +20,8 @@ import {
     VerifyStartProps,
     YakRunnerCodeScanProps,
     CodeScanRuleByGroupProps,
-    CodeScanRuleByKeyWordProps
+    CodeScanRuleByKeyWordProps,
+    CreateSSAProjectResponse
 } from "./YakRunnerCodeScanType"
 import {Col, Divider, Form, Radio, Row, Slider, Tooltip} from "antd"
 import {
@@ -34,7 +35,7 @@ import {
     useUpdateEffect
 } from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
-import {failed, warn, info, yakitNotify} from "@/utils/notification"
+import {failed, warn, info, yakitNotify, success} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -43,7 +44,7 @@ import {
     OutlineArrowsexpandIcon,
     OutlineClipboardlistIcon,
     OutlineQuestionmarkcircleIcon,
-    OutlineTerminalIcon,
+    OutlineTerminalIcon
 } from "@/assets/icon/outline"
 import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -51,7 +52,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {RemoteGV} from "@/yakitGV"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {YakScript} from "../invoker/schema"
+import {genDefaultPagination, QueryGeneralResponse, YakScript} from "../invoker/schema"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {
     FormContentItemByType,
@@ -68,7 +69,7 @@ import {shallow} from "zustand/shallow"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import useHoldGRPCStream, {convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {v4 as uuidv4} from "uuid"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
@@ -102,6 +103,11 @@ import moment from "moment"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon, FolderOpenIcon} from "@/assets/newIcon"
+import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHistory"
+import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
+import {formatTimestamp} from "@/utils/timeUtil"
+import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -114,7 +120,7 @@ const clearRuleByPageInfo: CodeScanPageInfoProps = {
     Keyword: "",
     FilterLibRuleKind: "",
     selectTotal: 0,
-    RuleNames: []
+    RuleIds: []
 }
 export interface CodeScanStreamInfo {
     logState: StreamResult.Log[]
@@ -165,7 +171,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         if (
             (pageInfo.Keyword || "").length > 0 ||
             pageInfo.FilterLibRuleKind !== "" ||
-            (pageInfo.RuleNames || []).length > 0
+            (pageInfo.RuleIds || []).length > 0
         ) {
             return false
         }
@@ -178,7 +184,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         if (
             (pageInfo.Keyword || "").length > 0 ||
             pageInfo.FilterLibRuleKind !== "" ||
-            (pageInfo.RuleNames || []).length > 0
+            (pageInfo.RuleIds || []).length > 0
         ) {
             return false
         }
@@ -211,7 +217,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     Keyword: "",
                     FilterLibRuleKind: "",
                     selectTotal,
-                    RuleNames: []
+                    RuleIds: []
                 }))
             } else {
                 setPageInfo((prev) => ({
@@ -249,7 +255,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     Keyword: "",
                     FilterLibRuleKind: "",
                     selectTotal,
-                    RuleNames: []
+                    RuleIds: []
                 }))
                 setAllCheck(newList.length === response.length)
             } else {
@@ -263,7 +269,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     Keyword: "",
                     FilterLibRuleKind: "",
                     selectTotal,
-                    RuleNames: []
+                    RuleIds: []
                 }))
                 setAllCheck(newList.length === response.length)
             }
@@ -272,17 +278,6 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         } catch (error) {}
     })
 
-    // 是否展示选中
-    const isShowSelect = useCreation(() => {
-        if (
-            (pageInfo.Keyword || "").length > 0 ||
-            pageInfo.FilterLibRuleKind !== "" ||
-            (pageInfo.RuleNames || []).length > 0
-        ) {
-            return false
-        }
-        return true
-    }, [pageInfo])
     return (
         <>
             <div
@@ -319,9 +314,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                             <Divider type='vertical' style={{margin: "0 4px"}} />
                             <span className={styles["count-num"]}>
                                 Selected
-                                <span className={styles["num-style"]}>
-                                    {isShowSelect ? (pageInfo.GroupNames || []).length : 0}
-                                </span>
+                                <span className={styles["num-style"]}>{(pageInfo.GroupNames || []).length}</span>
                             </span>
                         </div>
                         <div className={styles["filter-body-right"]}>
@@ -336,7 +329,8 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                     data={response}
                     loadMoreData={() => {}}
                     renderRow={(rowData: SyntaxFlowGroup, index: number) => {
-                        const checked = isShowSelect && (pageInfo.GroupNames || []).includes(rowData.GroupName)
+                        const checked = (pageInfo.GroupNames || []).includes(rowData.GroupName)
+
                         return <CodeScanGroupByKeyWordItem item={rowData} onSelect={onSelect} selected={checked} />
                     }}
                     page={1}
@@ -355,7 +349,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
 })
 
 const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((props) => {
-    const {inViewport} = props
+    const {inViewport, handleTabClick} = props
     const [pageInfo, setPageInfo] = useControllableValue<CodeScanPageInfoProps>(props, {
         defaultValue: {
             GroupNames: [],
@@ -458,13 +452,13 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 Keyword: keywords,
                 FilterLibRuleKind: filterLibRuleKind,
                 selectTotal: parseInt(response.Total + ""),
-                RuleNames: []
+                RuleIds: []
             }))
         } else {
             setPageInfo((prev: CodeScanPageInfoProps) => ({
                 ...prev,
                 ...clearRuleByPageInfo,
-                RuleNames: selectedRules.map((item) => item.RuleName),
+                RuleIds: selectedRules.map((item) => parseInt(item.Id + "")),
                 selectTotal: selectedRules.length
             }))
         }
@@ -484,51 +478,30 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         setAllCheck(false)
         setSelectedRules([])
     })
+
+    const onResetCodeScanProjectFun = useMemoizedFn(() => {
+        handleTabClick({
+            key: "group",
+            label: <>按组选</>,
+            contShow: false
+        })
+        setAllCheck(false)
+        setSelectedRules([])
+    })
+
+    useEffect(() => {
+        emiter.on("onResetCodeScanProject", onResetCodeScanProjectFun)
+        return () => {
+            emiter.off("onResetCodeScanProject", onResetCodeScanProjectFun)
+        }
+    }, [])
     return (
-        <div className={classNames(styles["code-scan-group-wrapper"])} style={{height: inViewport ? "100%" : "0px"}}>
-            <div className={styles["filter-wrapper"]}>
-                <div className={styles["header-filter-tag"]}>
-                    <YakitPopover
-                        overlayClassName={styles["code-scan-rule-group-popover"]}
-                        content={
-                            <div className={styles["code-scan-rule-list-filter"]}>
-                                {groupList.map((item) => {
-                                    return (
-                                        <div
-                                            className={styles["code-scan-rule-list-group-item"]}
-                                            key={item.GroupName}
-                                            onClick={() => onSelectGroup(item)}
-                                        >
-                                            <div
-                                                className={classNames(styles["name"], "yakit-content-single-ellipsis")}
-                                            >
-                                                {item.GroupName}
-                                            </div>
-                                            <div className={styles["count"]}>{item.Count}</div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        }
-                        trigger='hover'
-                        visible={groupTagShow}
-                        onVisibleChange={setGroupTagShow}
-                        placement='bottom'
-                    >
-                        <div
-                            className={classNames(styles["tag-total"], {
-                                [styles["tag-total-active"]]: groupTagShow
-                            })}
-                        >
-                            <FolderOpenIcon />
-                            <span>
-                                插件组 <span className={styles["total-style"]}>{groupList.length}</span>
-                            </span>
-                            {(groupTagShow && <ChevronUpIcon className={styles["chevron-down"]} />) || (
-                                <ChevronDownIcon className={styles["chevron-down"]} />
-                            )}
-                        </div>
-                    </YakitPopover>
+        <>
+            <div className={styles["left-header-search"]}>
+                <div className={styles["header-type-wrapper"]}>
+                    <span className={styles["header-text"]}>扫描规则</span>
+                </div>
+                {inViewport && (
                     <div className={styles["header-filter-search"]}>
                         <YakitInput.Search
                             value={keywords}
@@ -538,72 +511,128 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                             onPressEnter={onPressEnter}
                         />
                     </div>
-                </div>
-
-                <div className={styles["filter-body"]} style={{padding: "0px 8px 0px 7px"}}>
-                    <div className={styles["filter-body-left"]}>
-                        <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
-                            全选
-                        </YakitCheckbox>
-                        <span className={styles["count-num"]}>
-                            Total<span className={styles["num-style"]}>{response.Total}</span>
-                        </span>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <span className={styles["count-num"]}>
-                            Selected
-                            <span className={styles["num-style"]}>
-                                {checked ? response.Total : selectedRules.length}
-                            </span>
-                        </span>
-                    </div>
-                    <div className={styles["filter-body-right"]}>
-                        <YakitCheckbox
-                            checked={filterLibRuleKind !== "noLib"}
-                            onChange={(e) => onFilterLibRuleKindChange(e.target.checked ? "" : "noLib")}
-                        >
-                            包含Lib规则
-                        </YakitCheckbox>
-                        <YakitButton type='text' danger onClick={onClearSelect}>
-                            清空
-                        </YakitButton>
-                    </div>
-                </div>
-                {selectGroup.length > 0 && (
-                    <div className={styles["code-scan-rule-group-query-show"]}>
-                        {selectGroup.map((i) => {
-                            return (
-                                <YakitTag
-                                    key={i}
-                                    style={{marginBottom: 2}}
-                                    onClose={() => onCloseTag(i)}
-                                    closable={true}
-                                >
-                                    <FolderOpenIcon className={styles["folder-icon"]} />
-                                    <span
-                                        className={classNames(styles["code-scan-rule-group-name"], "content-ellipsis")}
-                                    >
-                                        {i}
-                                    </span>
-                                </YakitTag>
-                            )
-                        })}
-                    </div>
                 )}
             </div>
-            <CodeScanByGroup
-                hidden={false}
-                response={response}
-                setResponse={setResponse}
-                filterLibRuleKind={filterLibRuleKind}
-                selectedRules={selectedRules}
-                setSelectedRules={setSelectedRules}
-                allCheck={allCheck}
-                setAllCheck={setAllCheck}
-                selectGroup={selectGroup}
-                keywords={keywords}
-                isRefresh={isRefresh}
-            />
-        </div>
+            <div
+                className={classNames(styles["code-scan-group-wrapper"])}
+                style={{height: inViewport ? "100%" : "0px"}}
+            >
+                <div className={styles["filter-wrapper"]}>
+                    <div className={styles["header-filter-tag"]}>
+                        <YakitPopover
+                            overlayClassName={styles["code-scan-rule-group-popover"]}
+                            content={
+                                <div className={styles["code-scan-rule-list-filter"]}>
+                                    {groupList.map((item) => {
+                                        return (
+                                            <div
+                                                className={styles["code-scan-rule-list-group-item"]}
+                                                key={item.GroupName}
+                                                onClick={() => onSelectGroup(item)}
+                                            >
+                                                <div
+                                                    className={classNames(
+                                                        styles["name"],
+                                                        "yakit-content-single-ellipsis"
+                                                    )}
+                                                >
+                                                    {item.GroupName}
+                                                </div>
+                                                <div className={styles["count"]}>{item.Count}</div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            }
+                            trigger='hover'
+                            visible={groupTagShow}
+                            onVisibleChange={setGroupTagShow}
+                            placement='bottom'
+                        >
+                            <div
+                                className={classNames(styles["tag-total"], {
+                                    [styles["tag-total-active"]]: groupTagShow
+                                })}
+                            >
+                                <FolderOpenIcon />
+                                <span>
+                                    规则组 <span className={styles["total-style"]}>{groupList.length}</span>
+                                </span>
+                                {(groupTagShow && <ChevronUpIcon className={styles["chevron-down"]} />) || (
+                                    <ChevronDownIcon className={styles["chevron-down"]} />
+                                )}
+                            </div>
+                        </YakitPopover>
+                    </div>
+
+                    <div className={styles["filter-body"]} style={{padding: "0px 8px 0px 7px"}}>
+                        <div className={styles["filter-body-left"]}>
+                            <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
+                                全选
+                            </YakitCheckbox>
+                            <span className={styles["count-num"]}>
+                                Total<span className={styles["num-style"]}>{response.Total}</span>
+                            </span>
+                            <Divider type='vertical' style={{margin: "0 4px"}} />
+                            <span className={styles["count-num"]}>
+                                Selected
+                                <span className={styles["num-style"]}>
+                                    {checked ? response.Total : selectedRules.length}
+                                </span>
+                            </span>
+                        </div>
+                        <div className={styles["filter-body-right"]}>
+                            <YakitCheckbox
+                                checked={filterLibRuleKind !== "noLib"}
+                                onChange={(e) => onFilterLibRuleKindChange(e.target.checked ? "" : "noLib")}
+                            >
+                                包含Lib规则
+                            </YakitCheckbox>
+                            <YakitButton type='text' danger onClick={onClearSelect}>
+                                清空
+                            </YakitButton>
+                        </div>
+                    </div>
+                    {selectGroup.length > 0 && (
+                        <div className={styles["code-scan-rule-group-query-show"]}>
+                            {selectGroup.map((i) => {
+                                return (
+                                    <YakitTag
+                                        key={i}
+                                        style={{marginBottom: 2}}
+                                        onClose={() => onCloseTag(i)}
+                                        closable={true}
+                                    >
+                                        <FolderOpenIcon className={styles["folder-icon"]} />
+                                        <span
+                                            className={classNames(
+                                                styles["code-scan-rule-group-name"],
+                                                "content-ellipsis"
+                                            )}
+                                        >
+                                            {i}
+                                        </span>
+                                    </YakitTag>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+                <CodeScanByGroup
+                    hidden={false}
+                    response={response}
+                    setResponse={setResponse}
+                    filterLibRuleKind={filterLibRuleKind}
+                    selectedRules={selectedRules}
+                    setSelectedRules={setSelectedRules}
+                    allCheck={allCheck}
+                    setAllCheck={setAllCheck}
+                    selectGroup={selectGroup}
+                    keywords={keywords}
+                    isRefresh={isRefresh}
+                />
+            </div>
+        </>
     )
 })
 
@@ -636,7 +665,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         {
             key: "keyword",
             label: <>按关键词</>,
-            contShow: false 
+            contShow: false
         }
     ])
     const [type, setType] = useState<"keyword" | "group">("group")
@@ -702,18 +731,13 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                     [styles["left-wrapper-hidden"]]: hidden
                 })}
             >
-                <div className={styles["left-header-search"]}>
-                    <div className={styles["header-type-wrapper"]}>
-                        <span className={styles["header-text"]}>扫描规则</span>
-                    </div>
-                </div>
-
                 <CodeScanRuleByKeyWord
                     inViewport={type === "keyword"}
                     filterLibRuleKind={filterLibRuleKind}
                     setFilterLibRuleKind={setFilterLibRuleKind}
                     pageInfo={pageInfo}
                     setPageInfo={setPageInfo}
+                    handleTabClick={handleTabClick}
                 />
 
                 <CodeScanRuleByGroup inViewport={type === "group"} pageInfo={pageInfo} setPageInfo={setPageInfo} />
@@ -882,10 +906,12 @@ const CodeScanByExecute: React.FC<CodeScanByExecuteProps> = React.memo((props) =
                                 <span className='content-ellipsis'>项目名 : {info.ProgramName}</span>
                                 <span className='content-ellipsis'>Info : {info.Info}</span>
                                 <span className={styles["footer"]}>
-                                    <span className={classNames(styles["progress"],{
-                                    [styles["progress-gray"]]: info.Progress === 1,
-                                    }) }>
-                                        百分比: {Math.round(info.Progress * 100)}%
+                                    <span
+                                        className={classNames(styles["progress"], {
+                                            [styles["progress-gray"]]: info.Progress === 1
+                                        })}
+                                    >
+                                        执行进度: {Math.round(info.Progress * 100)}%
                                     </span>
                                     <span className={classNames(styles["time"])}>{time}</span>
                                 </span>
@@ -945,7 +971,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [progressShow, setProgressShow] = useState<{type: "new" | "old"; progress: number}>()
 
-    const [executeType, setExecuteType] = useState<"new" | "old">("new")
+    const [executeType, setExecuteType] = useState<"new" | "old">("old")
     /**暂停 */
     const [pauseLoading, setPauseLoading] = useState<boolean>(false)
     /**停止 */
@@ -1003,19 +1029,36 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         codeScanExecuteContentRef.current?.onStopAuditExecute()
     })
 
-    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string; language: string}[]>([])
-
+    const [auditCodeList, setAuditCodeList] = useState<
+        {label: string; value: number; Language: string; JSONStringConfig: string}[]
+    >([])
+    const [selectProjectId, setSelectProjectId] = useState<number[]>([])
     const getAduitList = useMemoizedFn(async () => {
         try {
-            const {res} = await grpcFetchAuditTree("/")
-            if (res.Resources.length > 0) {
-                const list = res.Resources.map((item) => {
-                    let language = item.Extra.find((item) => item.Key === "Language")?.Value || ""
-                    return {label: item.ResourceName, value: item.ResourceName, language}
+            // QuerySSAProject
+            ipcRenderer
+                .invoke("QuerySSAProject", {
+                    Pagination: {
+                        ...genDefaultPagination(500),
+                        Order: "asc",
+                        OrderBy: "created_at"
+                    }
                 })
-                // setExecuteType("old")
-                setAuditCodeList(list)
-            }
+                .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
+                    item.Data = (item as any)?.Projects || []
+                    if (item.Data.length > 0) {
+                        let projectId: number[] = []
+                        const list = item.Data.map((item) => {
+                            const {ProjectName, ID, Language, JSONStringConfig} = item
+                            if (pageInfo.projectId === ID) {
+                                projectId.push(ID)
+                            }
+                            return {label: ProjectName, value: ID, Language, JSONStringConfig}
+                        })
+                        setAuditCodeList(list)
+                        setSelectProjectId(projectId)
+                    }
+                })
         } catch (error) {}
     })
 
@@ -1230,6 +1273,8 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         extraParamsValue={extraParamsValue}
                         setActiveTask={setActiveTask}
                         CodeScanByExecuteLastDataRef={CodeScanByExecuteLastDataRef}
+                        selectProjectId={selectProjectId}
+                        setSelectProjectId={setSelectProjectId}
                     />
                 </div>
             </div>
@@ -1346,11 +1391,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         }, [])
 
         useEffect(() => {
-            const {projectName, codeScanMode, runtimeId} = pageInfo
-            if (projectName) {
+            const {projectId, historyName, codeScanMode, runtimeId} = pageInfo
+            if (projectId) {
                 setExecuteType("old")
                 form.setFieldsValue({
-                    project: projectName
+                    project: projectId,
+                    history: historyName
                 })
             }
             if (codeScanMode && runtimeId) {
@@ -1461,7 +1507,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             valuePropName: "continueLoading",
             trigger: "setContinueLoading"
         })
-        /**已编译项目-执行状态 */
+        /**项目列表-执行状态 */
         const [executeStatus, setExecuteStatus] = useControllableValue<SyntaxFlowScanExecuteState>(props, {
             defaultValue: "default",
             valuePropName: "executeStatus",
@@ -1583,8 +1629,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
             let reportName = ""
-            if (pageInfo.projectName && pageInfo.projectName.length > 0) {
-                reportName = `${pageInfo.projectName[0]}代码扫描报告`
+            if (pageInfo.projectName) {
+                reportName = `${pageInfo.projectName}代码扫描报告`
             }
 
             const params: CreateReportContentProps = {
@@ -1700,13 +1746,33 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             }
         }, [])
 
+        const [JSONStringConfig, setJSONStringConfig] = useState<string>()
+        const SyntaxFlowScanParamsRef = useRef<SyntaxFlowScanRequest>()
+        const onSyntaxFlowScan = useMemoizedFn(async () => {
+            if (!SyntaxFlowScanParamsRef.current) {
+                failed("获取扫描参数失败，请重试")
+                return
+            }
+            apiSyntaxFlowScan(SyntaxFlowScanParamsRef.current, token).then(() => {
+                pageInfoCacheRef.current = {
+                    ...pageInfo,
+                    projectId: SyntaxFlowScanParamsRef.current?.SSAProjectId,
+                    historyName: SyntaxFlowScanParamsRef.current?.ProgramName
+                }
+                setIsExpand(false)
+                setExecuteStatus("process")
+                resetStreamInfo()
+                if (setHidden) setHidden(true)
+            })
+        })
+
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
-            if ((pageInfo.selectTotal||0) === 0) {
+            if ((pageInfo.selectTotal || 0) === 0) {
                 warn("请选择扫描规则")
                 return
             }
-            const {project} = value
+            const {project, history} = value
             if (!project) {
                 warn("请输入项目名称")
                 return
@@ -1716,13 +1782,15 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 getAduitList()
                 form.setFieldsValue({project})
             }
+
             // 清空已展示的规则执行数据
             CodeScanByExecuteLastDataRef.current = []
             setActiveTask([])
             const params: SyntaxFlowScanRequest = {
                 ...extraParamsValue,
                 ControlMode: "start",
-                ProgramName: project,
+                SSAProjectId: project,
+                ProgramName: history === "recompileAndScan" || !history ? [] : [history],
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -1730,20 +1798,25 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: "",
-                    FilterLibRuleKind: filterLibRuleKind
+                    Keyword: pageInfo.Keyword || "",
+                    FilterLibRuleKind: filterLibRuleKind,
+                    Ids: pageInfo.RuleIds || []
                 }
             }
-            apiSyntaxFlowScan(params, token).then(() => {
-                pageInfoCacheRef.current = {
-                    ...pageInfo,
-                    projectName: project
+            SyntaxFlowScanParamsRef.current = params
+            // 先执行编译再扫描
+            if (history === "recompileAndScan") {
+                const JSONStringConfig = auditCodeList.find((item) => item.value === project)?.JSONStringConfig
+                if (!JSONStringConfig) {
+                    failed("未找到对应项目编译配置，请重试")
+                    return
                 }
-                setIsExpand(false)
-                setExecuteStatus("process")
-                resetStreamInfo()
-                if (setHidden) setHidden(true)
-            })
+                setJSONStringConfig(JSONStringConfig)
+            }
+            // 直接扫描
+            else {
+                onSyntaxFlowScan()
+            }
         })
 
         /**取消执行 */
@@ -1877,6 +1950,64 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         // 数组去重
         const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
+        const [selectProjectId, setSelectProjectId] = useControllableValue<number[]>(props, {
+            defaultValue: [],
+            valuePropName: "selectProjectId",
+            trigger: "setSelectProjectId"
+        })
+        const [compileHistoryList, setCompileHistoryList] = useState<{label: string; value: string}[]>([])
+        const getCompileHistoryList = useMemoizedFn(async (ProjectIds: number[]) => {
+            const finalParams: QuerySSAProgramRequest = {
+                Filter: {
+                    ProjectIds
+                },
+                Pagination: {...genDefaultPagination(500), OrderBy: "created_at"}
+            }
+            apiQuerySSAPrograms(finalParams).then((res) => {
+                const newCompileHistoryList = res.Data.map((item) => {
+                    return {
+                        label: formatTimestamp(item.UpdateAt),
+                        value: item.Name
+                    }
+                })
+                setCompileHistoryList([
+                    {label: "编译并扫描最新代码", value: "recompileAndScan"},
+                    ...newCompileHistoryList
+                ])
+            })
+        })
+
+        useUpdateEffect(() => {
+            if (selectProjectId.length === 0) {
+                setCompileHistoryList([])
+                return
+            }
+            getCompileHistoryList(selectProjectId)
+        }, [selectProjectId])
+
+        const onSelectProject = useMemoizedFn(async (item: number) => {
+            try {
+                let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
+
+                let language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
+                if (language) {
+                    selectGroup.push(language)
+                    selectGroup.push("general")
+                }
+
+                const newSelectGroup = filter(selectGroup)
+                const selectTotal = await getGroupNamesTotal(newSelectGroup)
+                setPageInfo({
+                    ...pageInfo,
+                    ...clearRuleByPageInfo,
+                    GroupNames: newSelectGroup,
+                    selectTotal
+                })
+                setSelectProjectId(item ? [item] : [])
+                emiter.emit("onResetCodeScanProject")
+            } catch (error) {}
+        })
+
         return (
             <>
                 <div
@@ -1902,7 +2033,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     },
                                     {
                                         value: "old",
-                                        label: "已编译项目"
+                                        label: "项目列表"
                                     }
                                 ]}
                             />
@@ -1943,25 +2074,21 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 rules={[{required: true, message: "请选择项目名称"}]}
                             >
                                 <YakitSelect
-                                    mode='multiple'
                                     allowClear
                                     showSearch
                                     placeholder='请选择项目名称'
                                     options={auditCodeList}
-                                    onChange={async(arr: string[]) => {
-                                        let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
-                                        arr.forEach((item) => {
-                                            let language = auditCodeList.find((itemIn) => itemIn.value === item)
-                                                ?.language
-                                            if (language) {
-                                                selectGroup.push(language)
-                                                selectGroup.push("general")
-                                            }
-                                        })
-                                        const newSelectGroup = filter(selectGroup)
-                                        const selectTotal = await getGroupNamesTotal(newSelectGroup)
-                                        setPageInfo({...pageInfo,...clearRuleByPageInfo, GroupNames: newSelectGroup, selectTotal})
-                                    }}
+                                    onChange={onSelectProject}
+                                />
+                            </Form.Item>
+
+                            <Form.Item label='编译历史' name='history'>
+                                <YakitSelect
+                                    allowClear
+                                    showSearch
+                                    placeholder='请选择编译历史'
+                                    options={compileHistoryList}
+                                    disabled={compileHistoryList.length === 0}
                                 />
                             </Form.Item>
 
@@ -2031,7 +2158,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             rulesState: []
                         }}
                         // 后端建议没有则传任意数字填充
-                        runtimeId={runtimeId||"1111111111"}
+                        runtimeId={runtimeId || "1111111111"}
                         loading={isExecuting}
                         defaultActiveKey={undefined}
                     />
@@ -2076,6 +2203,14 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         </YakitDrawer>
                     )}
                 </React.Suspense>
+
+                <AfreshAuditModal
+                    nameOrConfig={JSONStringConfig}
+                    setNameOrConfig={setJSONStringConfig}
+                    onSuccee={onSyntaxFlowScan}
+                    warrpId={document.getElementById(`yakrunner-code-scan-${pageId}`)}
+                    type='compile'
+                />
             </>
         )
     })
@@ -2106,6 +2241,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
         const isRealStartRef = useRef<boolean>(false)
 
+        /** 选填参数 */
+        const groupParams = useMemo(() => {
+            const arr =
+                plugin?.Params.filter(
+                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
+                ) || []
+            return ParamsToGroupByGroupName(arr)
+        }, [plugin?.Params])
+
         /** 填充表单默认值 */
         const handleInitFormValue = useMemoizedFn((arr: YakParamProps[]) => {
             // 表单内数据
@@ -2115,23 +2259,19 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             let newFormValue = {}
             arr.forEach((ele) => {
                 let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
-                const value = getValueByType(initValue, ele.TypeVerbose)
+                let value = getValueByType(initValue, ele.TypeVerbose)
                 newFormValue = {
                     ...newFormValue,
                     [ele.Field]: value
                 }
             })
-            form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
+            let fieldsValue = {...cloneDeep(defaultValue || {}), ...newFormValue}
+            // compile-immediately 特例处理（应后端要求）
+            if ((plugin?.Params || []).filter((item) => item.Field === "compile-immediately").length > 0) {
+                fieldsValue["compile-immediately"] = true
+            }
+            form.setFieldsValue(fieldsValue)
         })
-
-        /** 选填参数 */
-        const groupParams = useMemo(() => {
-            const arr =
-                plugin?.Params.filter(
-                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
-                ) || []
-            return ParamsToGroupByGroupName(arr)
-        }, [plugin?.Params])
 
         /** 选填参数（无需折叠） */
         const groupParamsShow = useMemo(() => {
@@ -2208,12 +2348,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             }
         })
-        const runnerProject = useRef<string>()
+        const projectIdCacheRef = useRef<number>()
+        const jsonCacheRef = useRef<string>("")
 
         // 执行审计
         const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
             setAuditError(false)
             debugPluginStreamEvent.reset()
+            debugCompilePluginStreamEvent.reset()
             apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
                 isRealStartRef.current = false
                 resetStreamInfo()
@@ -2244,16 +2386,125 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             []
         )
 
+        const tokenCompileRef = useRef<string>(randomString(40))
+        const [streamCompileInfo, debugCompilePluginStreamEvent] = useHoldGRPCStream({
+            taskName: "debug-plugin",
+            apiKey: "DebugPlugin",
+            token: tokenCompileRef.current,
+            onEnd: (getStreamInfo) => {
+                debugCompilePluginStreamEvent.stop()
+                setTimeout(() => {
+                    if (getStreamInfo) {
+                        const errorLog = getStreamInfo.logState.find((item) => item.level === "error")
+                        if (errorLog) {
+                            setExecuteStatus("error")
+                            setAuditError(true)
+                        }
+                    }
+                    setAuditsExecuting(false)
+                    setProgressShow(undefined)
+                }, 300)
+            },
+            onError: () => {
+                setExecuteStatus("error")
+            },
+            setRuntimeId: (rId) => {
+                yakitNotify("info", `Compile调试任务启动成功，运行时 ID: ${rId}`)
+            }
+        })
+        // 通过插件（SSA 项目编译）执行
+        const onCompileByPlugin = useMemoizedFn(() => {
+            const requestParams: DebugPluginRequest = {
+                Code: "",
+                PluginType: "yak",
+                Input: "",
+                HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+                ExecParams: [
+                    {
+                        Key: "config",
+                        Value: jsonCacheRef.current
+                    }
+                ],
+                PluginName: "SSA 项目编译"
+            }
+            apiDebugPlugin({params: requestParams, token: tokenCompileRef.current})
+                .then(() => {
+                    isStartExecuteRef.current = false
+                    debugCompilePluginStreamEvent.start()
+                })
+                .catch(() => {})
+        })
+
+        const isStartExecuteRef = useRef<boolean>(false)
         useUpdateEffect(() => {
+            // 插件执行 SSA 项目编译
+            const progress =
+                Math.floor((streamCompileInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+            // 当任务结束时 跳转打开编译列表
+            if (progress === 1) {
+                setTimeout(() => {
+                    if (projectIdCacheRef.current) {
+                        isStartExecuteRef.current = true
+                        setExecuteType("old")
+                        onStartExecute(
+                            {
+                                project: projectIdCacheRef.current
+                            },
+                            true
+                        )
+                    } else {
+                        failed("项目名获取失败")
+                    }
+                }, 300)
+            }
+
+            let newLog = streamCompileInfo.logState.slice(0, 100).map((item) => ({
+                type: "log",
+                content: item
+            }))
+            pushNewLogs(newLog)
+
+            setProgressShow({
+                type: "new",
+                progress: progress
+            })
+        }, [streamCompileInfo])
+
+        const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
+            return new Promise((resolve, reject) => {
+                ipcRenderer
+                    .invoke("CreateSSAProject", {
+                        JSONStringConfig
+                    })
+                    .then((res: CreateSSAProjectResponse) => {
+                        projectIdCacheRef.current = res.Project.ID
+                        jsonCacheRef.current = res.Project.JSONStringConfig
+                        resolve(null)
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", "创建项目管理数据失败")
+                        reject(error)
+                    })
+            })
+        })
+
+        const onStreamInfoFun = useMemoizedFn(async (newStreamInfo: HoldGRPCStreamInfo) => {
             // 此处为真正的启动
             if (!isRealStartRef.current) {
-                const startLog = streamInfo.logState.find((item) => item.level === "code")
+                const startLog = newStreamInfo.logState.find((item) => item.level === "code")
                 if (startLog && startLog.data) {
                     try {
                         const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
                         const {kind, msg} = verifyStart.error
                         setVerifyForm(false)
-                        runnerProject.current = verifyStart.program_name
+                        // CreateSSAProject 创建项目管理数据
+                        projectIdCacheRef.current = verifyStart?.BaseInfo?.project_id
+                        jsonCacheRef.current = startLog?.data || ""
+
+                        if (verifyStart?.project_exists === false) {
+                            await onCreateSSAProject(startLog?.data || "")
+                        }
+
                         switch (kind) {
                             // 链接错误
                             case "connectFailException":
@@ -2326,6 +2577,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 setIsExpand(false)
                                 setAuditsExecuting(true)
                                 setExecuteStatus("process")
+                                onCompileByPlugin()
                                 break
                         }
                     } catch (error) {
@@ -2333,32 +2585,10 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     }
                 }
             }
+        })
 
-            if (isRealStartRef.current) {
-                const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
-                // 当任务结束时 跳转打开编译列表
-                if (progress === 1) {
-                    setTimeout(() => {
-                        if (runnerProject.current) {
-                            setExecuteType("old")
-                            onStartExecute({project: [runnerProject.current]}, true)
-                        } else {
-                            failed("项目名获取失败")
-                        }
-                    }, 300)
-                }
-
-                let newLog = streamInfo.logState.slice(0, 100).map((item) => ({
-                    type: "log",
-                    content: item
-                }))
-                pushNewLogs(newLog)
-
-                setProgressShow({
-                    type: "new",
-                    progress: progress
-                })
-            }
+        useUpdateEffect(() => {
+            onStreamInfoFun(streamInfo)
         }, [streamInfo])
 
         const onStartAuditFun = useMemoizedFn(async (value) => {
@@ -2414,6 +2644,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                             help='可将项目文件拖入框内或点击此处'
                             disabled={false}
                             // accept=""
+                            cacheFilePathKey='CodeScan_File_Path'
+                            cacheFolderPathKey='CodeScan_Folder_Path'
                         />
                     </Form.Item>
 
@@ -2582,7 +2814,7 @@ export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = R
                             "yakit-content-single-ellipsis"
                         )}
                     >
-                        {data.Title}
+                        {data.RuleName}
                     </div>
                 </div>
                 <div className={styles["flow-rule-item-show"]}>

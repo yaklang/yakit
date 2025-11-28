@@ -4,7 +4,7 @@ import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuestionMarkCircleIcon, RefreshIcon} from "@/assets/newIcon"
 import {Pagination, Space, Tooltip} from "antd"
-import {OutlineTrashIcon} from "@/assets/icon/outline"
+import {OutlineClipboardlistIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {yakitNotify} from "@/utils/notification"
@@ -16,7 +16,7 @@ import classNames from "classnames"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {GetReleaseEdition, isCommunityIRify, isEnpriTraceIRify, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
+import {GetReleaseEdition, isCommunityIRify, isEnpriTraceIRify, isIRify, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import html2pdf from "html2pdf.js"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -45,8 +45,10 @@ import {FoldHoleCard, FoldRuleCard} from "./reportRenders/ReportExtendCard"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./ReportViewerPage.module.scss"
 import {getEnvTypeByProjects} from "../softwareSettings/ProjectManage"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {CodeScanTaskList} from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
 const {ipcRenderer} = window.require("electron")
 
 interface ReportViewerPageProp {}
@@ -103,6 +105,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
     const selectedRowKeys = useCreation(() => {
         return selectList.map((item) => item.Id)
     }, [compareSelectList])
+    const [createVisible, setCreateVisible] = useState<boolean>(false)
 
     const onCheckboxSingle = (selectedRows: Report) => {
         if (!selectedRowKeys.includes(selectedRows.Id)) {
@@ -244,6 +247,16 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                             disabled={!response.Data.length}
                         ></YakitButton>
                     </YakitPopconfirm>
+                    {isIRify() && (
+                        <YakitButton
+                            type='primary'
+                            icon={<OutlineClipboardlistIcon />}
+                            size='small'
+                            onClick={() => setCreateVisible(true)}
+                        >
+                            生成报告
+                        </YakitButton>
+                    )}
                 </div>
             }
         >
@@ -319,6 +332,19 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                     }}
                 ></RollingLoadList>
             </div>
+            <YakitModal
+                title='生成报告'
+                visible={createVisible}
+                width={"45%"}
+                footer={null}
+                onCancel={() => setCreateVisible(false)}
+                bodyStyle={{paddingTop: 0}}
+            >
+                {/* <div>请选择扫描结果生成报告</div> */}
+                <div className={styles['card-code-scan-task-list']}>
+                   <CodeScanTaskList visible={createVisible} setVisible={setCreateVisible} readonly={true}/> 
+                </div>
+            </YakitModal>
         </YakitCard>
     )
 }
@@ -452,29 +478,28 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     // 下载HTML
     const downloadHtml = () => {
-            handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-            .then((data) => {
-                if (data.filePaths.length) {
-                    setDownloadLoading(true)
-                    let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
-                    ipcRenderer
-                        .invoke("DownloadHtmlReport", {
-                            JsonRaw: report.JsonRaw,
-                            outputDir: absolutePath,
-                            reportName: report.Title
-                        })
-                        .then((r) => {
-                            if (r?.ok) {
-                                yakitNotify("success", "报告导出成功")
-                                r?.outputDir && openABSFileLocated(r.outputDir)
-                            }
-                        })
-                        .catch((e) => {
-                            yakitNotify("error", `Download Html Report failed ${e}`)
-                        })
-                        .finally(() => setDownloadLoading(false))
-                }
-            })
+        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+            if (data.filePaths.length) {
+                setDownloadLoading(true)
+                let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+                ipcRenderer
+                    .invoke("DownloadHtmlReport", {
+                        JsonRaw: report.JsonRaw,
+                        outputDir: absolutePath,
+                        reportName: report.Title
+                    })
+                    .then((r) => {
+                        if (r?.ok) {
+                            yakitNotify("success", "报告导出成功")
+                            r?.outputDir && openABSFileLocated(r.outputDir)
+                        }
+                    })
+                    .catch((e) => {
+                        yakitNotify("error", `Download Html Report failed ${e}`)
+                    })
+                    .finally(() => setDownloadLoading(false))
+            }
+        })
     }
 
     // 下载Word
@@ -675,7 +700,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                     total={allReportItems.length}
                                     current={current}
                                     pageSize={1}
-                                    showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 页</div>}
+                                    showTotal={(total) => (
+                                        <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                            共 {total} 页
+                                        </div>
+                                    )}
                                     onChange={onChangePagination}
                                 />
                             </div>

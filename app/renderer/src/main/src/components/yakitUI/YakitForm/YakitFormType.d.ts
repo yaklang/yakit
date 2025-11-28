@@ -4,6 +4,7 @@ import {DraggerProps} from "antd/lib/upload"
 import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 import {InternalTextAreaProps} from "../YakitInput/YakitInputType"
 import {ReactNode} from "react"
+import { OpenDialogOptions } from "@/utils/fileSystemDialog";
 
 type YakitDragger = Omit<DraggerProps, "beforeUpload" | "onChange">
 
@@ -51,6 +52,11 @@ export interface YakitDraggerProps extends FileDraggerProps {
     accept?: string
     /**文件类型是否后缀一定存在 */
     fileExtensionIsExist?: boolean
+
+    /** 缓存文件所选路径Key */
+    cacheFilePathKey?: string
+    /** 缓存文件夹所选路径Key */
+    cacheFolderPathKey?: string
 }
 
 export interface YakitDraggerContentProps

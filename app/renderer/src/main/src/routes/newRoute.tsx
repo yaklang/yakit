@@ -135,7 +135,9 @@ import {
     WebsocketFuzzerPageInfoProps,
     AIForgeEditorPageInfoProps,
     AIToolEditorPageInfoProps,
-    YakRunnerScanHistoryPageInfoProps
+    YakRunnerScanHistoryPageInfoProps,
+    RuleManagementPageInfoProps,
+    AuditHoleInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -353,7 +355,7 @@ export const YakitRouteToPageInfo: Record<
         describeUi: "YakitRoute.auditRuleCodeAnalysis"
     },
     "yakrunner-project-manager": {label: "项目管理", labelUi: "YakitRoute.projectManagement"},
-    yakrunner_scanHistory: {label: "扫描历史", labelUi: "YakitRoute.scanHistory"},
+    yakrunner_scanHistory: {label: "项目历史", labelUi: "YakitRoute.projectHistory"},
     "rule-management": {
         label: "规则管理",
         labelUi: "YakitRoute.ruleManagement",
@@ -586,6 +588,7 @@ export interface ComponentParams {
     hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
     /**代码审计页面 */
     auditCodePageInfo?: AuditCodePageInfoProps
+    auditHolePageInfo?: AuditHoleInfoProps
     /**代码扫描页面 */
     codeScanPageInfo?: CodeScanPageInfoProps
     /**记事本编辑页面 */
@@ -603,6 +606,8 @@ export interface ComponentParams {
     modifyAIToolPageInfo?: AIToolEditorPageInfoProps
     /** 扫描历史页面 */
     yakRunnerScanHistoryPageInfo?: YakRunnerScanHistoryPageInfoProps
+    /** 规则管理页面 */
+    ruleManagementPageInfo?: RuleManagementPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
@@ -817,7 +822,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.YakRunner_ScanHistory:
             return <YakRunnerScanHistory />
         case YakitRoute.Rule_Management:
-            return <RuleManagement />
+            return <RuleManagement ruleManagementPageInfo={params?.ruleManagementPageInfo} />
         case YakitRoute.Notepad_Manage:
             return <NotepadManage />
         case YakitRoute.Modify_Notepad:

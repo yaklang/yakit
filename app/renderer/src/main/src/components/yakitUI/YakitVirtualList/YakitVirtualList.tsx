@@ -38,7 +38,8 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
         renderKey = "id",
         rowSelection,
         page = 0,
-        loadMoreData
+        loadMoreData,
+        onClickRow
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(600)
@@ -100,11 +101,13 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
         },
         {wait: 200, leading: false}
     ).run
+
     const onChangeCheckboxSingle = useMemoizedFn((checked: boolean, key: string, row: T) => {
         if (!rowSelection) return
         if (!rowSelection.onChangeCheckboxSingle) return
         rowSelection.onChangeCheckboxSingle(checked, key, row)
     })
+
     const onChangeCheckbox = useMemoizedFn((checked: boolean) => {
         if (!rowSelection) return
         if (!rowSelection.onSelectAll) return
@@ -115,6 +118,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
             rowSelection.onSelectAll([], [], checked)
         }
     })
+
     const checkboxPropsMap = useCreation(() => {
         const map = new Map<React.Key, Partial<YakitProtoCheckboxProps>>()
         const {getCheckboxProps} = rowSelection || {}
@@ -127,9 +131,14 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
         }
         return map
     }, [data, rowSelection?.getCheckboxProps])
+
     const isAll = useCreation(() => {
         return rowSelection?.isAll || (list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length)
     }, [rowSelection?.isAll, list.length, data.length, rowSelection?.selectedRowKeys?.length])
+
+    const onClickRowFun = useMemoizedFn((ele:T)=>{
+        onClickRow?.(ele)
+    })
     return (
         <div className={classNames(styles["virtual-list"], className)}>
             <YakitSpin spinning={loading && page <= 1}>
@@ -190,7 +199,9 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                     >
                         <div ref={wrapperRef} className={styles["virtual-list-wrapper"]}>
                             {list.map((ele) => (
-                                <div className={styles["virtual-list-item"]} key={ele.data[renderKey] || ele.index}>
+                                <div className={classNames(styles["virtual-list-item"],{
+                                [styles["virtual-list-item-click"]]: !!onClickRow,
+                                }) } onClick={() => onClickRowFun(ele.data)} key={ele.data[renderKey] || ele.index}>
                                     {columns.map((item, index) => {
                                         return (
                                             <div

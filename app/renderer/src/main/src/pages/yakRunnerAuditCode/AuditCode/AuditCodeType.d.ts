@@ -1,6 +1,8 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
 import {ShowItemType} from "../BottomEditorDetails/BottomEditorDetailsType"
+import { SyntaxFlowRuleFilter } from "@/pages/ruleManagement/RuleManagementType";
+import {DbOperateMessage} from "../../layout/mainOperatorContent/utils"
 import {ReactNode} from "react"
 export interface YakURLKVPair {
     Key: string
@@ -60,6 +62,8 @@ export interface AuditNodeMapProps {
     page?: number
     // 是否未加载完毕
     hasMore?: boolean
+    // 加载是否失败
+    error?: string
 }
 
 export interface AuditNodeProps {
@@ -93,6 +97,8 @@ export interface AuditNodeProps {
     page?: number
     // 是否未加载完毕
     hasMore?: boolean
+    // 加载是否失败
+    error?: string
 }
 
 export interface AuditDetailItemProps {
@@ -140,6 +146,8 @@ export interface AuditModalFormProps {
 export interface AuditModalFormModalProps {
     onCancel: () => void
     onSuccee: (path: string) => void
+    // 刷新
+    onRefresh?: () => void
     title?: string
     // 绑定容器
     warrpId?: HTMLElement | null
@@ -148,43 +156,86 @@ export interface AuditModalFormModalProps {
 }
 
 export interface AfreshAuditModalProps {
-    afreshName?: string
-    setAfreshName: (v?: string) => void
+    // 名称或配置
+    nameOrConfig?: string
+    setNameOrConfig: (v?: string) => void
     onSuccee: () => void
     // 绑定容器
     warrpId?: HTMLElement | null
+    // 区分重新编译和全新编译
+    type?: "compile" | "afresh_compile"
 }
 
-export interface QuerySSAProgramsProps {
-    ProgramNames?: string[]
+export interface SSAProjectFilter {
+    IDs?: number[]
+    ProjectNames?: string[]
+    SearchKeyword?: string
     Languages?: string[]
-    Ids?: number[]
-    BeforeUpdatedAt?: number
-    AfterUpdatedAt?: number
-    Keyword?: string
-    AfterID?: number
-    BeforeID?: number
 }
 
-export interface SSAProgramResponse {
+export interface DeleteSSAProjectRequest {
+    Filter?: SSAProjectFilter
+    // "clear_compile_history" - 只清空编译历史（删除 IrProgram，保留 SSAProject）
+    // "delete_all" 或 空字符串 - 清空编译历史和项目信息（删除 IrProgram 和 SSAProject）
+    // 默认为 "delete_all"
+    DeleteMode?:"clear_compile_history" | "delete_all" 
+}
+
+interface SSAProjectScanRuleConfig {
+    RuleFilter: SyntaxFlowRuleFilter
+}
+
+interface SSAProjectScanConfig {
+    Concurrency: number
+    Memory: boolean
+    IgnoreLanguage: boolean
+}
+
+interface SSAProjectCompileConfig {
+    StrictMode: boolean
+    PeepholeSize: number
+    ExcludeFiles: string[]
+    ReCompile: boolean
+    Memory: boolean
+    Concurrency: number
+}
+
+export interface SSAProjectResponse {
+    ID: number
     CreateAt: number
     UpdateAt: number
-    Name: string
-    Description: string
-    Dbpath: string
+    // 项目基础信息
+    ProjectName: string
     Language: string
-    EngineVersion: string
-    Recompile: boolean
-    Id: number
-    HighRiskNumber: number
-    CriticalRiskNumber: number
-    WarnRiskNumber: number
-    LowRiskNumber: number
-    InfoRiskNumber: number
+    Description: string
+    Tags: string[]
+    // 源代码来源
+    CodeSourceConfig: string
+    // 编译配置选项
+    CompileConfig: SSAProjectCompileConfig
+    // 扫描配置选项
+    ScanConfig: SSAProjectScanConfig
+    // 规则策略配置
+    RuleConfig: SSAProjectScanRuleConfig
+    // JSON字符串配置（用于JSONSchema渲染表单的数据）
+    JSONStringConfig: string
+    // 漏洞个数
+    RiskNumber: number
+    // 编译次数
+    CompileTimes: number
+}
+
+export interface UpdateSSAProjectRequest {
+    Project: Partial<SSAProjectResponse>
+}
+
+export interface UpdateSSAProjectResponse {
+    Project: SSAProjectResponse
+    Message: DbOperateMessage
 }
 
 export interface AuditHistoryTableProps {
-    pageType: "aucitCode" | "projectManager"
+    pageType: "auditCode" | "projectManager"
     onClose?: () => void
     onExecuteAudit?: () => void
     refresh?: boolean
@@ -193,9 +244,10 @@ export interface AuditHistoryTableProps {
 }
 
 export interface ProjectManagerEditFormProps {
-    record: SSAProgramResponse
-    setData: React.Dispatch<React.SetStateAction<SSAProgramResponse[]>>
+    record: SSAProjectResponse
+    setData: React.Dispatch<React.SetStateAction<SSAProjectResponse[]>>
     onClose: () => void
+    schema:RJSFSchema
 }
 
 export interface AuditHistoryListRefProps {
@@ -216,4 +268,14 @@ export interface AuditHistoryListProps {
     onOpenEditorDetails: (v: ShowItemType) => void
     query: QuerySyntaxFlowResultRequest
     setQuery: (v: QuerySyntaxFlowResultRequest) => void
+}
+
+export interface ResultDataProps {
+    description: string;
+    language: string;
+    path: string;
+    project_id: number;
+    project_name: string;
+    success: boolean;
+    tags: string[];
 }
