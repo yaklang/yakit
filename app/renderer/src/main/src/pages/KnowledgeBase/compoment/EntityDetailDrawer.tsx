@@ -1,5 +1,5 @@
-import {Dispatch, FC, SetStateAction, useEffect, useMemo} from "react"
-import {Divider, Form} from "antd"
+import {Dispatch, FC, SetStateAction, useEffect, useMemo, useRef} from "react"
+import {Divider, Form, Tooltip} from "antd"
 
 import {Entity, GenerateERMDotResponse, QueryRelationshipResponse} from "@/components/playground/entityRepository"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -13,7 +13,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {failed, success} from "@/utils/notification"
 
 import {randomString} from "@/utils/randomUtil"
-import {OutlinePencilaltIcon, OutlinePhotographIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {OutlinePencilaltIcon, OutlinePhotographIcon, OutlinePlay2Icon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -23,6 +23,9 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {GenerateKnowledge} from "./GenerateKnowledge"
 import {KnowledgeBaseTableProps} from "./KnowledgeBaseTable"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
+import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
+import React from "react"
 
 interface EntityDetailDrawerProps {
     entityDrawerDetail: Partial<Entity> & {visible: boolean}
@@ -54,6 +57,7 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
     const [status, setStatus] = useSafeState("preview")
     const [relationshipType, setRelationshipType] = useSafeState("svg")
     const [depth, setDepth] = useSafeState<number>(2)
+    const wrapperWidth = useListenWidth(document.getElementById("repository-manage"))
 
     const {
         data: dotCode,
@@ -229,144 +233,175 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
             destroyOnClose={true}
             className={classNames(styles["entity-detail-drawer"])}
         >
-            <div className={styles["detail-left"]}>
-                <div className={styles["detail-header"]}>
-                    <div className={styles["header-buttons"]}>
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            options={[
-                                {
-                                    value: "base",
-                                    label: "基础信息"
-                                },
-                                {
-                                    value: "related",
-                                    label: "相关知识"
-                                }
-                            ]}
-                        />
-                        {type === "related" ? (
-                            <>
-                                <div className={styles["caption"]}>Total</div>
-                                <div className={styles["number"]}>{knowledgeBaseData?.length ?? 0}</div>
-                            </>
-                        ) : null}
-                    </div>
-                    <div>{targetButtonMemo}</div>
-                </div>
-                <div className={styles["detail-container"]}>
-                    {type === "base" ? (
-                        <Form form={form} layout='vertical'>
-                            <Item label='实体名称' name='Name' rules={[{required: true, message: "请输入实体名称"}]}>
-                                <YakitInput disabled={status === "preview"} />
-                            </Item>
-                            <Item label='描述' name='Description'>
-                                <YakitInput.TextArea disabled={status === "preview"} />
-                            </Item>
-                            <Item label='类型' name='Type' rules={[{required: true, message: "请输入实体类型"}]}>
-                                <YakitInput disabled={status === "preview"} />
-                            </Item>
-
-                            <Form.Item label='属性' name='Attributes'>
-                                <YakitSelect mode='tags' disabled={status === "preview"} />
-                            </Form.Item>
-
-                            {/* <RelationList form={form} disabled={status === "preview"} /> */}
-                        </Form>
-                    ) : (
-                        <div className={styles["related-knowledge-box"]}>
-                            {knowledgeBaseData?.map((item, index) => {
-                                return (
-                                    <div className={styles["related-box"]} key={item.ID}>
-                                        <div className={styles["num-box"]}>
-                                            <div className={styles["num-font"]}>
-                                                {(index + 1).toString().padStart(2, "0")}
-                                            </div>
-                                        </div>
-                                        <div className={styles["content"]}>
-                                            <div className={styles["title-box"]}>
-                                                <div className={styles["title"]}>{item.KnowledgeTitle}</div>
-                                                <YakitTag color='blue' size='middle'>
-                                                    {item.KnowledgeType}
-                                                </YakitTag>
-                                                <YakitTag color='warning' size='middle'>
-                                                    {item?.ImportanceScore ?? 0}
-                                                </YakitTag>
-                                            </div>
-                                            <div className={styles["description"]}>{item.KnowledgeDetails}</div>
-                                        </div>
-                                    </div>
-                                )
-                            })}
+            <div className={styles["detail-drawer-content"]}>
+                <div className={styles["detail-left"]}>
+                    <div className={styles["detail-header"]}>
+                        <div className={styles["header-buttons"]}>
+                            <YakitRadioButtons
+                                buttonStyle='solid'
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                options={[
+                                    {
+                                        value: "base",
+                                        label: "基础信息"
+                                    },
+                                    {
+                                        value: "related",
+                                        label: "相关知识"
+                                    }
+                                ]}
+                            />
+                            {type === "related" ? (
+                                <>
+                                    <div className={styles["caption"]}>Total</div>
+                                    <div className={styles["number"]}>{knowledgeBaseData?.length ?? 0}</div>
+                                </>
+                            ) : null}
                         </div>
-                    )}
-                </div>
-            </div>
+                        <div>{targetButtonMemo}</div>
+                    </div>
+                    <div className={styles["detail-container"]}>
+                        {type === "base" ? (
+                            <Form form={form} layout='vertical'>
+                                <Item
+                                    label='实体名称'
+                                    name='Name'
+                                    rules={[{required: true, message: "请输入实体名称"}]}
+                                >
+                                    <YakitInput disabled={status === "preview"} />
+                                </Item>
+                                <Item label='描述' name='Description'>
+                                    <YakitInput.TextArea disabled={status === "preview"} />
+                                </Item>
+                                <Item label='类型' name='Type' rules={[{required: true, message: "请输入实体类型"}]}>
+                                    <YakitInput disabled={status === "preview"} />
+                                </Item>
 
-            <div className={styles["detail-right"]}>
-                <div className={styles["detail-header"]}>
-                    <div className={styles["title"]}>知识 - 实体关系图</div>
-                    <div className={styles["header-buttons"]}>
-                        <div className={styles["in-depth-description"]}>深度</div>
-                        <YakitInputNumber
-                            className={styles["operate-inputNumber"]}
-                            value={depth}
-                            onChange={async (value) => {
-                                if (typeof value === "number" && value) {
-                                    runAsync(depth)
-                                    dotCodeRunAsync(depth)
-                                    setDepth(value)
-                                }
-                            }}
-                        />
-                        <Divider type={"vertical"} />
-                        <GenerateKnowledge
-                            generateKnowledgeDataList={[{...(entityDrawerDetail as any)}]}
-                            generateKnowledgeBaseItem={generateKnowledgeBaseItem}
-                            depth={depth}
-                            knowledgeType='entity'
-                        />
-                        <Divider type={"vertical"} />
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            value={relationshipType}
-                            onChange={(e) => setRelationshipType(e.target.value)}
-                            options={[
-                                {
-                                    label: (
-                                        <div className={styles["radio-buttons-label"]}>
-                                            <OutlinePhotographIcon />
-                                            SVG
+                                <Form.Item label='属性' name='Attributes'>
+                                    <YakitSelect mode='tags' disabled={status === "preview"} />
+                                </Form.Item>
+
+                                {/* <RelationList form={form} disabled={status === "preview"} /> */}
+                            </Form>
+                        ) : (
+                            <div className={styles["related-knowledge-box"]}>
+                                {knowledgeBaseData?.map((item, index) => {
+                                    return (
+                                        <div className={styles["related-box"]} key={item.ID}>
+                                            <div className={styles["num-box"]}>
+                                                <div className={styles["num-font"]}>
+                                                    {(index + 1).toString().padStart(2, "0")}
+                                                </div>
+                                            </div>
+                                            <div className={styles["content"]}>
+                                                <div className={styles["title-box"]}>
+                                                    <div className={styles["title"]}>{item.KnowledgeTitle}</div>
+                                                    <YakitTag color='blue' size='middle'>
+                                                        {item.KnowledgeType}
+                                                    </YakitTag>
+                                                    <YakitTag color='warning' size='middle'>
+                                                        {item?.ImportanceScore ?? 0}
+                                                    </YakitTag>
+                                                </div>
+                                                <div className={styles["description"]}>{item.KnowledgeDetails}</div>
+                                            </div>
                                         </div>
-                                    ),
-                                    value: "svg"
-                                },
-                                {
-                                    label: (
-                                        <div className={styles["radio-buttons-label"]}>
-                                            <OutlineTerminalIcon />
-                                            Code
-                                        </div>
-                                    ),
-                                    value: "code"
-                                }
-                            ]}
-                        />
+                                    )
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className={styles["detail-diagram"]}>
-                    <div className={styles["content"]}>
-                        {relationshipType === "svg" ? (
-                            <YakitSpin spinning={loading}>
-                                {GraphData ? <GraphChart graphData={GraphData} /> : <YakitEmpty />}
-                            </YakitSpin>
-                        ) : (
-                            <YakitSpin spinning={dotCodeLoading}>
-                                <pre style={{padding: 12}}>{dotCode}</pre>
-                            </YakitSpin>
-                        )}
+
+                <div className={styles["detail-right"]}>
+                    <div className={styles["detail-header"]}>
+                        <div className={styles["title"]}>知识 - 实体关系图</div>
+                        <div className={styles["header-buttons"]}>
+                            <div className={styles["in-depth-description"]}>深度</div>
+                            <YakitInputNumber
+                                className={styles["operate-inputNumber"]}
+                                value={depth}
+                                onChange={async (value) => {
+                                    if (typeof value === "number" && value) {
+                                        runAsync(depth)
+                                        dotCodeRunAsync(depth)
+                                        setDepth(value)
+                                    }
+                                }}
+                            />
+                            <Divider type={"vertical"} />
+                            <GenerateKnowledge
+                                generateKnowledgeDataList={[{...(entityDrawerDetail as any)}]}
+                                generateKnowledgeBaseItem={generateKnowledgeBaseItem}
+                                depth={depth}
+                                knowledgeType='entity'
+                                children={
+                                    <HubButton
+                                        width={wrapperWidth}
+                                        iconWidth={1500}
+                                        icon={<OutlinePlay2Icon />}
+                                        type='outline1'
+                                        name={"从实体生成知识"}
+                                    />
+                                }
+                            />
+                            <Divider type={"vertical"} />
+                            <YakitRadioButtons
+                                buttonStyle='solid'
+                                value={relationshipType}
+                                onChange={(e) => setRelationshipType(e.target.value)}
+                                options={[
+                                    {
+                                        label: (
+                                            <div className={styles["radio-buttons-label"]}>
+                                                {wrapperWidth > 1500 ? (
+                                                    <React.Fragment>
+                                                        <OutlinePhotographIcon />
+                                                        SVG
+                                                    </React.Fragment>
+                                                ) : (
+                                                    <Tooltip title='SVG'>
+                                                        <OutlinePhotographIcon />
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        ),
+                                        value: "svg"
+                                    },
+                                    {
+                                        label: (
+                                            <div className={styles["radio-buttons-label"]}>
+                                                {wrapperWidth > 1500 ? (
+                                                    <React.Fragment>
+                                                        <OutlineTerminalIcon />
+                                                        Code
+                                                    </React.Fragment>
+                                                ) : (
+                                                    <Tooltip title='Code'>
+                                                        <OutlineTerminalIcon />
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        ),
+                                        value: "code"
+                                    }
+                                ]}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles["detail-diagram"]}>
+                        <div className={styles["content"]}>
+                            {relationshipType === "svg" ? (
+                                <YakitSpin spinning={loading}>
+                                    {GraphData ? <GraphChart graphData={GraphData} /> : <YakitEmpty />}
+                                </YakitSpin>
+                            ) : (
+                                <YakitSpin spinning={dotCodeLoading}>
+                                    <pre style={{padding: 12}}>{dotCode}</pre>
+                                </YakitSpin>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

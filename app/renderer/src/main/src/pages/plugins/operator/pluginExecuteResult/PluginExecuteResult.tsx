@@ -391,7 +391,18 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         switch (type) {
             case "plugin-log":
                 const currentTime = moment().format("YYYY-MM-DD")
-                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} {t("PluginExecuteLog.log_query_result")}</>} />
+                return (
+                    <LocalPluginLog
+                        loading={loading}
+                        list={list}
+                        heard={
+                            <>
+                                {" "}
+                                {currentTime} {t("PluginExecuteLog.log_query_result")}
+                            </>
+                        }
+                    />
+                )
             case "echarts-statistics":
                 return <LocalList list={echartsLists} />
             case "output-text":

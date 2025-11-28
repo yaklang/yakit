@@ -260,7 +260,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     /** 插件来源切换 */
     const onPluginSourceChange = useMemoizedFn((key: string) => {
         if (loading) return
-        if(key === 'local') {
+        if (key === "local") {
             onChangeLocal?.(getSearch())
             return
         }

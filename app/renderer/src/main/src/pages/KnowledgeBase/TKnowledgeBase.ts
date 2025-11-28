@@ -70,6 +70,7 @@ interface SearchKnowledgeBaseEntryFilter {
     KnowledgeBaseId: number
     Keyword: string
     RelatedEntityUUIDS?: string[]
+    HiddenIndex: string[]
 }
 interface SearchKnowledgeBaseEntryRequest {
     Filter: Partial<SearchKnowledgeBaseEntryFilter>
@@ -113,6 +114,7 @@ interface VectorStoreEntry {
     Metadata: string
     Embedding: number[]
     DocumentType: string
+    EntityID: string
 }
 
 type VectorStoreEntryResponse = QueryGeneralResponseProps<VectorStoreEntry, "Entries">

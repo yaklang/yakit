@@ -341,13 +341,15 @@ interface BackendEntity {
     ID: string
     Name: string
     HiddenIndex: string
+    BaseIndex: string
+    Type?: string
 }
 
 interface BackendRelationship {
     SourceEntityIndex: string
     TargetEntityIndex: string
     Attributes: {Key: string; Value: string}[]
-    Type?: string // 可选类型
+    Type?: string
 }
 
 interface BackendData {
@@ -358,6 +360,7 @@ interface BackendData {
 export interface GraphNode {
     id: string
     name: string
+    category?: string
     symbolSize: number
     x: number
     y: number
@@ -365,7 +368,7 @@ export interface GraphNode {
     fixed: boolean
 }
 
-interface GraphLink {
+export interface GraphLink {
     source: string
     target: string
 }
@@ -373,32 +376,36 @@ interface GraphLink {
 export interface GraphData {
     nodes: GraphNode[]
     links: GraphLink[]
-    // links?: GraphSeriesOption["data"]
-    // nodes?: GraphSeriesOption["data"]
 }
 
 const transformToGraphData = (data: BackendData): GraphData => {
+    const total = data.Entities.length
+
+    // map HiddenIndex → 连续 index
     const indexMap = new Map(data.Entities.map((entity, idx) => [entity.HiddenIndex, idx.toString()]))
 
-    const degreeMap = new Map()
+    // 计算度数（决定节点大小）
+    const degreeMap = new Map<string, number>()
     data.Entities.forEach((_, idx) => degreeMap.set(idx.toString(), 0))
-
     data.Relationships.forEach((rel) => {
-        const sourceId = indexMap.get(rel.SourceEntityIndex)
-        const targetId = indexMap.get(rel.TargetEntityIndex)
-        if (sourceId && targetId) {
-            degreeMap.set(sourceId, (degreeMap.get(sourceId) ?? 0) + 1)
-            degreeMap.set(targetId, (degreeMap.get(targetId) ?? 0) + 1)
+        const s = indexMap.get(rel.SourceEntityIndex)
+        const t = indexMap.get(rel.TargetEntityIndex)
+        if (s && t) {
+            degreeMap.set(s, (degreeMap.get(s) ?? 0) + 1)
+            degreeMap.set(t, (degreeMap.get(t) ?? 0) + 1)
         }
     })
 
-    // 先生成普通节点，暂不考虑外围
+    // 构造节点
     const nodesTemp: GraphNode[] = data.Entities.map((entity, index) => {
         const degree = degreeMap.get(index.toString()) ?? 1
-        const size = Math.log(degree + 1) * 10 + 10 // log增长
+        const size = Math.log(degree + 1) * 10 + 10
         return {
             id: index.toString(),
-            name: entity.Name || `Entity-${index}`,
+            BaseIndex: entity?.BaseIndex,
+            HiddenIndex: entity?.HiddenIndex,
+            name: entity.Name ?? `Entity-${index}`,
+            category: entity.Type ?? "default",
             symbolSize: size,
             x: 0,
             y: 0,
@@ -407,42 +414,75 @@ const transformToGraphData = (data: BackendData): GraphData => {
         }
     })
 
-    const nodesTempSymbolSize = nodesTemp.map((n) => n.symbolSize)
+    // 最大节点设上限
+    const maxSymbol = Math.max(...nodesTemp.map((n) => n.symbolSize))
+    const maxSize = maxSymbol < 40 ? 40 : maxSymbol
 
-    const maxSize = Math.max(...nodesTempSymbolSize) < 40 ? 40 : Math.max(...nodesTempSymbolSize)
-
-    // 判断哪些节点没有 target
+    // 哪些是被指向的节点？其他节点放外围
     const targetIds = new Set(data.Relationships.map((rel) => indexMap.get(rel.TargetEntityIndex)).filter(Boolean))
 
-    const spreadRange = 300 // 中心区域大小
-    const outerRange = 400 // 外围范围
+    // 存放已分配位置，避免堆叠
+    const occupiedPositions: {x: number; y: number; r: number}[] = []
 
-    const nodes: GraphNode[] = nodesTemp.map((node) => {
+    const isOverlapping = (x: number, y: number, r: number) => {
+        return occupiedPositions.some((pos) => {
+            const dx = pos.x - x
+            const dy = pos.y - y
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            return distance < pos.r + r + 20
+        })
+    }
+
+    // 多层环状布局生成位置
+    const generateLayeredPosition = (layerCount: number, idx: number, total: number) => {
+        const nodesPerLayer = Math.ceil(total / layerCount)
+        const layer = Math.floor(idx / nodesPerLayer)
+        const angle = (idx % nodesPerLayer) * ((2 * Math.PI) / nodesPerLayer) + Math.random() * 0.5
+        const radius = 200 + layer * 300 + Math.random() * 100 // 每层间距 300 + 随机扰动
+        return {x: Math.cos(angle) * radius, y: Math.sin(angle) * radius}
+    }
+
+    const layerCount = Math.ceil(Math.sqrt(total)) // 根据总量设置层数
+
+    // 生成最终节点位置
+    const nodes: GraphNode[] = nodesTemp.map((node, idx) => {
         const isOuter = !targetIds.has(node.id)
-        let x: number, y: number, size: number
+        let x = 0,
+            y = 0,
+            size = node.symbolSize
 
         if (isOuter) {
-            // 外围随机坐标
-            const angle = Math.random() * 2 * Math.PI
-            x = Math.cos(angle) * outerRange
-            y = Math.sin(angle) * outerRange
-
-            // symbolSize 随机在 15~20
             size = maxSize + Math.random() * 5
+            let pos
+            let attempt = 0
+            do {
+                const angle = Math.random() * 2 * Math.PI
+                const radius = 1000 + idx * 15 + Math.random() * 300 // 外环半径更大
+                pos = {x: Math.cos(angle) * radius, y: Math.sin(angle) * radius}
+                attempt++
+            } while (isOverlapping(pos.x, pos.y, size) && attempt < 100)
+            x = pos.x
+            y = pos.y
         } else {
-            // 中心区域随机坐标
-            x = Math.random() * spreadRange - spreadRange / 2
-            y = Math.random() * spreadRange - spreadRange / 2
-            size = node.symbolSize
+            let pos
+            let attempt = 0
+            do {
+                pos = generateLayeredPosition(layerCount, idx, total)
+                attempt++
+            } while (isOverlapping(pos.x, pos.y, size) && attempt < 100)
+            x = pos.x
+            y = pos.y
         }
 
+        occupiedPositions.push({x, y, r: size})
         return {...node, x, y, symbolSize: size}
     })
 
+    // 生成边
     const links: GraphLink[] = data.Relationships.map((rel) => ({
         source: indexMap.get(rel.SourceEntityIndex) ?? "",
         target: indexMap.get(rel.TargetEntityIndex) ?? ""
-    })).filter((link) => link.source && link.target)
+    })).filter((l) => l.source && l.target)
 
     return {nodes, links}
 }

@@ -6,25 +6,23 @@ import {LightningBoltIcon} from "../icon/sidebarIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineExportIcon,
+    OutlineExternallinkIcon,
     OutlineLoadingIcon,
     OutlinePencilaltIcon,
     OutlineTimeIcon,
-    OutlineTrashIcon,
-    OutlineXIcon
+    OutlineTrashIcon
 } from "@/assets/icon/outline"
 
 import styles from "../knowledgeBase.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {Divider} from "antd"
 import {tableHeaderGroupOptions} from "../utils"
-import {useSafeState} from "ahooks"
+import {useMemoizedFn, useSafeState} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {AddKnowledgeBaseModal} from "./AddKnowledgeBaseModal"
 
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import classNames from "classnames"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+
+import {PluginExecuteDetailDrawer} from "./PluginExecuteDetailDrawer"
 
 export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     setTableProps: Dispatch<
@@ -60,9 +58,7 @@ const KnowledgeBaseTableHeader: FC<
     setQuery,
     setLinkId,
     setOpenQA,
-    selectList,
     setSelectList,
-    allCheck,
     setAllCheck
 }) => {
     const [searchValue, setSearchValue] = useSafeState("")
@@ -70,15 +66,40 @@ const KnowledgeBaseTableHeader: FC<
         visible: false,
         KnowledgeBaseName: ""
     })
+    const [buildingDrawer, setBuildingDrawer] = useSafeState<{
+        visible: boolean
+        streamToken?: string
+    }>({
+        visible: false,
+        streamToken: ""
+    })
+
+    const [show, setShow] = useSafeState<boolean>(false)
 
     useEffect(() => {
         setQuery?.("")
         setSearchValue("")
     }, [tableProps.type, knowledgeBaseItems.ID])
 
+    const onCloseViewBuildProcess = useMemoizedFn(() => {
+        setBuildingDrawer({visible: false, streamToken: ""})
+    })
+
+    const onViewBuildProcess = useMemoizedFn((streamToken) => {
+        if (streams) {
+            setBuildingDrawer({
+                visible: true,
+                streamToken
+            })
+        }
+    })
+
     const tableHeaderSpin = useMemo(() => {
         return knowledgeBaseItems?.streamstep === 2 && streams?.[knowledgeBaseItems?.streamToken] ? (
-            <div className={styles["building-knowledge-items"]}>
+            <div
+                className={styles["building-knowledge-items"]}
+                onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken)}
+            >
                 <OutlineLoadingIcon className={styles["loading-icon"]} />
                 构建知识条目中...
             </div>
@@ -90,76 +111,9 @@ const KnowledgeBaseTableHeader: FC<
             <div className={styles["header-left-total"]}>
                 <div className={styles["caption"]}>Total</div>
                 <div className={styles["number"]}>{tableProps.tableTotal ?? 0}</div>
-                {tableProps.type !== "Vector" ? (
-                    allCheck ? (
-                        <React.Fragment>
-                            <Divider type='vertical' />
-
-                            <div className={styles["select-all"]}>
-                                Selected <span>all</span>{" "}
-                                <OutlineXIcon
-                                    onClick={() => {
-                                        setSelectList([])
-                                        setAllCheck(false)
-                                    }}
-                                />
-                            </div>
-                        </React.Fragment>
-                    ) : (
-                        <React.Fragment>
-                            {/* <div className={styles["caption"]}>Selected</div>
-                            <div className={styles["number"]}>{selectList?.length}</div> */}
-                            {selectList.length > 0 ? (
-                                <React.Fragment>
-                                    <Divider type='vertical' />
-
-                                    <YakitPopover
-                                        overlayClassName={styles["table-selected-filter-popover"]}
-                                        content={
-                                            <div className={styles["hub-outer-list-filter"]}>
-                                                {selectList.map((item) => {
-                                                    return item ? (
-                                                        <YakitTag
-                                                            key={item.ID}
-                                                            closable
-                                                            onClose={() => {
-                                                                const result = selectList.filter(
-                                                                    (it) => it.ID !== item.ID
-                                                                )
-                                                                setSelectList(result)
-                                                                setAllCheck(false)
-                                                            }}
-                                                        >
-                                                            {item.ID}
-                                                        </YakitTag>
-                                                    ) : null
-                                                })}
-                                            </div>
-                                        }
-                                        trigger='hover'
-                                        placement='bottomLeft'
-                                    >
-                                        <div className={classNames(styles["tag-total"])}>
-                                            <span>
-                                                Selected{" "}
-                                                <span className={styles["total-style"]}>{selectList.length}</span>
-                                            </span>
-                                            <OutlineXIcon
-                                                onClick={() => {
-                                                    setSelectList([])
-                                                    setAllCheck(false)
-                                                }}
-                                            />
-                                        </div>
-                                    </YakitPopover>
-                                </React.Fragment>
-                            ) : null}
-                        </React.Fragment>
-                    )
-                ) : null}
             </div>
         )
-    }, [allCheck, selectList, tableProps.tableTotal, tableProps.type])
+    }, [tableProps.tableTotal, tableProps.type])
 
     const onOpenAddKnowledgeBaseModal = () => {
         setAddModalData({
@@ -180,6 +134,8 @@ const KnowledgeBaseTableHeader: FC<
                     {knowledgeBaseItems.historyGenerateKnowledgeList?.length > 0 ? (
                         <YakitPopover
                             overlayClassName={styles["knowledge-history-popover"]}
+                            visible={show}
+                            onVisibleChange={(visible) => setShow(visible)}
                             content={
                                 <div className={styles["knowledge-history-content"]}>
                                     <div className={styles["title"]}>
@@ -200,7 +156,13 @@ const KnowledgeBaseTableHeader: FC<
                                                 </div>
                                                 <div className={styles["content-last"]}>
                                                     <div>{it.date}</div>
-                                                    {/* <OutlineExternallinkIcon className={styles["external-link-icon"]} /> */}
+                                                    <OutlineExternallinkIcon
+                                                        className={styles["external-link-icon"]}
+                                                        onClick={() => {
+                                                            setShow(false)
+                                                            onViewBuildProcess(it.token)
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                         )
@@ -299,6 +261,14 @@ const KnowledgeBaseTableHeader: FC<
                 </div>
             </div>
             <AddKnowledgeBaseModal addModalData={addModalData} setAddModalData={setAddModalData} />
+            {buildingDrawer.visible ? (
+                <PluginExecuteDetailDrawer
+                    buildingDrawer={buildingDrawer}
+                    onCloseViewBuildProcess={onCloseViewBuildProcess}
+                    streams={streams}
+                    title={"知识条目构建详情"}
+                />
+            ) : null}
         </div>
     )
 }

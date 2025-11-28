@@ -67,12 +67,19 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({addModalData, se
                                         return Promise.reject("请上传文件")
                                     }
 
-                                    // 必须包含点，且不能是 ".xxx"
-                                    // 主文件名 (点前) 至少 1 个字符
-                                    const reg = /^[^.]+\.[^.]+$/
+                                    // 多个文件用逗号分隔
+                                    const files = value.split(",").map((i) => i.trim())
 
-                                    if (!reg.test(value)) {
-                                        return Promise.reject("请上传有效的文件")
+                                    // 校验格式：必须有文件名 + 后缀
+                                    const reg = /^[^.\/]+?\.[^.\/]+$/
+
+                                    for (const file of files) {
+                                        // 取文件名 (兼容 windows、mac 路径)
+                                        const fileName = file.split("/").pop()?.split("\\").pop()
+
+                                        if (!fileName || !reg.test(fileName)) {
+                                            return Promise.reject("请上传有效的文件")
+                                        }
                                     }
 
                                     return Promise.resolve()

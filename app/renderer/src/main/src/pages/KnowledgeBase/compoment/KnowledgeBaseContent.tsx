@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useEffect, useMemo, useRef, type FC} from "react"
+import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 
@@ -18,10 +18,10 @@ import {failed, success} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {KnowledgeBaseQA} from "./KnowledgeBaseQA/KnowledgeBaseQA"
 import {BinaryInfo} from "./AllInstallPluginsProps"
+import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -31,23 +31,26 @@ interface KnowledgeBaseContentProps {
     editKnowledgeBase: (id: string, data: Partial<KnowledgeBaseItem>) => void
     clearAll: () => void
     binariesToInstall: BinaryInfo[] | undefined
+    apiRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["api"] | undefined>
 }
 
-const KnowledgeBaseContent: FC<KnowledgeBaseContentProps> = ({
-    knowledgeBaseID,
-    setKnowledgeBaseID,
-    knowledgeBases,
-    previousKnowledgeBases,
-    editKnowledgeBase,
-    clearAll,
-    binariesToInstall
-}) => {
-    const [visible, setVisible] = useSafeState(false)
+const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
+    const {
+        knowledgeBaseID,
+        setKnowledgeBaseID,
+        knowledgeBases,
+        previousKnowledgeBases,
+        editKnowledgeBase,
+        clearAll,
+        binariesToInstall,
+        apiRef
+    } = props
     const [openQA, setOpenQA] = useSafeState({
         status: false,
         all: false
     })
     const [streams, api] = useMultipleHoldGRPCStream()
+
     const onOK = async () => {
         try {
             await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
@@ -58,28 +61,11 @@ const KnowledgeBaseContent: FC<KnowledgeBaseContentProps> = ({
             console.error("取消流时出错：", e)
         }
     }
-    const apiRef = useRef(api)
 
     // 每次变化时更新 ref
     useDeepCompareEffect(() => {
         apiRef.current = api
     }, [api])
-
-    const onCloseKnowledgeRepository = () => {
-        if (apiRef.current.tokens.length > 0) {
-            setVisible(true)
-            return
-        } else {
-            emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
-        }
-    }
-
-    useEffect(() => {
-        emiter.on("onCloseKnowledgeRepository", onCloseKnowledgeRepository)
-        return () => {
-            emiter.off("onCloseKnowledgeRepository", onCloseKnowledgeRepository)
-        }
-    }, [])
 
     useAsyncEffect(async () => {
         const addManuallyItem = findChangedObjects(previousKnowledgeBases, knowledgeBases)
@@ -239,14 +225,15 @@ const KnowledgeBaseContent: FC<KnowledgeBaseContentProps> = ({
         }
     })
 
-    const onCancel = () => {
-        setVisible(false)
-    }
-
     const targetSelectedKnowledgeBaseItem = useMemo(() => {
         const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
         return result
     }, [openQA, knowledgeBaseID])
+
+    useImperativeHandle(ref, () => ({
+        onOK
+    }))
+
     return (
         <div className={styles["knowledge-base-body"]}>
             <KnowledgeBaseSidebar
@@ -271,18 +258,8 @@ const KnowledgeBaseContent: FC<KnowledgeBaseContentProps> = ({
                 knowledgeBase={targetSelectedKnowledgeBaseItem}
                 knowledgeBaseID={knowledgeBaseID}
             />
-            <YakitHint
-                visible={visible}
-                // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
-                title={"知识库未构建完成"}
-                content={"知识未构建完成，是否确定关闭"}
-                okButtonText='立即关闭'
-                onOk={onOK}
-                cancelButtonText='稍后再说'
-                onCancel={onCancel}
-            />
         </div>
     )
-}
+})
 
 export default KnowledgeBaseContent
