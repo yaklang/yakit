@@ -755,16 +755,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         if (!getBodyLengthSort() || newSort.orderBy !== "") {
-            // if (newSort.order === "none") {
-            //     newSort.order = "desc"
-            // }
-            // if (newSort.orderBy === "DurationMs") {
-            //     newSort.orderBy = "duration"
-            // }
-            // if (newSort.orderBy === "RequestSizeVerbose") {
-            //     newSort.orderBy = "request_length"
-            // }
-            // 直接修改sort会导致TableVirtualResize的sort值跟着改了 且useEffect监听不到sort的改变
             sorterTableRef.current = {
                 ...newSort,
                 ...newSort.order === "none" ? { order : "desc" } : {},

@@ -1058,10 +1058,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 return newParams
             })
             setTriggerParamsWatch((old) => !old)
-            // 直接修改sort会导致TableVirtualResize的sort值跟着改了 且useEffect监听不到sort的改变
-            // if (sort.orderBy === "DurationMs") {
-            //     sort.orderBy = "duration"
-            // }
             sortRef.current = {
                 ...sort,
                 ...sort.orderBy === "DurationMs" ? { orderBy: "duration" } : {}
@@ -4866,12 +4862,10 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                     maxNumber={maxNumber}
                     onSure={() => {
                         setValueChanged(false)
-                        // setShow(false)
                         onSure?.()
                     }}
                     onReset={() => {
                         setValueChanged(false)
-                        // setShow(false)
                         onReset?.()
                     }}
                     onchangeValued={onchangeValued}
