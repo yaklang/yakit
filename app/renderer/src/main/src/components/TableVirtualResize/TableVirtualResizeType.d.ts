@@ -83,7 +83,8 @@ export interface TableVirtualResizeProps<T> {
     isRightClickBatchOperate?: boolean
     /** 是否隐藏表格初始渲染时的 loadingUI */
     isHiddenLoadingUI?: boolean
-
+    /** 用于重置排序的标志 */
+    isResetSort?: boolean
     onRowDoubleClick?: (record?: T) => void
     // TODO 单机行是否需要高亮显示
     lineHighlight?: boolean

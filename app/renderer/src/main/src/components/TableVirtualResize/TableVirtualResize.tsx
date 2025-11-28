@@ -138,6 +138,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         inMouseEnterTable = false,
         containerClassName,
         isRightClickBatchOperate,
+        isResetSort,
         isHiddenLoadingUI = false,
         onRowDoubleClick,
         lineHighlight
@@ -774,6 +775,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         })
         scrollTo(0)
     }, [isReset])
+
+    useUpdateEffect(() => {
+        setSort({
+            order: "none",
+            orderBy: ""
+        })
+        scrollTo(0)
+    }, [isResetSort])
+
     const onChangTable = useMemoizedFn(() => {
         if (props.onChange) props.onChange(1, pagination.limit, sort, filters)
     })

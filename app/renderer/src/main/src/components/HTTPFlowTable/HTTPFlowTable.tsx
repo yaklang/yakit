@@ -1058,10 +1058,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 return newParams
             })
             setTriggerParamsWatch((old) => !old)
-            if (sort.orderBy === "DurationMs") {
-                sort.orderBy = "duration"
+            // 直接修改sort会导致TableVirtualResize的sort值跟着改了 且useEffect监听不到sort的改变
+            // if (sort.orderBy === "DurationMs") {
+            //     sort.orderBy = "duration"
+            // }
+            sortRef.current = {
+                ...sort,
+                ...sort.orderBy === "DurationMs" ? { orderBy: "duration" } : {}
             }
-            sortRef.current = sort
         },
         {wait: 500}
     ).run
