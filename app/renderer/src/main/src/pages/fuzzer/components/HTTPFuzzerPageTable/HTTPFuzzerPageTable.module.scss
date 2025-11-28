@@ -2,6 +2,17 @@
 
 .table-container {
     border: 0 !important;
+
+    
+    .virtual-table-sorter {
+        margin-top: 6px;
+        color: var(--Colors-Use-Neutral-Disable);
+    }
+
+    .virtual-table-sorter-active {
+        color: var(--Colors-Use-Main-Primary);
+    }
+
     .table-item-extracted-results {
         @extend .display-flex-center;
         overflow: hidden;

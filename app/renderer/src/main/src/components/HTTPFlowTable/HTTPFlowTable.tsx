@@ -1058,10 +1058,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 return newParams
             })
             setTriggerParamsWatch((old) => !old)
-            if (sort.orderBy === "DurationMs") {
-                sort.orderBy = "duration"
+            sortRef.current = {
+                ...sort,
+                ...sort.orderBy === "DurationMs" ? { orderBy: "duration" } : {}
             }
-            sortRef.current = sort
         },
         {wait: 500}
     ).run
@@ -2033,7 +2033,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
-                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                                    {rowData.BodyLength}{rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）`: ''}
                                 </div>
                             )}
                         </>
@@ -2138,7 +2138,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 title: t("HTTPFlowTable.requestSizeVerbose"),
                 dataKey: "RequestSizeVerbose",
                 enableDrag: false,
-                width: 120
+                width: 120,
+                render: (text, {RequestLength}) => `${RequestLength || text.slice(0,-1)}${RequestLength > 1024 ? `（${text}）` : '' }`
             },
             {
                 title: t("YakitTable.action"),
@@ -4845,6 +4846,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
         if (!inViewport && getValueChanged()) {
             onSure?.()
         }
+        !inViewport && setShow(false)
     }, [inViewport])
 
     return (
@@ -4860,12 +4862,10 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                     maxNumber={maxNumber}
                     onSure={() => {
                         setValueChanged(false)
-                        setShow(false)
                         onSure?.()
                     }}
                     onReset={() => {
                         setValueChanged(false)
-                        setShow(false)
                         onReset?.()
                     }}
                     onchangeValued={onchangeValued}

@@ -1,4 +1,4 @@
-import {ArrowCircleRightSvgIcon, FilterIcon} from "@/assets/newIcon"
+import {ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon } from "@/assets/newIcon"
 import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -194,6 +194,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const [loading, setLoading] = useState<boolean>(false)
         const [sorterTable, setSorterTable] = useState<SortProps>()
+        const [isResetSort, setIsResetSort] = useState<boolean>(false)
 
         const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
         const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
@@ -333,7 +334,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           width: 93,
                           sorterProps: {
                               sorter: true
-                          }
+                          },
                       },
                       {
                           title: t("HTTPFuzzerPageTable.status"),
@@ -367,6 +368,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <TableFilterAndSorter
                                       sortStatus={sorterTable?.orderBy === "StatusCode" ? sorterTable?.order : "none"}
                                       handleSort={(status) => {
+                                          setIsResetSort(pre => !pre)
                                           setSorterTable(
                                               status === "none" 
                                                   ? undefined 
@@ -414,6 +416,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <TableFilterAndSorter
                                       sortStatus={sorterTable?.orderBy === "BodyLength" ? sorterTable?.order : "none"}
                                       handleSort={(status) => {
+                                          setIsResetSort(pre => !pre)
                                           setSorterTable(
                                               status === "none" 
                                                   ? undefined 
@@ -462,6 +465,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <TableFilterAndSorter
                                       sortStatus={sorterTable?.orderBy === "DurationMs" ? sorterTable?.order : "none"}
                                       handleSort={(status) => {
+                                          setIsResetSort(pre => !pre)
                                           setSorterTable(
                                               status === "none" 
                                                   ? undefined 
@@ -537,7 +541,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           },
                           sorterProps: {
                               sorter: true
-                          }
+                          },
                       },
                       {
                           title: t("HTTPFuzzerPageTable.httpHeaderSimilarity"),
@@ -546,7 +550,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           width: 140,
                           sorterProps: {
                               sorter: true
-                          }
+                          },
                       },
 
                       {
@@ -561,7 +565,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           render: (text) => (text ? formatTimestamp(text) : "-"),
                           sorterProps: {
                               sorter: true
-                          }
+                          },
+
                       },
                       {
                           title: t("YakitTable.action"),
@@ -629,7 +634,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           width: 100,
                           sorterProps: {
                               sorter: true
-                          }
+                          },
                       },
                       {
                           title: t("HTTPFuzzerPageTable.failureReason"),
@@ -1096,6 +1101,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     containerClassName={classNames(styles["table-container"], {
                                         [styles["table-container-border"]]: currentSelectItem?.ResponseRaw
                                     })}
+                                    isResetSort={isResetSort}
                                     currentSelectItem={currentSelectItem}
                                     onSetCurrentRow={onSetCurrentRow}
                                     useUpAndDown={tableKeyUpDownEnabled}

@@ -467,7 +467,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     // 表格相关变量
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
-    const [isReset, setIsReset] = useState<boolean>(false)
+    const [isResetSort, setIsResetSort] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const sorterTableRef = useRef<SortProps>()
     const [data, setData] = useState<HTTPFlow[]>([])
@@ -742,7 +742,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const onBodyLengthSort = useMemoizedFn((sort) => {
         const newSort = bodyLengthSort === sort ? false : sort
         if (newSort) {
-            setIsReset((prev) => !prev)
+            setIsResetSort((prev) => !prev)
         }
         setBodyLengthSort(newSort)
         sorterTableRef.current = {
@@ -755,16 +755,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         if (!getBodyLengthSort() || newSort.orderBy !== "") {
-            if (newSort.order === "none") {
-                newSort.order = "desc"
+            sorterTableRef.current = {
+                ...newSort,
+                ...newSort.order === "none" ? { order : "desc" } : {},
+                ...newSort.orderBy === "DurationMs" ? { orderBy : "duration" } : newSort.orderBy === "RequestSizeVerbose" ?  { orderBy : "request_length" } : {},
             }
-            if (newSort.orderBy === "DurationMs") {
-                newSort.orderBy = "duration"
-            }
-            if (newSort.orderBy === "RequestSizeVerbose") {
-                newSort.orderBy = "request_length"
-            }
-            sorterTableRef.current = newSort
             setBodyLengthSort(false)
         }
         setQuery((prev) => {
@@ -1138,7 +1133,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
-                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                                    {rowData.BodyLength}{rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）`: ''}
                                 </div>
                             )}
                         </>
@@ -1249,7 +1244,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 width: 120,
                 sorterProps: {
                     sorter: true
-                }
+                },
+                render: (text, {RequestLength}) => `${RequestLength || text.slice(0,-1)}${RequestLength > 1024 ? `（${text}）` : '' }`
             },
             {
                 title: t("YakitTable.action"),
@@ -2294,7 +2290,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 query={query}
                 loading={loading}
                 isRefresh={isRefresh}
-                isReset={isReset}
+                isResetSort={isResetSort}
                 isShowTitle={true}
                 renderTitle={
                     <div className={styles["http-history-table-title"]}>

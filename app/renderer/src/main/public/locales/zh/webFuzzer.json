@@ -391,7 +391,7 @@
     "render_fuzz": "渲染 Fuzz",
     "compat_mode_tip": "兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。",
     "render_mode": "渲染模式",
-    "disable_hot_reload": "禁用热更新",
+    "disable_hot_reload": "禁用热加载",
     "no_fix_length": "不修复长度",
     "timeout_duration": "超时时长",
     "connection": "连接",

@@ -391,7 +391,7 @@
     "render_fuzz": "Render Fuzz",
     "compat_mode_tip": "In compatibility mode, inner curly braces can be omitted when nested, e.g., {{base64(url(www.example.com))}}. In standard mode, they cannot be omitted. Fuzztag will be disabled if this is turned off.",
     "render_mode": "Render Mode",
-    "disable_hot_reload": "Disable Hot Reload",
+    "disable_hot_reload": "Disable Hot Loading",
     "no_fix_length": "Do not fix length",
     "timeout_duration": "Timeout Duration",
     "connection": "Connection",
