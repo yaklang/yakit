@@ -45,7 +45,11 @@
     "confirm_feedback_prompt": "After confirming the feedback, the entire vulnerability information will be uploaded to the backend, and developers will use the information to fix the false positive. Do you confirm the feedback?",
     "export_csv": "Export CSV",
     "export_html": "Export HTML",
-    "vulnerability_detection": "Vulnerability Detection"
+    "vulnerability_detection": "Vulnerability Detection",
+    "RowContextMenu":{
+        "delete_duplicate_title_data": "Delete Duplicate Title Data",
+        "openInNewWindow": "Open in New Window"
+    }
   },
   "YakitRiskSelectTag": {
     "false_positive": "False Positive",
