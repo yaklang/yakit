@@ -40,7 +40,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
 
     useEffect(() => {
-        getAIModelListOption(true)
+        getAIModelListOption(!modelValue)
         emiter.on("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         return () => {
             emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
