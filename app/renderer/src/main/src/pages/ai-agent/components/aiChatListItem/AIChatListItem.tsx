@@ -144,7 +144,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
                 return (
                     <DividerCard
-                        status={StreamsStatus.success}
+                        status={StreamsStatus.cancel}
                         name='任务结束标志'
                         desc='当前任务已经结束，下面为新的任务数据'
                         success={0}

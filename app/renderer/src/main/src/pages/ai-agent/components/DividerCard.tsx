@@ -8,11 +8,12 @@ import {TaskInProgressIcon, TaskSuccessIcon} from "../aiTree/icon"
 export enum StreamsStatus {
     success = "completed",
     inProgress = "processing",
-    error = "aborted"
+    error = "aborted",
+    cancel = "cancel"
 }
 
 interface SuccessStatus {
-    status: StreamsStatus.success
+    status: StreamsStatus.success | StreamsStatus.cancel
     desc?: string
     success: number
     error: number
@@ -80,6 +81,30 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                             <OutlineXIcon />
                             <p className={styles["divider-content-error-text"]}>{desc}</p>
                         </YakitTag>
+                    </div>
+                ]
+            case StreamsStatus.cancel:
+                const {error, success} = props
+                return [
+                    <div key='circle' className={styles["node-circle-icon"]} />,
+                    <div className={classNames(styles["divider-content-success"], styles["divider-content-text"])}>
+                        <span>{name}</span>
+                        {[error, success]
+                            .filter((ele) => !!ele)
+                            .map((item, index) => {
+                                return (
+                                    <YakitTag
+                                        key={index}
+                                        size='small'
+                                        fullRadius
+                                        color={index === 0 ? "danger" : "success"}
+                                        className={styles["divider-content-success-tag"]}
+                                    >
+                                        {item}
+                                    </YakitTag>
+                                )
+                            })}
+                        <span className={styles["divider-content-text-desc"]}>{desc}</span>
                     </div>
                 ]
             default:

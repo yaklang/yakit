@@ -82,6 +82,12 @@
             }
         }
     }
+    .node-circle-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid var(--Colors-Use-Neutral-Disable);
+    }
 }
 
 .icon-danger {
