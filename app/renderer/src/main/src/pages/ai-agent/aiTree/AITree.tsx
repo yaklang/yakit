@@ -1,5 +1,5 @@
-import React, { memo, useMemo} from "react"
-import { AITreeNodeProps, AITreeProps} from "./type"
+import React, {memo, useMemo} from "react"
+import {AITreeNodeProps, AITreeProps} from "./type"
 import {TaskErrorIcon, TaskInProgressIcon, TaskSuccessIcon} from "./icon"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -55,7 +55,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
     const {isStart, isEnd, isStartOfLevel, isEndOfLevel, isParentLast, levelDiff} = position
     const [infoShow, setInfoShow] = React.useState(false)
 
-       const handleFindLeafNode = useMemoizedFn((info: AITaskInfoProps) => {
+    const handleFindLeafNode = useMemoizedFn((info: AITaskInfoProps) => {
         if (data.subtasks && data.subtasks.length > 0) {
             return handleFindLeafNode(data.subtasks[0])
         } else {
@@ -93,21 +93,21 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             <div className={styles["node-content"]} onClick={handleClick}>
                 <div className={styles["node-content-text"]}>{data.goal}</div>
                 <div className={styles["node-content-tag"]}>
-                    {[data.fail_tool_call_count, data.success_tool_call_count]
-                        .filter((ele) => !!ele)
-                        .map((item, index) => {
-                            return (
-                                <YakitTag
-                                    key={index}
-                                    size='small'
-                                    fullRadius
-                                    color={index === 0 ? "danger" : "success"}
-                                    className={styles["node-content-tag-num"]}
-                                >
-                                    {item}
-                                </YakitTag>
-                            )
-                        })}
+                    {[data.fail_tool_call_count, data.success_tool_call_count].map((item, index) => {
+                        if (!item) return null 
+                        const color = index === 0 ? "danger" : "success" 
+                        return (
+                            <YakitTag
+                                key={index}
+                                size='small'
+                                fullRadius
+                                color={color}
+                                className={styles["node-content-tag-num"]}
+                            >
+                                {item}
+                            </YakitTag>
+                        )
+                    })}
                 </div>
             </div>
         )

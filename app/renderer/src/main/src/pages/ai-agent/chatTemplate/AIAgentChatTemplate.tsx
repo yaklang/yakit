@@ -1,4 +1,4 @@
-import React, {memo, MutableRefObject, useEffect, useMemo, useState} from "react"
+import React, {memo, MutableRefObject, useEffect, useMemo, useRef, useState} from "react"
 import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatStreamProps,
@@ -79,7 +79,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {streams, scrollToBottom, execute} = props
-    const {scrollerRef, virtuosoRef, scrollToIndex} = useVirtuosoAutoScroll(streams)
+    const {scrollIntoViewOnChange, virtuosoRef, setIsAtBottomRef, scrollToIndex} = useVirtuosoAutoScroll()
     const {t} = useI18nNamespaces(["yakitUi"])
     useUpdateEffect(() => {
         scrollToIndex("LAST")
@@ -100,16 +100,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 </div>
             ),
             Footer: () => (
-                <div>
-                    {loading ? (
-                        <div style={{paddingBottom: "38px"}}>
-                            <YakitSpin>
-                                <div style={{marginTop: "38px", textAlign: "center"}}>{t("YakitSpin.loading")}...</div>
-                            </YakitSpin>
-                        </div>
-                    ) : (
-                        <div style={{paddingBottom: "68px"}} />
-                    )}
+                <div style={{height: "80px"}}>
+                    {loading && <YakitSpin wrapperClassName={styles['spin']} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>}
                 </div>
             )
         }),
@@ -119,16 +111,15 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso
-                scrollerRef={(ref) =>
-                    ((scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement)
-                }
                 ref={virtuosoRef}
+                atBottomStateChange={setIsAtBottomRef}
                 style={{height: "100%", width: "100%"}}
                 data={streams}
+                scrollIntoViewOnChange={scrollIntoViewOnChange}
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
-                overscan={300}
                 initialTopMostItemIndex={{index: "LAST"}}
+                skipAnimationFrameInResizeObserver
                 increaseViewportBy={{top: 300, bottom: 300}}
                 components={components}
             />

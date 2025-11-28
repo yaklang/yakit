@@ -64,7 +64,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 })
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats} = props
-    const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(chats)
+    const {virtuosoRef, setIsAtBottomRef, scrollIntoViewOnChange} = useVirtuosoAutoScroll()
 
     const renderItem = (item: AIChatQSData) => {
         return <AIChatListItem key={item.id} item={item} type='re-act' />
@@ -83,15 +83,15 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     return (
         <div className={styles["ai-re-act-chat-contents"]}>
             <Virtuoso
-                scrollerRef={(ref) =>
-                    ((scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement)
-                }
                 ref={virtuosoRef}
                 data={chats}
+                atBottomStateChange={setIsAtBottomRef}
+                scrollIntoViewOnChange={scrollIntoViewOnChange}
                 totalCount={chats.length}
                 itemContent={(_, item) => renderItem(item)}
-                overscan={300}
                 components={components}
+                initialTopMostItemIndex={{index: "LAST"}}
+                increaseViewportBy={{top: 300, bottom: 300}}
                 className={styles["re-act-contents-list"]}
             />
         </div>

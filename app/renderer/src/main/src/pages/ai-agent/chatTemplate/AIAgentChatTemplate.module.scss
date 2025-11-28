@@ -163,6 +163,11 @@
             padding-top: 12px;
         }
     }
+    .spin{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 .task-type-header {
