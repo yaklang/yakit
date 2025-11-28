@@ -73,6 +73,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitRoute} from "@/enums/yakitRoute"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const setAIModal = (params: {
     config: GlobalNetworkConfig
@@ -97,6 +98,10 @@ export const setAIModal = (params: {
         footer: null,
         closable: true,
         maskClosable: false,
+        onCancel: () => {
+            emiter.emit("onRefreshAvailableAIModelList")
+            m.destroy()
+        },
         content: (
             <>
                 <NewThirdPartyApplicationConfig
@@ -118,10 +123,14 @@ export const setAIModal = (params: {
                         const params: GlobalNetworkConfig = {...config, AppConfigs: existedResult}
                         apiSetGlobalNetworkConfig(params).then(() => {
                             onSuccess()
+                            emiter.emit("onRefreshAvailableAIModelList")
                             m.destroy()
                         })
                     }}
-                    onCancel={() => m.destroy()}
+                    onCancel={() => {
+                        emiter.emit("onRefreshAvailableAIModelList")
+                        m.destroy()
+                    }}
                 />
             </>
         )
@@ -159,6 +168,13 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
     const onlineRef = useRef<AIOnlineModelListRefProps>(null)
     const localRef = useRef<AILocalModelListRefProps>(null)
+
+    useEffect(() => {
+        emiter.on("onRefreshAIModelList", onRefresh)
+        return () => {
+            emiter.off("onRefreshAIModelList", onRefresh)
+        }
+    }, [])
 
     const onToolQueryTypeChange = useMemoizedFn((e) => {
         setModelType(e.target.value as AIModelType)
@@ -347,12 +363,14 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             setList(newList)
             apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: newList}).then(() => {
                 getList()
+                emiter.emit("onRefreshAvailableAIModelList")
             })
         })
         const onRemoveAll = useMemoizedFn(() => {
             if (!configRef.current) return
             apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: []}).then(() => {
                 getList()
+                emiter.emit("onRefreshAvailableAIModelList")
             })
         })
         /**
@@ -765,6 +783,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         return grpcDeleteLocalModel({Name: item.Name, DeleteSourceFile: deleteSourceFile}).then(() => {
             onRefresh()
             setRemoveVisible(false)
+            emiter.emit("onRefreshAvailableAIModelList")
         })
     })
     const onCancelRemove = useMemoizedFn(() => {

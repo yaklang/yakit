@@ -18,6 +18,8 @@ import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {AIInputEventHotPatchTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {isEqual} from "lodash"
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     //#region AI model
@@ -27,7 +29,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const {handleSendConfigHotpatch} = useChatIPCDispatcher()
 
     const modelValue = useCreation(() => {
-        return setting?.AIService || AIAgentSettingDefault.AIService
+        return setting?.AIService
     }, [setting?.AIService])
 
     const [aiModelOptions, setAIModelOptions] = useState<GetAIModelListResponse>({
@@ -38,25 +40,60 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
 
     useEffect(() => {
-        getAIModelListOption()
+        getAIModelListOption(true)
+        emiter.on("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
+        return () => {
+            emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
+        }
     }, [])
+    const onRefreshAvailableAIModelList = useMemoizedFn(() => {
+        getAIModelListOption(true)
+    })
     const getAIModelListOption = useDebounceFn(
-        () => {
+        (refreshValue?: boolean) => {
             getAIModelList().then((res) => {
-                setAIModelOptions(res)
-                onInitValue(res)
+                if (res.localModels.length === 0 && res.onlineModels.length === 0) {
+                    onOpenConfigModal()
+                    onSelectModel("")
+                } else {
+                    setAIModelOptions(res)
+                    refreshValue && onInitValue(res)
+                }
             })
         },
         {wait: 200, leading: true}
     ).run
 
-    const onInitValue = useMemoizedFn((res) => {
-        if (!setting?.AIService) {
-            if (res && res.onlineModels.length > 0) {
-                onSelectModel((res.onlineModels[0].Type as string) || "")
-            } else if (res && res.localModels.length > 0) {
-                onSelectModel((res.localModels[0].Name as string) || "")
+    const onOpenConfigModal = useMemoizedFn(() => {
+        const m = YakitModalConfirm({
+            title: "AI 模型未配置",
+            width: 420,
+            onOkText: "去配置",
+            cancelButtonProps: {style: {display: "none"}},
+            content: <div>无可使用AI模型，请配置后使用</div>,
+            closable: false,
+            maskClosable: false,
+            onOk: () => {
+                apiGetGlobalNetworkConfig().then((obj) => {
+                    setAIModal({
+                        config: obj,
+                        onSuccess: () => {
+                            setTimeout(() => {
+                                emiter.emit("onRefreshAIModelList")
+                            }, 200)
+                        }
+                    })
+                    m.destroy()
+                })
             }
+        })
+    })
+
+    const onInitValue = useMemoizedFn((res) => {
+        if (res && res.onlineModels.length > 0) {
+            onSelectModel((res.onlineModels[0].Type as string) || "")
+        } else if (res && res.localModels.length > 0) {
+            onSelectModel((res.localModels[0].Name as string) || "")
         }
     })
 
@@ -94,7 +131,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     </div>
                 )
             }}
-            getList={getAIModelListOption}
+            getList={() => getAIModelListOption()}
             open={open}
             setOpen={onSetOpen}
         >
