@@ -6,8 +6,9 @@ import {TextAreaProps} from "antd/lib/input"
 
 import "./FormItemUtil.css"
 import {ManyMultiSelectForString} from "../../utils/inputUtil"
-import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
-import { YakitSelectProps } from "../yakitUI/YakitSelect/YakitSelectType"
+import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
+import {YakitSelectProps} from "../yakitUI/YakitSelect/YakitSelectType"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 
 const {Item} = Form
 const {Dragger} = Upload
@@ -75,7 +76,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
                 // accept={restDragger.accept || "text/plain"}
                 accept={restDragger.accept || ""}
             >
-                <TextArea
+                <YakitInput.TextArea
                     {...restTextarea}
                     spellCheck={false}
                     onChange={(e) => {
@@ -95,7 +96,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
                         if (restTextarea.onClick) restTextarea.onClick(e)
                         if (!!isBubbing) e.stopPropagation()
                     }}
-                ></TextArea>
+                ></YakitInput.TextArea>
             </Dragger>
         )
     }
@@ -112,7 +113,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
                         // accept={restDragger.accept || "text/plain"}
                         accept={restDragger.accept || ""}
                     >
-                        <TextArea
+                        <YakitInput.TextArea
                             {...restTextarea}
                             spellCheck={false}
                             onChange={(e) => {
@@ -132,7 +133,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
                                 if (restTextarea.onClick) restTextarea.onClick(e)
                                 if (!!isBubbing) e.stopPropagation()
                             }}
-                        ></TextArea>
+                        ></YakitInput.TextArea>
                     </Dragger>
                 </Col>
 
@@ -168,7 +169,7 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
                 className={`file-upload-dragger ${DraggerClassName || ""}`}
                 accept={restDragger.accept === undefined ? "text/plain" : restDragger.accept}
             >
-                <Input
+                <YakitInput
                     {...restInput}
                     onChange={(e) => {
                         if (restInput.onChange) restInput.onChange(e)
@@ -187,7 +188,7 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
                         if (restInput.onClick) restInput.onClick(e)
                         if (!!isBubbing) e.stopPropagation()
                     }}
-                ></Input>
+                ></YakitInput>
             </Dragger>
         )
     }
@@ -203,7 +204,7 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
                         className={`file-upload-dragger ${DraggerClassName || ""}`}
                         accept={restDragger.accept === undefined ? "text/plain" : restDragger.accept}
                     >
-                        <Input
+                        <YakitInput
                             {...restInput}
                             onChange={(e) => {
                                 if (restInput.onChange) restInput.onChange(e)
@@ -222,7 +223,7 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
                                 if (restInput.onClick) restInput.onClick(e)
                                 if (!!isBubbing) e.stopPropagation()
                             }}
-                        ></Input>
+                        ></YakitInput>
                     </Dragger>
                 </Col>
 
@@ -268,7 +269,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                     const flag = Object.prototype.toString.call(item) === "[object Object]"
                     const value = flag ? item[optValue] : item
                     const title = flag ? item[optText] : item
-                    const key = optKey?item[optText] : null
+                    const key = optKey ? item[optText] : null
                     return (
                         <YakitSelect.Option
                             key={key || value || index}

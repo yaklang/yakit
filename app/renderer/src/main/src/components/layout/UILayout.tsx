@@ -661,7 +661,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- 各种操作逻辑处理 Start ---------- */
     const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any) => {
-        if (!getOldLink()) return
         setLoading(true)
         setTimeout(() => {
             setLoading(false)
@@ -673,7 +672,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 远程控制时的刷新按钮loading
     const [remoteControlRefreshLoading, setRemoteControlRefreshLoading] = useState<boolean>(false)
     useEffect(() => {
-        if (!getOldLink()) return
         if (engineLink) {
             setRestartLoading(false)
             setRemoteControlRefreshLoading(false)
@@ -726,6 +724,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (localEngineRef.current) localEngineRef.current.resetBuiltIn()
                 return
 
+            default:
+                return
+        }
+    })
+
+    const newLoadingClickCallback = useMemoizedFn((type: YaklangEngineMode | YakitStatusType) => {
+        switch (type) {
+            case "control-remote":
+                // 远程控制连接时的刷新
+                setTimeoutLoading(setRemoteControlRefreshLoading)
+                onStartLinkEngine(true)
+                break
+            case "local":
+                setTimeoutLoading(setRestartLoading)
+                setLinkLocalEngine()
+                return
             default:
                 return
         }
@@ -1169,7 +1183,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
 
-    // #region // TODO 远程控制(控制端) 该功能按钮暂时被屏蔽
+    // #region 远程控制(控制端)
     const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
 
     useEffect(() => {
@@ -1177,10 +1191,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.on("login-out-dynamic-control-callback", async (params) => {
             if (dynamicStatus.isDynamicStatus) {
                 // 切换到本地
-                handleLinkLocalMode()
+                if (getOldLink()) {
+                    handleLinkLocalMode()
+                } else {
+                    setLinkLocalEngine()
+                }
 
                 setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
-                await remoteOperation(false, dynamicStatus, userInfo)
+                await remoteOperation(false, dynamicStatus)
                 // 是否退出登录
                 if (params?.loginOut) {
                     ipcRenderer.invoke("ipc-sign-out")
@@ -1201,20 +1219,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             ipcRenderer
                 .invoke("Codec", {Type: "base64-decode", Text: resultObj.pubpem, Params: [], ScriptName: ""})
                 .then((res) => {
+                    if (!getOldLink()) {
+                        setNewCheckLog(["远程控制连接中..."])
+                        setShowLoadingPage(true)
+                    } else {
+                        setCheckLog(["远程控制连接中..."])
+                    }
                     setYakitStatus("control-remote")
-                    setCheckLog(["远程控制连接中..."])
                     onDisconnect()
-
-                    setCredential(() => {
-                        return {
-                            Host: resultObj.host,
-                            IsTLS: true,
-                            Password: resultObj.secret,
-                            PemBytes: StringToUint8Array(res?.Result || ""),
-                            Port: resultObj.port,
-                            Mode: "remote"
-                        }
-                    })
+                    
+                    const obj = {
+                        Host: resultObj.host,
+                        IsTLS: true,
+                        Password: resultObj.secret,
+                        PemBytes: StringToUint8Array(res?.Result || ""),
+                        Port: resultObj.port,
+                        Mode: "remote"
+                    }
+                    setCredential(obj as unknown as YaklangEngineWatchDogCredential)
+                    ipcRenderer.invoke("updateCredential", {credential: obj})
                     onStartLinkEngine(true)
                 })
                 .catch((err) => {
@@ -1755,6 +1778,24 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             debugToPrintLog(`[INFO] 目标引擎进程不存在: 主窗口探活失败${count}次`)
             setEngineLink(false)
 
+            if (dynamicStatus.isDynamicStatus && getYakitStatus() !== "control-remote") {
+                setNewCheckLog(["远程控制重连中..."])
+                setYakitStatus("control-remote")
+                return
+            } else {
+                if (getYakitStatus() === "control-remote") {
+                    if (count === 5) {
+                        setNewCheckLog(["远程控制异常退出, 无法连接"])
+                        failed("远程控制异常退出, 无法连接。")
+                        setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
+                        remoteOperation(false, dynamicStatus, userInfo)
+                        setYakitStatus("control-remote-timeout")
+                        onDisconnect()
+                    }
+                    return
+                }
+            }
+
             if (getYakitStatus() === "error" && count === 20) {
                 // 连接断开后的20次尝试过后，不在进行尝试
                 return
@@ -1781,7 +1822,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const onWatchDogCallback = useMemoizedFn((type: EngineWatchDogCallbackType) => {
         switch (type) {
             case "control-remote-connect-failed":
-                setCheckLog(["远程控制异常退出, 无法连接"])
+                if (getOldLink()) {
+                    setCheckLog(["远程控制异常退出, 无法连接"])
+                } else {
+                    setNewCheckLog(["远程控制异常退出, 无法连接"])
+                }
                 setYakitStatus("control-remote-timeout")
                 return
             case "remote-connect-failed":
@@ -2056,7 +2101,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             />
                         )}
                         {!engineLink && showLoadingPage && !oldLink && (
-                            <NewYakitLoading yakitStatus={yakitStatus} checkLog={newCheckLog} />
+                            <NewYakitLoading
+                                yakitStatus={yakitStatus}
+                                checkLog={newCheckLog}
+                                restartLoading={restartLoading}
+                                remoteControlRefreshLoading={remoteControlRefreshLoading}
+                                btnClickCallback={newLoadingClickCallback}
+                            />
                         )}
                         {engineLink && (
                             <YakitSpin spinning={switchEngineLoading}>

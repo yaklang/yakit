@@ -176,15 +176,15 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
 
     return (
         <div className={styles["control-myself"]}>
-            <Spin spinning={loading}>
-                <TextArea
+            <YakitSpin spinning={loading}>
+                <YakitInput.TextArea
                     spellCheck={false}
                     value={textArea}
                     className={styles["text-area"]}
                     autoSize={{minRows: 3, maxRows: 10}}
                     disabled
                 />
-            </Spin>
+            </YakitSpin>
             <div className={styles["btn-box"]}>
                 <YakitButton type='outline2' style={{marginRight: 8}} onClick={goBack}>
                     返回上一步
@@ -260,7 +260,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
     }
     return (
         <div className={styles["control-other"]}>
-            <Spin spinning={uploadLoading}>
+            <YakitSpin spinning={uploadLoading}>
                 <ContentUploadInput
                     type='textarea'
                     beforeUpload={(f) => {
@@ -300,7 +300,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
                         placeholder: "请将链接密钥粘贴/输入到文本框中"
                     }}
                 />
-            </Spin>
+            </YakitSpin>
             <div className={styles["btn-box"]}>
                 <YakitButton type='outline2' style={{marginRight: 8}} onClick={goBack}>
                     返回上一步
@@ -644,7 +644,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
 }
 
 /** 通知是否远程连接 */
-export const remoteOperation = (status: boolean, dynamicStatus: DynamicStatusProps, userInfo?: UserInfoProps) => {
+export const remoteOperation = (status: boolean, dynamicStatus: DynamicStatusProps) => {
     const {id, host, port, secret, note} = dynamicStatus
     return new Promise(async (resolve, reject) => {
         NetWorkApi<API.RemoteOperationRequest, API.ActionSucceeded>({
