@@ -4840,7 +4840,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
     // valueChanged判断用户输入值 点击其他区域触发筛选列表
     const [_, setValueChanged, getValueChanged] = useGetSetState<boolean>(false)
 
-    const onchangeValued = useMemoizedFn(() => {
+    const onChangeValued = useMemoizedFn(() => {
         setValueChanged(true)
     })
 
@@ -4872,7 +4872,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                         setValueChanged(false)
                         onReset?.()
                     }}
-                    onchangeValued={onchangeValued}
+                    onChangeValued={onChangeValued}
                 />
             ) : (
                 <>
@@ -4933,11 +4933,11 @@ interface RangeInputNumberProps {
     onReset?: () => void
     onSure?: () => void
     showFooter?: boolean
-    onchangeValued?: () => void
+    onChangeValued?: () => void
 }
 
 export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo((props) => {
-    const {minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter, onchangeValued} = props
+    const {minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter, onChangeValued} = props
     return (
         <div className={style["table-body-length-filter"]}>
             <Input.Group compact size='small' className={style["input-group"]}>
@@ -4948,7 +4948,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
                     value={minNumber}
                     onChange={(v) => {
                         if (setMinNumber) setMinNumber(v as number)
-                        onchangeValued?.()
+                        onChangeValued?.()
                     }}
                     size='small'
                 />
@@ -4960,7 +4960,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
                     value={maxNumber}
                     onChange={(v) => {
                         if (setMaxNumber) setMaxNumber(v as number)
-                        onchangeValued?.()
+                        onChangeValued?.()
                     }}
                     size='small'
                 />
