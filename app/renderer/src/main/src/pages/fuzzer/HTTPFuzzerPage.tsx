@@ -1178,7 +1178,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (retryRef.current) {
             retryRef.current = false
             const retryTaskID = failedFuzzer?.length > 0 ? failedFuzzer[0]?.TaskId : undefined
-            if (typeof retryTaskID === "number") {
+            if (retryTaskID && (retryTaskID + "").length > 0) {
                 const params = { ...httpParams, RetryTaskID: parseInt(retryTaskID + "", 10) }
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
