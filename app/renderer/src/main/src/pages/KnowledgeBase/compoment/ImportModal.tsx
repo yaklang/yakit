@@ -163,7 +163,9 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             onCancel={handleCancel}
             width={600}
             destroyOnClose
+            bodyStyle={{padding: 0}}
             maskClosable={!importLoading}
+            className={styles["knowledge-import-export-modal"]}
             footer={[
                 <div className={styles["knowledge-base-modal-footer"]} key='footer'>
                     <YakitButton type='outline1' onClick={handleCancel}>
@@ -175,7 +177,10 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                 </div>
             ]}
         >
-            <Form form={form} layout='vertical'>
+            <div className={styles["import-hint"]}>
+                只可导入从知识库里导出的rag文件，导入文件暂不支持修改。导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。
+            </div>
+            <Form form={form} layout='vertical' className={styles["import-form"]}>
                 <YakitFormDragger
                     formItemProps={{
                         label: "导入文件路径",

@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from "react"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {DefaultTabs} from "@/hook/useHoldGRPCStream/constant"
+import {yakitFailed, info} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -186,24 +187,26 @@ export default function useMultipleHoldGRPCStream() {
             } catch {}
         }
 
-        const errorHandler = (_: any, error: any) => {
-            params.onError?.({...error, requestToken: token})
+        const errorHandler = (error: string) => {
+            yakitFailed(`[Mod] ${store.params.taskName} error: ${error}`, true)
+            params?.onError && params.onError({error, requestToken: token})
         }
 
-        const endHandler = (_: any) => {
+        const endHandler = () => {
             handleResultsFor(token)
-            const info = {
+            const infoParams = {
                 ...store.info,
                 runtimeId: store.runTimeId.cache,
                 loading: !!store.timeRef,
                 requestToken: token
             }
-            ipcRenderer.emit(`${token}-end-client`, null, info)
-            params.onEnd?.(info)
+            ipcRenderer.emit(`${token}-end-client`, null, infoParams)
+            params.onEnd?.(infoParams)
+            info(`[Mod] ${store.params.taskName} finished`)
         }
 
         ipcRenderer.on(`${token}-data`, dataHandler)
-        ipcRenderer.on(`${token}-error`, errorHandler)
+        ipcRenderer.on(`${token}-error`, (_, error) => errorHandler(error))
         ipcRenderer.on(`${token}-end`, endHandler)
         ;(store as any)._handlers = {dataHandler, errorHandler, endHandler}
     }

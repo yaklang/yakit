@@ -35,13 +35,15 @@ interface KnowledgeBaseStoreProps {
 
 export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
     knowledgeBases: [],
-    previousKnowledgeBases: null,
+    previousKnowledgeBases: [],
 
     initialize: (items) =>
-        set((state) => ({
-            previousKnowledgeBases: state.knowledgeBases,
-            knowledgeBases: mergeKnowledgeBaseData(state.knowledgeBases, items)
-        })),
+        set((state) => {
+            return {
+                previousKnowledgeBases: state.knowledgeBases,
+                knowledgeBases: mergeKnowledgeBaseData(state.knowledgeBases, items)
+            }
+        }),
 
     addKnowledgeBase: (item) =>
         set((state) => {
@@ -49,7 +51,7 @@ export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
             const exists = prev.some((kb) => kb.KnowledgeBaseName === item.KnowledgeBaseName)
             const newList = exists
                 ? prev.map((kb) => (kb.KnowledgeBaseName === item.KnowledgeBaseName ? item : kb))
-                : [...prev, item]
+                : [item, ...prev]
 
             return {
                 previousKnowledgeBases: prev,

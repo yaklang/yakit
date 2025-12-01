@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle} from "react"
+import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 
@@ -22,6 +22,7 @@ import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {KnowledgeBaseQA} from "./KnowledgeBaseQA/KnowledgeBaseQA"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
+import {CreateKnowledgeBaseData} from "../TKnowledgeBase"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -32,6 +33,7 @@ interface KnowledgeBaseContentProps {
     clearAll: () => void
     binariesToInstall: BinaryInfo[] | undefined
     apiRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["api"] | undefined>
+    refreshAsync: () => Promise<CreateKnowledgeBaseData[] | undefined>
 }
 
 const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
@@ -43,7 +45,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         editKnowledgeBase,
         clearAll,
         binariesToInstall,
-        apiRef
+        apiRef,
+        refreshAsync
     } = props
     const [openQA, setOpenQA] = useSafeState({
         status: false,
@@ -58,7 +61,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             clearAll()
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
         } catch (e) {
-            console.error("取消流时出错：", e)
+            failed(`关闭知识库页面失败: ${e + ""}`)
         }
     }
 
@@ -82,6 +85,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         const addedHistory = targetPreviousKnowledgeBases
             ? extractAddedHistory(targetKnowledgeBases, targetPreviousKnowledgeBases)
             : null
+        if (!previousKnowledgeBases?.length && knowledgeBases.length !== 1) return
         // 新增 知识库
         if (typeof diff === "object" && diff.increase) {
             const kb = diff.increase
@@ -243,6 +247,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 api={api}
                 setOpenQA={setOpenQA}
                 binariesToInstall={binariesToInstall}
+                refreshAsync={refreshAsync}
             />
             <KnowledgeBaseContainer
                 knowledgeBases={knowledgeBases}
@@ -262,4 +267,4 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     )
 })
 
-export default KnowledgeBaseContent
+export default memo(KnowledgeBaseContent)

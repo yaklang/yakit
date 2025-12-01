@@ -1,19 +1,21 @@
 import {Dispatch, SetStateAction, useEffect, type FC} from "react"
-import {useMemoizedFn, useSafeState} from "ahooks"
+import {useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
 
 import {
     OutlineAiChatIcon,
     OutlineChevrondownIcon,
     OutlineChevronrightIcon,
+    OutlineExclamationcircleIcon,
     OutlineFolderopenIcon,
     OutlineLoadingIcon,
+    OutlineRefreshIcon,
     SolidPuzzleIcon
 } from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
-import {targetIcon} from "../utils"
+import {prioritizeProcessingItems, targetIcon} from "../utils"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
 import {SolidLightningBoltIcon, SolidOutlineSearchIcon} from "@/assets/icon/solid"
@@ -29,6 +31,10 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
+import {CreateKnowledgeBaseData} from "../TKnowledgeBase"
+
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {e} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 
 export interface TKnowledgeBaseSidebarProps {
     knowledgeBases: KnowledgeBaseItem[]
@@ -42,6 +48,7 @@ export interface TKnowledgeBaseSidebarProps {
         }>
     >
     binariesToInstall?: BinaryInfo[]
+    refreshAsync?: () => Promise<CreateKnowledgeBaseData[] | undefined>
 }
 
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
@@ -50,21 +57,26 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     setKnowledgeBaseID,
     api,
     setOpenQA,
-    binariesToInstall
+    binariesToInstall,
+    refreshAsync
 }) => {
     const [expand, setExpand] = useSafeState(true)
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
+    const [checked, setChecked] = useSafeState(false)
 
     const handleChangeExpand = useMemoizedFn((e) => {
         setExpand((old) => !old)
     })
 
     useEffect(() => {
-        setKnowledgeBase(knowledgeBases)
+        setKnowledgeBase(() => {
+            const externalImportKnowledgeBase = checked ? knowledgeBases : knowledgeBases.filter((it) => !it.IsImported)
+            return prioritizeProcessingItems(externalImportKnowledgeBase)
+        })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [knowledgeBases])
+    }, [knowledgeBases, checked])
 
     return (
         <div
@@ -84,6 +96,16 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         />
                         <div className={styles["header-title"]}>知识库管理</div>
                         <div className={styles["knowledge-size"]}>{knowledgeBase.length ?? 0}</div>
+                        <Tooltip title='刷新知识库列表'>
+                            <YakitButton
+                                type='text'
+                                icon={<OutlineRefreshIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    refreshAsync?.()
+                                }}
+                            />
+                        </Tooltip>
                     </div>
                     <div className={styles["header-operate"]}>
                         <YakitPopover
@@ -155,6 +177,15 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                     />
                 </div>
 
+                <div className={styles["repository-manage-checked"]}>
+                    <YakitCheckbox checked={checked} onChange={(e) => setChecked(e.target.checked)}>
+                        外部导入{" "}
+                        <Tooltip title='勾选以后可以查看外部导入的知识库'>
+                            <OutlineExclamationcircleIcon />
+                        </Tooltip>
+                    </YakitCheckbox>
+                </div>
+
                 <div className={styles["knowledge-base-info-body"]}>
                     {knowledgeBase.length > 0 ? (
                         knowledgeBase.map((items, index) => {
@@ -192,7 +223,9 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                     生成中
                                                 </div>
                                             ) : (
-                                                <div className={styles["type-tag"]}>{items.KnowledgeBaseType}</div>
+                                                <div className={styles["type-tag"]}>
+                                                    {items.IsImported ? "外部导入" : "手动创建"}
+                                                </div>
                                             )}
 
                                             <div

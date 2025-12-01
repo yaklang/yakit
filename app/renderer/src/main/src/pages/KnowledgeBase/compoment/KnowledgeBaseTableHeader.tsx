@@ -23,6 +23,7 @@ import {AddKnowledgeBaseModal} from "./AddKnowledgeBaseModal"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 import {PluginExecuteDetailDrawer} from "./PluginExecuteDetailDrawer"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     setTableProps: Dispatch<
@@ -122,13 +123,31 @@ const KnowledgeBaseTableHeader: FC<
         })
     }
 
+    const tags = ["漏洞情报", " 攻击技术", " 恶意软件"]
+
     return (
         <div className={styles["table-header"]}>
             <div className={styles["table-header-first"]}>
                 <div className={styles["header-left"]}>
                     {knowledgeBaseItems.icon ? <knowledgeBaseItems.icon className={styles["icon"]} /> : null}
                     <div className={styles["header-title"]}>{knowledgeBaseItems?.KnowledgeBaseName}</div>
-                    <div className={styles["tag"]}>{knowledgeBaseItems?.KnowledgeBaseType}</div>
+                    <div className={styles["tags"]}>
+                        {knowledgeBaseItems?.Tags?.map((it) => (
+                            <YakitTag className={styles["tag"]} key={it}>
+                                {it}
+                            </YakitTag>
+                        ))}
+                    </div>
+
+                    {knowledgeBaseItems?.streamstep === 1 && streams?.[knowledgeBaseItems?.streamToken] ? (
+                        <div
+                            className={styles["build-tag"]}
+                            onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken)}
+                        >
+                            <OutlineLoadingIcon className={styles["loading-icon"]} />
+                            知识库生成中
+                        </div>
+                    ) : null}
                 </div>
                 <div className={styles["header-right"]}>
                     {knowledgeBaseItems.historyGenerateKnowledgeList?.length > 0 ? (

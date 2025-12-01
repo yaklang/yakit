@@ -13,7 +13,7 @@ import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {CreateKnowledgeBase} from "./compoment/CreateKnowledgeBase"
 
-import {compareKnowledgeBaseChange, getFileInfoList, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChange, getFileInfoList, prioritizeProcessingItems, targetInstallList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -33,8 +33,15 @@ const KnowledgeBase: FC = () => {
     const contentRef = useRef<any>(null)
     const [visible, setVisible] = useSafeState(false)
 
-    const {initialize, editKnowledgeBase, knowledgeBases, addKnowledgeBase, clearAll, previousKnowledgeBases} =
-        useKnowledgeBase()
+    const {
+        initialize,
+        editKnowledgeBase,
+        knowledgeBases,
+        addKnowledgeBase,
+        deleteKnowledgeBase,
+        clearAll,
+        previousKnowledgeBases
+    } = useKnowledgeBase()
 
     const [installPlug, setInstallPlug] = useSafeState(false)
     const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
@@ -123,7 +130,7 @@ const KnowledgeBase: FC = () => {
         async (Keyword?: string) => {
             const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
                 Keyword,
-                Pagination: {Limit: 9999}
+                Pagination: {Limit: 9999, Page: 1}
             })
             const {KnowledgeBases} = result
 
@@ -136,9 +143,9 @@ const KnowledgeBase: FC = () => {
         {
             manual: true,
             onSuccess: (value) => {
-                if (value) {
-                    const KnowledgeBaseID = value?.[0]?.ID || ""
-                    !knowledgeBaseID && setKnowledgeBaseID(KnowledgeBaseID)
+                const FirstknowledgeBaseID = value?.find((item) => item.IsImported === false)?.ID
+                if (FirstknowledgeBaseID) {
+                    !knowledgeBaseID && setKnowledgeBaseID(FirstknowledgeBaseID)
                 }
             }
         }
@@ -146,8 +153,18 @@ const KnowledgeBase: FC = () => {
 
     useUpdateEffect(() => {
         const diffKnowledgeBase = compareKnowledgeBaseChange(knowledgeBases, existsKnowledgeBase)
-        if (typeof diffKnowledgeBase === "object" && diffKnowledgeBase.increase) {
+        if (
+            typeof diffKnowledgeBase === "object" &&
+            diffKnowledgeBase.increase &&
+            previousKnowledgeBases?.length &&
+            previousKnowledgeBases.length > 0
+        ) {
             addKnowledgeBase(diffKnowledgeBase.increase)
+        } else if (typeof diffKnowledgeBase === "object" && diffKnowledgeBase.delete) {
+            deleteKnowledgeBase(diffKnowledgeBase.delete.ID)
+        } else {
+            return
+            // no change
         }
     }, [existsKnowledgeBase])
 
@@ -168,7 +185,8 @@ const KnowledgeBase: FC = () => {
     }, [installPlug])
 
     useEffect(() => {
-        setKnowledgeBaseID(knowledgeBases?.[0]?.ID || "")
+        const FirstknowledgeBaseID = knowledgeBases?.find((item) => item.IsImported === false)?.ID
+        setKnowledgeBaseID(FirstknowledgeBaseID || "")
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -237,7 +255,7 @@ const KnowledgeBase: FC = () => {
                     <div className={styles["create-knowledgBase"]}>
                         <div className={styles["create-content"]}>
                             <div className={styles["create-title"]}>创建知识库</div>
-                            <CreateKnowledgeBase form={form} />
+                            <CreateKnowledgeBase form={form} type={"new"} />
                             <div className={styles["create-button"]} onClick={handCreateKnowledgBase}>
                                 <YakitButton icon={<SolidPlayIcon />} loading={createKnowledgLoading}>
                                     开始创建
@@ -260,6 +278,7 @@ const KnowledgeBase: FC = () => {
                         clearAll={clearAll}
                         binariesToInstall={binariesToInstall}
                         apiRef={apiRef}
+                        refreshAsync={refreshAsync}
                     />
                 )
         }

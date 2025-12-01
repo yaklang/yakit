@@ -65,7 +65,7 @@ export const normalizeEntry = (e: any): KnowledgeBaseEntry => ({
 })
 
 export const createStreamResponseHandler = (setMessages: React.Dispatch<React.SetStateAction<QAMessage[]>>) => {
-    return (_: any, response: QueryKnowledgeBaseByAIResponse) => {
+    return (response: QueryKnowledgeBaseByAIResponse) => {
         const {Message, MessageType, Data} = response
 
         setMessages((prev) => {
@@ -78,17 +78,20 @@ export const createStreamResponseHandler = (setMessages: React.Dispatch<React.Se
 
             const appendProcess = (text: string) => {
                 last.processLog = (last.processLog ?? "") + text + "\n"
-                last.content = last.processLog
+                // last.content = last.processLog
             }
 
             switch (MessageType) {
                 case "message": {
+                    last.showDetails = true
                     appendProcess(Message)
                     break
                 }
 
                 case "mid_result":
                 case "result": {
+                    last.showRelated = true
+
                     try {
                         if (!Data || Data === "null" || Data === "undefined") break
 
@@ -106,6 +109,7 @@ export const createStreamResponseHandler = (setMessages: React.Dispatch<React.Se
                 case "ai_summary": {
                     last.finalAnswer = Message
                     last.content = Message
+
                     last.isStreaming = false
                     break
                 }
