@@ -1,8 +1,9 @@
 import React, {useMemo} from "react"
-import {YakitStatusType} from "@/yakitGVDefine"
+import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
@@ -42,11 +43,56 @@ export interface NewYakitLoadingProp {
     /** yakit模式 */
     yakitStatus: YakitStatusType
     checkLog: string[]
+    restartLoading: boolean
+    remoteControlRefreshLoading: boolean
+    btnClickCallback: (type: YaklangEngineMode | YakitStatusType) => any
 }
 
 export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
-    const {yakitStatus, checkLog} = props
+    const {yakitStatus, checkLog, restartLoading, remoteControlRefreshLoading, btnClickCallback} = props
     const {theme} = useTheme()
+
+    const btns = useMemo(() => {
+        if (yakitStatus === "control-remote") {
+            return (
+                <>
+                    <YakitButton
+                        loading={remoteControlRefreshLoading}
+                        className={styles["btn-style"]}
+                        size='max'
+                        onClick={() => btnClickCallback("control-remote")}
+                    >
+                        刷新
+                    </YakitButton>
+                    <YakitButton
+                        loading={remoteControlRefreshLoading}
+                        className={styles["btn-style"]}
+                        type='outline2'
+                        size='max'
+                        onClick={() => btnClickCallback("local")}
+                    >
+                        返回本地连接
+                    </YakitButton>
+                </>
+            )
+        }
+
+        if (yakitStatus === "control-remote-timeout") {
+            return (
+                <YakitButton
+                    loading={restartLoading}
+                    className={styles["btn-style"]}
+                    type='outline2'
+                    size='max'
+                    onClick={() => btnClickCallback("local")}
+                >
+                    返回本地连接
+                </YakitButton>
+            )
+        }
+        
+        return null
+    }, [yakitStatus, remoteControlRefreshLoading, restartLoading])
 
     /** 加载页随机宣传语 */
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
@@ -139,6 +185,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                             </div>
                         </div>
                         <div className={styles["engine-log-btn"]}>
+                            {btns}
                             <div
                                 className={styles["engine-help-wrapper"]}
                                 onClick={() => {
