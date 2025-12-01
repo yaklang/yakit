@@ -68,7 +68,8 @@ function createEngineLinkWindow() {
         titleBarStyle: "hidden",
         show: true,
         skipTaskbar: false,
-        fullscreenable: false
+        fullscreenable: false,
+        maximizable: false
     })
 
     if (!hasPos) engineLinkWin.center()
