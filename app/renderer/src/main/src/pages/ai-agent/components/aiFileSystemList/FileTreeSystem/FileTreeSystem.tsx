@@ -21,7 +21,7 @@ const FileTreeSystem = () => {
                 path={grpcFolders}
                 selected={selected}
                 setSelected={setSelected}
-                title='ai生成文件夹'
+                title='AI Artifacts'
                 isOpen={false}
             />
         )
@@ -30,7 +30,7 @@ const FileTreeSystem = () => {
             <FileTreeSystemListWapper
                 isOpen
                 key='customFolder'
-                title='本地文件夹'
+                title='已打开文件系统'
                 selected={selected}
                 path={Array.from(customFolder)}
                 setOpenFolder={customFolderStore.addCustomFolder}
