@@ -2638,7 +2638,15 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                     </div>
                                 }
                             >
-                                <Descriptions bordered size='small' labelStyle={{width: 120}}>
+                                <Descriptions
+                                    bordered
+                                    size='small'
+                                    labelStyle={{
+                                        width: 120,
+                                      
+                                    }}
+                                    className="yakit-descriptions"
+                                >
                                     <Descriptions.Item label='类型' span={3}>
                                         <YakitInput
                                             defaultValue={alert.RiskType}
