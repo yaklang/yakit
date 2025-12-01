@@ -152,8 +152,16 @@ const OperationLog: FC<OperationLogProps> = ({loading, list}) => {
                                         </div>
                                     )
                                 } catch (error) {
-                                    // console.log("JSON解析错误:", error)
-                                    return null
+                                    return (
+                                        <div
+                                            className={classNames(
+                                                styles["timeline-card"],
+                                                styles[`timeline-card-danger`]
+                                            )}
+                                        >
+                                            {String(error)}
+                                        </div>
+                                    )
                                 }
                             })}
                         </div>
