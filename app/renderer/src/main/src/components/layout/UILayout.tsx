@@ -28,7 +28,8 @@ import {
     isCommunityEdition,
     isEnpriTrace,
     isEnpriTraceAgent,
-    isEnterpriseEdition
+    isEnterpriseEdition,
+    isMemfit
 } from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
@@ -1637,7 +1638,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setTemporaryProjectNoPromptFlag(flag === "true")
             }
             // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
-            if (SystemInfo.isDev) {
+            if (SystemInfo.isDev || isMemfit()) {
                 const res = await ipcRenderer.invoke("GetDefaultProjectEx", {
                     Type: getEnvTypeByProjects()
                 })
