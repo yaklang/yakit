@@ -9,6 +9,7 @@ import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
+import {PreWrapper} from "../ToolInvokerCard"
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -69,8 +70,10 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     </div>
                 )}
             </div>
-            {/* TODO - isToolStdoutStream(nodeId)=true，显示代码样式 */}
-            <div className={styles["card-content"]}>{content}</div>
+            <div className={styles["card-content"]}>
+                {/* 工具紫色卡片所有nodeId都显示代码格式 */}
+                <PreWrapper code={content} />
+            </div>
         </div>
     )
 })
