@@ -1,4 +1,4 @@
-import React, {ReactNode} from "react"
+import React from "react"
 import {AIChatListItemProps} from "./type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
@@ -70,13 +70,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.RESULT:
                 return <AITriageChatContent isAnswer={true} content={data} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.THOUGHT:
-                return (
-                    <AITriageChatContent
-                        isAnswer={true}
-                        content={`思考：${data}`}
-                        {...chatContentExtraProps}
-                    />
-                )
+                return <AITriageChatContent isAnswer={true} content={`思考：${data}`} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.TOOL_RESULT:
                 const {execFileRecord} = yakExecResult
                 const fileList = execFileRecord.get(data.callToolId)

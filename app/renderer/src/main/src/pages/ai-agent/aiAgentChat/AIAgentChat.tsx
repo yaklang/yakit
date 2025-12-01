@@ -7,7 +7,6 @@ import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useAIAgentStore from "../useContext/useStore"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
 import cloneDeep from "lodash/cloneDeep"
@@ -105,7 +104,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [timelineMessage, setTimelineMessage] = useState<string>()
 
     const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
-        console.log("reviewInfo", info)
         setReviewExpand(true)
         setReviewInfo(cloneDeep(info))
     })
@@ -348,7 +346,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     /** 从别的元素上触发使用 forge 模板的功能 */
     const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
-        console.log("onReActChatEvent-forge", forge)
         if (!forge || !forge.Id) {
             yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
             return
@@ -561,9 +558,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSendConfigHotpatch
         }
     }, [events])
-    useEffect(() => {
-        console.log("chatIPCData", chatIPCData)
-    }, [chatIPCData])
 
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>

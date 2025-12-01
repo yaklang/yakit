@@ -7,7 +7,7 @@ import {getAIModelList} from "../utils"
 import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
 import {GetAIModelListResponse} from "../../type/aiModel"
-import {AIAgentSettingDefault, AIOnlineModelIconMap} from "../../defaultConstant"
+import {AIOnlineModelIconMap} from "../../defaultConstant"
 import {OutlineAtomIconByStatus, setAIModal} from "../AIModelList"
 import useAIAgentStore from "../../useContext/useStore"
 import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
@@ -159,7 +159,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     )
 })
 
-export const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
+const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     const {value} = props
     const icon = useCreation(() => {
         return (

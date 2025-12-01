@@ -8,7 +8,6 @@ import styles from "./AIChatToolColorCard.module.scss"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
-import {ChatStreamContent} from "../../chatTemplate/AIAgentChatTemplate"
 import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
 
 /** @name AI工具按钮对应图标 */
@@ -49,7 +48,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
             <div className={styles["card-header"]}>
                 <div className={styles["card-title"]}>
                     <OutlineSparklesColorsIcon />
-                    <div className="content-ellipsis">{title}</div>
+                    <div className='content-ellipsis'>{title}</div>
                 </div>
                 {isToolStdoutStream(NodeId) && selectors?.selectors && (
                     <div className={styles["card-extra"]}>
@@ -70,9 +69,8 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     </div>
                 )}
             </div>
-            <div className={styles["card-content"]}>
-                <ChatStreamContent stream={content} />
-            </div>
+            {/* TODO - isToolStdoutStream(nodeId)=true，显示代码样式 */}
+            <div className={styles["card-content"]}>{content}</div>
         </div>
     )
 })

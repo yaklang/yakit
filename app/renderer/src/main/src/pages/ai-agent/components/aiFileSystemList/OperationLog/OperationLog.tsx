@@ -2,7 +2,7 @@ import {FC, useMemo, useState} from "react"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import styles from "./OperationLog.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {OutlineChevrondownIcon, OutlineChevronupIcon, OutlineClockIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineClockIcon} from "@/assets/icon/outline"
 import {getFileActionStatus, isPluginExecuteLogFileItem} from "@/pages/invoker/utils"
 import classNames from "classnames"
 import {formatTime} from "@/utils/timeUtil"
@@ -152,7 +152,7 @@ const OperationLog: FC<OperationLogProps> = ({loading, list}) => {
                                         </div>
                                     )
                                 } catch (error) {
-                                    console.log("JSON解析错误:", error)
+                                    // console.log("JSON解析错误:", error)
                                     return null
                                 }
                             })}

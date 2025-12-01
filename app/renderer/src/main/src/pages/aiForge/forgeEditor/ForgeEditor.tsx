@@ -117,7 +117,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                 yakitNotify("error", `尝试编辑的模板异常(ID: ${id}), 请关闭页面重试`)
                 return
             }
-            console.log("handleModifyInit-fetchCacheID", id)
 
             grpcGetAIForge({ID: id})
                 .then((res) => {
@@ -126,7 +125,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         setDelayCancelFetchDataLoading()
                         return
                     }
-                    console.log("grpcGetAIForge-res", res)
                     forgeData.current = cloneDeep(res)
                     try {
                         if (infoFormRef.current) {
@@ -212,12 +210,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     requestData.Params = undefined
 
                     const apiFunc = requestData.Id ? grpcUpdateAIForge : grpcCreateAIForge
-                    console.log(
-                        "apiFunc",
-                        requestData,
-                        "\n",
-                        requestData.Id ? "grpcUpdateAIForge" : "grpcCreateAIForge"
-                    )
                     apiFunc(requestData)
                         .then(async (res) => {
                             let resInfo: AIForge = cloneDeep(requestData)
@@ -231,7 +223,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                 }
                             }
                             forgeData.current = cloneDeep(resInfo)
-                            console.log("latest-forge-data", forgeData.current)
                             emiter.emit("onTriggerRefreshForgeList", `${resInfo.Id}`)
                             yakitNotify("success", "保存成功")
                             resolve()
@@ -241,7 +232,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         })
                 } else {
                     yakitNotify("error", "未获取到模板信息表单，请关闭页面重试")
-                    console.error("handleSave", `获取不到 form 实例, 请检查代码逻辑`)
                     reject()
                     return
                 }
@@ -564,15 +554,11 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
             const data = cloneDeep(values)
             if (form) {
                 form.setFieldsValue(data)
-            } else {
-                console.error("handleSetFormValues", `获取不到 form 实例, 请检查代码逻辑`)
             }
         })
         const handleResetFormValues = useMemoizedFn(() => {
             if (form) {
                 form.resetFields()
-            } else {
-                console.error("handleResetFormValues", `获取不到 form 实例, 请检查代码逻辑`)
             }
         })
         const handleGetFormValues = useMemoizedFn(() => {

@@ -4,7 +4,6 @@ import {useEffect, useMemo, useState, type FC} from "react"
 import styles from "./FilePreview.module.scss"
 import {OutlineFolderopenIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {getCodeByPath, getCodeSizeByPath, MAX_FILE_SIZE_BYTES, monacaLanguageType} from "@/pages/yakRunner/utils"
@@ -13,8 +12,8 @@ import {Result} from "antd"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {setClipboardText} from "@/utils/clipboard"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import {yakitNotify} from "@/utils/notification"
 
 interface FileInfo {
     path: string
@@ -52,7 +51,7 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
             const content = await getCodeByPath(path)
             setFileInfo({path, size, isPlainText, content, language: monacaLanguageType(path)})
         } catch (err) {
-            console.error("Failed to load file:", err)
+            yakitNotify("error", `Failed to load file:${err}`)
         } finally {
             setLoading(false)
         }
