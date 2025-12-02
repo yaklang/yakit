@@ -127,4 +127,5 @@ export interface OperationRecord {
 export interface OperationRecordRes {
     fontSize?: number
     showBreak?: boolean
+    noWordWrap?: boolean
 }
