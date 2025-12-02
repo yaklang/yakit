@@ -527,15 +527,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         isRunRef.current = true
         let settledArr: (() => Promise<string>)[] = []
         if (isIRify()) {
-            settledArr = [onRuleUpdate, getCurrentYak]
+            settledArr = [onRuleUpdate]
         } else {
             settledArr = [
                 updateSystemProxy,
                 updateGlobalReverse,
                 updatePcap,
                 updateChromePath,
-                updateMITMCert,
-                getCurrentYak
+                updateMITMCert
             ]
         }
         if (serverPushStatus) {
@@ -558,6 +557,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     useEffect(() => {
         let timer: any = null
         if (isEngineLink) {
+            // 仅在引擎连接时校验引擎是否为官方发布版本
+            // 频繁读写将会大幅占用性能
+            getCurrentYak()
+
             getRemoteValue(RemoteGV.GlobalStateTimeInterval).then((time: any) => {
                 setTimeInterval(+time || 5)
                 if ((+time || 5) > 5) updateAllInfo()
