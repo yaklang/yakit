@@ -80,7 +80,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
         }
         ipcRenderer.on(`${token}-data`, (_, data: MigrateSSAProjectResponse) => {
             const p = Math.floor(data.Percent * 100)
-            logInfoRef.current = [...logInfoRef.current, data.Message]
+            logInfoRef.current = [...logInfoRef.current, data.Message].slice(0, 8)
             setPercent(p)
         })
         ipcRenderer.on(`${token}-end`, () => {

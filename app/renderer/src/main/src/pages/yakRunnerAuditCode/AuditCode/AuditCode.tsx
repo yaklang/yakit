@@ -129,6 +129,7 @@ import {getNameByPath} from "@/pages/yakRunner/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {RJSFSchema} from "@rjsf/utils"
 import {TrashIcon} from "@/assets/newIcon"
+import {IRifyUpdateProjectManagerModal} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -2354,6 +2355,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         titile: string
         params: DeleteSSAProjectRequest
     }>()
+    const [isAllowIRifyUpdate, setIsAllowIRifyUpdate] = useState<boolean>(false)
     // 接口是否正在请求
     const isGrpcRef = useRef<boolean>(false)
     const afterId = useRef<number>()
@@ -2749,6 +2751,12 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                         {selectedRowKeys.length > 0 ? "删除" : "清空"}
                     </YakitButton>
 
+                    {pageType === "projectManager" && (
+                        <YakitButton type='outline1' onClick={() => setIsAllowIRifyUpdate(true)}>
+                            迁移旧项目数据
+                        </YakitButton>
+                    )}
+
                     <YakitButton
                         icon={<SolidPluscircleIcon />}
                         onClick={() => {
@@ -2788,6 +2796,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     onClickRow={onClickRow}
                 />
             </div>
+
+            <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
 
             <AfreshAuditModal
                 nameOrConfig={JSONStringConfig}
