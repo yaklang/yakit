@@ -1,4 +1,6 @@
-export interface AIReActTaskChatProps {}
+export interface AIReActTaskChatProps {
+    setShowFreeChat: (show: boolean) => void
+}
 
 export interface AIReActTaskChatContentProps {}
 

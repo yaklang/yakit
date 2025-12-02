@@ -3,7 +3,7 @@
     overflow: hidden auto;
     display: flex;
     justify-content: center;
-    padding-left: 12px;
+    padding-left: 4px;
     flex: 1;
     .re-act-contents-list {
         max-width: 784px;
@@ -16,7 +16,7 @@
     .item-wrapper {
         width: 100%;
         box-sizing: border-box;
-        padding-right: 12px;    
+        padding-right: 12px;
         .item-inner {
             padding: 2px 0;
         }

@@ -27,6 +27,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
+import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs, yakExecResult, aiPerfData} = useAIChatUIData()
@@ -37,6 +38,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const [allTotal, setAllTotal] = useState<number>(0)
     const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
     const [interval, setInterval] = useState<number | undefined>(undefined)
+
+    const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
 
     useEffect(() => {
         emiter.on("switchAIActTab", setActiveKey)
@@ -98,7 +101,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
         switch (key) {
             case AITabsEnum.Task_Content:
-                return <AIReActTaskChat />
+                return <AIReActTaskChat setShowFreeChat={setShowFreeChat} />
             case AITabsEnum.File_System:
                 return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
             case AITabsEnum.Risk:
@@ -179,12 +182,50 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const {onOpenLogWindow} = useAiChatLog()
 
     const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
-        setActiveKey((per) => (per === key ? undefined : key))
+        if (activeKey === key) {
+            setShowFreeChat(true)
+            setActiveKey(undefined)
+        } else {
+            setActiveKey(key)
+        }
     })
     const onOpenLog = useMemoizedFn((e) => {
         e.stopPropagation()
         onOpenLogWindow()
     })
+
+    const resizeBoxProps: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = useCreation(() => {
+        if (!activeKey) {
+            return {
+                firstNodeStyle: {display: "none"},
+                secondRatio: "100%",
+                lineStyle: {display: "none"},
+                secondNodeStyle: {width: "100%", padding: 0}
+            }
+        }
+        return {
+            freeze: showFreeChat,
+            firstMinSize: 400,
+            secondMinSize: showFreeChat ? 400 : 30,
+            secondRatio: showFreeChat ? "432px" : undefined,
+            secondNodeStyle: {
+                padding: 0,
+                ...(!showFreeChat && {
+                    minWidth: 30,
+                    maxWidth: 30
+                })
+            },
+            firstNodeStyle: {
+                padding: 0,
+                ...(!showFreeChat && {
+                    width: "100%"
+                })
+            },
+            lineDirection: "left",
+            lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
+        }
+    }, [activeKey, showFreeChat])
+
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
@@ -261,8 +302,27 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             </ExpandAndRetract>
             <div className={styles["ai-chat-tab-wrapper"]}>
                 <div className={styles["ai-chat-content"]}>
-                    {activeKey && <div className={styles["tab-content"]}>{renderTabContent(activeKey)}</div>}
-                    <AIReActChat mode={!!activeKey ? "task" : "welcome"} />
+                    <YakitResizeBox
+                        firstNode={
+                            activeKey && (
+                                <div
+                                    className={classNames(styles["tab-content"], {
+                                        [styles["tab-content-right"]]: !showFreeChat
+                                    })}
+                                >
+                                    {renderTabContent(activeKey)}
+                                </div>
+                            )
+                        }
+                        secondNode={
+                            <AIReActChat
+                                mode={!!activeKey ? "task" : "welcome"}
+                                showFreeChat={showFreeChat}
+                                setShowFreeChat={setShowFreeChat}
+                            />
+                        }
+                        {...resizeBoxProps}
+                    />
                 </div>
                 <YakitSideTab
                     type='vertical-right'

@@ -37,7 +37,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
+    const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
+        defaultValue: true,
+        valuePropName: "showFreeChat",
+        trigger: "setShowFreeChat"
+    })
 
     const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
     const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
@@ -83,13 +87,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     })
 
     // #endregion
-
-    useEffect(() => {
-        emiter.on("switchReActShow", handleSwitchShowFreeChat)
-        return () => {
-            emiter.off("switchReActShow", handleSwitchShowFreeChat)
-        }
-    }, [])
 
     const isShowRetract = useCreation(() => {
         return mode === "task" && showFreeChat

@@ -6,5 +6,4 @@ export type AIReActEventProps = {
     onReActChatEvent: string
     switchAIActTab?: AITabsEnumType
     switchAIAgentTab: AIAgentTabListEnum
-    switchReActShow?: boolean
 }
