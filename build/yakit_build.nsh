@@ -129,8 +129,8 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "Memfit_InstallPath"
                         StrCpy $EXE_NAME "Memfit"
                     ${Else}
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CSGP_InstallPath"
-                        StrCpy $EXE_NAME "CSGP"
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CSG_InstallPath"
+                        StrCpy $EXE_NAME "CSG"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -168,8 +168,8 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "Memfit_InstallPath"
                         StrCpy $EXE_NAME "Memfit"
                     ${Else}   
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CSGP_InstallPath"
-                        StrCpy $EXE_NAME "CSGP"
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CSG_InstallPath"
+                        StrCpy $EXE_NAME "CSG"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}

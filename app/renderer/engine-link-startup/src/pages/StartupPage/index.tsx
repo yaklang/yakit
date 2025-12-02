@@ -694,7 +694,7 @@ export const StartupPage: React.FC = () => {
             if (isEnpriTraceIRify()) {
                 return {src: iRifyLogo, width: 92, height: 41}
             } else {
-                return {src: yakitEELogo, width: 137, height: 40}
+                return {src: yakitEELogo, width: 105, height: 65}
             }
         }
 
@@ -796,9 +796,9 @@ export const StartupPage: React.FC = () => {
                     </>
                 )}
             </div>
-            <div className={styles["startup-wrapper-right"]}>
+            {/* <div className={styles["startup-wrapper-right"]}>
                 <img src={startupRightImg.src} alt='暂无图片' />
-            </div>
+            </div> */}
         </div>
     )
 }

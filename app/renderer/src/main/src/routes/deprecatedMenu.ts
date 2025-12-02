@@ -27,5 +27,4 @@ export const EnterpriseDeprecatedSecondMenu: string[] = [
     "插件商店",
     "我的插件",
     "本地插件",
-    "MITM 交互式劫持 v2"
 ]
