@@ -70,6 +70,7 @@ function createEngineLinkWindow() {
         skipTaskbar: false,
         opacity: 1
     })
+    state.manage(engineLinkWin)
 
     if (!hasPos) engineLinkWin.center()
     if (isDev) engineLinkWin.loadURL("http://127.0.0.1:5173")
@@ -91,10 +92,6 @@ function createEngineLinkWindow() {
     })
 
     engineLinkWin.webContents.on("will-navigate", (e) => e.preventDefault())
-
-    engineLinkWin.on("show", () => {
-        state.manage(engineLinkWin)
-    })
 
     engineLinkWin.on("close", (e) => {
         e.preventDefault()
@@ -138,6 +135,7 @@ function createWindow() {
         skipTaskbar: true,
         opacity: 0
     })
+    state.manage(win)
 
     if (isDev) win.loadURL("http://127.0.0.1:3000")
     else win.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
@@ -156,10 +154,6 @@ function createWindow() {
         renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
         if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
         require("./handlers/logger").saveLogs()
-    })
-
-    win.on("show", () => {
-        state.manage(win)
     })
 
     win.on("close", (e) => {
