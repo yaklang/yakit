@@ -14,7 +14,7 @@ const {
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
 const {windowStatePatch} = require("./filePath")
 const Screenshots = require("./screenshots")
-const windowStateKeeper = require("electron-window-state")
+const windowStateKeeper = require("./windowStateKeeper")
 const {MenuTemplate} = require("./menu")
 const {renderLogOutputFile, getAllLogHandles, closeAllLogHandles, initAllLogFolders} = require("./logFile")
 
