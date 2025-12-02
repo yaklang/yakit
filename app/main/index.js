@@ -67,8 +67,7 @@ function createEngineLinkWindow() {
         },
         titleBarStyle: "hidden",
         show: true,
-        skipTaskbar: false,
-        opacity: 1
+        skipTaskbar: false
     })
 
     if (!hasPos) engineLinkWin.center()
@@ -135,8 +134,7 @@ function createWindow() {
         },
         titleBarStyle: "hidden",
         show: false,
-        skipTaskbar: true,
-        opacity: 0
+        skipTaskbar: true
     })
 
     if (isDev) win.loadURL("http://127.0.0.1:3000")
@@ -203,42 +201,35 @@ function safeSend(targetWin, channel, data) {
         sendFn()
     }
 }
-
-// 主窗口隐藏
-function mainWinHide() {
-    if (win && !win.isDestroyed()) {
-        win.setOpacity(0)
-        win.hide()
-        win.setSkipTaskbar(true)
+// 窗口隐藏
+function winHide(targetWin) {
+    if (targetWin && !targetWin.isDestroyed()) {
+        targetWin.hide()
+        targetWin.setSkipTaskbar(true)
     }
 }
-
-// 主窗口显示
-function mainWinShow() {
-    if (win && !win.isDestroyed()) {
-        win.setOpacity(1)
-        win.show()
-        win.focus()
-        win.setSkipTaskbar(false)
-    }
-}
-
-// 引擎连接窗口隐藏
-function engineLinkWinHide() {
-    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
-        engineLinkWin.hide()
-        engineLinkWin.setOpacity(0)
-        engineLinkWin.setSkipTaskbar(true)
-    }
-}
-
-// 引擎连接窗口显示
-function engineLinkWinShow() {
-    if (engineLinkWin && !engineLinkWin.isDestroyed()) {
-        engineLinkWin.setOpacity(1)
-        engineLinkWin.show()
-        engineLinkWin.focus()
-        engineLinkWin.setSkipTaskbar(false)
+// 窗口显示
+function winShow(targetWin) {
+    if (targetWin && !targetWin.isDestroyed()) {
+        const showNow = () => {
+            try {
+                targetWin.show()
+                targetWin.focus()
+                targetWin.setSkipTaskbar(false)
+                if (process.platform === "darwin") {
+                    targetWin.setAlwaysOnTop(true)
+                    setTimeout(() => targetWin.setAlwaysOnTop(false), 120)
+                }
+            } catch (e) {
+                console.warn("winShow failed:", e)
+            }
+        }
+        if (targetWin.webContents.isLoading()) {
+            targetWin.webContents.once("did-finish-load", showNow)
+            targetWin.once("ready-to-show", showNow)
+        } else {
+            showNow()
+        }
     }
 }
 
@@ -253,20 +244,20 @@ function registerGlobalIPC() {
     /** 刷新缓存 */
     ipcMain.handle("trigger-reload", () => {
         win.webContents.reload()
-        mainWinHide()
+        winHide(win)
         engineLinkWin.webContents.reload()
         setTimeout(() => {
-            engineLinkWinShow()
+            winShow(engineLinkWin)
         }, 500)
         return
     })
     /** 强制清空刷新缓存 */
     ipcMain.handle("trigger-reload-cache", () => {
         win.webContents.reloadIgnoringCache()
-        mainWinHide()
+        winHide(win)
         engineLinkWin.webContents.reloadIgnoringCache()
         setTimeout(() => {
-            engineLinkWinShow()
+            winShow(engineLinkWin)
         }, 500)
         return
     })
@@ -282,15 +273,15 @@ function registerGlobalIPC() {
     // ------------------- 窗口发送数据操作 -------------------
     // engineLink 完成操作
     ipcMain.handle("engineLinkWin-done", async (event, data) => {
-        engineLinkWinHide()
-        mainWinShow()
+        winHide(engineLinkWin)
+        winShow(win)
         safeSend(win, "from-engineLinkWin", data)
     })
 
     // win 完成操作
     ipcMain.handle("yakitMainWin-done", async (event, data) => {
-        mainWinHide()
-        engineLinkWinShow()
+        winHide(win)
+        winShow(engineLinkWin)
         safeSend(engineLinkWin, "from-win", data)
     })
 
@@ -451,7 +442,6 @@ app.whenReady().then(() => {
 
     createEngineLinkWindow()
     createWindow()
-    mainWinHide()
 
     app.on("activate", function () {
         if (BrowserWindow.getAllWindows().length === 0) {
