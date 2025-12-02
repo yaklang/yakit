@@ -157,6 +157,9 @@
             overflow: hidden;
             border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
+            .re-act-chat-container-header {
+                padding: 12px 8px;
+            }
         }
         .tab-content {
             flex: 1;

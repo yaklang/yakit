@@ -14,8 +14,8 @@ export interface PluginExecuteResultProps {
 export interface VulnerabilitiesRisksTableProps {
     runtimeId?: string
     runTimeIDs?: string[]
-    allTotal: number
-    setAllTotal: (n: number) => void
+    allTotal?: number
+    setAllTotal?: (n: number) => void
 }
 
 export interface AuditHoleTableOnTabProps {
