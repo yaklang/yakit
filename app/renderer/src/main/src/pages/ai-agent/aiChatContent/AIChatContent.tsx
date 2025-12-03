@@ -75,14 +75,14 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     }, [initRunTimeIDs, runTimeIDs])
 
     useEffect(() => {
-        if (runTimeIDs.length > 0) {
+        if (initRunTimeIDs.length > 0) {
             if (!tempRiskTotal) setIntervalRisk(1000)
             if (!tempHTTPTotal) setIntervalHTTP(1000)
         } else {
             setTempRiskTotal(0)
             setTempHTTPTotal(0)
         }
-    }, [runTimeIDs])
+    }, [initRunTimeIDs])
     useInterval(() => {
         getRiskTotal()
     }, intervalRisk)
@@ -90,8 +90,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         getHTTPTotal()
     }, intervalHTTP)
     const getRiskTotal = useMemoizedFn(() => {
-        if (!runTimeIDs.length) return
-        apiQueryRisksTotalByRuntimeIds(runTimeIDs).then((allRes) => {
+        if (!initRunTimeIDs.length) return
+        apiQueryRisksTotalByRuntimeIds(initRunTimeIDs).then((allRes) => {
             if (+allRes.Total > 0) {
                 setTempRiskTotal(+allRes.Total)
                 if (intervalRisk) setIntervalRisk(undefined)
@@ -102,8 +102,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         })
     })
     const getHTTPTotal = useMemoizedFn(() => {
-        if (!runTimeIDs.length) return
-        grpcQueryHTTPFlows({RuntimeIDs: runTimeIDs}).then((allRes) => {
+        if (!initRunTimeIDs.length) return
+        grpcQueryHTTPFlows({RuntimeIDs: initRunTimeIDs}).then((allRes) => {
             if (+allRes.Total > 0) {
                 setTempHTTPTotal(+allRes.Total)
                 if (intervalHTTP) setIntervalHTTP(undefined)
