@@ -222,7 +222,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         }
         return {
             freeze: showFreeChat,
-            firstMinSize: 400,
+            firstMinSize: 500,
             secondMinSize: showFreeChat ? 400 : 30,
             secondRatio: showFreeChat ? "432px" : undefined,
             secondNodeStyle: {
