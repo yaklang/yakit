@@ -164,6 +164,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                                     <YakitProtoCheckbox
                                         checked={isAll}
                                         indeterminate={!isAll && (rowSelection?.selectedRowKeys?.length || 0) > 0}
+                                        onClick={(e) => e.stopPropagation()}
                                         onChange={(e) => {
                                             onChangeCheckbox(e.target.checked)
                                         }}
@@ -213,6 +214,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                                             >
                                                 {index === 0 && rowSelection && (
                                                     <YakitProtoCheckbox
+                                                        onClick={(e) => e.stopPropagation()}
                                                         onChange={(e) => {
                                                             onChangeCheckboxSingle(
                                                                 e.target.checked,
@@ -368,6 +370,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
                                             onClick={() => onSelect(item)}
                                         >
                                             <YakitProtoCheckbox
+                                                onClick={(e) => e.stopPropagation()}
                                                 checked={checked}
                                                 onChange={() => onCheck(checked, item)}
                                             />
