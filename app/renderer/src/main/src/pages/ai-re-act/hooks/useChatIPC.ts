@@ -12,6 +12,7 @@ import {
     AIChatIPCStartParams,
     AIChatSendParams,
     AIQuestionQueues,
+    CasualLoadingStatus,
     UseCasualChatEvents,
     UseChatIPCEvents,
     UseChatIPCParams,
@@ -46,14 +47,24 @@ const UseCasualAndTaskTypes = [
     // 决策总结
     "tool_call_decision",
     // 任务规划崩溃的错误信息
-    "fail_plan_and_execution"
+    "fail_plan_and_execution",
+    // 流式数据的参考补充消息
+    "reference_material"
 ]
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {getRequest, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onTimelineMessage, onEnd} =
-        params || {}
+    const {
+        getRequest,
+        onTaskStart,
+        onTaskReview,
+        onTaskReviewExtra,
+        onReviewRelease,
+        onTimelineMessage,
+        onEnd,
+        onNotifyMessage
+    } = params || {}
 
     // 自由对话-review 信息的自动释放
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
@@ -102,9 +113,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
 
     // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
-    const [questionQueue, setQuestionQueue, getQuestionQueue] = useGetSetState<AIQuestionQueues>(
-        cloneDeep(DeafultAIQuestionQueues)
-    )
+    const [questionQueue, setQuestionQueue] = useState<AIQuestionQueues>(cloneDeep(DeafultAIQuestionQueues))
     // 开始定时循环获取问题队列
     const handleStartQuestionQueue = useMemoizedFn(() => {
         setTimeout(() => {
@@ -140,6 +149,17 @@ function useChatIPC(params?: UseChatIPCParams) {
         reactTaskToAsync.current = ""
     })
 
+    /** 自由对话-loading状态相关逻辑 */
+    const casualChatID = useRef<string>("")
+    const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>({
+        loading: false,
+        title: "thinking..."
+    })
+    const handleResetCasualChatID = useMemoizedFn(() => {
+        casualChatID.current = ""
+        setCasualStatus({loading: false, title: "thinking..."})
+    })
+
     // 设置任务规划的标识ID
     const planCoordinatorId = useRef<string>("")
 
@@ -150,7 +170,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease: handleCasualReviewRelease,
         onGrpcFolder: handleSetGrpcFolders,
         sendRequest: sendRequest,
-        getQuestionQueue
+        onNotifyMessage
     })
 
     // 任务规划相关数据和逻辑
@@ -161,7 +181,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
         sendRequest: sendRequest,
-        onGrpcFolder: handleSetGrpcFolders
+        onGrpcFolder: handleSetGrpcFolders,
+        onNotifyMessage
     })
     // #endregion
 
@@ -214,6 +235,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
+        reactTaskToAsync.current = ""
+        handleResetCasualChatID()
         planCoordinatorId.current = ""
         casualChatEvent.handleResetData()
         taskChatEvent.handleResetData()
@@ -244,7 +267,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                     // 触发任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
-                        onTaskStart && onTaskStart(startInfo.coordinator_id)
+                        // 下面注释的代码为 触发UI分裂的回调
+                        // onTaskStart && onTaskStart(startInfo.coordinator_id)
                         planCoordinatorId.current = startInfo.coordinator_id
                     }
                     return
@@ -263,6 +287,24 @@ function useChatIPC(params?: UseChatIPCParams) {
                     // 准备执行任务规划的问题id(react_task_id)
                     const reactTaskInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskToAsync
                     reactTaskToAsync.current = reactTaskInfo.task_id
+                    if (casualChatID.current === reactTaskToAsync.current) handleResetCasualChatID()
+                    return
+                }
+                if (res.Type === "react_task_changed") {
+                    if (planCoordinatorId.current !== res.CoordinatorId) return
+                    /* 问题的状态变化 */
+                    const {react_task_id, react_task_now_status} = JSON.parse(
+                        ipcContent
+                    ) as AIAgentGrpcApi.ReactTaskChanged
+
+                    if (react_task_now_status === "processing") {
+                        casualChatID.current = react_task_id
+                        setCasualStatus({loading: true, title: "thinking..."})
+                    }
+
+                    if (react_task_now_status === "completed") {
+                        handleResetCasualChatID()
+                    }
                     return
                 }
 
@@ -311,6 +353,21 @@ function useChatIPC(params?: UseChatIPCParams) {
                             data: tasks ?? []
                         })
                         return
+                    } else if (res.NodeId === "status") {
+                        const data = JSON.parse(ipcContent) as {key: string; value: string}
+                        if (data.key === "re-act-loading-status-key") {
+                            if (planCoordinatorId.current === res.CoordinatorId) return
+                            // 自由对话-loading展示标题
+                            setCasualStatus((old) => {
+                                if (old.loading) {
+                                    return {...old, title: data.value || "thinking..."}
+                                }
+                                return old
+                            })
+                        } else {
+                            // 执行状态卡片处理
+                            yakExecResultEvent.handleSetData(res)
+                        }
                     } else {
                         // 因为流数据有日志类型，所以都放入日志逻辑过滤一遍
                         if (res.NodeId === "stream-finished") {
@@ -412,7 +469,17 @@ function useChatIPC(params?: UseChatIPCParams) {
     }, [])
 
     return [
-        {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat, grpcFolders, questionQueue},
+        {
+            execute,
+            runTimeIDs,
+            yakExecResult,
+            aiPerfData,
+            casualChat,
+            taskChat,
+            grpcFolders,
+            questionQueue,
+            casualStatus
+        },
         {
             fetchToken,
             fetchReactTaskToAsync,

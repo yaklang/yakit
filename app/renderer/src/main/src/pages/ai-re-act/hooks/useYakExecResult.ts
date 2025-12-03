@@ -71,7 +71,7 @@ function useYakExecResult(params?: UseYakExecResultParams) {
     })
 
     /**
-     * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:file;后续根据可需求更改
+     * @description 该方法可以记录yak_exec_result中所有的日志，根但是目前只对接level:file;后续据可需求更改
      */
     const onHandleYakExecResultLogs = useMemoizedFn((obj: AIAgentGrpcApi.AICardMessage) => {
         const log = obj.content as StreamResult.Log
@@ -99,6 +99,22 @@ function useYakExecResult(params?: UseYakExecResultParams) {
         } catch (error) {}
     })
 
+    /** AI执行过程中的status状态卡片化处理 */
+    const onAIStatusHandleCard = useMemoizedFn((info: {key: string; value: string; timestamp: number}) => {
+        const {key, value, timestamp} = info
+        const originData = cardKVPair.current.get(key)
+        if (originData && originData.Timestamp > timestamp) {
+            return
+        }
+        cardKVPair.current.set(key, {
+            Id: key,
+            Data: value,
+            Timestamp: timestamp,
+            Tags: []
+        })
+        onSetCard()
+    })
+
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
@@ -106,6 +122,14 @@ function useYakExecResult(params?: UseYakExecResultParams) {
             if (res.Type === "yak_exec_result") {
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIPluginExecResult
                 onHandleYakExecResult(res.CallToolID || "", data)
+                return
+            }
+            if (res.Type === "structured" && res.NodeId === "status") {
+                // 执行状态卡片处理
+                const data = JSON.parse(ipcContent) as {key: string; value: string}
+                if (data.key !== "re-act-loading-status-key") {
+                    onAIStatusHandleCard({...data, timestamp: res.Timestamp})
+                }
                 return
             }
         } catch (error) {

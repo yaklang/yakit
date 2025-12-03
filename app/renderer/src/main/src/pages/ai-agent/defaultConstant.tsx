@@ -223,7 +223,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     questionQueue: {
         total: 0,
         data: []
-    }
+    },
+    casualStatus: {loading: false, title: ""}
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},

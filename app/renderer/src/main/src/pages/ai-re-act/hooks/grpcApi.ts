@@ -464,6 +464,12 @@ export declare namespace AIAgentGrpcApi {
         tasks: QuestionQueueItem[]
         total_tasks: number
     }
+    /** 问题状态变化消息 */
+    export interface ReactTaskChanged {
+        react_task_id: string
+        react_task_now_status: string
+        react_task_old_status: string
+    }
 
     /** 准备执行任务规划的问题id(react_task_id) */
     export interface ReactTaskToAsync {
@@ -471,6 +477,13 @@ export declare namespace AIAgentGrpcApi {
         loop_name: string
         task_index: string
         task_user_input: string
+    }
+
+    /** stream类型消息的参考补充消息 */
+    export interface ReferenceMaterialPayload {
+        event_uuid: string
+        payload: string
+        type: string
     }
 }
 
