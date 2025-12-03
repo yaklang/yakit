@@ -47,7 +47,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
-    const onSwitchAIAgentTab = useMemoizedFn(([key, value]) => {
+    const onSwitchAIAgentTab = useMemoizedFn((data) => {
+        if (!data) return
+        const [key, value] = data
         setActiveKey(key)
         if (value) {
             setRunTimeIDs([value])
@@ -71,7 +73,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             </YakitTag>
         )
     }, [initRunTimeIDs, runTimeIDs])
-    
+
     useEffect(() => {
         if (runTimeIDs.length > 0) {
             if (!tempRiskTotal) setIntervalRisk(1000)
