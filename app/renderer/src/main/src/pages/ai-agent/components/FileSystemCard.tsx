@@ -29,7 +29,7 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, sho
     const onDetail = () => onOpenLocalFileByPath(path)
 
     const switchAIActTab = () => {
-        emiter.emit("switchAIActTab", AITabsEnum.File_System)
+        emiter.emit("switchAIActTab", [AITabsEnum.File_System])
     }
     return (
         <ChatCard

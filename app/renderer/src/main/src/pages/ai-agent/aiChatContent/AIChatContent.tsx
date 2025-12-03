@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useState} from "react"
 import {AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
@@ -30,9 +30,10 @@ import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
-    const {runTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
+    const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<AITabsEnumType>()
@@ -44,13 +45,33 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
 
-    useEffect(() => {
-        emiter.on("switchAIActTab", setActiveKey)
-        return () => {
-            emiter.off("switchAIActTab", setActiveKey)
-        }
-    }, [])
+    const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
+    const onSwitchAIAgentTab = useMemoizedFn(([key, value]) => {
+        setActiveKey(key)
+        if (value) {
+            setRunTimeIDs([value])
+        } else {
+            setRunTimeIDs(initRunTimeIDs)
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("switchAIActTab", onSwitchAIAgentTab)
+        return () => {
+            emiter.off("switchAIActTab", onSwitchAIAgentTab)
+        }
+    }, [onSwitchAIAgentTab])
+
+    const filterTagDom = useMemo(() => {
+        if (initRunTimeIDs === runTimeIDs) return null
+        return (
+            <YakitTag color='info' closable onClose={() => setRunTimeIDs(initRunTimeIDs)}>
+                {runTimeIDs}
+            </YakitTag>
+        )
+    }, [initRunTimeIDs, runTimeIDs])
+    
     useEffect(() => {
         if (runTimeIDs.length > 0) {
             if (!tempRiskTotal) setIntervalRisk(1000)
@@ -135,7 +156,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 )
             case AITabsEnum.HTTP:
                 return !!runTimeIDs.length ? (
-                    <PluginExecuteHttpFlow runtimeId={runTimeIDs.join(",")} website={true} />
+                    <PluginExecuteHttpFlow
+                        filterTagDom={filterTagDom}
+                        runtimeId={runTimeIDs.join(",")}
+                        website={true}
+                    />
                 ) : (
                     <>
                         <YakitEmpty style={{paddingTop: 48}} />
@@ -205,6 +230,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         } else {
             setActiveKey(key)
         }
+        setRunTimeIDs(initRunTimeIDs)
     })
     const onOpenLog = useMemoizedFn((e) => {
         e.stopPropagation()

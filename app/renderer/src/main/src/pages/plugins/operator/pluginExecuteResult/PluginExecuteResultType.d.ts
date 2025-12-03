@@ -38,6 +38,7 @@ export interface PluginExecuteResultTabContentProps {
 export interface PluginExecuteWebsiteTreeProps {
     runtimeId: string
     website?: boolean
+    filterTagDom?: React.ReactNode
 }
 export interface PluginExecutePortTableProps {
     runtimeId: string

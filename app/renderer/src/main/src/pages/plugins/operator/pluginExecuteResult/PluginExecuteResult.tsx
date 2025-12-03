@@ -238,7 +238,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 })
 /**HTTP 流量 */
 export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
-    const {runtimeId, website = false} = props
+    const {runtimeId, filterTagDom, website = false} = props
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
@@ -316,6 +316,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                         setSecondNodeVisible={setSecondNodeVisible}
                         pageType='Plugin'
                         runtimeId={runtimeId}
+                        filterTagDom={filterTagDom}
                         params={{SourceType: "scan"}}
                         httpHistoryTableTitleStyle={{
                             paddingTop: 12,

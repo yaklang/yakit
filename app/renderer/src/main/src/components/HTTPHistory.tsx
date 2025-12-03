@@ -1,4 +1,4 @@
-import React, {CSSProperties, ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -382,6 +382,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     pageType: HTTPHistorySourcePageType
     runtimeId?: string
+    filterTagDom?: ReactNode
     httpHistoryTableTitleStyle?: CSSProperties
     containerClassName?: string
     titleHeight?: number
@@ -413,6 +414,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         params,
         searchURL,
         includeInUrl,
+        filterTagDom,
         curProcess,
         onQueryParams,
         downstreamProxyStr,
@@ -559,6 +561,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             onSelected={(i) => {
                                 setSelectedHTTPFlow(i)
                             }}
+                            filterTagDom={filterTagDom}
                             onSearch={setHighlightSearch}
                             onlyShowFirstNode={onlyShowFirstNode}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}

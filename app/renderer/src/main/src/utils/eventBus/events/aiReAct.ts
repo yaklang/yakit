@@ -4,6 +4,6 @@ import {AIAgentTabListEnum} from "@/pages/ai-agent/defaultConstant"
 export type AIReActEventProps = {
     /**string>{AIReActEventInfo} */
     onReActChatEvent: string
-    switchAIActTab?: AITabsEnumType
+    switchAIActTab?: [AITabsEnumType,string?]
     switchAIAgentTab: AIAgentTabListEnum
 }
