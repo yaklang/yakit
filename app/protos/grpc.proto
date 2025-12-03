@@ -996,6 +996,7 @@ message CreateKnowledgeBaseV2Request {
   string Name = 1;
   string Description = 2;
   string Type = 3;
+  repeated string Tags = 4;
 }
 
 message CreateKnowledgeBaseV2Response {
@@ -1375,6 +1376,8 @@ message KnowledgeBaseInfo {
   string KnowledgeBaseName = 2;
   string KnowledgeBaseDescription = 3;
   string KnowledgeBaseType = 4;
+  repeated string Tags = 5;
+  bool IsImported = 6;
 }
 
 message GetKnowledgeBaseResponse {
@@ -1393,6 +1396,7 @@ message UpdateKnowledgeBaseRequest {
   string KnowledgeBaseName = 2;
   string KnowledgeBaseDescription = 3;
   string KnowledgeBaseType = 4;
+  repeated string Tags = 5;
 }
 
 message DeleteKnowledgeBaseEntryRequest {
@@ -1689,6 +1693,7 @@ message AIOutputEvent {
   string ContentType = 18; // markdown / yaklang_code / plain_code
   string CallToolID = 19; // 如果是调用工具相关的事件，那么这里是调用的ID
   string AIService = 20; // 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称
+  string TaskUUID = 21; // 任务的唯一ID
 }
 
 message I18n {
@@ -1784,6 +1789,9 @@ message AIStartParams {
   // 是否启用AI搜索本地工具的功能？
   bool EnableAISearchTool = 12;
 
+  // 是否禁用AI搜索forge功能
+  bool DisableAISearchForge = 32;
+
   // 是否启用AI搜索互联网搜索引擎的功能？
   bool EnableAISearchInternet = 13;
 
@@ -1832,6 +1840,8 @@ message AIEventFilter {
   repeated string EventUUIDS = 1;
   repeated string  EventType = 2;
   repeated string CoordinatorId = 3;
+  repeated string TaskIndex = 4;
+  repeated string TaskUUID = 5;
 }
 
 
@@ -1941,6 +1951,8 @@ message StartMcpServerRequest {
   repeated string Script = 7;
   // enable all tool sets
   bool EnableAll = 8;
+  // enable yak ai tool
+  bool EnableYakAITool = 9;
 }
 
 message StartMcpServerResponse {
@@ -8332,6 +8344,7 @@ message GenerateSSAReportResponse {
   string Message = 2;       // 消息
   string ReportData = 3;    // 报告数据（当格式不是yakit时）
 }
+
 // SSA Project Messages
 message SSAProject {
   int64 ID = 1;
