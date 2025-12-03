@@ -2274,16 +2274,25 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
     )
 })
 
-export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
-    const {info, columnSize} = props
+export interface RightBugAuditResultProps {
+    info: SSARisk
+    columnSize?: number
+    isScroll?: boolean
+    extra?: React.ReactNode
+    boxStyle?: React.CSSProperties
+}
+
+export const RightBugAuditResult: React.FC<RightBugAuditResultProps> = React.memo((props) => {
+    const {info, columnSize, extra, boxStyle} = props
 
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
                 [styles["yakit-risk-details-content-no-border"]]: true
             })}
+            style={boxStyle}
         >
-            <RightBugAuditResultHeader info={info} />
+            <RightBugAuditResultHeader info={info} extra={extra} />
             <AuditResultDescribe info={info} columnSize={columnSize} />
         </div>
     )

@@ -9,6 +9,7 @@ import {
 } from "@/components/layout/hooks/useEngineConsole/useEngineConsole"
 import i18n from "@/i18n/i18n"
 import { Risk } from "@/pages/risks/schema"
+import { SSARisk } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -35,6 +36,18 @@ export const openRiskNewWindow = (data?: Risk) => {
         yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
         ipcRenderer.send("open-new-child-window", {
             type: "openRiskNewWindow",
+            data: data
+        })
+    }
+}
+
+export const openSSARiskNewWindow = (data?: SSARisk) => {
+    if (childWindowHash) {
+        minWinSendToChildWin({type: "openSSARiskNewWindow", data})
+    } else {
+        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
+        ipcRenderer.send("open-new-child-window", {
+            type: "openSSARiskNewWindow",
             data: data
         })
     }

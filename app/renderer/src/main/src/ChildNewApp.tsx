@@ -5,7 +5,7 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {coordinate} from "./pages/globalVariable"
 import {YakitSpin} from "./components/yakitUI/YakitSpin/YakitSpin"
 import TitleBar from "./components/BaseTitleBar"
-import {YakitRiskDetails} from "./pages/risks/YakitRiskTable/YakitRiskTable"
+import {RightBugAuditResult, YakitRiskDetails} from "./pages/risks/YakitRiskTable/YakitRiskTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -61,6 +61,8 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
                             boxStyle={{flex: 1}}
                         />
                     )
+                case "openSSARiskNewWindow":
+                    return <RightBugAuditResult info={parentWinData.data} boxStyle={{height: "100%"}} />
             }
         }
         return null
