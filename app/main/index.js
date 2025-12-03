@@ -212,16 +212,12 @@ function winHide(targetWin) {
 function winShow(targetWin) {
     if (targetWin && !targetWin.isDestroyed()) {
         const showNow = () => {
-            try {
-                targetWin.show()
-                targetWin.focus()
-                targetWin.setSkipTaskbar(false)
-                if (process.platform === "darwin") {
-                    targetWin.setAlwaysOnTop(true)
-                    setTimeout(() => targetWin.setAlwaysOnTop(false), 120)
-                }
-            } catch (e) {
-                console.warn("winShow failed:", e)
+            targetWin.show()
+            targetWin.focus()
+            targetWin.setSkipTaskbar(false)
+            if (process.platform === "darwin") {
+                targetWin.setAlwaysOnTop(true)
+                setTimeout(() => targetWin.setAlwaysOnTop(false), 120)
             }
         }
         if (targetWin.webContents.isLoading()) {
