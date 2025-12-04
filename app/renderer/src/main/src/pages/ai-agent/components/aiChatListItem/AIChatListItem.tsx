@@ -37,17 +37,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return {}
         }
     }, [type])
-    const aiFileSystemCard = useCreation(() => {
-        switch (type) {
-            case "re-act":
-                return {
-                    showDetail: false
-                }
-
-            default:
-                return {}
-        }
-    }, [type])
     const getTask = (id) => {
         return taskChat.plan.find((item) => item.index === id)
     }
