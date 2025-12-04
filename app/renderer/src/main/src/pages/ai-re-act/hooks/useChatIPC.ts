@@ -182,7 +182,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease: handleTaskReviewRelease,
         sendRequest: sendRequest,
         onGrpcFolder: handleSetGrpcFolders,
-        onNotifyMessage
+        onNotifyMessage,
+        onTaskStart
     })
     // #endregion
 

@@ -81,6 +81,7 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onGrpcFolder?: (path: string) => void
     /** 通知消息回调 */
     onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
+    onTaskStart: UseChatIPCParams["onTaskStart"]
 }
 
 export interface UseTaskChatState {
@@ -116,7 +117,7 @@ export interface UseChatIPCParams {
     /** 获取流接口请求参数 */
     getRequest?: () => AIAgentSetting | undefined
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
-    onTaskStart?: (id: string) => void
+    onTaskStart?: () => void
     /** 任务规划的 review 事件 */
     onTaskReview?: (data: AIChatQSData) => void
     /** 任务规划中 plan_review 事件的补充数据 */

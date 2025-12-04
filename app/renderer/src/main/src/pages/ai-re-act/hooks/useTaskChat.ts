@@ -1,4 +1,4 @@
-import {useRef, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
@@ -38,8 +38,17 @@ export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "t
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest, onGrpcFolder, onNotifyMessage} =
-        params || {}
+    const {
+        onTaskStart,
+        pushLog,
+        getRequest,
+        onReview,
+        onReviewExtra,
+        onReviewRelease,
+        sendRequest,
+        onGrpcFolder,
+        onNotifyMessage
+    } = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -63,6 +72,13 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
     const [streams, setStreams] = useState<AIChatQSData[]>([])
     // #endregion
+
+    useEffect(() => {
+        /**NOTE - 临时解决方案，后续session时再讨论具体方案 */
+        if (onTaskStart && streams.length === 1) {
+            onTaskStart()
+        }
+    }, [streams.length])
 
     // #region 工具执行过程相关数据和逻辑
     /** @description 工具执行过程的数据和工具相关的流数据，在执行过程中，顺序是无序，所以需要对其关联记录 */
