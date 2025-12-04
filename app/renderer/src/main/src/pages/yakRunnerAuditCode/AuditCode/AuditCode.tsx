@@ -130,6 +130,10 @@ import cloneDeep from "lodash/cloneDeep"
 import {RJSFSchema} from "@rjsf/utils"
 import {TrashIcon} from "@/assets/newIcon"
 import {IRifyUpdateProjectManagerModal} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
+import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {useProxy} from "@/hook/useProxy"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1502,6 +1506,11 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(true)
     const [plugin, setPlugin] = useState<YakScript>()
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const {
+        proxyConfig: {Endpoints = []},
+        checkProxyEndpoints
+    } = useProxy()
 
     // 获取参数
     const handleFetchParams = useDebounceFn(
@@ -1600,6 +1609,8 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         ExecParams: [],
                         PluginName: ""
                     }
+                    //如果有新增的代理配置 则存配置项
+                    checkProxyEndpoints(value.proxy)
                     // compile-immediately 特例处理（应后端要求）
                     requestParams.ExecParams = getYakExecutorParam({"compile-immediately": true, ...value})
                     if (customParams.peepholeArr.data.length > 0) {
@@ -1614,6 +1625,14 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 })
                 .catch(() => {})
         }
+    })
+
+    const onClickDownstreamProxy = useMemoizedFn(async () => {
+        const versionValid = await checkProxyVersion()
+        if (!versionValid) {
+            return
+        }
+        setAgentConfigModalVisible(true)
     })
 
     return (
@@ -1680,13 +1699,19 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                     extra={
                                         <div
                                             className={styles["agent-down-stream-proxy"]}
-                                            onClick={() => setAgentConfigModalVisible(true)}
+                                            onClick={onClickDownstreamProxy}
                                         >
-                                            配置代理认证
+                                            {t("AgentConfigModal.proxy_configuration")}
                                         </div>
                                     }
                                 >
-                                    <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                                    <YakitSelect
+                                        allowClear
+                                        options={Endpoints.map(({Url}) => ({label: Url, value: Url}))}
+                                        mode='tags'
+                                        placeholder={t("ProxyConfig.example_proxy_address")}
+                                    />
+                                    {/* <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' /> */}
                                 </Form.Item>
                                 <Form.Item
                                     name='peephole'
@@ -1733,11 +1758,16 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 </YakitButton>
             </div>
             <AgentConfigModal
-                agentConfigModalVisible={agentConfigModalVisible}
+                agentConfigModalVisible={false} //弃用
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
                     form.setFieldsValue({proxy: url})
                 }}
+            />
+            <ProxyRulesConfig
+                hideRules
+                visible={agentConfigModalVisible}
+                onClose={() => setAgentConfigModalVisible(false)}
             />
         </YakitSpin>
     )

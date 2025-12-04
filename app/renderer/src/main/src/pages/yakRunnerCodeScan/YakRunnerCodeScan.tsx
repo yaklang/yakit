@@ -108,6 +108,10 @@ import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHisto
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {useProxy} from "@/hook/useProxy"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -2240,6 +2244,11 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
         // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
         const isRealStartRef = useRef<boolean>(false)
+        const {t, i18n} = useI18nNamespaces(["mitm"])
+        const {
+            proxyConfig: {Endpoints = []},
+            checkProxyEndpoints
+        } = useProxy()
 
         /** 选填参数 */
         const groupParams = useMemo(() => {
@@ -2608,7 +2617,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 ExecParams: [],
                 PluginName: ""
             }
-
+            //如果有新增的代理配置 则存配置项
+            checkProxyEndpoints(value.proxy)
             requestParams.ExecParams = getYakExecutorParam({...value})
             if (customParams.peepholeArr.data.length > 0) {
                 requestParams.ExecParams = requestParams.ExecParams.map((item) => {
@@ -2619,6 +2629,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 })
             }
             onStartAudit(requestParams)
+        })
+
+        const onClickDownstreamProxy = useMemoizedFn(async () => {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setAgentConfigModalVisible(true)
         })
 
         return (
@@ -2714,13 +2732,18 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                             extra={
                                                 <div
                                                     className={styles["agent-down-stream-proxy"]}
-                                                    onClick={() => setAgentConfigModalVisible(true)}
+                                                    onClick={onClickDownstreamProxy}
                                                 >
-                                                    配置代理认证
+                                                    {t("AgentConfigModal.proxy_configuration")}
                                                 </div>
                                             }
                                         >
-                                            <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                                            <YakitSelect
+                                                allowClear
+                                                options={Endpoints.map(({Url}) => ({label: Url, value: Url}))}
+                                                mode='tags'
+                                                placeholder={t("ProxyConfig.example_proxy_address")}
+                                            />
                                         </Form.Item>
                                         <Form.Item
                                             name='peephole'
@@ -2783,11 +2806,16 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     </Form.Item>
                 </Form>
                 <AgentConfigModal
-                    agentConfigModalVisible={agentConfigModalVisible}
+                    agentConfigModalVisible={false} //弃用
                     onCloseModal={() => setAgentConfigModalVisible(false)}
                     generateURL={(url) => {
                         form.setFieldsValue({proxy: url})
                     }}
+                />
+                <ProxyRulesConfig
+                    hideRules
+                    visible={agentConfigModalVisible}
+                    onClose={() => setAgentConfigModalVisible(false)}
                 />
             </div>
         )

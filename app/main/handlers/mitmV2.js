@@ -84,6 +84,7 @@ module.exports = (win, getClient) => {
     let currentPort
     let currentHost
     let currentDownstreamProxy
+    let currentDownstreamProxyRuleId
     let sendMessage
     let destroyMessage
 
@@ -93,7 +94,8 @@ module.exports = (win, getClient) => {
             haveStream: !!stream,
             host: currentHost,
             port: currentPort,
-            downstreamProxy: currentDownstreamProxy
+            downstreamProxy: currentDownstreamProxy,
+            downstreamProxyRuleId: currentDownstreamProxyRuleId
         }
     })
 
@@ -185,9 +187,9 @@ module.exports = (win, getClient) => {
     })
 
     // 下游代理
-    ipcMain.handle("mitmV2-set-downstream-proxy", (e, downstreamProxy) => {
+    ipcMain.handle("mitmV2-set-downstream-proxy", (e, {downstreamProxy, downstreamProxyRuleId }) => {
         if (stream) {
-            sendMessage({SetDownstreamProxy: true, DownstreamProxy: downstreamProxy})
+            sendMessage({SetDownstreamProxy: true, DownstreamProxy: downstreamProxy, DownstreamProxyRuleId: downstreamProxyRuleId})
         }
     })
 
@@ -212,7 +214,7 @@ module.exports = (win, getClient) => {
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitmV2-start-call", (e, params) => {
-        const {Host, Port, DownstreamProxy, extra} = params
+        const {Host, Port, DownstreamProxy, DownstreamProxyRuleId, extra} = params
         if (stream) {
             if (win) {
                 win.webContents.send("client-mitmV2-start-success")
@@ -276,6 +278,8 @@ module.exports = (win, getClient) => {
         stream.on("error", (err) => {
             stream = null
             destroyMessage()
+            currentDownstreamProxyRuleId = ""
+            currentDownstreamProxy = ""
             if (err.code && win) {
                 switch (err.code) {
                     case 1:
@@ -293,10 +297,13 @@ module.exports = (win, getClient) => {
             }
             stream = null
             destroyMessage()
+            currentDownstreamProxyRuleId = ""
+            currentDownstreamProxy = ""
         })
         currentHost = Host
         currentPort = Port
         currentDownstreamProxy = DownstreamProxy
+        currentDownstreamProxyRuleId = DownstreamProxyRuleId || ""
         if (stream) {
             const {send, destroy} = createMessageSender(stream)
             sendMessage = send
@@ -318,6 +325,8 @@ module.exports = (win, getClient) => {
             stream = null
             mitmClient = null
         }
+        currentDownstreamProxyRuleId = ""
+        currentDownstreamProxy = ""
     })
 
     /**手动劫持 相关操作 */

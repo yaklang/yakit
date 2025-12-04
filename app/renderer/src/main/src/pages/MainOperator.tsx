@@ -17,7 +17,7 @@ import SetPassword from "./SetPassword"
 import {useEeSystemConfig, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {refreshToken} from "@/utils/login"
-import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -52,6 +52,12 @@ import {MessageCenterModal} from "@/components/MessageCenter/MessageCenter"
 import {LocalGVS} from "@/enums/localGlobal"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {grpcOpenRenderLogFolder} from "@/utils/logCollection"
+import { randomString } from "@/utils/randomUtil"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
+import { grpcSetGlobalProxyRulesConfig } from "@/apiUtils/grpc"
+import { MITMConsts } from "./mitm/MITMConsts"
+import { checkProxyVersion } from "@/utils/proxyConfigUtil"
 
 import "./main.scss"
 import "./GlobalClass.scss"
@@ -246,6 +252,30 @@ const getDefaultExpand = () => {
 }
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [showRenderCrash, setShowRenderCrash] = useState(false)
+    const [showProxyModal, setShowProxyModal] = useState(false)
+    const [ProxyModalLoading, setProxyModalLoading] = useState(false)
+    const ProxyHistoryName = MITMConsts.MITMDefaultDownstreamProxyHistory
+    const {t, i18n} = useI18nNamespaces(["mitm"])
+
+    const remoteProxyHistory = useMemoizedFn(() => {
+        const cacheData = {
+            options: [],
+            defaultValue: ""
+        }
+        setRemoteValue(ProxyHistoryName, JSON.stringify(cacheData)).then(() => setShowProxyModal(false))
+    })
+
+    const checkAndShowDataMigration = useMemoizedFn(() => {
+        onGetRemoteValuesBase(ProxyHistoryName).then(({options}) => {
+            if (options?.length) setShowProxyModal(true)
+        })
+    })
+
+    // 首页加载时初始化
+    useEffect(() => {
+        checkAndShowDataMigration()
+    }, [])
+
     useEffect(() => {
         getLocalValue(LocalGVS.RenderCrashScreen)
             .then((value) => {
@@ -707,6 +737,41 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 onOk={onUpdateCancenl}
                 onIgnore={onUpdateIgnore}
             /> */}
+
+            <YakitHintModal
+                visible={showProxyModal}
+                title={t("ProxyConfig.data_migration")}
+                content={t("ProxyConfig.migration_title")}
+                cancelButtonText={t("ProxyConfig.not_migration")}
+                okButtonText={t("ProxyConfig.migration")}
+                okButtonProps={{
+                    loading: ProxyModalLoading
+                }}
+                onOk={async () => {
+                    const versionValid = await checkProxyVersion()
+                    if (!versionValid) {
+                        setShowProxyModal(false)
+                        return
+                    }
+                    onGetRemoteValuesBase(ProxyHistoryName).then(({options}) => {
+                        if (!options?.length) return
+                        setProxyModalLoading(true)
+                        const generateEndpointId = () => `ep-${randomString(8)}`
+                        const config = {
+                            Routes: [],
+                            Endpoints: options.map(({label, value}) => ({
+                                Id: generateEndpointId(),
+                                Name: label + "",
+                                Url: value,
+                                UserName: '',
+                                Password:''
+                            }))
+                        }
+                        grpcSetGlobalProxyRulesConfig(config).then(() => remoteProxyHistory()).finally(()=>setProxyModalLoading(false))
+                    })
+                }}
+                onCancel={() => remoteProxyHistory() } //不迁移则丢弃数据
+            />
         </>
     )
 })

@@ -218,6 +218,8 @@
             }
 
             svg {
+                height: 16px;
+                width: 16px;
                 color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
@@ -449,5 +451,73 @@
         border-top: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 0 0 4px 4px;
         background: var(--Colors-Use-Neutral-Bg);
+    }
+}
+
+.proxy-rules-config-overlay {
+    .textarea-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        .header-title {
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            word-break: keep-all;
+            white-space: nowrap;
+        }
+        .header-hint-icon {
+            cursor: pointer;
+            svg {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+
+    .icon-trash {
+        svg {
+            width: 18px;
+            height: 18px;
+            color: var(--Colors-Use-Error-Primary);
+            cursor: pointer;
+        }
+    }
+
+    .password_display_icon_text {
+        width: 200px;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+    .password_display_icon_eye svg {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    :global {
+        .ant-drawer-header-title {
+            flex-direction: row-reverse;
+        }
+
+        .ant-drawer-body {
+            padding: 0;
+        }
+    }
+
+    .config-tab-item{
+        position: static;
+    }
+}
+
+.proxy-rules-config-modal .header-hint-icon {
+    cursor: pointer;
+    svg {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        width: 16px;
+        height: 16px;
     }
 }

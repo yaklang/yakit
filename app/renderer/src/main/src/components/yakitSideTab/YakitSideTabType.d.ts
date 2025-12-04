@@ -20,6 +20,7 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
     children?: ReactNode
 
     className?: string
+    btnItemClassName?: string
 }
 
 export interface YakitTabsProps {

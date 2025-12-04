@@ -58,6 +58,9 @@ import {
 import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import { useProxy } from "@/hook/useProxy"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -132,7 +135,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         isbuttonIsSendReqStatus,
         cachedTotal
     } = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer", "mitm"])
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
@@ -155,6 +158,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [inViewport = true] = useInViewport(queryRef)
 
     const [batchTargetModalVisible, setBatchTargetModalVisible] = useState<boolean>(false)
+    const { proxyRouteOptions } = useProxy();
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -438,6 +442,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     )
 
+    const onClickDownstreamProxy = useMemoizedFn(async () => {
+        const versionValid = await checkProxyVersion()
+        if (!versionValid) {
+            return
+        }
+        setAgentConfigModalVisible(true)
+    })
+
     const renderContent = useMemoizedFn(() => {
         switch (showFormContentType) {
             case "config":
@@ -513,50 +525,33 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 }
                                 name='proxy'
                                 style={{marginBottom: 5}}
+                                getValueFromEvent={(value) => {
+                                    // 只保留最后一个选中的值
+                                    if (Array.isArray(value) && value.length > 1) {
+                                        return [value[value.length - 1]]
+                                    }
+                                    return value
+                                }}
                             >
                                 <YakitSelect
                                     ref={proxyListRef}
-                                    cacheHistoryDataKey={CacheDropDownGV.WebFuzzerProxyList}
-                                    isCacheDefaultValue={false}
-                                    defaultOptions={[
-                                        {
-                                            label: "http://127.0.0.1:7890",
-                                            value: "http://127.0.0.1:7890"
-                                        },
-                                        {
-                                            label: "http://127.0.0.1:8080",
-                                            value: "http://127.0.0.1:8080"
-                                        },
-                                        {
-                                            label: "http://127.0.0.1:8082",
-                                            value: "http://127.0.0.1:8082"
-                                        }
-                                    ]}
+                                    options={proxyRouteOptions}
                                     allowClear
                                     placeholder={t("YakitInput.please_enter")}
                                     mode='tags'
                                     size='small'
                                     maxTagCount={1}
                                     dropdownMatchSelectWidth={245}
-                                    tagRender={(props) => {
-                                        return (
-                                            <YakitTag size={"middle"} {...props}>
-                                                <span className='content-ellipsis' style={{width: "100%"}}>
-                                                    {maskProxyPassword(props.value)}
-                                                </span>
-                                            </YakitTag>
-                                        )
-                                    }}
                                 />
                             </Form.Item>
                             <Form.Item label={<> </>}>
                                 <YakitButton
                                     size='small'
                                     type='text'
-                                    onClick={() => setAgentConfigModalVisible(true)}
+                                    onClick={onClickDownstreamProxy}
                                     icon={<PlusSmIcon />}
                                 >
-                                    {t("HttpQueryAdvancedConfig.proxy_auth_config")}
+                                    {t("AgentConfigModal.proxy_configuration")}
                                 </YakitButton>
                             </Form.Item>
                             <Form.Item
@@ -1424,7 +1419,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 hasApplyBtn={!!cachedTotal}
             />
             <AgentConfigModal
-                agentConfigModalVisible={agentConfigModalVisible}
+                agentConfigModalVisible={false} //弃用
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
                     const v = form.getFieldsValue()
@@ -1437,6 +1432,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     })
                 }}
             ></AgentConfigModal>
+            <ProxyRulesConfig
+                visible={agentConfigModalVisible}
+                onClose={() => setAgentConfigModalVisible(false)}
+            />
             <BatchTargetModal
                 batchTargetModalVisible={batchTargetModalVisible}
                 onCloseModal={() => setBatchTargetModalVisible(false)}

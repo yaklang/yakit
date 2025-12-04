@@ -246,6 +246,9 @@ module.exports = {
             console.error(e)
         }
 
+        //代理规则
+        require("./handlers/proxyRules")(win, getClient)
+
         //assets
         require("./handlers/assets")(win, getClient)
 
