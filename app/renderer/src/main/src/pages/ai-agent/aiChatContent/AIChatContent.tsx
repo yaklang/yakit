@@ -56,6 +56,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         if (data === undefined) return setActiveKey(data)
         try {
             const {key, value} = JSON.parse(data) as AIAgentTabPayload
+            if (key === "http" && !tempHTTPTotal) return
+            if (key === "risk" && !tempRiskTotal) return
             setActiveKey(key)
             if (value) {
                 setRunTimeIDs([value])
