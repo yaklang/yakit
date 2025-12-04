@@ -291,23 +291,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (casualChatID.current === reactTaskToAsync.current) handleResetCasualChatID()
                     return
                 }
-                if (res.Type === "react_task_changed") {
-                    if (planCoordinatorId.current !== res.CoordinatorId) return
-                    /* 问题的状态变化 */
-                    const {react_task_id, react_task_now_status} = JSON.parse(
-                        ipcContent
-                    ) as AIAgentGrpcApi.ReactTaskChanged
-
-                    if (react_task_now_status === "processing") {
-                        casualChatID.current = react_task_id
-                        setCasualStatus({loading: true, title: "thinking..."})
-                    }
-
-                    if (react_task_now_status === "completed") {
-                        handleResetCasualChatID()
-                    }
-                    return
-                }
 
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
@@ -353,6 +336,22 @@ function useChatIPC(params?: UseChatIPCParams) {
                             total: total_tasks,
                             data: tasks ?? []
                         })
+                        return
+                    } else if (res.NodeId === "react_task_status_changed") {
+                        if (planCoordinatorId.current === res.CoordinatorId) return
+                        /* 问题的状态变化 */
+                        const {react_task_id, react_task_now_status} = JSON.parse(
+                            ipcContent
+                        ) as AIAgentGrpcApi.ReactTaskChanged
+
+                        if (react_task_now_status === "processing") {
+                            casualChatID.current = react_task_id
+                            setCasualStatus(() => ({loading: true, title: "thinking..."}))
+                        }
+
+                        if (react_task_now_status === "completed") {
+                            handleResetCasualChatID()
+                        }
                         return
                     } else if (res.NodeId === "status") {
                         const data = JSON.parse(ipcContent) as {key: string; value: string}
