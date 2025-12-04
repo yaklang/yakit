@@ -1,9 +1,6 @@
 import React, {memo, useEffect, useMemo, useState} from "react"
 import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {
-    AIAgentChatStreamProps,
-    AIChatLeftSideProps,
-    AIChatToolDrawerContentProps} from "../aiAgentType"
+import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
@@ -72,7 +69,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {streams, scrollToBottom, execute} = props
-    const {scrollIntoViewOnChange, virtuosoRef, setIsAtBottomRef, scrollToIndex} = useVirtuosoAutoScroll()
+    const {virtuosoRef, setIsAtBottomRef, scrollToIndex, followOutput} = useVirtuosoAutoScroll()
     const {t} = useI18nNamespaces(["yakitUi"])
     useUpdateEffect(() => {
         scrollToIndex("LAST")
@@ -85,20 +82,33 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
     }, [streams.length, execute])
 
-    const components = useMemo(
-        () => ({
-            Item: ({children, style, "data-index": dataIndex}) => (
+    const Item = useMemo(
+        () =>
+            ({children, style, "data-index": dataIndex}) => (
                 <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
                     <div className={styles["item-inner"]}>{children}</div>
                 </div>
             ),
-            Footer: () => (
-                <div style={{height: "80px"}}>
-                    {loading && <YakitSpin wrapperClassName={styles['spin']} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>}
-                </div>
-            )
-        }),
+        []
+    )
+
+    const Footer = useMemo(
+        () => () => (
+            <div style={{height: "80px"}}>
+                {loading && (
+                    <YakitSpin wrapperClassName={styles["spin"]} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>
+                )}
+            </div>
+        ),
         [loading, t]
+    )
+
+    const components = useMemo(
+        () => ({
+            Item,
+            Footer
+        }),
+        [Footer, Item]
     )
 
     return (
@@ -108,9 +118,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 atBottomStateChange={setIsAtBottomRef}
                 style={{height: "100%", width: "100%"}}
                 data={streams}
-                scrollIntoViewOnChange={scrollIntoViewOnChange}
+                followOutput={followOutput}
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
+                atBottomThreshold={100}
                 initialTopMostItemIndex={{index: "LAST"}}
                 skipAnimationFrameInResizeObserver
                 increaseViewportBy={{top: 300, bottom: 300}}

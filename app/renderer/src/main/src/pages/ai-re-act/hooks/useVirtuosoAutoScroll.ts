@@ -13,17 +13,9 @@ const useVirtuosoAutoScroll = () => {
     const setIsAtBottomRef  = (v) => {
         isAtBottomRef.current = v
     }
-
-    const scrollIntoViewOnChange = useMemoizedFn(
-        ({totalCount}: ScrollIntoViewArgs): ScrollIntoViewLocation | false => {
-            if (!isAtBottomRef.current) return false
-            return {
-                index: totalCount,
-                align: "end",
-                behavior: "auto"
-            }
-        }
-    )
+    const followOutput = useMemoizedFn((): boolean => {
+        return isAtBottomRef.current
+    })
 
     const scrollToIndex = useCallback((index: "LAST" | number) => {
         requestIdleCallback(() => {
@@ -35,7 +27,7 @@ const useVirtuosoAutoScroll = () => {
         })
     }, [])
 
-    return {virtuosoRef, setIsAtBottomRef, scrollIntoViewOnChange, scrollToIndex}
+    return {virtuosoRef, setIsAtBottomRef, scrollToIndex,followOutput}
 }
 
 export default useVirtuosoAutoScroll

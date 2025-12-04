@@ -16,6 +16,8 @@ import {AIStreamContentType} from "../hooks/defaultConstant"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
 import {AIChatQSData} from "../hooks/aiRender"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
@@ -64,33 +66,54 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 })
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats} = props
-    const {virtuosoRef, setIsAtBottomRef, scrollIntoViewOnChange} = useVirtuosoAutoScroll()
+    const {
+        chatIPCData: {
+            casualStatus: {loading, title}
+        }
+    } = useChatIPCStore()
+    const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
 
     const renderItem = (item: AIChatQSData) => {
         return <AIChatListItem key={item.id} item={item} type='re-act' />
     }
 
-    const components = useMemo(
-        () => ({
-            Item: ({children, style, "data-index": dataIndex}) => (
+    const Item = useMemo(
+        () =>
+            ({children, style, "data-index": dataIndex}) => (
                 <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
                     <div className={styles["item-inner"]}>{children}</div>
                 </div>
-            )
-        }),
+            ),
         []
+    )
+
+    const Footer = useMemo(
+        () => () => (
+            <div style={{height: "40px"}}>
+                {loading && <YakitSpin wrapperClassName={styles["spin"]} tip={title}></YakitSpin>}
+            </div>
+        ),
+        [loading, title]
+    )
+
+    const components = useMemo(
+        () => ({
+            Item,
+            Footer
+        }),
+        [Footer, Item]
     )
     return (
         <div className={styles["ai-re-act-chat-contents"]}>
             <Virtuoso
                 ref={virtuosoRef}
-                data={chats}
                 atBottomStateChange={setIsAtBottomRef}
-                scrollIntoViewOnChange={scrollIntoViewOnChange}
-                totalCount={chats.length}
+                data={chats}
+                followOutput={followOutput}
                 itemContent={(_, item) => renderItem(item)}
-                components={components}
                 initialTopMostItemIndex={{index: "LAST"}}
+                components={components}
+                atBottomThreshold={50}
                 increaseViewportBy={{top: 300, bottom: 300}}
                 className={styles["re-act-contents-list"]}
             />
