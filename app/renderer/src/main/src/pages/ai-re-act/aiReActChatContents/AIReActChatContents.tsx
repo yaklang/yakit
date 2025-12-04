@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react"
+import React, {useCallback, useMemo, useState} from "react"
 import {AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps} from "./AIReActChatContentsType"
 import styles from "./AIReActChatContents.module.scss"
 import {useCreation} from "ahooks"
@@ -111,22 +111,22 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         return <AIChatListItem key={item.id} item={item} type='re-act' />
     }
 
-    const Item = useMemo(
-        () =>
-            ({children, style, "data-index": dataIndex}) => (
-                <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                    <div className={styles["item-inner"]}>{children}</div>
-                </div>
-            ),
+    const Item = useCallback(
+        ({children, style, "data-index": dataIndex}) => (
+            <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                <div className={styles["item-inner"]}>{children}</div>
+            </div>
+        ),
         []
     )
 
-    const Footer = useMemo(
-        () => () => (
-            <div style={{height: "40px"}}>
-                {loading && <YakitSpin wrapperClassName={styles["spin"]} tip={title}></YakitSpin>}
-            </div>
-        ),
+    const Footer = useCallback(
+        () =>
+            loading ? (
+                <div style={{height: "40px"}}>
+                    {<YakitSpin wrapperClassName={styles["spin"]} tip={title}></YakitSpin>}
+                </div>
+            ) : null,
         [loading, title]
     )
 

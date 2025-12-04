@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useMemo, useState} from "react"
+import React, {memo, useCallback, useEffect, useMemo, useState} from "react"
 import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
@@ -82,24 +82,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
     }, [streams.length, execute])
 
-    const Item = useMemo(
-        () =>
-            ({children, style, "data-index": dataIndex}) => (
-                <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                    <div className={styles["item-inner"]}>{children}</div>
-                </div>
-            ),
+    const Item = useCallback(
+        ({children, style, "data-index": dataIndex}) => (
+            <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                <div className={styles["item-inner"]}>{children}</div>
+            </div>
+        ),
         []
     )
 
-    const Footer = useMemo(
-        () => () => (
-            <div style={{height: "80px"}}>
-                {loading && (
+    const Footer = useCallback(
+        () =>
+            loading ? (
+                <div style={{height: "80px"}}>
                     <YakitSpin wrapperClassName={styles["spin"]} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>
-                )}
-            </div>
-        ),
+                </div>
+            ) : null,
         [loading, t]
     )
 
