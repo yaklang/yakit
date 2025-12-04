@@ -117,5 +117,7 @@ export enum YakitRoute {
     /**AI 工具编辑 */
     ModifyAITool = "modify-ai-tool",
     /** AI 知识库 */
-    AI_REPOSITORY = "ai-repository"
+    AI_REPOSITORY = "ai-repository",
+    // SSA编译历史
+    SSA_Compile_History = "ssa-compile-history"
 }
