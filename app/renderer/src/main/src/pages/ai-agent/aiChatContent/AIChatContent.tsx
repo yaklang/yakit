@@ -160,7 +160,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
             case AITabsEnum.Risk:
                 return !!runTimeIDs.length ? (
-                    <VulnerabilitiesRisksTable runTimeIDs={runTimeIDs} />
+                    <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
                 ) : (
                     <>
                         <YakitEmpty style={{paddingTop: 48}} />

@@ -14,6 +14,7 @@ export interface PluginExecuteResultProps {
 export interface VulnerabilitiesRisksTableProps {
     runtimeId?: string
     runTimeIDs?: string[]
+    filterTagDom?: ReactNode
     allTotal?: number
     setAllTotal?: (n: number) => void
 }
