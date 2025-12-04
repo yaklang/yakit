@@ -1,5 +1,5 @@
 import {SolidToolIcon} from "@/assets/icon/solid"
-import {FC, memo, useCallback, useEffect, useMemo, useState} from "react"
+import {FC, memo, ReactNode, useCallback, useEffect, useMemo, useState} from "react"
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
@@ -24,7 +24,7 @@ interface ToolInvokerCardProps {
     execError?: string
 }
 interface PreWrapperProps {
-    code: string
+    code: ReactNode
 }
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,

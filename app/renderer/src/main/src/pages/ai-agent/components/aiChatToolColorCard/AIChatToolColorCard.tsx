@@ -18,7 +18,7 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {handleSend} = useChatIPCDispatcher()
-    const {toolCall} = props
+    const {toolCall, referenceNode} = props
     const {NodeId, content, selectors} = toolCall
     const title = useCreation(() => {
         if (NodeId === "call-tools") return "Call-tools：参数生成中..."
@@ -74,6 +74,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 {/* 工具紫色卡片所有nodeId都显示代码格式 */}
                 <PreWrapper code={content} />
             </div>
+            {referenceNode}
         </div>
     )
 })
