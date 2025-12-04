@@ -22,7 +22,12 @@ import ChatIPCContent, {
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon} from "@/assets/icon/outline"
-import {AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
+import {
+    AIChatIPCNotifyMessage,
+    AIChatIPCStartParams,
+    ChatIPCSendType,
+    UseTaskChatState
+} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -42,6 +47,7 @@ import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
+import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -54,7 +60,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 }
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
-
+    const {getLabelByParams} = useAINodeLabel()
     const {activeChat, setting} = useAIAgentStore()
     const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
 
@@ -132,6 +138,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleSaveChatInfo()
         handleStopAfterChangeState()
     })
+    const onNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
+        const {NodeIdVerbose, Content} = message
+        const verbose = getLabelByParams(NodeIdVerbose)
+        yakitNotify("info", {
+            message: verbose,
+            description: Content
+        })
+    })
+
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
@@ -139,7 +154,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
         onTimelineMessage: handleTimelineMessage,
-        getRequest: getSetting
+        getRequest: getSetting,
+        onNotifyMessage
     })
     const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
 
