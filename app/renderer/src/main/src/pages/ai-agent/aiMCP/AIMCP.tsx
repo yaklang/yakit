@@ -511,7 +511,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
             desc,
             typeNode
         }
-    }, [item.Type])
+    }, [item.Type, item.URL, item.Command])
     const localModelMenu: YakitMenuItemType[] = useCreation(() => {
         let menu: YakitMenuItemType[] = [
             {
