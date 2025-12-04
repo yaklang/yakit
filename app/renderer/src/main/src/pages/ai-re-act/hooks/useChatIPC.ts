@@ -187,6 +187,13 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
+    /** 流断开瞬间, 需要将状态相关变量进行重置 */
+    const handleResetGrpcStatus = useMemoizedFn(() => {
+        setExecute(false)
+        reactTaskToAsync.current = ""
+        handleResetCasualChatID()
+    })
+
     // #region review事件相关方法
     /** review 界面选项触发事件 */
     const onSend = useMemoizedFn(({token, type, params, optionValue, extraValue}: AIChatSendParams) => {
@@ -228,7 +235,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 重置所有数据 */
     const onReset = useMemoizedFn(() => {
         chatID.current = ""
-        setExecute(false)
+        handleResetGrpcStatus()
         setRunTimeIDs([])
         setGrpcFolders([])
         // handleResetQuestionQueueTimer()
@@ -236,8 +243,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
-        reactTaskToAsync.current = ""
-        handleResetCasualChatID()
         planCoordinatorId.current = ""
         casualChatEvent.handleResetData()
         taskChatEvent.handleResetData()
@@ -424,7 +429,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
             taskChatEvent.handleCloseGrpc()
-            setExecute(false)
+            handleResetGrpcStatus()
             onEnd && onEnd()
 
             ipcRenderer.invoke("cancel-ai-re-act", token).catch(() => {})
