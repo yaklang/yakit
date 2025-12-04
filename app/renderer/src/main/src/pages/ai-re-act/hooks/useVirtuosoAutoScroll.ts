@@ -1,11 +1,7 @@
 import {useMemoizedFn} from "ahooks"
 import {useCallback, useRef} from "react"
-import type {ScrollIntoViewLocation, VirtuosoHandle} from "react-virtuoso"
+import type { VirtuosoHandle} from "react-virtuoso"
 
-interface ScrollIntoViewArgs {
-    totalCount: number
-    scrollingInProgress: boolean
-}
 const useVirtuosoAutoScroll = () => {
     const virtuosoRef = useRef<VirtuosoHandle>(null)
     const isAtBottomRef = useRef(true)

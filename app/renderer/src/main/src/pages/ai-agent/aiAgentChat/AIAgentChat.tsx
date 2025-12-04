@@ -87,7 +87,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onSetKeyTask = useMemoizedFn(() => {
         setMode("task")
         setTimeout(() => {
-            emiter.emit("switchAIActTab", [AITabsEnum.Task_Content])
+            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.Task_Content}))
         }, 100)
     })
 

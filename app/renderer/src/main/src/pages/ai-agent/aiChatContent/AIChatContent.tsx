@@ -30,7 +30,12 @@ import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+
+interface AIAgentTabPayload {
+    key: AITabsEnumType
+    value?: string
+}
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
@@ -48,13 +53,18 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
     const onSwitchAIAgentTab = useMemoizedFn((data) => {
-        if (!data) return
-        const [key, value] = data
-        setActiveKey(key)
-        if (value) {
-            setRunTimeIDs([value])
-        } else {
-            setRunTimeIDs(initRunTimeIDs)
+        if (data === undefined) return setActiveKey(data)
+        try {
+            const {key, value} = JSON.parse(data) as AIAgentTabPayload
+            setActiveKey(key)
+            if (value) {
+                setRunTimeIDs([value])
+            } else {
+                setRunTimeIDs(initRunTimeIDs)
+            }
+        } catch (error) {
+            console.log('error:', error);
+            setActiveKey(undefined)
         }
     })
 

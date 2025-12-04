@@ -66,7 +66,13 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
 
     const switchAIActTab = (key: AITabsEnum) => {
-        emiter.emit("switchAIActTab", [key, params])
+        emiter.emit(
+            "switchAIActTab",
+            JSON.stringify({
+                key,
+                value: params
+            })
+        )
     }
 
     return (
