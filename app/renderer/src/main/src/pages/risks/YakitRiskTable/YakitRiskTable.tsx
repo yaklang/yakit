@@ -88,7 +88,12 @@ import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {AuditCodePageInfoProps, PluginHubPageInfoProps, RuleManagementPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {
+    AuditCodePageInfoProps,
+    PluginHubPageInfoProps,
+    RuleManagementPageInfoProps,
+    usePageInfo
+} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
@@ -275,6 +280,37 @@ const yakitRiskCellStyle = (t: (text: string) => string) => {
                 color: {rgb: "bd2a21"}
             }
         }
+    }
+}
+
+const getSeverityIcon = (Severity?: string) => {
+    const severity = SeverityMapTag.filter((item) => item.key.includes(Severity || ""))[0]
+    let icon = <></>
+    switch (severity?.name) {
+        case "信息":
+            icon = <IconSolidInfoRiskIcon />
+            break
+        case "低危":
+            icon = <IconSolidLowRiskIcon />
+            break
+        case "中危":
+            icon = <IconSolidMediumRiskIcon />
+            break
+        case "高危":
+            icon = <IconSolidHighRiskIcon />
+            break
+        case "严重":
+            icon = <IconSolidSeriousIcon />
+            break
+        default:
+            icon = <IconSolidDefaultRiskIcon />
+            break
+    }
+    return {
+        icon,
+        tag: severity?.tag || "default",
+        name: severity?.name || Severity || "-",
+        nameUi: severity?.nameUi
     }
 }
 const defLimit = 20
@@ -1259,7 +1295,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
 
-    const onRiskTableRowDoubleClick = useMemoizedFn((r?:Risk) => {
+    const onRiskTableRowDoubleClick = useMemoizedFn((r?: Risk) => {
         openRiskNewWindow(r)
     })
 
@@ -1555,7 +1591,16 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest, boxStyle, detailClassName = ""} = props
+    const {
+        info,
+        isShowTime = true,
+        className = "",
+        border = true,
+        isShowExtra,
+        onRetest,
+        boxStyle,
+        detailClassName = ""
+    } = props
     const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     // 目前可展示的请求和响应类型
     const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
@@ -1581,42 +1626,18 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     }, [info])
 
     const severityInfo = useCreation(() => {
-        const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
-        let icon = <></>
-        switch (severity?.name) {
-            case "信息":
-                icon = <IconSolidInfoRiskIcon />
-                break
-            case "低危":
-                icon = <IconSolidLowRiskIcon />
-                break
-            case "中危":
-                icon = <IconSolidMediumRiskIcon />
-                break
-            case "高危":
-                icon = <IconSolidHighRiskIcon />
-                break
-            case "严重":
-                icon = <IconSolidSeriousIcon />
-                break
-            default:
-                icon = <IconSolidDefaultRiskIcon />
-                break
-        }
-        return {
-            icon,
-            tag: severity?.tag || "default",
-            name: severity?.name || info?.Severity || "-",
-            nameUi: severity?.nameUi
-        }
+        return getSeverityIcon(info.Severity)
     }, [info.Severity])
+
     const onClickIP = useMemoizedFn(() => {
         if (props.onClickIP) props.onClickIP(info)
     })
+
     const column = useCreation(() => {
         if (descriptionsDivWidth > 600) return 3
         return 1
     }, [descriptionsDivWidth])
+
     const codeNode = useMemoizedFn((isRequest: boolean) => {
         const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
         const extraParams = {
@@ -1795,7 +1816,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     />
                 )}
                 {showType === "detail" && (
-                    <div className={classNames(styles["content-resize-second"],detailClassName)} ref={descriptionsRef}>
+                    <div className={classNames(styles["content-resize-second"], detailClassName)} ref={descriptionsRef}>
                         <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                             <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
                             <Descriptions.Item label={t("YakitRiskDetails.type")}>
@@ -1971,7 +1992,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
 
 export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
     const {info, className, border, isShowExtra} = props
-    const {t, i18n} = useI18nNamespaces(["risk"])
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
 
     const onClickIP = useMemoizedFn(() => {
@@ -1979,34 +2000,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
     })
 
     const severityInfo = useCreation(() => {
-        const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
-        let icon = <></>
-        switch (severity?.name) {
-            case "信息":
-                icon = <IconSolidInfoRiskIcon />
-                break
-            case "低危":
-                icon = <IconSolidLowRiskIcon />
-                break
-            case "中危":
-                icon = <IconSolidMediumRiskIcon />
-                break
-            case "高危":
-                icon = <IconSolidHighRiskIcon />
-                break
-            case "严重":
-                icon = <IconSolidSeriousIcon />
-                break
-            default:
-                icon = <IconSolidDefaultRiskIcon />
-                break
-        }
-        return {
-            icon,
-            tag: severity?.tag || "default",
-            name: severity?.name || info?.Severity || "-",
-            nameUi: severity?.nameUi
-        }
+        return getSeverityIcon(info.Severity)
     }, [info.Severity])
 
     // 跳转到代码审计页面
@@ -2198,36 +2192,9 @@ interface RightBugAuditResultHeaderProps {
 
 export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps> = React.memo((props) => {
     const {info, extra} = props
-    const {t, i18n} = useI18nNamespaces(["risk"])
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const severityInfo = useCreation(() => {
-        const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
-        let icon = <></>
-        switch (severity?.name) {
-            case "信息":
-                icon = <IconSolidInfoRiskIcon />
-                break
-            case "低危":
-                icon = <IconSolidLowRiskIcon />
-                break
-            case "中危":
-                icon = <IconSolidMediumRiskIcon />
-                break
-            case "高危":
-                icon = <IconSolidHighRiskIcon />
-                break
-            case "严重":
-                icon = <IconSolidSeriousIcon />
-                break
-            default:
-                icon = <IconSolidDefaultRiskIcon />
-                break
-        }
-        return {
-            icon,
-            tag: severity?.tag || "default",
-            name: severity?.name || info?.Severity || "-",
-            nameUi: severity?.nameUi
-        }
+        return getSeverityIcon(info.Severity)
     }, [info.Severity])
 
     const onContext = useMemoizedFn(async () => {
@@ -2307,16 +2274,25 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
     )
 })
 
-export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
-    const {info, columnSize} = props
+export interface RightBugAuditResultProps {
+    info: SSARisk
+    columnSize?: number
+    isScroll?: boolean
+    extra?: React.ReactNode
+    boxStyle?: React.CSSProperties
+}
+
+export const RightBugAuditResult: React.FC<RightBugAuditResultProps> = React.memo((props) => {
+    const {info, columnSize, extra, boxStyle} = props
 
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
                 [styles["yakit-risk-details-content-no-border"]]: true
             })}
+            style={boxStyle}
         >
-            <RightBugAuditResultHeader info={info} />
+            <RightBugAuditResultHeader info={info} extra={extra} />
             <AuditResultDescribe info={info} columnSize={columnSize} />
         </div>
     )

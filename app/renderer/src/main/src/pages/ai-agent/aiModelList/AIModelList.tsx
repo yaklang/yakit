@@ -92,6 +92,7 @@ export const setAIModal = (params: {
             ...extraParams
         }
     }
+    const isAdd = `${!item}`
     let m = showYakitModal({
         title: "添加第三方应用",
         width: 600,
@@ -99,7 +100,7 @@ export const setAIModal = (params: {
         closable: true,
         maskClosable: false,
         onCancel: () => {
-            emiter.emit("onRefreshAvailableAIModelList")
+            // emiter.emit("onRefreshAvailableAIModelList", isAdd)
             m.destroy()
         },
         content: (
@@ -123,12 +124,12 @@ export const setAIModal = (params: {
                         const params: GlobalNetworkConfig = {...config, AppConfigs: existedResult}
                         apiSetGlobalNetworkConfig(params).then(() => {
                             onSuccess()
-                            emiter.emit("onRefreshAvailableAIModelList")
+                            emiter.emit("onRefreshAvailableAIModelList", isAdd)
                             m.destroy()
                         })
                     }}
                     onCancel={() => {
-                        emiter.emit("onRefreshAvailableAIModelList")
+                        // emiter.emit("onRefreshAvailableAIModelList", isAdd)
                         m.destroy()
                     }}
                 />

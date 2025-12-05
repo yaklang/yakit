@@ -117,6 +117,9 @@ export interface AIInputEvent {
 
     IsFreeInput?: boolean
     FreeInput?: string // 自由输入的文本
+
+    /** 问题关联的文件路径 */
+    AttachedFilePath?: string[]
 }
 
 export interface AIOutputI18n {
@@ -249,7 +252,7 @@ export declare namespace AIAgentGrpcApi {
         goal: string
         /**
          * 后端发送的任务状态
-         * progress: "processing" | "completed" | "aborted"
+         * progress: "processing" | "completed" | "aborted" | "skipped"
          */
         progress?: string
         subtasks?: AITaskInfoProps[]
@@ -464,6 +467,12 @@ export declare namespace AIAgentGrpcApi {
         tasks: QuestionQueueItem[]
         total_tasks: number
     }
+    /** 问题状态变化消息 */
+    export interface ReactTaskChanged {
+        react_task_id: string
+        react_task_now_status: string
+        react_task_old_status: string
+    }
 
     /** 准备执行任务规划的问题id(react_task_id) */
     export interface ReactTaskToAsync {
@@ -471,6 +480,32 @@ export declare namespace AIAgentGrpcApi {
         loop_name: string
         task_index: string
         task_user_input: string
+    }
+
+    /** stream类型消息的参考补充消息 */
+    export interface ReferenceMaterialPayload {
+        event_uuid: string
+        payload: string
+        type: string
+    }
+
+    /** 实时时间线-单个时间点的数据 */
+    export interface TimelineItem {
+        deleted: boolean
+        timestamp: number
+        id: number
+        /** 可选类型 "user_input" "tool_result", "user_interaction", "text", "raw" */
+        type: string
+        entry_type?: string
+        /** 任务ID */
+        task_id?: string
+        /** 实际内容 */
+        content: string
+        /** 原始文本（用于调试） */
+        raw_text?: string
+
+        ShrinkResult?: string
+        ShrinkSimilarResult?: string
     }
 }
 

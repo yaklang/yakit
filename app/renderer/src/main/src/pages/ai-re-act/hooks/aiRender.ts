@@ -32,6 +32,7 @@ export interface AIStreamOutput extends AIOutputBaseInfo {
     content: string
     ContentType: AIOutputEvent["ContentType"]
     selectors?: ToolStreamSelectors
+    reference?: AIAgentGrpcApi.ReferenceMaterialPayload[]
 }
 
 /** 工具结果的信息内容 */
@@ -80,14 +81,6 @@ export type AIReviewType =
     | UIRequireUserInteractive
     | UIExecAIForgeReview
 
-/** 文件系统操作结构(辅助UI渲染) */
-export interface AIFileSystemPin {
-    path: string
-    isDir: boolean
-    name: string
-    suffix: string
-}
-
 /** 插件执行中的文件操作记录 */
 export interface AIYakExecFileRecord extends StreamResult.Log {
     /** 前端主动对接口流输出的文件记录进行先后操作的记录 */
@@ -105,22 +98,15 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
     level: number
 }
 
-/** 问题队列状态变化 */
-export interface AIQuestionQueueStatusChange extends AIAgentGrpcApi.QuestionQueueStatusChange {
-    NodeId: AIOutputEvent["NodeId"]
-    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
-    type: "enqueue" | "dequeue"
-    queues: AIQuestionQueues
-}
-
-/** 自由对话-问题队列清空消息 */
-export interface AIQuestionQueueCleared {
-    NodeId: AIOutputEvent["NodeId"]
-    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
-}
-
 /** 任务规划-执行崩溃后的错误信息展示 */
 export interface FailPlanAndExecutionError {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    content: string
+}
+
+/** 自由对话崩溃的错误信息 */
+export interface FailReactError {
     NodeId: AIOutputEvent["NodeId"]
     NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
     content: string
@@ -149,20 +135,18 @@ export enum AIChatQSDataTypeEnum {
     REQUIRE_USER_INTERACTIVE = "require_user_interactive",
     /**智能体/forge审阅 */
     EXEC_AIFORGE_REVIEW_REQUIRE = "exec_aiforge_review_require",
-    /**更新文件系统 */
-    FILE_SYSTEM_PIN = "file_system_pin",
     /**Divider Card */
     TASK_INDEX_NODE = "task_index_node",
     /**工具决策 */
     TOOL_CALL_DECISION = "tool_call_decision",
     /**当前任务规划结束标志 */
     END_PLAN_AND_EXECUTION = "end_plan_and_execution",
-    /** 问题队列状态变化信息 */
-    QUESTION_QUEUE_STATUS_CHANGE = "question_queue_status_change",
-    /** 问题队列清空消息 */
-    QUESTION_QUEUE_CLEARED = "question_queue_cleared",
     /** 任务规划崩溃的错误信息 */
-    FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution"
+    FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution",
+    /** ReAct任务崩溃的错误信息 */
+    FAIL_REACT = "fail_react_task",
+    /** 工具结果 */
+    TOOL_CALL_RESULT = "tool_call_result"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -179,6 +163,7 @@ type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
 /** @deprecated 日志类型已无用，迁移成一个新页面 */
 type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
+type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
 type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
 type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
@@ -190,19 +175,14 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
     UIRequireUserInteractive
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
-type ChatFileSystemPin = AIChatQSDataBase<AIChatQSDataTypeEnum.FILE_SYSTEM_PIN, AIFileSystemPin>
 type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
-type ChatQuestionQueueStatusChange = AIChatQSDataBase<
-    AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE,
-    AIQuestionQueueStatusChange
->
-type ChatQuestionQueueCleared = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED, AIQuestionQueueCleared>
 type ChatFailPlanAndExecution = AIChatQSDataBase<
     AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
     FailPlanAndExecutionError
 >
+type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -216,11 +196,10 @@ export type AIChatQSData =
     | ChatToolUseReviewRequire
     | ChatRequireUserInteractive
     | ChatExecAIForgeReview
-    | ChatFileSystemPin
     | ChatTaskIndexNode
     | ChatToolCallDecision
     | ChatPlanExecEnd
-    | ChatQuestionQueueStatusChange
-    | ChatQuestionQueueCleared
     | ChatFailPlanAndExecution
+    | ChatFailReact
+    | ChatToolCallResult
 // #endregion

@@ -177,7 +177,6 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
         if (!ParamsUIConfig) return null
         try {
             const param: YakParamProps[] = handleFetchParams(ParamsUIConfig)
-            console.log("AIForgeForm: forge-show-ui-params", param)
             return param
         } catch (error) {
             return null

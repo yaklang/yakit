@@ -113,7 +113,11 @@ export enum AIInputEventSyncTypeEnum {
     /** 清空队列 */
     SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task",
     /** 取消指定任务 */
-    SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task"
+    SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task",
+    /** 取消指定的任务树上的某个节点 */
+    SYNC_TYPE_SKIP_SUBTASK_IN_PLAN = "skip_subtask_in_plan",
+    /** 重跑指定的任务树上的某个节点 */
+    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan"
 }
 
 export enum AIInputEventHotPatchTypeEnum {

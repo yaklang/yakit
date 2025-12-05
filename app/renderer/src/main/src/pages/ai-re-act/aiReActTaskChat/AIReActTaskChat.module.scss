@@ -22,7 +22,7 @@
     @extend %display-flex-center;
     align-items: flex-start;
     flex: 1;
-    overflow: hidden;
+    // overflow: auto hidden;
     height: 100%;
     @include AIReActChat.content-side("left");
     .chat-content-wrapper {
@@ -32,6 +32,7 @@
         height: 100%;
         width: 100%;
         position: relative;
+        min-width: 400px;
     }
     .header {
         @extend %display-flex-center;

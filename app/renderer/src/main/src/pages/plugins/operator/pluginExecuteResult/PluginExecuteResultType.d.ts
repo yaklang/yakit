@@ -14,8 +14,9 @@ export interface PluginExecuteResultProps {
 export interface VulnerabilitiesRisksTableProps {
     runtimeId?: string
     runTimeIDs?: string[]
-    allTotal: number
-    setAllTotal: (n: number) => void
+    filterTagDom?: ReactNode
+    allTotal?: number
+    setAllTotal?: (n: number) => void
 }
 
 export interface AuditHoleTableOnTabProps {
@@ -38,6 +39,7 @@ export interface PluginExecuteResultTabContentProps {
 export interface PluginExecuteWebsiteTreeProps {
     runtimeId: string
     website?: boolean
+    filterTagDom?: React.ReactNode
 }
 export interface PluginExecutePortTableProps {
     runtimeId: string

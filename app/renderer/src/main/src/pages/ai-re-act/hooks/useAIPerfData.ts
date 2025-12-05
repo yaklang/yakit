@@ -54,21 +54,33 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
             if (res.Type === "pressure") {
                 // 上下文压力
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Pressure
-                setPressure((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
+                setPressure((old) => {
+                    const newArr = old.concat([{...data, timestamp: Number(res.Timestamp) || 0}])
+                    if (newArr.length > 100) newArr.shift()
+                    return newArr
+                })
                 return
             }
 
             if (res.Type === "ai_first_byte_cost_ms") {
                 // 首字符响应耗时
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
-                setFirstCost((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
+                setFirstCost((old) => {
+                    const newArr = old.concat([{...data, timestamp: Number(res.Timestamp) || 0}])
+                    if (newArr.length > 100) newArr.shift()
+                    return newArr
+                })
                 return
             }
 
             if (res.Type === "ai_total_cost_ms") {
                 // 总对话耗时
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
-                setTotalCost((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
+                setTotalCost((old) => {
+                    const newArr = old.concat([{...data, timestamp: Number(res.Timestamp) || 0}])
+                    if (newArr.length > 100) newArr.shift()
+                    return newArr
+                })
                 return
             }
         } catch (error) {

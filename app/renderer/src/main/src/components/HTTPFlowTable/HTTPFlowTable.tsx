@@ -297,6 +297,8 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     /** 进程名 */
     ProcessName?: string[]
+    /** 过滤运行时ID Dom */
+    filterTagDom?: ReactNode
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
     onSetHasNewData?: (f: boolean) => void
@@ -610,6 +612,13 @@ interface ImportExportStreamResponse {
     Verbose: string
 }
 
+const getRunTimeIdObj = (runTimeId?: string) => {
+    return {
+        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
+    }
+}
+
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const {
         noTableTitle = false,
@@ -633,6 +642,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         containerClassName = "",
         runTimeId,
         downstreamProxyStr = "",
+        filterTagDom,
         onSetTableTotal,
         onSetTableSelectNum,
         onSetHasNewData
@@ -655,12 +665,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>({
         SourceType: props.params?.SourceType || "mitm",
-        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
+        ...getRunTimeIdObj(runTimeId),
         FromPlugin: "",
         Full: false,
         Tags: []
     })
+    useEffect(() => {
+        setParams((pre) => ({
+            ...pre,
+            ...getRunTimeIdObj(runTimeId)
+        }))
+    }, [runTimeId])
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
 
@@ -3572,8 +3587,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const obj: YakQueryHTTPFlowRequest = {
             // 这里是外界传进来的条件重置时需要保留
             SourceType: props.params?.SourceType || "mitm",
-            RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-            RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
+            ...getRunTimeIdObj(runTimeId),
             Full: false,
             // 屏蔽条件和高级筛选里面的参数需要保留
             ExcludeId: params.ExcludeId,
@@ -4118,6 +4132,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 </span>
                                             </div>
                                         </div>
+                                        {filterTagDom}
                                     </div>
                                     <div className={style["http-history-table-right"]}>
                                         {showAdvancedSearch && (

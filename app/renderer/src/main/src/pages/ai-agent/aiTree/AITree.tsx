@@ -1,15 +1,18 @@
 import React, {memo, useMemo} from "react"
 import {AITreeNodeProps, AITreeProps} from "./type"
 import {TaskErrorIcon, TaskInProgressIcon, TaskSuccessIcon} from "./icon"
-import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {OutlineExitIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useMemoizedFn} from "ahooks"
-import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./AITree.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AITaskInfoProps} from "@/pages/ai-re-act/hooks/aiRender"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -24,7 +27,10 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-    const {tasks, onNodeClick} = props
+    const {tasks} = props
+    const onClick = useMemoizedFn((id) => {
+        emiter.emit("onAITreeLocatePlanningList", id)
+    })
     return (
         <div className={styles["ai-tree"]}>
             {tasks.map((item, index) => {
@@ -39,7 +45,13 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
                     levelDiff: Math.abs(item.level - (next?.level ?? 2)) // START_LEVEL 加上 去掉第一层，所以是 2
                 }
                 return (
-                    <AITreeNode key={item.index} order={index} position={position} data={item} onClick={onNodeClick} />
+                    <AITreeNode
+                        key={item.index}
+                        order={index}
+                        position={position}
+                        data={item}
+                        onClick={() => onClick(item.index)}
+                    />
                 )
             })}
             <div className={styles["ai-tree-node-end"]}>
@@ -51,7 +63,10 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
 
 /** @name 树节点 */
 const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) => {
-    const lineNum = data.level - START_LEVEL
+    const {handleSendSyncMessage} = useChatIPCDispatcher()
+    const lineNum = useMemo(() => {
+        return data.level - START_LEVEL
+    }, [data.level])
     const {isStart, isEnd, isStartOfLevel, isEndOfLevel, isParentLast, levelDiff} = position
     const [infoShow, setInfoShow] = React.useState(false)
 
@@ -62,40 +77,50 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             return info
         }
     })
-
-    const handleClick = useMemoizedFn(() => {
-        onClick && onClick(handleFindLeafNode(cloneDeep(data)))
+    const onCancelTask = useMemoizedFn(() => {
+        handleSendSyncMessage({
+            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+            SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", subtask_index: data.index})
+        })
     })
-
     const [Icon, Card] = useMemo(() => {
         const titleNode = (
             <div className={styles["node-title"]}>
                 <p>{data.name}</p>
-
-                <YakitPopover
-                    overlayClassName={styles["task-detail-popover"]}
-                    overlayStyle={{paddingLeft: 4}}
-                    placement='rightTop'
-                    content={
-                        <div className={styles["detail-wrapper"]}>
-                            <div className={styles["detail-title"]}>{data.name}</div>
-                            <div className={styles["detail-description"]}>{data.goal}</div>
-                        </div>
-                    }
-                    visible={infoShow}
-                    onVisibleChange={setInfoShow}
-                >
-                    <OutlineInformationcircleIcon />
-                </YakitPopover>
+                <div className={styles["node-extra"]}>
+                    <YakitPopover
+                        overlayClassName={styles["task-detail-popover"]}
+                        overlayStyle={{paddingLeft: 4}}
+                        placement='rightTop'
+                        content={
+                            <div className={styles["detail-wrapper"]}>
+                                <div className={styles["detail-title"]}>{data.name}</div>
+                                <div className={styles["detail-description"]}>{data.goal}</div>
+                            </div>
+                        }
+                        visible={infoShow}
+                        onVisibleChange={setInfoShow}
+                    >
+                        <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                    </YakitPopover>
+                    {data.progress === "processing" && (
+                        <YakitPopconfirm
+                            title={"是否确认取消该子任务，取消后会按顺序执行下一个子任务?"}
+                            onConfirm={() => onCancelTask()}
+                        >
+                            <OutlineExitIcon />
+                        </YakitPopconfirm>
+                    )}
+                </div>
             </div>
         )
         const contentNode = (
-            <div className={styles["node-content"]} onClick={handleClick}>
+            <div className={styles["node-content"]}>
                 <div className={styles["node-content-text"]}>{data.goal}</div>
                 <div className={styles["node-content-tag"]}>
                     {[data.fail_tool_call_count, data.success_tool_call_count].map((item, index) => {
-                        if (!item) return null 
-                        const color = index === 0 ? "danger" : "success" 
+                        if (!item) return null
+                        const color = index === 0 ? "danger" : "success"
                         return (
                             <YakitTag
                                 key={index}
@@ -114,11 +139,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
         const style = isParentLast && !data.progress ? {marginBottom: "16px"} : {}
 
         const getWrapper = (extraClass?: string) => (
-            <div
-                className={classNames(styles["node-wrapper"], extraClass)}
-                style={style}
-                onClick={() => onClick?.(data)}
-            >
+            <div className={classNames(styles["node-wrapper"], extraClass)} style={style} onClick={onClick}>
                 {titleNode}
                 {data.progress && contentNode}
             </div>
@@ -127,6 +148,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             case "completed":
                 return [<TaskSuccessIcon key='success' />, getWrapper(styles["node-wrapper-success"])]
             case "aborted":
+            case "skipped":
                 return [<TaskErrorIcon key='error' />, getWrapper(styles["node-wrapper-error"])]
             case "processing":
                 return [<TaskInProgressIcon key='in-progress' />, getWrapper(styles["node-wrapper-in-progress"])]
@@ -136,7 +158,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
                     getWrapper(styles["node-wrapper-default"])
                 ]
         }
-    }, [data, handleClick, infoShow, isParentLast, onClick])
+    }, [data, infoShow, isParentLast, onClick, onCancelTask])
 
     if (data === null) return null
 

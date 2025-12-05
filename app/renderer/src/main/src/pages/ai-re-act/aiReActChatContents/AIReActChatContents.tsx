@@ -1,5 +1,5 @@
-import React, {MutableRefObject, useMemo} from "react"
-import {AIReActChatContentsPProps, AIStreamNodeProps} from "./AIReActChatContentsType.d"
+import React, {useCallback, useMemo, useState} from "react"
+import {AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps} from "./AIReActChatContentsType"
 import styles from "./AIReActChatContents.module.scss"
 import {useCreation} from "ahooks"
 import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
@@ -16,10 +16,31 @@ import {AIStreamContentType} from "../hooks/defaultConstant"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
 import {AIChatQSData} from "../hooks/aiRender"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
+import classNames from "classnames"
+import {PreWrapper} from "@/pages/ai-agent/components/ToolInvokerCard"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 
+const getAIReferenceNodeByType = (contentType?: string) => {
+    switch (contentType) {
+        case AIStreamContentType.TEXT_MARKDOWN:
+            return styles["ai-text-markdown-reference-node"]
+        case AIStreamContentType.CODE_YAKLANG:
+        case AIStreamContentType.CODE_HTTP_REQUEST:
+            return styles["ai-yaklang-reference-node"]
+        case AIStreamContentType.TEXT_PLAIN:
+            return styles["ai-text-plain-reference-node"]
+        case AIStreamContentType.LOG_TOOL:
+            return styles["ai-log-tool-reference-node"]
+        default:
+            return styles["ai-stream-chat-reference-node"]
+    }
+}
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
-    const {NodeId, content, NodeIdVerbose, CallToolID, ContentType} = stream.data
+    const {NodeId, content, NodeIdVerbose, CallToolID, ContentType, reference} = stream.data
     const {yakExecResult} = useAIChatUIData()
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
@@ -29,9 +50,22 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
             title: stream.AIService
         }
     }, [stream.Timestamp, stream.AIService])
+    const referenceNode = useCreation(() => {
+        const className = getAIReferenceNodeByType(ContentType)
+        return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>
+    }, [reference, ContentType])
+
     switch (ContentType) {
         case AIStreamContentType.TEXT_MARKDOWN:
-            return <AIMarkdown content={content} nodeLabel={nodeLabel} modalInfo={modalInfo} {...aiMarkdownProps} />
+            return (
+                <AIMarkdown
+                    referenceNode={referenceNode}
+                    content={content}
+                    nodeLabel={nodeLabel}
+                    modalInfo={modalInfo}
+                    {...aiMarkdownProps}
+                />
+            )
         case AIStreamContentType.CODE_YAKLANG:
         case AIStreamContentType.CODE_HTTP_REQUEST:
             return (
@@ -40,6 +74,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     content={content}
                     nodeLabel={nodeLabel}
                     modalInfo={modalInfo}
+                    referenceNode={referenceNode}
                 />
             )
         case AIStreamContentType.TEXT_PLAIN:
@@ -52,48 +87,100 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     content={content}
                     modalInfo={modalInfo}
                     fileList={fileList}
+                    referenceNode={referenceNode}
                 />
             )
         case AIStreamContentType.LOG_TOOL:
-            return <AIChatToolColorCard toolCall={stream.data} />
+            return <AIChatToolColorCard toolCall={stream.data} referenceNode={referenceNode} />
         case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
             return <></>
         default:
-            return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
+            return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} referenceNode={referenceNode} />
     }
 })
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats} = props
-    const {virtuosoRef, setIsAtBottomRef, scrollIntoViewOnChange} = useVirtuosoAutoScroll()
+    const {
+        chatIPCData: {
+            casualStatus: {loading, title}
+        }
+    } = useChatIPCStore()
+    const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
 
     const renderItem = (item: AIChatQSData) => {
         return <AIChatListItem key={item.id} item={item} type='re-act' />
     }
 
+    const Item = useCallback(
+        ({children, style, "data-index": dataIndex}) => (
+            <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                <div className={styles["item-inner"]}>{children}</div>
+            </div>
+        ),
+        []
+    )
+
+    const Footer = useCallback(
+        () =>
+            loading ? (
+                <div style={{height: "40px"}}>
+                    {<YakitSpin wrapperClassName={styles["spin"]} tip={title}></YakitSpin>}
+                </div>
+            ) : null,
+        [loading, title]
+    )
+
     const components = useMemo(
         () => ({
-            Item: ({children, style, "data-index": dataIndex}) => (
-                <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                    <div className={styles["item-inner"]}>{children}</div>
-                </div>
-            )
+            Item,
+            Footer
         }),
-        []
+        [Footer, Item]
     )
     return (
         <div className={styles["ai-re-act-chat-contents"]}>
             <Virtuoso
                 ref={virtuosoRef}
-                data={chats}
                 atBottomStateChange={setIsAtBottomRef}
-                scrollIntoViewOnChange={scrollIntoViewOnChange}
-                totalCount={chats.length}
+                data={chats}
+                followOutput={followOutput}
                 itemContent={(_, item) => renderItem(item)}
-                components={components}
                 initialTopMostItemIndex={{index: "LAST"}}
+                components={components}
+                atBottomThreshold={50}
                 increaseViewportBy={{top: 300, bottom: 300}}
                 className={styles["re-act-contents-list"]}
             />
+        </div>
+    )
+})
+
+const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
+    const {referenceList, className} = props
+    const [expand, setExpand] = useState<boolean>(false)
+    return (
+        <div className={classNames(styles["ai-reference-node"], className)}>
+            <div className={styles["reference-title"]} onClick={() => setExpand((v) => !v)}>
+                <span>参考资料({referenceList.length})</span>
+                <YakitButton type='text' icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />} />
+            </div>
+            {expand && (
+                <PreWrapper
+                    code={
+                        <div className={styles["reference-list"]}>
+                            {referenceList.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={classNames(styles["reference-list-item"])}
+                                    title={item.payload}
+                                >
+                                    {item.payload}
+                                </div>
+                            ))}
+                        </div>
+                    }
+                />
+            )}
         </div>
     )
 })

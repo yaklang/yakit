@@ -44,7 +44,8 @@ export enum AIAgentTabListEnum {
     Forge_Name = "forgeName",
     Tool = "tool",
     AI_Model = "AIModel",
-    MCP = "mcp"
+    MCP = "mcp",
+    KnowledgeBase = "knowledgeBase"
 }
 export const AIAgentTabList: YakitSideTabProps["yakitTabs"] = [
     {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
@@ -53,6 +54,19 @@ export const AIAgentTabList: YakitSideTabProps["yakitTabs"] = [
     {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
     {value: AIAgentTabListEnum.AI_Model, label: "AI模型", icon: <OutlineChipIcon />},
     {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
+]
+export enum AIMentionTabsEnum {
+    /**forge 智能体 */
+    Forge_Name = "forgeName",
+    /**工具 */
+    Tool = "tool",
+    /**知识库 */
+    KnowledgeBase = "knowledgeBase"
+}
+export const AIMentionTabs: YakitSideTabProps["yakitTabs"] = [
+    {value: AIMentionTabsEnum.Forge_Name, label: "模板"},
+    {value: AIMentionTabsEnum.Tool, label: "工具"},
+    {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -127,12 +141,12 @@ export enum AITabsEnum {
     Risk = "risk"
 }
 /** @name AI 默认展示的tab集合 */
-export const AITabs: YakitSideTabProps["yakitTabs"] = [
-    {label: "任务内容", value: AITabsEnum.Task_Content},
-    {label: "更新文件系统", value: AITabsEnum.File_System},
-    {label: "HTTP 流量", value: AITabsEnum.HTTP},
-    {label: "漏洞与风险", value: AITabsEnum.Risk}
-]
+export const AITabs = {
+    "task-content": {label: "任务内容", value: AITabsEnum.Task_Content},
+    "file-system": {label: "文件系统", value: AITabsEnum.File_System},
+    http: {label: "HTTP 流量", value: AITabsEnum.HTTP},
+    risk: {label: "漏洞与风险", value: AITabsEnum.Risk}
+}
 
 /** AI-Forge 列表查询条件里的页码默认条件 */
 export const AIForgeListDefaultPagination: PaginationSchema = {
@@ -223,7 +237,9 @@ export const defaultChatIPCData: UseChatIPCState = {
     questionQueue: {
         total: 0,
         data: []
-    }
+    },
+    casualStatus: {loading: false, title: ""},
+    reActTimelines: []
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},

@@ -1,13 +1,15 @@
 @use "../../../../styles/mixin.scss" as mixin;
 .ai-stream-chat-content-wrapper {
+    border-radius: 8px;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.ai-stream-chat-content {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     max-width: 100%;
     gap: 4px;
 
-    border-radius: 8px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
     .title {
         padding: 8px 0px 8px 12px;
         border-radius: 8px 0 0 8px;

@@ -2,6 +2,7 @@ import {ReactNode} from "react"
 
 export interface AIChatWelcomeProps {
     onTriageSubmit: (question: string) => void
+    onSetReAct: () => void
 }
 interface AIRecommendItem {
     type: string

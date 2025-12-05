@@ -19,6 +19,10 @@ module.exports = async function (context) {
         productVersion = productVersion.replace("-ee", "")
     }
 
+    const productName=baseInfo.productName
+
+    const artifactName = productName==="Memfit AI"?"MemfitAI":productName
+
     /** win32 */
     const win32Config = context.electronPlatformName === "win32" ? context.packager.config.win : null
     if (win32Config) {
@@ -36,7 +40,7 @@ module.exports = async function (context) {
                 to: "LICENSE.md"
             }
         ]
-        win32Config.artifactName = `${"${productName}"}-${productVersion}-windows${
+        win32Config.artifactName = `${artifactName}-${productVersion}-windows${
             isLegacy ? "-legacy" : ""
         }-amd64.${"${ext}"}`
         context.packager.config.win = win32Config
@@ -58,7 +62,7 @@ module.exports = async function (context) {
         ]
         switch (arch) {
             case "arm64":
-                linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux${
+                linuxConfig.artifactName = `${artifactName}-${productVersion}-linux${
                     isLegacy ? "-legacy" : ""
                 }-arm64.${"${ext}"}`
                 linuxConfig.extraFiles = [
@@ -70,7 +74,7 @@ module.exports = async function (context) {
                 ]
                 break
             case "x64":
-                linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux${
+                linuxConfig.artifactName = `${artifactName}-${productVersion}-linux${
                     isLegacy ? "-legacy" : ""
                 }-amd64.${"${ext}"}`
                 linuxConfig.extraFiles = [
@@ -98,7 +102,7 @@ module.exports = async function (context) {
                 to: "bins/flag.darwin.txt"
             }
         ]
-        macConfig.artifactName = `${"${productName}"}-${productVersion}-darwin${
+        macConfig.artifactName = `${artifactName}-${productVersion}-darwin${
             isLegacy ? "-legacy" : ""
         }-${"${arch}"}.${"${ext}"}`
         switch (arch) {

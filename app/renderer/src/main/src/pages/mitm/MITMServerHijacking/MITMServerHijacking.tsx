@@ -432,11 +432,15 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     })
 
     const onClickDownstreamProxy = useMemoizedFn(async () => {
-        const versionValid = await checkProxyVersion()
-        if (!versionValid) {
-            return
+        try {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setAgentConfigModalVisible(true)
+        } catch (error) {
+            console.error("error:", error)
         }
-        setAgentConfigModalVisible(true)
     })
 
     return (
@@ -492,16 +496,6 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                     </Form>
                 </div>
             </YakitModal>
-            <AgentConfigModal
-                agentConfigModalVisible={false} //弃用
-                onCloseModal={() => setAgentConfigModalVisible(false)}
-                generateURL={(url) => {
-                    const v = form.getFieldsValue()
-                    const arr = Array.isArray(v.downstreamProxy) ? v.downstreamProxy.slice() : []
-                    arr.push(url)
-                    form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
-                }}
-            ></AgentConfigModal>
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
                 onClose={() => setAgentConfigModalVisible(false)}

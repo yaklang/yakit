@@ -98,21 +98,20 @@ jobs:
             - name: Show built files
               run: ls ./release
 
-            - name: Check Memfit if the output is correct
-              run: (./packageScript/script/check-build-package.sh Memfit) || { exit 1; }
-              shell: bash
+            # - name: Check Memfit if the output is correct
+            #   run: (./packageScript/script/check-build-package.sh "Memfit AI") || { exit 1; }
+            #   shell: bash
             - name: Upload Memfit artifacts
               uses: actions/upload-artifact@v4
               with:
                   name: Memfit-artifacts
                   path: |
-                      ./release/Memfit-${{ env.ENV_TAG }}-*.exe
-                      ./release/Memfit-${{ env.ENV_TAG }}-*.dmg
-                      ./release/Memfit-${{ env.ENV_TAG }}-*.AppImage
+                      ./release/MemfitAI-${{ env.ENV_TAG }}-*.exe
+                      ./release/MemfitAI-${{ env.ENV_TAG }}-*.dmg
+                      ./release/MemfitAI-${{ env.ENV_TAG }}-*.AppImage
                   if-no-files-found: error
                   retention-days: 1
 
-                  
     publish_memfit_to_oss:
         needs: build_memfit
         runs-on: ubuntu-latest

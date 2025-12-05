@@ -1723,6 +1723,7 @@ message AIInputEvent {
 
   bool IsFreeInput = 11;
   string FreeInput = 12;
+  repeated string AttachedFilePath = 14;
 }
 
 
@@ -8455,6 +8456,7 @@ message DeleteSSAProjectRequest {
   // "delete_all" 或 空字符串 - 清空编译历史和项目信息（删除 IrProgram 和 SSAProject）
   // 默认为 "delete_all"
   string DeleteMode = 2;
+  bool DeleteAllProject =3 ;
 }
 
 message DeleteSSAProjectResponse {

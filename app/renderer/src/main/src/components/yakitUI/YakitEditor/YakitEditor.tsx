@@ -297,6 +297,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         onOperationRecord("showBreak", showLineBreaks)
     }, [showLineBreaks])
 
+    useUpdateEffect(() => {
+        onOperationRecord("noWordWrap", noWordWrap)
+    }, [noWordWrap])
+
     // 自定义HTTP数据包变形处理
     const {customHTTPMutatePlugin, contextMenuPlugin, setCustomHTTPMutatePlugin, setContextMenuPlugin} = useStore()
     const searchCodecCustomHTTPMutatePlugin = useMemoizedFn(() => {
@@ -583,7 +587,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }, [])
 
     /** 操作记录存储 */
-    const onOperationRecord = (type: "fontSize" | "showBreak", value: number | boolean) => {
+    const onOperationRecord = (type: "fontSize" | "showBreak" | "noWordWrap", value: number | boolean) => {
         if (editorOperationRecord) {
             getRemoteValue(editorOperationRecord).then((data) => {
                 if (!data) {

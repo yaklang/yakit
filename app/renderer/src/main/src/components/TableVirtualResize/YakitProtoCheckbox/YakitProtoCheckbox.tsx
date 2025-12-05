@@ -10,6 +10,7 @@ export interface YakitProtoCheckboxProps {
     disabled?: boolean
     wrapperClassName?: string
     wrapperStyle?: React.CSSProperties
+    onClick?: (e) => void
 }
 /**
  * @description: 原生 多选框

@@ -31,13 +31,21 @@
             background-color: var(--Colors-Use-Main-Primary);
             &:hover {
                 background-color: var(--Colors-Use-Main-Hover);
+                color: var(--Colors-Use-Main-On-Primary);
+                svg {
+                    color: var(--Colors-Use-Main-On-Primary);
+                }
             }
             svg {
                 color: var(--Colors-Use-Main-On-Primary);
             }
         }
         &-item-advanced-config-unShow {
-            background-color: var(--Colors-Use-Main-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background-color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            svg {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
         }
         &-label {
             font-weight: 600;

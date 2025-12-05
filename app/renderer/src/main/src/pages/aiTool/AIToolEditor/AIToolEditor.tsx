@@ -626,8 +626,6 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
             const data = cloneDeep(values)
             if (form) {
                 form.setFieldsValue(data)
-            } else {
-                console.error("AIToolEditorInfoForm-handleSetFormValues", `获取不到 form 实例, 请检查代码逻辑`)
             }
         })
         const handleGetFormValues = useMemoizedFn(() => {

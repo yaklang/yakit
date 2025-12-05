@@ -315,11 +315,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [alertVisible, setAlertVisible] = useState<boolean>(true)
 
     const onClickDownstreamProxy = useMemoizedFn(async () => {
-        const versionValid = await checkProxyVersion()
-        if (!versionValid) {
-            return
+        try {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setAgentConfigModalVisible(true)
+        } catch (error) {
+            console.error("error:", error)
         }
-        setAgentConfigModalVisible(true)
     })
 
     return (
@@ -530,16 +534,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     </Item>
                 </Form>
                 {/* 代理劫持弹窗 */}
-                <AgentConfigModal
-                    agentConfigModalVisible={false} //弃用
-                    onCloseModal={() => setAgentConfigModalVisible(false)}
-                    generateURL={(url) => {
-                        const v = form.getFieldsValue()
-                        const arr = Array.isArray(v.downstreamProxy) ? v.downstreamProxy.slice() : []
-                        arr.push(url)
-                        form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
-                    }}
-                ></AgentConfigModal>
                 <ProxyRulesConfig 
                     visible={agentConfigModalVisible} 
                     onClose={() => setAgentConfigModalVisible(false)} 
@@ -590,6 +584,7 @@ interface AgentConfigModalProp {
 }
 
 // 代理劫持弹窗
+/** @deprecated 已弃用，使用 ProxyRulesConfig 替代 */
 export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     const {agentConfigModalVisible, onCloseModal, generateURL} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])

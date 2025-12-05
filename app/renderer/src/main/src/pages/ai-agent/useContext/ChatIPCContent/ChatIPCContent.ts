@@ -4,6 +4,7 @@ import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
+import { HandleStartParams } from "../../aiAgentChat/type"
 
 export interface ChatIPCContextStore {
     chatIPCData: UseChatIPCState
@@ -34,7 +35,7 @@ export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
     handleSendCasual: (params: AIChatIPCSendParams) => void
     handleSendTask: (params: AIChatIPCSendParams) => void
-    handleStart: (qs: string) => void
+    handleStart: (data:HandleStartParams) => void
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void
     setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
