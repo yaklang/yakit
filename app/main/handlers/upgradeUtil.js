@@ -1334,70 +1334,74 @@ module.exports = {
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
-                const {isEnterprise, isIRify, isMemfit} = type
-                const IRifyCE = isIRify && !isEnterprise
-                const IRifyEE = isIRify && isEnterprise
-                const YakitCE = !isIRify && !isEnterprise
-                const YakitEE = !isIRify && isEnterprise
-                const MemfitCE = isMemfit && !isEnterprise
-                const MemfitEE = isMemfit && isEnterprise
-                // format version，下载的版本号里不能存在 V
-                if (version.startsWith("v")) {
-                    version = version.substr(1)
-                }
-
-                console.info("start to fetching download-url for yakit")
-                let downloadUrl = ""
-                if (IRifyCE) {
-                    downloadUrl = await getDownloadUrl(version, "IRifyCE")
-                } else if (IRifyEE) {
-                    downloadUrl = await getDownloadUrl(version, "IRifyEE")
-                } else if (YakitEE) {
-                    downloadUrl = await getDownloadUrl(version, "YakitEE")
-                } else if (MemfitCE) {
-                    downloadUrl = await getDownloadUrl(version, "Memfit")
-                } else if (MemfitEE) {
-                    downloadUrl = await getDownloadUrl(version, "Memfit")
-                } else {
-                    downloadUrl = await getDownloadUrl(version, "YakitCE")
-                }
-                // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
-                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
-                const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
                 try {
-                    fs.unlinkSync(dest)
-                } catch (e) {}
+                    const {isEnterprise, isIRify, isMemfit} = type
+                    const IRifyCE = isIRify && !isEnterprise
+                    const IRifyEE = isIRify && isEnterprise
+                    const YakitCE = !isIRify && !isEnterprise
+                    const YakitEE = !isIRify && isEnterprise
+                    const MemfitCE = isMemfit && !isEnterprise
+                    const MemfitEE = isMemfit && isEnterprise
+                    // format version，下载的版本号里不能存在 V
+                    if (version.startsWith("v")) {
+                        version = version.substr(1)
+                    }
 
-                console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
-                // 企业版下载
-                if (YakitEE || IRifyEE || MemfitEE) {
-                    await downloadYakitEE(
-                        version,
-                        isIRify,
-                        dest,
-                        (state) => {
-                            if (!!state) {
-                                win.webContents.send("download-yakit-engine-progress", state)
-                            }
-                        },
-                        resolve,
-                        reject
-                    )
-                } else {
-                    // 社区版下载
-                    await downloadYakitCommunity(
-                        version,
-                        isIRify,
-                        isMemfit,
-                        dest,
-                        (state) => {
-                            if (!!state) {
-                                win.webContents.send("download-yakit-engine-progress", state)
-                            }
-                        },
-                        resolve,
-                        reject
-                    )
+                    console.info("start to fetching download-url for yakit")
+                    let downloadUrl = ""
+                    if (IRifyCE) {
+                        downloadUrl = await getDownloadUrl(version, "IRifyCE")
+                    } else if (IRifyEE) {
+                        downloadUrl = await getDownloadUrl(version, "IRifyEE")
+                    } else if (YakitEE) {
+                        downloadUrl = await getDownloadUrl(version, "YakitEE")
+                    } else if (MemfitCE) {
+                        downloadUrl = await getDownloadUrl(version, "Memfit")
+                    } else if (MemfitEE) {
+                        downloadUrl = await getDownloadUrl(version, "Memfit")
+                    } else {
+                        downloadUrl = await getDownloadUrl(version, "YakitCE")
+                    }
+                    // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
+                    if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+                    const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
+                    try {
+                        fs.unlinkSync(dest)
+                    } catch (e) {}
+
+                    console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
+                    // 企业版下载
+                    if (YakitEE || IRifyEE || MemfitEE) {
+                        await downloadYakitEE(
+                            version,
+                            isIRify,
+                            dest,
+                            (state) => {
+                                if (!!state) {
+                                    win.webContents.send("download-yakit-engine-progress", state)
+                                }
+                            },
+                            resolve,
+                            reject
+                        )
+                    } else {
+                        // 社区版下载
+                        await downloadYakitCommunity(
+                            version,
+                            isIRify,
+                            isMemfit,
+                            dest,
+                            (state) => {
+                                if (!!state) {
+                                    win.webContents.send("download-yakit-engine-progress", state)
+                                }
+                            },
+                            resolve,
+                            reject
+                        )
+                    }
+                } catch (error) {
+                    reject(error)
                 }
             })
         }
