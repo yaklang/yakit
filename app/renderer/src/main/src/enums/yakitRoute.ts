@@ -1,15 +1,15 @@
 /** 渲染端所有页面枚举 */
 export enum YakitRoute {
     /** 首页 */
-    NewHome = "new-home",
+    NewHome = "new-home", // （已翻译）
     /** 手动渗透 v1*/
-    HTTPHacker = "httpHacker",
+    HTTPHacker = "httpHacker", // （已翻译）
     /**mitm v2 */
-    MITMHacker = "mitm-hijack",
-    HTTPFuzzer = "httpFuzzer",
-    WebsocketFuzzer = "websocket-fuzzer",
-    Codec = "codec",
-    DataCompare = "dataCompare",
+    MITMHacker = "mitm-hijack", // （已翻译）
+    HTTPFuzzer = "httpFuzzer", // （已翻译）
+    WebsocketFuzzer = "websocket-fuzzer", // （已翻译）
+    Codec = "codec", // （已翻译）
+    DataCompare = "dataCompare", // （已翻译）
     /** 基础工具 */
     Mod_ScanPort = "scan-port",
     PoC = "poc",
@@ -25,10 +25,10 @@ export enum YakitRoute {
     ReverseServer_New = "ReverseServer_New",
     ShellReceiver = "shellReceiver",
     /** 数据库 */
-    DB_HTTPHistory = "db-http-request",
-    DB_HTTPHistoryAnalysis = "db-http-request-analysis",
+    DB_HTTPHistory = "db-http-request", // （已翻译）
+    DB_HTTPHistoryAnalysis = "db-http-request-analysis", // （已翻译）
     DB_Report = "db-reports-results",
-    DB_Risk = "db-risks",
+    DB_Risk = "db-risks", // （已翻译）
     Misstatement = "misstatement",
     DB_Ports = "db-ports",
     DB_Domain = "db-domains",

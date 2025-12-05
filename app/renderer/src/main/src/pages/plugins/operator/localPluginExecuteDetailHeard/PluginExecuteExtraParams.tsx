@@ -194,6 +194,7 @@ interface ExtraParamsNodeByTypeProps extends JsonFormSchemaListWrapper {
 }
 export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
     const {extraParamsGroup, pluginType, jsonSchemaListRef, isDefaultActiveKey = true, wrapperClassName} = props
+    const {t, i18n} = useI18nNamespaces(["plugin"])
     const defaultActiveKey = useMemo(() => {
         if (!isDefaultActiveKey) return undefined
         return extraParamsGroup.map((ele) => ele.group)
@@ -204,7 +205,7 @@ export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React
             className={classNames(styles["extra-params-node-type"], wrapperClassName || "")}
         >
             {extraParamsGroup.map((item, index) => (
-                <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
+                <YakitPanel key={`${item.group}`} header={`${t("ExtraParamsNodeByType.parameterGroup")}${item.group}`}>
                     {item.data?.map((formItem) => (
                         <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
                             <FormContentItemByType
