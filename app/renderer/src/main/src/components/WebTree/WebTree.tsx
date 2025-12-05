@@ -42,6 +42,8 @@ interface WebTreeProp {
 
     /** runtime-id 网站树的过滤条件(runtime_id) */
     runTimeId?: string
+    /** 多选 */
+    multiple?: boolean
 }
 
 /**
@@ -60,7 +62,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         onSelectKeys,
         onGetUrl,
         resetTableAndEditorShow,
-        runTimeId = ""
+        runTimeId = "",
+        multiple = false,
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
@@ -390,6 +393,14 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         onExpand={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                         selectedKeys={selectedKeys}
                         onSelect={onSelectedKeys}
+                        selectable={!multiple}
+                        checkable={multiple}
+                        onCheck={(checkedKeys) => {
+                            // 勾选替换选中
+                            const keys = Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked
+                            onSelectedKeys(keys, {selectedNodes: []})
+                        }}
+                        checkedKeys={selectedKeys}
                         blockNode={true}
                     ></YakitTree>
                 )}

@@ -33,7 +33,7 @@ export const matchersConditionOptions = [
 export const defaultSubMatcherItem: HTTPResponseMatcher = {
     MatcherType: "word",
     ExprType: "nuclei-dsl",
-    Scope: "request_body",
+    Scope: "body",
     Group: [""],
     Condition: "and",
     Negative: false,
@@ -66,7 +66,7 @@ export const defaultMatcherItem: HTTPResponseMatcher = {
 
 export const defaultExtractorItem: HTTPResponseExtractor = {
     Type: "regex",
-    Scope: "request_body",
+    Scope: "body",
     Groups: [""],
     // ---------
     Name: "data_0",
