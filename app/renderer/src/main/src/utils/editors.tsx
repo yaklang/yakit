@@ -635,7 +635,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     useEffect(() => {
         if (editorOperationRecord) {
-            setTypeLoading(true)
             getRemoteValue(editorOperationRecord).then((data) => {
                 try {
                     if (!data) return
@@ -649,10 +648,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     if (typeof obj?.noWordWrap === "boolean") {
                         setNoWordwrap(obj?.noWordWrap)
                     }
-                    setTypeLoading(false)
-                } catch (error) {
-                    setTypeLoading(false)
-                }
+                } catch (error) {}
             })
         }
     }, [])
