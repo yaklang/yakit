@@ -515,5 +515,54 @@ hijackSaveHTTPFlow = func(flow /* *yakit.HTTPFlow */, modify /* func(modified *y
     modify(flow)
 }`,
         isDefault: true
+    },
+    {
+        name: "MockHttp模板",
+        temp: `// mockHTTPRequest 会在请求即将发往真实服务器之前被调用。
+// 你可以通过调用 mockResponse(fakeResponse) 来伪造一个响应直接返回给客户端，从而阻止原始请求被发送。
+// isHttps    (bool):                  请求是否为HTTPS协议。
+// url        (string):                请求的完整URL。
+// req        ([]byte):                完整的原始HTTP请求报文。
+// mockResponse func(fakeResponse string): 回调函数，用于注入虚假的响应。
+mockHTTPRequest = func(isHttps, url, req, mockResponse) {
+    // 场景1：Mock一个成功的JSON响应 (例如：获取用户信息)
+    // 适用于测试前端在拿到正确数据后，UI是否能正常渲染。
+    if str.Contains(url, "/api/user/profile") {
+        yakit.Info("[MOCK] 拦截到用户信息请求，返回成功的模拟数据: " + url)
+        // 构造一个合法的 HTTP 响应报文
+        // 关键点:
+        // 1. 状态行: "HTTP/1.1 200 OK"
+        // 2. 响应头: 至少要有 Content-Type，跨域的请求需要 Access-Control-Allow-Origin
+        // 3. 空行: 响应头和响应体之间必须有一个空行 \`\\r\\n\\r\\n\`
+        // 4. 响应体: JSON 字符串
+        successResponse := "HTTP/1.1 200 OK\\r\\nContent-Type: application/json\\r\\nAccess-Control-Allow-Origin: *\\r\\n\\r\\n" + 
+                           \`{"ok":true, "code": 200, "data": {"username": "mock-user", "email": "mock@example.com", "level": 99}}\`
+        
+        // 调用 mockResponse 将伪造的响应返回给客户端
+        mockResponse(successResponse)
+    }
+    // 场景2：Mock一个失败的响应 (例如：服务端错误)
+    // 适用于测试前端在遇到服务器5xx错误时，是否能优雅地处理并给出提示。
+    if str.Contains(url, "/api/submit/order") {
+        yakit.Info("[MOCK] 拦截到订单提交请求，返回服务器错误: " + url)
+        
+        errorResponse := "HTTP/1.1 503 Service Unavailable\\r\\nContent-Type: application/json\\r\\nAccess-Control-Allow-Origin: *\\r\\n\\r\\n" +
+                          \`{"ok":false, "message": "服务暂时不可用，请稍后再试"}\`
+        
+        mockResponse(errorResponse)
+    }
+    // 场景3：根据请求体内容进行复杂判断和Mock (例如：阻止危险操作)
+    // 适用于测试前端对特定输入的处理，或防止测试时产生垃圾数据。
+    if str.Contains(url, "/api/data/delete") && str.Contains(string(req), \`"is_production":true\`) {
+        yakit.Info("[MOCK] 检测到危险的删除操作，已拦截并返回'禁止操作'响应: " + url)
+        
+        // 返回一个 403 Forbidden 响应
+        forbiddenResponse := "HTTP/1.1 403 Forbidden\\r\\nContent-Type: application/json\\r\\nAccess-Control-Allow-Origin: *\\r\\n\\r\\n" +
+                             \`{"ok":false, "message": "模拟环境禁止删除线上数据！"}\`
+        mockResponse(forbiddenResponse)
+    }
+    // 如果以上 if 条件都没有命中，函数会默认结束，Yakit将正常处理该请求（即将其发往后端服务器）。
+}`,
+        isDefault: true
     }
 ]
