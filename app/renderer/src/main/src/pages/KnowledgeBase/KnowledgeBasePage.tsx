@@ -24,6 +24,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {AIModelSelect} from "../ai-agent/aiModelList/aiModelSelect/AIModelSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -287,6 +288,7 @@ const KnowledgeBase: FC = () => {
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
+            <AIModelSelect />
             <div className={styles["repository-container"]}>{knowledgeBaseEntrance}</div>
             <YakitHint
                 visible={visible}

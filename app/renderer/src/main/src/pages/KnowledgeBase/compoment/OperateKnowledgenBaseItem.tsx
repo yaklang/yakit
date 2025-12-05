@@ -232,7 +232,6 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
                 ...items,
                 ...result
             }
-            console.log(transformData, "transformData")
             await editKnowledgRunAsync(transformData)
             editKnowledgeBase(items.ID, transformData)
         } catch (error) {}

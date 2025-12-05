@@ -131,13 +131,15 @@ const KnowledgeBaseTableHeader: FC<
                 <div className={styles["header-left"]}>
                     {knowledgeBaseItems.icon ? <knowledgeBaseItems.icon className={styles["icon"]} /> : null}
                     <div className={styles["header-title"]}>{knowledgeBaseItems?.KnowledgeBaseName}</div>
-                    <div className={styles["tags"]}>
-                        {knowledgeBaseItems?.Tags?.map((it) => (
-                            <YakitTag className={styles["tag"]} key={it}>
-                                {it}
-                            </YakitTag>
-                        ))}
-                    </div>
+                    {knowledgeBaseItems?.Tags ? (
+                        <div className={styles["tags"]}>
+                            {knowledgeBaseItems?.Tags?.map((it) => (
+                                <YakitTag className={styles["tag"]} key={it}>
+                                    {it}
+                                </YakitTag>
+                            ))}
+                        </div>
+                    ) : null}
 
                     {knowledgeBaseItems?.streamstep === 1 && streams?.[knowledgeBaseItems?.streamToken] ? (
                         <div

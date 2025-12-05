@@ -942,11 +942,12 @@
                                 font-size: 11px;
                                 white-space: nowrap;
                             }
-                            .build-tag{
-                                text-wrap: nowrap;
-                                @extend %building-knowledge-items;
-                            }
+
                         }   
+                    }
+                    .build-tag{
+                        text-wrap: nowrap;
+                        @extend %building-knowledge-items;
                     }
 
                 .header-right{
