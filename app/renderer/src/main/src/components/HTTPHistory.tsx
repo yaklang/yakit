@@ -273,6 +273,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
     // #endregion
+    const compareUrl = useMemo(()=> [...selectedKeys, ...includeInUrl ? [includeInUrl]:[]],[selectedKeys, includeInUrl]) 
 
     return (
         <div className={styles.hTTPHistory}>
@@ -363,7 +364,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div className={styles["hTTPHistory-right"]}>
                         <HTTPFlowRealTimeTableAndEditor
                             searchURL={searchURL}
-                            includeInUrl={[...selectedKeys, ...includeInUrl ? [includeInUrl]:[]]}
+                            includeInUrl={compareUrl}
                             curProcess={curProcess}
                             onQueryParams={onQueryParams}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
