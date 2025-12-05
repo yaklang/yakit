@@ -70,7 +70,7 @@
             width: 100%;
             padding: 0;
             background-color: var(--Colors-Use-Basic-Background);
-            &:hover {
+            &:hover:not(:has(.ant-tree-checkbox-checked)) {
                 .ant-tree-switcher {
                     background-color: var(--Colors-Use-Neutral-Bg);
                     border-radius: 4px 0 0 4px;
@@ -80,7 +80,7 @@
         }
 
         .ant-tree-treenode:not(.ant-tree-treenode-selected) {
-            &:hover {
+            &:hover:not(:has(.ant-tree-checkbox-checked)) {
                 .ant-tree-switcher.ant-tree-switcher-noop {
                     background-color: var(--Colors-Use-Neutral-Bg-Hover);
                     border-radius: 4px 0 0 4px;
@@ -164,5 +164,34 @@
             width: calc(100% - 24px);
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
+
+        //checkbox放到最前面
+        .ant-tree-treenode {
+            margin-bottom: 1px;
+            align-items: center;
+            .ant-tree-checkbox{
+                margin-top: 0;
+                order: -1;
+            }
+
+            // 让勾选的节点显示样式和选中一样
+            &:has(.ant-tree-checkbox-checked) {
+                .ant-tree-node-content-wrapper{
+                    background-color: var(--Colors-Use-Main-Primary);
+
+                    span {
+                        color: var(--Colors-Use-Main-On-Primary);
+                    }
+                }
+                .ant-tree-switcher  {
+                    background-color: var(--Colors-Use-Main-Pressed);
+                    border-radius: 4px 0 0 4px;
+                }
+                .ant-tree-node-content-wrapper,.ant-tree-switcher svg{
+                        color: var(--Colors-Use-Main-On-Primary)
+                }
+            }
+        }
+        
     }
 }

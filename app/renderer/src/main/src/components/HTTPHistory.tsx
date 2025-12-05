@@ -212,6 +212,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
     const [searchURL, setSearchURL] = useState<string>("")
     const [includeInUrl, setIncludeInUrl] = useState<string>("")
+    const [selectedKeys, setSelectedKeys] = useState<string[]>([])
     const [treeQueryparams, setTreeQueryparams] = useState<string>("")
 
     const [curProcess, setCurProcess] = useState<string[]>([])
@@ -325,13 +326,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
-                                            setSearchURL(searchURL)
+                                            // setSearchURL(searchURL)
                                             setIncludeInUrl(includeInUrl)
                                         }}
                                         resetTableAndEditorShow={(table, editor) => {
                                             setOnlyShowFirstNode(table)
                                             setSecondNodeVisible(editor)
                                         }}
+                                        multiple
+                                        onSelectKeys={(selectKeys)=> setSelectedKeys(selectKeys.map(i => i +''))}
                                     ></WebTree>
                                 </div>
                                 <div
@@ -360,7 +363,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div className={styles["hTTPHistory-right"]}>
                         <HTTPFlowRealTimeTableAndEditor
                             searchURL={searchURL}
-                            includeInUrl={includeInUrl}
+                            includeInUrl={[...selectedKeys, ...includeInUrl ? [includeInUrl]:[]]}
                             curProcess={curProcess}
                             onQueryParams={onQueryParams}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
