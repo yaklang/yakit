@@ -3361,6 +3361,24 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     if (!onlyOneResponse && cachedTotal > 1 && showSuccess === "false") {
         return (
             <>
+                {!!failedFuzzer.length &&
+                    <Tooltip title={t("SecondNodeExtra.exportPayload")}>
+                    <YakitButton
+                        style={{marginRight: 10}}
+                        type='outline2'
+                        icon={<OutlineExportIcon />} 
+                        size={size}
+                        onClick={() => {
+                            emiter.emit(
+                                "onGetExportFuzzer",
+                                JSON.stringify({
+                                    pageId,
+                                    type: "payload"
+                                })
+                            )
+                        }}
+                    />
+                </Tooltip>}
                 {retryNoPopconfirm ? (
                     <YakitButton
                         type={"primary"}

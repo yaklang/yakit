@@ -124,7 +124,8 @@
     "exportPayloadOnly": "Export Payload Only",
     "extractFromResponsePacket": "Extract content from the response packet",
     "exportExtractedData": "Export Extracted Data",
-    "matchAndExtract": "Match And Extract"
+    "matchAndExtract": "Match And Extract",
+    "exportPayload": "Export Payload"
   },
   "SecondNodeTitle": {
     "oversizedResponse": "Oversized Response",

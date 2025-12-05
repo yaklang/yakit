@@ -124,7 +124,8 @@
     "exportPayloadOnly": "仅导出 Payload",
     "extractFromResponsePacket": "提取响应数据包中内容",
     "exportExtractedData": "导出提取数据",
-    "matchAndExtract": "匹配/提取"
+    "matchAndExtract": "匹配/提取",
+    "exportPayload": "导出 Payload"
   },
   "SecondNodeTitle": {
     "oversizedResponse": "超大响应",
