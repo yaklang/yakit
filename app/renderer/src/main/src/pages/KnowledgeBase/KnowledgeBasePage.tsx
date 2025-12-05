@@ -288,7 +288,9 @@ const KnowledgeBase: FC = () => {
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
-            <AIModelSelect />
+            <div style={{display: "none"}}>
+                <AIModelSelect />
+            </div>
             <div className={styles["repository-container"]}>{knowledgeBaseEntrance}</div>
             <YakitHint
                 visible={visible}
