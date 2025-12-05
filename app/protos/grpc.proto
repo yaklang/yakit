@@ -700,6 +700,9 @@ service Yak {
   rpc GetGlobalNetworkConfig(GetGlobalNetworkConfigRequest) returns (GlobalNetworkConfig);
   rpc SetGlobalNetworkConfig(GlobalNetworkConfig) returns (Empty);
   rpc ResetGlobalNetworkConfig(ResetGlobalNetworkConfigRequest) returns (Empty);
+  // Global Proxy Rules Config
+  rpc GetGlobalProxyRulesConfig(Empty) returns (GlobalProxyRulesConfig);
+  rpc SetGlobalProxyRulesConfig(SetGlobalProxyRulesConfigRequest) returns (Empty);
   rpc ValidP12PassWord(ValidP12PassWordRequest) returns (ValidP12PassWordResponse);
 
   // YAKURL
@@ -2445,6 +2448,31 @@ message GlobalNetworkConfig {
   uint64 MinTlsVersion = 21;
   uint64 MaxTlsVersion = 22;
   uint64 MaxContentLength = 23;
+}
+
+message ProxyEndpoint {
+  string Id = 1;
+  string Name = 2;
+  string Url = 3;
+  string UserName = 4;
+  string Password = 5;
+}
+
+message ProxyRoute {
+  string Id = 1;
+  string Name = 2;
+  repeated string Patterns = 3;
+  repeated string EndpointIds = 4;
+  bool Disabled = 5;
+}
+
+message GlobalProxyRulesConfig {
+  repeated ProxyEndpoint Endpoints = 1;
+  repeated ProxyRoute Routes = 2;
+}
+
+message SetGlobalProxyRulesConfigRequest {
+  GlobalProxyRulesConfig Config = 1;
 }
 
 message AuthInfo {
@@ -5958,6 +5986,7 @@ message FuzzerRequest {// last index 68
   int64 RandomChunkedMaxDelay = 68;
 
   bool NoReadMultiResponse = 69;
+  string ProxyRuleId = 70;
 }
 
 message MutateMethod {
@@ -8210,6 +8239,7 @@ message MITMV2Request{
 
   bool RecoverContext = 45; // recover mitm context plugin config...
   int64 PluginConcurrency = 47; // 设置插件并发数，默认30
+  string DownstreamProxyRuleId = 48;
 }
 
 message MITMV2Response {

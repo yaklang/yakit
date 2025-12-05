@@ -69,6 +69,7 @@ import {
 } from "./MITMHacker/utils"
 import {KVPair} from "@/models/kv"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { useProxy } from "@/hook/useProxy"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
@@ -133,6 +134,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
+    const { proxyConfig:{ Routes = [] } } = useProxy()
 
     const mitmContent = useContext(MITMContext)
 
@@ -276,6 +278,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             targetHost,
             targetPort,
             downstreamProxy,
+            downstreamProxyRuleId,
             enableHttp2,
             ForceDisableKeepAlive,
             certs: ClientCertificate[],
@@ -285,6 +288,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 host: targetHost,
                 port: targetPort,
                 downstreamProxy: downstreamProxy,
+                downstreamProxyRuleId,
                 enableHttp2: enableHttp2,
                 ForceDisableKeepAlive: ForceDisableKeepAlive,
                 certificates: certs,
@@ -303,6 +307,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             host,
             port,
             downstreamProxy,
+            downstreamProxyRuleId,
             enableInitialPlugin,
             plugins,
             enableHttp2,
@@ -316,10 +321,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setDisableCACertPage(extra?.disableCACertPage || false)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
+            startMITMServer(host, port, downstreamProxy, downstreamProxyRuleId, enableHttp2, ForceDisableKeepAlive, certs, extra)
             let tip = ""
-            if (downstreamProxy) {
-                tip += `下游代理：${maskProxyPassword(downstreamProxy)}`
+            if(downstreamProxyRuleId || downstreamProxy){
+                const proxyStr = downstreamProxyRuleId ? 
+                `规则组：${Routes.find(({Id})=> Id === downstreamProxyRuleId)?.Name}` : 
+                `代理节点：${maskProxyPassword(downstreamProxy)}`
+                    tip += `下游代理：${proxyStr}`
             }
             setDownstreamProxyStr(downstreamProxy || "")
             if (extra) {
@@ -458,6 +466,7 @@ interface MITMServerProps {
         host: string,
         port: number,
         downstreamProxy: string,
+        downstreamProxyRuleId: string,
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
@@ -573,6 +582,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             host,
             port,
             downstreamProxy,
+            downstreamProxyRuleId,
             enableInitialPlugin,
             enableHttp2,
             ForceDisableKeepAlive,
@@ -585,6 +595,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     host,
                     port,
                     downstreamProxy,
+                    downstreamProxyRuleId,
                     enableInitialPlugin,
                     enableInitialPlugin ? noParamsCheckList : [],
                     enableHttp2,

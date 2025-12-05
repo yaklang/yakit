@@ -168,6 +168,7 @@ import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm
 import { ExportDataType } from "@/utils/exporter"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import { PublicHTTPHistoryIcon } from "@/routes/publicIcon"
+import { useProxy } from "@/hook/useProxy"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -337,6 +338,7 @@ export interface FuzzerRequestProps {
     FuzzTagMode: FuzzTagMode
     FuzzTagSyncIndex: boolean
     Proxy: string
+    ProxyRuleId?: string
     PerRequestTimeoutSeconds: number
     DialTimeoutSeconds: number
     BatchTarget?: Uint8Array
@@ -693,6 +695,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         shallow
     )
     const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "yakitRoute"])
+    const { checkProxyEndpoints, getProxyValue } = useProxy()
     const initWebFuzzerPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
@@ -1140,13 +1143,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const getFuzzerRequestParams = useMemoizedFn(() => {
+        const { proxy = [] } = advancedConfigValue;
+        const { proxyEndpoints, ProxyRuleIds } = getProxyValue(proxy)
         return {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
             RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
             HotPatchCode: hotPatchCodeRef.current,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
             FuzzerTabIndex: props.id,
-            EngineDropPacket: true
+            EngineDropPacket: true,
+            Proxy: proxyEndpoints,
+            ...ProxyRuleIds ? { ProxyRuleId: ProxyRuleIds} : {},
         }
     })
 
@@ -1167,9 +1174,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
-        if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
-            getProxyList(advancedConfigValue.proxy)
-        }
+        //如果有新增的代理配置 则存配置项
+        checkProxyEndpoints(advancedConfigValue.proxy)
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
@@ -2289,7 +2295,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             IsHttps: advancedConfigValue.isHttps,
                                             IsGmTLS: advancedConfigValue.isGmTLS,
                                             PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                                            Proxy: advancedConfigValue.proxy.join(","),
+                                            Proxy: (advancedConfigValue.proxy || [])
+                                                .filter((item) => !item.startsWith("route"))
+                                                .join(","),
                                             Extractors: advancedConfigValue.extractors,
                                             Matchers: advancedConfigValue.matchers,
                                             Params: advancedConfigValue.params || []
@@ -2605,6 +2613,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
     const [systemProxy, setSystemProxy] = useState<GetSystemProxyResult>()
     const divRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(divRef)
+    const { proxyRouteOptions } = useProxy();
     useEffect(() => {
         if (!inViewport) return
         getConfigSystemProxy()
@@ -2632,13 +2641,17 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
             enableRandomChunked: false
         })
     })
+    const proxyTooltipContent = useMemo(() => {
+        return advancedConfigValue.proxy?.map((item) => maskProxyPassword(proxyRouteOptions.find(({value})=> value === item)?.label || item))
+    }, [advancedConfigValue.proxy, proxyRouteOptions])
+
     return (
         <div className={styles["display-flex"]} ref={divRef}>
             {droppedCount > 0 && (
                 <YakitTag color='danger'>{t("FuzzerExtraShow.responsesDiscarded", {droppedCount})}</YakitTag>
             )}
             {advancedConfigValue.proxy.length > 0 && (
-                <Tooltip title={advancedConfigValue.proxy.map((item) => maskProxyPassword(item))}>
+                <Tooltip title={proxyTooltipContent}>
                     <YakitTag
                         className={classNames(styles["proxy-text"], "content-ellipsis")}
                         closable={true}
@@ -2653,8 +2666,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                         {(() => {
                             const maxDisplay = 3 // 最多显示3条
                             const {proxy} = advancedConfigValue
-                            const displayData = proxy
-                                .map((item) => maskProxyPassword(item))
+                            const displayData = proxyTooltipContent
                                 .slice(0, maxDisplay)
                                 .join(", ") // 取前3个
                             const remainingCount = proxy.length - maxDisplay // 剩余数量

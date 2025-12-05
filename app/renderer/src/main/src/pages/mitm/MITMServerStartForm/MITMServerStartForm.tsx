@@ -33,6 +33,9 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {useProxy} from "@/hook/useProxy"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -43,6 +46,7 @@ export interface MITMServerStartFormProp {
         host: string,
         port: number,
         downstreamProxy: string,
+        downstreamProxyRuleId: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
@@ -120,6 +124,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
     })
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
+    const { getProxyValue, proxyRouteOptions, checkProxyEndpoints } = useProxy()
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
@@ -258,10 +263,13 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         } else if (params.stateSecretHijacking === "randomJA3") {
             extra.RandomJA3 = true
         }
+        const { downstreamProxy = [] } = params
+        const { proxyEndpoints: downstreamProxyValue, ProxyRuleIds: downstreamProxyRuleId } = getProxyValue(downstreamProxy)
         props.onStartMITMServer(
             params.host,
             params.port,
-            Array.isArray(params.downstreamProxy) ? params.downstreamProxy.join(",") : "",
+            downstreamProxyValue,
+            downstreamProxyRuleId,
             params.enableInitialPlugin,
             params.enableHttp2,
             params.ForceDisableKeepAlive,
@@ -269,9 +277,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             extra
         )
         hostRef.current.onSetRemoteValues(params.host)
-        if (downstreamProxyRef.current) {
-            downstreamProxyRef.current.onSetRemoteValues(params.downstreamProxy || [])
-        }
+        //如果有新增的代理配置 则存配置项
+        checkProxyEndpoints(downstreamProxy)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.stateSecretHijacking}`)
@@ -306,6 +313,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
     const [alertVisible, setAlertVisible] = useState<boolean>(true)
+
+    const onClickDownstreamProxy = useMemoizedFn(async () => {
+        const versionValid = await checkProxyVersion()
+        if (!versionValid) {
+            return
+        }
+        setAgentConfigModalVisible(true)
+    })
+
     return (
         <>
             {mitmVersion === MITMVersion.V1 && (
@@ -367,29 +383,27 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port
                                 <span
                                     className={styles["form-rule-help-setting"]}
-                                    onClick={() => setAgentConfigModalVisible(true)}
+                                    onClick={onClickDownstreamProxy}
                                 >
-                                    配置代理认证&nbsp;
+                                    {t("AgentConfigModal.proxy_configuration")}
                                 </span>
                             </span>
                         }
+                        getValueFromEvent={(value) => {
+                            // 只保留最后一个选中的值
+                            if (Array.isArray(value) && value.length > 1) {
+                                return [value[value.length - 1]]
+                            }
+                            return value
+                        }}
+                        validateTrigger={["onChange", "onBlur"]}
                     >
                         <YakitSelect
                             ref={downstreamProxyRef}
-                            cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxyHistory}
-                            isCacheDefaultValue={true}
                             allowClear
+                            options={proxyRouteOptions}
                             mode='tags'
                             maxTagCount={4}
-                            tagRender={(props) => {
-                                return (
-                                    <YakitTag size={"middle"} {...props}>
-                                        <span className='content-ellipsis' style={{width: "100%"}}>
-                                            {maskProxyPassword(props.value)}
-                                        </span>
-                                    </YakitTag>
-                                )
-                            }}
                             placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
                         />
                     </Item>
@@ -517,7 +531,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 </Form>
                 {/* 代理劫持弹窗 */}
                 <AgentConfigModal
-                    agentConfigModalVisible={agentConfigModalVisible}
+                    agentConfigModalVisible={false} //弃用
                     onCloseModal={() => setAgentConfigModalVisible(false)}
                     generateURL={(url) => {
                         const v = form.getFieldsValue()
@@ -526,6 +540,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
                     }}
                 ></AgentConfigModal>
+                <ProxyRulesConfig 
+                    visible={agentConfigModalVisible} 
+                    onClose={() => setAgentConfigModalVisible(false)} 
+                />
                 <React.Suspense fallback={<div>loading...</div>}>
                     <MITMFormAdvancedConfiguration
                         visible={advancedFormVisible}
