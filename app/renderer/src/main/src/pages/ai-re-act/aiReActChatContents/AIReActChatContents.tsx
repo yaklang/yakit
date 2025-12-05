@@ -169,7 +169,11 @@ const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
                     code={
                         <div className={styles["reference-list"]}>
                             {referenceList.map((item, index) => (
-                                <div className={classNames(styles["reference-list-item"])} title={item.payload}>
+                                <div
+                                    key={index}
+                                    className={classNames(styles["reference-list-item"])}
+                                    title={item.payload}
+                                >
                                     {item.payload}
                                 </div>
                             ))}
