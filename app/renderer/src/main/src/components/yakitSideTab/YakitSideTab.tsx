@@ -14,7 +14,8 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
         type = "vertical",
         children,
         onTabPaneRender,
-        className = ""
+        className = "",
+        btnItemClassName = ''
     } = props
     const [show, setShow] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -50,7 +51,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                                     key={item.value}
                                     item={item}
                                     onChange={onChange}
-                                    className={classNames(styles["yakit-side-tab-item"], {
+                                    className={classNames(styles["yakit-side-tab-item"], btnItemClassName, {
                                         [styles["yakit-side-tab-item-active"]]: item.value === activeKey,
                                         [styles["yakit-side-tab-item-show"]]:
                                             item.value === activeKey && (item.show === false || !show)
@@ -74,7 +75,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                                     key={item.value}
                                     item={item}
                                     onChange={onChange}
-                                    className={classNames(styles["yakit-side-tab-item"], {
+                                    className={classNames(styles["yakit-side-tab-item"], btnItemClassName, {
                                         [styles["yakit-side-tab-item-active"]]: item.value === activeKey
                                     })}
                                     onTabPaneRender={onTabPaneRender}
@@ -93,7 +94,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                                     key={item.value}
                                     item={item}
                                     onChange={onChange}
-                                    className={classNames(styles["yakit-side-tab-horizontal-item"], {
+                                    className={classNames(styles["yakit-side-tab-horizontal-item"], btnItemClassName, {
                                         [styles["yakit-side-tab-horizontal-item-active"]]: item.value === activeKey
                                     })}
                                     onTabPaneRender={onTabPaneRender}

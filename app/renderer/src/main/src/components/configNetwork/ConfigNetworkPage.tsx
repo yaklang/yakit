@@ -26,6 +26,7 @@ import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
+import ProxyRulesConfig from "./ProxyRulesConfig"
 import {v4 as uuidv4} from "uuid"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {PcapMetadata} from "@/models/Traffic"
@@ -42,6 +43,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {CodeCustomize} from "./CustomizeCode"
 import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT} from "@/defaultConstants/HoldGRPCStream"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export interface ConfigNetworkPageProp {}
 
@@ -177,6 +179,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const configRef = useRef<any>()
     const [inViewport] = useInViewport(configRef)
     const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
+    const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
+    const [proxyRoutesCount, setProxyRoutesCount] = useState(0)
+    const {t, i18n} = useI18nNamespaces(["mitm"])
 
     /** ---------- 是否删除私密插件逻辑 Start ---------- */
     const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
@@ -1044,6 +1049,21 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }
                                     />
                                 </Form.Item>
+                                <Form.Item label={t("ProxyConfig.title")}>
+                                    <div className={styles["form-rule-body"]}>
+                                        <div className={styles["form-rule"]} onClick={()=> setProxyDrawerVisible(true)}>
+                                            <div className={styles["form-rule-text"]}>{t("ProxyConfig.recordRoutesCount", {i: proxyRoutesCount})}</div>
+                                            <div className={styles["form-rule-icon"]}>
+                                                <OutlineCogIcon />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Form.Item> 
+                                <ProxyRulesConfig
+                                    visible={proxyDrawerVisible}
+                                    onClose={() => setProxyDrawerVisible(false)}
+                                    onRoutesChange={setProxyRoutesCount}
+                                />
                                 <Form.Item label={"保存HTTP流量"} tooltip='打开则会保存MITM以外的流量数据到History表中'>
                                     <YakitSwitch
                                         checked={!params.SkipSaveHTTPFlow}

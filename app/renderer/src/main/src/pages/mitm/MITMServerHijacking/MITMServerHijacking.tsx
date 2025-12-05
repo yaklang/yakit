@@ -34,6 +34,10 @@ import {
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import { useProxy } from "@/hook/useProxy"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -232,6 +236,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
         const proxyValue: MITMSetDownstreamProxyRequest = {
             downstreamProxy: "",
+            downstreamProxyRuleId: '',
             version: mitmVersion
         }
         grpcMITMSetDownstreamProxy(proxyValue)
@@ -368,6 +373,8 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     const {downStreamAgentModalVisible, onCloseModal, tip, onSetTip, setDownstreamProxyStr} = props
     const [form] = Form.useForm()
     const mitmContent = useContext(MITMContext)
+    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const { proxyRouteOptions, getProxyValue, checkProxyEndpoints } = useProxy()    
 
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
@@ -375,25 +382,29 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     const onOKFun = useMemoizedFn(async () => {
         const tipArr = tip.split("|")
 
-        const downstreamProxy = form.getFieldsValue().downstreamProxy
-        downstreamProxyRef.current.onSetRemoteValues(downstreamProxy)
+        const downstreamProxy = form.getFieldsValue().downstreamProxy || []
+        //如果有新增的代理配置 则存配置项
+        checkProxyEndpoints(downstreamProxy)
+        const { proxyEndpoints, ProxyRuleIds } = getProxyValue(downstreamProxy)
 
         const proxyValue: MITMSetDownstreamProxyRequest = {
-            downstreamProxy: downstreamProxy.join(","),
+            downstreamProxy: proxyEndpoints,
+            downstreamProxyRuleId: ProxyRuleIds,
             version: mitmVersion
         }
         grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy.length) {
+            const downstreamProxyName = downstreamProxy.map(item => proxyRouteOptions.find(({value}) => value === item)?.label || item)
             if (tip.indexOf("下游代理") === -1) {
                 onSetTip(
-                    `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}` +
+                    `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}` +
                         (tip.indexOf("|") === 0 ? tip : `|${tip}`)
                 )
             } else {
                 const tipStr = tipArr
                     .map((item) => {
                         if (item.startsWith("下游代理")) {
-                            return `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}`
+                            return `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}`
                         } else {
                             return item
                         }
@@ -420,6 +431,14 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         onSetRemoteValues: (s: string[]) => {}
     })
 
+    const onClickDownstreamProxy = useMemoizedFn(async () => {
+        const versionValid = await checkProxyVersion()
+        if (!versionValid) {
+            return
+        }
+        setAgentConfigModalVisible(true)
+    })
+
     return (
         <>
             <YakitModal
@@ -434,6 +453,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                 onCancel={onClose}
                 onOk={onOKFun}
                 bodyStyle={{padding: 0}}
+                zIndex={999} //默认1000 会导致路由配置弹窗被盖住
             >
                 <div style={{padding: 15}}>
                     <Form
@@ -447,39 +467,33 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                         <Form.Item
                             label='下游代理'
                             name='downstreamProxy'
+                            getValueFromEvent={(value) => {
+                                // 只保留最后一个选中的值
+                                if (Array.isArray(value) && value.length > 1) {
+                                    return [value[value.length - 1]]
+                                }
+                                return value
+                            }}
                             help={
-                                <div
-                                    className={style["agent-down-stream-proxy"]}
-                                    onClick={() => setAgentConfigModalVisible(true)}
-                                >
-                                    配置代理认证
+                                <div className={style["agent-down-stream-proxy"]} onClick={onClickDownstreamProxy}>
+                                    {t("AgentConfigModal.proxy_configuration")}
                                 </div>
                             }
                         >
                             <YakitSelect
                                 ref={downstreamProxyRef}
-                                cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxyHistory}
-                                isCacheDefaultValue={true}
                                 allowClear
+                                options={proxyRouteOptions}
                                 mode='tags'
                                 maxTagCount={2}
                                 placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
-                                tagRender={(props) => {
-                                    return (
-                                        <YakitTag size={"middle"} {...props}>
-                                            <span className='content-ellipsis' style={{width: "100%"}}>
-                                                {maskProxyPassword(props.value)}
-                                            </span>
-                                        </YakitTag>
-                                    )
-                                }}
                             />
                         </Form.Item>
                     </Form>
                 </div>
             </YakitModal>
             <AgentConfigModal
-                agentConfigModalVisible={agentConfigModalVisible}
+                agentConfigModalVisible={false} //弃用
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
                     const v = form.getFieldsValue()
@@ -488,6 +502,10 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                     form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
                 }}
             ></AgentConfigModal>
+            <ProxyRulesConfig
+                visible={agentConfigModalVisible}
+                onClose={() => setAgentConfigModalVisible(false)}
+            />
         </>
     )
 })
