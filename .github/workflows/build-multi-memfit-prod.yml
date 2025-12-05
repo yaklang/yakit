@@ -112,7 +112,6 @@ jobs:
                   if-no-files-found: error
                   retention-days: 1
 
-                  
     publish_memfit_to_oss:
         needs: build_memfit
         runs-on: ubuntu-latest
@@ -131,8 +130,11 @@ jobs:
                   name: Memfit-artifacts
                   merge-multiple: true
 
-            - run: ls
+            - run: |
+                  for f in "Memfit AI-"*; do mv "$f" "${f/Memfit AI-/MemfitAI-}"; done
+                  ls
               name: List downloaded artifacts
+              shell: bash
 
             - name: Upload Memfit to OSS
               uses: tvrcgo/upload-to-oss@master
