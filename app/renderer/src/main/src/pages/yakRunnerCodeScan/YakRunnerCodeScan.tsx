@@ -2632,11 +2632,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         })
 
         const onClickDownstreamProxy = useMemoizedFn(async () => {
-            const versionValid = await checkProxyVersion()
-            if (!versionValid) {
-                return
+            try {
+                const versionValid = await checkProxyVersion()
+                if (!versionValid) {
+                    return
+                }
+                setAgentConfigModalVisible(true)
+            } catch (error) {
+                console.error("error:", error)
             }
-            setAgentConfigModalVisible(true)
         })
 
         return (
@@ -2805,13 +2809,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         </div>
                     </Form.Item>
                 </Form>
-                <AgentConfigModal
-                    agentConfigModalVisible={false} //弃用
-                    onCloseModal={() => setAgentConfigModalVisible(false)}
-                    generateURL={(url) => {
-                        form.setFieldsValue({proxy: url})
-                    }}
-                />
                 <ProxyRulesConfig
                     hideRules
                     visible={agentConfigModalVisible}
