@@ -1,7 +1,7 @@
 {
   "name": "engine-link-startup",
   "private": true,
-  "version": "1.11.29",
+  "version": "1.12.05",
   "type": "module",
   "scripts": {
     "electron-render": "vite --mode default",
