@@ -92,12 +92,13 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     )
 
     const Footer = useCallback(
-        () =>
-            loading ? (
-                <div style={{height: "80px"}}>
+        () => (
+            <div style={{height: "80px"}}>
+                {loading && (
                     <YakitSpin wrapperClassName={styles["spin"]} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>
-                </div>
-            ) : null,
+                )}
+            </div>
+        ),
         [loading, t]
     )
 
