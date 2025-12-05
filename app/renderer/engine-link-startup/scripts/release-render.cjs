@@ -20,7 +20,7 @@ try {
 
     // 更新远端分支代码
     execSync(`git fetch origin`, {stdio: "inherit"})
-    execSync(`git checkout -b update/link-render-${version} origin/master`, {stdio: "inherit"})
+    execSync(`git checkout -b update/link-render-${version} origin/ai-chat-ci`, {stdio: "inherit"})
 
     // 生成版本号修改
     execSync(`yarn version --new-version ${version} --no-git-tag-version`, {stdio: "inherit"})
