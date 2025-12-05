@@ -51,11 +51,13 @@
                     color: var(--Colors-Use-Main-On-Primary);
                     background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
+                        color: var(--Colors-Use-Main-On-Primary);
                         background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--Colors-Use-Main-Border);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    background-color: var(--Colors-Use-Neutral-Text-4-Help-text);
                 }
             }
         }
