@@ -51,7 +51,6 @@ module.exports = {
                     let close = false
 
                     const timeoutId = setTimeout(() => {
-                        console.log(111111, close);
                         if (close) return
                         killed = true
                         subprocess.kill()
