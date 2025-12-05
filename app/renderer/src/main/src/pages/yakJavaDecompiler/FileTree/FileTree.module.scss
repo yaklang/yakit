@@ -117,7 +117,7 @@
         .content-body {
             flex: 1;
             overflow: hidden;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -136,7 +136,7 @@
 
     &:hover {
         border-radius: 4px;
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     &.node-selected {
