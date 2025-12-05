@@ -48,11 +48,15 @@ import {openConsoleNewWindow} from "@/utils/openWebsite"
 import usePluginTrace from "./PluginTrace/usePluginTrace"
 import {PluginTraceRefProps} from "./PluginTrace/type"
 import {pluginTraceRefFunDef} from "./PluginTrace/PluginTrace"
+import { PluginTunHijack, PluginTunHijackDef } from "./PluginTunHijack/PluginTunHijack"
+import { PluginTunHijackRefProps } from "./PluginTunHijack/PluginTunHijackType"
+import usePluginTunHijack from "./PluginTunHijack/usePluginTunHijack"
+import { useStore } from "@/store/mitmState"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
 
-type tabKeys = "all" | "loaded" | "hot-patch" | "trace"
+type tabKeys = "all" | "loaded" | "hot-patch" | "trace" | "tun-hijack"
 interface TabsItem {
     key: tabKeys
     label: ReactElement | string
@@ -167,6 +171,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         {
             key: "trace",
             label: "插件追踪",
+            contShow: false // 初始为false
+        },
+        {
+            key: "tun-hijack",
+            label: "Tun劫持",
             contShow: false // 初始为false
         }
     ])
@@ -538,6 +547,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                     </>
                 )
             case "trace":
+            case "tun-hijack":
                 return <></>
             default:
                 return (
@@ -582,6 +592,22 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         }
         pluginTraceActions.startPluginTrace()
     })
+
+    const {setTunSessionState} = useStore()
+    const PluginTunHijackRef = useRef<PluginTunHijackRefProps>(PluginTunHijackDef)
+    const [pluginTunHijackData, pluginTunHijackActions] = usePluginTunHijack({
+        PluginName: "Tun劫持服务",
+        onEnd: () => {
+            setTunSessionState({
+                deviceName: null,
+                configuredRoutes: []
+            })
+        }
+    })
+    useEffect(()=>{
+        console.log("main---");
+    },[])
+
 
     const onRenderContent = useMemoizedFn(() => {
         switch (curTabKey) {
@@ -776,6 +802,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         pluginTraceStats={pluginTraceActions.pluginTraceStats}
                         pluginTraceList={pluginTraceActions.pluginTraceList}
                     />
+                )
+            case "tun-hijack":
+                return (
+                    <PluginTunHijack ref={PluginTunHijackRef} pluginTunHijackData={pluginTunHijackData} pluginTunHijackActions={pluginTunHijackActions}/>
                 )
             default:
                 return <></>
