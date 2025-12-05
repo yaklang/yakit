@@ -106,9 +106,9 @@ jobs:
               with:
                   name: Memfit-artifacts
                   path: |
-                      ./release/Memfit AI-${{ env.ENV_TAG }}-*.exe
-                      ./release/Memfit AI-${{ env.ENV_TAG }}-*.dmg
-                      ./release/Memfit AI-${{ env.ENV_TAG }}-*.AppImage
+                      ./release/MemfitAI-${{ env.ENV_TAG }}-*.exe
+                      ./release/MemfitAI-${{ env.ENV_TAG }}-*.dmg
+                      ./release/MemfitAI-${{ env.ENV_TAG }}-*.AppImage
                   if-no-files-found: error
                   retention-days: 1
 
