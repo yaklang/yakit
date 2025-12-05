@@ -124,7 +124,7 @@ FunctionEnd
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
                 ${Else}
-                    ${StrStr} $0 $EXEFILE "Memfit AI"
+                    ${StrStr} $0 $EXEFILE "MemfitAI"
                     ${If} $0 != ""
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
