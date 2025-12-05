@@ -46,8 +46,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         }
     }, [])
-    const onRefreshAvailableAIModelList = useMemoizedFn(() => {
-        getAIModelListOption(true)
+    const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
+        getAIModelListOption(data === "true")
     })
     const getAIModelListOption = useDebounceFn(
         (refreshValue?: boolean) => {
