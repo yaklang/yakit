@@ -22,6 +22,7 @@ import {KnowledgeBaseItem} from "../../hooks/useKnowledgeBase"
 import {randomString} from "@/utils/randomUtil"
 import {failed, info} from "@/utils/notification"
 import {BaseQAContent} from "./BaseQAContent"
+import {RoundedStopButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -44,6 +45,7 @@ interface KnowledgeBaseQAProps {
 const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledgeBase, knowledgeBaseID}) => {
     const [messages, setMessages] = useSafeState<QAMessage[]>([])
 
+    const contentRef = useRef<{scrollToBottom: () => void} | null>(null)
     const [selected, setSelected] = useSafeState<string[]>(["hypothetical_answer"])
     const [question, setQuestion] = useSafeState<string>("")
     const [loading, setLoading] = useSafeState(false)
@@ -102,7 +104,7 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
         const assistantMessage: QAMessage = {
             id: generateId(),
             type: "assistant",
-            content: "正在思考中...\n",
+            content: "",
             timestamp: Date.now(),
             entries: [],
             isStreaming: true,
@@ -113,6 +115,9 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
         }
 
         setMessages((prev) => [...prev, userMessage, assistantMessage])
+        requestAnimationFrame(() => {
+            contentRef.current?.scrollToBottom?.()
+        })
         setQuestion("")
         setLoading(true)
 
@@ -138,7 +143,7 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
 
             // 监听流式响应
             ipcRenderer.on(`${token}-data`, (e, data: QueryKnowledgeBaseByAIResponse) => {
-                handleStreamResponse(token, data)
+                handleStreamResponse(data)
             })
             ipcRenderer.on(`${token}-error`, (e, err: any) => {
                 failed(`查询失败: ${err?.message || err}`)
@@ -194,6 +199,35 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
         }
     })
 
+    // const stop = useMemoizedFn(async () => {
+    //     const token = streamingTokenRef.current
+    //     if (!token) return
+
+    //     try {
+    //         // 通知主进程取消
+    //         await ipcRenderer.invoke("cancel-QueryKnowledgeBaseByAI", token)
+    //     } catch {}
+
+    //     // 移除监听器
+    //     ipcRenderer.removeAllListeners(`${token}-data`)
+    //     ipcRenderer.removeAllListeners(`${token}-error`)
+    //     ipcRenderer.removeAllListeners(`${token}-end`)
+    //     streamingTokenRef.current = ""
+
+    //     // 结束 loading
+    //     setLoading(false)
+
+    //     // 设置最后一条 assistantMessage 为非 streaming
+    //     setMessages((prev) => {
+    //         const list = [...prev]
+    //         const last = list[list.length - 1]
+    //         if (last && last.type === "assistant" && last.isStreaming) {
+    //             last.isStreaming = false
+    //         }
+    //         return list
+    //     })
+    // })
+
     return (
         <div
             className={classNames(styles["knowledge-base-QA"], {
@@ -219,7 +253,8 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
                     <YakitCloseSvgIcon onClick={() => onClose()} />
                 </div>
             </div>
-            <BaseQAContent content={messages} />
+            {/* <BaseQAContent content={messages} /> */}
+            <BaseQAContent ref={contentRef} content={messages} />
 
             <div className={styles["base-QA-footer"]}>
                 <div className={styles["footer-body"]}>
@@ -231,6 +266,9 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
                             textareaProps={{
                                 placeholder: "请输入问题"
                             }}
+                            // extraFooterRight={
+                            //     messages?.[messages.length - 1]?.isStreaming && <RoundedStopButton onClick={stop} />
+                            // }
                             onSubmit={handleSubmit}
                             extraFooterLeft={
                                 <YakitPopover

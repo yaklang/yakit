@@ -37,7 +37,8 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
             const result = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
                 Name: params.KnowledgeBaseName,
                 Description: params.KnowledgeBaseDescription,
-                Type: params.KnowledgeBaseType
+                Type: params.KnowledgeBaseType,
+                Tags: params.Tags
             })
             const KnowledgeBaseID = result?.KnowledgeBase?.ID
             addKnowledgeBase({
@@ -69,7 +70,6 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
             addManuallyItem: false,
             historyGenerateKnowledgeList: []
         }
-
         await runAsync(transformFormData)
     }
 
@@ -82,6 +82,7 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
             width={600}
             destroyOnClose
             maskClosable={false}
+            wrapClassName={styles["create-knowledge-modal"]}
             footer={
                 <div className={styles["delete-yakit-hint"]}>
                     <YakitButton type='outline1' onClick={handOpenKnowledgeBasesModal}>

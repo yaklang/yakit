@@ -98,7 +98,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
             const file = await handleSaveFileSystemDialog({
                 title: "导出知识库",
                 defaultPath: "knowledge",
-                filters: [{name: "Files", extensions: ["kb"]}]
+                filters: [{name: "Files", extensions: ["rag"]}]
             })
 
             if (!file?.filePath) return

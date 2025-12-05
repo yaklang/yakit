@@ -1,6 +1,7 @@
 import type {GetKnowledgeBaseResponse, KnowledgeBase} from "@/components/playground/knowlegeBase"
 import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 import {QueryGeneralResponseProps} from "../invoker/schema"
+import {IconProps} from "@/assets/newIcon"
 interface KnowledgeBaseFile {
     path: string
     fileType: string
@@ -34,6 +35,8 @@ interface CreateKnowledgeBaseData extends Entity, KnowledgeBaseEntry {
     KnowledgeBaseLength: number
     streamToken: string
     streamstep: 1 | 2 | "success"
+    Tags: string[]
+    IsImported: boolean
     addManuallyItem: boolean
     // 从实体生成知识 流数据收集
     historyGenerateKnowledgeList: Array<{

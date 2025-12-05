@@ -1,38 +1,21 @@
-import {type FC} from "react"
+import React, {type FC} from "react"
 
-import {useRequest, useUpdateEffect} from "ahooks"
-import {Form} from "antd"
+import {useUpdateEffect} from "ahooks"
+import {Collapse, Form} from "antd"
 
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {failed} from "@/utils/notification"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 
 import type {FormInstance} from "antd/es/form/Form"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import styles from "../knowledgeBase.module.scss"
+import {knowledgeTypeOptions} from "../utils"
 
-const {ipcRenderer} = window.require("electron")
-
-const CreateKnowledgeBase: FC<{form: FormInstance<any>}> = ({form}) => {
+const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form, type}) => {
     const KnowledgeBaseFileValue = Form.useWatch("KnowledgeBaseFile", form)
-
-    const {data, loading} = useRequest(
-        async () => {
-            const result = await ipcRenderer.invoke("GetKnowledgeBaseTypeList")
-            if (result?.KnowledgeBaseTypes?.length > 0) {
-                form.setFieldsValue({KnowledgeBaseType: result?.KnowledgeBaseTypes?.[0]?.Name})
-            }
-            return result?.KnowledgeBaseTypes?.map((it) => ({
-                value: it?.Name,
-                label: it?.Name
-            }))
-        },
-        {
-            onError: (error) => failed(`获取知识库类型失败: ${error}`)
-        }
-    )
 
     useUpdateEffect(() => {
         const result = KnowledgeBaseFileValue
@@ -47,19 +30,15 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>}> = ({form}) => {
     }, [KnowledgeBaseFileValue])
 
     return (
-        <Form form={form} layout='vertical'>
-            <YakitSpin spinning={loading}>
-                <YakitFormDragger
-                    formItemProps={{
-                        name: "KnowledgeBaseFile",
-                        label: "上传文件",
-                        rules: [
-                            {
-                                validator: (_, value) => {
-                                    if (!value) {
-                                        return Promise.reject("请上传文件")
-                                    }
-
+        <Form form={form} layout='vertical' className={styles["create-knowledge-from"]}>
+            <YakitFormDragger
+                formItemProps={{
+                    name: "KnowledgeBaseFile",
+                    label: "上传文件",
+                    rules: [
+                        {
+                            validator: (_, value) => {
+                                if (value) {
                                     // 多个文件用逗号分隔
                                     const files = value.split(",").map((i) => i.trim())
 
@@ -76,56 +55,73 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>}> = ({form}) => {
                                     }
 
                                     return Promise.resolve()
+                                } else {
+                                    return Promise.resolve()
                                 }
-                            }
-                        ]
-                    }}
-                    renderType='textarea'
-                    textareaProps={{
-                        rows: 3
-                    }}
-                    size='large'
-                    help='可将文件拖入框内或'
-                    selectType='file'
-                    multiple={true}
-                />
-
-                <Form.Item
-                    label='知识库名：'
-                    name='KnowledgeBaseName'
-                    rules={[
-                        {required: true, message: "请输入知识库名"},
-                        {
-                            validator: (_, value) => {
-                                if (typeof value === "string" && value.trim() === "") {
-                                    return Promise.reject(new Error("知识库名不能为空字符串"))
-                                }
-                                return Promise.resolve()
                             }
                         }
-                    ]}
-                >
-                    <YakitInput placeholder='请输入知识库名' />
-                </Form.Item>
+                    ]
+                }}
+                renderType='textarea'
+                textareaProps={{
+                    rows: 3
+                }}
+                size='large'
+                help='可将文件拖入框内或'
+                selectType='file'
+                multiple={true}
+            />
 
-                <Form.Item
-                    label='知识库类型：'
-                    name='KnowledgeBaseType'
-                    rules={[{required: true, message: "请输入知识库类型"}]}
-                >
-                    <YakitSelect options={data} placeholder='请选择' />
-                </Form.Item>
-                <Form.Item
-                    label='补充提示词：'
-                    name='KnowledgeBaseDescription'
-                    rules={[{max: 500, message: "描述最多 500 个字符"}]}
-                >
-                    <YakitInput.TextArea maxLength={500} placeholder='请输入补充提示词' rows={3} showCount />
-                </Form.Item>
-                <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={1000}>
-                    <YakitInputNumber />
-                </Form.Item>
-            </YakitSpin>
+            <Form.Item
+                label='知识库名：'
+                name='KnowledgeBaseName'
+                rules={[
+                    {required: true, message: "请输入知识库名"},
+                    {
+                        validator: (_, value) => {
+                            if (typeof value === "string" && value.trim() === "") {
+                                return Promise.reject(new Error("知识库名不能为空字符串"))
+                            }
+                            return Promise.resolve()
+                        }
+                    }
+                ]}
+            >
+                <YakitInput placeholder='请输入知识库名' />
+            </Form.Item>
+
+            <Form.Item label='Tags：' name='Tags'>
+                <YakitSelect mode='tags' placeholder='请选择' options={knowledgeTypeOptions} />
+            </Form.Item>
+            {type === "new" ? (
+                <React.Fragment>
+                    <Form.Item
+                        label='补充提示词：'
+                        name='KnowledgeBaseDescription'
+                        rules={[{max: 500, message: "描述最多 500 个字符"}]}
+                    >
+                        <YakitInput.TextArea maxLength={500} placeholder='请输入补充提示词' rows={3} showCount />
+                    </Form.Item>
+                    <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={1000}>
+                        <YakitInputNumber />
+                    </Form.Item>
+                </React.Fragment>
+            ) : (
+                <YakitCollapse bordered={false} className={styles["create-knowledge-configuration"]}>
+                    <Collapse.Panel header='高级配置' key='1'>
+                        <Form.Item
+                            label='补充提示词：'
+                            name='KnowledgeBaseDescription'
+                            rules={[{max: 500, message: "描述最多 500 个字符"}]}
+                        >
+                            <YakitInput.TextArea maxLength={500} placeholder='请输入补充提示词' rows={3} showCount />
+                        </Form.Item>
+                        <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={1000}>
+                            <YakitInputNumber />
+                        </Form.Item>
+                    </Collapse.Panel>
+                </YakitCollapse>
+            )}
         </Form>
     )
 }

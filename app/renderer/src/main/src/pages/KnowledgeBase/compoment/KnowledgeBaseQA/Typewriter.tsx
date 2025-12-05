@@ -24,5 +24,5 @@ export default function Typewriter({text, speed = 20}: TypewriterProps) {
         return () => clearInterval(timer)
     }, [text, speed])
 
-    return <>{displayText}</>
+    return <pre>{displayText}</pre>
 }

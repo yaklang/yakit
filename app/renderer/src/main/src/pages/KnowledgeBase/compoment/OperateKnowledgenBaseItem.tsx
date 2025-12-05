@@ -2,7 +2,7 @@ import {FC, useEffect} from "react"
 
 import {SolidDotsverticalIcon} from "@/assets/icon/solid"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {getNextSelectedID, manageMenuList} from "../utils"
+import {getNextSelectedID, knowledgeTypeOptions, manageMenuList} from "../utils"
 import {useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import styles from "../knowledgeBase.module.scss"
@@ -55,7 +55,7 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
             const file = await handleSaveFileSystemDialog({
                 title: "导出知识库",
                 defaultPath: "knowledge",
-                filters: [{name: "Files", extensions: ["kb"]}]
+                filters: [{name: "Files", extensions: ["rag"]}]
             })
 
             if (!file?.filePath) return
@@ -192,21 +192,6 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
     const [form] = Form.useForm()
     const {editKnowledgeBase} = useKnowledgeBase()
 
-    const {data, loading, runAsync} = useRequest(
-        async () => {
-            const result = await ipcRenderer.invoke("GetKnowledgeBaseTypeList")
-
-            return result?.KnowledgeBaseTypes?.map((it) => ({
-                value: it?.Name,
-                label: it?.Name
-            }))
-        },
-        {
-            manual: true,
-            onError: (error) => failed(`获取知识库类型失败: ${error}`)
-        }
-    )
-
     const {runAsync: editKnowledgRunAsync, loading: editKnowledgLoading} = useRequest(
         async (parmas) => {
             await ipcRenderer.invoke("UpdateKnowledgeBase", {
@@ -229,8 +214,9 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
 
     useUpdateEffect(() => {
         if (visible) {
-            runAsync()
-            form.setFieldsValue(items)
+            form.setFieldsValue({
+                ...items
+            })
         }
     }, [visible])
 
@@ -271,39 +257,33 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
             }
         >
             <Form form={form} layout='vertical'>
-                <YakitSpin spinning={loading}>
-                    <Form.Item
-                        label='知识库名：'
-                        name='KnowledgeBaseName'
-                        rules={[
-                            {required: true, message: "请输入知识库名"},
-                            {
-                                validator: (_, value) => {
-                                    if (typeof value === "string" && value.length > 0 && value.trim() === "") {
-                                        return Promise.reject(new Error("知识库名不能为空字符串"))
-                                    }
-                                    return Promise.resolve()
+                <Form.Item
+                    label='知识库名：'
+                    name='KnowledgeBaseName'
+                    rules={[
+                        {required: true, message: "请输入知识库名"},
+                        {
+                            validator: (_, value) => {
+                                if (typeof value === "string" && value.length > 0 && value.trim() === "") {
+                                    return Promise.reject(new Error("知识库名不能为空字符串"))
                                 }
+                                return Promise.resolve()
                             }
-                        ]}
-                    >
-                        <YakitInput placeholder='请输入知识库名' />
-                    </Form.Item>
-                    <Form.Item
-                        label='知识库类型：'
-                        name='KnowledgeBaseType'
-                        rules={[{required: true, message: "请输入知识库类型"}]}
-                    >
-                        <YakitSelect options={data} placeholder='请选择' />
-                    </Form.Item>
-                    <Form.Item
-                        label='描述：'
-                        name='KnowledgeBaseDescription'
-                        rules={[{max: 500, message: "描述最多 500 个字符"}]}
-                    >
-                        <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
-                    </Form.Item>
-                </YakitSpin>
+                        }
+                    ]}
+                >
+                    <YakitInput placeholder='请输入知识库名' />
+                </Form.Item>
+                <Form.Item label='Tags：' name='Tags'>
+                    <YakitSelect mode='tags' placeholder='请选择' options={knowledgeTypeOptions} />
+                </Form.Item>
+                <Form.Item
+                    label='描述：'
+                    name='KnowledgeBaseDescription'
+                    rules={[{max: 500, message: "描述最多 500 个字符"}]}
+                >
+                    <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
+                </Form.Item>
             </Form>
         </YakitModal>
     )

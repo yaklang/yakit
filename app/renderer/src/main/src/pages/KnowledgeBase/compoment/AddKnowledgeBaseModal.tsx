@@ -96,6 +96,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({addModalData, se
                     selectType='file'
                     multiple={true}
                 />
+
                 <Form.Item
                     label='补充提示词：'
                     name='KnowledgeBaseDescription'
