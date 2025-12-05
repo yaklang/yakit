@@ -16,7 +16,7 @@ try {
     // 更新远端分支代码
     execSync(`git fetch origin`, {stdio: "inherit"})
     // 生成更新版本号分支
-    execSync(`git checkout -b update/memfit-pack-${version} origin/ai-chat-ci`, {stdio: "inherit"})
+    execSync(`git checkout -b update/memfit-pack-${version} origin/perf/ai-chat-ci`, {stdio: "inherit"})
 
     // 生成版本号修改
     execSync(`yarn version --new-version ${version} --no-git-tag-version`, {stdio: "inherit"})
