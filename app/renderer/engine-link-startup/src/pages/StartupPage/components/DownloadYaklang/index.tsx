@@ -164,7 +164,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
         setBounds({
             left: -targetRect.left + uiData.x,
             right: clientWidth - (targetRect.right - uiData.x),
-            top: -targetRect.top + uiData.y,
+            top: -targetRect.top + uiData.y + 50,
             bottom: clientHeight - (targetRect.bottom - uiData.y)
         })
     })

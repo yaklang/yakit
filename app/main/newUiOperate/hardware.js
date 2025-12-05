@@ -1,7 +1,7 @@
 const {ipcMain, shell} = require("electron")
 const OS = require("os")
 const process = require("process")
-const {yaklangEngineDir, remoteLinkDir} = require("../filePath")
+const {yaklangEngineDir, remoteLinkDir, yakitInstallDir} = require("../filePath")
 
 // CPU瞬时使用均值
 const cpuData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -119,6 +119,11 @@ module.exports = {
         /** 获取远程连接配置信息文件路径 */
         ipcMain.handle(ipcEventPre + "fetch-remote-file-path", (e) => {
             return remoteLinkDir
+        })
+
+        /** 打开 yakit 文件所在文件夹 */
+        ipcMain.handle(ipcEventPre + "open-yakit-path", (e) => {
+            return shell.openPath(yakitInstallDir)
         })
     }
 }

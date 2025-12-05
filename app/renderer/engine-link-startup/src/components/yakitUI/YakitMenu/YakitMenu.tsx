@@ -41,6 +41,8 @@ export interface YakitMenuProp extends MenuProps {
     popupClassName?: string
     /** @name 组件尺寸类型(默认|右键高度紧凑型) */
     size?: "default" | "rightMenu"
+    menuWrapperClassName?: string
+    menuItemTitleClassName?: string
 }
 
 export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
@@ -52,6 +54,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         className,
         popupClassName,
         size = "default",
+        menuWrapperClassName,
+        menuItemTitleClassName,
         ...restMenu
     } = props
 
@@ -96,7 +100,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                         <div
                                             className={classNames(
                                                 styles["yakit-menu-item-title"],
-                                                "yakit-single-line-ellipsis"
+                                                "yakit-single-line-ellipsis",
+                                                menuItemTitleClassName
                                             )}
                                         >
                                             {info.label}
@@ -106,7 +111,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                     <div
                                         className={classNames(
                                             styles["yakit-menu-item-title"],
-                                            "yakit-single-line-ellipsis"
+                                            "yakit-single-line-ellipsis",
+                                            menuItemTitleClassName
                                         )}
                                     >
                                         {info.label}
@@ -150,7 +156,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                         <div
                                             className={classNames(
                                                 styles["yakit-menu-item-title"],
-                                                "yakit-single-line-ellipsis"
+                                                "yakit-single-line-ellipsis",
+                                                menuItemTitleClassName
                                             )}
                                         >
                                             {info.label}
@@ -160,7 +167,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                     <div
                                         className={classNames(
                                             styles["yakit-menu-item-title"],
-                                            "yakit-single-line-ellipsis"
+                                            "yakit-single-line-ellipsis",
+                                            menuItemTitleClassName
                                         )}
                                     >
                                         {info.label}
@@ -181,7 +189,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
 
     return (
-        <div className={classNames(styles["yakit-menu-div-wrapper"], menuTypeClass, menuSizeClass)}>
+        <div className={classNames(styles["yakit-menu-div-wrapper"], menuTypeClass, menuSizeClass, menuWrapperClassName)}>
             <Menu
                 {...restMenu}
                 className={classNames(styles["yakit-menu-wrapper"], className || "")}

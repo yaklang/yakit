@@ -48,8 +48,10 @@ module.exports = {
                     let stderr = ""
                     const timeoutMs = 11000
                     let killed = false
+                    let close = false
 
                     const timeoutId = setTimeout(() => {
+                        if (close) return
                         killed = true
                         subprocess.kill()
                         try {
@@ -87,7 +89,7 @@ module.exports = {
 
                     subprocess.on("close", (code) => {
                         if (checkId !== currentCheckId || killed) return
-
+                        close = true
                         clearTimeout(timeoutId)
                         const combinedOutput = (stdout + stderr).trim()
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式结束，退出码: ${code} -----`)

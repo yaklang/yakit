@@ -1,5 +1,5 @@
 import {yakitNotify} from "@/utils/notification"
-import {APIFunc, APINoRequestFunc} from "@/utils/api"
+import {APIFunc, APINoRequestFunc, APIOptionalFunc} from "@/utils/api"
 import {ipcEventPre} from "@/utils/ipcEventPre"
 import {
     AllowSecretLocalExecResult,
@@ -11,6 +11,7 @@ import {
 } from "./components/LocalEngine/LocalEngineType"
 import {StartLocalEngine} from "./types"
 import {randomString} from "@/utils/randomUtil"
+import {getReleaseEditionName, isEnterpriseEdition, isIRify, isMemfit} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -236,6 +237,124 @@ export const grpcFixupDatabase: APIFunc<FixupDatabase, FixupDatabaseExecResult> 
             })
             .catch((err) => {
                 reject(err)
+            })
+    })
+}
+
+/** @name 获取Yakit本地版本号 */
+export const grpcFetchLocalYakitVersion: APINoRequestFunc<string> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "fetch-yakit-version")
+            .then((version: string) => {
+                let newVersion = version
+                // 如果存在-ce，则软件是 CE 版本
+                if (version.endsWith("-ce")) {
+                    newVersion = version.replace("-ce", "")
+                }
+                // 如果存在-ee，则软件是 EE 版本
+                if (version.endsWith("-ee")) {
+                    newVersion = version.replace("-ee", "")
+                }
+                resolve(newVersion)
+            })
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取本地软件版本失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取Yakit最新版本号 */
+interface GrpcToHTTPRequestProps {
+    timeout?: number
+}
+export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps, string> = (config, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "fetch-latest-yakit-version", {
+                config: config,
+                releaseEditionName: getReleaseEditionName()
+            })
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取最新软件版本失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 下载指定版本yakit */
+export const grpcDownloadYakit: APIFunc<string, string> = (version, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "download-latest-yakit", version, {
+                isEnterprise: isEnterpriseEdition(),
+                isIRify: isIRify(),
+                isMemfit: isMemfit()
+            })
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "下载失败: " + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 取消下载指定版本Yakit */
+export const grpcCancelDownloadYakit: APINoRequestFunc<boolean> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "cancel-download-yakit-version")
+            .then(() => {
+                resolve(true)
+            })
+            .catch((e: any) => {
+                if (!hiddenError) yakitNotify("error", "取消下载失败：" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取Yak引擎本地版本号 */
+export const grpcFetchLocalYakVersion: APINoRequestFunc<string> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "get-current-yak")
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取本地引擎版本失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取指定Yak引擎版本号的校验Hash值 */
+export const grpcFetchSpecifiedYakVersionHash: APIFunc<{version: string; config: GrpcToHTTPRequestProps}, string> = (
+    request,
+    hiddenError
+) => {
+    const {version, config} = request
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "fetch-check-yaklang-source", version, config)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取线上引擎 hash 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取本地Yak引擎的校验Hash值 */
+export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "CalcEngineSha265")
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取本地引擎 hash 失败:" + e)
+                reject(e)
             })
     })
 }

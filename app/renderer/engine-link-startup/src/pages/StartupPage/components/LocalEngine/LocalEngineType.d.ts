@@ -8,11 +8,17 @@ export interface LocalEngineProps {
     setYakitStatus: (v: YakitStatusType) => void
     buildInEngineVersion: string
     setRestartLoading: Dispatch<SetStateAction<boolean>>
+    yakitUpdate: boolean
+    setYakitUpdate: Dispatch<SetStateAction<boolean>>
 }
 
 export interface LocalEngineLinkFuncProps {
     /** 初始化并检查所有前置项后的本地连接 */
     init: (port: number) => void
+    /** 检查引擎版本 */
+    checkEngine: () => void
+    /** 校验引擎来源 */
+    checkEngineSource: (version?: string) => void
     /** 检查引擎版本后的本地连接 */
     link: (port: number) => void
 }
