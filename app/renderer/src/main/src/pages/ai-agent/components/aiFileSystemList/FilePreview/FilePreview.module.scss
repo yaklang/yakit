@@ -1,3 +1,5 @@
+@use "../../../.../../../../styles/mixin.scss" as mixin;
+
 .file-preview {
     width: 100%;
     height: 100%;
@@ -13,15 +15,19 @@
             &-left {
                 display: flex;
                 gap: 4px;
+                width: 0;
+                flex: 1;
                 img {
                     width: 24px;
                     height: 24px;
                     margin-right: 4px;
                 }
-                span {
+                p {
+                    margin: 0;
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 14px;
                     font-weight: 500;
+                    @include mixin.text-ellipsis;
                 }
             }
             &-right {
@@ -40,6 +46,7 @@
             font-style: normal;
             font-weight: 400;
             line-height: 16px;
+            @include mixin.text-ellipsis;
         }
     }
     &-content {

@@ -292,7 +292,7 @@ const DownloadUrlByType = {
         suffix: getSuffix()
     },
     Memfit: {
-        name: "Memfit",
+        name: "MemfitAI",
         dir: "memfit",
         suffix: getSuffix()
     }

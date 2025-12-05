@@ -1,5 +1,5 @@
 import {SolidToolIcon} from "@/assets/icon/solid"
-import {FC, memo, useCallback, useEffect, useMemo, useState} from "react"
+import {FC, memo, ReactNode, useCallback, useEffect, useMemo, useState} from "react"
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
@@ -10,6 +10,8 @@ import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
 import FileList from "./FileList"
 import ModalInfo, {ModalInfoProps} from "./ModelInfo"
+import emiter from "@/utils/eventBus/eventBus"
+import {AITabsEnum} from "../defaultConstant"
 interface ToolInvokerCardProps {
     titleText?: string
     status: "default" | "success" | "failed" | "user_cancelled"
@@ -22,7 +24,7 @@ interface ToolInvokerCardProps {
     execError?: string
 }
 interface PreWrapperProps {
-    code: string
+    code: ReactNode
 }
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
@@ -62,13 +64,38 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
             console.error("error:", error)
         })
     }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
+
+    const switchAIActTab = (key: AITabsEnum) => {
+        emiter.emit(
+            "switchAIActTab",
+            JSON.stringify({
+                key,
+                value: params
+            })
+        )
+    }
+
     return (
         <ChatCard
             titleText={titleText}
             titleIcon={<SolidToolIcon />}
             titleExtra={
                 <div className={styles["tool-invoker-card-extra"]}>
-                    相关漏洞 <span>{risksLen}</span> <span>|</span> HTTP 流量 <span>{trafficLen}</span>
+                    <label
+                        onClick={() => {
+                            switchAIActTab(AITabsEnum.Risk)
+                        }}
+                    >
+                        相关漏洞 <span>{risksLen}</span>
+                    </label>
+                    <span>|</span>
+                    <label
+                        onClick={() => {
+                            switchAIActTab(AITabsEnum.HTTP)
+                        }}
+                    >
+                        HTTP 流量 <span>{trafficLen}</span>
+                    </label>
                 </div>
             }
             footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}

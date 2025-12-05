@@ -5,15 +5,15 @@
         display: flex;
         @if $type == "left" {
             border-right: 1px solid var(--Colors-Use-Neutral-Border);
-            transition:
-                border-right 0.3s ease-in-out,
-                width 0.3s ease-in-out;
+            // transition:
+            //     border-right 0.3s ease-in-out,
+            //     width 0.3s ease-in-out;
         } @else {
             justify-content: space-between;
             border-left: 1px solid var(--Colors-Use-Neutral-Border);
-            transition:
-                border-left 0.3s ease-in-out,
-                width 0.3s ease-in-out;
+            // transition:
+            //     border-left 0.3s ease-in-out,
+            //     width 0.3s ease-in-out;
         }
         .open-wrapper {
             width: 0;
@@ -74,7 +74,7 @@
 }
 
 @include content-side("re-act") {
-    width: 432px;
+    width: 100%;
     border-left: 0;
 }
 .ai-re-act-chat {
@@ -84,6 +84,11 @@
     display: flex;
     flex-direction: column;
     background: var(--Colors-Use-Neutral-Bg);
+    .chat-container {
+        .chat-header {
+            padding: 12px 8px 12px 0px;
+        }
+    }
 }
 .ai-re-act-chat-hidden {
     width: 0;

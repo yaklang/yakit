@@ -5,7 +5,7 @@ import {AIReActChatProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
-import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn, useMount} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
@@ -20,15 +20,15 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
-import emiter from "@/utils/eventBus/eventBus"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
+import {fileToChatQuestionStore, useFileToQuestion} from "./store"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode} = props
+    const {mode, chatContainerClassName, chatContainerHeaderClassName} = props
 
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
@@ -37,12 +37,18 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
+    const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
+        defaultValue: true,
+        valuePropName: "showFreeChat",
+        trigger: "setShowFreeChat"
+    })
 
     const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
     const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
 
     const {activeChat, setting} = useAIAgentStore()
+
+    const fileToQuestion = useFileToQuestion()
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
@@ -61,21 +67,24 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             yakitNotify("error", "请先配置 AI ReAct 参数")
             return
         }
+        const fileArr = fileToQuestion.filter(i => qs.includes(i))
         if (execute) {
-            handleSend(qs)
+            handleSend(qs, fileArr)
         } else {
-            handleStart(qs)
+            handleStart({qs, fileToQuestion: fileArr})
         }
         setQuestion("")
+        fileToChatQuestionStore.claearFileToChatQuestion()
     })
 
     /**自由对话 */
-    const handleSend = useMemoizedFn((qs: string) => {
+    const handleSend = useMemoizedFn((qs: string, fileArr: string[]) => {
         if (!activeChat?.id) return
         try {
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
-                FreeInput: qs
+                FreeInput: qs,
+                AttachedFilePath: fileArr
             }
             // 发送到服务端
             chatIPCEvents.onSend({token: activeChat.id, type: "casual", params: chatMessage})
@@ -83,13 +92,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     })
 
     // #endregion
-
-    useEffect(() => {
-        emiter.on("switchReActShow", handleSwitchShowFreeChat)
-        return () => {
-            emiter.off("switchReActShow", handleSwitchShowFreeChat)
-        }
-    }, [])
 
     const isShowRetract = useCreation(() => {
         return mode === "task" && showFreeChat
@@ -120,6 +122,18 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const onClose = useMemoizedFn(() => {
         setTimelineVisible(false)
     })
+
+    useEffect(() => {
+        if (!fileToQuestion.length) return
+        const lastFile = fileToQuestion[fileToQuestion.length - 1]
+        if (!lastFile) return
+        if (question) {
+            setQuestion((prev) => `${prev} ${lastFile} `)
+            return
+        }
+        setQuestion(`${lastFile} `)
+    }, [fileToQuestion])
+
     return (
         <>
             <div
@@ -134,8 +148,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         [styles["ai-re-act-chat-hidden"]]: !showFreeChat
                     })}
                 >
-                    <div className={styles["chat-container"]}>
-                        <div className={styles["chat-header"]}>
+                    <div className={classNames(styles["chat-container"], chatContainerClassName)}>
+                        <div className={classNames(styles["chat-header"], chatContainerHeaderClassName)}>
                             <div className={styles["chat-header-title"]}>
                                 <ColorsChatIcon />
                                 自由对话

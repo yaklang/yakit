@@ -9,3 +9,9 @@ export interface AIReActTaskChatReviewProps {
     setScrollToBottom: (v: boolean) => void
     onStopTask: () => void
 }
+
+export interface HandleStartParams {
+    qs: string
+    fileToQuestion?: string[]
+    extraValue?: AIChatIPCStartParams["extraValue"]
+}

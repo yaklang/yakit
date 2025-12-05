@@ -1,5 +1,5 @@
 import React, {useRef, useState} from "react"
-import {AIChatSelectProps, AIReviewRuleSelectProps} from "./type"
+import {AIChatSelectProps, AIReviewRuleSelectProps, ReviewRuleSelectProps} from "./type"
 import styles from "./AIReviewRuleSelect.module.scss"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
@@ -16,8 +16,11 @@ import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore
 import {AIStartParams} from "../hooks/grpcApi"
 import {AIInputEventHotPatchTypeEnum} from "../hooks/defaultConstant"
 import isEqual from "lodash/isEqual"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/enums/yakitRoute"
 
-const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props) => {
+const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
 
@@ -144,7 +147,18 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
         </>
     )
 })
-
+/**
+ * TODO 目前这个组件只需要在ai-agent展示，待优化；优化层级高
+ */
+const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props) => {
+    const {getCurrentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            getCurrentPageTabRouteKey: s.getCurrentPageTabRouteKey
+        }),
+        shallow
+    )
+    return getCurrentPageTabRouteKey() !== YakitRoute.AI_Agent ? <></> : <ReviewRuleSelect {...props} />
+})
 export default AIReviewRuleSelect
 
 export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {

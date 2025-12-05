@@ -23,6 +23,8 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
 export const handleGrpcDataPushLog = (params: {info: AIOutputEvent; pushLog: (log: AIChatLogData) => void}) => {
     try {
         const {info, pushLog} = params
+        // 这类类型的数据从日志数据中屏蔽掉，后续的stream类型逻辑会使用到
+        if (info.Type === "stream_start") return
         let ipcContent = Uint8ArrayToString(info.Content) || ""
         const logInfo: AIChatLogData = {
             type: "log",
@@ -41,8 +43,13 @@ export const handleGrpcDataPushLog = (params: {info: AIOutputEvent; pushLog: (lo
 const genExecTask = (params: {task: AIAgentGrpcApi.PlanTask; level: number; tasks: AITaskInfoProps[]}) => {
     const {task, level, tasks} = params
 
-    tasks.push({...task, subtasks: undefined, level})
-    if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) return
+    if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) {
+        tasks.push({...task, subtasks: undefined, level, isLeaf: true})
+        return
+    } else {
+        tasks.push({...task, subtasks: undefined, level, isLeaf: false})
+    }
+
     for (let subtask of task.subtasks) {
         genExecTask({level: level + 1, task: subtask, tasks: tasks})
     }

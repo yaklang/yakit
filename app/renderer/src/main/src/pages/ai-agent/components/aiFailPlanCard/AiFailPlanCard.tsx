@@ -2,9 +2,7 @@ import type {FailPlanAndExecutionError} from "@/pages/ai-re-act/hooks/aiRender"
 import {type FC} from "react"
 import ChatCard from "../ChatCard"
 import styles from "./AiFailPlanCard.module.scss"
-import {SolidToolIcon} from "@/assets/icon/solid"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TaskErrorIcon} from "../../aiTree/icon"
 
 const AiFailPlanCard: FC<{item: FailPlanAndExecutionError}> = ({item}) => {

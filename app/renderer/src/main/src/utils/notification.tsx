@@ -29,6 +29,31 @@ export const failed = (msg: React.ReactNode) => {
 
 // ==========================新版 yakit notification ==========================
 export const yakitFailed = (props: ArgsProps | string | React.ReactNode, isShowCopy?: boolean) => {
+    yakitNotify("error", props, isShowCopy)
+}
+
+/**
+ * @param type
+ * @returns {React.ReactNode} 图标
+ */
+const getIcon = (type) => {
+    switch (type) {
+        case "error":
+            return <CloseCircleIcon className='yakit-notify-icon yakit-notify-error-icon' />
+        case "success":
+            return <CheckCircleOutlineIcon className='yakit-notify-icon yakit-notify-success-icon' />
+        case "warning":
+            return <ExclamationOutlineIcon className='yakit-notify-icon yakit-notify-warning-icon' />
+        default:
+            return <></>
+    }
+}
+
+export const yakitNotify = (
+    notifyType: "error" | "success" | "warning" | "info",
+    props: ArgsProps | string | React.ReactNode,
+    isShowCopy?: boolean
+) => {
     let newProps: ArgsProps = {
         message: ""
     }
@@ -53,49 +78,10 @@ export const yakitFailed = (props: ArgsProps | string | React.ReactNode, isShowC
     } else {
         newProps.message = props
     }
-    notification["error"]({
-        ...newProps,
-        placement: "bottomRight",
-        className: "yakit-notification-failed"
-    })
-}
-
-/**
- * @param type
- * @returns {React.ReactNode} 图标
- */
-const getIcon = (type) => {
-    switch (type) {
-        case "error":
-            return <CloseCircleIcon className='yakit-notify-icon yakit-notify-error-icon' />
-        case "success":
-            return <CheckCircleOutlineIcon className='yakit-notify-icon yakit-notify-success-icon' />
-        case "warning":
-            return <ExclamationOutlineIcon className='yakit-notify-icon yakit-notify-warning-icon' />
-        default:
-            return <></>
-    }
-}
-
-export const yakitNotify = (
-    notifyType: "error" | "success" | "warning" | "info",
-    props: ArgsProps | string | React.ReactNode
-) => {
-    let newProps: ArgsProps = {
-        message: ""
-    }
-    if (typeof props === "string") {
-        newProps.message = props
-    } else if (typeof props === "object") {
-        newProps = props as ArgsProps
-    } else {
-        newProps.message = props
-    }
-
     notification[notifyType]({
         ...newProps,
         icon: getIcon(notifyType),
-        placement: "bottomRight",
-        className: "yakit-notification-" + notifyType
+        placement: "bottomLeft",
+        className: `yakit-notification-${notifyType}`
     })
 }

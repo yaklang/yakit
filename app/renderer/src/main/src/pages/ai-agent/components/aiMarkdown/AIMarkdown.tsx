@@ -21,7 +21,7 @@ const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
     }
 ]
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-    const {content, nodeLabel, className, modalInfo} = props
+    const {content, nodeLabel, className, modalInfo,referenceNode} = props
     const [type, setType] = useState<"preview" | "code">("preview")
     const [expand, setExpand] = useState<boolean>(true)
     const item: ReportItem = useCreation(() => {
@@ -72,6 +72,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
             >
                 {renderContent()}
             </div>
+            {referenceNode}
             <ModalInfo {...modalInfo} />
         </div>
     )

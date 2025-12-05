@@ -240,6 +240,11 @@
             transform: scale(0);
         }
     }
+    .open-folder-button{
+        position: absolute;
+        top: 16px;
+        left: 16px;
+    }
 }
 .recommend-list-wrapper {
     @extend %display-column-center;

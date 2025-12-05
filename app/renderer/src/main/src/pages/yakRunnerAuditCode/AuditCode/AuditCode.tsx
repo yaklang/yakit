@@ -130,8 +130,8 @@ import cloneDeep from "lodash/cloneDeep"
 import {RJSFSchema} from "@rjsf/utils"
 import {TrashIcon} from "@/assets/newIcon"
 import {IRifyUpdateProjectManagerModal} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
-import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
 const {YakitPanel} = YakitCollapse
@@ -1628,11 +1628,15 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     })
 
     const onClickDownstreamProxy = useMemoizedFn(async () => {
-        const versionValid = await checkProxyVersion()
-        if (!versionValid) {
-            return
+        try {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setAgentConfigModalVisible(true)
+        } catch (error) {
+            console.error("error:", error)
         }
-        setAgentConfigModalVisible(true)
     })
 
     return (
@@ -1697,13 +1701,38 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                     name='proxy'
                                     label='代理'
                                     extra={
+                                        <>
                                         <div
                                             className={styles["agent-down-stream-proxy"]}
                                             onClick={onClickDownstreamProxy}
                                         >
                                             {t("AgentConfigModal.proxy_configuration")}
                                         </div>
+                                            <Divider type="vertical" />
+                                            <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})}/>
+                                        </>
                                     }
+                                    validateTrigger={["onChange", "onBlur"]}
+                                    rules={[
+                                        {
+                                            validator: (_, value) => {
+                                                if (!value || !Array.isArray(value) || value.length === 0) {
+                                                    return Promise.resolve()
+                                                }
+                                                // 获取当前options中的所有值
+                                                const existingOptions = Endpoints.map(({Id}) => Id)
+                                                // 只校验新输入的值(不在options中的值)
+                                                const newValues = value.filter((v) => !existingOptions.includes(v))
+                                                // 校验代理地址格式: 协议://地址:端口
+                                                for (const v of newValues) {
+                                                    if (!isValidUrlWithProtocol(v)) {
+                                                        return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                                    }
+                                                }
+                                                return Promise.resolve()
+                                            }
+                                        }
+                                    ]}
                                 >
                                     <YakitSelect
                                         allowClear
@@ -1757,17 +1786,15 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     {isVerifyForm ? "正在校验" : "添加项目"}
                 </YakitButton>
             </div>
-            <AgentConfigModal
-                agentConfigModalVisible={false} //弃用
-                onCloseModal={() => setAgentConfigModalVisible(false)}
-                generateURL={(url) => {
-                    form.setFieldsValue({proxy: url})
-                }}
-            />
             <ProxyRulesConfig
                 hideRules
                 visible={agentConfigModalVisible}
-                onClose={() => setAgentConfigModalVisible(false)}
+                onClose={() => {
+                    setAgentConfigModalVisible(false)
+                    const proxy = form.getFieldValue("proxy") || []
+                    const filterProxy = proxy.filter((item) => Endpoints.some(({Id}) => Id === item))
+                    form.setFieldsValue({proxy: filterProxy})
+                }}
             />
         </YakitSpin>
     )
@@ -2769,7 +2796,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 titile: selectedRowKeys.length === 0 ? "确认清空列表数据？" : "确认删除勾选数据？",
                                 params:
                                     selectedRowKeys.length === 0
-                                        ? {}
+                                        ? {
+                                            DeleteAllProject: true
+                                        }
                                         : {
                                               Filter: {
                                                   IDs: selectedRowKeys.map((item) => parseInt(item + ""))

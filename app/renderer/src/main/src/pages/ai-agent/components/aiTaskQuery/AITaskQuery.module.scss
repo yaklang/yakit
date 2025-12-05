@@ -79,6 +79,7 @@
                 .item-left {
                     @extend %display-flex-center;
                     gap: 4px;
+                    overflow: hidden;
                 }
 
                 .item-right {

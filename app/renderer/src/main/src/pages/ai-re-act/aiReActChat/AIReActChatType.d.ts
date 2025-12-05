@@ -3,6 +3,10 @@ import {AIChatQSData} from "../hooks/aiRender"
 
 export interface AIReActChatProps {
     mode: AIAgentChatMode
+    chatContainerClassName?: string
+    chatContainerHeaderClassName?: string
+    showFreeChat: boolean
+    setShowFreeChat: (show: boolean) => void
 }
 
 export interface AIReActLogProps {

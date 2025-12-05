@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useMemoizedFn, useClickAway} from "ahooks"
+import {useMemoizedFn, useClickAway, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
 import { OutlineChevrondoubledownIcon } from "@/assets/icon/outline"
@@ -295,6 +295,9 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     useEffect(() => {
         setFirstMinSize(firstMinSize)
     }, [firstMinSize])
+    useUpdateEffect(() => {
+        setSecondMinSize(secondMinSize)
+    }, [secondMinSize])
 
     // 特殊情况处理
     const specialSizeFun = useMemoizedFn((size: number) => {

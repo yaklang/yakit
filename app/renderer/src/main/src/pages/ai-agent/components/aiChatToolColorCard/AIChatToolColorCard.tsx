@@ -8,8 +8,8 @@ import styles from "./AIChatToolColorCard.module.scss"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
-import {ChatStreamContent} from "../../chatTemplate/AIAgentChatTemplate"
 import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
+import {PreWrapper} from "../ToolInvokerCard"
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -18,7 +18,7 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {handleSend} = useChatIPCDispatcher()
-    const {toolCall} = props
+    const {toolCall, referenceNode} = props
     const {NodeId, content, selectors} = toolCall
     const title = useCreation(() => {
         if (NodeId === "call-tools") return "Call-tools：参数生成中..."
@@ -49,7 +49,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
             <div className={styles["card-header"]}>
                 <div className={styles["card-title"]}>
                     <OutlineSparklesColorsIcon />
-                    <div className="content-ellipsis">{title}</div>
+                    <div className='content-ellipsis'>{title}</div>
                 </div>
                 {isToolStdoutStream(NodeId) && selectors?.selectors && (
                     <div className={styles["card-extra"]}>
@@ -71,8 +71,10 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 )}
             </div>
             <div className={styles["card-content"]}>
-                <ChatStreamContent stream={content} />
+                {/* 工具紫色卡片所有nodeId都显示代码格式 */}
+                <PreWrapper code={content} />
             </div>
+            {referenceNode}
         </div>
     )
 })

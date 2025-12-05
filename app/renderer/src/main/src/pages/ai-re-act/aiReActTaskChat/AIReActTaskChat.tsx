@@ -20,14 +20,16 @@ import emiter from "@/utils/eventBus/eventBus"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AIReviewType} from "../hooks/aiRender"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
+    const {setShowFreeChat} = props
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
 
     const onIsExpand = useMemoizedFn(() => {
         setLeftExpand(expand)
-        emiter.emit("switchReActShow", expand)
+        setShowFreeChat(expand)
         setExpand((v) => !v)
     })
 
@@ -87,7 +89,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     return (
         <>
             <div className={styles["tab-content"]}>
-                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute}/>
+                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute} />
             </div>
             {!!reviewInfo ? (
                 <AIReActTaskChatReview
@@ -100,17 +102,22 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
                         {!!getTaskId() && (
-                            <YakitButton
-                                type='outline1'
-                                icon={<OutlineExitIcon />}
-                                onClick={onStopTask}
-                                className={styles["task-button"]}
-                                radius='28px'
-                                size='large'
-                                colors='danger'
+                            <YakitPopconfirm
+                                onConfirm={() => onStopTask()}
+                                title='是否确认取消整个任务，确认将停止执行'
+                                placement='top'
                             >
-                                取消当前任务
-                            </YakitButton>
+                                <YakitButton
+                                    type='outline1'
+                                    icon={<OutlineExitIcon />}
+                                    className={styles["task-button"]}
+                                    radius='28px'
+                                    size='large'
+                                    colors='danger'
+                                >
+                                    取消当前任务
+                                </YakitButton>
+                            </YakitPopconfirm>
                         )}
                         <YakitButton
                             type='outline2'

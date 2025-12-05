@@ -238,7 +238,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 })
 /**HTTP 流量 */
 export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
-    const {runtimeId, website = false} = props
+    const {runtimeId, filterTagDom, website = false} = props
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
@@ -316,6 +316,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                         setSecondNodeVisible={setSecondNodeVisible}
                         pageType='Plugin'
                         runtimeId={runtimeId}
+                        filterTagDom={filterTagDom}
                         params={{SourceType: "scan"}}
                         httpHistoryTableTitleStyle={{
                             paddingTop: 12,
@@ -344,12 +345,14 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const [activeKey, setActiveKey] = useState<string>("plugin-log")
 
     const list: StreamResult.Log[] = useCreation(() => {
-        return (messageList || [])
-            .filter((i) => {
-                return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
-            })
-            // .splice(0, 25)
-            .reverse()
+        return (
+            (messageList || [])
+                .filter((i) => {
+                    return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
+                })
+                // .splice(0, 25)
+                .reverse()
+        )
     }, [messageList])
 
     const echartsLists: StreamResult.Log[] = useCreation(() => {
@@ -447,7 +450,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
 
 /**风险与漏洞tab表 */
 export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
-    const {runtimeId, runTimeIDs} = props
+    const {runtimeId, runTimeIDs, filterTagDom} = props
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [allTotal, setAllTotal] = useControllableValue<number>(props, {
@@ -488,6 +491,7 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
                             <div className={styles["table-renderTitle-left"]}>
                                 <span>{t("VulnerabilitiesRisksTable.risks_and_vulnerabilities")}</span>
                                 <TableTotalAndSelectNumber total={allTotal} />
+                                {filterTagDom}
                             </div>
                             <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
                                 {t("YakitButton.view_all_button")}
@@ -516,19 +520,26 @@ export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.mem
     const [allTotal, setAllTotal] = useState<number>(0)
 
     const onJumpAuditHole = useMemoizedFn(() => {
-        emiter.emit("openPage", JSON.stringify({
-            route: YakitRoute.YakRunner_Audit_Hole,
-            params: {
-                RuntimeID: [runtimeId]
-            }
-        }))
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.YakRunner_Audit_Hole,
+                params: {
+                    RuntimeID: [runtimeId]
+                }
+            })
+        )
     })
+
+    const query = useMemo(() => {
+        return {
+            RuntimeID: [runtimeId]
+        }
+    }, [runtimeId])
     return (
         <div className={styles["risks-table"]}>
             <YakitAuditHoleTable
-                query={{
-                    RuntimeID: [runtimeId]
-                }}
+                query={query}
                 setAllTotal={setAllTotal}
                 renderTitle={
                     <div className={styles["table-renderTitle"]}>

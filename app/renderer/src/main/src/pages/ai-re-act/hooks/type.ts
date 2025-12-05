@@ -53,8 +53,8 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     onGrpcFolder?: (path: string) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
-    /** 获取问题队列信息 */
-    getQuestionQueue?: () => AIQuestionQueues
+    /** 通知消息回调 */
+    onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
 }
 
 export interface UseCasualChatState {
@@ -79,6 +79,9 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     sendRequest?: (request: AIInputEvent) => void
     /** 接口里返回文件夹路径时的回调事件 */
     onGrpcFolder?: (path: string) => void
+    /** 通知消息回调 */
+    onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
+    onTaskStart: UseChatIPCParams["onTaskStart"]
 }
 
 export interface UseTaskChatState {
@@ -99,12 +102,22 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
 // #endregion
 
 // #region useChatIPC相关定义
+/** 会话类型 */
 export type ChatIPCSendType = "casual" | "task" | ""
+/** 会话-通知消息回调 */
+export interface AIChatIPCNotifyMessage {
+    Type: AIOutputEvent["Type"]
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    Content: string
+    Timestamp: AIOutputEvent["Timestamp"]
+}
+
 export interface UseChatIPCParams {
     /** 获取流接口请求参数 */
     getRequest?: () => AIAgentSetting | undefined
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
-    onTaskStart?: (id: string) => void
+    onTaskStart?: () => void
     /** 任务规划的 review 事件 */
     onTaskReview?: (data: AIChatQSData) => void
     /** 任务规划中 plan_review 事件的补充数据 */
@@ -115,11 +128,20 @@ export interface UseChatIPCParams {
     onTimelineMessage?: (message: string) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
+    /** 通知消息的回调 */
+    onNotifyMessage?: (message: AIChatIPCNotifyMessage) => void
 }
 
+/** 自由对话-实时问题队列 */
 export interface AIQuestionQueues {
     total: number
     data: AIAgentGrpcApi.QuestionQueueItem[]
+}
+
+/** 自由对话-loading状态信息 */
+export interface CasualLoadingStatus {
+    loading: boolean
+    title: string
 }
 
 export interface UseChatIPCState {
@@ -139,6 +161,10 @@ export interface UseChatIPCState {
     grpcFolders: string[]
     /** 问题队列信息 */
     questionQueue: AIQuestionQueues
+    /** 自由对话的loading状态信息 */
+    casualStatus: CasualLoadingStatus
+    /** 实时时间线 */
+    reActTimelines: AIAgentGrpcApi.TimelineItem[]
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */

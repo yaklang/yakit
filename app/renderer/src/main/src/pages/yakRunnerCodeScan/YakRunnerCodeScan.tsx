@@ -32,6 +32,7 @@ import {
     useInterval,
     useInViewport,
     useMemoizedFn,
+    useThrottleFn,
     useUpdateEffect
 } from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
@@ -108,8 +109,8 @@ import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHisto
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
-import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {YakitPanel} = YakitCollapse
@@ -1150,6 +1151,13 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
             ...clearRuleByPageInfo
         }))
     })
+
+    const onSetProgressFun = useThrottleFn(
+        (data?: {type: "new" | "old"; progress: number}) => {
+            setProgressShow(data)
+        },
+        {wait: 500}
+    ).run
     return (
         <>
             {executeStatus !== "default" && CodeScanByExecuteData.length > 0 && (
@@ -1253,7 +1261,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         ref={codeScanExecuteContentRef}
                         isExpand={isExpand}
                         setIsExpand={setIsExpand}
-                        setProgressShow={setProgressShow}
+                        setProgressShow={onSetProgressFun}
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         filterLibRuleKind={filterLibRuleKind}
@@ -1633,8 +1641,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
             let reportName = ""
-            if (pageInfo.projectName) {
-                reportName = `${pageInfo.projectName}代码扫描报告`
+            const projectItem = auditCodeList.find((item) => item.value === pageInfo.projectId)
+            const projectName = pageInfo?.projectName || projectItem?.label
+            
+            if (projectName) {
+                reportName = `${projectName}代码扫描报告`
             }
 
             const params: CreateReportContentProps = {
@@ -1960,6 +1971,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             trigger: "setSelectProjectId"
         })
         const [compileHistoryList, setCompileHistoryList] = useState<{label: string; value: string}[]>([])
+        const isSelectProjectRef = useRef<boolean>(false)
         const getCompileHistoryList = useMemoizedFn(async (ProjectIds: number[]) => {
             const finalParams: QuerySSAProgramRequest = {
                 Filter: {
@@ -1967,18 +1979,32 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 },
                 Pagination: {...genDefaultPagination(500), OrderBy: "created_at"}
             }
-            apiQuerySSAPrograms(finalParams).then((res) => {
-                const newCompileHistoryList = res.Data.map((item) => {
-                    return {
-                        label: formatTimestamp(item.UpdateAt),
-                        value: item.Name
+            let newCompileHistoryList: {label: string; value: string}[] = []
+            apiQuerySSAPrograms(finalParams)
+                .then((res) => {
+                    newCompileHistoryList = res.Data.map((item) => {
+                        return {
+                            label: formatTimestamp(item.UpdateAt),
+                            value: item.Name
+                        }
+                    })
+                    newCompileHistoryList.unshift({label: "编译并扫描最新代码", value: "recompileAndScan"})
+                    setCompileHistoryList(newCompileHistoryList)
+                })
+                .finally(() => {
+                    if (isSelectProjectRef.current) {
+                        isSelectProjectRef.current = false
+                        if (newCompileHistoryList.length > 1) {
+                            form.setFieldsValue({
+                                history: newCompileHistoryList[1].value
+                            })
+                        } else {
+                            form.setFieldsValue({
+                                history: "recompileAndScan"
+                            })
+                        }
                     }
                 })
-                setCompileHistoryList([
-                    {label: "编译并扫描最新代码", value: "recompileAndScan"},
-                    ...newCompileHistoryList
-                ])
-            })
         })
 
         useUpdateEffect(() => {
@@ -2007,6 +2033,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     GroupNames: newSelectGroup,
                     selectTotal
                 })
+                isSelectProjectRef.current = true
                 setSelectProjectId(item ? [item] : [])
                 emiter.emit("onResetCodeScanProject")
             } catch (error) {}
@@ -2632,11 +2659,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         })
 
         const onClickDownstreamProxy = useMemoizedFn(async () => {
-            const versionValid = await checkProxyVersion()
-            if (!versionValid) {
-                return
+            try {
+                const versionValid = await checkProxyVersion()
+                if (!versionValid) {
+                    return
+                }
+                setAgentConfigModalVisible(true)
+            } catch (error) {
+                console.error("error:", error)
             }
-            setAgentConfigModalVisible(true)
         })
 
         return (
@@ -2730,13 +2761,38 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                             name='proxy'
                                             label='代理'
                                             extra={
+                                                <>
                                                 <div
                                                     className={styles["agent-down-stream-proxy"]}
                                                     onClick={onClickDownstreamProxy}
                                                 >
                                                     {t("AgentConfigModal.proxy_configuration")}
                                                 </div>
+                                                    <Divider type="vertical" />
+                                                    <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})}/>
+                                                </>
                                             }
+                                            validateTrigger={["onChange", "onBlur"]}
+                                            rules={[
+                                                {
+                                                    validator: (_, value) => {
+                                                        if (!value || !Array.isArray(value) || value.length === 0) {
+                                                            return Promise.resolve()
+                                                        }
+                                                        // 获取当前options中的所有值
+                                                        const existingOptions = Endpoints.map(({Id}) => Id)
+                                                        // 只校验新输入的值(不在options中的值)
+                                                        const newValues = value.filter((v) => !existingOptions.includes(v))
+                                                        // 校验代理地址格式: 协议://地址:端口
+                                                        for (const v of newValues) {
+                                                            if (!isValidUrlWithProtocol(v)) {
+                                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                                            }
+                                                        }
+                                                        return Promise.resolve()
+                                                    }
+                                                }
+                                            ]}
                                         >
                                             <YakitSelect
                                                 allowClear
@@ -2805,17 +2861,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         </div>
                     </Form.Item>
                 </Form>
-                <AgentConfigModal
-                    agentConfigModalVisible={false} //弃用
-                    onCloseModal={() => setAgentConfigModalVisible(false)}
-                    generateURL={(url) => {
-                        form.setFieldsValue({proxy: url})
-                    }}
-                />
                 <ProxyRulesConfig
                     hideRules
                     visible={agentConfigModalVisible}
-                    onClose={() => setAgentConfigModalVisible(false)}
+                    onClose={() => {
+                        setAgentConfigModalVisible(false)
+                        const proxy = form.getFieldValue("proxy") || []
+                        const filterProxy = proxy.filter((item) => Endpoints.some(({Id}) => Id === item))
+                        form.setFieldsValue({proxy: filterProxy})
+                    }}
                 />
             </div>
         )

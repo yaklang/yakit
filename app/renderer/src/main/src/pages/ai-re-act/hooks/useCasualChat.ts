@@ -18,7 +18,6 @@ import {
     AIReviewJudgeLevelMap,
     CasualDefaultToolResultSummary,
     convertNodeIdToVerbose,
-    DeafultAIQuestionQueues,
     DefaultAIToolResult
 } from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
@@ -26,21 +25,27 @@ import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,
-    AIQuestionQueueStatusChange,
     AIReviewType,
     AIStreamOutput,
     AIToolResult,
     ToolStreamSelectors
 } from "./aiRender"
-import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
-export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_require"]
+export const UseCasualChatTypes = [
+    "thought",
+    "result",
+    "exec_aiforge_review_require",
+    // 自由对话崩溃的错误信息
+    "fail_react_task",
+    // 自由对话成功结束标志
+    "success_react_task"
+]
 
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease, onGrpcFolder, sendRequest, getQuestionQueue} = params || {}
+    const {pushLog, getRequest, onReviewRelease, onGrpcFolder, sendRequest, onNotifyMessage} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -620,27 +625,22 @@ function useCasualChat(params?: UseCasualChatParams) {
     // #endregion
 
     /** 文件系统操作处理数据 */
-    const handleFileSystemPin = useMemoizedFn(async (res: AIOutputEvent) => {
+    const handleFileSystemPin = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
+            const ipcContent = Uint8ArrayToString(Content) || ""
             const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
-            const fileInfo = await getLocalFileName(path, true)
 
-            setContents((old) => {
-                const newArr = [...old]
-                newArr.push({
-                    ...genBaseAIChatData(res),
-                    type: AIChatQSDataTypeEnum.FILE_SYSTEM_PIN,
-                    data: {
-                        path: path,
-                        isDir: res.Type === "filesystem_pin_directory",
-                        name: fileInfo.name,
-                        suffix: fileInfo.suffix
-                    }
+            onNotifyMessage &&
+                onNotifyMessage({
+                    Type,
+                    NodeId,
+                    NodeIdVerbose,
+                    Timestamp,
+                    Content: path
                 })
-                return newArr
-            })
-            if (res.Type === "filesystem_pin_directory") {
+
+            if (Type === "filesystem_pin_directory") {
                 onGrpcFolder && onGrpcFolder(path)
             }
         } catch (error) {
@@ -681,6 +681,35 @@ function useCasualChat(params?: UseCasualChatParams) {
         }
     })
 
+    /** 流式数据追加参考材料 */
+    const handleStreamAppendReference = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReferenceMaterialPayload
+
+            setContents((old) => {
+                let newArr = [...old]
+                const itemInfo = newArr.find((item) => {
+                    if (item.type === "stream" && item.data) {
+                        return item.data.EventUUID === data.event_uuid
+                    }
+                    return false
+                })
+                if (!!itemInfo && itemInfo.type === "stream") {
+                    if (!itemInfo.data.reference) itemInfo.data.reference = []
+                    itemInfo.data.reference.push(data)
+                }
+
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
     // #region 问题队列状态变化相关逻辑处理
     const handleTriggerQuestionQueueRequest = useThrottleFn(
         () => {
@@ -692,30 +721,17 @@ function useCasualChat(params?: UseCasualChatParams) {
     // 状态变化处理
     const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const {NodeId, NodeIdVerbose, Content} = res
+            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
             const ipcContent = Uint8ArrayToString(Content) || ""
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-
-            const queues = getQuestionQueue?.() ?? cloneDeep(DeafultAIQuestionQueues)
-
-            setContents((old) => {
-                const newArr = [...old]
-                const info: AIQuestionQueueStatusChange = {
-                    react_task_id: data.react_task_id,
-                    react_task_input: data.react_task_input,
-                    reason: data.reason ?? "",
+            onNotifyMessage &&
+                onNotifyMessage({
+                    Type,
                     NodeId,
                     NodeIdVerbose,
-                    type: NodeId === "react_task_enqueue" ? "enqueue" : "dequeue",
-                    queues: cloneDeep(queues)
-                }
-                newArr.push({
-                    ...genBaseAIChatData(res),
-                    type: AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE,
-                    data: info
+                    Timestamp,
+                    Content: data.react_task_input
                 })
-                return newArr
-            })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -729,20 +745,15 @@ function useCasualChat(params?: UseCasualChatParams) {
     // 问题队列清空处理
     const handleClearQuestionQueue = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const {NodeId, NodeIdVerbose} = res
-
-            setContents((old) => {
-                const newArr = [...old]
-                newArr.push({
-                    ...genBaseAIChatData(res),
-                    type: AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED,
-                    data: {
-                        NodeId,
-                        NodeIdVerbose
-                    }
+            const {Type, NodeId, NodeIdVerbose, Timestamp} = res
+            onNotifyMessage &&
+                onNotifyMessage({
+                    Type,
+                    NodeId,
+                    NodeIdVerbose,
+                    Timestamp,
+                    Content: "已清空所有任务队列数据"
                 })
-                return newArr
-            })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -883,6 +894,36 @@ function useCasualChat(params?: UseCasualChatParams) {
                     })
                     return newArr
                 })
+                return
+            }
+
+            if (res.Type === "fail_react_task") {
+                // ReAct任务崩溃的错误信息
+                setContents((old) => {
+                    const newArr = [...old]
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: AIChatQSDataTypeEnum.FAIL_REACT,
+                        data: {
+                            content: ipcContent,
+                            NodeId: res.NodeId,
+                            NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                        }
+                    })
+                    return newArr
+                })
+                return
+            }
+
+            if (res.Type === "success_react_task") {
+                // ReAct任务成功结束标志
+                // 暂时过滤不展示到UI上
+                return
+            }
+
+            if (res.Type === "reference_material") {
+                // 流式数据追加参考材料
+                handleStreamAppendReference(res)
                 return
             }
         } catch (error) {

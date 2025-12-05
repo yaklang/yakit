@@ -748,27 +748,31 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     loading: ProxyModalLoading
                 }}
                 onOk={async () => {
-                    const versionValid = await checkProxyVersion()
-                    if (!versionValid) {
-                        setShowProxyModal(false)
-                        return
-                    }
-                    onGetRemoteValuesBase(ProxyHistoryName).then(({options}) => {
-                        if (!options?.length) return
-                        setProxyModalLoading(true)
-                        const generateEndpointId = () => `ep-${randomString(8)}`
-                        const config = {
-                            Routes: [],
-                            Endpoints: options.map(({label, value}) => ({
-                                Id: generateEndpointId(),
-                                Name: label + "",
-                                Url: value,
-                                UserName: '',
-                                Password:''
-                            }))
+                    try {
+                        const versionValid = await checkProxyVersion()
+                        if (!versionValid) {
+                            setShowProxyModal(false)
+                            return
                         }
-                        grpcSetGlobalProxyRulesConfig(config).then(() => remoteProxyHistory()).finally(()=>setProxyModalLoading(false))
-                    })
+                        onGetRemoteValuesBase(ProxyHistoryName).then(({options}) => {
+                            if (!options?.length) return
+                            setProxyModalLoading(true)
+                            const generateEndpointId = () => `ep-${randomString(8)}`
+                            const config = {
+                                Routes: [],
+                                Endpoints: options.map(({label, value}) => ({
+                                    Id: generateEndpointId(),
+                                    Name: label + "",
+                                    Url: value,
+                                    UserName: '',
+                                    Password:''
+                                }))
+                            }
+                            grpcSetGlobalProxyRulesConfig(config).then(() => remoteProxyHistory()).finally(()=>setProxyModalLoading(false))
+                        })
+                    } catch (error) {
+                        console.error("error:", error)
+                    }
                 }}
                 onCancel={() => remoteProxyHistory() } //不迁移则丢弃数据
             />

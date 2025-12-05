@@ -486,6 +486,36 @@
         }
     }
 
+    .icon-ban-active {
+        svg {
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
+
+    .config-tab-item{
+        transform: rotate(180deg);
+        text-orientation: sideways-right;
+        writing-mode: vertical-rl
+    }
+
+    .disabled-badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        line-height: 16px;
+        background-color: var(--Colors-Use-Error-Primary);
+        color: var(--Colors-Use-Main-On-Primary);
+        border-radius: 10px;
+        vertical-align: middle;
+        box-shadow: none;
+    }
+
+    .row-disabled {
+        opacity: 0.6;
+        color: var(--Colors-Use-Neutral-Disable);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
     .password_display_icon_text {
         width: 200px;
         overflow: hidden;
@@ -507,10 +537,6 @@
             padding: 0;
         }
     }
-
-    .config-tab-item{
-        position: static;
-    }
 }
 
 .proxy-rules-config-modal .header-hint-icon {
@@ -519,5 +545,72 @@
         color: var(--Colors-Use-Neutral-Text-1-Title);
         width: 16px;
         height: 16px;
+    }
+}
+
+.proxy-test-title {
+    color: var(--Colors-Use-Main-Primary);
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.proxy-test-modal-content {
+    display: flex;
+    height: 400px;
+    flex-direction: column;
+
+    .test-modal-content-res {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+
+        .proxy-test-modal-loading {
+            display: contents;
+        }
+
+        .proxy-test-modal-detail {
+            width: 100%;
+            padding: 8px;
+            margin: 8px;
+            border-radius: 8px;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            white-space: pre-line;
+
+            svg {
+                margin-right: 6px;
+                color: var(--Colors-Use-Error-Primary);
+            }
+        }
+
+        .proxy-test-modal-failed svg {
+            height: 48px;
+            width: 48px;
+            margin-right: 4px;
+            color: var(--Colors-Use-Error-Primary);
+            margin-bottom: 12px;
+        }
+
+        .proxy-test-modal-success {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+
+            svg {
+                height: 48px;
+                width: 48px;
+                margin-right: 4px;
+                color: var(--Colors-Use-Success-Primary);
+            }
+            span {
+                font-size: 22px;
+                font-weight: bold;
+                color: var(--Colors-Use-Success-Primary);
+            }
+        }
     }
 }

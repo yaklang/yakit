@@ -34,10 +34,12 @@ import {
     GetConnectPort,
     isCommunityEdition,
     isCommunityIRify,
+    isCommunityMemfit,
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnpriTraceIRify,
-    isIRify
+    isIRify,
+    isMemfit
 } from "@/utils/envfile"
 import {RemoteEngine} from "./components/RemoteEngine/RemoteEngine"
 import {RemoteLinkInfo} from "./components/RemoteEngine/RemoteEngineType"
@@ -54,8 +56,10 @@ import yakitEELogo from "@/assets/yakitEELogo.png"
 import yakitSELogo from "@/assets/yakitSELogo.png"
 import irifyRight from "@/assets/irify-right.png"
 import yakitRight from "@/assets/yakit-right.png"
+import memfitRight from "@/assets/memfit-right.png"
 
 import styles from "./index.module.scss"
+import {SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon} from "@/assets/colors"
 const {ipcRenderer} = window.require("electron")
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -746,24 +750,28 @@ export const StartupPage: React.FC = () => {
         // ce
         if (isCommunityEdition()) {
             if (isCommunityIRify()) {
-                return {src: iRifyLogo, width: 92, height: 41}
+                return {type: "svg", component: SolidIrifyFontLogoIcon, width: 112, height: 41}
+            } else if (isCommunityMemfit()) {
+                return {type: "svg", component: SolidMemfitFontLogoIcon, width: 112, height: 41}
             } else {
-                return {src: yakitLogo, width: 112, height: 41}
+                return {type: "img", src: yakitLogo, width: 112, height: 41}
             }
         }
 
         // ee
         if (isEnpriTrace()) {
             if (isEnpriTraceIRify()) {
-                return {src: iRifyLogo, width: 92, height: 41}
+                return {type: "svg", component: SolidIrifyFontLogoIcon, width: 112, height: 41}
+            } else if (isMemfit()) {
+                return {type: "svg", component: SolidMemfitFontLogoIcon, width: 112, height: 41}
             } else {
-                return {src: yakitEELogo, width: 137, height: 40}
+                return {type: "img", src: yakitEELogo, width: 137, height: 40}
             }
         }
 
         // se
         if (isEnpriTraceAgent()) {
-            return {src: yakitSELogo, width: 190, height: 40}
+            return {type: "img", src: yakitSELogo, width: 190, height: 40}
         }
 
         return {src: yakitLogo, width: 112, height: 41}
@@ -773,6 +781,7 @@ export const StartupPage: React.FC = () => {
         if (isIRify()) {
             return {src: irifyRight}
         }
+        if (isCommunityMemfit() || isMemfit()) return {src: memfitRight}
         return {src: yakitRight}
     }, [])
 
@@ -782,12 +791,16 @@ export const StartupPage: React.FC = () => {
             <div className={styles["startup-wrapper-left"]}>
                 <div className={styles["startup-title"]}>
                     <div className={styles["startup-logo"]}>
-                        <img
-                            src={startupLogo.src}
-                            alt='暂无图片'
-                            width={startupLogo.width}
-                            height={startupLogo.height}
-                        />
+                        {startupLogo.type === "img" ? (
+                            <img
+                                src={startupLogo.src}
+                                alt='暂无图片'
+                                width={startupLogo.width}
+                                height={startupLogo.height}
+                            />
+                        ) : (
+                            <startupLogo.component style={{height: startupLogo.height, width: startupLogo.width}} />
+                        )}
                     </div>
                     <div className={styles["startup-desc"]}>为网络安全而生</div>
                 </div>

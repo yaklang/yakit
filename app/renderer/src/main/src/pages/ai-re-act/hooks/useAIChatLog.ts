@@ -39,7 +39,8 @@ function useAIChatLog() {
         const sendData = {
             level: stream.data.NodeId,
             message: stream.data.content,
-            timestamp: formatTimestamp(stream.Timestamp)
+            timestamp: formatTimestamp(stream.Timestamp),
+            isStream: true
         }
         streamInfo.current.delete(uuid)
         ipcRenderer.invoke("forward-ai-chat-log-data", sendData)

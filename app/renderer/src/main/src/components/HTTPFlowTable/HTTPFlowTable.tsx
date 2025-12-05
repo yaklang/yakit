@@ -106,6 +106,7 @@ import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {getHTTPFlowExportFields} from "./HTTPFlowExportFields"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
@@ -288,6 +289,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     includeInUrl?: string | string[]
+    selectedKeys?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     titleHeight?: number
     containerClassName?: string
@@ -297,6 +299,8 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     /** 进程名 */
     ProcessName?: string[]
+    /** 过滤运行时ID Dom */
+    filterTagDom?: ReactNode
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
     onSetHasNewData?: (f: boolean) => void
@@ -610,6 +614,13 @@ interface ImportExportStreamResponse {
     Verbose: string
 }
 
+const getRunTimeIdObj = (runTimeId?: string) => {
+    return {
+        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
+    }
+}
+
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const {
         noTableTitle = false,
@@ -633,11 +644,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         containerClassName = "",
         runTimeId,
         downstreamProxyStr = "",
+        filterTagDom,
         onSetTableTotal,
         onSetTableSelectNum,
         onSetHasNewData
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history"])
+
+    // 导出字段映射配置
+    const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
             currentPageTabRouteKey: s.currentPageTabRouteKey
@@ -655,12 +670,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>({
         SourceType: props.params?.SourceType || "mitm",
-        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
+        ...getRunTimeIdObj(runTimeId),
         FromPlugin: "",
         Full: false,
         Tags: []
     })
+    useEffect(() => {
+        setParams((pre) => ({
+            ...pre,
+            ...getRunTimeIdObj(runTimeId)
+        }))
+    }, [runTimeId])
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
 
@@ -1090,11 +1110,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams((prev) => ({
                 ...prev,
                 SearchURL: props.searchURL,
-                IncludeInUrl: props.includeInUrl
-                    ? Array.isArray(props.includeInUrl)
-                        ? props.includeInUrl
-                        : [props.includeInUrl]
-                    : [""]
             }))
             setScrollToIndex(0)
             setCurrentIndex(undefined)
@@ -1103,12 +1118,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRows([])
             setIsAllSelect(false)
         }
-    }, [props.searchURL, props.includeInUrl, pageType])
+    }, [props.searchURL, props.includeInUrl, pageType])// 这里加上includeInUrl依赖但里面没用到 是因为下面selectedKeys只需要设置setParams 不需要重置
     useUpdateEffect(() => {
         if (params.SearchURL === "") {
             refreshTabsContRef.current = true
         }
     }, [params.SearchURL])
+
+    useUpdateEffect(() => {
+        const {includeInUrl, selectedKeys = []} = props
+        setParams((prev) => ({
+            ...prev,
+            IncludeInUrl: [
+                ...(includeInUrl ? (Array.isArray(includeInUrl) ? includeInUrl : [includeInUrl]) : []),
+                ...selectedKeys
+            ]
+        }))
+    }, [props.selectedKeys, props.includeInUrl])
+
     const [queryParams, setQueryParams] = useState<string>("")
     useDebounceEffect(
         () => {
@@ -2522,99 +2549,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
 
             let exportParams: any = {}
-            // 这里的key值为数据库的key
-            const arrList = [
-                {
-                    title: t("YakitTable.order"),
-                    key: "id",
-                    dataKey: "Id"
-                },
-                {
-                    title: t("HTTPFlowTable.method"),
-                    key: "method",
-                    dataKey: "Method"
-                },
-                {
-                    title: t("HTTPFlowTable.statusCode"),
-                    key: "status_code",
-                    dataKey: "StatusCode"
-                },
-                {
-                    title: "URL",
-                    key: "url",
-                    dataKey: "Url"
-                },
-                {
-                    title: "Host",
-                    key: "host",
-                    dataKey: "Host"
-                },
-                {
-                    title: "Path",
-                    key: "path",
-                    dataKey: "Path"
-                },
-                {
-                    title: t("HTTPFlowTable.fromPlugin"),
-                    key: "from_plugin",
-                    dataKey: "FromPlugin"
-                },
-                {
-                    title: "Tags",
-                    key: "tags",
-                    dataKey: "Tags"
-                },
-                {
-                    title: "IP",
-                    key: "iP_address",
-                    dataKey: "IPAddress"
-                },
-                {
-                    title: t("HTTPFlowTable.bodyLength"),
-                    key: "body_length",
-                    dataKey: "BodyLength"
-                },
-                {
-                    title: "Title",
-                    key: "response",
-                    dataKey: "HtmlTitle"
-                },
-                {
-                    title: t("HTTPFlowTable.params"),
-                    key: "get_params_total",
-                    dataKey: "GetParamsTotal"
-                },
-                {
-                    title: t("HTTPFlowTable.contentType"),
-                    key: "content_type",
-                    dataKey: "ContentType"
-                },
-                {
-                    title: t("HTTPFlowTable.durationMs"),
-                    key: "duration",
-                    dataKey: "DurationMs"
-                },
-                {
-                    title: t("HTTPFlowTable.updatedAt"),
-                    key: "updated_at",
-                    dataKey: "UpdatedAt"
-                },
-                {
-                    title: t("HTTPFlowTable.requestSizeVerbose"),
-                    key: "request",
-                    dataKey: "RequestSizeVerbose"
-                },
-                {
-                    title: t("HTTPFlowTable.requestPacket"),
-                    key: "request",
-                    dataKey: "request"
-                },
-                {
-                    title: t("HTTPFlowTable.responsePacket"),
-                    key: "response",
-                    dataKey: "response"
-                }
-            ]
             const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
 
             const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
@@ -2712,9 +2646,47 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
     const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onHarExport = (ids: number[]) => {
+        percentContainerRef.current = currentPageTabRouteKey
+        const titleValue = configColumnRef.current.map((item) => ({title: item.title, key: item.dataKey}))
+        const harFieldOptions = [
+            ...titleValue,
+            {title: t("HTTPFlowTable.requestPacket"), key: "request"},
+            {title: t("HTTPFlowTable.responsePacket"), key: "response"}
+        ]
+        const m = showYakitModal({
+            title: t("HTTPFlowTable.exportFields"),
+            content: (
+                <ExportSelect
+                    exportValue={harFieldOptions}
+                    initCheckValue={harFieldOptions}
+                    setExportTitle={(v: string[]) => {
+                        setExportDataKey(["Id", ...v])
+                    }}
+                    exportKey={"MITM-HISTORY-EXPORT-KEYS"}
+                    getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
+                    onClose={() => m.destroy()}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
+                    onHarExport={() => handleClickHarExport(ids)}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            },
+            width: 650,
+            footer: null,
+            maskClosable: false,
+            getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+        })
+    }
+
+    const handleClickHarExport = useMemoizedFn((ids: number[]) => {
         handleSaveFileSystemDialog({
             title: t("HTTPFlowTable.saveFile"),
-            defaultPath: "History",
+            defaultPath: `History-${Date.now()}`,
             filters: [
                 {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
             ]
@@ -2722,13 +2694,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (!file.canceled) {
                 const filePath = file?.filePath?.toString()
                 if (filePath) {
+                    const FieldName = arrList
+                        .filter((item) => exportDataKey.includes(item.dataKey))
+                        .map((item) => item.key)
                     const exportParams: ExportHTTPFlowStreamRequest = {
                         Filter: {
                             IncludeId: ids,
                             ...params
                         },
                         ExportType: "har",
-                        TargetPath: filePath
+                        TargetPath: filePath,
+                        FieldName
                     }
 
                     const token = randomString(40)
@@ -2745,7 +2721,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             }
         })
-    }
+    })
 
     const getPacketNewWindow = useMemoizedFn((r) => {
         return {
@@ -3572,8 +3548,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const obj: YakQueryHTTPFlowRequest = {
             // 这里是外界传进来的条件重置时需要保留
             SourceType: props.params?.SourceType || "mitm",
-            RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-            RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
+            ...getRunTimeIdObj(runTimeId),
             Full: false,
             // 屏蔽条件和高级筛选里面的参数需要保留
             ExcludeId: params.ExcludeId,
@@ -4118,6 +4093,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 </span>
                                             </div>
                                         </div>
+                                        {filterTagDom}
                                     </div>
                                     <div className={style["http-history-table-right"]}>
                                         {showAdvancedSearch && (
@@ -4983,6 +4959,19 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 
 // 发送web fuzzer const
 export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string) => {
+    let params = {}
+    try {
+        const stateSecretHijacking = await getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS)
+        if (stateSecretHijacking) {
+            if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
+                Object.assign(params, {enableGMTLS: true})
+            } else if (stateSecretHijacking === "randomJA3") {
+                Object.assign(params, {randomJA3: true})
+            }
+        }
+    } catch (e) {
+        console.error(e)
+    }
     ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
@@ -4990,6 +4979,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
                 openFlag,
                 isHttps: rowData.IsHTTPS,
                 downstreamProxyStr,
+                ...params,
                 request: rowData.InvalidForUTF8Request
                     ? rowData.SafeHTTPRequest!
                     : new Buffer(rowData.Request).toString("utf8")

@@ -7,7 +7,7 @@ import ModalInfo, {type ModalInfoProps} from "./ModelInfo"
 import { AIYakExecFileRecord } from "@/pages/ai-re-act/hooks/aiRender"
 
 interface StreamCardProps {
-    content?: string
+    content?: ReactNode
     fileList?: AIYakExecFileRecord[]
     prompt?: string
     titleText?: string
@@ -16,6 +16,8 @@ interface StreamCardProps {
     modalInfo?: ModalInfoProps
 
     contentExtra?: ReactNode
+    /**参考资料 */
+    referenceNode?: ReactNode
 }
 
 const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
@@ -30,7 +32,7 @@ const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
     )
 }
 
-const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileList, prompt, modalInfo, contentExtra,}) => {
+const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileList, prompt, modalInfo, contentExtra,referenceNode}) => {
     return (
         <ChatCard
             titleText={titleText}
@@ -45,6 +47,7 @@ const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileLis
             <div className={styles["stream-content"]}>{content}</div>
             {contentExtra}
             {!!fileList?.length && <FileList fileList={fileList} />}
+            {referenceNode}
         </ChatCard>
     )
 }

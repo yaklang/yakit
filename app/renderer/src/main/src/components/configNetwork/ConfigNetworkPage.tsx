@@ -43,7 +43,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {CodeCustomize} from "./CustomizeCode"
 import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT} from "@/defaultConstants/HoldGRPCStream"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import { useProxy } from "@/hook/useProxy"
 
 export interface ConfigNetworkPageProp {}
 
@@ -180,8 +182,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const [inViewport] = useInViewport(configRef)
     const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
-    const [proxyRoutesCount, setProxyRoutesCount] = useState(0)
     const {t, i18n} = useI18nNamespaces(["mitm"])
+    const { proxyConfig: { Routes = [], Endpoints = [] }} = useProxy()
 
     /** ---------- 是否删除私密插件逻辑 Start ---------- */
     const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
@@ -673,6 +675,18 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         setLimitLogNum(value)
     })
 
+    const onClickDownstreamProxy = useMemoizedFn(async () => {
+        try {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setProxyDrawerVisible(true)
+        } catch (error) {
+            console.error("error:", error)
+        }
+    })
+
     return (
         <>
             <div ref={configRef}>
@@ -1051,18 +1065,23 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item>
                                 <Form.Item label={t("ProxyConfig.title")}>
                                     <div className={styles["form-rule-body"]}>
-                                        <div className={styles["form-rule"]} onClick={()=> setProxyDrawerVisible(true)}>
-                                            <div className={styles["form-rule-text"]}>{t("ProxyConfig.recordRoutesCount", {i: proxyRoutesCount})}</div>
+                                        <div
+                                            className={styles["form-rule"]}
+                                            onClick={onClickDownstreamProxy}
+                                        >
+                                            <div className={styles["form-rule-text"]}>
+                                                {t("ProxyConfig.recordPointsCount", {i: Endpoints.length})},
+                                                {t("ProxyConfig.recordRoutesCount", {i: Routes.length})}
+                                            </div>
                                             <div className={styles["form-rule-icon"]}>
                                                 <OutlineCogIcon />
                                             </div>
                                         </div>
                                     </div>
-                                </Form.Item> 
+                                </Form.Item>
                                 <ProxyRulesConfig
                                     visible={proxyDrawerVisible}
                                     onClose={() => setProxyDrawerVisible(false)}
-                                    onRoutesChange={setProxyRoutesCount}
                                 />
                                 <Form.Item label={"保存HTTP流量"} tooltip='打开则会保存MITM以外的流量数据到History表中'>
                                     <YakitSwitch

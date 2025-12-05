@@ -350,13 +350,19 @@ const ReportList: React.FC<ReportListProp> = (props) => {
 }
 
 // 根据阈值切割报告 用于分页显示 性能优化项
-const truncateArrayBySize = (arr: ReportItem[], maxSizeKB: number): ReportItem[][] => {
+const truncateArrayBySize = (arr: ReportItem[], maxSizeKB: number, maxItemsPerChunk = 250): ReportItem[][] => {
     const maxSizeBytes = maxSizeKB * 1024
     let currentChunkSize = 0
     const result: ReportItem[][] = [[]]
     for (const item of arr) {
         const itemSize = new Blob([JSON.stringify(item)]).size
-        if (currentChunkSize + itemSize > maxSizeBytes) {
+        const currentChunk = result[result.length - 1]
+
+        // 如果加入该 item 会超过最大字节限制 或者 超过最大数量限制，创建新的 chunk
+        if (
+            currentChunkSize + itemSize > maxSizeBytes ||
+            currentChunk.length >= maxItemsPerChunk
+        ) {
             result.push([])
             currentChunkSize = 0
         }

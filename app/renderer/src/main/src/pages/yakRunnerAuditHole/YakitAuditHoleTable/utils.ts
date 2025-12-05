@@ -200,3 +200,49 @@ export const apiQueryNewSSARisks: (query?: QueryNewSSARisksRequest) => Promise<Q
             })
     })
 }
+
+/** 导出SSA风险请求参数 */
+export interface ExportSSARiskRequest {
+    Filter: SSARisksFilter
+    TargetPath: string
+    WithDataFlowPath?: boolean
+    WithFileContent?: boolean
+}
+
+/** 导出SSA风险响应 */
+export interface ExportSSARiskResponse {
+    Process: number
+    Verbose: string
+    ExportFilePath?: string
+}
+
+/** 导入SSA风险请求参数 */
+export interface ImportSSARiskRequest {
+    InputPath: string
+}
+
+/** 导入SSA风险响应 */
+export interface ImportSSARiskResponse {
+    Process: number
+    Verbose: string
+}
+
+/** ExportSSARisk - 导出SSA风险数据到JSON文件 */
+export const apiExportSSARisk = (params: ExportSSARiskRequest, token: string) => {
+    return ipcRenderer.invoke("ExportSSARisk", params, token)
+}
+
+/** ImportSSARisk - 从JSON文件导入SSA风险数据 */
+export const apiImportSSARisk = (params: ImportSSARiskRequest, token: string) => {
+    return ipcRenderer.invoke("ImportSSARisk", params, token)
+}
+
+/** 取消导出SSA风险 */
+export const cancelExportSSARisk = (token: string) => {
+    return ipcRenderer.invoke("cancel-ExportSSARisk", token)
+}
+
+/** 取消导入SSA风险 */
+export const cancelImportSSARisk = (token: string) => {
+    return ipcRenderer.invoke("cancel-ImportSSARisk", token)
+}

@@ -1,4 +1,4 @@
-import React, {CSSProperties, ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -327,7 +327,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
-                                            // setSearchURL(searchURL)
+                                            setSearchURL(searchURL)
                                             setIncludeInUrl(includeInUrl)
                                         }}
                                         resetTableAndEditorShow={(table, editor) => {
@@ -364,7 +364,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div className={styles["hTTPHistory-right"]}>
                         <HTTPFlowRealTimeTableAndEditor
                             searchURL={searchURL}
-                            includeInUrl={compareUrl}
+                            includeInUrl={includeInUrl}
+                            selectedKeys={selectedKeys}
                             curProcess={curProcess}
                             onQueryParams={onQueryParams}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
@@ -386,6 +387,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     pageType: HTTPHistorySourcePageType
     runtimeId?: string
+    filterTagDom?: ReactNode
     httpHistoryTableTitleStyle?: CSSProperties
     containerClassName?: string
     titleHeight?: number
@@ -402,6 +404,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     onSetHasNewData?: (f: boolean) => void
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
+    selectedKeys?:  string[]
 }
 /**
  * 此组件用于实时流量表和编辑器
@@ -417,6 +420,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         params,
         searchURL,
         includeInUrl,
+        filterTagDom,
         curProcess,
         onQueryParams,
         downstreamProxyStr,
@@ -433,7 +437,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showDelAll = true,
         showSetting = true,
         showRefresh = true,
-        showFlod = true
+        showFlod = true,
+        selectedKeys = []
     } = props
 
     const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
@@ -560,9 +565,11 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             params={params}
                             searchURL={searchURL}
                             includeInUrl={includeInUrl}
+                            selectedKeys={selectedKeys}
                             onSelected={(i) => {
                                 setSelectedHTTPFlow(i)
                             }}
+                            filterTagDom={filterTagDom}
                             onSearch={setHighlightSearch}
                             onlyShowFirstNode={onlyShowFirstNode}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}

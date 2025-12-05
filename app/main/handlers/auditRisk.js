@@ -1,4 +1,6 @@
 const {ipcMain} = require("electron")
+const handlerHelper = require("./handleStreamWithContext")
+
 module.exports = (win, getClient) => {
     const asyncQuerySSARisks = (params) => {
         return new Promise((resolve, reject) => {
@@ -160,5 +162,62 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("QueryNewSSARisks", async (e, params) => {
         return await asyncQueryNewSSARisks(params)
+    })
+
+    // 导出SSA风险数据 - 需要转换字段名 Process -> Percent 以兼容 ImportExportProgress 组件
+    const streamExportSSARiskMap = new Map()
+    ipcMain.handle("cancel-ExportSSARisk", handlerHelper.cancelHandler(streamExportSSARiskMap))
+    ipcMain.handle("ExportSSARisk", (e, params, token) => {
+        let stream = getClient().ExportSSARisk(params)
+        streamExportSSARiskMap.set(token, stream)
+        stream.on("data", (data) => {
+            if (win) {
+                // 转换字段名: Process -> Percent
+                win.webContents.send(`${token}-data`, {
+                    Percent: data.Process,
+                    Verbose: data.Verbose,
+                    ExportFilePath: data.ExportFilePath
+                })
+            }
+        })
+        stream.on("error", (error) => {
+            if (win) {
+                win.webContents.send(`${token}-error`, error?.details || error)
+            }
+        })
+        stream.on("end", () => {
+            streamExportSSARiskMap.delete(token)
+            if (win) {
+                win.webContents.send(`${token}-end`)
+            }
+        })
+    })
+
+    // 导入SSA风险数据 - 需要转换字段名 Process -> Percent 以兼容 ImportExportProgress 组件
+    const streamImportSSARiskMap = new Map()
+    ipcMain.handle("cancel-ImportSSARisk", handlerHelper.cancelHandler(streamImportSSARiskMap))
+    ipcMain.handle("ImportSSARisk", (e, params, token) => {
+        let stream = getClient().ImportSSARisk(params)
+        streamImportSSARiskMap.set(token, stream)
+        stream.on("data", (data) => {
+            if (win) {
+                // 转换字段名: Process -> Percent
+                win.webContents.send(`${token}-data`, {
+                    Percent: data.Process,
+                    Verbose: data.Verbose
+                })
+            }
+        })
+        stream.on("error", (error) => {
+            if (win) {
+                win.webContents.send(`${token}-error`, error?.details || error)
+            }
+        })
+        stream.on("end", () => {
+            streamImportSSARiskMap.delete(token)
+            if (win) {
+                win.webContents.send(`${token}-end`)
+            }
+        })
     })
 }
