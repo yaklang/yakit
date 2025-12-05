@@ -606,7 +606,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [showValue, setShowValue] = useState<string>(originValue)
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
-    const [typeLoading, setTypeLoading] = useState<boolean>(false)
+    // const [typeLoading, setTypeLoading] = useState<boolean>(false)
     const {theme} = useTheme()
 
     // 对比loading
@@ -635,7 +635,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     useEffect(() => {
         if (editorOperationRecord) {
-            setTypeLoading(true)
             getRemoteValue(editorOperationRecord).then((data) => {
                 try {
                     if (!data) return
@@ -649,9 +648,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     if (typeof obj?.noWordWrap === "boolean") {
                         setNoWordwrap(obj?.noWordWrap)
                     }
-                    setTypeLoading(false)
                 } catch (error) {
-                    setTypeLoading(false)
+                    fail(error + "")
                 }
             })
         }
@@ -913,15 +911,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const beautifyCode = useDebounceFn(
         useMemoizedFn(async () => {
             if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === "beautify") === -1) return
-            setTypeLoading(true)
+            // setTypeLoading(true)
             setRenderHTML(undefined)
             if (originValue.length > 0) {
                 let beautifyValue = await prettifyPacketCode(originValue)
                 setShowValue(Uint8ArrayToString(beautifyValue as Uint8Array))
-                setTypeLoading(false)
+                // setTypeLoading(false)
             } else {
                 setShowValue("")
-                setTypeLoading(false)
+                // setTypeLoading(false)
             }
         }),
         {
@@ -931,12 +929,16 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const renderCode = useDebounceFn(
         useMemoizedFn(async () => {
             if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === "render") === -1) return
-            setTypeLoading(true)
+            // setTypeLoading(true)
             let renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
             setRenderHTML(
-                <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} sandbox="" />
+                <iframe
+                    srcDoc={renderValue as string}
+                    style={{width: "100%", height: "100%", border: "none"}}
+                    sandbox=''
+                />
             )
-            setTypeLoading(false)
+            // setTypeLoading(false)
         }),
         {wait: 300}
     ).run
@@ -965,7 +967,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             <Card
                 className={"flex-card"}
                 size={"small"}
-                loading={props.loading || typeLoading}
+                loading={
+                    props.loading
+                    // || typeLoading
+                }
                 bordered={props.bordered}
                 style={{height: "100%", width: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
                 title={
