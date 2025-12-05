@@ -67,7 +67,8 @@ function createEngineLinkWindow() {
         },
         titleBarStyle: "hidden",
         show: true,
-        skipTaskbar: false
+        skipTaskbar: false,
+        fullscreenable: false
     })
 
     if (!hasPos) engineLinkWin.center()
@@ -211,21 +212,9 @@ function winHide(targetWin) {
 // 窗口显示
 function winShow(targetWin) {
     if (targetWin && !targetWin.isDestroyed()) {
-        const showNow = () => {
-            targetWin.show()
-            targetWin.focus()
-            targetWin.setSkipTaskbar(false)
-            if (process.platform === "darwin") {
-                targetWin.setAlwaysOnTop(true)
-                setTimeout(() => targetWin.setAlwaysOnTop(false), 120)
-            }
-        }
-        if (targetWin.webContents.isLoading()) {
-            targetWin.webContents.once("did-finish-load", showNow)
-            targetWin.once("ready-to-show", showNow)
-        } else {
-            showNow()
-        }
+        targetWin.show()
+        targetWin.focus()
+        targetWin.setSkipTaskbar(false)
     }
 }
 
