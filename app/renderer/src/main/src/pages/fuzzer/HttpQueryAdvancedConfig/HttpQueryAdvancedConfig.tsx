@@ -443,11 +443,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     )
 
     const onClickDownstreamProxy = useMemoizedFn(async () => {
-        const versionValid = await checkProxyVersion()
-        if (!versionValid) {
-            return
+        try {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setAgentConfigModalVisible(true)
+        } catch (error) {
+            console.error("error:", error)
         }
-        setAgentConfigModalVisible(true)
     })
 
     const renderContent = useMemoizedFn(() => {
@@ -1418,20 +1422,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 onSave={onSave}
                 hasApplyBtn={!!cachedTotal}
             />
-            <AgentConfigModal
-                agentConfigModalVisible={false} //弃用
-                onCloseModal={() => setAgentConfigModalVisible(false)}
-                generateURL={(url) => {
-                    const v = form.getFieldsValue()
-                    const copyProxyArr = structuredClone(v.proxy)
-                    copyProxyArr.push(url)
-                    proxyListRef.current.onSetRemoteValues([...new Set(copyProxyArr)])
-                    onSetValue({
-                        ...v,
-                        proxy: [...new Set(copyProxyArr)]
-                    })
-                }}
-            ></AgentConfigModal>
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
                 onClose={() => setAgentConfigModalVisible(false)}
