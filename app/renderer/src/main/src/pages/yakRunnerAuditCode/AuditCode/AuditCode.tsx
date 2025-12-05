@@ -2766,7 +2766,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 titile: selectedRowKeys.length === 0 ? "确认清空列表数据？" : "确认删除勾选数据？",
                                 params:
                                     selectedRowKeys.length === 0
-                                        ? {}
+                                        ? {
+                                            DeleteAllProject: true
+                                        }
                                         : {
                                               Filter: {
                                                   IDs: selectedRowKeys.map((item) => parseInt(item + ""))

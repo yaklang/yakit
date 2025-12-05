@@ -179,6 +179,8 @@ export interface DeleteSSAProjectRequest {
     // "delete_all" 或 空字符串 - 清空编译历史和项目信息（删除 IrProgram 和 SSAProject）
     // 默认为 "delete_all"
     DeleteMode?:"clear_compile_history" | "delete_all" 
+    // 是否为全部删除
+    DeleteAllProject?: boolean
 }
 
 interface SSAProjectScanRuleConfig {

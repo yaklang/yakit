@@ -32,6 +32,7 @@ import {
     useInterval,
     useInViewport,
     useMemoizedFn,
+    useThrottleFn,
     useUpdateEffect
 } from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
@@ -1150,6 +1151,13 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
             ...clearRuleByPageInfo
         }))
     })
+
+    const onSetProgressFun = useThrottleFn(
+        (data?: {type: "new" | "old"; progress: number}) => {
+            setProgressShow(data)
+        },
+        {wait: 500}
+    ).run
     return (
         <>
             {executeStatus !== "default" && CodeScanByExecuteData.length > 0 && (
@@ -1253,7 +1261,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         ref={codeScanExecuteContentRef}
                         isExpand={isExpand}
                         setIsExpand={setIsExpand}
-                        setProgressShow={setProgressShow}
+                        setProgressShow={onSetProgressFun}
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         filterLibRuleKind={filterLibRuleKind}
