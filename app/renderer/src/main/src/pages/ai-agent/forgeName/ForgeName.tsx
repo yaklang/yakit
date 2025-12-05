@@ -207,15 +207,12 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
     // 通信触发更新数据请求
     const handleEmiterUpdateData = useMemoizedFn((id: string) => {
-        console.log("handleEmiterUpdateData", id)
-
         const forgesArr = getData().Data || []
         const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
         if (findIndex !== -1) {
             // 存在数据则局部更新
             grpcGetAIForge({ID: Number(id)})
                 .then((res) => {
-                    console.log("ForgeName-grpcGetAIForge-res", res)
                     setData((old) => {
                         const newData = {...old}
                         newData.Data[findIndex] = res

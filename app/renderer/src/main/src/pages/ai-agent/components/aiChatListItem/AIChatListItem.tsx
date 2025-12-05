@@ -1,11 +1,10 @@
-import React, {ReactNode} from "react"
+import React from "react"
 import {AIChatListItemProps} from "./type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {AIReviewResult} from "../aiReviewResult/AIReviewResult"
 import {AITriageChatContent} from "../aiTriageChat/AITriageChat"
-import FileSystemCard from "../FileSystemCard"
 import ToolInvokerCard from "../ToolInvokerCard"
 import styles from "./AIChatListItem.module.scss"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
@@ -13,7 +12,6 @@ import DividerCard, {StreamsStatus} from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
-import {AITaskClearNotice, AITaskUpdateNotice} from "../aiTaskUpdateNotice/AITaskUpdateNotice"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
 
 const chatContentExtraProps = {
@@ -33,17 +31,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                     aiMarkdownProps: {
                         className: styles["ai-mark-down-wrapper"]
                     }
-                }
-
-            default:
-                return {}
-        }
-    }, [type])
-    const aiFileSystemCard = useCreation(() => {
-        switch (type) {
-            case "re-act":
-                return {
-                    showDetail: false
                 }
 
             default:
@@ -70,13 +57,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.RESULT:
                 return <AITriageChatContent isAnswer={true} content={data} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.THOUGHT:
-                return (
-                    <AITriageChatContent
-                        isAnswer={true}
-                        content={`思考：${data}`}
-                        {...chatContentExtraProps}
-                    />
-                )
+                return <AITriageChatContent isAnswer={true} content={`思考：${data}`} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.TOOL_RESULT:
                 const {execFileRecord} = yakExecResult
                 const fileList = execFileRecord.get(data.callToolId)
@@ -115,18 +96,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         />
                     )
                 }
-            case AIChatQSDataTypeEnum.FILE_SYSTEM_PIN:
-                return (
-                    <FileSystemCard
-                        {...data}
-                        {...aiFileSystemCard}
-                        modalInfo={{
-                            title: item.AIService,
-                            time: Timestamp
-                        }}
-                    />
-                )
-
             case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
                 const task = getTask(data.taskIndex)
                 const dividerCardProps = {
@@ -151,11 +120,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         error={0}
                     />
                 )
-
-            case AIChatQSDataTypeEnum.QUESTION_QUEUE_STATUS_CHANGE:
-                return <AITaskUpdateNotice item={data} />
-            case AIChatQSDataTypeEnum.QUESTION_QUEUE_CLEARED:
-                return <AITaskClearNotice item={data} />
             case AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION:
                 return <AiFailPlanCard item={data} />
             default:

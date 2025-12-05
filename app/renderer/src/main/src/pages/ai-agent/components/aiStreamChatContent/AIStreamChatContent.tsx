@@ -8,31 +8,34 @@ import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
-    const {content, nodeIdVerbose} = props
+    const {content, nodeIdVerbose, referenceNode} = props
     const {nodeLabel} = useAINodeLabel(nodeIdVerbose)
     const showContent = useCreation(() => {
         return content.slice(-150)
     }, [content])
     return (
-        <Tooltip
-            title={
-                <div className={styles["tooltip-stream-content"]}>
-                    {content}
-                    <CopyComponents copyText={content} />
+        <div className={styles['ai-stream-chat-content-wrapper']}>
+            <Tooltip
+                title={
+                    <div className={styles["tooltip-stream-content"]}>
+                        {content}
+                        <CopyComponents copyText={content} />
+                    </div>
+                }
+                trigger={"click"}
+            >
+                <div className={styles["ai-stream-chat-content"]}>
+                    <div className={styles["title"]}>
+                        <OutlineSparklesColorsIcon />
+                        {nodeLabel}
+                    </div>
+                    <div className={styles["ai-stream-content"]}>
+                        {content.length > 100 && <div className={styles["ai-mask"]} />}
+                        {showContent}
+                    </div>
                 </div>
-            }
-            trigger={"click"}
-        >
-            <div className={styles["ai-stream-chat-content-wrapper"]}>
-                <div className={styles["title"]}>
-                    <OutlineSparklesColorsIcon />
-                    {nodeLabel}
-                </div>
-                <div className={styles["ai-stream-content"]}>
-                    {content.length > 100 && <div className={styles["ai-mask"]} />}
-                    {showContent}
-                </div>
-            </div>
-        </Tooltip>
+            </Tooltip>
+            {referenceNode}
+        </div>
     )
 })

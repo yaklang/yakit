@@ -1,4 +1,4 @@
-import {useRef, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
@@ -31,7 +31,6 @@ import {
     AIToolResult,
     ToolStreamSelectors
 } from "./aiRender"
-import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
 export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "task_review_require", "plan"]
@@ -39,7 +38,17 @@ export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "t
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest, onGrpcFolder} = params || {}
+    const {
+        onTaskStart,
+        pushLog,
+        getRequest,
+        onReview,
+        onReviewExtra,
+        onReviewRelease,
+        sendRequest,
+        onGrpcFolder,
+        onNotifyMessage
+    } = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -63,6 +72,13 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
     const [streams, setStreams] = useState<AIChatQSData[]>([])
     // #endregion
+
+    useEffect(() => {
+        /**NOTE - 临时解决方案，后续session时再讨论具体方案 */
+        if (onTaskStart && streams.length === 1) {
+            onTaskStart()
+        }
+    }, [streams.length])
 
     // #region 工具执行过程相关数据和逻辑
     /** @description 工具执行过程的数据和工具相关的流数据，在执行过程中，顺序是无序，所以需要对其关联记录 */
@@ -642,27 +658,22 @@ function useTaskChat(params?: UseTaskChatParams) {
     // #endregion
 
     /** 文件系统操作处理数据 */
-    const handleFileSystemPin = useMemoizedFn(async (res: AIOutputEvent) => {
+    const handleFileSystemPin = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
+            const ipcContent = Uint8ArrayToString(Content) || ""
             const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
-            const fileInfo = await getLocalFileName(path, true)
 
-            setStreams((old) => {
-                const newArr = [...old]
-                newArr.push({
-                    ...genBaseAIChatData(res),
-                    type: AIChatQSDataTypeEnum.FILE_SYSTEM_PIN,
-                    data: {
-                        path: path,
-                        isDir: res.Type === "filesystem_pin_directory",
-                        name: fileInfo.name,
-                        suffix: fileInfo.suffix
-                    }
+            onNotifyMessage &&
+                onNotifyMessage({
+                    Type,
+                    NodeId,
+                    NodeIdVerbose,
+                    Timestamp,
+                    Content: path
                 })
-                return newArr
-            })
-            if (res.Type === "filesystem_pin_directory") {
+
+            if (Type === "filesystem_pin_directory") {
                 onGrpcFolder && onGrpcFolder(path)
             }
         } catch (error) {
@@ -693,6 +704,35 @@ function useTaskChat(params?: UseTaskChatParams) {
                         }
                     }
                 })
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
+    /** 流式数据追加参考材料 */
+    const handleStreamAppendReference = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReferenceMaterialPayload
+
+            setStreams((old) => {
+                let newArr = [...old]
+                const itemInfo = newArr.find((item) => {
+                    if (item.type === "stream" && item.data) {
+                        return item.data.EventUUID === data.event_uuid
+                    }
+                    return false
+                })
+                if (!!itemInfo && itemInfo.type === "stream") {
+                    if (!itemInfo.data.reference) itemInfo.data.reference = []
+                    itemInfo.data.reference.push(data)
+                }
+
                 return newArr
             })
         } catch (error) {
@@ -895,6 +935,12 @@ function useTaskChat(params?: UseTaskChatParams) {
                     })
                     return newArr
                 })
+                return
+            }
+
+            if (res.Type === "reference_material") {
+                // 流式数据追加参考材料
+                handleStreamAppendReference(res)
                 return
             }
         } catch (error) {

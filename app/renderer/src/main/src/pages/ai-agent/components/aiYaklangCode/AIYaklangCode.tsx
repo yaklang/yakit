@@ -10,7 +10,7 @@ import {AIStreamContentType} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 
 export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
-    const {content: defContent, nodeLabel, modalInfo, contentType} = props
+    const {content: defContent, nodeLabel, modalInfo, contentType, referenceNode} = props
     const [content, setContent] = useState(defContent)
     useThrottleEffect(
         () => {
@@ -36,6 +36,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
             footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
         >
             <div className={styles["ai-yaklang-code"]}>{renderCode()}</div>
+            {referenceNode}
         </ChatCard>
     )
 })

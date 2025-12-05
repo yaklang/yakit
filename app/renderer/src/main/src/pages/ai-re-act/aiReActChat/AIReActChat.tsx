@@ -20,7 +20,6 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
-import emiter from "@/utils/eventBus/eventBus"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
@@ -28,7 +27,7 @@ import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCConten
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode} = props
+    const {mode, chatContainerClassName,chatContainerHeaderClassName} = props
 
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
@@ -37,7 +36,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
+    const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
+        defaultValue: true,
+        valuePropName: "showFreeChat",
+        trigger: "setShowFreeChat"
+    })
 
     const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
     const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
@@ -84,13 +87,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     // #endregion
 
-    useEffect(() => {
-        emiter.on("switchReActShow", handleSwitchShowFreeChat)
-        return () => {
-            emiter.off("switchReActShow", handleSwitchShowFreeChat)
-        }
-    }, [])
-
     const isShowRetract = useCreation(() => {
         return mode === "task" && showFreeChat
     }, [mode, showFreeChat])
@@ -134,8 +130,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         [styles["ai-re-act-chat-hidden"]]: !showFreeChat
                     })}
                 >
-                    <div className={styles["chat-container"]}>
-                        <div className={styles["chat-header"]}>
+                    <div className={classNames(styles["chat-container"], chatContainerClassName)}>
+                        <div className={classNames(styles["chat-header"],chatContainerHeaderClassName)}>
                             <div className={styles["chat-header-title"]}>
                                 <ColorsChatIcon />
                                 自由对话

@@ -238,7 +238,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 })
 /**HTTP 流量 */
 export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
-    const {runtimeId, website = false} = props
+    const {runtimeId, filterTagDom, website = false} = props
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
@@ -316,6 +316,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                         setSecondNodeVisible={setSecondNodeVisible}
                         pageType='Plugin'
                         runtimeId={runtimeId}
+                        filterTagDom={filterTagDom}
                         params={{SourceType: "scan"}}
                         httpHistoryTableTitleStyle={{
                             paddingTop: 12,
@@ -447,7 +448,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
 
 /**风险与漏洞tab表 */
 export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
-    const {runtimeId, runTimeIDs} = props
+    const {runtimeId, runTimeIDs, filterTagDom} = props
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [allTotal, setAllTotal] = useControllableValue<number>(props, {
@@ -488,6 +489,7 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
                             <div className={styles["table-renderTitle-left"]}>
                                 <span>{t("VulnerabilitiesRisksTable.risks_and_vulnerabilities")}</span>
                                 <TableTotalAndSelectNumber total={allTotal} />
+                                {filterTagDom}
                             </div>
                             <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
                                 {t("YakitButton.view_all_button")}

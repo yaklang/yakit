@@ -7,7 +7,6 @@ import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useAIAgentStore from "../useContext/useStore"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
 import cloneDeep from "lodash/cloneDeep"
@@ -23,7 +22,12 @@ import ChatIPCContent, {
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon} from "@/assets/icon/outline"
-import {AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
+import {
+    AIChatIPCNotifyMessage,
+    AIChatIPCStartParams,
+    ChatIPCSendType,
+    UseTaskChatState
+} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -43,6 +47,7 @@ import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
+import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -55,7 +60,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 }
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
-
+    const {getLabelByParams} = useAINodeLabel()
     const {activeChat, setting} = useAIAgentStore()
     const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
 
@@ -82,7 +87,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onSetKeyTask = useMemoizedFn(() => {
         setMode("task")
         setTimeout(() => {
-            emiter.emit("switchAIActTab", AITabsEnum.Task_Content)
+            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.Task_Content}))
         }, 100)
     })
 
@@ -105,7 +110,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [timelineMessage, setTimelineMessage] = useState<string>()
 
     const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
-        console.log("reviewInfo", info)
         setReviewExpand(true)
         setReviewInfo(cloneDeep(info))
     })
@@ -134,6 +138,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleSaveChatInfo()
         handleStopAfterChangeState()
     })
+    const onNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
+        const {NodeIdVerbose, Content} = message
+        const verbose = getLabelByParams(NodeIdVerbose)
+        yakitNotify("info", {
+            message: verbose,
+            description: Content
+        })
+    })
+
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
@@ -141,7 +154,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
         onTimelineMessage: handleTimelineMessage,
-        getRequest: getSetting
+        getRequest: getSetting,
+        onNotifyMessage
     })
     const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
 
@@ -348,7 +362,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     /** 从别的元素上触发使用 forge 模板的功能 */
     const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
-        console.log("onReActChatEvent-forge", forge)
         if (!forge || !forge.Id) {
             yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
             return
@@ -561,9 +574,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSendConfigHotpatch
         }
     }, [events])
-    useEffect(() => {
-        console.log("chatIPCData", chatIPCData)
-    }, [chatIPCData])
 
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>

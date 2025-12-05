@@ -22,12 +22,13 @@ import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AIReviewType} from "../hooks/aiRender"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
+    const {setShowFreeChat} = props
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
 
     const onIsExpand = useMemoizedFn(() => {
         setLeftExpand(expand)
-        emiter.emit("switchReActShow", expand)
+        setShowFreeChat(expand)
         setExpand((v) => !v)
     })
 
@@ -87,7 +88,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     return (
         <>
             <div className={styles["tab-content"]}>
-                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute}/>
+                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute} />
             </div>
             {!!reviewInfo ? (
                 <AIReActTaskChatReview

@@ -12,8 +12,8 @@ enum TabKey {
 }
 
 const options = [
-    {label: "文件树", value: TabKey.FileTree},
-    {label: "操作日志", value: TabKey.OperationLog}
+    {label: "文件系统", value: TabKey.FileTree},
+    {label: "读写日志", value: TabKey.OperationLog}
 ]
 
 export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({execFileRecord}) => {

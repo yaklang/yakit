@@ -46,7 +46,7 @@ const getFileName = (path: string, isDir: boolean): string => {
 
 const FileList: FC<FileListProps> = ({title, fileList}) => {
     const switchAIActTab = () => {
-        emiter.emit("switchAIActTab", AITabsEnum.File_System)
+        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
     }
     return (
         <div className={styles["file-list"]}>

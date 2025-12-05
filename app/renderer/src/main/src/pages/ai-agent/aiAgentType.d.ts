@@ -59,17 +59,8 @@ export interface AIChatLeftSideProps {
     tasks: AITaskInfoProps[]
 }
 
-export interface AICardListProps {
-    list: AIAgentGrpcApi.AIInfoCard[]
-}
-
 // 对话框回答
 export type AITabsEnumType = `${AITabsEnum}`
-export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
-    info: AIChatInfo
-    coordinatorId?: string
-    yakExecResultLogs: StreamResult.Log[]
-}
 
 export interface AIAgentChatStreamProps {
     streams: AIChatQSData[]
@@ -77,43 +68,7 @@ export interface AIAgentChatStreamProps {
     scrollToBottom: boolean
     execute?: boolean
 }
-export interface ChatStreamCollapseItemProps {
-    expandKey: string
-    info: AIStreamOutput
-    timestamp: number
-    secondExpand: boolean
-    handleChangeSecondPanel: (expand: boolean, order: string) => void
-    className?: string
-    defaultExpand?: boolean
-}
-export interface ChatStreamContentProps {
-    stream: string
-}
-export interface ChatStreamCollapseProps {
-    id?: string
-    className?: string
-    style?: CSSProperties
-    title?: ReactNode
-    headerExtra?: ReactNode
-    children?: ReactNode
-    defaultExpand?: boolean
-    expand?: boolean
-    onChange?: (value: boolean) => void
-}
 
-export interface AIAgentChatFooterProps {
-    /** 正在执行中 */
-    execute: boolean
-    /** 是否在 review 步骤中 */
-    review: boolean
-    /** 是否能显示重新执行按钮 */
-    showReExe?: boolean
-    onStop: () => void
-    positon: boolean
-    onPositon: () => void
-    onReExe: () => void
-    onNewChat: () => void
-}
 // #endregion
 
 //#region AI工具查看详情
@@ -122,6 +77,3 @@ export interface AIChatToolDrawerContentProps {
 }
 // #endregion
 
-//#region AI 展示内容的tab
-export interface AITabProps extends HoldGRPCStreamProps.InfoTab {}
-//#endregion
