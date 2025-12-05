@@ -49,13 +49,14 @@ module.exports = (win, getClient) => {
     /** 获取Yakit最新版本号 */
     const asyncFetchLatestYakitVersion = (params) => {
         const {config, releaseEditionName} = params
+        console.log('releaseEditionName:', releaseEditionName);
         return new Promise((resolve, reject) => {
             const versionFetchers = {
                 Yakit: fetchLatestYakitVersion,
                 EnpriTrace: fetchLatestYakitEEVersion,
                 IRify: fetchLatestYakitIRifyVersion,
                 "IRify-EnpriTrace": fetchLatestYakitIRifyEEVersion,
-                Memfit: fetchLatestYakitMemfitVersion
+                "Memfit AI": fetchLatestYakitMemfitVersion
             }
             const fetchPromise = versionFetchers[releaseEditionName]
                 ? versionFetchers[releaseEditionName]
