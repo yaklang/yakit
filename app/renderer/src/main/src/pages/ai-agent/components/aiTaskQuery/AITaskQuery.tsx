@@ -55,7 +55,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
                             <YakitTag size='small' fullRadius={true}>
                                 {questionQueue.total}
                             </YakitTag>
-                            <OutlineQuestionmarkcircleIcon className={styles["question-mark-circle"]} />
+                            {/* <OutlineQuestionmarkcircleIcon className={styles["question-mark-circle"]} /> */}
                         </div>
                         <div className={styles["header-right"]}>
                             <YakitButton
