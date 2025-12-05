@@ -183,6 +183,7 @@ const KnowledgeBase = React.lazy(() => import("@/pages/KnowledgeBase/KnowledgeBa
 const ForgeEditor = React.lazy(() => import("@/pages/aiForge/forgeEditor/ForgeEditor"))
 const AIToolEditor = React.lazy(() => import("@/pages/aiTool/AIToolEditor/AIToolEditor"))
 const YakRunnerScanHistory = React.lazy(() => import("@/pages/yakRunnerScanHistory/YakRunnerScanHistory"))
+const SSACompileHistory = React.lazy(() => import("@/pages/ssaCompileHistory/SSACompileHistory"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -376,7 +377,8 @@ export const YakitRouteToPageInfo: Record<
     "add-ai-forge": {label: "新建 Forge", labelUi: "YakitRoute.createForge"},
     "modify-ai-forge": {label: "编辑 Forge", labelUi: "YakitRoute.editForge"},
     "add-ai-tool": {label: "新建 Tool", labelUi: "YakitRoute.createTool"},
-    "modify-ai-tool": {label: "编辑 Tool", labelUi: "YakitRoute.editTool"}
+    "modify-ai-tool": {label: "编辑 Tool", labelUi: "YakitRoute.editTool"},
+    "ssa-compile-history": {label: "SSA项目编译历史", labelUi: "YakitRoute.ssaCompileHistory"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -823,6 +825,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerProjectManager />
         case YakitRoute.YakRunner_ScanHistory:
             return <YakRunnerScanHistory />
+        case YakitRoute.SSA_Compile_History:
+            return <SSACompileHistory />
         case YakitRoute.Rule_Management:
             return <RuleManagement ruleManagementPageInfo={params?.ruleManagementPageInfo} />
         case YakitRoute.Notepad_Manage:

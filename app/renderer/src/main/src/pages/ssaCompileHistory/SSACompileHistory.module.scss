@@ -1,0 +1,81 @@
+.ssa-compile-history {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    .header {
+        padding: 8px 16px;
+        height: 40px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
+        .main {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            .title {
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .sub-title {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                .text {
+                    color: #b4bbca;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+                .number {
+                    color: #f28b44;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+        }
+        .extra {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            .search-icon {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                svg {
+                    height: 12px;
+                    width: 12px;
+                    path {
+                        stroke-width: 1.5;
+                    }
+                }
+            }
+        }
+    }
+    .table {
+        padding: 12px 16px;
+        flex: 1;
+        overflow: hidden;
+        .audit-virtual-list {
+            height: 100%;
+        }
+        .audit-text {
+            overflow: hidden;
+        }
+
+        .audit-opt {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+    }
+
+    .tooltip-line-feed {
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+}
