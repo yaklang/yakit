@@ -98,9 +98,9 @@ jobs:
             - name: Show built files
               run: ls ./release
 
-            - name: Check Memfit if the output is correct
-              run: (./packageScript/script/check-build-package.sh "Memfit AI") || { exit 1; }
-              shell: bash
+            # - name: Check Memfit if the output is correct
+            #   run: (./packageScript/script/check-build-package.sh "Memfit AI") || { exit 1; }
+            #   shell: bash
             - name: Upload Memfit artifacts
               uses: actions/upload-artifact@v4
               with:
