@@ -241,7 +241,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         const flag = val === "/" ? false : !!val.trim()
         searchTreeFlag.current = flag
         setExpandedKeys([])
-        setSelectedKeys([])
+        selectedKeys.length && setSelectedKeys([])
         if (val === "" && selectedNodes.length) {
             setSelectedNodes([])
             resetTableAndEditorShow && resetTableAndEditorShow(true, false)
@@ -259,7 +259,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             if (selectedKeys.length) {
                 if (refreshTreeFlag) {
                     if (searchTreeFlag.current) {
-                        setSelectedKeys([])
+                        selectedKeys.length && setSelectedKeys([])
                         setSelectedNodes([])
                         setExpandedKeys([])
                         getTreeData("website://" + searchValue)
@@ -290,7 +290,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             searchTreeFlag.current = false
         }
         setExpandedKeys([])
-        setSelectedKeys([])
+        selectedKeys.length && setSelectedKeys([])
         setSelectedNodes([])
         getTreeData("website://" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : "/"}` : "/"}`)
     })
@@ -298,7 +298,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     // 网站树跳转 -> 带到搜索框查询
     const onJumpWebTree = (value: string) => {
         searchTreeFlag.current = true
-        setSelectedKeys([])
+        selectedKeys.length && setSelectedKeys([])
         setSearchValue(value)
         getTreeData("website://" + value)
     }
