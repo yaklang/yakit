@@ -1,7 +1,15 @@
 import {useEffect, useMemo, useRef, type FC} from "react"
 
 import {Form} from "antd"
-import {useAsyncEffect, useDebounceFn, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {
+    useAsyncEffect,
+    useCreation,
+    useDebounceFn,
+    useMemoizedFn,
+    useRequest,
+    useSafeState,
+    useUpdateEffect
+} from "ahooks"
 
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import AllInstallPlugins from "./compoment/AllInstallPlugins"
@@ -13,7 +21,7 @@ import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {CreateKnowledgeBase} from "./compoment/CreateKnowledgeBase"
 
-import {compareKnowledgeBaseChange, getFileInfoList, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChangeList, getFileInfoList, targetInstallList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -50,7 +58,11 @@ const KnowledgeBase: FC = () => {
     const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
 
     // 拉取还没安装的 binaries
-    const {data: binariesToInstall, loading} = useRequest(
+    const {
+        data: binariesToInstall,
+        loading,
+        refreshAsync: binariesToInstallRefreshAsync
+    } = useRequest(
         async () => {
             const result = await ipcRenderer.invoke("ListThirdPartyBinary", {
                 Pagination: {
@@ -67,7 +79,6 @@ const KnowledgeBase: FC = () => {
             const resultList = targetInstallList
                 .map((name) => binariesList.find((it) => it.Name === name))
                 .filter((v) => v !== undefined)
-
             return resultList
         },
         {
@@ -75,8 +86,11 @@ const KnowledgeBase: FC = () => {
                 const resultList = targetInstallList
                     .map((name) => result.find((it) => it.Name === name && !it.InstallPath))
                     .filter((v) => v !== undefined)
-                if (resultList.length !== 0) {
-                    info(`使用知识库缺少第三方依赖，需安装${resultList.length}个`)
+                const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
+
+                const filteredInstall = resultList.filter((item) => !exclude.includes(item.Name))
+                if (filteredInstall.length !== 0) {
+                    info(`使用知识库缺少第三方依赖，需安装${filteredInstall.length}个`)
                     setInstallPlug(true)
                 }
             },
@@ -126,12 +140,13 @@ const KnowledgeBase: FC = () => {
     const {
         data: existsKnowledgeBase,
         runAsync: existsKnowledgeBaseAsync,
-        refreshAsync
+        refreshAsync,
+        loading: existsKnowledgeLoading
     } = useRequest(
         async (Keyword?: string) => {
             const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
                 Keyword,
-                Pagination: {Limit: 9999, Page: 1}
+                Pagination: {Limit: 9999, Page: 1, OrderBy: "updated_at", Sort: "desc"}
             })
             const {KnowledgeBases} = result
 
@@ -144,7 +159,7 @@ const KnowledgeBase: FC = () => {
         {
             manual: true,
             onSuccess: (value) => {
-                const FirstknowledgeBaseID = value?.find((item) => item.IsImported === false)?.ID
+                const FirstknowledgeBaseID = value?.findLast((item) => item.IsImported === false)?.ID
                 if (FirstknowledgeBaseID) {
                     !knowledgeBaseID && setKnowledgeBaseID(FirstknowledgeBaseID)
                 }
@@ -153,19 +168,23 @@ const KnowledgeBase: FC = () => {
     )
 
     useUpdateEffect(() => {
-        const diffKnowledgeBase = compareKnowledgeBaseChange(knowledgeBases, existsKnowledgeBase)
-        if (
-            typeof diffKnowledgeBase === "object" &&
-            diffKnowledgeBase.increase &&
-            previousKnowledgeBases?.length &&
-            previousKnowledgeBases.length > 0
-        ) {
-            addKnowledgeBase(diffKnowledgeBase.increase)
-        } else if (typeof diffKnowledgeBase === "object" && diffKnowledgeBase.delete) {
-            deleteKnowledgeBase(diffKnowledgeBase.delete.ID)
-        } else {
+        if (!existsKnowledgeBase) return
+
+        const diff = compareKnowledgeBaseChangeList(knowledgeBases, existsKnowledgeBase)
+
+        // 如果没有变化，直接退出，不要再 add/delete
+        if (!diff || (!diff.increased?.length && !diff.deleted?.length)) {
             return
-            // no change
+        }
+
+        // 有新增
+        if (diff.increased?.length) {
+            addKnowledgeBase(diff.increased)
+        }
+
+        // 有删除
+        if (diff.deleted?.length) {
+            deleteKnowledgeBase(diff.deleted.map((it) => it.ID))
         }
     }, [existsKnowledgeBase])
 
@@ -211,21 +230,16 @@ const KnowledgeBase: FC = () => {
             createKnwledgeDataRef.current = transformFormData
             await createKnowledgRunAsync(transformFormData)
         } catch (error) {
-            failed(error + "")
+            // failed(error + "")
         }
     }
-
-    useUpdateEffect(() => {
-        return () => {
-            clearAll()
-        }
-    }, [])
 
     const onCloseKnowledgeRepository = () => {
         if (apiRef?.current && apiRef.current.tokens.length > 0) {
             setVisible(true)
             return
         } else {
+            clearAll()
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
         }
     }
@@ -280,14 +294,18 @@ const KnowledgeBase: FC = () => {
             // 缺失插件时展示需下载插件页面
             case installPlug:
                 return (
-                    <YakitSpin spinning={loading}>
-                        <AllInstallPlugins onInstallPlug={setInstallPlug} binariesToInstall={binariesToInstall} />
+                    <YakitSpin spinning={loading || existsKnowledgeLoading}>
+                        <AllInstallPlugins
+                            onInstallPlug={setInstallPlug}
+                            binariesToInstall={binariesToInstall}
+                            binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
+                        />
                     </YakitSpin>
                 )
             // 无知识库时展示添加知识库页面
             case !existsKnowledgeBase?.length:
                 return (
-                    <YakitSpin spinning={loading}>
+                    <YakitSpin spinning={loading || existsKnowledgeLoading}>
                         <div className={styles["create-knowledgBase"]}>
                             <div className={styles["create-content"]}>
                                 <div className={styles["create-title"]}>创建知识库</div>
@@ -316,6 +334,7 @@ const KnowledgeBase: FC = () => {
                         binariesToInstall={binariesToInstall}
                         apiRef={apiRef}
                         refreshAsync={refreshAsync}
+                        binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
                     />
                 )
         }

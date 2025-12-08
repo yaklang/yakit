@@ -1,6 +1,6 @@
 import {FC, memo, useEffect, useRef, useState} from "react"
 
-import {Progress} from "antd"
+import {Progress, Tooltip} from "antd"
 import {useRequest, useSafeState} from "ahooks"
 
 import {CloudDownloadIcon, RemoveIcon} from "@/assets/newIcon"
@@ -14,13 +14,18 @@ import type {AllInstallPluginsProps, ExecResult} from "./AllInstallPluginsProps"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import classNames from "classnames"
-import {OutlineClouddownloadIcon, OutlineFolderopenIcon, SolidPuzzleIcon} from "@/assets/icon/outline"
+import {
+    OutlineClouddownloadIcon,
+    OutlineFolderopenIcon,
+    OutlineRefreshIcon,
+    SolidPuzzleIcon
+} from "@/assets/icon/outline"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 
 const {ipcRenderer} = window.require("electron")
 
-const installWithEvents = (binary: {Name: string}, token: string) => {
+export const installWithEvents = (binary: {Name: string}, token: string) => {
     return new Promise<void>((resolve, reject) => {
         let settled = false
 
@@ -54,7 +59,11 @@ const onCloseKnowledgeRepository = () => {
     emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
 }
 
-const AllInstallPlugins: FC<AllInstallPluginsProps> = ({onInstallPlug, binariesToInstall}) => {
+const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
+    onInstallPlug,
+    binariesToInstall,
+    binariesToInstallRefreshAsync
+}) => {
     const [installTokens, setInstallTokens] = useState<string[]>([])
     const [overallProgress, setOverallProgress] = useState(0)
     const progressMap = useRef<Record<string, number>>({})
@@ -71,7 +80,9 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({onInstallPlug, binariesT
     // 并发安装所有
     const {run: runInstallAll, loading} = useRequest(
         async () => {
-            const emptyInstallPathItem = binariesToInstall?.filter((item) => item.InstallPath === "") ?? []
+            const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
+            const filteredInstall = binariesToInstall?.filter((item) => !exclude.includes(item.Name)) ?? []
+            const emptyInstallPathItem = filteredInstall?.filter((item) => item.InstallPath === "") ?? []
             if (!emptyInstallPathItem || emptyInstallPathItem.length === 0) {
                 return
             } else {
@@ -89,11 +100,12 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({onInstallPlug, binariesT
         },
         {
             manual: true,
-            onSuccess: () => {
+            onSuccess: async () => {
                 success("知识库所需插件安装完成")
                 setOverallProgress(100)
                 onInstallPlug(false)
                 setInstallTokens([])
+                await binariesToInstallRefreshAsync()
             },
             onError: (err) => {
                 failed(`插件安装失败: ${err}`)
@@ -158,7 +170,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({onInstallPlug, binariesT
             })
 
             await installWithEvents({Name: binary.Name}, binary.installToken)
-
+            await binariesToInstallRefreshAsync()
             success(`${binary.Name} 下载完成`)
             onInstallPlug(false)
             setInstallTokens([])
@@ -190,6 +202,16 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({onInstallPlug, binariesT
                     <div className={styles["left"]}>
                         <SolidPuzzleIcon />
                         <div>插件下载</div>
+                        <Tooltip title='刷新插件列表'>
+                            <YakitButton
+                                type='text'
+                                icon={<OutlineRefreshIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    binariesToInstallRefreshAsync?.()
+                                }}
+                            />
+                        </Tooltip>
                     </div>
                     <div className={styles["right"]}>
                         <YakitButton

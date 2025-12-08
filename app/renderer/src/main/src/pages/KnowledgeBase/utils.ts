@@ -35,6 +35,7 @@ import {
     DiamondIcon,
     RobotIcon
 } from "./icon/sidebarIcon"
+import {YakitSideTabProps} from "../../components/yakitSideTab/YakitSideTabType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -47,6 +48,17 @@ const targetInstallList = [
     "page2image",
     "pandoc",
     "whisper.cpp"
+]
+
+export enum KnowledgeTabListEnum {
+    Knowledge = "knowledge",
+    Plugin = "plugin",
+    AI_Model = "AIModel"
+}
+export const KnowledgeTabList: YakitSideTabProps["yakitTabs"] = [
+    {value: KnowledgeTabListEnum.Knowledge, label: "知识库"},
+    {value: KnowledgeTabListEnum.Plugin, label: "插件"},
+    {value: KnowledgeTabListEnum.AI_Model, label: "AI模型"}
 ]
 
 const knowledgeTypeOptions = [
@@ -361,6 +373,31 @@ const compareKnowledgeBaseChange = (
     return true
 }
 
+const compareKnowledgeBaseChangeList = (
+    prev: KnowledgeBaseItem[] | null | undefined,
+    next: KnowledgeBaseItem[] | null | undefined
+): {deleted: KnowledgeBaseItem[]; increased: KnowledgeBaseItem[]; unchanged: boolean} => {
+    if (!Array.isArray(prev)) prev = []
+    if (!Array.isArray(next)) next = []
+
+    const prevMap = new Map(prev.map((item) => [item.ID, item]))
+    const nextMap = new Map(next.map((item) => [item.ID, item]))
+
+    // 删除项：prev 里有，但 next 没有
+    const deleted = prev.filter((item) => !nextMap.has(item.ID))
+
+    // 新增项：next 里有，但 prev 没有
+    const increased = next.filter((item) => !prevMap.has(item.ID))
+
+    // === 核心: 没有任何新增或删除时，返回 true ===
+    const unchanged = deleted.length === 0 && increased.length === 0
+
+    return {
+        deleted,
+        increased,
+        unchanged
+    }
+}
 const findChangedObjects = (before, after) => {
     return after.find((newItem) => {
         const oldItem = before.find((b) => b.ID === newItem.ID)
@@ -379,7 +416,7 @@ const BuildingKnowledgeBase = async (targetKnowledgeBase: KnowledgeBaseItem) => 
         ExecParams: [
             {Key: "files", Value: files},
             {Key: "kbName", Value: targetKnowledgeBase.KnowledgeBaseName || "default"},
-            {Key: "prompt", Value: ""},
+            {Key: "prompt", Value: targetKnowledgeBase.prompt ?? ""},
             {Key: "entrylen", Value: `${targetKnowledgeBase.KnowledgeBaseLength ?? 1000}`},
             {Key: "k", Value: "0"},
             {Key: "kmin", Value: "2"},
@@ -700,5 +737,6 @@ export {
     extractAddedHistory,
     answerOptions,
     prioritizeProcessingItems,
-    knowledgeTypeOptions
+    knowledgeTypeOptions,
+    compareKnowledgeBaseChangeList
 }

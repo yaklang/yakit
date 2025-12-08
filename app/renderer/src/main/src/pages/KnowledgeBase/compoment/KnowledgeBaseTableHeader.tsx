@@ -52,7 +52,7 @@ const KnowledgeBaseTableHeader: FC<
     knowledgeBaseItems,
     onDeleteVisible,
     onEditVisible,
-    onExportVisible,
+    onExportKnowledgeBase,
     streams,
     setTableProps,
     tableProps,
@@ -60,7 +60,8 @@ const KnowledgeBaseTableHeader: FC<
     setLinkId,
     setOpenQA,
     setSelectList,
-    setAllCheck
+    setAllCheck,
+    api
 }) => {
     const [searchValue, setSearchValue] = useSafeState("")
     const [addModalData, setAddModalData] = useSafeState<{visible: boolean; KnowledgeBaseName: string}>({
@@ -70,9 +71,11 @@ const KnowledgeBaseTableHeader: FC<
     const [buildingDrawer, setBuildingDrawer] = useSafeState<{
         visible: boolean
         streamToken?: string
+        type: string
     }>({
         visible: false,
-        streamToken: ""
+        streamToken: "",
+        type: ""
     })
 
     const [show, setShow] = useSafeState<boolean>(false)
@@ -83,14 +86,15 @@ const KnowledgeBaseTableHeader: FC<
     }, [tableProps.type, knowledgeBaseItems.ID])
 
     const onCloseViewBuildProcess = useMemoizedFn(() => {
-        setBuildingDrawer({visible: false, streamToken: ""})
+        setBuildingDrawer({visible: false, streamToken: "", type: ""})
     })
 
-    const onViewBuildProcess = useMemoizedFn((streamToken) => {
+    const onViewBuildProcess = useMemoizedFn((streamToken, type) => {
         if (streams) {
             setBuildingDrawer({
                 visible: true,
-                streamToken
+                streamToken,
+                type
             })
         }
     })
@@ -99,7 +103,7 @@ const KnowledgeBaseTableHeader: FC<
         return knowledgeBaseItems?.streamstep === 2 && streams?.[knowledgeBaseItems?.streamToken] ? (
             <div
                 className={styles["building-knowledge-items"]}
-                onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken)}
+                onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, "routine")}
             >
                 <OutlineLoadingIcon className={styles["loading-icon"]} />
                 构建知识条目中...
@@ -123,15 +127,13 @@ const KnowledgeBaseTableHeader: FC<
         })
     }
 
-    const tags = ["漏洞情报", " 攻击技术", " 恶意软件"]
-
     return (
         <div className={styles["table-header"]}>
             <div className={styles["table-header-first"]}>
                 <div className={styles["header-left"]}>
                     {knowledgeBaseItems.icon ? <knowledgeBaseItems.icon className={styles["icon"]} /> : null}
                     <div className={styles["header-title"]}>{knowledgeBaseItems?.KnowledgeBaseName}</div>
-                    {knowledgeBaseItems?.Tags ? (
+                    {knowledgeBaseItems?.Tags?.length > 0 ? (
                         <div className={styles["tags"]}>
                             {knowledgeBaseItems?.Tags?.map((it) => (
                                 <YakitTag className={styles["tag"]} key={it}>
@@ -144,7 +146,7 @@ const KnowledgeBaseTableHeader: FC<
                     {knowledgeBaseItems?.streamstep === 1 && streams?.[knowledgeBaseItems?.streamToken] ? (
                         <div
                             className={styles["build-tag"]}
-                            onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken)}
+                            onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, "routine")}
                         >
                             <OutlineLoadingIcon className={styles["loading-icon"]} />
                             知识库生成中
@@ -181,7 +183,7 @@ const KnowledgeBaseTableHeader: FC<
                                                         className={styles["external-link-icon"]}
                                                         onClick={() => {
                                                             setShow(false)
-                                                            onViewBuildProcess(it.token)
+                                                            onViewBuildProcess(it.token, "historyGenerate")
                                                         }}
                                                     />
                                                 </div>
@@ -199,15 +201,7 @@ const KnowledgeBaseTableHeader: FC<
                             </YakitButton>
                         </YakitPopover>
                     ) : null}
-                    <div
-                        className={styles["ai-button"]}
-                        onClick={() =>
-                            setOpenQA?.({
-                                status: true,
-                                all: false
-                            })
-                        }
-                    >
+                    <div className={styles["ai-button"]} onClick={() => setOpenQA?.(true)}>
                         <LightningBoltIcon />
                         AI 召回
                     </div>
@@ -223,12 +217,9 @@ const KnowledgeBaseTableHeader: FC<
                     <YakitButton
                         icon={<OutlineExportIcon />}
                         type='secondary2'
-                        onClick={() =>
-                            onExportVisible?.({
-                                open: true,
-                                filePath: ""
-                            })
-                        }
+                        onClick={async () => {
+                            knowledgeBaseItems.ID && (await onExportKnowledgeBase?.(knowledgeBaseItems.ID))
+                        }}
                     >
                         导出
                     </YakitButton>
@@ -287,7 +278,9 @@ const KnowledgeBaseTableHeader: FC<
                     buildingDrawer={buildingDrawer}
                     onCloseViewBuildProcess={onCloseViewBuildProcess}
                     streams={streams}
+                    api={api}
                     title={"知识条目构建详情"}
+                    knowledgeBaseItems={knowledgeBaseItems}
                 />
             ) : null}
         </div>

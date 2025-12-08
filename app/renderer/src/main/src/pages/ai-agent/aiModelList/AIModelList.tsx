@@ -74,6 +74,8 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 export const setAIModal = (params: {
     config: GlobalNetworkConfig
@@ -169,6 +171,8 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
     const onlineRef = useRef<AIOnlineModelListRefProps>(null)
     const localRef = useRef<AILocalModelListRefProps>(null)
+    const onlineListRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(onlineListRef)
 
     useEffect(() => {
         emiter.on("onRefreshAIModelList", onRefresh)
@@ -176,6 +180,12 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
             emiter.off("onRefreshAIModelList", onRefresh)
         }
     }, [])
+
+    useEffect(() => {
+        if (inViewport) {
+            onRefresh()
+        }
+    }, [inViewport])
 
     const onToolQueryTypeChange = useMemoizedFn((e) => {
         setModelType(e.target.value as AIModelType)
@@ -262,7 +272,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         localRef.current?.onRefresh()
     })
     return (
-        <div className={styles["ai-model-list-wrapper"]}>
+        <div className={styles["ai-model-list-wrapper"]} ref={onlineListRef}>
             <div className={styles["ai-model-list-header"]}>
                 <div className={styles["ai-model-list-header-left"]}>
                     <YakitRadioButtons
@@ -501,6 +511,13 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             []
         )
 
+        const {currentPageTabRouteKey} = usePageInfo(
+            (s) => ({
+                currentPageTabRouteKey: s.currentPageTabRouteKey
+            }),
+            shallow
+        )
+
         useEffect(() => {
             init()
         }, [])
@@ -577,9 +594,19 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
         return llamaServerReady ? (
             <YakitSpin spinning={spinning}>
                 {supportedModelsUser.length > 0 && (
-                    <AILocalModelListWrapper title='我添加的' list={supportedModelsUser} onRefresh={getList} />
+                    <AILocalModelListWrapper
+                        title='我添加的'
+                        list={supportedModelsUser}
+                        onRefresh={getList}
+                        currentPageTabRouteKey={currentPageTabRouteKey}
+                    />
                 )}
-                <AILocalModelListWrapper title='推荐模型' list={supportedModels} onRefresh={getList} />
+                <AILocalModelListWrapper
+                    title='推荐模型'
+                    list={supportedModels}
+                    onRefresh={getList}
+                    currentPageTabRouteKey={currentPageTabRouteKey}
+                />
             </YakitSpin>
         ) : (
             <YakitSpin spinning={llamaServerChecking}>
@@ -627,7 +654,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                         onFinished={installFinished}
                         onCancel={installCancel}
                         getContainer={
-                            document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined
+                            document.getElementById(`main-operator-page-body-${currentPageTabRouteKey}`) || undefined
                         }
                     />
                 )}
@@ -636,7 +663,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
     })
 )
 const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.memo((props) => {
-    const {title, list, onRefresh} = props
+    const {title, list, onRefresh, currentPageTabRouteKey} = props
     return (
         <div className={styles["ai-local-model-list-wrapper"]}>
             <div className={styles["ai-local-model-list-title"]}>
@@ -646,7 +673,11 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
             <div className={styles["ai-local-model-list"]}>
                 {list.map((rowData) => (
                     <div className={styles["ai-local-model-list-row"]} key={rowData.Name}>
-                        <AILocalModelListItem item={rowData} onRefresh={onRefresh} />
+                        <AILocalModelListItem
+                            item={rowData}
+                            onRefresh={onRefresh}
+                            currentPageTabRouteKey={currentPageTabRouteKey}
+                        />
                     </div>
                 ))}
             </div>
@@ -655,7 +686,7 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
 })
 
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
-    const {item, onRefresh} = props
+    const {item, onRefresh, currentPageTabRouteKey} = props
     const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
 
     const [visible, setVisible] = useState<boolean>(false)
@@ -930,7 +961,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                     onFinished={installFinished}
                     onCancel={installCancel}
                     getContainer={
-                        document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined
+                        document.getElementById(`main-operator-page-body-${currentPageTabRouteKey}`) || undefined
                     }
                 />
             )}

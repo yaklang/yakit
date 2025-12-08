@@ -5,7 +5,16 @@ import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 import styles from "../knowledgeBase.module.scss"
 import KnowledgeBaseContainer from "./KnowledgeBaseContainer"
 import {KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
-import {useAsyncEffect, useDeepCompareEffect, useMemoizedFn, useSafeState} from "ahooks"
+import {
+    useAsyncEffect,
+    useCreation,
+    useDebounceFn,
+    useDeepCompareEffect,
+    useMap,
+    useMemoizedFn,
+    useSafeState,
+    useUpdateEffect
+} from "ahooks"
 import {
     BuildingKnowledgeBase,
     BuildingKnowledgeBaseEntry,
@@ -14,7 +23,7 @@ import {
     findChangedObjects
 } from "../utils"
 import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
-import {failed, success} from "@/utils/notification"
+import {failed, success, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -23,6 +32,30 @@ import {KnowledgeBaseQA} from "./KnowledgeBaseQA/KnowledgeBaseQA"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 import {CreateKnowledgeBaseData} from "../TKnowledgeBase"
+import {AIReActChat} from "./KnowledgeAIReActChat/AIReActChat"
+
+import ChatIPCContent, {
+    AIChatIPCSendParams,
+    AISendConfigHotpatchParams,
+    AISendSyncMessageParams,
+    ChatIPCContextDispatcher,
+    ChatIPCContextStore
+} from "../../ai-agent/useContext/ChatIPCContent/ChatIPCContent"
+import {AIChatIPCNotifyMessage, AIChatIPCStartParams, ChatIPCSendType} from "../../ai-re-act/hooks/type"
+import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
+import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
+import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
+import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
+import {AIAgentChatMode} from "@/pages/ai-agent/aiAgentChat/type"
+import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
+import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
+import {cloneDeep} from "lodash"
+import {AIAgentSettingDefault, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
+import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -34,6 +67,7 @@ interface KnowledgeBaseContentProps {
     binariesToInstall: BinaryInfo[] | undefined
     apiRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["api"] | undefined>
     refreshAsync: () => Promise<CreateKnowledgeBaseData[] | undefined>
+    binariesToInstallRefreshAsync?: () => Promise<any[]>
 }
 
 const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
@@ -46,12 +80,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         clearAll,
         binariesToInstall,
         apiRef,
-        refreshAsync
+        refreshAsync,
+        binariesToInstallRefreshAsync
     } = props
-    const [openQA, setOpenQA] = useSafeState({
-        status: false,
-        all: false
-    })
+    const [showFreeChat, setShowFreeChat] = useSafeState(false)
     const [streams, api] = useMultipleHoldGRPCStream()
 
     const onOK = async () => {
@@ -89,6 +121,13 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         // 新增 知识库
         if (typeof diff === "object" && diff.increase) {
             const kb = diff.increase
+            if (!kb.streamToken || !kb.KnowledgeBaseFile.length) {
+                editKnowledgeBase(kb.ID, {
+                    ...kb,
+                    streamstep: "success"
+                })
+                return
+            }
             try {
                 await BuildingKnowledgeBase(kb)
                 if (api && typeof api.createStream === "function") {
@@ -232,38 +271,309 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const targetSelectedKnowledgeBaseItem = useMemo(() => {
         const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
         return result
-    }, [openQA, knowledgeBaseID])
+    }, [knowledgeBases, knowledgeBaseID])
 
     useImperativeHandle(ref, () => ({
         onOK
     }))
 
+    const [reviewInfo, setReviewInfo] = useSafeState<AIChatQSData>()
+    const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
+        string,
+        AIAgentGrpcApi.PlanReviewRequireExtra
+    >(new Map())
+    const [reviewExpand, setReviewExpand] = useSafeState<boolean>(true)
+    const [timelineMessage, setTimelineMessage] = useSafeState<string>()
+
+    const [mode, setMode] = useSafeState<AIAgentChatMode>("welcome")
+
+    const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+
+    // 历史对话
+    const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
+    // 当前展示对话
+    const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
+
+    const {getLabelByParams} = useAINodeLabel()
+
+    const handleSaveChatInfo = useMemoizedFn(() => {
+        const showID = activeID
+        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
+        if (showID && events.fetchToken() && showID === events.fetchToken()) {
+            const answer: AIChatInfo["answer"] = {
+                runTimeIDs: cloneDeep(runTimeIDs),
+                taskChat: cloneDeep(taskChat),
+                aiPerfData: cloneDeep(aiPerfData),
+                casualChat: cloneDeep(casualChat),
+                yakExecResult: cloneDeep({
+                    ...yakExecResult,
+                    execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
+                }),
+                grpcFolders: cloneDeep(grpcFolders)
+            }
+            setChats &&
+                setChats((old) => {
+                    const newValue = cloneDeep(old)
+                    const findIndex = newValue.findIndex((item) => item.id === showID)
+                    if (findIndex !== -1) {
+                        newValue[findIndex].answer = {...(answer || {})}
+                    }
+                    return newValue
+                })
+        }
+    })
+
+    const handleChatingEnd = useMemoizedFn(() => {
+        handleSaveChatInfo()
+        handleStopAfterChangeState()
+    })
+
+    const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
+        setPlanReviewTreeKeywords(info.index, info)
+    })
+    const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
+        setReviewExpand(true)
+        setReviewInfo(cloneDeep(info))
+    })
+
+    const handleReleaseReview = useMemoizedFn((type: ChatIPCSendType, id: string) => {
+        if (!reviewInfo) return
+        if ((reviewInfo.data as AIReviewType).id === id) {
+            // if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
+            handleStopAfterChangeState()
+        }
+    })
+
+    /**自由对话中触发任务开始 */
+    const handleTaskStart = useMemoizedFn(() => {
+        onSetKeyTask()
+    })
+
+    const onSetKeyTask = useMemoizedFn(() => {
+        setMode("task")
+        setTimeout(() => {
+            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.Task_Content}))
+        }, 100)
+    })
+
+    const handleTimelineMessage = useDebounceFn(
+        useMemoizedFn((value: string) => {
+            setTimelineMessage(value)
+        }),
+        {wait: 300, leading: true}
+    ).run
+
+    const onNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
+        const {NodeIdVerbose, Content} = message
+        const verbose = getLabelByParams(NodeIdVerbose)
+        yakitNotify("info", {
+            message: verbose,
+            description: Content
+        })
+    })
+
+    const [chatIPCData, events] = useChatIPC({
+        onEnd: handleChatingEnd,
+        onTaskReview: handleShowReview,
+        onTaskReviewExtra: handleShowReviewExtra,
+        onReviewRelease: handleReleaseReview,
+        onTaskStart: handleTaskStart,
+        onTimelineMessage: handleTimelineMessage,
+        getRequest: getSetting,
+        onNotifyMessage
+    })
+
+    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
+
+    /** 停止回答后的状态调整||清空Review状态 */
+    const handleStopAfterChangeState = useMemoizedFn(() => {
+        // 清空review信息
+        setReviewInfo(undefined)
+        resetPlanReviewTreeKeywords()
+        setReviewExpand(true)
+    })
+
+    /** 当前对话唯一ID */
+    const activeID = useCreation(() => {
+        return activeChat?.id
+    }, [activeChat])
+
+    const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
+        handleSendInteractiveMessage(params, "casual")
+    })
+
+    const onSetReAct = useMemoizedFn(() => {
+        setMode("re-act")
+        setTimeout(() => {
+            emiter.emit("switchAIActTab")
+        }, 100)
+    })
+
+    const handleStart = useMemoizedFn((qs: string, extraValue?: AIChatIPCStartParams["extraValue"]) => {
+        const request: AIStartParams = {
+            ...formatAIAgentSetting(setting),
+            UserQuery: qs,
+            CoordinatorId: "",
+            Sequence: 1
+        }
+        // 创建新的聊天记录
+        const newChat: AIChatInfo = {
+            id: knowledgeBaseID,
+            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+            question: qs,
+            time: new Date().getTime(),
+            request
+        }
+        setActiveChat && setActiveChat(newChat)
+        setChats && setChats((old) => [...old, newChat])
+        onSetReAct()
+        // 发送初始化参数
+        const startParams: AIInputEvent = {
+            IsStart: true,
+            Params: {
+                ...request
+            }
+        }
+        events.onStart({token: newChat.id, params: startParams, extraValue})
+    })
+
+    const onStop = useMemoizedFn(() => {
+        if (execute && activeID) {
+            events.onClose(activeID)
+            handleStopAfterChangeState()
+        }
+    })
+
+    /**发送 IsInteractiveMessage 消息 */
+    const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
+        const {value, id, optionValue} = params
+        if (!activeID) return
+        if (!id) return
+
+        const info: AIInputEvent = {
+            IsInteractiveMessage: true,
+            InteractiveId: id,
+            InteractiveJSONInput: value
+        }
+        events.onSend({token: activeID, type, params: info, optionValue})
+        handleStopAfterChangeState()
+    })
+
+    const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
+        handleSendInteractiveMessage(params, "task")
+    })
+
+    const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
+        handleSendInteractiveMessage(params, "")
+    })
+
+    /**发送 IsSyncMessage 消息 */
+    const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
+        if (!activeID) return
+        const {syncType, SyncJsonInput, params} = data
+        const info: AIInputEvent = {
+            IsSyncMessage: true,
+            SyncType: syncType,
+            SyncJsonInput,
+            Params: params
+        }
+        events.onSend({token: activeID, type: "", params: info})
+    })
+
+    /**发送 IsConfigHotpatch 消息 */
+    const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
+        if (!activeID) return
+        const {hotpatchType, params} = data
+        const info: AIInputEvent = {
+            IsConfigHotpatch: true,
+            HotpatchType: hotpatchType,
+            Params: params
+        }
+        events.onSend({token: activeID, type: "", params: info})
+    })
+
+    const store: ChatIPCContextStore = useCreation(() => {
+        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage}
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
+
+    const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
+        return {
+            chatIPCEvents: events,
+            handleSendCasual,
+            handleSendTask,
+            handleSaveChatInfo,
+            handleStart,
+            handleStop: onStop,
+            handleSend,
+            setTimelineMessage,
+            handleSendSyncMessage,
+            handleSendConfigHotpatch
+        }
+    }, [events])
+
+    const stores: AIAgentContextStore = useMemo(() => {
+        return {
+            setting: setting,
+            chats: chats,
+            activeChat: activeChat
+        }
+    }, [setting, chats, activeChat])
+
+    const dispatchers: AIAgentContextDispatcher = useMemo(() => {
+        return {
+            getSetting: getSetting,
+            setSetting: setSetting,
+            setChats: setChats,
+            getChats: getChats,
+            setActiveChat: setActiveChat
+        }
+    }, [])
+
+    const createNewEvents = (id: string) => {
+        setKnowledgeBaseID(id)
+        onStop()
+        const findChatsItems = chats.find((it) => it.id === id)
+        handleSaveChatInfo()
+        events.onReset()
+        if (findChatsItems) {
+            setActiveChat({...findChatsItems})
+        } else {
+            setActiveChat(undefined)
+        }
+    }
+
     return (
-        <div className={styles["knowledge-base-body"]}>
-            <KnowledgeBaseSidebar
-                knowledgeBases={knowledgeBases}
-                knowledgeBaseID={knowledgeBaseID}
-                setKnowledgeBaseID={setKnowledgeBaseID}
-                api={api}
-                setOpenQA={setOpenQA}
-                binariesToInstall={binariesToInstall}
-                refreshAsync={refreshAsync}
-            />
-            <KnowledgeBaseContainer
-                knowledgeBases={knowledgeBases}
-                knowledgeBaseID={knowledgeBaseID}
-                setKnowledgeBaseID={setKnowledgeBaseID}
-                streams={streams}
-                api={api}
-                setOpenQA={setOpenQA}
-            />
-            <KnowledgeBaseQA
-                openQA={openQA}
-                setOpenQA={setOpenQA}
-                knowledgeBase={targetSelectedKnowledgeBaseItem}
-                knowledgeBaseID={knowledgeBaseID}
-            />
-        </div>
+        <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
+            <ChatIPCContent.Provider value={{store, dispatcher}}>
+                <div className={styles["knowledge-base-body"]}>
+                    <KnowledgeBaseSidebar
+                        knowledgeBases={knowledgeBases}
+                        knowledgeBaseID={knowledgeBaseID}
+                        setKnowledgeBaseID={(id) => createNewEvents(id)}
+                        api={api}
+                        setOpenQA={setShowFreeChat}
+                        binariesToInstall={binariesToInstall}
+                        refreshAsync={refreshAsync}
+                        binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
+                    />
+                    <KnowledgeBaseContainer
+                        knowledgeBases={knowledgeBases}
+                        knowledgeBaseID={knowledgeBaseID}
+                        setKnowledgeBaseID={(id) => createNewEvents(id)}
+                        streams={streams}
+                        api={api}
+                        setOpenQA={setShowFreeChat}
+                    />
+                    <AIReActChat
+                        mode={"task"}
+                        showFreeChat={showFreeChat}
+                        setShowFreeChat={setShowFreeChat}
+                        knowledgeId={knowledgeBaseID}
+                        knowledgeBases={knowledgeBases}
+                    />
+                </div>
+            </ChatIPCContent.Provider>
+        </AIAgentContext.Provider>
     )
 })
 

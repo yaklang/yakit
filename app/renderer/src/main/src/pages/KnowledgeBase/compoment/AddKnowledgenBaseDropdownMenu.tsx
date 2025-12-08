@@ -1,4 +1,4 @@
-import React, {Dispatch, SetStateAction} from "react"
+import React from "react"
 import {type FC} from "react"
 
 import {useSafeState} from "ahooks"
@@ -11,9 +11,10 @@ import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
 import {Form} from "antd"
 import {ImportModal} from "./ImportModal"
 
-const AddKnowledgenBaseDropdownMenu: FC<{setKnowledgeBaseID: Dispatch<SetStateAction<string>>}> = ({
-    setKnowledgeBaseID
-}) => {
+const AddKnowledgenBaseDropdownMenu: FC<{
+    setKnowledgeBaseID: (id: string) => void
+    setChecked: (checked: boolean) => void
+}> = ({setKnowledgeBaseID, setChecked}) => {
     const [form] = Form.useForm()
     const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
     const [visible, setVisible] = useSafeState(false)
@@ -63,7 +64,7 @@ const AddKnowledgenBaseDropdownMenu: FC<{setKnowledgeBaseID: Dispatch<SetStateAc
                 form={form}
             />
 
-            <ImportModal visible={importVisible} onVisible={setImportVisible} />
+            <ImportModal visible={importVisible} onVisible={setImportVisible} setChecked={setChecked} />
         </React.Fragment>
     )
 }

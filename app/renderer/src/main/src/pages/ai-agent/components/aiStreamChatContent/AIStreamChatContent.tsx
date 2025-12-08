@@ -14,7 +14,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
         return content.slice(-150)
     }, [content])
     return (
-        <div className={styles['ai-stream-chat-content-wrapper']}>
+        <div className={styles["ai-stream-chat-content-wrapper"]}>
             <Tooltip
                 title={
                     <div className={styles["tooltip-stream-content"]}>

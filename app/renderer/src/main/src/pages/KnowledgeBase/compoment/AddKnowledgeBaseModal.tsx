@@ -97,8 +97,11 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({addModalData, se
                     multiple={true}
                 />
 
+                <Form.Item label='补充提示词：' name='prompt'>
+                    <YakitInput placeholder='请输入补充提示词' />
+                </Form.Item>
                 <Form.Item
-                    label='补充提示词：'
+                    label='描述：'
                     name='KnowledgeBaseDescription'
                     rules={[{max: 500, message: "描述最多 500 个字符"}]}
                 >

@@ -20,7 +20,7 @@ interface TKnowledgeBaseFormModalProps {
     title: string
     handOpenKnowledgeBasesModal: () => void
     form: FormInstance<any>
-    setKnowledgeBaseID: Dispatch<SetStateAction<string>>
+    setKnowledgeBaseID: (id: string) => void
 }
 
 const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({

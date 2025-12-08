@@ -342,8 +342,8 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
                                 value={depth}
                                 onChange={async (value) => {
                                     if (typeof value === "number" && value) {
-                                        runAsync(depth)
-                                        dotCodeRunAsync(depth)
+                                        runAsync(value)
+                                        dotCodeRunAsync(value)
                                         setDepth(value)
                                     }
                                 }}
