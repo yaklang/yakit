@@ -38,6 +38,7 @@ interface CreateKnowledgeBaseData extends Entity, KnowledgeBaseEntry {
     Tags: string[]
     IsImported: boolean
     addManuallyItem: boolean
+    prompt?: string
     // 从实体生成知识 流数据收集
     historyGenerateKnowledgeList: Array<{
         date: string

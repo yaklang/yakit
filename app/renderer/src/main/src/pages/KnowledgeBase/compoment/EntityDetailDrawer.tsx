@@ -135,7 +135,6 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
                     Order: "desc"
                 }
             })
-            // console.log(response, requestData, "sss")
         },
         {
             manual: true
@@ -324,8 +323,8 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
                                 value={depth}
                                 onChange={async (value) => {
                                     if (typeof value === "number" && value) {
-                                        runAsync(depth)
-                                        dotCodeRunAsync(depth)
+                                        runAsync(value)
+                                        dotCodeRunAsync(value)
                                         setDepth(value)
                                     }
                                 }}

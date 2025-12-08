@@ -143,6 +143,7 @@ const KnowledgeBaseQA: FC<KnowledgeBaseQAProps> = ({openQA, setOpenQA, knowledge
 
             // 监听流式响应
             ipcRenderer.on(`${token}-data`, (e, data: QueryKnowledgeBaseByAIResponse) => {
+                console.log(data, "data")
                 handleStreamResponse(data)
             })
             ipcRenderer.on(`${token}-error`, (e, err: any) => {

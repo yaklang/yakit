@@ -77,7 +77,7 @@ export const createStreamResponseHandler = (setMessages: React.Dispatch<React.Se
             }
 
             const appendProcess = (text: string) => {
-                last.processLog = (last.processLog ?? "") + text + "\n"
+                last.processLog = ((last.processLog ?? "") + text).replaceAll("\n", " ")
                 // last.content = last.processLog
             }
 

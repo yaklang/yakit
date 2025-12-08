@@ -40,33 +40,56 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     const [menuOpen, setMenuOpen] = useSafeState(false)
     const [deleteVisible, setDeleteVisible] = useSafeState(false)
     const [editVisible, setEditVisible] = useSafeState(false)
-    const [exportVisible, setExportVisible] = useSafeState<{open: boolean; filePath?: string}>({
-        filePath: "",
-        open: false
-    })
 
     useUpdateEffect(() => {
         !menuOpen && setMenuSelectedId("")
     }, [menuOpen])
 
-    const exportFile = useMemoizedFn(async () => {
+    const [exportToken, setExportToken] = useSafeState("")
+    const exportFile = async (KnowledgeBaseId: number) => {
+        const defaultName = items.KnowledgeBaseName ? `export-${items.KnowledgeBaseName}` : "default-knowledge"
         try {
-            // 打开保存文件对话框
             const file = await handleSaveFileSystemDialog({
                 title: "导出知识库",
-                defaultPath: "knowledge",
+                defaultPath: defaultName,
                 filters: [{name: "Files", extensions: ["rag"]}]
             })
 
-            if (!file?.filePath) return
-            setExportVisible({
-                open: true,
-                filePath: file.filePath
-            })
+            if (!file || file.canceled) return
+
+            const filePath = file.filePath
+            if (!filePath) return
+
+            const token = `export-kb-${Date.now()}`
+            setExportToken(token)
+
+            await ipcRenderer.invoke("ExportKnowledgeBase", {KnowledgeBaseId, TargetPath: filePath}, token)
         } catch (error) {
-            failed(`导出知识库失败: ${error}`)
+            failed("导出知识库失败：" + error)
         }
-    })
+    }
+
+    useEffect(() => {
+        if (!exportToken) return
+
+        const onError = (_: any, err: any) => {
+            failed("导出知识库失败: " + err)
+            setExportToken("")
+        }
+
+        const onEnd = () => {
+            success("导出知识库成功")
+            setExportToken("")
+        }
+
+        ipcRenderer.on(`${exportToken}-error`, onError)
+        ipcRenderer.on(`${exportToken}-end`, onEnd)
+
+        return () => {
+            ipcRenderer.removeAllListeners(`${exportToken}-error`)
+            ipcRenderer.removeAllListeners(`${exportToken}-end`)
+        }
+    }, [exportToken])
 
     return (
         <div>
@@ -84,7 +107,7 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
                                 setDeleteVisible((preValue) => !preValue)
                                 break
                             case "export":
-                                exportFile()
+                                exportFile(items.ID)
                                 break
 
                             default:
@@ -118,7 +141,6 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
                 api={api}
             />
             <EditKnowledgenBaseModal visible={editVisible} setVisible={setEditVisible} items={items} />
-            <ExportModal exportVisible={exportVisible} setExportVisible={setExportVisible} KnowledgeBaseId={items.ID} />
         </div>
     )
 }
@@ -305,131 +327,4 @@ type TExportModalProps = {
     KnowledgeBaseId: string
 }
 
-const ExportModal: React.FC<TExportModalProps> = (props) => {
-    const {setExportVisible, exportVisible, KnowledgeBaseId} = props
-    const [exportLoading, setExportLoading] = useSafeState(false)
-    const [progress, setProgress] = useSafeState<GeneralProgress>({
-        Percent: 0,
-        Message: "",
-        MessageType: ""
-    })
-    const [token, setToken] = useSafeState<string>("")
-
-    // 每次打开弹窗生成新 token
-    useEffect(() => {
-        if (exportVisible.open) {
-            const newToken = `export-kb-${Date.now()}`
-            setToken(newToken)
-            handleExport(newToken)
-        }
-    }, [exportVisible.open])
-
-    // 监听流式事件
-    useEffect(() => {
-        if (!token) return
-
-        const handleData = (_: any, data: GeneralProgress) => {
-            setProgress(data)
-        }
-
-        const handleError = (_: any, error: any) => {
-            setExportLoading(false)
-            failed(`导出知识库失败: ${error}`)
-        }
-
-        const handleEnd = () => {
-            setExportLoading(false)
-            success("导出知识库成功")
-            setExportVisible({
-                open: false,
-                filePath: ""
-            })
-            setProgress({Percent: 0, Message: "", MessageType: ""})
-        }
-
-        ipcRenderer.on(`${token}-data`, handleData)
-        ipcRenderer.on(`${token}-error`, handleError)
-        ipcRenderer.on(`${token}-end`, handleEnd)
-
-        return () => {
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        }
-    }, [token])
-
-    // 点击导出按钮逻辑
-    const handleExport = useMemoizedFn(async (token: string) => {
-        try {
-            setProgress({Percent: 0, Message: "开始导出...", MessageType: "info"})
-
-            // 调用流式接口
-            await ipcRenderer.invoke(
-                "ExportKnowledgeBase",
-                {
-                    KnowledgeBaseId,
-                    TargetPath: exportVisible.filePath
-                },
-                token
-            )
-        } catch (error: any) {
-            setExportLoading(false)
-            if (error?.message !== "cancelled") {
-                failed(`导出知识库失败: ${error}`)
-            }
-        }
-    })
-
-    // 取消导出 / 关闭
-    const handleCancel = useMemoizedFn(() => {
-        if (exportLoading && token) {
-            ipcRenderer.invoke("cancel-ExportKnowledgeBase", token)
-        }
-        setExportVisible({
-            open: false,
-            filePath: ""
-        })
-        setProgress({Percent: 0, Message: "", MessageType: ""})
-        setExportLoading(false)
-    })
-
-    return (
-        <YakitModal
-            title='导出知识库'
-            visible={exportVisible.open}
-            onCancel={handleCancel}
-            width={600}
-            destroyOnClose
-            maskClosable={!exportLoading}
-            footer={[
-                <div className={styles["knowledge-base-modal-footer"]} key='footer'>
-                    <YakitButton type='outline1' onClick={handleCancel}>
-                        {exportLoading ? "取消导出" : "取消"}
-                    </YakitButton>
-                </div>
-            ]}
-        >
-            {exportLoading && (
-                <div style={{marginTop: 16}}>
-                    <Progress
-                        percent={Math.round(progress.Percent * 100)}
-                        style={{width: "100%"}}
-                        status={progress.MessageType === "error" ? "exception" : "active"}
-                    />
-                    {progress.Message && (
-                        <div style={{marginTop: 8, fontSize: 12, color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
-                            {progress.Message}
-                        </div>
-                    )}
-                </div>
-            )}
-            {!exportLoading && (
-                <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)", fontSize: 13}}>
-                    点击“导出”后将弹出文件保存对话框，请选择导出位置。
-                </div>
-            )}
-        </YakitModal>
-    )
-}
-
-export {OperateKnowledgenBaseItem, DeleteConfirm, EditKnowledgenBaseModal, ExportModal}
+export {OperateKnowledgenBaseItem, DeleteConfirm, EditKnowledgenBaseModal}

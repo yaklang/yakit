@@ -25,13 +25,8 @@ interface KnowledgeBaseTableProps {
     api?: APIType
     onEditVisible?: (visible: boolean) => void
     onDeleteVisible?: (visible: boolean) => void
-    onExportVisible?: (preValue: {open: boolean; filePath?: string}) => void
-    setOpenQA?: Dispatch<
-        SetStateAction<{
-            status: boolean
-            all: boolean
-        }>
-    >
+    onExportKnowledgeBase?: (KnowledgeBaseId: number) => Promise<void>
+    setOpenQA?: Dispatch<SetStateAction<boolean>>
 }
 
 const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
@@ -106,7 +101,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                 knowledgeBaseItems={knowledgeBaseItems}
                 onDeleteVisible={props.onDeleteVisible}
                 onEditVisible={props.onEditVisible}
-                onExportVisible={props.onExportVisible}
+                onExportKnowledgeBase={props.onExportKnowledgeBase}
                 setTableProps={setTableProps}
                 tableProps={tableProps}
                 setQuery={setQuery}

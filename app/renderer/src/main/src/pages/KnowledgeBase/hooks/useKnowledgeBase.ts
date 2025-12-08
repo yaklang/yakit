@@ -18,10 +18,10 @@ interface KnowledgeBaseStoreProps {
     initialize: (items: KnowledgeBaseItem[]) => void
 
     /** 添加知识库 */
-    addKnowledgeBase: (item: KnowledgeBaseItem) => void
+    addKnowledgeBase: (item: KnowledgeBaseItem | KnowledgeBaseItem[] | string | string[]) => void
 
     /** 删除知识库 */
-    deleteKnowledgeBase: (id: string) => void
+    deleteKnowledgeBase: (id: string | string[] | KnowledgeBaseItem | KnowledgeBaseItem[]) => void
 
     /** 获取指定知识库 */
     getKnowledgeBase: (id: string) => KnowledgeBaseItem | undefined
@@ -31,6 +31,14 @@ interface KnowledgeBaseStoreProps {
 
     /** 编辑知识库 */
     editKnowledgeBase: (id: string, data: Partial<KnowledgeBaseItem>) => void
+}
+
+const normalizeToArray = <T>(value: T | T[]): T[] => {
+    return Array.isArray(value) ? value : [value]
+}
+
+const getId = (value: string | KnowledgeBaseItem): string => {
+    return typeof value === "string" ? value : value.ID
 }
 
 export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
@@ -45,13 +53,26 @@ export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
             }
         }),
 
-    addKnowledgeBase: (item) =>
+    /** 新增：支持 item/string 的数组 或 单个 */
+    addKnowledgeBase: (input) =>
         set((state) => {
+            const list = normalizeToArray(input).map((i) => {
+                if (typeof i === "string") {
+                    throw new Error("addKnowledgeBase 不支持 string 作为知识库内容，必须为 KnowledgeBaseItem")
+                }
+                return i
+            })
+
             const prev = state.knowledgeBases
-            const exists = prev.some((kb) => kb.KnowledgeBaseName === item.KnowledgeBaseName)
-            const newList = exists
-                ? prev.map((kb) => (kb.KnowledgeBaseName === item.KnowledgeBaseName ? item : kb))
-                : [item, ...prev]
+            let newList = [...prev]
+
+            list.forEach((item) => {
+                const exists = newList.some((kb) => kb.KnowledgeBaseName === item.KnowledgeBaseName)
+
+                newList = exists
+                    ? newList.map((kb) => (kb.KnowledgeBaseName === item.KnowledgeBaseName ? item : kb))
+                    : [item, ...newList]
+            })
 
             return {
                 previousKnowledgeBases: prev,
@@ -59,11 +80,16 @@ export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
             }
         }),
 
-    deleteKnowledgeBase: (id) =>
-        set((state) => ({
-            previousKnowledgeBases: state.knowledgeBases,
-            knowledgeBases: state.knowledgeBases.filter((kb) => kb.ID !== id)
-        })),
+    /** 新增：支持 string | item | string[] | item[] */
+    deleteKnowledgeBase: (input) =>
+        set((state) => {
+            const ids = normalizeToArray(input).map((x) => getId(x))
+
+            return {
+                previousKnowledgeBases: state.knowledgeBases,
+                knowledgeBases: state.knowledgeBases.filter((kb) => !ids.includes(kb.ID))
+            }
+        }),
 
     getKnowledgeBase: (id) => get().knowledgeBases.find((kb) => kb.ID === id),
 

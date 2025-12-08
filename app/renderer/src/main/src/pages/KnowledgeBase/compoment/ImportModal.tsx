@@ -21,10 +21,11 @@ interface GeneralProgress {
 interface TImportModalProps {
     visible: boolean
     onVisible: (visible: boolean) => void
+    setChecked: (checked: boolean) => void
 }
 
 const ImportModal: React.FC<TImportModalProps> = (props) => {
-    const {visible, onVisible} = props
+    const {visible, onVisible, setChecked} = props
     const [form] = Form.useForm()
     const [importLoading, setImportLoading] = useSafeState(false)
     const [progress, setProgress] = useSafeState<GeneralProgress>({
@@ -94,10 +95,11 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             // 失败时不显示成功提示，但仍然刷新和关闭
             if (!hasError) {
                 success("导入知识库成功")
+                await existsKnowledgeBaseAsync()
+                onVisible(false)
+                form.resetFields()
+                setChecked(true)
             }
-            await existsKnowledgeBaseAsync()
-            onVisible(false)
-            form.resetFields()
             setProgress({Percent: 0, Message: "", MessageType: ""})
         }
 
