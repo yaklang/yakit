@@ -138,6 +138,7 @@ export const useProxy = () => {
     proxyRouteOptions,
     getProxyValue,
     proxyConfig,
+    comparePointUrl,
     saveProxyConfig,
     checkProxyEndpoints
   }

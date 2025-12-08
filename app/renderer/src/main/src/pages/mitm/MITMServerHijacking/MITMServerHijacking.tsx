@@ -346,6 +346,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             <DownStreamAgentModal
                 downStreamAgentModalVisible={downStreamAgentModalVisible}
                 onCloseModal={() => setDownStreamAgentModalVisible(false)}
+                downstreamProxyStr={downstreamProxyStr}
                 setDownstreamProxyStr={setDownstreamProxyStr}
                 tip={tip}
                 onSetTip={onSetTip}
@@ -387,14 +388,22 @@ interface DownStreamAgentModalProp {
     tip: string
     onSetTip: (tip: string) => void
     setDownstreamProxyStr: (proxy: string) => void
+    downstreamProxyStr: string
 }
 
 const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((props) => {
-    const {downStreamAgentModalVisible, onCloseModal, tip, onSetTip, setDownstreamProxyStr} = props
+    const {
+        downStreamAgentModalVisible,
+        downstreamProxyStr = '',
+        onCloseModal,
+        tip,
+        onSetTip,
+        setDownstreamProxyStr
+    } = props
     const [form] = Form.useForm()
     const mitmContent = useContext(MITMContext)
     const {t, i18n} = useI18nNamespaces(["mitm"])
-    const { proxyRouteOptions, getProxyValue, checkProxyEndpoints } = useProxy()    
+    const { proxyRouteOptions, getProxyValue, checkProxyEndpoints, proxyConfig, comparePointUrl } = useProxy()    
 
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
@@ -462,6 +471,21 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
             console.error("error:", error)
         }
     })
+
+    //回显代理选项
+    useEffect(() => {
+        if(downStreamAgentModalVisible){
+            const downstreamProxy = downstreamProxyStr.split(",").filter(i=>!!i).map((val) => {
+                if(!val.startsWith('route')){
+                    return proxyConfig.Endpoints.find(({ Id }) => comparePointUrl(Id) === val )?.Id
+                } 
+                return val
+            }) 
+            form.setFieldsValue({
+                downstreamProxy
+            })
+        }
+    }, [downStreamAgentModalVisible])
 
     return (
         <>
