@@ -577,35 +577,35 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
-            <div className={styles["chat-wrapper"]}>
-                {mode === "welcome" ? (
-                    <React.Suspense fallback={<div>loading...</div>}>
-                        <AIChatWelcome onTriageSubmit={handleStartTriageChat} />
-                    </React.Suspense>
-                ) : (
-                    <ChatIPCContent.Provider value={{store, dispatcher}}>
+            <ChatIPCContent.Provider value={{store, dispatcher}}>
+                <div className={styles["chat-wrapper"]}>
+                    {mode === "welcome" ? (
+                        <React.Suspense fallback={<div>loading...</div>}>
+                            <AIChatWelcome onTriageSubmit={handleStartTriageChat} />
+                        </React.Suspense>
+                    ) : (
                         <AIChatContent />
-                    </ChatIPCContent.Provider>
-                )}
-                <div className={styles["footer-forge-form"]}>
-                    {activeForge && (
-                        <AIForgeForm
-                            wrapperRef={wrapperRef}
-                            info={activeForge}
-                            onBack={handleClearActiveForge}
-                            onSubmit={handleSubmitForge}
-                        />
                     )}
-                    {activeTool && (
-                        <AIToolForm
-                            wrapperRef={wrapperRef}
-                            info={activeTool}
-                            onBack={handleClearActiveTool}
-                            onSubmit={handleSubmitTool}
-                        />
-                    )}
+                    <div className={styles["footer-forge-form"]}>
+                        {activeForge && (
+                            <AIForgeForm
+                                wrapperRef={wrapperRef}
+                                info={activeForge}
+                                onBack={handleClearActiveForge}
+                                onSubmit={handleSubmitForge}
+                            />
+                        )}
+                        {activeTool && (
+                            <AIToolForm
+                                wrapperRef={wrapperRef}
+                                info={activeTool}
+                                onBack={handleClearActiveTool}
+                                onSubmit={handleSubmitTool}
+                            />
+                        )}
+                    </div>
                 </div>
-            </div>
+            </ChatIPCContent.Provider>
             <YakitHint
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceShow}
