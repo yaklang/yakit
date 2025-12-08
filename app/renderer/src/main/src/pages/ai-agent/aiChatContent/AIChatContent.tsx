@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useMemo, useState} from "react"
-import {AIChatContentProps} from "./type"
+import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useInterval, useMemoizedFn} from "ahooks"
@@ -31,11 +31,7 @@ import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitRes
 import {grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-
-interface AIAgentTabPayload {
-    key: AITabsEnumType
-    value?: string
-}
+import {TabKey} from "../components/aiFileSystemList/type"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
@@ -52,21 +48,37 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
+    const [fileSystemKey, setFileSystemKey] = useState<TabKey>()
+
+    const handleTabStateChange = useMemoizedFn((key: AITabsEnumType, value: AIAgentTabPayload["value"]) => {
+        setActiveKey(key)
+        if (!value) {
+            setRunTimeIDs(initRunTimeIDs)
+            setFileSystemKey(undefined)
+            return
+        }
+        if (key === AITabsEnum.File_System) {
+            setFileSystemKey(value as TabKey)
+        } else {
+            setRunTimeIDs([value])
+            setFileSystemKey(undefined)
+        }
+    })
+
     const onSwitchAIAgentTab = useMemoizedFn((data) => {
         if (data === undefined) return setActiveKey(data)
+        let payload: AIAgentTabPayload
         try {
-            const {key, value} = JSON.parse(data) as AIAgentTabPayload
-            if (key === AITabsEnum.HTTP && !tempHTTPTotal) return
-            if (key === AITabsEnum.Risk && !tempRiskTotal) return
-            setActiveKey(key)
-            if (value) {
-                setRunTimeIDs([value])
-            } else {
-                setRunTimeIDs(initRunTimeIDs)
-            }
+            payload = JSON.parse(data)
         } catch (error) {
             setActiveKey(undefined)
+            return
         }
+        const {key, value} = payload
+
+        if (key === AITabsEnum.HTTP && !tempHTTPTotal) return
+        if (key === AITabsEnum.Risk && !tempRiskTotal) return
+        handleTabStateChange(key, value)
     })
 
     useEffect(() => {
@@ -158,7 +170,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             case AITabsEnum.Task_Content:
                 return <AIReActTaskChat setShowFreeChat={setShowFreeChat} />
             case AITabsEnum.File_System:
-                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
+                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} />
             case AITabsEnum.Risk:
                 return !!runTimeIDs.length ? (
                     <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
