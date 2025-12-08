@@ -2019,6 +2019,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     selectTotal
                 })
                 setSelectProjectId(item ? [item] : [])
+                form.setFieldsValue({
+                    history:"recompileAndScan"
+                })
                 emiter.emit("onResetCodeScanProject")
             } catch (error) {}
         })
