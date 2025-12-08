@@ -288,6 +288,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     includeInUrl?: string | string[]
+    selectedKeys?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     titleHeight?: number
     containerClassName?: string
@@ -1124,6 +1125,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             refreshTabsContRef.current = true
         }
     }, [params.SearchURL])
+
+    useUpdateEffect(() => {
+        const {includeInUrl, selectedKeys = []} = props
+        setParams((prev) => ({
+            ...prev,
+            IncludeInUrl: [
+                ...(includeInUrl ? (Array.isArray(includeInUrl) ? includeInUrl : [includeInUrl]) : []),
+                ...selectedKeys
+            ]
+        }))
+    }, [props.selectedKeys])
+
     const [queryParams, setQueryParams] = useState<string>("")
     useDebounceEffect(
         () => {
