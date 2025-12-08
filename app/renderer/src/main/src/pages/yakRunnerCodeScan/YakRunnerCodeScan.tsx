@@ -1641,8 +1641,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
             let reportName = ""
-            if (pageInfo.projectName) {
-                reportName = `${pageInfo.projectName}代码扫描报告`
+            const projectItem = auditCodeList.find((item) => item.value === pageInfo.projectId)
+            const projectName = pageInfo?.projectName || projectItem?.label
+            
+            if (projectName) {
+                reportName = `${projectName}代码扫描报告`
             }
 
             const params: CreateReportContentProps = {
