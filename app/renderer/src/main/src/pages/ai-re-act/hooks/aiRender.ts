@@ -105,6 +105,13 @@ export interface FailPlanAndExecutionError {
     content: string
 }
 
+/** ReAct任务崩溃的错误信息 */
+export interface FailReactError {
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+    content: string
+}
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
@@ -135,7 +142,11 @@ export enum AIChatQSDataTypeEnum {
     /**当前任务规划结束标志 */
     END_PLAN_AND_EXECUTION = "end_plan_and_execution",
     /** 任务规划崩溃的错误信息 */
-    FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution"
+    FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution",
+    /** ReAct任务崩溃的错误信息 */
+    FAIL_REACT = "fail_react_task",
+    /** ReAct任务成功结束标志 */
+    SUCCESS_REACT_TASK = "success_react_task"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -170,6 +181,8 @@ type ChatFailPlanAndExecution = AIChatQSDataBase<
     AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
     FailPlanAndExecutionError
 >
+type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
+type ChatSuccessReactTask = AIChatQSDataBase<AIChatQSDataTypeEnum.SUCCESS_REACT_TASK, string>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -187,4 +200,6 @@ export type AIChatQSData =
     | ChatToolCallDecision
     | ChatPlanExecEnd
     | ChatFailPlanAndExecution
+    | ChatFailReact
+    | ChatSuccessReactTask
 // #endregion

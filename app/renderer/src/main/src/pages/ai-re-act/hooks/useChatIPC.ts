@@ -48,6 +48,10 @@ const UseCasualAndTaskTypes = [
     "tool_call_decision",
     // 任务规划崩溃的错误信息
     "fail_plan_and_execution",
+    // ReAct任务崩溃的错误信息
+    "fail_react_task",
+    // ReAct任务成功结束标志
+    "success_react_task",
     // 流式数据的参考补充消息
     "reference_material"
 ]

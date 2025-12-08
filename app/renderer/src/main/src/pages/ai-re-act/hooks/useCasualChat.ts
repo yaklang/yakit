@@ -889,6 +889,38 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return
             }
 
+            if (res.Type === "fail_react_task") {
+                // ReAct任务崩溃的错误信息
+                setContents((old) => {
+                    const newArr = [...old]
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: AIChatQSDataTypeEnum.FAIL_REACT,
+                        data: {
+                            content: ipcContent,
+                            NodeId: res.NodeId,
+                            NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                        }
+                    })
+                    return newArr
+                })
+                return
+            }
+
+            if (res.Type === "success_react_task") {
+                // ReAct任务成功结束标志
+                setContents((old) => {
+                    const newArr = [...old]
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: AIChatQSDataTypeEnum.SUCCESS_REACT_TASK,
+                        data: ipcContent
+                    })
+                    return newArr
+                })
+                return
+            }
+
             if (res.Type === "reference_material") {
                 // 流式数据追加参考材料
                 handleStreamAppendReference(res)
