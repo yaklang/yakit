@@ -327,7 +327,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
-                                            // setSearchURL(searchURL)
+                                            setSearchURL(searchURL)
                                             setIncludeInUrl(includeInUrl)
                                         }}
                                         resetTableAndEditorShow={(table, editor) => {
@@ -364,7 +364,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div className={styles["hTTPHistory-right"]}>
                         <HTTPFlowRealTimeTableAndEditor
                             searchURL={searchURL}
-                            includeInUrl={compareUrl}
+                            includeInUrl={includeInUrl}
+                            selectedKeys={selectedKeys}
                             curProcess={curProcess}
                             onQueryParams={onQueryParams}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
@@ -403,6 +404,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     onSetHasNewData?: (f: boolean) => void
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
+    selectedKeys?:  string[]
 }
 /**
  * 此组件用于实时流量表和编辑器
@@ -435,7 +437,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showDelAll = true,
         showSetting = true,
         showRefresh = true,
-        showFlod = true
+        showFlod = true,
+        selectedKeys = []
     } = props
 
     const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
@@ -562,6 +565,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             params={params}
                             searchURL={searchURL}
                             includeInUrl={includeInUrl}
+                            selectedKeys={selectedKeys}
                             onSelected={(i) => {
                                 setSelectedHTTPFlow(i)
                             }}

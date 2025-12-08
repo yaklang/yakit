@@ -692,6 +692,13 @@
                     line-height: 16px;
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
+
+                :global {
+                    .ant-progress-show-info .ant-progress-outer{
+                        margin-right: calc(-2em - 37px);
+                        padding-right: calc(2em + 37px);
+                    }
+                }
             }
 
             .modal-right-content {
