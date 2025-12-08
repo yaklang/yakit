@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useRef, type FC} from "react"
 
 import {Form} from "antd"
-import {useAsyncEffect, useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {useAsyncEffect, useDebounceFn, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import AllInstallPlugins from "./compoment/AllInstallPlugins"
@@ -13,7 +13,7 @@ import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {CreateKnowledgeBase} from "./compoment/CreateKnowledgeBase"
 
-import {compareKnowledgeBaseChange, getFileInfoList, prioritizeProcessingItems, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChange, getFileInfoList, targetInstallList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -24,7 +24,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {AIModelSelect} from "../ai-agent/aiModelList/aiModelSelect/AIModelSelect"
+import {getAIModelList, isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -241,6 +241,40 @@ const KnowledgeBase: FC = () => {
         }
     }, [])
 
+    const [aiModelOptions, setAIModelOptions] = useSafeState<string>("")
+
+    const getAIModelListOption = useDebounceFn(
+        (refreshValue?: boolean) => {
+            isForcedSetAIModal({
+                noDataCall: () => {
+                    setAIModelOptions("")
+                },
+                haveDataCall: (res) => {
+                    refreshValue && onInitValue(res)
+                }
+            })
+        },
+        {wait: 200, leading: true}
+    ).run
+
+    const onInitValue = useMemoizedFn((res) => {
+        if (res && res.onlineModels.length > 0) {
+            setAIModelOptions((res.onlineModels[0].Type as string) || "")
+        } else if (res && res.localModels.length > 0) {
+            setAIModelOptions((res.localModels[0].Name as string) || "")
+        }
+    })
+
+    useAsyncEffect(async () => {
+        const result = await getAIModelList()
+        onInitValue(result)
+    }, [])
+
+    useEffect(() => {
+        getAIModelListOption(!aiModelOptions)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [aiModelOptions])
+
     const knowledgeBaseEntrance = useMemo(() => {
         switch (true) {
             // 缺失插件时展示需下载插件页面
@@ -253,17 +287,19 @@ const KnowledgeBase: FC = () => {
             // 无知识库时展示添加知识库页面
             case !existsKnowledgeBase?.length:
                 return (
-                    <div className={styles["create-knowledgBase"]}>
-                        <div className={styles["create-content"]}>
-                            <div className={styles["create-title"]}>创建知识库</div>
-                            <CreateKnowledgeBase form={form} type={"new"} />
-                            <div className={styles["create-button"]} onClick={handCreateKnowledgBase}>
-                                <YakitButton icon={<SolidPlayIcon />} loading={createKnowledgLoading}>
-                                    开始创建
-                                </YakitButton>
+                    <YakitSpin spinning={loading}>
+                        <div className={styles["create-knowledgBase"]}>
+                            <div className={styles["create-content"]}>
+                                <div className={styles["create-title"]}>创建知识库</div>
+                                <CreateKnowledgeBase form={form} type={"new"} />
+                                <div className={styles["create-button"]} onClick={handCreateKnowledgBase}>
+                                    <YakitButton icon={<SolidPlayIcon />} loading={createKnowledgLoading}>
+                                        开始创建
+                                    </YakitButton>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </YakitSpin>
                 )
 
             // 正常进入知识库页面
@@ -288,9 +324,6 @@ const KnowledgeBase: FC = () => {
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
-            <div style={{display: "none"}}>
-                <AIModelSelect />
-            </div>
             <div className={styles["repository-container"]}>{knowledgeBaseEntrance}</div>
             <YakitHint
                 visible={visible}
