@@ -510,6 +510,9 @@
 
     .config-tab-item{
         position: static;
+        transform: rotate(180deg);
+        text-orientation: sideways-right;
+        writing-mode: vertical-rl;
     }
 }
 
