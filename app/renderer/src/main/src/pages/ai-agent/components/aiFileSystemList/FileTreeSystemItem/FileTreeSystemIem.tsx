@@ -1,18 +1,14 @@
-import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {FolderDefault, FolderDefaultExpanded, KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {FC, useMemo} from "react"
 import styles from "./FileTreeSystemItem.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {customFolderStore} from "../store/useCustomFolder"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {setClipboardText} from "@/utils/clipboard"
+import {FileTreeSystemItemProps} from "../type"
+import {historyStore} from "../store/useHistoryFolder"
+import { fileToChatQuestionStore } from "@/pages/ai-re-act/aiReActChat/store"
 
-const FileTreeSystemItem: FC<{
-    data: FileNodeProps
-    isOpen?: boolean
-    expanded?: boolean
-    onResetTree?: () => void
-}> = ({data, isOpen, expanded, onResetTree}) => {
+const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded, onResetTree}) => {
     // 文件图标
     const iconImage = useMemo(() => {
         if (!data.isFolder) return KeyToIcon[data.icon].iconPath
@@ -42,6 +38,10 @@ const FileTreeSystemItem: FC<{
             {
                 key: "path",
                 label: "复制路径"
+            },
+            {
+                key: "sendToChat",
+                label: "发送到自由对话"
             }
         ]
     }, [])
@@ -49,7 +49,7 @@ const FileTreeSystemItem: FC<{
     const handleDropdown = (key: string) => {
         switch (key) {
             case "closeFolder":
-                customFolderStore.removeCustomFolder(data.path)
+                historyStore.removeHistoryItem(data.path)
                 break
             case "openFolder":
                 onOpenLocalFileByPath(data.path)
@@ -60,6 +60,9 @@ const FileTreeSystemItem: FC<{
             case "refreshFolder":
                 onResetTree?.()
                 break
+            case 'sendToChat':
+               fileToChatQuestionStore.addFileToChatQuestion(data.path)
+                break   
             default:
                 break
         }

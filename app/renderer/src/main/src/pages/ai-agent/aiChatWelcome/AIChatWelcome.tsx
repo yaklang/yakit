@@ -1,4 +1,4 @@
-import React, {useEffect, useId, useRef, useState} from "react"
+import React, {useEffect, useId, useMemo, useRef, useState} from "react"
 import {
     AIChatWelcomeProps,
     AIMaterialsData,
@@ -30,7 +30,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {Tooltip} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import emiter from "@/utils/eventBus/eventBus"
-import {AIAgentTabListEnum} from "../defaultConstant"
+import {AIAgentTabListEnum, AITabsEnum} from "../defaultConstant"
 import {YakitRoute} from "@/enums/yakitRoute"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
@@ -42,6 +42,9 @@ import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
+import {handleOpenFileSystemDialog, OpenDialogOptions} from "@/utils/fileSystemDialog"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {historyStore} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -61,7 +64,7 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
 }
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
-    const {onTriageSubmit} = props
+    const {onTriageSubmit, onSetReAct} = props
     // #region 问题相关逻辑
     const textareaProps: AIChatTextareaProps["textareaProps"] = useCreation(() => {
         return {
@@ -283,8 +286,61 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setCheckItems([])
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
+
+    const dropdownMenu = useMemo(() => {
+        return {
+            data: [
+                {
+                    label: "打开文件",
+                    key: "open-file"
+                },
+                {
+                    label: "打开文件夹",
+                    key: "open-folder"
+                }
+            ],
+            onClick: ({key}) => {
+                switch (key) {
+                    case "open-file":
+                        onOpenFileFolder(["openFile"])
+                        break
+                    case "open-folder":
+                    default:
+                        onOpenFileFolder(["openDirectory"])
+                        break
+                }
+            }
+        }
+    }, [])
+
+    const onOpenFileFolder = async (properties: OpenDialogOptions["properties"]) => {
+        const {filePaths} = await handleOpenFileSystemDialog({
+            title: "请选择文件夹",
+            properties
+        })
+        if (!filePaths.length) return
+        const absolutePath: string = filePaths[0].replace(/\\/g, "\\")
+        historyStore.addHistoryItem({
+            path: absolutePath,
+            isFolder: properties?.includes("openDirectory") ?? true,
+        })
+     
+        onSetReAct?.()
+    }
+
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
+            <YakitDropdownMenu
+                menu={dropdownMenu}
+                dropdown={{
+                    trigger: ["click"],
+                    placement: "bottomLeft"
+                }}
+            >
+                <YakitButton className={styles["open-folder-button"]} type='outline1'>
+                    打开文件夹管理
+                </YakitButton>
+            </YakitDropdownMenu>
             <div className={styles["content"]}>
                 <div className={styles["content-absolute"]}>
                     <div className={styles["input-wrapper"]}>

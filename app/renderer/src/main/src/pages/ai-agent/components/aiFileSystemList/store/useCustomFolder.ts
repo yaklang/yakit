@@ -1,55 +1,46 @@
 import { bindExternalStoreHook, createExternalStore } from "@/utils/createExternalStore"
+import { HistoryItem } from "../type"
 
-const STORAGE_KEY = "custom-folder"
-const RECENT_COUNT = 3
+const SESSION_KEY = "current-session-files"
 
-// 初始化最近打开数组和 store
-const initialRecent: string[] = (() => {
+const getInitSession = (): HistoryItem[] => {
     try {
-        const saved = localStorage.getItem(STORAGE_KEY)
+        const saved = sessionStorage.getItem(SESSION_KEY)
         return saved ? JSON.parse(saved) : []
     } catch {
         return []
     }
-})()
+}
 
-// store 保存所有打开的文件
-const store = createExternalStore<Set<string>>(new Set(initialRecent))
-const recentStore: string[] = [...initialRecent]
+const store = createExternalStore<HistoryItem[]>(getInitSession())
 
 export const customFolderStore = {
     subscribe: store.subscribe,
-    getCustomFolderSet: store.getSnapshot,
+    getSnapshot: store.getSnapshot,
 
-    addCustomFolder(path: string) {
-        store.setSnapshot(prev => {
-            const next = new Set(prev)
-            next.add(path)
+    addCustomFolderItem(item: HistoryItem) {
+        store.setSnapshot((prev) => {
+            if (prev.some((i) => i.path === item.path)) return prev
+
+            const next = [...prev, item]
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(next))
             return next
         })
-        // 更新最近三条
-        const index = recentStore.indexOf(path)
-        if (index !== -1) recentStore.splice(index, 1) // 去重
-        recentStore.push(path)
-        if (recentStore.length > RECENT_COUNT) recentStore.shift() // 保留最后三条
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(recentStore))
+
     },
 
-    removeCustomFolder(path: string) {
-        store.setSnapshot(prev => {
-            const next = new Set(prev)
-            next.delete(path)
+    removeCustomFolderItem(path: string) {
+        store.setSnapshot((prev) => {
+            const next = prev.filter((item) => item.path !== path)
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(next))
             return next
         })
-
-        const index = recentStore.indexOf(path)
-        if (index !== -1) recentStore.splice(index, 1)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(recentStore))
     },
 
     clearCustomFolder() {
-        store.setSnapshot(() => new Set<string>())
-    },
+        store.setSnapshot(() => [])
+        sessionStorage.removeItem(SESSION_KEY)
+    }
 }
 
 export const useCustomFolder = bindExternalStoreHook(store)

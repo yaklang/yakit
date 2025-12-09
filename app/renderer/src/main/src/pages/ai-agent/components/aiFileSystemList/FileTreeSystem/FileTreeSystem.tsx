@@ -4,17 +4,44 @@ import {useMemo, useState} from "react"
 import FilePreview from "../FilePreview/FilePreview"
 import FileTreeSystemListWapper from "../FileTreeSystemList/FileTreeSystemList"
 import {useMemoizedFn} from "ahooks"
-import {customFolderStore, useCustomFolder} from "../store/useCustomFolder"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
+import {HistoryItem} from "../type"
+import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
+import {useCustomFolder, customFolderStore} from "../store/useCustomFolder"
+
+const filterIsDir = (items: HistoryItem[], flag = true) => {
+    return items.filter((item) => item.isFolder === flag)
+}
+
 const FileTreeSystem = () => {
     // 单选
     const [selected, setSelected] = useState<FileNodeProps>()
     // ai的文件夹
     const {grpcFolders} = useAIChatUIData()
+    // 打开的本地文件夹history
+    const historyFolder = useHistoryItems()
     // 用户文件夹
     const customFolder = useCustomFolder()
 
+    const onSetFolder = useMemoizedFn((path: string, isFolder: boolean) => {
+        historyStore.addHistoryItem({path, isFolder})
+        customFolderStore.addCustomFolderItem({path, isFolder})
+    })
     const filstNode = useMemoizedFn(() => {
+        const customFileDom = (
+            <FileTreeSystemListWapper
+                isOpen
+                key='customFile'
+                title='已打开文件'
+                selected={selected}
+                isFolder={false}
+                historyFolder={filterIsDir(historyFolder, false)}
+                path={customFolder.filter((item) => !item.isFolder).map((item) => item.path)}
+                setOpenFolder={onSetFolder}
+                setSelected={setSelected}
+            />
+        )
+
         const aiFolderDom = (
             <FileTreeSystemListWapper
                 key='aiFolder'
@@ -32,17 +59,17 @@ const FileTreeSystem = () => {
                 key='customFolder'
                 title='已打开文件系统'
                 selected={selected}
-                path={Array.from(customFolder)}
-                setOpenFolder={customFolderStore.addCustomFolder}
+                historyFolder={filterIsDir(historyFolder)}
+                path={customFolder.filter((item) => item.isFolder).map((item) => item.path)}
+                setOpenFolder={onSetFolder}
                 setSelected={setSelected}
             />
         )
-        return [aiFolderDom, customFolderDom]
+        return [aiFolderDom, customFileDom, customFolderDom]
     })
-
     const filePreviewData = useMemo(() => {
-      if(selected?.isFolder) return undefined
-      return selected
+        if (selected?.isFolder) return undefined
+        return selected
     }, [selected])
 
     return (

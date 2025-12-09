@@ -90,9 +90,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const filterTagDom = useMemo(() => {
         if (initRunTimeIDs === runTimeIDs) return null
+        // 超过20字符截取，显示...
+        const showId = runTimeIDs.at(0)?.slice(0, 30) + "…"
         return (
             <YakitTag color='info' closable onClose={() => setRunTimeIDs(initRunTimeIDs)}>
-                {runTimeIDs}
+                {showId}
             </YakitTag>
         )
     }, [initRunTimeIDs, runTimeIDs])

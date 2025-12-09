@@ -27,11 +27,22 @@ import styles from "./AIAgentChatTemplate.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import emiter from "@/utils/eventBus/eventBus"
 import {PreWrapper} from "../components/ToolInvokerCard"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import TimelineCard from "./TimelineCard/TimelineCard"
 
+export enum AIChatLeft {
+    TaskTree = "task-tree",
+    Timeline = "timeline"
+}
+
+const options = [
+    {label: "任务树", value: AIChatLeft.TaskTree},
+    {label: "时间线", value: AIChatLeft.Timeline}
+]
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
-
+    const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.TaskTree)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
         valuePropName: "expand",
@@ -39,6 +50,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     })
     const handleCancelExpand = useMemoizedFn(() => {
         setExpand(false)
+    })
+
+    const renderDom = useMemoizedFn(() => {
+        switch (activeTab) {
+            case AIChatLeft.TaskTree:
+                return tasks.length > 0 ? (
+                    <AITree tasks={tasks} />
+                ) : (
+                    <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
+                )
+            case AIChatLeft.Timeline:
+                return <TimelineCard />
+            default:
+                break
+        }
     })
 
     return (
@@ -52,18 +78,18 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                     size='small'
                 />
                 <div className={styles["header-title"]}>
-                    任务列表
-                    <YakitRoundCornerTag>{tasks.length}</YakitRoundCornerTag>
+                    <YakitRadioButtons
+                        buttonStyle='solid'
+                        size='middle'
+                        defaultValue={AIChatLeft.TaskTree}
+                        options={options}
+                        value={activeTab}
+                        onChange={({target}) => setActiveTab(target.value)}
+                    />
                 </div>
             </div>
 
-            <div className={styles["task-list"]}>
-                {tasks.length > 0 ? (
-                    <AITree tasks={tasks} />
-                ) : (
-                    <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
-                )}
-            </div>
+            <div className={styles["task-list"]}>{renderDom()}</div>
         </div>
     )
 })

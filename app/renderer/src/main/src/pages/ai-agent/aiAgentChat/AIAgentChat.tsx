@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
+import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams} from "./type"
 import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIChatInfo} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
@@ -69,7 +69,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleStartTriageChat = useMemoizedFn((qs: string) => {
         setMode("re-act")
-        handleStart(qs)
+        handleStart({qs})
     })
 
     useEffect(() => {
@@ -189,7 +189,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 })
         }
     })
-    const handleStart = useMemoizedFn((qs: string, extraValue?: AIChatIPCStartParams["extraValue"]) => {
+    const handleStart = useMemoizedFn(({qs, fileToQuestion, extraValue}: HandleStartParams) => {
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
@@ -212,7 +212,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             IsStart: true,
             Params: {
                 ...request
-            }
+            },
+            AttachedFilePath: fileToQuestion
         }
         events.onStart({token: newChat.id, params: startParams, extraValue})
     })
@@ -305,6 +306,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         onStop()
                         handleSaveChatInfo()
                         events.onReset()
+                        setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
                         }, 100)
@@ -456,10 +458,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 ? `,参数:${JSON.stringify(request.ForgeParams)}`
                 : `${!!formValue?.UserQuery ? `,输入${formValue?.UserQuery!}` : ""}`
         }`
-        handleStart(qs, {
-            isForge: true,
-            showForgeQuestion: `我要使用 ${request.ForgeName}forge执行任务`,
-            forgeParams: JSON.stringify(formValue, null, 2)
+        handleStart({
+            qs,
+            extraValue: {
+                isForge: true,
+                showForgeQuestion: `我要使用 ${request.ForgeName}forge执行任务`,
+                forgeParams: JSON.stringify(formValue, null, 2)
+            }
         })
         handleClearActiveForge()
     })
@@ -470,9 +475,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             return
         }
         setMode("re-act")
-        handleStart(
-            `我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务${question ? `,输入${question}` : ""}`
-        )
+        handleStart({
+            qs: `我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务${
+                question ? `,输入${question}` : ""
+            }`
+        })
         handleClearActiveTool()
     })
 
@@ -585,7 +592,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 <div className={styles["chat-wrapper"]}>
                     {mode === "welcome" ? (
                         <React.Suspense fallback={<div>loading...</div>}>
-                            <AIChatWelcome onTriageSubmit={handleStartTriageChat} />
+                            <AIChatWelcome onTriageSubmit={handleStartTriageChat} onSetReAct={onSetReAct} />
                         </React.Suspense>
                     ) : (
                         <AIChatContent />

@@ -492,7 +492,7 @@ export declare namespace AIAgentGrpcApi {
     /** 实时时间线-单个时间点的数据 */
     export interface TimelineItem {
         deleted: boolean
-        created_at: number
+        timestamp: number
         id: number
         /** 可选类型 "user_input" "tool_result", "user_interaction", "text", "raw" */
         type: string

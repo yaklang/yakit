@@ -122,6 +122,7 @@ function useFileTree(params: UseFileTreeParams) {
                 isFolder: !!isFolder,
                 icon: icon,
                 depth: 1,
+                isLeaf:!isFolder,
                 children: []
             }
             setNodeDetailMap(node)
