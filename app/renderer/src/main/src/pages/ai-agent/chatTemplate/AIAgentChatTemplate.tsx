@@ -1,5 +1,5 @@
 import React, {memo, useCallback, useEffect, useMemo, useState} from "react"
-import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useMemoizedFn, useMount, useUpdateEffect} from "ahooks"
 import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -25,6 +25,7 @@ import {genBaseAIChatData} from "@/pages/ai-re-act/hooks/utils"
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import emiter from "@/utils/eventBus/eventBus"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -109,6 +110,26 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         }),
         [Footer, Item]
     )
+
+    const onScrollToIndex = (id) => {
+        const index = streams.findIndex((item) => {
+            if (item.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE) {
+                const i = item.data.task
+                return i.index === id
+            }
+            return false
+        })
+        if (index !== -1) {
+            scrollToIndex(index,'auto')
+        }
+    }
+
+    useMount(() => {
+        emiter.on("onAITreeLocatePlanningList", onScrollToIndex)
+        return () => {
+            emiter.off("onAITreeLocatePlanningList", onScrollToIndex)
+        }
+    })
 
     return (
         <div className={styles["ai-agent-chat-stream"]}>

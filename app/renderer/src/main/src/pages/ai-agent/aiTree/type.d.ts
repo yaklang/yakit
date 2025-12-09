@@ -23,5 +23,5 @@ export interface AITreeNodeProps {
         levelDiff: number
     }
     data: AITaskInfoProps
-    onClick?: (info: AITaskInfoProps) => void
+    onClick?: () => void
 }

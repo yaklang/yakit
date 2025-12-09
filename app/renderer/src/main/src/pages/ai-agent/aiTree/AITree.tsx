@@ -10,6 +10,7 @@ import classNames from "classnames"
 import styles from "./AITree.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AITaskInfoProps} from "@/pages/ai-re-act/hooks/aiRender"
+import emiter from "@/utils/eventBus/eventBus"
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -24,7 +25,10 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-    const {tasks, onNodeClick} = props
+    const {tasks} = props
+    const onClick = useMemoizedFn((id) => {
+        emiter.emit("onAITreeLocatePlanningList", id)
+    })
     return (
         <div className={styles["ai-tree"]}>
             {tasks.map((item, index) => {
@@ -39,7 +43,13 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
                     levelDiff: Math.abs(item.level - (next?.level ?? 2)) // START_LEVEL 加上 去掉第一层，所以是 2
                 }
                 return (
-                    <AITreeNode key={item.index} order={index} position={position} data={item} onClick={onNodeClick} />
+                    <AITreeNode
+                        key={item.index}
+                        order={index}
+                        position={position}
+                        data={item}
+                        onClick={() => onClick(item.index)}
+                    />
                 )
             })}
             <div className={styles["ai-tree-node-end"]}>
@@ -61,10 +71,6 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
         } else {
             return info
         }
-    })
-
-    const handleClick = useMemoizedFn(() => {
-        onClick && onClick(handleFindLeafNode(cloneDeep(data)))
     })
 
     const [Icon, Card] = useMemo(() => {
@@ -90,12 +96,12 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             </div>
         )
         const contentNode = (
-            <div className={styles["node-content"]} onClick={handleClick}>
+            <div className={styles["node-content"]}>
                 <div className={styles["node-content-text"]}>{data.goal}</div>
                 <div className={styles["node-content-tag"]}>
                     {[data.fail_tool_call_count, data.success_tool_call_count].map((item, index) => {
-                        if (!item) return null 
-                        const color = index === 0 ? "danger" : "success" 
+                        if (!item) return null
+                        const color = index === 0 ? "danger" : "success"
                         return (
                             <YakitTag
                                 key={index}
@@ -114,11 +120,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
         const style = isParentLast && !data.progress ? {marginBottom: "16px"} : {}
 
         const getWrapper = (extraClass?: string) => (
-            <div
-                className={classNames(styles["node-wrapper"], extraClass)}
-                style={style}
-                onClick={() => onClick?.(data)}
-            >
+            <div className={classNames(styles["node-wrapper"], extraClass)} style={style} onClick={onClick}>
                 {titleNode}
                 {data.progress && contentNode}
             </div>
@@ -136,7 +138,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
                     getWrapper(styles["node-wrapper-default"])
                 ]
         }
-    }, [data, handleClick, infoShow, isParentLast, onClick])
+    }, [data, infoShow, isParentLast, onClick])
 
     if (data === null) return null
 
