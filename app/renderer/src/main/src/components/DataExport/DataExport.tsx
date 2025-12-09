@@ -21,6 +21,7 @@ interface ExportExcelProps {
     text?: string
     newUIType?: YakitButtonProp["type"]
     getContainer?: HTMLElement
+    onHarExport?: () => void
 }
 
 interface resProps {
@@ -85,7 +86,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         showButton = true,
         text,
         newUIType = "outline2",
-        getContainer
+        getContainer,
+        onHarExport
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "components"])
     const [loading, setLoading] = useState<boolean>(false)
@@ -213,7 +215,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         <>
             {showButton ? (
                 <>
-                    <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...btnProps}>
+                    <YakitButton loading={loading} type={newUIType} onClick={() => (onHarExport || toExcel)()} {...btnProps}>
                         {text || t("YakitButton.exportExcel")}
                     </YakitButton>
                 </>
@@ -329,10 +331,11 @@ interface ExportSelectProps {
     /**关闭 */
     onClose: () => void
     getContainer?: HTMLElement
+    onHarExport?: () => void
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose, getContainer} =
+    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose, getContainer, onHarExport} =
         props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
@@ -393,6 +396,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
                     text={t("YakitButton.export")}
                     pageSize={pageSize}
                     getContainer={getContainer}
+                    onHarExport={onHarExport}
                 />
             </div>
         </div>
