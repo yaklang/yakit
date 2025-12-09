@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {AIModelItemProps, AIModelSelectProps} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {isForcedSetAIModal, getAIModelList} from "../utils"
 import styles from "./AIModelSelect.module.scss"
@@ -63,14 +63,17 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     })
     const [open, setOpen] = useState<boolean>(false)
     const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
+    const refRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(refRef)
 
     useEffect(() => {
+        if (!inViewport) return
         getAIModelListOption(!modelValue)
         emiter.on("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         return () => {
             emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         }
-    }, [])
+    }, [inViewport])
     const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
         getAIModelListOption(data === "true")
     })
@@ -119,43 +122,48 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     }, [aiModelOptions.onlineModels.length, aiModelOptions.localModels.length])
 
     //#endregion
-    return isHaveData ? (
-        <AIChatSelect
-            value={modelValue}
-            onSelect={onSelectModel}
-            dropdownRender={(menu) => {
-                return (
-                    <div className={styles["drop-select-wrapper"]}>
-                        <div className={styles["select-title"]}>AI 模型选择</div>
-                        {menu}
-                    </div>
-                )
-            }}
-            getList={() => getAIModelListOption()}
-            open={open}
-            setOpen={onSetOpen}
-        >
-            {aiModelOptions.onlineModels.length > 0 && (
-                <YakitSelect.OptGroup key='线上' label='线上'>
-                    {aiModelOptions.onlineModels.map((nodeItem) => (
-                        <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
-                            <AIModelItem value={nodeItem.Type} />
-                        </YakitSelect.Option>
-                    ))}
-                </YakitSelect.OptGroup>
+    return (
+        <>
+            <div ref={refRef} />
+            {isHaveData ? (
+                <AIChatSelect
+                    value={modelValue}
+                    onSelect={onSelectModel}
+                    dropdownRender={(menu) => {
+                        return (
+                            <div className={styles["drop-select-wrapper"]}>
+                                <div className={styles["select-title"]}>AI 模型选择</div>
+                                {menu}
+                            </div>
+                        )
+                    }}
+                    getList={() => getAIModelListOption()}
+                    open={open}
+                    setOpen={onSetOpen}
+                >
+                    {aiModelOptions.onlineModels.length > 0 && (
+                        <YakitSelect.OptGroup key='线上' label='线上'>
+                            {aiModelOptions.onlineModels.map((nodeItem) => (
+                                <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
+                                    <AIModelItem value={nodeItem.Type} />
+                                </YakitSelect.Option>
+                            ))}
+                        </YakitSelect.OptGroup>
+                    )}
+                    {aiModelOptions.localModels.length > 0 && (
+                        <YakitSelect.OptGroup key='本地' label='本地'>
+                            {aiModelOptions.localModels.map((nodeItem) => (
+                                <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
+                                    <AIModelItem value={nodeItem.Name} />
+                                </YakitSelect.Option>
+                            ))}
+                        </YakitSelect.OptGroup>
+                    )}
+                </AIChatSelect>
+            ) : (
+                <></>
             )}
-            {aiModelOptions.localModels.length > 0 && (
-                <YakitSelect.OptGroup key='本地' label='本地'>
-                    {aiModelOptions.localModels.map((nodeItem) => (
-                        <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
-                            <AIModelItem value={nodeItem.Name} />
-                        </YakitSelect.Option>
-                    ))}
-                </YakitSelect.OptGroup>
-            )}
-        </AIChatSelect>
-    ) : (
-        <></>
+        </>
     )
 })
 
