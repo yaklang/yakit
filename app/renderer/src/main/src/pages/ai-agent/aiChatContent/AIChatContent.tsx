@@ -37,7 +37,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    const [activeKey, setActiveKey] = useState<AITabsEnumType>()
+    const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.File_System)
 
     const [tempRiskTotal, setTempRiskTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数,现在不显示具体数量了
     const [tempHTTPTotal, setTempHTTPTotal] = useState<number>(0) // HTTP流量表tab是否显示，大于0就显示
@@ -369,41 +369,42 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 </div>
             </ExpandAndRetract>
             <div className={styles["ai-chat-tab-wrapper"]}>
-                <div className={styles["ai-chat-content"]}>
-                    <YakitResizeBox
-                        firstNode={
-                            activeKey && (
-                                <div
-                                    className={classNames(styles["tab-content"], {
-                                        [styles["tab-content-right"]]: !showFreeChat
-                                    })}
-                                >
-                                    {renderTabContent(activeKey)}
-                                </div>
-                            )
-                        }
-                        secondNode={
-                            <AIReActChat
-                                chatContainerHeaderClassName={classNames({
-                                    [styles["re-act-chat-container-header"]]: !activeKey
-                                })}
-                                mode={!!activeKey ? "task" : "welcome"}
-                                showFreeChat={showFreeChat}
-                                setShowFreeChat={setShowFreeChat}
-                            />
-                        }
-                        {...resizeBoxProps}
-                    />
-                </div>
                 <YakitSideTab
-                    type='vertical-right'
+                    type='horizontal'
                     yakitTabs={yakitTabs}
                     activeKey={activeKey}
                     onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
                     onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
                     className={styles["tab-wrap"]}
                     show={true}
-                />
+                >
+                    <div className={styles["ai-chat-content"]}>
+                        <YakitResizeBox
+                            firstNode={
+                                activeKey && (
+                                    <div
+                                        className={classNames(styles["tab-content"], {
+                                            [styles["tab-content-right"]]: !showFreeChat
+                                        })}
+                                    >
+                                        {renderTabContent(activeKey)}
+                                    </div>
+                                )
+                            }
+                            secondNode={
+                                <AIReActChat
+                                    chatContainerHeaderClassName={classNames({
+                                        [styles["re-act-chat-container-header"]]: !activeKey
+                                    })}
+                                    mode={!!activeKey ? "task" : "welcome"}
+                                    showFreeChat={showFreeChat}
+                                    setShowFreeChat={setShowFreeChat}
+                                />
+                            }
+                            {...resizeBoxProps}
+                        />
+                    </div>
+                </YakitSideTab>
             </div>
         </div>
     )

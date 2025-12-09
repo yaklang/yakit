@@ -94,7 +94,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onSetReAct = useMemoizedFn(() => {
         setMode("re-act")
         setTimeout(() => {
-            emiter.emit("switchAIActTab")
+            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
         }, 100)
     })
 
