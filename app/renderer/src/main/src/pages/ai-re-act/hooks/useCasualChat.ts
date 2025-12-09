@@ -32,7 +32,15 @@ import {
 } from "./aiRender"
 
 // 属于该 hook 处理数据的类型
-export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_require"]
+export const UseCasualChatTypes = [
+    "thought",
+    "result",
+    "exec_aiforge_review_require",
+    // 自由对话崩溃的错误信息
+    "fail_react_task",
+    // 自由对话成功结束标志
+    "success_react_task"
+]
 
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 

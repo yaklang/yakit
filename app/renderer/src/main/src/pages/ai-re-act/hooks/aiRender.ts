@@ -105,7 +105,7 @@ export interface FailPlanAndExecutionError {
     content: string
 }
 
-/** ReAct任务崩溃的错误信息 */
+/** 自由对话崩溃的错误信息 */
 export interface FailReactError {
     NodeId: AIOutputEvent["NodeId"]
     NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
