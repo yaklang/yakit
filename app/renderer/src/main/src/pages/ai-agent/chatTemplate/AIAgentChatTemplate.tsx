@@ -20,12 +20,13 @@ import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
-import {genBaseAIChatData} from "@/pages/ai-re-act/hooks/utils"
+import {genBaseAIChatData, isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import emiter from "@/utils/eventBus/eventBus"
+import {PreWrapper} from "../components/ToolInvokerCard"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -120,7 +121,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
             return false
         })
         if (index !== -1) {
-            scrollToIndex(index,'auto')
+            scrollToIndex(index, "auto")
         }
     }
 
@@ -171,7 +172,11 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             .then((res: AIEventQueryResponse) => {
                 const {Events} = res
                 const list: AIChatQSData[] = []
-                Events.filter((ele) => ele.Type === "stream").forEach((item) => {
+                Events.filter((ele) => {
+                    if (ele.Type === AIChatQSDataTypeEnum.STREAM && isToolExecStream(ele.NodeId)) return true
+                    if (ele.Type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT) return true
+                    return false
+                }).forEach((item) => {
                     let ipcContent = ""
                     let ipcStreamDelta = ""
                     try {
@@ -201,7 +206,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 }, 200)
             })
     })
-
     return (
         <div className={styles["ai-chat-tool-drawer-content"]}>
             {loading ? (
@@ -211,7 +215,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     {toolList.map((info) => {
                         const {id, Timestamp, type, data} = info
                         switch (type) {
-                            case "stream":
+                            case AIChatQSDataTypeEnum.STREAM:
+                            case AIChatQSDataTypeEnum.TOOL_CALL_RESULT:
                                 const {NodeIdVerbose, CallToolID, content, NodeId} = data
                                 const {execFileRecord} = yakExecResult
                                 const fileList = execFileRecord.get(CallToolID)
@@ -221,7 +226,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                     <StreamCard
                                         titleText={nodeLabel}
                                         titleIcon={taskAnswerToIconMap[NodeId]}
-                                        content={content}
+                                        content={<PreWrapper code={content} />}
                                         modalInfo={{
                                             time: Timestamp,
                                             title: info.AIService
