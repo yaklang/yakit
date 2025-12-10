@@ -22,6 +22,7 @@ import styles from "./DNSLogPage.module.scss"
 import {Uint8ArrayToString} from "@/utils/str"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 export interface DNSLogPageProp {}
 
 const {ipcRenderer} = window.require("electron")
@@ -80,6 +81,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const DNS_LOG_PAGE_UPDATE_TOKEN_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_CACHE"
     const DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE"
     const openDetails = useRef<DNSLogEvent>()
+    const [clearTimestamp, setClearTimestamp, getClearTimestamp] = useGetState(0)
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    
 
     useEffect(() => {
         // 初始化-查看菜单是否开启dnslog并请求获取参数fDNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE
@@ -213,8 +217,13 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 UseLocal: getSelectedMode() === "内置" ? false : getIsLocal()
             })
             .then((rsp: {Events: DNSLogEvent[]}) => {
+                const clearTime = getClearTimestamp()
                 setRecords(
                     rsp.Events.filter((i) => {
+                        // 筛选时间戳之后的记录
+                        if (clearTime > 0 && +i.Timestamp <= clearTime) {
+                            return false
+                        }
                         if (getOnlyARecord()) {
                             return i.DNSType === "A"
                         }
@@ -364,8 +373,13 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         ipcRenderer
             .invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params || ""})
             .then((rsp: {Events: DNSLogEvent[]}) => {
+                const clearTime = getClearTimestamp()
                 setRecords(
                     rsp.Events.filter((i) => {
+                        // 筛选时间戳之后的记录
+                        if (clearTime > 0 && +i.Timestamp <= clearTime) {
+                            return false
+                        }
                         if (getOnlyARecord()) {
                             return i.DNSType === "A"
                         }
@@ -431,6 +445,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             return
         }
         dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
+    })
+
+    const onClickClear = useMemoizedFn(() => {
+        const currentTimestamp = Math.floor(Date.now() / 1000)
+        setClearTimestamp(currentTimestamp)
+        setRecords((pre) => pre.filter(({Timestamp}) => +Timestamp > currentTimestamp))
     })
 
     return (
@@ -638,12 +658,22 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                             />
                                         </Form.Item>
                                     </Form>
-                                    <YakitButton
-                                        size={"small"}
-                                        type={"text"}
-                                        onClick={manuallyRefresh}
-                                        icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
-                                    />
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <YakitButton
+                                            type='outline1'
+                                            onClick={onClickClear}
+                                            danger
+                                            disabled={!records.length}
+                                        >
+                                            {t("YakitButton.reset")}
+                                        </YakitButton>
+                                        <YakitButton
+                                            size={"small"}
+                                            type={"text"}
+                                            onClick={manuallyRefresh}
+                                            icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
+                                        />
+                                    </div>
                                 </div>
                             }
                             renderKey='Index'
