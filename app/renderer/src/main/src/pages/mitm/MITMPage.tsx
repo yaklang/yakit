@@ -69,17 +69,13 @@ import {
 } from "./MITMHacker/utils"
 import {KVPair} from "@/models/kv"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { useProxy } from "@/hook/useProxy"
+import {useProxy} from "@/hook/useProxy"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
 
-type idleTabKeys = "plugin"
-interface IdleTabsItem {
-    key: idleTabKeys
-    label: ReactElement | string
-    contShow: boolean
-}
 export interface MITMPageProp {}
 
 export interface TraceInfo {
@@ -721,61 +717,56 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         })
     })
 
+    // #region 左侧tab
     const idleTabsRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(idleTabsRef)
-    const [curIdleTabKey, setCurIdleTabKey] = useState<idleTabKeys>("plugin")
-    const [idleTabs, setIdleTabs] = useState<Array<IdleTabsItem>>([
+    const [activeKey, setActiveKey] = useState<string>("plugin")
+    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
-            key: "plugin",
-            label: <>插件</>,
-            contShow: true // 初始为true
+            label: () => "插件",
+            value: "plugin",
+            show: true
         }
     ])
-    const handleTabClick = (item: IdleTabsItem) => {
-        const contShow = !item.contShow
-        idleTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = contShow
-            } else {
-                i.contShow = false
+    useEffect(() => {
+        getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
+            if (setting) {
+                try {
+                    const tabs = JSON.parse(setting)
+                    setYakitTab((prev) => {
+                        prev.forEach((i) => {
+                            if (i.value === tabs.curTabKey) {
+                                i.show = tabs.contShow
+                            } else {
+                                i.show = false
+                            }
+                        })
+                        return [...prev]
+                    })
+                    onActiveKey(tabs.curTabKey)
+                } catch (error) {}
             }
         })
-        setRemoteValue(RemoteGV.MitmIdleLeftTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
-        setIdleTabs([...idleTabs])
-        setOpenTabsFlag(idleTabs.some((item) => item.contShow))
-        setCurIdleTabKey(item.key)
-    }
+    }, [inViewport])
+    const onActiveKey = useMemoizedFn((key) => {
+        setActiveKey(key)
+    })
+    const show = useCreation(() => {
+        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
+    }, [yakitTab, activeKey])
     useEffect(() => {
         if (inViewport) {
-            getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
-                if (setting) {
-                    try {
-                        const tabs = JSON.parse(setting)
-                        idleTabs.forEach((i) => {
-                            if (i.key === tabs.curTabKey) {
-                                i.contShow = tabs.contShow
-                            } else {
-                                i.contShow = false
-                            }
-                        })
-                        setIdleTabs([...idleTabs])
-                        setCurIdleTabKey(tabs.curTabKey)
-                    } catch (error) {
-                        idleTabs.forEach((i) => {
-                            if (i.key === "plugin") {
-                                i.contShow = true
-                            } else {
-                                i.contShow = false
-                            }
-                        })
-                        setIdleTabs([...idleTabs])
-                        setCurIdleTabKey("plugin")
-                    }
-                }
-                setOpenTabsFlag(idleTabs.some((item) => item.contShow))
-            })
+            setOpenTabsFlag(show)
         }
-    }, [inViewport])
+    }, [show, inViewport])
+    useDebounceEffect(
+        () => {
+            setRemoteValue(RemoteGV.MitmIdleLeftTabs, JSON.stringify({contShow: show, curTabKey: activeKey}))
+        },
+        [show, activeKey],
+        {wait: 300}
+    )
+    // #endregion
 
     const setTotalFun = useMemoizedFn((t) => {
         setTotal(t)
@@ -790,23 +781,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <div className={style["mitm-idle-tab-wrap"]} ref={idleTabsRef}>
-                        <div className={style["mitm-idle-tab"]}>
-                            {idleTabs.map((item) => (
-                                <div
-                                    className={classNames(style["mitm-idle-tab-item"], {
-                                        [style["mitm-idle-tab-item-active"]]: curIdleTabKey === item.key,
-                                        [style["mitm-idle-tab-item-unshowCont"]]:
-                                            curIdleTabKey === item.key && !item.contShow
-                                    })}
-                                    key={item.key}
-                                    onClick={() => {
-                                        handleTabClick(item)
-                                    }}
-                                >
-                                    {item.label}
-                                </div>
-                            ))}
-                        </div>
+                        <YakitSideTab
+                            yakitTabs={yakitTab}
+                            setYakitTabs={setYakitTab}
+                            activeKey={activeKey}
+                            onActiveKey={onActiveKey}
+                        />
                         <div
                             className={style["mitm-idle-tab-cont-item"]}
                             style={{

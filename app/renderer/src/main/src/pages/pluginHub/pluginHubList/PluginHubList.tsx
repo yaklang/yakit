@@ -4,8 +4,6 @@ import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {HubListRecycle} from "./HubListRecycle"
 import {HubListOwn} from "./HubListOwn"
 import {HubListLocal} from "./HubListLocal"
-import {Tooltip} from "antd"
-import {HubSideBarList} from "../defaultConstant"
 import {HubListOnline} from "./HubListOnline"
 import {PageNodeItemProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -13,10 +11,19 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {useStore} from "@/store"
 import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
+import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
+import {
+    OutlineAdjustmentsIcon,
+    OutlineLocalPluginIcon,
+    OutlineOnlinePluginIcon,
+    OutlineOwnPluginIcon,
+    OutlineTrashSecondIcon
+} from "@/assets/icon/outline"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
-import { PluginSearchParams } from "@/pages/plugins/baseTemplateType"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -59,7 +66,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     // 处理指定页面和详情类型功能
     const handleSpecifiedPageAndDetail = useMemoizedFn((data: PluginHubPageInfoProps) => {
         const {tabActive, detailInfo, refeshList, openGroupDrawer} = data
-        onSetActive(tabActive || "online", false)
+        onSetActive(tabActive || "online", true)
         setOpenGroupDrawer(openGroupDrawer || false)
         if (detailInfo) {
             setAutoOpenDetailTab && setAutoOpenDetailTab(detailInfo.tabActive || undefined)
@@ -93,45 +100,82 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
             handleSpecifiedPageAndDetail(data)
             setOpenGroupDrawer(data.openGroupDrawer || false)
         } else {
-            onSetActive("online")
+            onSetActive("online", true)
         }
     }, [])
 
     /** ---------- Tabs组件逻辑 Start ---------- */
-    // 无详情页的列表tab类型
-    const noDetailTabs = useRef<PluginSourceType[]>(["recycle", "setting"])
-    // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
-    const rendered = useRef<Set<string>>(new Set())
     const [active, setActive] = useControllableValue<PluginSourceType>(props, {
         valuePropName: "active",
         trigger: "setActive"
     })
+    const activeRef = useRef<PluginSourceType>(active)
+    const [hubSideBarList, setHubSideBarList] = useState<YakitTabsProps[]>([
+        {
+            value: "online",
+            label: () => "插件商店",
+            icon: <OutlineOnlinePluginIcon />,
+            show: true,
+            hint: () => "插件商店"
+        },
+        {value: "own", label: () => "我的", icon: <OutlineOwnPluginIcon />, show: false, hint: () => "我的插件"},
+        {value: "local", label: () => "本地", icon: <OutlineLocalPluginIcon />, show: false, hint: () => "本地插件"},
+        {value: "setting", label: () => "配置", icon: <OutlineAdjustmentsIcon />, show: false, hint: () => "配置"},
+        {value: "recycle", label: () => "回收站", icon: <OutlineTrashSecondIcon />, show: false, hint: () => "回收站"}
+    ])
+    // 无详情页的列表tab类型
+    const noDetailTabs = useRef<PluginSourceType[]>(["recycle", "setting"])
+    // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
+    const rendered = useRef<Set<string>>(new Set())
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
-    const onSetActive = useMemoizedFn((type: PluginSourceType, isSwitchExpand = true) => {
-        setHintShow((val) => {
-            for (let key of Object.keys(val)) {
-                if (noDetailTabs.current.includes(type)) val[key] = false // 点击后隐藏空内容的 tooltip
-                else if (type === "own" && !isLogin) val[key] = false // 点击后隐藏未登录时空内容的 tooltip
-                else if (key === type) val[key] = true // 正常展示提示
-                else val[key] = false // 无关联类型隐藏提示
-            }
-            return {...val}
-        })
-        if (type === active) {
-            if (noDetailTabs.current.includes(active)) return
-            if (isSwitchExpand) {
-                isDetail ? setHiddenDetail((val) => !val) : setActiveHidden((val) => !val)
-            }
+    const onSetActive = useMemoizedFn((type: PluginSourceType, openFlag = false) => {
+        if (noDetailTabs.current.includes(active) || openFlag || (!isLogin && type === "own")) {
+            setHubSideBarList((prev) => {
+                prev.forEach((i) => {
+                    if (type === i.value) {
+                        i.show = true
+                    } else {
+                        i.show = false
+                    }
+                })
+                return [...prev]
+            })
         } else {
+            setHubSideBarList((prev) => {
+                prev.forEach((i) => {
+                    if (type === i.value) {
+                        i.show = !i.show
+                    } else {
+                        i.show = false
+                    }
+                })
+                return [...prev]
+            })
+        }
+
+        if (type !== active) {
             if (!rendered.current.has(type)) {
                 rendered.current.add(type)
             }
-            setHiddenDetailPage(noDetailTabs.current.includes(type))
             setActive(type)
         }
     })
+    useEffect(() => {
+        const show = hubSideBarList.find((ele) => ele.value === active)?.show !== false
+        if (isDetail) {
+            setHiddenDetail(!show)
+        } else {
+            setActiveHidden(!show)
+        }
+        setHiddenDetailPage(noDetailTabs.current.includes(active))
+        activeRef.current = active
+    }, [hubSideBarList, active, isDetail])
+    useEffect(() => {
+        if (!isLogin && activeRef.current === "own") {
+            onSetActive("own", true)
+        }
+    }, [isLogin])
 
-    const [hintShow, setHintShow] = useState<Record<string, boolean>>({})
     /** ---------- Tabs组件逻辑 End ---------- */
 
     /** ---------- 进入插件详情逻辑 Start ---------- */
@@ -163,10 +207,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
      */
     const handleUpdatePluginInfo = useMemoizedFn((content: string) => {
         if (rendered.current.has("local")) {
-            if (active !== "local") onSetActive("local")
+            if (active !== "local") onSetActive("local", true)
             emiter.emit("editorLocalSaveToLocalList", content)
         } else {
-            onSetActive("local")
+            onSetActive("local", true)
         }
     })
 
@@ -174,7 +218,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const [localSearchParams, setLocalSearchParams] = useState<PluginSearchParams | undefined>(undefined)
     const onChangeLocal = useMemoizedFn((searchParams?: PluginSearchParams) => {
         setLocalSearchParams(searchParams)
-        onSetActive("local")
+        onSetActive("local", true)
     })
 
     useEffect(() => {
@@ -187,59 +231,30 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     }, [])
     /** ---------- 通信监听 Start ---------- */
 
-    const barHint = useMemoizedFn((key: PluginSourceType, isActive: boolean) => {
-        if (isActive) {
-            if (noDetailTabs.current.includes(key)) return ""
-            if (key === "own" && !isLogin) return ""
-
-            if (isDetail) {
-                return hiddenDetail ? "展开详情列表" : "收起详情列表"
-            } else {
-                return activeHidden ? "展开高级筛选" : "收起高级筛选"
-            }
+    const barHint = useMemoizedFn((key: string) => {
+        const item = hubSideBarList.find((item) => item.value === key)
+        if (key !== active) {
+            return `点击进入${item ? item.hint?.() : "列表"}`
         } else {
-            const item = HubSideBarList.find((item) => item.key === key)
-            return `点击进入${item ? item.hint : "列表"}`
+            if (noDetailTabs.current.includes(key as PluginSourceType)) return ""
+            if (key === "own" && !isLogin) return ""
+            if (isDetail) {
+                return !item?.show ? "展开详情列表" : "收起详情列表"
+            } else {
+                return !item?.show ? "展开高级筛选" : "收起高级筛选"
+            }
         }
     })
 
     return (
         <div className={styles["plugin-hub-list"]}>
             <div className={styles["side-bar-list"]}>
-                {HubSideBarList.map((item, index) => {
-                    const isActive = item.key === active
-                    const hint = barHint(item.key, isActive)
-                    const selected =
-                        item.key !== "recycle" && active === item.key && (isDetail ? hiddenDetail : activeHidden)
-                    const visible = !!hintShow[item.key]
-                    return (
-                        <Tooltip
-                            key={item.key}
-                            overlayClassName='plugins-tooltip'
-                            title={hint}
-                            placement='right'
-                            visible={visible}
-                            onVisibleChange={(visible) =>
-                                setHintShow((val) => {
-                                    val[item.key] = visible
-                                    return {...val}
-                                })
-                            }
-                        >
-                            <div
-                                key={item.key}
-                                className={classNames(styles["side-bar-list-item"], {
-                                    [styles["side-bar-list-item-active"]]: isActive,
-                                    [styles["side-bar-list-item-selected"]]: selected
-                                })}
-                                onClick={() => onSetActive(item.key)}
-                            >
-                                <span className={styles["item-text"]}>{item.title}</span>
-                                {item.icon}
-                            </div>
-                        </Tooltip>
-                    )
-                })}
+                <YakitSideTab
+                    yakitTabs={hubSideBarList}
+                    activeKey={active}
+                    onActiveKey={(v) => onSetActive(v as PluginSourceType)}
+                    barHint={barHint}
+                />
             </div>
 
             <div className={styles["hub-list-body"]}>

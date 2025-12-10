@@ -8,7 +8,6 @@ import {
     CodeScanExecuteContentProps,
     CodeScanExecuteContentRefProps,
     CodeScanGroupByKeyWordItemProps,
-    CodeScanTabsItem,
     FlowRuleDetailsListItemProps,
     SyntaxFlowResult,
     SyntaxFlowScanActiveTask,
@@ -113,6 +112,8 @@ import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRul
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -485,11 +486,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
     })
 
     const onResetCodeScanProjectFun = useMemoizedFn(() => {
-        handleTabClick({
-            key: "group",
-            label: <>按组选</>,
-            contShow: false
-        })
+        handleTabClick("group")
         setAllCheck(false)
         setSelectedRules([])
     })
@@ -658,54 +655,55 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     })
     const [pageInfo, setPageInfo] = useState<CodeScanPageInfoProps>(initPageInfo())
 
+    // #region 左侧tab
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
-
-    const [codeScanTabs, setCodeScanTabs] = useState<Array<CodeScanTabsItem>>([
+    const [type, setType] = useState<"keyword" | "group">("group")
+    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
-            key: "group",
-            label: <>按组选</>,
-            contShow: true // 初始为true
+            label: () => "按组选",
+            value: "group",
+            show: true
         },
         {
-            key: "keyword",
-            label: <>按关键词</>,
-            contShow: false
+            label: () => "按关键词",
+            value: "keyword",
+            show: false
         }
     ])
-    const [type, setType] = useState<"keyword" | "group">("group")
-    const handleTabClick = useMemoizedFn((item: CodeScanTabsItem) => {
-        const contShow = !item.contShow
-        codeScanTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = contShow
-            } else {
-                i.contShow = false
-            }
-        })
-        setCodeScanTabs([...codeScanTabs])
-        setHidden(!codeScanTabs.some((item) => item.contShow))
-        setType(item.key)
+    const onActiveKey = useMemoizedFn((key) => {
+        setType(key)
     })
-
-    const handleTabHidden = useMemoizedFn((isHidden: boolean) => {
-        if (isHidden) {
-            codeScanTabs.forEach((i) => {
-                i.contShow = false
-            })
-            setCodeScanTabs([...codeScanTabs])
-        } else {
-            codeScanTabs.forEach((i) => {
-                if (i.key === type) {
-                    i.contShow = true
+    const show = useCreation(() => {
+        return yakitTab.find((ele) => ele.value === type)?.show !== false
+    }, [yakitTab, type])
+    useEffect(() => {
+        setHidden(!show)
+    }, [show])
+    const handleTabClick = useMemoizedFn((tab) => {
+        setYakitTab((prev) => {
+            prev.forEach((i) => {
+                if (i.value === tab) {
+                    i.show = true
                 } else {
-                    i.contShow = false
+                    i.show = false
                 }
             })
-            setCodeScanTabs([...codeScanTabs])
-        }
-        setHidden(isHidden)
+            return [...prev]
+        })
+        onActiveKey(tab)
     })
+    const handleTabHidden = useMemoizedFn((isHidden: boolean) => {
+        if (isHidden) {
+            yakitTab.forEach((i) => {
+                i.show = false
+            })
+            setYakitTab([...yakitTab])
+        } else {
+            handleTabClick(type)
+        }
+    })
+    // #endregion
 
     const [filterLibRuleKind, setFilterLibRuleKind] = useState<"" | "noLib">("noLib")
 
@@ -713,22 +711,12 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
             {/* 左侧边栏 */}
             <div className={styles["code-scan-tab-wrap"]}>
-                <div className={styles["code-scan-tab"]}>
-                    {codeScanTabs.map((item) => (
-                        <div
-                            className={classNames(styles["code-scan-tab-item"], {
-                                [styles["code-scan-tab-item-active"]]: type === item.key,
-                                [styles["code-scan-tab-item-unshowCont"]]: type === item.key && !item.contShow
-                            })}
-                            key={item.key}
-                            onClick={() => {
-                                handleTabClick(item)
-                            }}
-                        >
-                            {item.label}
-                        </div>
-                    ))}
-                </div>
+                <YakitSideTab
+                    yakitTabs={yakitTab}
+                    setYakitTabs={setYakitTab}
+                    activeKey={type}
+                    onActiveKey={onActiveKey}
+                />
             </div>
 
             <div

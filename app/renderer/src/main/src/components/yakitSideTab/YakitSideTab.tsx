@@ -1,21 +1,23 @@
-import React, {ReactNode} from "react"
+import React, {ReactNode, useState} from "react"
 import {YakitSideTabProps, YakitTabsItemProps} from "./YakitSideTabType"
 import classNames from "classnames"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {Tooltip} from "antd"
 import styles from "./YakitSideTab.module.scss"
 
-export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
+export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref) => {
     const {
         yakitTabs,
         cacheKey,
         activeKey,
         onActiveKey,
         setYakitTabs,
+        barHint,
         type = "vertical",
         children,
         onTabPaneRender,
         className = "",
-        btnItemClassName = ''
+        btnItemClassName = ""
     } = props
     const [show, setShow] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -23,10 +25,29 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
         trigger: "setShow"
     })
     const onChange = useMemoizedFn((item) => {
-        if (item.value === activeKey) {
-            setShow((v) => !v)
-            setYakitTabs &&
-                setYakitTabs(
+        if (type === "vertical") {
+            if (props.show === undefined) {
+                setYakitTabs?.(
+                    yakitTabs.map((ele) => {
+                        if (ele.value === item.value) {
+                            return {
+                                ...ele,
+                                show: !ele.show
+                            }
+                        } else {
+                            return {
+                                ...ele,
+                                show: false
+                            }
+                        }
+                    })
+                )
+            } else if (props.setShow !== undefined) {
+                setShow((v) => !v)
+            }
+        } else {
+            if (item.value === activeKey) {
+                setYakitTabs?.(
                     yakitTabs.map((ele) => {
                         if (ele.value === item.value) {
                             return {
@@ -37,6 +58,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                         return ele
                     })
                 )
+            }
         }
         onActiveKey(item.value)
     })
@@ -53,11 +75,16 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                                     onChange={onChange}
                                     className={classNames(styles["yakit-side-tab-item"], btnItemClassName, {
                                         [styles["yakit-side-tab-item-active"]]: item.value === activeKey,
+                                        [styles["yakit-side-tab-item-active-noHover"]]:
+                                            item.value === activeKey &&
+                                            props.show === true &&
+                                            props.setShow === undefined,
                                         [styles["yakit-side-tab-item-show"]]:
                                             item.value === activeKey && (item.show === false || !show)
                                     })}
                                     onTabPaneRender={onTabPaneRender}
                                     rotate={"left"}
+                                    barHint={barHint}
                                 />
                             ))}
                         </div>
@@ -80,6 +107,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                                     })}
                                     onTabPaneRender={onTabPaneRender}
                                     rotate={"right"}
+                                    barHint={barHint}
                                 />
                             ))}
                         </div>
@@ -125,7 +153,16 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
 })
 
 const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
-    const {item, onChange, className = "", onTabPaneRender, rotate} = props
+    const {item, onChange, className = "", onTabPaneRender, rotate, barHint} = props
+    const [hover, setHover] = useState(false)
+
+    const renderLabel = useCreation(() => {
+        if (typeof item.label === "function") {
+            return item.label()
+        }
+        return item.label
+    }, [item.label])
+
     const node: ReactNode[] = useCreation(() => {
         return [
             <span
@@ -135,22 +172,51 @@ const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
                     [styles["item-text-right"]]: rotate === "right"
                 })}
             >
-                {item.label}
+                {renderLabel}
             </span>,
             item.icon
         ]
-    }, [item.label, item.icon, rotate])
+    }, [renderLabel, item.icon, rotate])
     const [label, icon] = node
+
+    const tabDom = useMemoizedFn(() => {
+        return (
+            <div
+                key={item.value}
+                className={className}
+                onClick={() => onChange(item)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+            >
+                {onTabPaneRender ? (
+                    onTabPaneRender(item, node)
+                ) : (
+                    <>
+                        {icon}
+                        {label}
+                    </>
+                )}
+            </div>
+        )
+    })
+
+    const hint = barHint?.(item.value)
+
     return (
-        <div key={item.value} className={className} onClick={() => onChange(item)}>
-            {onTabPaneRender ? (
-                onTabPaneRender(item, node)
+        <>
+            {hint ? (
+                <Tooltip
+                    key={`${item.value}`}
+                    title={hint}
+                    placement='right'
+                    destroyTooltipOnHide
+                    visible={hover}
+                >
+                    {tabDom()}
+                </Tooltip>
             ) : (
-                <>
-                    {icon}
-                    {label}
-                </>
+                <>{tabDom()}</>
             )}
-        </div>
+        </>
     )
 })

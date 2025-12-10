@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {
     useCreation,
@@ -101,14 +101,9 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import styles from "./HTTPHistoryFilter.module.scss"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 const {ipcRenderer} = window.require("electron")
-
-type tabKeys = "web-tree" | "process"
-interface TabsItem {
-    key: tabKeys
-    label: (t: (keys: string) => string) => ReactElement | string
-    contShow: boolean
-}
 
 interface HTTPHistoryFilterProps {
     onSetClickedHttpFlow: (flow?: HTTPFlow) => void
@@ -144,27 +139,19 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     } = props
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
-    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
-    const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
-    const [tabsData, setTabsData] = useState<Array<TabsItem>>([
+    const [activeKey, setActiveKey] = useState<string>("web-tree")
+    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
-            key: "web-tree",
-            label: (t) => (
-                <>
-                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.websiteTree")}</span> <OutlineLog2Icon />
-                </>
-            ),
-            contShow: true // 初始为true
+            icon: <OutlineLog2Icon />,
+            label: () => t("HTTPHistory.websiteTree"),
+            value: "web-tree",
+            show: true
         },
         {
-            key: "process",
-            label: (t) => (
-                <>
-                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.process")}</span>
-                    <OutlineTerminalIcon />
-                </>
-            ),
-            contShow: false // 初始为false
+            icon: <OutlineTerminalIcon />,
+            label: () => t("HTTPHistory.process"),
+            value: "process",
+            show: false
         }
     ])
     useEffect(() => {
@@ -172,70 +159,68 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    setTabsData((prev) => {
-                        prev.forEach((i) => {
-                            if (toWebFuzzer) {
-                                i.contShow = false
-                            } else {
-                                if (i.key === tabs.curTabKey) {
-                                    i.contShow = tabs.contShow
+                    setYakitTab((prev) => {
+                        if (toWebFuzzer) {
+                            prev.forEach((i) => {
+                                i.show = false
+                            })
+                        } else {
+                            prev.forEach((i) => {
+                                if (i.value === tabs.curTabKey) {
+                                    i.show = tabs.contShow
                                 } else {
-                                    i.contShow = false
+                                    i.show = false
                                 }
-                            }
+                            })
+                        }
+                        return [...prev]
+                    })
+                    onActiveKey(tabs.curTabKey)
+                } catch (error) {}
+            } else {
+                if (toWebFuzzer) {
+                    setYakitTab((prev) => {
+                        prev.forEach((i) => {
+                            i.show = false
                         })
                         return [...prev]
                     })
-                    setCurTabKey(tabs.curTabKey)
-                    setRemoteValue(
-                        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
-                        JSON.stringify({contShow: toWebFuzzer ? false : tabs.contShow, curTabKey: tabs.curTabKey})
-                    )
-                } catch (error) {
-                    setTabsData((prev) => {
-                        prev.forEach((i) => {
-                            if (toWebFuzzer) {
-                                i.contShow = false
-                            } else {
-                                if (i.key === "web-tree") {
-                                    i.contShow = true
-                                } else {
-                                    i.contShow = false
-                                }
-                            }
-                        })
-                        return [...prev]
-                    })
-                    setCurTabKey("web-tree")
-                    setRemoteValue(
-                        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
-                        JSON.stringify({contShow: toWebFuzzer ? false : true, curTabKey: "web-tree"})
-                    )
                 }
             }
         })
     }, [])
-    const handleTabClick = async (item: TabsItem) => {
-        const contShow = !item.contShow
-        setTabsData((prev) => {
-            prev.forEach((i) => {
-                if (i.key === item.key) {
-                    i.contShow = contShow
-                } else {
-                    i.contShow = false
-                }
-            })
-            return [...prev]
-        })
-        setRemoteValue(
-            RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
-            JSON.stringify({contShow: contShow, curTabKey: item.key})
-        )
-        setCurTabKey(item.key)
-    }
-    useEffect(() => {
-        setOpenTabsFlag(tabsData.some((item) => item.contShow))
-    }, [tabsData])
+    const onActiveKey = useMemoizedFn((key) => {
+        setActiveKey(key)
+    })
+
+    const openTabsFlag = useCreation(() => {
+        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
+    }, [yakitTab, activeKey])
+
+    useDebounceEffect(
+        () => {
+            setRemoteValue(
+                RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
+                JSON.stringify({contShow: openTabsFlag, curTabKey: activeKey})
+            )
+        },
+        [openTabsFlag, activeKey],
+        {wait: 300}
+    )
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "20%",
+            secondRatio: "80%"
+        }
+
+        if (openTabsFlag) {
+            p.firstRatio = "20%"
+        } else {
+            p.firstRatio = "24px"
+        }
+        return p
+    }, [openTabsFlag])
     // #endregion
 
     // #region 网站树、进程
@@ -267,20 +252,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     })
     // #endregion
 
-    const ResizeBoxProps = useCreation(() => {
-        let p = {
-            firstRatio: "20%",
-            secondRatio: "80%"
-        }
-
-        if (openTabsFlag) {
-            p.firstRatio = "20%"
-        } else {
-            p.firstRatio = "24px"
-        }
-        return p
-    }, [openTabsFlag])
-
     return (
         <div className={styles["HTTPHistoryFilter"]}>
             <YakitResizeBox
@@ -289,65 +260,49 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                 isRecalculateWH={openTabsFlag}
                 firstNode={
                     <div className={styles["HTTPHistoryFilter-left"]}>
-                        <div className={styles["tab-wrap"]}>
-                            <div className={styles["tab"]}>
-                                {tabsData.map((item) => (
-                                    <div
-                                        className={classNames(styles["tab-item"], {
-                                            [styles["tab-item-active"]]: curTabKey === item.key,
-                                            [styles["tab-item-unshowCont"]]: curTabKey === item.key && !item.contShow
-                                        })}
-                                        key={item.key}
-                                        onClick={() => {
-                                            handleTabClick(item)
-                                        }}
-                                    >
-                                        {item.label(t)}
-                                    </div>
-                                ))}
+                        <YakitSideTab
+                            key={i18n.language}
+                            yakitTabs={yakitTab}
+                            setYakitTabs={setYakitTab}
+                            activeKey={activeKey}
+                            onActiveKey={onActiveKey}
+                        />
+                        <div className={styles["tab-content"]}>
+                            <ReactResizeDetector
+                                onResize={(width, height) => {
+                                    if (!width || !height) return
+                                    setTreeWrapHeight(height)
+                                }}
+                                handleWidth={true}
+                                handleHeight={true}
+                                refreshMode={"debounce"}
+                                refreshRate={50}
+                            />
+                            <div
+                                className={styles["webTree-wrapper"]}
+                                style={{display: activeKey === "web-tree" ? "block" : "none"}}
+                            >
+                                <WebTree
+                                    height={treeWrapHeight - 30}
+                                    searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
+                                    treeExtraQueryparams={treeQueryparams}
+                                    refreshTreeFlag={refreshFlag}
+                                    onGetUrl={(searchURL, includeInUrl) => {
+                                        setSearchURL(searchURL)
+                                        setIncludeInUrl(includeInUrl)
+                                    }}
+                                ></WebTree>
                             </div>
                             <div
-                                className={classNames(styles["tab-cont-item"])}
-                                style={{
-                                    overflowY: "hidden"
-                                }}
+                                className={styles["process-wrapper"]}
+                                style={{display: activeKey === "process" ? "block" : "none"}}
                             >
-                                <ReactResizeDetector
-                                    onResize={(width, height) => {
-                                        if (!width || !height) return
-                                        setTreeWrapHeight(height)
-                                    }}
-                                    handleWidth={true}
-                                    handleHeight={true}
-                                    refreshMode={"debounce"}
-                                    refreshRate={50}
-                                />
-                                <div
-                                    className={styles["webTree-wrapper"]}
-                                    style={{display: curTabKey === "web-tree" ? "block" : "none"}}
-                                >
-                                    <WebTree
-                                        height={treeWrapHeight - 30}
-                                        searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
-                                        treeExtraQueryparams={treeQueryparams}
-                                        refreshTreeFlag={refreshFlag}
-                                        onGetUrl={(searchURL, includeInUrl) => {
-                                            setSearchURL(searchURL)
-                                            setIncludeInUrl(includeInUrl)
-                                        }}
-                                    ></WebTree>
-                                </div>
-                                <div
-                                    className={styles["process-wrapper"]}
-                                    style={{display: curTabKey === "process" ? "block" : "none"}}
-                                >
-                                    <HistoryProcess
-                                        queryparamsStr={processQueryparams}
-                                        refreshProcessFlag={refreshFlag}
-                                        curProcess={curProcess}
-                                        onSetCurProcess={setCurProcess}
-                                    ></HistoryProcess>
-                                </div>
+                                <HistoryProcess
+                                    queryparamsStr={processQueryparams}
+                                    refreshProcessFlag={refreshFlag}
+                                    curProcess={curProcess}
+                                    onSetCurProcess={setCurProcess}
+                                ></HistoryProcess>
                             </div>
                         </div>
                     </div>

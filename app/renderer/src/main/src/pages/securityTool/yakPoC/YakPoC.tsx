@@ -77,6 +77,8 @@ import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const HybridScanTaskListDrawer = React.lazy(
     () => import("@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer")
@@ -90,13 +92,6 @@ export const onToManageGroup = () => {
             params: {tabActive: "local", openGroupDrawer: true}
         })
     )
-}
-
-type PocTabKeys = "keyword" | "group"
-interface PocTabsItem {
-    key: PocTabKeys
-    label: ReactElement | string
-    contShow: boolean
 }
 
 /**专项漏洞检测 */
@@ -120,7 +115,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const [responseToSelect, setResponseToSelect] = useState<GroupCount[]>([])
 
     // 隐藏插件列表
-    const [hidden, setHidden] = useState<boolean>(true)
+    const [hidden, setHidden] = useState<boolean>(false)
     const [type, setType] = useState<"keyword" | "group">(
         pageInfo.selectGroup && pageInfo.selectGroup?.length > 0 ? "group" : "keyword"
     )
@@ -200,15 +195,16 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const onClearAll = useMemoizedFn(() => {
         setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setDeletedGroup([])
-        setHidden(false)
-        pocTabs.forEach((i) => {
-            if (i.key === type) {
-                i.contShow = true
-            } else {
-                i.contShow = false
-            }
+        setYakitTab((prev) => {
+            prev.forEach((i) => {
+                if (i.value === type) {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
         })
-        setPocTabs([...pocTabs])
     })
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
@@ -221,56 +217,55 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         } catch (error) {}
     })
 
-    const [pocTabs, setPocTabs] = useState<Array<PocTabsItem>>([
+    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
-            key: "keyword",
-            label: <>按关键词</>,
-            contShow: true // 初始为true
+            label: () => "按关键词",
+            value: "keyword",
+            show: true
         },
         {
-            key: "group",
-            label: <>按组选</>,
-            contShow: false
+            label: () => "按组选",
+            value: "group",
+            show: false
         }
     ])
-    const handleTabClick = (item: PocTabsItem) => {
-        const contShow = !item.contShow
-        pocTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = contShow
-            } else {
-                i.contShow = false
-            }
-        })
-        setPocTabs([...pocTabs])
-        setHidden(!pocTabs.some((item) => item.contShow))
-        setType(item.key)
-    }
+    const onActiveKey = useMemoizedFn((key) => {
+        setType(key)
+    })
+    const show = useCreation(() => {
+        return yakitTab.find((ele) => ele.value === type)?.show !== false
+    }, [yakitTab, type])
+
+    useEffect(() => {
+        setHidden(!show)
+    }, [show])
+
     useEffect(() => {
         if (pageInfo.selectGroup?.length) {
             const t = pageInfo.selectGroup && pageInfo.selectGroup?.length > 0 ? "group" : "keyword"
-            pocTabs.forEach((i) => {
-                if (i.key === t) {
-                    i.contShow = true
-                } else {
-                    i.contShow = false
-                }
+            setYakitTab((prev) => {
+                prev.forEach((i) => {
+                    if (i.value === t) {
+                        i.show = true
+                    } else {
+                        i.show = false
+                    }
+                })
+                return [...prev]
             })
-            setPocTabs([...pocTabs])
-            setType(t)
-            setHidden(!pocTabs.some((item) => item.contShow))
-        } else {
-            setHidden(false)
+            onActiveKey(t)
         }
     }, [])
 
     // 当其他地方直接设置setHidden(true)时，tab相关状态也需要更新
     const handleHidden = useMemoizedFn(() => {
         if (hidden) {
-            pocTabs.forEach((i) => {
-                i.contShow = false
+            setYakitTab((prev) => {
+                prev.forEach((i) => {
+                    i.show = false
+                })
+                return [...prev]
             })
-            setPocTabs([...pocTabs])
         }
     })
     useUpdateEffect(() => {
@@ -280,22 +275,12 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div className={styles["yakpoc-tab-wrap"]}>
-                <div className={styles["yakpoc-tab"]}>
-                    {pocTabs.map((item) => (
-                        <div
-                            className={classNames(styles["yakpoc-tab-item"], {
-                                [styles["yakpoc-tab-item-active"]]: type === item.key,
-                                [styles["yakpoc-tab-item-unshowCont"]]: type === item.key && !item.contShow
-                            })}
-                            key={item.key}
-                            onClick={() => {
-                                handleTabClick(item)
-                            }}
-                        >
-                            {item.label}
-                        </div>
-                    ))}
-                </div>
+                <YakitSideTab
+                    yakitTabs={yakitTab}
+                    setYakitTabs={setYakitTab}
+                    activeKey={type}
+                    onActiveKey={onActiveKey}
+                />
             </div>
             <div
                 className={classNames(styles["left-wrapper"], {

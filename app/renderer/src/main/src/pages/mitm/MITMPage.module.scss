@@ -29,38 +29,6 @@
         display: flex;
         width: 100%;
         height: 100%;
-        .mitm-idle-tab {
-            width: 24px;
-            height: 100%;
-            background: var(--Colors-Use-Neutral-Bg-Hover);
-            &-item {
-                padding: 12px 4px;
-                cursor: pointer;
-                transform: rotate(180deg);
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 16px;
-
-                text-orientation: sideways-right;
-                writing-mode: vertical-rl;
-                border-top: 1px solid var(--Colors-Use-Neutral-Border);
-                &:hover {
-                    background: var(--Colors-Use-Basic-Background);
-                }
-                &-active {
-                    color: var(--Colors-Use-Main-On-Primary);
-                    background-color: var(--Colors-Use-Main-Primary);
-                    &:hover {
-                        color: var(--Colors-Use-Main-On-Primary);
-                        background-color: var(--Colors-Use-Main-Hover);
-                    }
-                }
-                &-unshowCont {
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                    background-color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                }
-            }
-        }
         .mitm-idle-tab-cont-item {
             overflow: auto;
             width: 100%;

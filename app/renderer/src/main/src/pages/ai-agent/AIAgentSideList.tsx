@@ -1,12 +1,21 @@
-import React, {ReactNode, useEffect, useState} from "react"
-import {useMemoizedFn} from "ahooks"
-import {AIAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {AIAgentTabListEnum} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./AIAgentSideList.module.scss"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {
+    OutlineChipIcon,
+    OutlineCogIcon,
+    OutlineMCPIcon,
+    OutlineSparklesIcon,
+    OutlineTemplateIcon,
+    OutlineWrenchIcon
+} from "@/assets/icon/outline"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
@@ -17,18 +26,40 @@ const AIMCP = React.lazy(() => import("./aiMCP/AIMCP"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
-
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
-    const [show, setShow] = useState<boolean>(true)
-
+    const [aiAgentTabList, setAiAgentTabList] = useState<YakitTabsProps[]>([
+        {value: AIAgentTabListEnum.History, label: () => "历史会话", icon: <OutlineSparklesIcon />, show: true},
+        {value: AIAgentTabListEnum.Setting, label: () => "配置", icon: <OutlineCogIcon />, show: false},
+        {value: AIAgentTabListEnum.Forge_Name, label: () => "模板", icon: <OutlineTemplateIcon />, show: false},
+        {value: AIAgentTabListEnum.Tool, label: () => "工具", icon: <OutlineWrenchIcon />, show: false},
+        {value: AIAgentTabListEnum.AI_Model, label: () => "AI模型", icon: <OutlineChipIcon />, show: false},
+        {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />, show: false}
+    ])
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
         setActive(value)
     })
+    const show = useCreation(() => {
+        return aiAgentTabList.find((ele) => ele.value === active)?.show !== false
+    }, [aiAgentTabList, active])
+
+    const switchAIAgentTab = useMemoizedFn((value: AIAgentTabListEnum) => {
+        setAiAgentTabList((prev) => {
+            prev.forEach((i) => {
+                if (i.value === value) {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
+        })
+        handleSetActive(value)
+    })
 
     useEffect(() => {
-        emiter.on("switchAIAgentTab", handleSetActive)
+        emiter.on("switchAIAgentTab", switchAIAgentTab)
         return () => {
-            emiter.off("switchAIAgentTab", handleSetActive)
+            emiter.off("switchAIAgentTab", switchAIAgentTab)
         }
     }, [])
 
@@ -103,12 +134,11 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         <div className={styles["ai-agent-side-list"]}>
             <YakitSideTab
                 type='vertical'
-                yakitTabs={AIAgentTabList}
+                yakitTabs={aiAgentTabList}
+                setYakitTabs={setAiAgentTabList}
                 activeKey={active}
                 onActiveKey={(v) => handleSetActive(v as AIAgentTabListEnum)}
                 className={styles["tab-wrap"]}
-                show={show}
-                setShow={setShow}
             >
                 <div
                     className={classNames(styles["tab-content"], {

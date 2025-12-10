@@ -22,7 +22,7 @@ export interface CodeScanRuleByKeyWordProps {
     setFilterLibRuleKind: (v: "" | "noLib") => void
     pageInfo: CodeScanPageInfoProps
     setPageInfo: (v: CodeScanPageInfoProps) => void
-    handleTabClick: (tab: CodeScanTabsItem) => void
+    handleTabClick: (tab: string) => void
 }
 
 export interface CodeScanRuleByGroupProps {
@@ -265,13 +265,6 @@ export interface VerifyStartProps {
         language: string
         tags: string[] | null
     }
-}
-
-type CodeScanTabKeys = "keyword" | "group"
-export interface CodeScanTabsItem {
-    key: CodeScanTabKeys
-    label: ReactElement | string
-    contShow: boolean
 }
 
 export interface SSAProject {

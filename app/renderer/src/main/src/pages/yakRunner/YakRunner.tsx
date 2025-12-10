@@ -1,5 +1,13 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
@@ -57,6 +65,7 @@ import {getStorageYakRunnerShortcutKeyEvents} from "@/utils/globalShortcutKey/ev
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {WatchFolderID} from "./FileTreeMap/watchFolderID"
 import {randomString} from "@/utils/randomUtil"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -468,7 +477,37 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
 
-    const [isUnShow, setUnShow] = useState<boolean>(true)
+    const [active, setActive, getActive] = useGetState<LeftSideType>("file-tree")
+    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
+        {
+            label: () => "资源管理器",
+            value: "file-tree",
+            show: false
+        },
+        {
+            label: () => "帮助文档",
+            value: "help-doc",
+            show: false
+        }
+    ])
+    const onActiveKey = useMemoizedFn((key) => {
+        setActive(key)
+    })
+    const isUnShow = useCreation(() => {
+        return !(yakitTab.find((ele) => ele.value === active)?.show !== false)
+    }, [yakitTab, active])
+    const openSideShow = useMemoizedFn(() => {
+        setYakitTab((prev) => {
+            prev.forEach((i) => {
+                if (i.value === getActive()) {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
+        })
+    })
 
     // 根据历史读取上次打开的文件夹
     const onGetYakRunnerLastFolderExpanded = useMemoizedFn(async () => {
@@ -476,7 +515,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             const historyData = await getYakRunnerLastFolderExpanded()
             if (historyData?.folderPath) {
                 onOpenFileTreeFun(historyData.folderPath)
-                setUnShow(false)
+                openSideShow()
             }
             emiter.emit("onDefaultExpanded", JSON.stringify(historyData?.expandedKeys || []))
         } catch (error) {}
@@ -489,7 +528,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             if (historyData?.activeFile && historyData.areaInfo) {
                 setActiveFile(historyData.activeFile)
                 setAreaInfo(historyData.areaInfo)
-                setUnShow(false)
+                openSideShow()
             }
         } catch (error) {}
     })
@@ -524,7 +563,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     useUpdateEffect(() => {
         if (fileTree.length > 0) {
             onSaveYakRunnerLastFolder(fileTree[0].path)
-            setUnShow(false)
+            openSideShow()
         } else {
             setYakRunnerLastFolderExpanded({
                 folderPath: "",
@@ -609,7 +648,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         {wait: 300}
     ).run
 
-    const [active, setActive, getActive] = useGetState<LeftSideType>("file-tree")
     const [codePath, setCodePath] = useState<string>("")
     // 默认保存路径
     useEffect(() => {
@@ -1012,9 +1050,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             <LeftSideBar
                                 addFileTab={addFileTab}
                                 isUnShow={isUnShow}
-                                setUnShow={setUnShow}
                                 active={active}
-                                setActive={setActive}
+                                setActive={onActiveKey}
+                                yakitTab={yakitTab}
+                                setYakitTab={setYakitTab}
                             />
                         }
                         secondNodeStyle={

@@ -1,5 +1,5 @@
 import React, {Dispatch, ReactNode, SetStateAction, useEffect, type FC} from "react"
-import {useMemoizedFn, useSafeState} from "ahooks"
+import {useCreation, useMemoizedFn, useSafeState} from "ahooks"
 
 import {
     OutlineAiChatIcon,
@@ -12,7 +12,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
-import {KnowledgeTabList, KnowledgeTabListEnum, prioritizeProcessingItems, targetIcon} from "../utils"
+import {KnowledgeTabListEnum, prioritizeProcessingItems, targetIcon} from "../utils"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
 import {SolidLightningBoltIcon, SolidOutlineSearchIcon} from "@/assets/icon/solid"
@@ -35,6 +35,7 @@ import {CloudDownloadIcon} from "@/assets/newIcon"
 import {installWithEvents} from "./AllInstallPlugins"
 import {failed, success} from "@/utils/notification"
 import AIModelList from "@/pages/ai-agent/aiModelList/AIModelList"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -59,8 +60,12 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     refreshAsync,
     binariesToInstallRefreshAsync
 }) => {
-    const [expand, setExpand] = useSafeState(true)
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
+    const [knowledgeTabList, setKnowledgeTabList] = useSafeState<YakitTabsProps[]>([
+        {value: KnowledgeTabListEnum.Knowledge, label: () => "知识库", show: true},
+        {value: KnowledgeTabListEnum.Plugin, label: () => "插件", show: false},
+        {value: KnowledgeTabListEnum.AI_Model, label: () => "AI模型", show: false}
+    ])
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
@@ -122,13 +127,12 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         }
     }, [installTokens])
 
-    const handleChangeExpand = useMemoizedFn(() => {
-        setExpand((old) => !old)
-    })
-
     const handleSetActive = useMemoizedFn((value: KnowledgeTabListEnum) => {
         setActive(value)
     })
+    const expand = useCreation(() => {
+        return knowledgeTabList.find((ele) => ele.value === active)?.show !== false
+    }, [knowledgeTabList, active])
 
     useEffect(() => {
         setKnowledgeBase(() => {
@@ -385,11 +389,10 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     return (
         <YakitSideTab
             type='vertical'
-            yakitTabs={KnowledgeTabList}
+            yakitTabs={knowledgeTabList}
+            setYakitTabs={setKnowledgeTabList}
             activeKey={active}
             onActiveKey={(v) => handleSetActive(v as KnowledgeTabListEnum)}
-            show={expand}
-            setShow={handleChangeExpand}
         >
             <div
                 className={classNames(styles["tab-content"], {

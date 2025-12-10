@@ -1,5 +1,5 @@
 import {ReactNode} from "react"
-export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRender"> {
+export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRender" | "barHint"> {
     yakitTabs: YakitTabsProps[]
     setYakitTabs?: (v: YakitTabsProps[]) => void
 
@@ -25,9 +25,10 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
 
 export interface YakitTabsProps {
     icon?: ReactNode
-    label: ReactNode
+    label: ReactNode | (() => ReactNode | string)
     value: string
     show?: boolean
+    hint?: () => string
 }
 
 export interface YakitTabsItemProps {
@@ -36,4 +37,5 @@ export interface YakitTabsItemProps {
     onChange: (v: YakitTabsProps) => void
     onTabPaneRender?: (item: YakitTabsProps, node: ReactNode[]) => ReactNode
     rotate?: "left" | "right"
+    barHint?: (k: string) => string
 }
