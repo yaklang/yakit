@@ -7,7 +7,12 @@ import {API} from "@/services/swagger/resposeType"
 import styles from "./PluginTunHijack.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import {PluginTunHijackProps, PluginTunHijackRefProps, PluginTunHijackTableProps} from "./PluginTunHijackType"
+import {
+    HijackTableDataProps,
+    PluginTunHijackProps,
+    PluginTunHijackRefProps,
+    PluginTunHijackTableProps
+} from "./PluginTunHijackType"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TraceSvgSvgIcon} from "@/assets/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -20,6 +25,11 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import usePluginTunHijack from "./usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitRoute } from "@/enums/yakitRoute"
 
 export const PluginTunHijackDef: PluginTunHijackRefProps = {
     startPluginTunHijack: () => {},
@@ -45,7 +55,6 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
 
         useUpdateEffect(() => {
             try {
-                // console.log("streamInfo---", pluginTunHijackData.streamInfo)
                 // 获取tun设备名
                 if (pluginTunHijackData.streamInfo.cardState) {
                     const cardState = pluginTunHijackData.streamInfo.cardState
@@ -57,8 +66,6 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
                             deviceName = tunnelInfo.Data
                         }
                     }
-                    console.log("???", deviceName)
-
                     setTunSessionState({
                         deviceName
                     })
@@ -69,7 +76,10 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
         return (
             <div className={styles["plugin-tun-hijack"]}>
                 {tunSessionState.deviceName ? (
-                    <PluginTunHijackTable cancelPluginTunHijack={cancelPluginTunHijack} deviceName={tunSessionState.deviceName} />
+                    <PluginTunHijackTable
+                        cancelPluginTunHijack={cancelPluginTunHijack}
+                        deviceName={tunSessionState.deviceName}
+                    />
                 ) : (
                     <div className={styles["plugin-tun-hijack-create"]}>
                         <YakitEmpty
@@ -100,25 +110,37 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
     })
 )
 
+const TunHijackQuitHint = "TunHijackQuitHint"
+
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo((props) => {
     const {cancelPluginTunHijack, deviceName} = props
-    const [pluginTunHijackFind, pluginTunHijackFindActions] = usePluginTunHijack({
-        PluginName: "路由表查询"
-    })
-    const [pluginTunHijackAdd, pluginTunHijackAddActions] = usePluginTunHijack({
-        PluginName: "路由表增加"
-    })
-    const [pluginTunHijackDel, pluginTunHijackDelActions] = usePluginTunHijack({
-        PluginName: "路由表删除"
-    })
+
     const [loading, setLoading] = useState<boolean>(false)
-    const [data, setData] = useState([])
-    const [tableData, setTableData] = useState([])
+    const [tableData, setTableData] = useState<HijackTableDataProps[]>([])
     const [visible, setVisible] = useState<boolean>(false)
     const [form] = Form.useForm()
 
+    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+
+    const onSelectAll = (newSelectedRowKeys: string[], selected: HijackTableDataProps[], checked: boolean) => {
+        setIsAllSelect(checked)
+        setSelectedRowKeys(newSelectedRowKeys)
+    }
+    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: HijackTableDataProps) => {
+        if (c) {
+            setSelectedRowKeys((s) => [...s, key])
+        } else {
+            setSelectedRowKeys((s) => s.filter((ele) => ele !== key))
+            setIsAllSelect(false)
+        }
+    })
+
     const addRoute = useMemoizedFn(() => {
         setVisible(true)
+        form.setFieldsValue({
+            target: ""
+        })
     })
 
     const onCancel = useMemoizedFn(() => {
@@ -129,19 +151,25 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         return [
             {
                 title: "IP",
-                dataKey: "PluginID",
-                render: (_, record) => {
-                    return _
-                }
+                dataKey: "ip_addr"
             },
+            // {
+            //     title: "Tun名称",
+            //     dataKey: "tun_name",
+            // },
             {
                 title: "操作",
                 width: 70,
                 fixed: "right",
                 dataKey: "Action",
-                render: (_, record) => {
+                render: (_, record: HijackTableDataProps) => {
                     return (
-                        <YakitButton type='text' colors='danger' size='small' onClick={() => handleDeleteRoute(record)}>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            size='small'
+                            onClick={() => handleDeleteRoute([record.ip_addr])}
+                        >
                             删除
                         </YakitButton>
                     )
@@ -150,6 +178,9 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         ]
     }, [])
     // 以下为路由表查询逻辑---
+    const [pluginTunHijackFind, pluginTunHijackFindActions] = usePluginTunHijack({
+        PluginName: "路由表查询"
+    })
     useEffect(() => {
         updatePluginTunHijack()
     }, [])
@@ -159,27 +190,67 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         pluginTunHijackFindActions.startPluginTunHijack()
     })
     useUpdateEffect(() => {
-        // 路由表查询结果处理
-        console.log("路由表查询结果处理---", pluginTunHijackFind.streamInfo)
-        setLoading(false)
+        try {
+            // 路由表查询结果处理
+            console.log("路由表查询结果处理---", pluginTunHijackFind.streamInfo)
+            const logState = pluginTunHijackFind.streamInfo.logState
+            const tableArr = logState.filter((item) => item.level === "text")
+            if (tableArr.length > 0) {
+                const parsedData = JSON.parse(tableArr?.[0].data) as HijackTableDataProps[]
+                const newData = parsedData.sort((a, b) => {
+                    return a.ip_addr.localeCompare(b.ip_addr)
+                })
+                setTableData(newData)
+            }
+            setLoading(false)
+        } catch (error) {
+            failed("路由表查询失败")
+            setLoading(false)
+        }
     }, [pluginTunHijackFind.streamInfo])
 
     // 以下为路由表删除逻辑---
-    const handleDeleteRoute = useMemoizedFn((record) => {
-        pluginTunHijackDelActions.startPluginTunHijack({
-            ExecParams: [
-                {Key: "ip_list", Value: "1"},
-                {Key: "tun_device_name", Value: deviceName},
-                {Key: "all_clean", Value: "true"}
+    // 是否为推出劫持的逻辑
+    const isQuitRef = useRef<boolean>(false)
+    const [pluginTunHijackDel, pluginTunHijackDelActions] = usePluginTunHijack({
+        PluginName: "路由表删除",
+        onEnd: () => {
+            if (!isQuitRef.current) {
+                pluginTunHijackFindActions.startPluginTunHijack()
+                isQuitRef.current = false
+            }
+        }
+    })
+    const handleDeleteRoute = useMemoizedFn((ipList?: string[]) => {
+        const ip = ipList || selectedRowKeys
+        let ExecParams = [
+            {Key: "tun_device_name", Value: deviceName},
+            {Key: "all_clean", Value: "true"}
+        ]
+        if (ip.length !== 0) {
+            ExecParams = [
+                {Key: "ip_list", Value: ip.join(",")},
+                {Key: "all_clean", Value: "false"}
             ]
+        }
+        console.log("handleDeleteRoute---", ExecParams)
+        pluginTunHijackDelActions.startPluginTunHijack({
+            ExecParams
         })
     })
     useUpdateEffect(() => {
         // 路由表删除结果处理
-        console.log("pluginTunHijackDel---", pluginTunHijackDel.streamInfo)
-    }, [pluginTunHijackDel.streamInfo])
+        console.log("pluginTunHijackDel---", pluginTunHijackDel)
+    }, [pluginTunHijackDel])
 
     // 以下为路由表增加逻辑---
+    const [pluginTunHijackAdd, pluginTunHijackAddActions] = usePluginTunHijack({
+        PluginName: "路由表增加",
+        onEnd: () => {
+            setAddLoading(false)
+        }
+    })
+    const [addLoading, setAddLoading] = useState<boolean>(false)
     const handleRouteOk = useMemoizedFn(() => {
         form.validateFields().then((res) => {
             console.log("handleRouteOk---", res)
@@ -194,7 +265,87 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     useUpdateEffect(() => {
         // 路由表增加结果处理
         console.log("pluginTunHijackAdd---", pluginTunHijackAdd.streamInfo)
+        const cardState = pluginTunHijackAdd.streamInfo.cardState
+        // 成功添加路由
+        const successTag = cardState.find((item) => item.tag === "成功添加路由")
+        if (successTag) {
+            success("添加路由成功")
+            setVisible(false)
+            pluginTunHijackFindActions.startPluginTunHijack()
+        }
     }, [pluginTunHijackAdd.streamInfo])
+    // 以上为路由表增加逻辑---
+
+    const [quitVisible, setQuitVisible] = useState<boolean>(false)
+    const [quitNoPrompt, setQuitNoPrompt] = useState<boolean>(false)
+
+    // 退出Tun劫持逻辑
+    const onQuitFun = useMemoizedFn(()=>{
+        isQuitRef.current = true
+        handleDeleteRoute([])
+        cancelPluginTunHijack()
+        // 如有其余操作的关闭来源 需通知其已执行Tun劫持关闭
+        // 点击页面关闭时直接关闭
+        if(formPageRef.current === "mitm"){
+            emiter.emit("onCloseTunHijackCallback", formPageRef.current)
+            formPageRef.current = undefined;
+        }
+        else if(formPageRef.current === "page"){
+            console.log("通知页面关闭");
+            info("正在关闭Tun劫持服务，请稍后...")
+            setTimeout(()=>{
+                emiter.emit("closePage", JSON.stringify({route: YakitRoute.MITMHacker}))
+            },500)
+        }
+    })
+
+    const onQuitTunHijackFun = useMemoizedFn(() => {
+        if (!quitNoPrompt) {
+            setQuitVisible(true)
+        } else {
+            onQuitFun()
+        }
+    })
+
+    const handleQuitOK = useMemoizedFn(() => {
+        setRemoteValue(TunHijackQuitHint, quitNoPrompt ? "true" : "false")
+        setQuitVisible(false)
+        onQuitFun()
+    })
+
+    const handleQuitCancel = useMemoizedFn(() => {
+        setQuitVisible(false)
+    })
+
+    useEffect(() => {
+        getRemoteValue(TunHijackQuitHint)
+            .then((res) => {
+                const replace = res === "true"
+                setQuitNoPrompt(replace)
+            })
+            .catch(() => {})
+    }, [])
+
+    // 关闭来源
+    const formPageRef = useRef<"mitm" | "page">();
+    const onCloseTunHijackConfirmModalFun = useMemoizedFn((fromPage:"mitm" | "page")=>{
+        formPageRef.current = fromPage;
+        // 来自其余操作关闭tun劫持的请求
+        // if(fromPage === "mitm"){
+            onQuitTunHijackFun()
+        // }
+        // else if(fromPage === "page"){
+        //     onQuitFun()
+        // }
+        
+    })
+
+    useEffect(()=>{
+        emiter.on("onCloseTunHijackConfirmModal", onCloseTunHijackConfirmModalFun)
+        return ()=>{
+            emiter.off("onCloseTunHijackConfirmModal", onCloseTunHijackConfirmModalFun)
+        }
+    },[])
 
     return (
         <div className={styles["plugin-tun-hijack-table"]}>
@@ -202,7 +353,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                 <div className={styles["plugin-tun-hijack-header"]}>
                     <div className={styles["title"]}>
                         <div className={styles["text"]}>路由列表</div>
-                        <YakitButton type='text'>
+                        <YakitButton type='text' onClick={() => pluginTunHijackFindActions.startPluginTunHijack()}>
                             <OutlineRefreshIcon />
                         </YakitButton>
                     </div>
@@ -210,10 +361,10 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                         <YakitButton type='primary' onClick={addRoute}>
                             添加路由
                         </YakitButton>
-                        <YakitButton type='outline1' colors='danger' onClick={handleDeleteRoute}>
-                            清空
+                        <YakitButton type='outline1' colors='danger' onClick={() => handleDeleteRoute()}>
+                            {selectedRowKeys.length > 0 ? "删除" : "清空"}
                         </YakitButton>
-                        <div className={styles["plugin-tun-hijack-quit-icon"]} onClick={cancelPluginTunHijack}>
+                        <div className={styles["plugin-tun-hijack-quit-icon"]} onClick={onQuitTunHijackFun}>
                             <QuitIcon />
                         </div>
                     </div>
@@ -224,12 +375,19 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                         isRefresh={loading}
                         isShowTitle={false}
                         data={tableData}
-                        renderKey={"id"}
+                        renderKey={"ip_addr"}
                         pagination={{
                             page: 1,
                             limit: 50,
-                            total: data.length,
+                            total: tableData.length,
                             onChange: () => {}
+                        }}
+                        rowSelection={{
+                            isAll: isAllSelect,
+                            type: "checkbox",
+                            selectedRowKeys,
+                            onSelectAll: onSelectAll,
+                            onChangeCheckboxSingle
                         }}
                         columns={columns}
                     />
@@ -243,6 +401,9 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                 onCancel={onCancel}
                 onOk={handleRouteOk}
                 okText='开始执行'
+                okButtonProps={{
+                    loading: addLoading
+                }}
             >
                 <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 15}}>
                     <Form.Item
@@ -255,6 +416,21 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                     </Form.Item>
                 </Form>
             </YakitModal>
+
+            <YakitHint
+                visible={quitVisible}
+                title='关闭Tun代理会清空路由表'
+                content={"关闭Tun代理后会清空路由表，不删除会导致无法访问劫持网站"}
+                footerExtra={
+                    <YakitCheckbox checked={quitNoPrompt} onChange={(e) => setQuitNoPrompt(e.target.checked)}>
+                        不再提醒
+                    </YakitCheckbox>
+                }
+                okButtonText='好的'
+                onOk={handleQuitOK}
+                cancelButtonText='取消'
+                onCancel={handleQuitCancel}
+            />
         </div>
     )
 })

@@ -35,3 +35,9 @@ export interface PluginTunHijackTableProps {
 }
 
 type OptionalDebugPluginRequest = Partial<DebugPluginRequest>
+
+
+export interface HijackTableDataProps {
+    ip_addr: string
+    tun_name: string
+}

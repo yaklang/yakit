@@ -604,10 +604,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
             })
         }
     })
-    useEffect(()=>{
-        console.log("main---");
-    },[])
-
 
     const onRenderContent = useMemoizedFn(() => {
         switch (curTabKey) {
