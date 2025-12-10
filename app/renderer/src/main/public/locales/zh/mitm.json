@@ -149,7 +149,7 @@
     "please_enter_username": "请输入用户名",
     "password_label": "密码",
     "please_enter_password": "请输入密码",
-    "proxy_address_placeholder": "请输入有效的代理地址 (如: http://127.0.0.1:8080)",
+    "proxy_address_placeholder": "请选择或输入代理地址,代理如有密码格式为:http://user:pass@ip:port",
     "data_migration": "数据迁移",
     "migration":"迁移",
     "not_migration":"不迁移",
@@ -160,6 +160,13 @@
     "Points": "代理节点",
     "address_tip": "配置后仅目标地址走代理,其余流量不走代理",
     "delete_point_title": "删除代理节点",
-    "delete_point_tips": "该节点仍被 {i} 条规则引用，删除后会同时从这些规则中移除。是否继续？"
+    "delete_point_tips": "该节点仍被 {i} 条规则引用，删除后会同时从这些规则中移除。是否继续？",
+    "disabled": "已禁用",
+    "detectionStart":"开始检测",
+    "detectionLoading":"检测中，请耐心等待...",
+    "detectionSuccess": "检测通过",
+    "proxyDetection": "代理检测",
+    "customDetectionTarget": "自定义检测目标",
+    "customDetectionTargetPlaceholder": "请输入检测目标"
   }
 }

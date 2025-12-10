@@ -16,6 +16,7 @@ export interface ProxyEndpoint {
     Url: string
     UserName: string
     Password: string
+    Disabled?: boolean
 }
 
 export interface ProxyRoute {
@@ -23,6 +24,7 @@ export interface ProxyRoute {
     Name: string
     Patterns: string[]
     EndpointIds: string[]
+    Disabled?: boolean
 }
 
 export interface GlobalProxyRulesConfig {

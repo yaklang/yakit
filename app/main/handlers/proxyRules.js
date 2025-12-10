@@ -33,4 +33,16 @@
             const request = params && params.Config ? params : {Config: params}
             return await asyncSetGlobalProxyRulesConfig(request)
         })
+
+        ipcMain.handle("CheckProxyAlive", async (e, request) => {
+            return new Promise((resolve, reject) => {
+                getClient().CheckProxyAlive(request, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        })
     }
