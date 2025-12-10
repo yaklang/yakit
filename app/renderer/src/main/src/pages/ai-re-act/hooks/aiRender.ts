@@ -144,9 +144,7 @@ export enum AIChatQSDataTypeEnum {
     /** 任务规划崩溃的错误信息 */
     FAIL_PLAN_AND_EXECUTION = "fail_plan_and_execution",
     /** ReAct任务崩溃的错误信息 */
-    FAIL_REACT = "fail_react_task",
-    /** ReAct任务成功结束标志 */
-    SUCCESS_REACT_TASK = "success_react_task"
+    FAIL_REACT = "fail_react_task"
 }
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -182,7 +180,6 @@ type ChatFailPlanAndExecution = AIChatQSDataBase<
     FailPlanAndExecutionError
 >
 type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
-type ChatSuccessReactTask = AIChatQSDataBase<AIChatQSDataTypeEnum.SUCCESS_REACT_TASK, string>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -201,5 +198,4 @@ export type AIChatQSData =
     | ChatPlanExecEnd
     | ChatFailPlanAndExecution
     | ChatFailReact
-    | ChatSuccessReactTask
 // #endregion

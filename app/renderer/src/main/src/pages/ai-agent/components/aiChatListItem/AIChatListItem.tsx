@@ -123,16 +123,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION:
             case AIChatQSDataTypeEnum.FAIL_REACT:
                 return <AiFailPlanCard item={data} />
-            case AIChatQSDataTypeEnum.SUCCESS_REACT_TASK:
-                return (
-                    <DividerCard
-                        status={StreamsStatus.success}
-                        name='任务执行结束'
-                        desc='当前任务已成功执行完成'
-                        success={0}
-                        error={0}
-                    />
-                )
             default:
                 return <></>
         }

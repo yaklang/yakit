@@ -917,15 +917,7 @@ function useCasualChat(params?: UseCasualChatParams) {
 
             if (res.Type === "success_react_task") {
                 // ReAct任务成功结束标志
-                setContents((old) => {
-                    const newArr = [...old]
-                    newArr.push({
-                        ...genBaseAIChatData(res),
-                        type: AIChatQSDataTypeEnum.SUCCESS_REACT_TASK,
-                        data: ipcContent
-                    })
-                    return newArr
-                })
+                // 暂时过滤不展示到UI上
                 return
             }
 
