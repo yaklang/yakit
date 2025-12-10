@@ -29,4 +29,7 @@ export type RefreshDataEventProps = {
     onVectorStoreDocument: string
     // 知识库-实体表
     onErModelRelationship: string
+
+    // mitm 染色规则提示
+    onMitmRuleMoreLimt?: string
 }
