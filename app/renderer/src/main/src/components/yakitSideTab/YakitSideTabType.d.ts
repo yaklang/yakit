@@ -23,9 +23,13 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
     btnItemClassName?: string
 }
 
+export interface YakitSideTabRefProps {
+    onActiveKeyToSelect: (key: string, show: boolean) => void
+}
+
 export interface YakitTabsProps {
     icon?: ReactNode
-    label: ReactNode
+    label: ReactNode | (() => ReactNode | string)
     value: string
     show?: boolean
 }
