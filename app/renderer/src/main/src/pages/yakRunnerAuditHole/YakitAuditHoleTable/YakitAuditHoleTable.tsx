@@ -19,6 +19,8 @@ import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
     OutlineEyeIcon,
+    OutlineExportIcon,
+    OutlineImportIcon,
     OutlineOpenIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
@@ -44,7 +46,11 @@ import {
     apiGetSSARiskDisposal,
     GetSSARiskDisposalResponse,
     SSARiskDisposalData,
-    apiDeleteSSARiskDisposals
+    apiDeleteSSARiskDisposals,
+    ExportSSARiskRequest,
+    ImportSSARiskRequest,
+    apiExportSSARisk,
+    apiImportSSARisk
 } from "./utils"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -52,7 +58,12 @@ import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitRes
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import emiter from "@/utils/eventBus/eventBus"
+import {openABSFileLocated} from "@/utils/openWebsite"
+import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {randomString} from "@/utils/randomUtil"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
@@ -80,6 +91,9 @@ import {LogNodeStatusModifyIcon} from "@/assets/icon/colors"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import importExportStyles from "@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss"
+
+const {ipcRenderer} = window.require("electron")
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
@@ -478,6 +492,200 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }
     /**误报上传 end */
 
+    /**导入导出 start */
+    const [exportModalVisible, setExportModalVisible] = useState<boolean>(false)
+    const [exportProgressVisible, setExportProgressVisible] = useState<boolean>(false)
+    const [exportToken, setExportToken] = useState<string>("")
+    const [importToken, setImportToken] = useState<string>("")
+    const exportPathRef = useRef<string>("")
+    const [exportForm] = Form.useForm()
+    const exportProgressRef = useRef<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
+    const [exportProgress, setExportProgress] = useState<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
+    const exportTimeRef = useRef<any>(null)
+
+    // 打开导出弹窗
+    const onExportSSARisk = useMemoizedFn(() => {
+        const token = randomString(40)
+        setExportToken(token)
+        exportForm.resetFields()
+        setExportModalVisible(true)
+    })
+
+    // 确认导出
+    const onConfirmExport = useMemoizedFn(() => {
+        const formValue = exportForm.getFieldsValue()
+        if (!formValue.TargetPath) {
+            yakitNotify("error", "请填写文件名")
+            return
+        }
+        let targetPath = formValue.TargetPath
+        if (!targetPath.endsWith(".json")) {
+            targetPath = targetPath + ".json"
+        }
+        // 生成完整路径
+        ipcRenderer.invoke("GenerateProjectsFilePath", targetPath).then((fullPath: string) => {
+            exportPathRef.current = fullPath
+            const exportParams: ExportSSARiskRequest = {
+                Filter: {
+                    ...tableParams.Filter
+                },
+                TargetPath: fullPath,
+                WithDataFlowPath: true,
+                WithFileContent: true
+            }
+            // 如果有选中的记录，则只导出选中的
+            if (!allCheck && selectList.length > 0) {
+                exportParams.Filter = {
+                    ID: selectList.map((item) => item.Id)
+                }
+            }
+            apiExportSSARisk(exportParams, exportToken)
+                .then(() => {
+                    setExportProgressVisible(true)
+                })
+                .catch((error) => {
+                    yakitNotify("error", `导出失败: ${error}`)
+                })
+        }).catch((error) => {
+            yakitNotify("error", `生成路径失败: ${error}`)
+        })
+    })
+
+    // 取消导出流
+    const cancelExportStream = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-ExportSSARisk", exportToken)
+        ipcRenderer.removeAllListeners(`${exportToken}-data`)
+        ipcRenderer.removeAllListeners(`${exportToken}-error`)
+        ipcRenderer.removeAllListeners(`${exportToken}-end`)
+        if (exportTimeRef.current) {
+            clearInterval(exportTimeRef.current)
+            exportTimeRef.current = null
+        }
+    })
+
+    // 导出成功
+    const onExportSuccess = useMemoizedFn(() => {
+        if (exportPathRef.current) {
+            openABSFileLocated(exportPathRef.current)
+        }
+        yakitNotify("success", "导出成功")
+        setExportModalVisible(false)
+        setExportProgressVisible(false)
+        setExportProgress({Progress: 0, Verbose: ""})
+        exportProgressRef.current = {Progress: 0, Verbose: ""}
+    })
+
+    // 监听导出进度
+    useEffect(() => {
+        if (!exportToken || !exportProgressVisible) return
+        const updateProgress = () => {
+            setExportProgress({...exportProgressRef.current})
+        }
+        exportTimeRef.current = setInterval(updateProgress, 500)
+        ipcRenderer.on(`${exportToken}-data`, (_, data: {Percent: number; Verbose: string}) => {
+            exportProgressRef.current = {Progress: data.Percent, Verbose: data.Verbose}
+        })
+        ipcRenderer.on(`${exportToken}-error`, (_, error) => {
+            yakitNotify("error", `导出失败: ${error}`)
+        })
+        ipcRenderer.on(`${exportToken}-end`, () => {})
+        return () => {
+            cancelExportStream()
+        }
+    }, [exportToken, exportProgressVisible])
+
+    // 监听导出完成
+    useEffect(() => {
+        if (exportProgress.Progress === 1) {
+            onExportSuccess()
+        }
+    }, [exportProgress.Progress])
+
+    // 导入相关状态
+    const [importModalVisible, setImportModalVisible] = useState<boolean>(false)
+    const [importProgressVisible, setImportProgressVisible] = useState<boolean>(false)
+    const [importForm] = Form.useForm()
+    const importProgressRef = useRef<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
+    const [importProgress, setImportProgress] = useState<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
+    const importTimeRef = useRef<any>(null)
+
+    // 打开导入弹窗
+    const onImportSSARisk = useMemoizedFn(() => {
+        const token = randomString(40)
+        setImportToken(token)
+        importForm.resetFields()
+        setImportModalVisible(true)
+    })
+
+    // 确认导入
+    const onConfirmImport = useMemoizedFn(() => {
+        const formValue = importForm.getFieldsValue()
+        if (!formValue.InputPath) {
+            yakitNotify("error", "请输入本地路径")
+            return
+        }
+        const importParams: ImportSSARiskRequest = {
+            InputPath: formValue.InputPath
+        }
+        apiImportSSARisk(importParams, importToken)
+            .then(() => {
+                setImportProgressVisible(true)
+            })
+            .catch((error) => {
+                yakitNotify("error", `导入失败: ${error}`)
+            })
+    })
+
+    // 取消导入流
+    const cancelImportStream = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-ImportSSARisk", importToken)
+        ipcRenderer.removeAllListeners(`${importToken}-data`)
+        ipcRenderer.removeAllListeners(`${importToken}-error`)
+        ipcRenderer.removeAllListeners(`${importToken}-end`)
+        if (importTimeRef.current) {
+            clearInterval(importTimeRef.current)
+            importTimeRef.current = null
+        }
+    })
+
+    // 导入成功
+    const onImportSuccess = useMemoizedFn(() => {
+        yakitNotify("success", "导入成功")
+        setImportModalVisible(false)
+        setImportProgressVisible(false)
+        setImportProgress({Progress: 0, Verbose: ""})
+        importProgressRef.current = {Progress: 0, Verbose: ""}
+        debugVirtualTableEvent.noResetRefreshT()
+        emiter.emit("onRefAuditRiskFieldGroup")
+    })
+
+    // 监听导入进度
+    useEffect(() => {
+        if (!importToken || !importProgressVisible) return
+        const updateProgress = () => {
+            setImportProgress({...importProgressRef.current})
+        }
+        importTimeRef.current = setInterval(updateProgress, 500)
+        ipcRenderer.on(`${importToken}-data`, (_, data: {Percent: number; Verbose: string}) => {
+            importProgressRef.current = {Progress: data.Percent, Verbose: data.Verbose}
+        })
+        ipcRenderer.on(`${importToken}-error`, (_, error) => {
+            yakitNotify("error", `导入失败: ${error}`)
+        })
+        ipcRenderer.on(`${importToken}-end`, () => {})
+        return () => {
+            cancelImportStream()
+        }
+    }, [importToken, importProgressVisible])
+
+    // 监听导入完成
+    useEffect(() => {
+        if (importProgress.Progress === 1) {
+            onImportSuccess()
+        }
+    }, [importProgress.Progress])
+    /**导入导出 end */
+
     const getRiskType = useMemoizedFn(() => {
         const query: GroupTableColumnRequest = {DatabaseName: "SSA", TableName: "ssa_risks", ColumnName: "risk_type"}
         apiGroupTableColumn(query).then((data) => {
@@ -859,6 +1067,21 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                         <FuncBtn
                                             maxWidth={1200}
                                             type='outline2'
+                                            icon={<OutlineExportIcon />}
+                                            onClick={onExportSSARisk}
+                                            disabled={tableTotal === 0}
+                                            name='导出'
+                                        />
+                                        <FuncBtn
+                                            maxWidth={1200}
+                                            type='outline2'
+                                            icon={<OutlineImportIcon />}
+                                            onClick={onImportSSARisk}
+                                            name='导入'
+                                        />
+                                        <FuncBtn
+                                            maxWidth={1200}
+                                            type='outline2'
                                             icon={<OutlineEyeIcon />}
                                             onClick={onAllRead}
                                             name='全部已读'
@@ -950,6 +1173,142 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 cacheKey={RemoteAuditHoleGV.AuditHoleMisstatementNoPrompt}
                 onCallback={handleMisstatementHint}
             />
+            {/* 导出弹窗 */}
+            <YakitModal
+                visible={exportModalVisible}
+                title='导出审计漏洞'
+                width={520}
+                centered={true}
+                maskClosable={false}
+                destroyOnClose={true}
+                bodyStyle={{padding: 0}}
+                onCancel={() => {
+                    cancelExportStream()
+                    setExportModalVisible(false)
+                    setExportProgressVisible(false)
+                    setExportProgress({Progress: 0, Verbose: ""})
+                    exportProgressRef.current = {Progress: 0, Verbose: ""}
+                }}
+                footerStyle={{justifyContent: "flex-end"}}
+                footer={
+                    !exportProgressVisible ? (
+                        <>
+                            <YakitButton
+                                type='outline2'
+                                onClick={() => setExportModalVisible(false)}
+                                style={{marginRight: 8}}
+                            >
+                                取消
+                            </YakitButton>
+                            <YakitButton onClick={onConfirmExport}>确定</YakitButton>
+                        </>
+                    ) : (
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                cancelExportStream()
+                                setExportModalVisible(false)
+                                setExportProgressVisible(false)
+                                setExportProgress({Progress: 0, Verbose: ""})
+                                exportProgressRef.current = {Progress: 0, Verbose: ""}
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                    )
+                }
+            >
+                {!exportProgressVisible ? (
+                    <div className={importExportStyles["import-export-modal"]}>
+                        <div className={importExportStyles["export-hint"]}>
+                            远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                        </div>
+                        <Form form={exportForm} layout='horizontal' labelCol={{span: 5}} wrapperCol={{span: 18}}>
+                            <Form.Item
+                                label='文件名'
+                                name='TargetPath'
+                                rules={[{required: true, message: "请填写文件名"}]}
+                            >
+                                <YakitInput placeholder='请输入导出文件名' />
+                            </Form.Item>
+                        </Form>
+                    </div>
+                ) : (
+                    <div style={{padding: "0 16px"}}>
+                        <ImportAndExportStatusInfo
+                            title='导出中'
+                            showDownloadDetail={false}
+                            streamData={exportProgress}
+                            logListInfo={[]}
+                        />
+                    </div>
+                )}
+            </YakitModal>
+            {/* 导入弹窗 */}
+            <YakitModal
+                visible={importModalVisible}
+                title='导入审计漏洞'
+                width={720}
+                centered={true}
+                maskClosable={false}
+                destroyOnClose={true}
+                bodyStyle={{padding: 0}}
+                onCancel={() => {
+                    cancelImportStream()
+                    setImportModalVisible(false)
+                    setImportProgressVisible(false)
+                    setImportProgress({Progress: 0, Verbose: ""})
+                    importProgressRef.current = {Progress: 0, Verbose: ""}
+                }}
+                footerStyle={{justifyContent: "flex-end"}}
+                footer={
+                    !importProgressVisible ? (
+                        <YakitButton onClick={onConfirmImport}>导入</YakitButton>
+                    ) : (
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                cancelImportStream()
+                                setImportModalVisible(false)
+                                setImportProgressVisible(false)
+                                setImportProgress({Progress: 0, Verbose: ""})
+                                importProgressRef.current = {Progress: 0, Verbose: ""}
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                    )
+                }
+            >
+                {!importProgressVisible ? (
+                    <div className={importExportStyles["import-export-modal"]}>
+                        <div className={importExportStyles["import-hint"]}>
+                            导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。
+                        </div>
+                        <Form form={importForm} layout='horizontal' labelCol={{span: 6}} wrapperCol={{span: 17}}>
+                            <YakitFormDragger
+                                formItemProps={{
+                                    name: "InputPath",
+                                    label: "本地路径",
+                                    rules: [{required: true, message: "请输入本地路径"}]
+                                }}
+                                multiple={false}
+                                selectType='file'
+                                fileExtensionIsExist={false}
+                            />
+                        </Form>
+                    </div>
+                ) : (
+                    <div style={{padding: "0 16px"}}>
+                        <ImportAndExportStatusInfo
+                            title='导入中'
+                            showDownloadDetail={false}
+                            streamData={importProgress}
+                            logListInfo={[]}
+                        />
+                    </div>
+                )}
+            </YakitModal>
         </div>
     )
 })
