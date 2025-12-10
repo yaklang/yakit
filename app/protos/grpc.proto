@@ -1052,6 +1052,7 @@ message AddMCPServerRequest {
   string URL = 3;
   string Command = 4;
   bool Enable = 5;
+  repeated KVPair Envs = 6;
 }
 
 message DeleteMCPServerRequest {
@@ -1065,6 +1066,7 @@ message UpdateMCPServerRequest {
   string URL = 4;
   string Command = 5;
   bool Enable = 6;
+  repeated KVPair Envs = 7;
 }
 
 // 支持分页查询
@@ -1099,6 +1101,7 @@ message MCPServer {
   bool Enable = 7;
   repeated MCPServerTool Tools = 6;
   string ErrorMsg = 8;
+  repeated KVPair Envs = 9;
 }
 
 message GetAllMCPServersResponse {
@@ -1425,6 +1428,7 @@ message QueryKnowledgeBaseByAIRequest {
   string EnhancePlan = 2;
   int64 KnowledgeBaseID = 3;
   bool QueryAllCollections = 4;
+  string AIService = 5;
 }
 
 message QueryKnowledgeBaseByAIResponse {
@@ -5863,6 +5867,7 @@ message FuzzerRequest {// last index 68
   string FuzzTagMode = 50; // "close"/"standard"/"legacy"
   bool FuzzTagSyncIndex = 51;
   string Proxy = 6;
+  string ProxyRuleId = 70;
   double PerRequestTimeoutSeconds = 7;
   double DialTimeoutSeconds = 61;
 
@@ -5987,7 +5992,6 @@ message FuzzerRequest {// last index 68
   int64 RandomChunkedMaxDelay = 68;
 
   bool NoReadMultiResponse = 69;
-  string ProxyRuleId = 70;
 }
 
 message MutateMethod {
@@ -8241,6 +8245,7 @@ message MITMV2Request{
   bool RecoverContext = 45; // recover mitm context plugin config...
   int64 PluginConcurrency = 47; // 设置插件并发数，默认30
   string DownstreamProxyRuleId = 48;
+
 }
 
 message MITMV2Response {
