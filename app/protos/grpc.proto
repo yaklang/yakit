@@ -2460,15 +2460,16 @@ message ProxyEndpoint {
   string Url = 3;
   string UserName = 4;
   string Password = 5;
-  bool Disabled = 6;
 }
 
 message CheckProxyAliveRequest {
   string EndpointId = 1;
+  // 临时代理串，如 http://user:pass@ip:port，如果提供则优先使用，不依赖 EndpointId
+  string Proxy = 2;
   // 通过代理需要访问的目标地址，可以是 URL 或 host:port
-  string Target = 2;
+  string Target = 3;
   // 可选超时时间，默认 5 秒
-  int64 TimeoutSeconds = 3;
+  int64 TimeoutSeconds = 4;
 }
 
 message CheckProxyAliveResponse {
