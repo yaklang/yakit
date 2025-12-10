@@ -157,7 +157,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         getRequest: getSetting,
         onNotifyMessage
     })
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
+    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders, reActTimelines} =
+        chatIPCData
 
     // 保存上次对话信息
     const handleSaveChatInfo = useMemoizedFn(() => {
@@ -173,7 +174,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     ...yakExecResult,
                     execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
                 }),
-                grpcFolders: cloneDeep(grpcFolders)
+                grpcFolders: cloneDeep(grpcFolders),
+                reActTimelines: cloneDeep(reActTimelines)
             }
             setChats &&
                 setChats((old) => {

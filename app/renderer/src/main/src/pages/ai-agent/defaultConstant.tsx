@@ -224,7 +224,8 @@ export const defaultChatIPCData: UseChatIPCState = {
         total: 0,
         data: []
     },
-    casualStatus: {loading: false, title: ""}
+    casualStatus: {loading: false, title: ""},
+    reActTimelines: []
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},

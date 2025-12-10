@@ -132,6 +132,7 @@ export interface UseChatIPCParams {
     onNotifyMessage?: (message: AIChatIPCNotifyMessage) => void
 }
 
+/** 自由对话-实时问题队列 */
 export interface AIQuestionQueues {
     total: number
     data: AIAgentGrpcApi.QuestionQueueItem[]
@@ -162,6 +163,8 @@ export interface UseChatIPCState {
     questionQueue: AIQuestionQueues
     /** 自由对话的loading状态信息 */
     casualStatus: CasualLoadingStatus
+    /** 实时时间线 */
+    reActTimelines: AIAgentGrpcApi.TimelineItem[]
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */

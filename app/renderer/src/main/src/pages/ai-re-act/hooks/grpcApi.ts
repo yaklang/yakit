@@ -485,6 +485,25 @@ export declare namespace AIAgentGrpcApi {
         payload: string
         type: string
     }
+
+    /** 实时时间线-单个时间点的数据 */
+    export interface TimelineItem {
+        deleted: boolean
+        created_at: number
+        id: number
+        /** 可选类型 "user_input" "tool_result", "user_interaction", "text", "raw" */
+        type: string
+        entry_type?: string
+        /** 任务ID */
+        task_id?: string
+        /** 实际内容 */
+        content: string
+        /** 原始文本（用于调试） */
+        raw_text?: string
+
+        ShrinkResult?: string
+        ShrinkSimilarResult?: string
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构

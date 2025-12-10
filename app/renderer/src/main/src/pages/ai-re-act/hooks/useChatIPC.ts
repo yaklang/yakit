@@ -128,6 +128,9 @@ function useChatIPC(params?: UseChatIPCParams) {
         execute ? 5000 : undefined
     )
 
+    // 实时时间线
+    const [reActTimelines, setReActTimelines] = useState<AIAgentGrpcApi.TimelineItem[]>([])
+
     // 日志
     const logEvents = useAIChatLog()
 
@@ -358,6 +361,11 @@ function useChatIPC(params?: UseChatIPCParams) {
                             handleResetCasualChatID()
                         }
                         return
+                    } else if (res.NodeId === "timeline_item") {
+                        /* 问题的状态变化 */
+                        const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
+                        setReActTimelines((old) => [...old, timelineItem])
+                        return
                     } else if (res.NodeId === "status") {
                         const data = JSON.parse(ipcContent) as {key: string; value: string}
                         if (data.key === "re-act-loading-status-key") {
@@ -483,7 +491,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             taskChat,
             grpcFolders,
             questionQueue,
-            casualStatus
+            casualStatus,
+            reActTimelines
         },
         {
             fetchToken,
