@@ -28,6 +28,11 @@ import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./Re
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {getNameByPath} from "@/pages/yakRunner/utils"
+import {fetchVarFlowGraph, fetchValueDataFlowGraph} from "./VarFlowGraphAPI"
+import {VarFlowGraph} from "./VarFlowGraphType"
+import {AnalysisStepsGraph} from "./AnalysisStepsGraph"
+import {VarFlowGraphViz} from "./VarFlowGraphViz"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 export interface JumpSourceDataProps {
     title: string
@@ -642,6 +647,12 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     const [refresh, setRefresh] = useState<boolean>(false)
     const [activeKey, setActiveKey] = useState<string | string[]>()
     const [loading, setLoading] = useState<boolean>(false)
+    // 新增：分析步骤图相关状态
+    const [viewMode, setViewMode] = useState<"dataflow" | "steps" | "graph">("dataflow")
+    const [varFlowGraph, setVarFlowGraph] = useState<VarFlowGraph | null>(null)
+    const [resultId, setResultId] = useState<string>()
+    const [programId, setProgramId] = useState<string>()
+    
     useEffect(() => {
         if (isShowAuditDetail && auditRightParams) {
             initData(auditRightParams)
@@ -656,6 +667,18 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             const body = Body ? StringToUint8Array(Body) : undefined
             const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
             if (result && result.Resources.length > 0) {
+                // 提取 result_id 和 program_id 用于获取分析步骤图
+                const resultIdResource = result.Resources.find((r) => r.ResourceType === "result_id")
+                if (resultIdResource) {
+                    setResultId(resultIdResource.ResourceName)
+                }
+                // 从 params 中获取 program_id
+                if (params.Location) {
+                    setProgramId(params.Location)
+                } else if (params.ProgramName) {
+                    setProgramId(params.ProgramName)
+                }
+                
                 result.Resources[0].Extra.forEach((item) => {
                     if (item.Key === "graph") {
                         setGraph(item.Value)
@@ -698,6 +721,87 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             setLoading(false)
         }
     })
+    
+    // 获取分析步骤图数据
+    const loadVarFlowGraph = useMemoizedFn(async () => {
+        if (!programId || !resultId) {
+            return
+        }
+        try {
+            setLoading(true)
+            const data = await fetchVarFlowGraph(programId, resultId)
+            setVarFlowGraph(data)
+            setLoading(false)
+        } catch (error) {
+            console.error("Failed to load VarFlowGraph:", error)
+            setLoading(false)
+        }
+    })
+    
+    // 当切换到分析步骤图视图时加载数据
+    useEffect(() => {
+        if ((viewMode === "steps" || viewMode === "graph") && !varFlowGraph && programId && resultId) {
+            loadVarFlowGraph()
+        }
+    }, [viewMode, programId, resultId])
+    
+    // 处理点击值跳转数据流图
+    const handleValueClick = useMemoizedFn(async (variable: string, index: number) => {
+        if (!programId || !resultId) return
+        
+        try {
+            setLoading(true)
+            const response = await fetchValueDataFlowGraph(programId, resultId, variable, index)
+            
+            if (response && response.Resources.length > 0) {
+                clearMapGraphInfoDetail()
+                
+                // 解析返回的数据流图数据
+                response.Resources[0].Extra.forEach((item) => {
+                    if (item.Key === "graph") {
+                        setGraph(item.Value)
+                    }
+                    if (item.Key === "graph_info") {
+                        try {
+                            let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
+                            graph_info.forEach((item) => {
+                                setMapGraphInfoDetail(item.node_id, item)
+                            })
+                        } catch (error) {}
+                    }
+                    if (item.Key === "message") {
+                        setMessage(item.Value)
+                    }
+                    if (item.Key === "node_id") {
+                        setNodeId(item.Value)
+                    }
+                    if (item.Key === "graph_line") {
+                        try {
+                            let graph_info: string[][] = JSON.parse(item.Value)
+                            if (graph_info.length > 0 && graph_info.length <= 10) {
+                                const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
+                                setActiveKey(expendKey)
+                            } else {
+                                setActiveKey(undefined)
+                            }
+                            setGraphLine(graph_info)
+                        } catch (error) {
+                            setGraphLine(undefined)
+                            setActiveKey(undefined)
+                        }
+                    }
+                })
+                
+                setRefresh(!refresh)
+                // 切换到数据流图视图
+                setViewMode("dataflow")
+            }
+            setLoading(false)
+        } catch (error) {
+            console.error("Failed to load value data flow graph:", error)
+            setLoading(false)
+        }
+    })
 
     return (
         <YakitSpin spinning={loading}>
@@ -707,16 +811,18 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         <div className={styles["absolute-box"]}>
                             <div className={styles["title"]}>审计结果</div>
                             <div className={styles["extra"]}>
-                                <Tooltip title='一键收起'>
-                                    <YakitButton
-                                        type='text2'
-                                        icon={<OutlineCollectionIcon />}
-                                        disabled={(graphLine || []).length === 0}
-                                        onClick={() => {
-                                            setActiveKey(undefined)
-                                        }}
-                                    />
-                                </Tooltip>
+                                {viewMode === "dataflow" && (
+                                    <Tooltip title='一键收起'>
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineCollectionIcon />}
+                                            disabled={(graphLine || []).length === 0}
+                                            onClick={() => {
+                                                setActiveKey(undefined)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                )}
                                 <YakitButton
                                     type='text2'
                                     icon={<OutlineXIcon />}
@@ -728,32 +834,59 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <div className={styles["main"]}>
-                    <YakitResizeBox
-                        isVer={true}
-                        secondRatio={!isShowAuditDetail ? "0px" : undefined}
-                        lineDirection='bottom'
-                        firstRatio={"200px"}
-                        firstMinSize={140}
-                        firstNodeStyle={{padding: 0}}
-                        secondNodeStyle={{padding: 0}}
-                        secondMinSize={350}
-                        firstNode={
-                            <>
-                                {auditRightParams && (
-                                    <AuditResultBox
-                                        activeKey={activeKey}
-                                        setActiveKey={setActiveKey}
-                                        graphLine={graphLine}
-                                        message={message}
-                                        nodeId={nodeId}
-                                        auditRightParams={auditRightParams}
-                                    />
-                                )}
-                            </>
-                        }
-                        secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
+                <div className={styles["view-mode-selector"]}>
+                    <YakitRadioButtons
+                        value={viewMode}
+                        onChange={(e) => setViewMode(e.target.value)}
+                        options={[
+                            {value: "dataflow", label: "数据流图"},
+                            {value: "graph", label: "变量流图"},
+                            {value: "steps", label: "分析步骤"}
+                        ]}
+                        size='small'
                     />
+                </div>
+                <div className={styles["main"]}>
+                    {viewMode === "dataflow" ? (
+                        <YakitResizeBox
+                            isVer={true}
+                            secondRatio={!isShowAuditDetail ? "0px" : undefined}
+                            lineDirection='bottom'
+                            firstRatio={"200px"}
+                            firstMinSize={140}
+                            firstNodeStyle={{padding: 0}}
+                            secondNodeStyle={{padding: 0}}
+                            secondMinSize={350}
+                            firstNode={
+                                <>
+                                    {auditRightParams && (
+                                        <AuditResultBox
+                                            activeKey={activeKey}
+                                            setActiveKey={setActiveKey}
+                                            graphLine={graphLine}
+                                            message={message}
+                                            nodeId={nodeId}
+                                            auditRightParams={auditRightParams}
+                                        />
+                                    )}
+                                </>
+                            }
+                            secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
+                        />
+                    ) : viewMode === "graph" ? (
+                        programId && resultId ? (
+                            <VarFlowGraphViz
+                                varFlowGraph={varFlowGraph}
+                                programId={programId}
+                                resultId={resultId}
+                                onValueClick={handleValueClick}
+                            />
+                        ) : (
+                            <div className={styles["empty-state"]}>暂无数据</div>
+                        )
+                    ) : (
+                        <AnalysisStepsGraph varFlowGraph={varFlowGraph} />
+                    )}
                 </div>
             </div>
         </YakitSpin>

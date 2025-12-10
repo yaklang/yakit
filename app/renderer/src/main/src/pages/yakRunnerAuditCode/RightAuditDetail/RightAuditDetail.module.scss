@@ -36,6 +36,19 @@
             }
         }
     }
+    .view-mode-selector {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
+    }
+    .empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--Colors-Use-Neutral-Text-2);
+        font-size: 14px;
+    }
     .main {
         flex: 1;
         overflow: hidden;
