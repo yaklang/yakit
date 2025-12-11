@@ -241,7 +241,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 if (updateData.action === "create") {
                     debugVirtualTableEvent.startT()
                 }
-                if(updateData.action === "update"){
+                if (updateData.action === "update") {
                     debugVirtualTableEvent.startT()
                 }
             }
@@ -500,7 +500,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const exportPathRef = useRef<string>("")
     const [exportForm] = Form.useForm()
     const exportProgressRef = useRef<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
-    const [exportProgress, setExportProgress] = useState<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
+    const [exportProgress, setExportProgress] = useState<{Progress: number; Verbose: string}>({
+        Progress: 0,
+        Verbose: ""
+    })
     const exportTimeRef = useRef<any>(null)
 
     // 打开导出弹窗
@@ -523,32 +526,35 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             targetPath = targetPath + ".json"
         }
         // 生成完整路径
-        ipcRenderer.invoke("GenerateProjectsFilePath", targetPath).then((fullPath: string) => {
-            exportPathRef.current = fullPath
-            const exportParams: ExportSSARiskRequest = {
-                Filter: {
-                    ...tableParams.Filter
-                },
-                TargetPath: fullPath,
-                WithDataFlowPath: true,
-                WithFileContent: true
-            }
-            // 如果有选中的记录，则只导出选中的
-            if (!allCheck && selectList.length > 0) {
-                exportParams.Filter = {
-                    ID: selectList.map((item) => item.Id)
+        ipcRenderer
+            .invoke("GenerateProjectsFilePath", targetPath)
+            .then((fullPath: string) => {
+                exportPathRef.current = fullPath
+                const exportParams: ExportSSARiskRequest = {
+                    Filter: {
+                        ...tableParams.Filter
+                    },
+                    TargetPath: fullPath,
+                    WithDataFlowPath: true,
+                    WithFileContent: true
                 }
-            }
-            apiExportSSARisk(exportParams, exportToken)
-                .then(() => {
-                    setExportProgressVisible(true)
-                })
-                .catch((error) => {
-                    yakitNotify("error", `导出失败: ${error}`)
-                })
-        }).catch((error) => {
-            yakitNotify("error", `生成路径失败: ${error}`)
-        })
+                // 如果有选中的记录，则只导出选中的
+                if (!allCheck && selectList.length > 0) {
+                    exportParams.Filter = {
+                        ID: selectList.map((item) => item.Id)
+                    }
+                }
+                apiExportSSARisk(exportParams, exportToken)
+                    .then(() => {
+                        setExportProgressVisible(true)
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", `导出失败: ${error}`)
+                    })
+            })
+            .catch((error) => {
+                yakitNotify("error", `生成路径失败: ${error}`)
+            })
     })
 
     // 取消导出流
@@ -606,7 +612,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const [importProgressVisible, setImportProgressVisible] = useState<boolean>(false)
     const [importForm] = Form.useForm()
     const importProgressRef = useRef<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
-    const [importProgress, setImportProgress] = useState<{Progress: number; Verbose: string}>({Progress: 0, Verbose: ""})
+    const [importProgress, setImportProgress] = useState<{Progress: number; Verbose: string}>({
+        Progress: 0,
+        Verbose: ""
+    })
     const importTimeRef = useRef<any>(null)
 
     // 打开导入弹窗
@@ -952,6 +961,22 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         debugVirtualTableEvent.setTData(newTableData)
     })
 
+    const onCancelExport = useMemoizedFn(() => {
+        cancelExportStream()
+        setExportModalVisible(false)
+        setExportProgressVisible(false)
+        setExportProgress({Progress: 0, Verbose: ""})
+        exportProgressRef.current = {Progress: 0, Verbose: ""}
+    })
+
+    const onCancelImport = useMemoizedFn(() => {
+        cancelImportStream()
+        setImportModalVisible(false)
+        setImportProgressVisible(false)
+        setImportProgress({Progress: 0, Verbose: ""})
+        importProgressRef.current = {Progress: 0, Verbose: ""}
+    })
+
     return (
         <div className={classNames(styles["yakit-audit-hole-table"], riskWrapperClassName)} ref={tableBoxRef}>
             <ReactResizeDetector
@@ -1019,16 +1044,18 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                                     {selectNum}
                                                 </span>
                                             </div>
-                                            {(query.RuntimeID||"").length > 0 && <YakitTag
-                                                className={styles['virtual-table-heard-right-tag']}
-                                                color='info'
-                                                closable
-                                                onClose={() => {
-                                                    setQuery && setQuery({RuntimeID: []})
-                                                }}
-                                            >
-                                                {query.RuntimeID} 
-                                            </YakitTag>}
+                                            {(query.RuntimeID || "").length > 0 && (
+                                                <YakitTag
+                                                    className={styles["virtual-table-heard-right-tag"]}
+                                                    color='info'
+                                                    closable
+                                                    onClose={() => {
+                                                        setQuery && setQuery({RuntimeID: []})
+                                                    }}
+                                                >
+                                                    {query.RuntimeID}
+                                                </YakitTag>
+                                            )}
                                         </div>
                                     </div>
                                     <div className={styles["table-head-extra"]}>
@@ -1182,13 +1209,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 maskClosable={false}
                 destroyOnClose={true}
                 bodyStyle={{padding: 0}}
-                onCancel={() => {
-                    cancelExportStream()
-                    setExportModalVisible(false)
-                    setExportProgressVisible(false)
-                    setExportProgress({Progress: 0, Verbose: ""})
-                    exportProgressRef.current = {Progress: 0, Verbose: ""}
-                }}
+                onCancel={onCancelExport}
                 footerStyle={{justifyContent: "flex-end"}}
                 footer={
                     !exportProgressVisible ? (
@@ -1203,16 +1224,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             <YakitButton onClick={onConfirmExport}>确定</YakitButton>
                         </>
                     ) : (
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                cancelExportStream()
-                                setExportModalVisible(false)
-                                setExportProgressVisible(false)
-                                setExportProgress({Progress: 0, Verbose: ""})
-                                exportProgressRef.current = {Progress: 0, Verbose: ""}
-                            }}
-                        >
+                        <YakitButton type='outline2' onClick={onCancelExport}>
                             取消
                         </YakitButton>
                     )
@@ -1253,28 +1265,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 maskClosable={false}
                 destroyOnClose={true}
                 bodyStyle={{padding: 0}}
-                onCancel={() => {
-                    cancelImportStream()
-                    setImportModalVisible(false)
-                    setImportProgressVisible(false)
-                    setImportProgress({Progress: 0, Verbose: ""})
-                    importProgressRef.current = {Progress: 0, Verbose: ""}
-                }}
+                onCancel={onCancelImport}
                 footerStyle={{justifyContent: "flex-end"}}
                 footer={
                     !importProgressVisible ? (
                         <YakitButton onClick={onConfirmImport}>导入</YakitButton>
                     ) : (
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                cancelImportStream()
-                                setImportModalVisible(false)
-                                setImportProgressVisible(false)
-                                setImportProgress({Progress: 0, Verbose: ""})
-                                importProgressRef.current = {Progress: 0, Verbose: ""}
-                            }}
-                        >
+                        <YakitButton type='outline2' onClick={onCancelImport}>
                             取消
                         </YakitButton>
                     )
