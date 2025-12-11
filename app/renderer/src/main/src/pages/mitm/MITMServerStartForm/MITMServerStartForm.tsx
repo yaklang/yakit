@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useRef, useState} from "react"
-import {Form, Space, Modal} from "antd"
+import {Form, Space, Modal, Divider} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MitmStatus} from "@/pages/mitm/MITMPage"
@@ -33,7 +33,7 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
@@ -381,7 +381,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <Item
                         label='下游代理'
                         name='downstreamProxy'
-                        help={
+                        extra={
                             <span className={styles["form-rule-help"]}>
                                 为经过该 MITM
                                 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port
@@ -391,6 +391,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 >
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </span>
+                                <Divider type="vertical"/>
+                                <ProxyTest />
                             </span>
                         }
                         getValueFromEvent={(value) => {
@@ -401,6 +403,27 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             return value
                         }}
                         validateTrigger={["onChange", "onBlur"]}
+                        rules={[
+                            {
+                                validator: (_, value) => {
+                                    if (!value || !Array.isArray(value) || value.length === 0) {
+                                        return Promise.resolve()
+                                    }
+                                    // 获取当前options中的所有值
+                                    const existingOptions = proxyRouteOptions.map(({value}) => value)
+                                    // 只校验新输入的值(不在options中的值)
+                                    const newValues = value.filter((v) => !existingOptions.includes(v))
+                                    // 校验代理地址格式: 协议://地址:端口
+                                    const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                    for (const v of newValues) {
+                                        if (!pattern.test(v)) {
+                                            return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                        }
+                                    }
+                                    return Promise.resolve()
+                                }
+                            }
+                        ]}
                     >
                         <YakitSelect
                             ref={downstreamProxyRef}

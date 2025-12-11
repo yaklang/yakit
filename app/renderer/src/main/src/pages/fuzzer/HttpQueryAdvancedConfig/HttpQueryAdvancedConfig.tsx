@@ -58,7 +58,7 @@ import {
 import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import { useProxy } from "@/hook/useProxy"
 
@@ -536,6 +536,28 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     }
                                     return value
                                 }}
+                                validateTrigger={["onChange", "onBlur"]}
+                                rules={[
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value || !Array.isArray(value) || value.length === 0) {
+                                                return Promise.resolve()
+                                            }
+                                            // 获取当前options中的所有值
+                                            const existingOptions = proxyRouteOptions.map(({value}) => value)
+                                            // 只校验新输入的值(不在options中的值)
+                                            const newValues = value.filter((v) => !existingOptions.includes(v))
+                                            // 校验代理地址格式: 协议://地址:端口
+                                            const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                            for (const v of newValues) {
+                                                if (!pattern.test(v)) {
+                                                    return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                                }
+                                            }
+                                            return Promise.resolve()
+                                        }
+                                    }
+                                ]}
                             >
                                 <YakitSelect
                                     ref={proxyListRef}
@@ -549,6 +571,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 />
                             </Form.Item>
                             <Form.Item label={<> </>}>
+                                <div style={{ display: 'flex', alignItems: 'center'}}>
                                 <YakitButton
                                     size='small'
                                     type='text'
@@ -557,6 +580,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 >
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </YakitButton>
+                                    <Divider type="vertical"/>
+                                    <YakitButton
+                                        size='small'
+                                        type='text'
+                                    >
+                                        <ProxyTest />
+                                    </YakitButton>
+                                </div>
                             </Form.Item>
                             <Form.Item
                                 label={t("HttpQueryAdvancedConfig.disable_system_proxy")}
