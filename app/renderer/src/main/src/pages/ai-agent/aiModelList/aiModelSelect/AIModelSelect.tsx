@@ -1,9 +1,9 @@
 import React, {useEffect, useRef, useState} from "react"
 import {AIModelItemProps, AIModelSelectProps} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
-import {getAIModelList} from "../utils"
+import {isForcedSetAIModal, getAIModelList} from "../utils"
 import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
 import {GetAIModelListResponse} from "../../type/aiModel"
@@ -20,6 +20,31 @@ import {isEqual} from "lodash"
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+
+export const onOpenConfigModal = () => {
+    const m = YakitModalConfirm({
+        title: "AI 模型未配置",
+        width: 420,
+        onOkText: "去配置",
+        cancelButtonProps: {style: {display: "none"}},
+        content: <div>无可使用AI模型，请配置后使用</div>,
+        closable: false,
+        maskClosable: false,
+        onOk: () => {
+            apiGetGlobalNetworkConfig().then((obj) => {
+                setAIModal({
+                    config: obj,
+                    onSuccess: () => {
+                        setTimeout(() => {
+                            emiter.emit("onRefreshAIModelList")
+                        }, 200)
+                    }
+                })
+                m.destroy()
+            })
+        }
+    })
+}
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     //#region AI model
@@ -38,24 +63,27 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     })
     const [open, setOpen] = useState<boolean>(false)
     const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
+    const refRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(refRef)
 
     useEffect(() => {
+        if (!inViewport) return
         getAIModelListOption(!modelValue)
         emiter.on("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         return () => {
             emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         }
-    }, [])
+    }, [inViewport])
     const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
         getAIModelListOption(data === "true")
     })
     const getAIModelListOption = useDebounceFn(
         (refreshValue?: boolean) => {
-            getAIModelList().then((res) => {
-                if (res.localModels.length === 0 && res.onlineModels.length === 0) {
-                    onOpenConfigModal()
+            isForcedSetAIModal({
+                noDataCall: () => {
                     onSelectModel("")
-                } else {
+                },
+                haveDataCall: (res) => {
                     setAIModelOptions(res)
                     refreshValue && onInitValue(res)
                 }
@@ -63,31 +91,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         },
         {wait: 200, leading: true}
     ).run
-
-    const onOpenConfigModal = useMemoizedFn(() => {
-        const m = YakitModalConfirm({
-            title: "AI 模型未配置",
-            width: 420,
-            onOkText: "去配置",
-            cancelButtonProps: {style: {display: "none"}},
-            content: <div>无可使用AI模型，请配置后使用</div>,
-            closable: false,
-            maskClosable: false,
-            onOk: () => {
-                apiGetGlobalNetworkConfig().then((obj) => {
-                    setAIModal({
-                        config: obj,
-                        onSuccess: () => {
-                            setTimeout(() => {
-                                emiter.emit("onRefreshAIModelList")
-                            }, 200)
-                        }
-                    })
-                    m.destroy()
-                })
-            }
-        })
-    })
 
     const onInitValue = useMemoizedFn((res) => {
         if (res && res.onlineModels.length > 0) {
@@ -119,43 +122,48 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     }, [aiModelOptions.onlineModels.length, aiModelOptions.localModels.length])
 
     //#endregion
-    return isHaveData ? (
-        <AIChatSelect
-            value={modelValue}
-            onSelect={onSelectModel}
-            dropdownRender={(menu) => {
-                return (
-                    <div className={styles["drop-select-wrapper"]}>
-                        <div className={styles["select-title"]}>AI 模型选择</div>
-                        {menu}
-                    </div>
-                )
-            }}
-            getList={() => getAIModelListOption()}
-            open={open}
-            setOpen={onSetOpen}
-        >
-            {aiModelOptions.onlineModels.length > 0 && (
-                <YakitSelect.OptGroup key='线上' label='线上'>
-                    {aiModelOptions.onlineModels.map((nodeItem) => (
-                        <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
-                            <AIModelItem value={nodeItem.Type} />
-                        </YakitSelect.Option>
-                    ))}
-                </YakitSelect.OptGroup>
+    return (
+        <>
+            <div ref={refRef} />
+            {isHaveData ? (
+                <AIChatSelect
+                    value={modelValue}
+                    onSelect={onSelectModel}
+                    dropdownRender={(menu) => {
+                        return (
+                            <div className={styles["drop-select-wrapper"]}>
+                                <div className={styles["select-title"]}>AI 模型选择</div>
+                                {menu}
+                            </div>
+                        )
+                    }}
+                    getList={() => getAIModelListOption()}
+                    open={open}
+                    setOpen={onSetOpen}
+                >
+                    {aiModelOptions.onlineModels.length > 0 && (
+                        <YakitSelect.OptGroup key='线上' label='线上'>
+                            {aiModelOptions.onlineModels.map((nodeItem) => (
+                                <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
+                                    <AIModelItem value={nodeItem.Type} />
+                                </YakitSelect.Option>
+                            ))}
+                        </YakitSelect.OptGroup>
+                    )}
+                    {aiModelOptions.localModels.length > 0 && (
+                        <YakitSelect.OptGroup key='本地' label='本地'>
+                            {aiModelOptions.localModels.map((nodeItem) => (
+                                <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
+                                    <AIModelItem value={nodeItem.Name} />
+                                </YakitSelect.Option>
+                            ))}
+                        </YakitSelect.OptGroup>
+                    )}
+                </AIChatSelect>
+            ) : (
+                <></>
             )}
-            {aiModelOptions.localModels.length > 0 && (
-                <YakitSelect.OptGroup key='本地' label='本地'>
-                    {aiModelOptions.localModels.map((nodeItem) => (
-                        <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
-                            <AIModelItem value={nodeItem.Name} />
-                        </YakitSelect.Option>
-                    ))}
-                </YakitSelect.OptGroup>
-            )}
-        </AIChatSelect>
-    ) : (
-        <></>
+        </>
     )
 })
 
