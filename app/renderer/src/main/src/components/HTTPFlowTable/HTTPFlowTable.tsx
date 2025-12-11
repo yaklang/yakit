@@ -1118,7 +1118,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRows([])
             setIsAllSelect(false)
         }
-    }, [props.searchURL, props.includeInUrl, pageType])
+    }, [props.searchURL, props.includeInUrl, pageType])// 这里加上includeInUrl依赖但里面没用到 是因为下面selectedKeys只需要设置setParams 不需要重置
     useUpdateEffect(() => {
         if (params.SearchURL === "") {
             refreshTabsContRef.current = true
