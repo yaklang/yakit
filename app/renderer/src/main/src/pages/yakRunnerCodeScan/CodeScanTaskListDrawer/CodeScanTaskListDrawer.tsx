@@ -2,7 +2,7 @@ import React, {ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef,
 import {Divider, Tooltip} from "antd"
 import {useControllableValue, useCreation, useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import styles from "./CodeScanTaskListDrawer.module.scss"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -21,6 +21,7 @@ import {shallow} from "zustand/shallow"
 import {SyntaxFlowScanRequest} from "../YakRunnerCodeScanType"
 import {CreateReportContentProps, onCreateReportModal} from "@/pages/portscan/CreateReport"
 import moment from "moment"
+import {apiQuerySSAPrograms} from "@/pages/yakRunnerScanHistory/utils"
 const {ipcRenderer} = window.require("electron")
 interface CodeScanTaskListForwardedRefProps {
     onRemove: () => void
@@ -495,45 +496,64 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
             update(1)
         })
 
-        const onDetails = useMemoizedFn((record: SyntaxFlowScanTask, codeScanMode: HybridScanModeType) => {
-            const runtimeId = record.TaskId
-            const projectName = record.Programs
-            const GroupNames = record.Config.Filter?.GroupNames
-            const route = YakitRoute.YakRunner_Code_Scan
-            const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(route, runtimeId)
-            // 重试new 都是新建页面
-            if (!!current && codeScanMode !== "new") {
-                emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
-                setTimeout(() => {
-                    // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
-                    if (codeScanMode !== "status") {
-                        emiter.emit(
-                            "onSetCodeScanTaskStatus",
-                            JSON.stringify({
+        const onDetails = useMemoizedFn(async (record: SyntaxFlowScanTask, codeScanMode: HybridScanModeType) => {
+            try {
+                const runtimeId = record.TaskId
+                const historyName = record.Programs?.[0]
+                const GroupNames = record.Config.Filter?.GroupNames
+                const route = YakitRoute.YakRunner_Code_Scan
+                const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(route, runtimeId)
+                // 查询项目
+                const res = await apiQuerySSAPrograms({
+                    Filter: {ProgramNames: record.Programs},
+                    Pagination: {...genDefaultPagination()}
+                })
+                let projectId = 0
+                let projectName = ""
+                if (res.Data.length > 0) {
+                    projectId = res.Data[0].SSAProjectID
+                    projectName = res.Data[0].Name
+                }
+                // 重试new 都是新建页面
+                if (!!current && codeScanMode !== "new") {
+                    emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
+                    setTimeout(() => {
+                        // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
+                        if (codeScanMode !== "status") {
+                            emiter.emit(
+                                "onSetCodeScanTaskStatus",
+                                JSON.stringify({
+                                    runtimeId,
+                                    codeScanMode,
+                                    projectName,
+                                    projectId,
+                                    historyName,
+                                    GroupNames,
+                                    pageId: current.pageId
+                                })
+                            )
+                        }
+                    }, 200)
+                } else {
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route,
+                            params: {
                                 runtimeId,
                                 codeScanMode,
                                 projectName,
-                                GroupNames,
-                                pageId: current.pageId
-                            })
-                        )
-                    }
-                }, 200)
-            } else {
-                emiter.emit(
-                    "openPage",
-                    JSON.stringify({
-                        route,
-                        params: {
-                            runtimeId,
-                            codeScanMode,
-                            projectName,
-                            GroupNames
-                        }
-                    })
-                )
+                                projectId,
+                                historyName,
+                                GroupNames
+                            }
+                        })
+                    )
+                }
+                setVisible(false)
+            } catch (error) {
+                failed("操作失败：" + error)
             }
-            setVisible(false)
         })
 
         const onTableChange = useDebounceFn(
