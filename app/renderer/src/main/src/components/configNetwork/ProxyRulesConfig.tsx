@@ -524,12 +524,10 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                 {
                     Target
                 },
-                joined.startsWith("ep-") ? {EndpointId: joined} : {Proxy: joined}
+                joined.startsWith("ep") ? {EndpointId: joined} : {Proxy: joined}
             )
 
-            console.log(params, "params")
             const res = await ipcRenderer.invoke("CheckProxyAlive", params)
-            console.log(res, "res")
             if (res.Ok) {
                 //检查新增代理节点
                 checkProxyEndpoints(proxy)
@@ -539,8 +537,6 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                 setErrorMsg(res.Reason)
             }
         } catch (e: any) {
-            if (e?.errorFields) return
-            console.log(e, "ssssss")
             setStatus("error")
             setErrorMsg(e.message)
         }
@@ -599,12 +595,9 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                     <YakitButton icon={<OutlineEngineIcon />} type='text2' onClick={onShowModal} />
                 </Tooltip>
             ) : (
-                <>
-                    <Divider type='vertical' />
-                    <span onClick={onShowModal} className={styles["proxy-test-title"]}>
-                        {t("ProxyConfig.proxyDetection")}
-                    </span>
-                </>
+                <span onClick={onShowModal} className={styles["proxy-test-title"]}>
+                    {t("ProxyConfig.proxyDetection")}
+                </span>
             )}
             <YakitModal
                 title={t("ProxyConfig.proxyDetection")}
@@ -615,57 +608,57 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                 className={styles["proxy-test-modal"]}
             >
                 <div className={styles["proxy-test-modal-content"]}>
-                <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
-                    <Form.Item
-                        label={t("ProxyConfig.Points")}
-                        name='Proxy'
-                        getValueFromEvent={(value) => {
-                            // 只保留最后一个选中的值
-                            if (Array.isArray(value) && value.length > 1) {
-                                return [value[value.length - 1]]
-                            }
-                            return value
-                        }}
-                        validateTrigger={["onChange", "onBlur"]}
-                        rules={[
-                            {
-                                validator: (_, value) => {
-                                    if (!value || !Array.isArray(value) || value.length === 0) {
+                    <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
+                        <Form.Item
+                            label={t("ProxyConfig.Points")}
+                            name='Proxy'
+                            getValueFromEvent={(value) => {
+                                // 只保留最后一个选中的值
+                                if (Array.isArray(value) && value.length > 1) {
+                                    return [value[value.length - 1]]
+                                }
+                                return value
+                            }}
+                            validateTrigger={["onChange", "onBlur"]}
+                            rules={[
+                                {
+                                    validator: (_, value) => {
+                                        if (!value || !Array.isArray(value) || value.length === 0) {
+                                            return Promise.resolve()
+                                        }
+                                        // 获取当前options中的所有值
+                                        const existingOptions = Endpoints.map((opt) => opt.Id)
+                                        // 只校验新输入的值(不在options中的值)
+                                        const newValues = value.filter((v) => !existingOptions.includes(v))
+                                        // 校验代理地址格式: 协议://地址:端口
+                                        const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                        for (const v of newValues) {
+                                            if (!pattern.test(v)) {
+                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                            }
+                                        }
                                         return Promise.resolve()
                                     }
-                                    // 获取当前options中的所有值
-                                    const existingOptions = Endpoints.map((opt) => opt.Id)
-                                    // 只校验新输入的值(不在options中的值)
-                                    const newValues = value.filter((v) => !existingOptions.includes(v))
-                                    // 校验代理地址格式: 协议://地址:端口
-                                    const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
-                                    for (const v of newValues) {
-                                        if (!pattern.test(v)) {
-                                            return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
-                                        }
-                                    }
-                                    return Promise.resolve()
                                 }
-                            }
-                        ]}
-                    >
-                        <YakitSelect
-                            disabled={disabled}
-                            options={Endpoints.map(({Url, Id}) => ({label: Url, value: Id}))}
-                            mode='tags'
-                            placeholder={t("ProxyConfig.proxy_address_placeholder")}
-                        />
-                    </Form.Item>
+                            ]}
+                        >
+                            <YakitSelect
+                                disabled={disabled}
+                                options={Endpoints.map(({Url, Id}) => ({label: Url, value: Id}))}
+                                mode='tags'
+                                placeholder={t("ProxyConfig.proxy_address_placeholder")}
+                            />
+                        </Form.Item>
 
-                    <Form.Item
-                        label={t("ProxyConfig.customDetectionTarget")}
-                        name='Target'
-                        rules={[{required: true, message: t("ProxyConfig.customDetectionTargetPlaceholder")}]}
-                    >
-                        <YakitInput disabled={disabled} />
-                    </Form.Item>
-                </Form>
-                <div className={styles["test-modal-content-res"]}>{renderContent()}</div>
+                        <Form.Item
+                            label={t("ProxyConfig.customDetectionTarget")}
+                            name='Target'
+                            rules={[{required: true, message: t("ProxyConfig.customDetectionTargetPlaceholder")}]}
+                        >
+                            <YakitInput disabled={disabled} />
+                        </Form.Item>
+                    </Form>
+                    <div className={styles["test-modal-content-res"]}>{renderContent()}</div>
                 </div>
             </YakitModal>
         </>

@@ -571,6 +571,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 />
                             </Form.Item>
                             <Form.Item label={<> </>}>
+                                <div style={{ display: 'flex', alignItems: 'center'}}>
                                 <YakitButton
                                     size='small'
                                     type='text'
@@ -579,7 +580,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 >
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </YakitButton>
-                                <ProxyTest />
+                                    <Divider type="vertical"/>
+                                    <YakitButton
+                                        size='small'
+                                        type='text'
+                                    >
+                                        <ProxyTest />
+                                    </YakitButton>
+                                </div>
                             </Form.Item>
                             <Form.Item
                                 label={t("HttpQueryAdvancedConfig.disable_system_proxy")}

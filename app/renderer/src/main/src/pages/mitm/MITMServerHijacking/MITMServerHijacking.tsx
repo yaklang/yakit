@@ -507,7 +507,8 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                 <div className={style["agent-down-stream-proxy"]} onClick={onClickDownstreamProxy}>
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </div>
-                                    <ProxyTest />
+                                <Divider type="vertical"/>
+                                <ProxyTest />
                                 </>
                             }
                             validateTrigger={["onChange", "onBlur"]}
