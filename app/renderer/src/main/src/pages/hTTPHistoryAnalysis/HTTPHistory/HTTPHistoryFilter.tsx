@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {
     useCreation,
@@ -10,6 +10,7 @@ import {
     useUpdateEffect
 } from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {getHTTPFlowExportFields} from "@/components/HTTPFlowTable/HTTPFlowExportFields"
 import {
     OutlineChevrondownIcon,
     OutlineCogIcon,
@@ -1960,6 +1961,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             return Math.round(total / 1000) * 100
         }
     }, [total])
+
+    // 导出字段映射配置
+    const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
+
     const getExcelData = useMemoizedFn((pagination, list: number[]) => {
         return new Promise((resolve) => {
             const params: any = {
@@ -1969,104 +1974,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             }
 
             let exportParams: any = {}
-            // 这里的key值为数据库的key
-            const arrList = [
-                {
-                    title: t("YakitTable.order"),
-                    key: "id",
-                    dataKey: "Id"
-                },
-                {
-                    title: t("HTTPFlowTable.method"),
-                    key: "method",
-                    dataKey: "Method"
-                },
-                {
-                    title: t("HTTPFlowTable.statusCode"),
-                    key: "status_code",
-                    dataKey: "StatusCode"
-                },
-                {
-                    title: "URL",
-                    key: "url",
-                    dataKey: "Url"
-                },
-                {
-                    title: "Host",
-                    key: "host",
-                    dataKey: "Host"
-                },
-                {
-                    title: "Path",
-                    key: "path",
-                    dataKey: "Path"
-                },
-                {
-                    title: "Payloads",
-                    key: "payloads",
-                    dataKey: "Payloads"
-                },
-                {
-                    title: t("HTTPFlowTable.fromPlugin"),
-                    key: "from_plugin",
-                    dataKey: "FromPlugin"
-                },
-                {
-                    title: "Tags",
-                    key: "tags",
-                    dataKey: "Tags"
-                },
-                {
-                    title: "IP",
-                    key: "iP_address",
-                    dataKey: "IPAddress"
-                },
-                {
-                    title: t("HTTPFlowTable.bodyLength"),
-                    key: "body_length",
-                    dataKey: "BodyLength"
-                },
-                {
-                    title: "Title",
-                    key: "response",
-                    dataKey: "HtmlTitle"
-                },
-                {
-                    title: t("HTTPFlowTable.params"),
-                    key: "get_params_total",
-                    dataKey: "GetParamsTotal"
-                },
-                {
-                    title: t("HTTPFlowTable.contentType"),
-                    key: "content_type",
-                    dataKey: "ContentType"
-                },
-                {
-                    title: t("HTTPFlowTable.durationMs"),
-                    key: "duration",
-                    dataKey: "DurationMs"
-                },
-                {
-                    title: t("HTTPFlowTable.updatedAt"),
-                    key: "updated_at",
-                    dataKey: "UpdatedAt"
-                },
-                {
-                    title: t("HTTPFlowTable.requestSizeVerbose"),
-                    key: "request",
-                    dataKey: "RequestSizeVerbose"
-                },
-                {
-                    title: t("HTTPFlowTable.requestPacket"),
-                    key: "request",
-                    dataKey: "request"
-                },
-                {
-                    title: t("HTTPFlowTable.responsePacket"),
-                    key: "response",
-                    dataKey: "response"
-                }
-            ]
             const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
 
             const Ids: number[] = list.map((id) => Number(id))
@@ -2150,6 +2057,44 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
     const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onHarExport = (ids: number[]) => {
+        percentContainerRef.current = currentPageTabRouteKey
+        const titleValue = configColumnRef.current.map((item) => ({title: item.title, key: item.dataKey}))
+        const harFieldOptions = [
+            ...titleValue,
+            {title: t("HTTPFlowTable.requestPacket"), key: "request"},
+            {title: t("HTTPFlowTable.responsePacket"), key: "response"}
+        ]
+        const m = showYakitModal({
+            title: t("HTTPFlowTable.exportFields"),
+            content: (
+                <ExportSelect
+                    exportValue={harFieldOptions}
+                    initCheckValue={harFieldOptions}
+                    setExportTitle={(v: string[]) => {
+                        setExportDataKey(["Id", ...v])
+                    }}
+                    exportKey={!toWebFuzzer ? "MITM-HISTORY-EXPORT-KEYS" : "WEBFUZZER-HISTORY-EXPORT-KEYS"}
+                    getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
+                    onClose={() => m.destroy()}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
+                    onHarExport={() => handleClickHarExport(ids)}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            },
+            width: 650,
+            footer: null,
+            maskClosable: false,
+            getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+        })
+    }
+
+    const handleClickHarExport = useMemoizedFn((ids: number[]) => {
         handleSaveFileSystemDialog({
             title: t("HTTPFlowTable.saveFile"),
             defaultPath: !toWebFuzzer ? "History" : "WebFuzzer",
@@ -2160,13 +2105,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             if (!file.canceled) {
                 const filePath = file?.filePath?.toString()
                 if (filePath) {
+                    const FieldName = arrList
+                        .filter((item) => exportDataKey.includes(item.dataKey))
+                        .map((item) => item.key)
                     const exportParams: ExportHTTPFlowStreamRequest = {
                         Filter: {
                             ...query,
                             IncludeId: ids
                         },
                         ExportType: "har",
-                        TargetPath: filePath
+                        TargetPath: filePath,
+                        FieldName
                     }
 
                     const token = randomString(40)
@@ -2183,7 +2132,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             }
         })
-    }
+    })
     // #endregion
 
     const queyChangeUpdateData = useDebounceFn(
