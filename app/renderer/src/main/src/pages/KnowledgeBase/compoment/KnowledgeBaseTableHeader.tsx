@@ -169,7 +169,14 @@ const KnowledgeBaseTableHeader: FC<
                                     </div>
                                     {knowledgeBaseItems.historyGenerateKnowledgeList.map((it, key) => {
                                         return (
-                                            <div key={it.token} className={styles["history-content"]}>
+                                            <div
+                                                key={it.token}
+                                                className={styles["history-content"]}
+                                                onClick={() => {
+                                                    setShow(false)
+                                                    onViewBuildProcess(it.token, "historyGenerate")
+                                                }}
+                                            >
                                                 <div className={styles["content-first"]}>
                                                     <div>{it.name}</div>
                                                     <div className={styles["tag"]}>
@@ -179,13 +186,7 @@ const KnowledgeBaseTableHeader: FC<
                                                 </div>
                                                 <div className={styles["content-last"]}>
                                                     <div>{it.date}</div>
-                                                    <OutlineExternallinkIcon
-                                                        className={styles["external-link-icon"]}
-                                                        onClick={() => {
-                                                            setShow(false)
-                                                            onViewBuildProcess(it.token, "historyGenerate")
-                                                        }}
-                                                    />
+                                                    <OutlineExternallinkIcon className={styles["external-link-icon"]} />
                                                 </div>
                                             </div>
                                         )

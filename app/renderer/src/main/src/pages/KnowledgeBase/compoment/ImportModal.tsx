@@ -9,6 +9,7 @@ import {useEffect, useRef} from "react"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {KnowledgeBaseContentProps} from "../TKnowledgeBase"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
+import {extractFileName} from "../utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,7 +37,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
     const [token, setToken] = useSafeState<string>("")
     const [hasError, setHasError] = useSafeState(false)
     const knowledgeBaseNameRef = useRef<string>("")
-    const {addKnowledgeBase} = useKnowledgeBase()
+    const {addKnowledgeBase, knowledgeBases} = useKnowledgeBase()
 
     useEffect(() => {
         if (visible) {
@@ -182,7 +183,17 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             <div className={styles["import-hint"]}>
                 只可导入从知识库里导出的rag文件，导入文件暂不支持修改。导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。
             </div>
-            <Form form={form} layout='vertical' className={styles["import-form"]}>
+            <Form
+                form={form}
+                layout='vertical'
+                className={styles["import-form"]}
+                onValuesChange={(changedValues) => {
+                    if (changedValues.importPath) {
+                        const fileName = extractFileName(changedValues.importPath)
+                        form.setFieldsValue({knowledgeBaseName: fileName})
+                    }
+                }}
+            >
                 <YakitFormDragger
                     formItemProps={{
                         label: "导入文件路径",
@@ -221,7 +232,25 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                     disabled={importLoading}
                     fileExtensionIsExist={false}
                 />
-                <Form.Item label='新知识库名称' name='knowledgeBaseName'>
+
+                <Form.Item
+                    label='新知识库名称'
+                    name='knowledgeBaseName'
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator(_, value) {
+                                const findKnowledgeIdx = knowledgeBases.findIndex(
+                                    (it) => it.KnowledgeBaseName === value
+                                )
+                                if (findKnowledgeIdx === 0) {
+                                    return Promise.reject("知识库名称重复，请重新输入")
+                                }
+                                return Promise.resolve()
+                            }
+                        }
+                    ]}
+                >
                     <YakitInput placeholder='请输入新知识库名称' disabled={importLoading} />
                 </Form.Item>
 
