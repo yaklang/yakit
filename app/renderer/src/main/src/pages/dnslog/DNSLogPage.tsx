@@ -81,7 +81,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const DNS_LOG_PAGE_UPDATE_TOKEN_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_CACHE"
     const DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE"
     const openDetails = useRef<DNSLogEvent>()
-    const [clearTimestamp, setClearTimestamp, getClearTimestamp] = useGetState(0)
+    const clearTimestamp = useRef<number>(0)
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     
 
@@ -217,7 +217,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 UseLocal: getSelectedMode() === "内置" ? false : getIsLocal()
             })
             .then((rsp: {Events: DNSLogEvent[]}) => {
-                const clearTime = getClearTimestamp()
+                const clearTime = clearTimestamp.current
                 setRecords(
                     rsp.Events.filter((i) => {
                         // 筛选时间戳之后的记录
@@ -373,7 +373,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         ipcRenderer
             .invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params || ""})
             .then((rsp: {Events: DNSLogEvent[]}) => {
-                const clearTime = getClearTimestamp()
+                const clearTime = clearTimestamp.current
                 setRecords(
                     rsp.Events.filter((i) => {
                         // 筛选时间戳之后的记录
@@ -449,7 +449,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
     const onClickClear = useMemoizedFn(() => {
         const currentTimestamp = Math.floor(Date.now() / 1000)
-        setClearTimestamp(currentTimestamp)
+        clearTimestamp.current = currentTimestamp
         setRecords((pre) => pre.filter(({Timestamp}) => +Timestamp > currentTimestamp))
     })
 
