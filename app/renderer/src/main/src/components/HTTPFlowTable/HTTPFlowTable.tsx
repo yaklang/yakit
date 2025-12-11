@@ -4959,6 +4959,13 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 
 // 发送web fuzzer const
 export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string) => {
+    const stateSecretHijacking = await getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS)
+    let params = {}
+    if (["enableGMTLS","1"].includes(stateSecretHijacking)) {
+        Object.assign(params, {enableGMTLS: true})
+    }else if(stateSecretHijacking === "randomJA3"){
+        Object.assign(params, {randomJA3: true})
+    }
     ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
@@ -4966,6 +4973,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
                 openFlag,
                 isHttps: rowData.IsHTTPS,
                 downstreamProxyStr,
+                ...params,
                 request: rowData.InvalidForUTF8Request
                     ? rowData.SafeHTTPRequest!
                     : new Buffer(rowData.Request).toString("utf8")

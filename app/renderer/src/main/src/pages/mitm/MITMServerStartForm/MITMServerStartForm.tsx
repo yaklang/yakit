@@ -124,7 +124,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
     })
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-    const { getProxyValue, proxyRouteOptions, checkProxyEndpoints } = useProxy()
+    const { getProxyValue, proxyRouteOptions, checkProxyEndpoints, proxyConfig: { Endpoints = []} } = useProxy()
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
@@ -168,6 +168,18 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         getRemoteValue(MITMConsts.MITMDefaultEnableHTTP2).then((e) => {
             form.setFieldsValue({enableHttp2: !!e})
         })
+
+        getRemoteValue(MITMConsts.MITMDownStreamProxy).then((e = '') => {
+            const downstreamProxy = e.split(',').filter(i=>!!i).map(item => {
+                if(item.startsWith('ep')|| item.startsWith('route')){
+                    return item
+                }else {
+                    return Endpoints.find(({Url})=> Url === item)?.Id || item
+                }
+            })
+            form.setFieldsValue({ downstreamProxy })
+        })
+
         getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
             if (e === "1") {
                 form.setFieldsValue({stateSecretHijacking: "enableGMTLS"})
@@ -279,6 +291,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         hostRef.current.onSetRemoteValues(params.host)
         //如果有新增的代理配置 则存配置项
         checkProxyEndpoints(downstreamProxy)
+        setRemoteValue(MITMConsts.MITMDownStreamProxy, downstreamProxy.join(','))
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.stateSecretHijacking}`)
