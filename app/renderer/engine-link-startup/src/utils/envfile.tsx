@@ -1,3 +1,5 @@
+export const __PLATFORM__ = import.meta.env.VITE_PLATFORM
+
 export enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
     /**@name 企业版 */
@@ -83,7 +85,7 @@ export const isMemfit = () => {
 }
 
 export const GetReleaseEdition = () => {
-    switch (fetchEnv()) {
+    switch (__PLATFORM__) {
         case "enterprise":
             return PRODUCT_RELEASE_EDITION.EnpriTrace
         case "simple-enterprise":
@@ -99,16 +101,8 @@ export const GetReleaseEdition = () => {
     }
 }
 
-export const fetchEnv = () => {
-    try {
-        return import.meta.env.VITE_PLATFORM
-    } catch (e) {
-        return ""
-    }
-}
-
 export const GetConnectPort = () => {
-    switch (fetchEnv()) {
+    switch (__PLATFORM__) {
         case "enterprise":
             return 9012
         case "simple-enterprise":
@@ -127,7 +121,7 @@ export const GetConnectPort = () => {
 export type SoftwareVersion = "yakit" | "irify" | "memfit"
 /** 获取软件是什么版本(yakit|irify|memfit) */
 export const FetchSoftwareVersion: () => SoftwareVersion = () => {
-    switch (fetchEnv()) {
+    switch (__PLATFORM__) {
         case "irify":
         case "irify-enterprise":
             return "irify"
