@@ -716,6 +716,16 @@ const prioritizeProcessingItems = (items: KnowledgeBaseItem[]) => {
     })
 }
 
+const extractFileName = (filePath: string) => {
+    if (!filePath) return ""
+
+    // 兼容 win/mac
+    const parts = filePath.split(/[/\\]/)
+    const fullName = parts[parts.length - 1]
+
+    return fullName.replace(/\.[^/.]+$/, "")
+}
+
 export {
     targetInstallList,
     getFileInfoList,
@@ -738,5 +748,6 @@ export {
     answerOptions,
     prioritizeProcessingItems,
     knowledgeTypeOptions,
-    compareKnowledgeBaseChangeList
+    compareKnowledgeBaseChangeList,
+    extractFileName
 }

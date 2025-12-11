@@ -92,6 +92,8 @@ const KnowledgeBase: FC = () => {
                 if (filteredInstall.length !== 0) {
                     info(`使用知识库缺少第三方依赖，需安装${filteredInstall.length}个`)
                     setInstallPlug(true)
+                } else {
+                    setInstallPlug(false)
                 }
             },
             onError: (err) => {
