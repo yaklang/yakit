@@ -2460,6 +2460,7 @@ message ProxyEndpoint {
   string Url = 3;
   string UserName = 4;
   string Password = 5;
+  bool Disabled = 6;
 }
 
 message CheckProxyAliveRequest {
