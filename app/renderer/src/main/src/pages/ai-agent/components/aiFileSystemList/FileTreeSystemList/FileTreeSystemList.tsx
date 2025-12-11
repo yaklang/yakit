@@ -76,7 +76,7 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen,selected,
     const [data, setData] = useState<FileNodeProps[]>([])
     const [_, startTransition] = useTransition()
     const [fileTree, {onLoadFolderChildren, onResetTree}] = useFileTree({
-        path,
+        target:{path, isFolder: true},
         onRefreshTreeData: () => {
             updateData()
         },

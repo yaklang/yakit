@@ -117,6 +117,9 @@ export interface AIInputEvent {
 
     IsFreeInput?: boolean
     FreeInput?: string // 自由输入的文本
+
+    /** 问题关联的文件路径 */
+    AttachedFilePath?: string[]
 }
 
 export interface AIOutputI18n {

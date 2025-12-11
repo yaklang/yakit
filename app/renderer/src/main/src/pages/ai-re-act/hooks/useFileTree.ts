@@ -11,8 +11,8 @@ import {v4 as uuidv4} from "uuid"
 
 // #region useFileTree 相关定义
 export interface UseFileTreeParams {
-    /** 需要加载的文件夹路径 */
-    path: string
+    /** 需要加载的(文件夹|文件)路径 */
+    target: {path: string; isFolder: boolean}
     /** 文件树的初始化完成的回调 */
     onInitComplete?: () => void
     /** 触发文件树数据重渲染的事件 */
@@ -31,10 +31,10 @@ export interface UseFileTreeEvents {
 }
 // #endregion
 
-function useFileTree(params?: UseFileTreeParams): [UseFileTreeState, UseFileTreeEvents]
+function useFileTree(params: UseFileTreeParams): [UseFileTreeState, UseFileTreeEvents]
 
-function useFileTree(params?: UseFileTreeParams) {
-    const {path, onInitComplete, onRefreshTreeData} = params || {}
+function useFileTree(params: UseFileTreeParams) {
+    const {target, onInitComplete, onRefreshTreeData} = params || {}
 
     // 主动触发UI文件树更新
     const onTriggerUIUpdate = useThrottleFn(
@@ -102,24 +102,35 @@ function useFileTree(params?: UseFileTreeParams) {
     // 初始化-开始获取文件树
     const initData = useMemoizedFn(async () => {
         try {
+            const {path, isFolder} = target || {}
             if (!path) return
-            const lastFolder = await getNameByPath(path)
-            if (!lastFolder) return
+            const targetName = await getNameByPath(path)
+            if (!targetName) return
+
+            let icon = ""
+            if (isFolder) {
+                icon = FolderDefault
+            } else {
+                const suffix = targetName.indexOf(".") > -1 ? targetName.split(".").pop() : ""
+                icon = suffix ? FileSuffix[suffix] || FileDefault : FileDefault
+            }
 
             const node: FileNodeProps = {
                 parent: null,
-                name: lastFolder,
+                name: targetName,
                 path: path,
-                isFolder: true,
-                icon: FolderDefault,
+                isFolder: !!isFolder,
+                icon: icon,
                 depth: 1,
                 children: []
             }
             setNodeDetailMap(node)
-            pendingFolderList.current.push(path)
             treeData.current = node
-            startPolling()
-            startWatchFolder(path)
+            if (isFolder) {
+                pendingFolderList.current.push(path)
+                startPolling()
+                startWatchFolder(path)
+            }
             onInitComplete && onInitComplete()
         } catch (error) {}
     })
