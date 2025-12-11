@@ -109,7 +109,7 @@ import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHisto
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
-import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
@@ -2761,13 +2761,39 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                             name='proxy'
                                             label='代理'
                                             extra={
+                                                <>
                                                 <div
                                                     className={styles["agent-down-stream-proxy"]}
                                                     onClick={onClickDownstreamProxy}
                                                 >
                                                     {t("AgentConfigModal.proxy_configuration")}
                                                 </div>
+                                                    <Divider type="vertical" />
+                                                    <ProxyTest />
+                                                </>
                                             }
+                                            validateTrigger={["onChange", "onBlur"]}
+                                            rules={[
+                                                {
+                                                    validator: (_, value) => {
+                                                        if (!value || !Array.isArray(value) || value.length === 0) {
+                                                            return Promise.resolve()
+                                                        }
+                                                        // 获取当前options中的所有值
+                                                        const existingOptions = Endpoints.map(({Id}) => Id)
+                                                        // 只校验新输入的值(不在options中的值)
+                                                        const newValues = value.filter((v) => !existingOptions.includes(v))
+                                                        // 校验代理地址格式: 协议://地址:端口
+                                                        const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                                        for (const v of newValues) {
+                                                            if (!pattern.test(v)) {
+                                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                                            }
+                                                        }
+                                                        return Promise.resolve()
+                                                    }
+                                                }
+                                            ]}
                                         >
                                             <YakitSelect
                                                 allowClear

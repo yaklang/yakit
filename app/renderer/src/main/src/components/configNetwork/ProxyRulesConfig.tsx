@@ -1,12 +1,16 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {memo, useEffect, useMemo, useState} from "react"
 import {Tooltip, Form, Divider, Table, Modal} from "antd"
 import {
     OutlinePencilaltIcon,
     OutlineQuestionmarkcircleIcon,
     OutlineTrashIcon,
     OutlineEyeoffIcon,
-    OutlineEyeIcon
+    OutlineEyeIcon,
+    OutlineBanIcon,
+    OutlineEngineIcon
 } from "@/assets/icon/outline"
+import {SolidCheckCircleIcon, SolidExclamationIcon, SolidXcircleIcon} from "@/assets/icon/solid"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {useMemoizedFn} from "ahooks"
 import {ProxyEndpoint, ProxyRoute} from "@/apiUtils/grpc"
 import {randomString} from "@/utils/randomUtil"
@@ -20,6 +24,8 @@ import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {useProxy} from "@/hook/useProxy"
 import {YakitSideTab} from "../yakitSideTab/YakitSideTab"
 import styles from "./ConfigNetworkPage.module.scss"
+import classNames from "classnames"
+const {ipcRenderer} = window.require("electron")
 
 const generateEndpointId = () => `ep-${randomString(8)}`
 const generateRouteId = () => `route-${randomString(8)}`
@@ -162,13 +168,27 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         })
     })
 
+    const onToggleDisable = useMemoizedFn((toggleId: string) => {
+        if (isEndpoints) {
+            saveProxyConfig({
+                Endpoints: Endpoints.map((item) => (item.Id === toggleId ? {...item, Disabled: !item.Disabled} : item)),
+                Routes
+            })
+        } else {
+            saveProxyConfig({
+                Endpoints,
+                Routes: Routes.map((item) => (item.Id === toggleId ? {...item, Disabled: !item.Disabled} : item))
+            })
+        }
+    })
+
     const renderEndPointsTable = useMemoizedFn(() => {
         return (
             <Table
                 columns={[
                     {
                         title: t("ProxyConfig.proxy_address"),
-                        dataIndex: "Url",
+                        dataIndex: "Url"
                     },
                     {
                         title: t("ProxyConfig.username"),
@@ -183,7 +203,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                     },
                     {
                         title: t("ProxyConfig.operation"),
-                        width: 100,
+                        width: 200,
                         dataIndex: "action",
                         render: (_, record) => (
                             <>
@@ -198,6 +218,16 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                                     type='text2'
                                     onClick={() => onEdit(record)}
                                 />
+                                <Divider type='vertical' style={{margin: "0 12px"}} />
+                                <ProxyTest proxy={[record.Id]} showIcon />
+                                <Divider type='vertical' style={{margin: "0 12px"}} />
+                                <YakitButton
+                                    icon={
+                                        <OutlineBanIcon className={record.Disabled ? styles["icon-ban-active"] : ""} />
+                                    }
+                                    type='text2'
+                                    onClick={() => onToggleDisable(record.Id)}
+                                />
                             </>
                         )
                     }
@@ -205,6 +235,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                 bordered
                 size='small'
                 dataSource={Endpoints}
+                rowClassName={({Disabled}) => (Disabled ? styles["row-disabled"] : "")}
                 pagination={{
                     showTotal: (i) => t("ProxyConfig.recordPointsCount", {i}),
                     total: Endpoints.length
@@ -240,15 +271,24 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                         render: (EndpointIds) => (
                             <div style={{display: "flex", flexDirection: "column", maxHeight: 100, overflow: "scroll"}}>
                                 {EndpointIds.map((id) => {
-                                    const url = Endpoints.find(({Id}) => Id === id)?.Url
-                                    return url ? <div key={id}>{url}</div> : null
+                                    const {Url, Disabled} = Endpoints.find(({Id}) => Id === id) || {}
+                                    return Url ? (
+                                        <div key={id}>
+                                            {Url}{" "}
+                                            {Disabled ? (
+                                                <span className={styles["disabled-badge"]}>
+                                                    {t("ProxyConfig.disabled")}
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    ) : null
                                 })}
                             </div>
                         )
                     },
                     {
                         title: t("ProxyConfig.operation"),
-                        width: 100,
+                        width: 150,
                         dataIndex: "action",
                         render: (_, record) => (
                             <>
@@ -263,6 +303,14 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                                     type='text2'
                                     onClick={() => onEdit(record)}
                                 />
+                                <Divider type='vertical' style={{margin: "0 12px"}} />
+                                <YakitButton
+                                    icon={
+                                        <OutlineBanIcon className={record.Disabled ? styles["icon-ban-active"] : ""} />
+                                    }
+                                    type='text2'
+                                    onClick={() => onToggleDisable(record.Id)}
+                                />
                             </>
                         )
                     }
@@ -270,6 +318,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                 bordered
                 size='small'
                 dataSource={Routes}
+                rowClassName={({Disabled}) => (Disabled ? styles["row-disabled"] : "")}
                 pagination={{
                     showTotal: (i) => t("ProxyConfig.recordRoutesCount", {i}),
                     total: Routes.length
@@ -340,14 +389,24 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             {hideRules ? (
                 renderContent()
             ) : (
-                <YakitSideTab
-                    yakitTabs={tab}
-                    activeKey={activeKey}
-                    onActiveKey={setActiveKey}
-                    btnItemClassName={styles["config-tab-item"]}
-                >
+                <div className={styles["proxy-rules-config-content"]}>
+                    <div className={styles["config-tab"]}>
+                        {tab.map(({label, value}) => {
+                            return (
+                                <div
+                                    key={value}
+                                    className={classNames(styles["config-tab-item"], {
+                                        [styles["config-tab-item-active"]]: value === activeKey
+                                    })}
+                                    onClick={() => setActiveKey(value)}
+                                >
+                                    {label}
+                                </div>
+                            )
+                        })}
+                    </div>
                     {renderContent()}
-                </YakitSideTab>
+                </div>
             )}
             <YakitModal
                 title={t(`ProxyConfig.${editId ? "edit_rule" : "add_rule"}`)}
@@ -430,5 +489,180 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         </YakitDrawer>
     )
 }
+
+export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) => {
+    const {proxy = [], showIcon = false} = props
+    const [visible, setVisible] = useState(false)
+    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+    const [errorMsg, setErrorMsg] = useState("")
+    const [form] = Form.useForm()
+    const {
+        proxyConfig: {Endpoints = []},
+        checkProxyEndpoints
+    } = useProxy()
+    const {t} = useI18nNamespaces(["yakitUi", "mitm", "payload"])
+
+    const onShowModal = useMemoizedFn(() => {
+        setVisible(true)
+        setStatus("idle")
+        form.setFieldsValue({Target: "cip.cc", Proxy: proxy})
+    })
+
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
+        form.resetFields()
+    })
+
+    const handleTest = useMemoizedFn(async () => {
+        try {
+            const {Target, Proxy} = await form.validateFields()
+            setStatus("loading")
+            setErrorMsg("")
+
+            const joined = Array.isArray(Proxy) ? Proxy.join(",") : String(Proxy || "")
+            const params = Object.assign(
+                {
+                    Target
+                },
+                joined.startsWith("ep") ? {EndpointId: joined} : {Proxy: joined}
+            )
+
+            const res = await ipcRenderer.invoke("CheckProxyAlive", params)
+            if (res.Ok) {
+                //检查新增代理节点
+                checkProxyEndpoints(proxy)
+                setStatus("success")
+            } else {
+                setStatus("error")
+                setErrorMsg(res.Reason)
+            }
+        } catch (e: any) {
+            setStatus("error")
+            setErrorMsg(e.message)
+        }
+    })
+
+    const renderContent = () => {
+        switch (status) {
+            case "idle":
+                return (
+                    <YakitButton type='primary' onClick={handleTest}>
+                        {t("ProxyConfig.detectionStart")}
+                    </YakitButton>
+                )
+            case "loading":
+                return (
+                    <YakitSpin
+                        size='large'
+                        tip={t("ProxyConfig.detectionLoading")}
+                        wrapperClassName={styles["proxy-test-modal-loading"]}
+                    />
+                )
+            case "success":
+                return (
+                    <>
+                        <div className={styles["proxy-test-modal-success"]}>
+                            <SolidCheckCircleIcon />
+                            <span>{t("ProxyConfig.detectionSuccess")}</span>
+                        </div>
+                        <YakitButton type='primary' onClick={handleTest}>
+                            {t("ProxyConfig.detectionStart")}
+                        </YakitButton>
+                    </>
+                )
+            case "error":
+                return (
+                    <>
+                        <div className={styles["proxy-test-modal-detail"]}>
+                            <SolidXcircleIcon />
+                            {errorMsg}
+                        </div>
+                        <SolidExclamationIcon className={styles["proxy-test-modal-failed"]} />
+                        <YakitButton type='primary' onClick={handleTest}>
+                            {t("ProxyConfig.detectionStart")}
+                        </YakitButton>
+                    </>
+                )
+        }
+    }
+
+    const disabled = useMemo(() => status === "loading", [status])
+
+    return (
+        <>
+            {showIcon ? (
+                <Tooltip title={t("ProxyConfig.proxyDetection")}>
+                    <YakitButton icon={<OutlineEngineIcon />} type='text2' onClick={onShowModal} />
+                </Tooltip>
+            ) : (
+                <span onClick={onShowModal} className={styles["proxy-test-title"]}>
+                    {t("ProxyConfig.proxyDetection")}
+                </span>
+            )}
+            <YakitModal
+                title={t("ProxyConfig.proxyDetection")}
+                visible={visible}
+                onCancel={onCancel}
+                footer={null}
+                width={600}
+                className={styles["proxy-test-modal"]}
+            >
+                <div className={styles["proxy-test-modal-content"]}>
+                    <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
+                        <Form.Item
+                            label={t("ProxyConfig.Points")}
+                            name='Proxy'
+                            getValueFromEvent={(value) => {
+                                // 只保留最后一个选中的值
+                                if (Array.isArray(value) && value.length > 1) {
+                                    return [value[value.length - 1]]
+                                }
+                                return value
+                            }}
+                            validateTrigger={["onChange", "onBlur"]}
+                            rules={[
+                                {
+                                    validator: (_, value) => {
+                                        if (!value || !Array.isArray(value) || value.length === 0) {
+                                            return Promise.resolve()
+                                        }
+                                        // 获取当前options中的所有值
+                                        const existingOptions = Endpoints.map((opt) => opt.Id)
+                                        // 只校验新输入的值(不在options中的值)
+                                        const newValues = value.filter((v) => !existingOptions.includes(v))
+                                        // 校验代理地址格式: 协议://地址:端口
+                                        const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                        for (const v of newValues) {
+                                            if (!pattern.test(v)) {
+                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                            }
+                                        }
+                                        return Promise.resolve()
+                                    }
+                                }
+                            ]}
+                        >
+                            <YakitSelect
+                                disabled={disabled}
+                                options={Endpoints.map(({Url, Id}) => ({label: Url, value: Id}))}
+                                mode='tags'
+                                placeholder={t("ProxyConfig.proxy_address_placeholder")}
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            label={t("ProxyConfig.customDetectionTarget")}
+                            name='Target'
+                            rules={[{required: true, message: t("ProxyConfig.customDetectionTargetPlaceholder")}]}
+                        >
+                            <YakitInput disabled={disabled} />
+                        </Form.Item>
+                    </Form>
+                    <div className={styles["test-modal-content-res"]}>{renderContent()}</div>
+                </div>
+            </YakitModal>
+        </>
+    )
+})
 
 export default ProxyRulesConfig

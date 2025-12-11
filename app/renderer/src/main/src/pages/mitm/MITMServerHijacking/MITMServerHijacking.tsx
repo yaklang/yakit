@@ -35,7 +35,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import { useProxy } from "@/hook/useProxy"
 import { useStore } from "@/store/mitmState"
@@ -522,11 +522,37 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                 }
                                 return value
                             }}
-                            help={
+                            extra={
+                                <>
                                 <div className={style["agent-down-stream-proxy"]} onClick={onClickDownstreamProxy}>
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </div>
+                                <Divider type="vertical"/>
+                                <ProxyTest />
+                                </>
                             }
+                            validateTrigger={["onChange", "onBlur"]}
+                            rules={[
+                                {
+                                    validator: (_, value) => {
+                                        if (!value || !Array.isArray(value) || value.length === 0) {
+                                            return Promise.resolve()
+                                        }
+                                        // 获取当前options中的所有值
+                                        const existingOptions = proxyRouteOptions.map(({value}) => value)
+                                        // 只校验新输入的值(不在options中的值)
+                                        const newValues = value.filter((v) => !existingOptions.includes(v))
+                                        // 校验代理地址格式: 协议://地址:端口
+                                        const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                        for (const v of newValues) {
+                                            if (!pattern.test(v)) {
+                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                            }
+                                        }
+                                        return Promise.resolve()
+                                    }
+                                }
+                            ]}
                         >
                             <YakitSelect
                                 ref={downstreamProxyRef}
