@@ -2097,7 +2097,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const handleClickHarExport = useMemoizedFn((ids: number[]) => {
         handleSaveFileSystemDialog({
             title: t("HTTPFlowTable.saveFile"),
-            defaultPath: !toWebFuzzer ? "History" : "WebFuzzer",
+            defaultPath: (!toWebFuzzer ? "History" : "WebFuzzer")+`-${Date.now()}` ,
             filters: [
                 {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
             ]
