@@ -30,6 +30,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import { YakitRoute } from "@/enums/yakitRoute"
+import { YakExecutorParam } from "@/pages/invoker/YakExecutorParams"
 
 export const PluginTunHijackDef: PluginTunHijackRefProps = {
     startPluginTunHijack: () => {},
@@ -192,7 +193,6 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     useUpdateEffect(() => {
         try {
             // 路由表查询结果处理
-            console.log("路由表查询结果处理---", pluginTunHijackFind.streamInfo)
             const logState = pluginTunHijackFind.streamInfo.logState
             const tableArr = logState.filter((item) => item.level === "text")
             if (tableArr.length > 0) {
@@ -224,24 +224,25 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     const handleDeleteRoute = useMemoizedFn((ipList?: string[]) => {
         const ip = ipList || selectedRowKeys
         let ExecParams = [
-            {Key: "tun_device_name", Value: deviceName},
-            {Key: "all_clean", Value: "true"}
+            {Key: "tunName", Value: deviceName},
+            {Key: "clear", Value: true}
         ]
         if (ip.length !== 0) {
             ExecParams = [
-                {Key: "ip_list", Value: ip.join(",")},
-                {Key: "all_clean", Value: "false"}
+                {Key: "ipList", Value: ip.join(",")},
             ]
         }
-        console.log("handleDeleteRoute---", ExecParams)
         pluginTunHijackDelActions.startPluginTunHijack({
-            ExecParams
+            ExecParams: ExecParams as YakExecutorParam[]
         })
     })
     useUpdateEffect(() => {
         // 路由表删除结果处理
-        console.log("pluginTunHijackDel---", pluginTunHijackDel)
-    }, [pluginTunHijackDel])
+        if(!pluginTunHijackDel.isExecuting){
+            setIsAllSelect(false)
+            setSelectedRowKeys([])
+        }
+    }, [pluginTunHijackDel.isExecuting])
 
     // 以下为路由表增加逻辑---
     const [pluginTunHijackAdd, pluginTunHijackAddActions] = usePluginTunHijack({
@@ -253,7 +254,6 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     const [addLoading, setAddLoading] = useState<boolean>(false)
     const handleRouteOk = useMemoizedFn(() => {
         form.validateFields().then((res) => {
-            console.log("handleRouteOk---", res)
             pluginTunHijackAddActions.startPluginTunHijack({
                 ExecParams: [
                     {Key: "name", Value: deviceName},
@@ -264,7 +264,6 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     })
     useUpdateEffect(() => {
         // 路由表增加结果处理
-        console.log("pluginTunHijackAdd---", pluginTunHijackAdd.streamInfo)
         const cardState = pluginTunHijackAdd.streamInfo.cardState
         // 成功添加路由
         const successTag = cardState.find((item) => item.tag === "成功添加路由")
@@ -291,7 +290,6 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
             formPageRef.current = undefined;
         }
         else if(formPageRef.current === "page"){
-            console.log("通知页面关闭");
             info("正在关闭Tun劫持服务，请稍后...")
             setTimeout(()=>{
                 emiter.emit("closePage", JSON.stringify({route: YakitRoute.MITMHacker}))
