@@ -48,6 +48,7 @@ import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -246,7 +247,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             IsSyncMessage: true,
             SyncType: syncType,
             SyncJsonInput,
-            Params: params
+            Params: params,
+            SyncID: randomString(8)
         }
         events.onSend({token: activeID, type: "", params: info})
     })
@@ -670,9 +672,15 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
-                    <YakitButton type='outline2' icon={<OutlineExitIcon />} onClick={onStopTask}>
-                        取消当前任务
-                    </YakitButton>
+                    <YakitPopconfirm
+                        placement='top'
+                        onConfirm={() => onStopTask()}
+                        title='是否确认取消整个任务，确认将停止执行'
+                    >
+                        <YakitButton type='outline2' icon={<OutlineExitIcon />}>
+                            取消当前任务
+                        </YakitButton>
+                    </YakitPopconfirm>
                     {node}
                 </div>
             </div>
