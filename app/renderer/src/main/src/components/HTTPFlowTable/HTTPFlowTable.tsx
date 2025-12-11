@@ -1110,11 +1110,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams((prev) => ({
                 ...prev,
                 SearchURL: props.searchURL,
-                IncludeInUrl: props.includeInUrl
-                    ? Array.isArray(props.includeInUrl)
-                        ? props.includeInUrl
-                        : [props.includeInUrl]
-                    : [""]
             }))
             setScrollToIndex(0)
             setCurrentIndex(undefined)
@@ -1139,7 +1134,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ...selectedKeys
             ]
         }))
-    }, [props.selectedKeys])
+    }, [props.selectedKeys, props.includeInUrl])
 
     const [queryParams, setQueryParams] = useState<string>("")
     useDebounceEffect(
