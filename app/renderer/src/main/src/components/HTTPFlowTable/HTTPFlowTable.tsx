@@ -106,6 +106,7 @@ import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {getHTTPFlowExportFields} from "./HTTPFlowExportFields"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
@@ -650,103 +651,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history"])
 
-    // 这里的key值为数据库的key
-    const arrList = useMemo(
-        () => [
-            {
-                title: t("YakitTable.order"),
-                key: "id",
-                dataKey: "Id"
-            },
-            {
-                title: t("HTTPFlowTable.method"),
-                key: "method",
-                dataKey: "Method"
-            },
-            {
-                title: t("HTTPFlowTable.statusCode"),
-                key: "status_code",
-                dataKey: "StatusCode"
-            },
-            {
-                title: "URL",
-                key: "url",
-                dataKey: "Url"
-            },
-            {
-                title: "Host",
-                key: "host",
-                dataKey: "Host"
-            },
-            {
-                title: "Path",
-                key: "path",
-                dataKey: "Path"
-            },
-            {
-                title: t("HTTPFlowTable.fromPlugin"),
-                key: "from_plugin",
-                dataKey: "FromPlugin"
-            },
-            {
-                title: "Tags",
-                key: "tags",
-                dataKey: "Tags"
-            },
-            {
-                title: "IP",
-                key: "iP_address",
-                dataKey: "IPAddress"
-            },
-            {
-                title: t("HTTPFlowTable.bodyLength"),
-                key: "body_length",
-                dataKey: "BodyLength"
-            },
-            {
-                title: "Title",
-                key: "response",
-                dataKey: "HtmlTitle"
-            },
-            {
-                title: t("HTTPFlowTable.params"),
-                key: "get_params_total",
-                dataKey: "GetParamsTotal"
-            },
-            {
-                title: t("HTTPFlowTable.contentType"),
-                key: "content_type",
-                dataKey: "ContentType"
-            },
-            {
-                title: t("HTTPFlowTable.durationMs"),
-                key: "duration",
-                dataKey: "DurationMs"
-            },
-            {
-                title: t("HTTPFlowTable.updatedAt"),
-                key: "updated_at",
-                dataKey: "UpdatedAt"
-            },
-            {
-                title: t("HTTPFlowTable.requestSizeVerbose"),
-                key: "request",
-                dataKey: "RequestSizeVerbose"
-            },
-            {
-                title: t("HTTPFlowTable.requestPacket"),
-                key: "request",
-                dataKey: "request"
-            },
-            {
-                title: t("HTTPFlowTable.responsePacket"),
-                key: "response",
-                dataKey: "response"
-            }
-        ],
-        [t]
-    )
-
+    // 导出字段映射配置
+    const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
             currentPageTabRouteKey: s.currentPageTabRouteKey
