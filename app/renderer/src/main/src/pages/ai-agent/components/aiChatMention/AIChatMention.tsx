@@ -1,0 +1,372 @@
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
+import {
+    AIChatMentionListRefProps,
+    AIChatMentionProps,
+    ForgeNameListOfMentionProps,
+    KnowledgeBaseListOfMentionProps,
+    ToolListOfMentionProps
+} from "./type"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import styles from "./AIChatMention.module.scss"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {useMemoizedFn, useRequest, useSafeState} from "ahooks"
+import {AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs} from "../../defaultConstant"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../../type/forge"
+import {grpcQueryAIForge} from "../../grpc"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {AITool, GetAIToolListRequest, GetAIToolListResponse} from "../../type/aiTool"
+import {genDefaultPagination} from "@/pages/invoker/schema"
+import {grpcGetAIToolList} from "../../aiToolList/utils"
+import {CreateKnowledgeBaseData, KnowledgeBaseContentProps} from "@/pages/KnowledgeBase/TKnowledgeBase"
+import {KnowledgeBase} from "@/components/playground/knowlegeBase/types"
+const {ipcRenderer} = window.require("electron")
+const defaultRef: AIChatMentionListRefProps = {
+    onRefresh: () => {}
+}
+export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
+    const {onSelect, defaultActiveTab} = props
+    const [activeKey, setActiveKey] = useState<AIMentionTabsEnum>(defaultActiveTab || AIMentionTabsEnum.Forge_Name)
+    const [keyWord, setKeyWord] = useState<string>("")
+    const forgeRef = useRef<AIChatMentionListRefProps>(defaultRef)
+    const toolRef = useRef<AIChatMentionListRefProps>(defaultRef)
+    const knowledgeBaseRef = useRef<AIChatMentionListRefProps>(defaultRef)
+    const onActiveKey = useMemoizedFn((k) => {
+        setKeyWord("")
+        setActiveKey(k as AIMentionTabsEnum)
+    })
+    const onSelectForge = useMemoizedFn((forgeItem: AIForge) => {
+        console.log('forgeItem',forgeItem)
+        onSelect(AIMentionTabsEnum.Forge_Name, forgeItem.ForgeVerboseName || forgeItem.ForgeName)
+    })
+    const onSelectTool = useMemoizedFn((toolItem: AITool) => {
+        onSelect(AIMentionTabsEnum.Tool, toolItem.VerboseName || toolItem.Name)
+    })
+    const onSelectKnowledgeBase = useMemoizedFn((knowledgeBaseItem: KnowledgeBase) => {
+        onSelect(AIMentionTabsEnum.KnowledgeBase, knowledgeBaseItem.KnowledgeBaseName)
+    })
+    const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
+        switch (key) {
+            case AIMentionTabsEnum.Forge_Name:
+                return <ForgeNameListOfMention ref={forgeRef} keyWord={keyWord} onSelect={onSelectForge} />
+            case AIMentionTabsEnum.Tool:
+                return <ToolListOfMention ref={toolRef} keyWord={keyWord} onSelect={onSelectTool} />
+            case AIMentionTabsEnum.KnowledgeBase:
+                return (
+                    <KnowledgeBaseListOfMention
+                        ref={knowledgeBaseRef}
+                        keyWord={keyWord}
+                        onSelect={onSelectKnowledgeBase}
+                    />
+                )
+            default:
+                return null
+        }
+    })
+    const onSearch = useMemoizedFn((value) => {
+        setKeyWord(value)
+        switch (activeKey) {
+            case AIMentionTabsEnum.Forge_Name:
+                forgeRef.current.onRefresh()
+                break
+            case AIMentionTabsEnum.Tool:
+                toolRef.current.onRefresh()
+                break
+            case AIMentionTabsEnum.KnowledgeBase:
+                knowledgeBaseRef.current.onRefresh()
+                break
+            default:
+                return null
+        }
+    })
+    const onPressEnter = useMemoizedFn((e) => {
+        onSearch(e.target.value)
+    })
+    return (
+        <div
+            className={styles["ai-chat-mention"]}
+            onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+            }}
+        >
+            <YakitSideTab
+                className={styles["tab-wrapper"]}
+                type='horizontal'
+                activeKey={activeKey}
+                yakitTabs={AIMentionTabs}
+                onActiveKey={onActiveKey}
+            >
+                <YakitInput.Search
+                    wrapperClassName={styles["mention-search"]}
+                    value={keyWord}
+                    onChange={(e) => setKeyWord(e.target.value)}
+                    onSearch={onSearch}
+                    onPressEnter={onPressEnter}
+                    allowClear={true}
+                />
+                <div className={styles["list-body"]}>{renderTabContent(activeKey)}</div>
+            </YakitSideTab>
+        </div>
+    )
+})
+
+const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {keyWord, onSelect} = props
+        const [loading, setLoading] = useState<boolean>(false)
+        const [spinning, setSpinning] = useState<boolean>(false)
+        const [isRef, setIsRef] = useState<boolean>(false)
+        const [hasMore, setHasMore] = useState<boolean>(true)
+        const [response, setResponse] = useState<QueryAIForgeResponse>({
+            Pagination: {...AIForgeListDefaultPagination},
+            Data: [],
+            Total: 0
+        })
+        useImperativeHandle(
+            ref,
+            () => ({
+                onRefresh: () => {
+                    getList()
+                }
+            }),
+            []
+        )
+        useEffect(() => {
+            // 获取模板列表
+            getList()
+        }, [])
+        const getList = useMemoizedFn(async (page?: number) => {
+            setLoading(true)
+            const newQuery: QueryAIForgeRequest = {
+                Pagination: {
+                    ...response.Pagination,
+                    Page: page || 1
+                },
+                Filter: {
+                    Keyword: keyWord
+                }
+            }
+            if (newQuery.Pagination.Page === 1) {
+                setSpinning(true)
+            }
+            try {
+                const res = await grpcQueryAIForge(newQuery)
+                if (!res.Data) res.Data = []
+                const newPage = +res.Pagination.Page
+                const length = newPage === 1 ? res.Data.length : res.Data.length + response.Data.length
+                setHasMore(length < +res.Total)
+                let newRes: QueryAIForgeResponse = {
+                    Data: newPage === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
+                    Pagination: res?.Pagination || {
+                        ...AIForgeListDefaultPagination
+                    },
+                    Total: res.Total
+                }
+                setResponse(newRes)
+                if (newPage === 1) {
+                    setIsRef(!isRef)
+                }
+            } catch (error) {}
+            setTimeout(() => {
+                setLoading(false)
+                setSpinning(false)
+            }, 300)
+        })
+        /**@description 列表加载更多 */
+        const loadMoreData = useMemoizedFn(() => {
+            getList(+response.Pagination.Page + 1)
+        })
+
+        return (
+            <div className={styles["forge-name-list-of-mention"]}>
+                <YakitSpin spinning={spinning}>
+                    <RollingLoadList<AIForge>
+                        data={response.Data}
+                        loadMoreData={loadMoreData}
+                        renderRow={(rowData: AIForge, index: number) => (
+                            <div className={styles["row-item"]} onClick={() => onSelect(rowData)}>
+                                {rowData.ForgeVerboseName || rowData.ForgeName}
+                            </div>
+                        )}
+                        classNameRow={styles["ai-forge-list-row"]}
+                        classNameList={styles["ai-forge-list"]}
+                        page={+response.Pagination.Page}
+                        hasMore={hasMore}
+                        loading={loading}
+                        defItemHeight={24}
+                        rowKey='ID'
+                        isRef={isRef}
+                    />
+                </YakitSpin>
+            </div>
+        )
+    })
+)
+
+const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {keyWord, onSelect} = props
+        const [loading, setLoading] = useState<boolean>(false)
+        const [spinning, setSpinning] = useState<boolean>(false)
+        const [hasMore, setHasMore] = useState<boolean>(false)
+        const [isRef, setIsRef] = useState<boolean>(false)
+        const [response, setResponse] = useState<GetAIToolListResponse>({
+            Tools: [],
+            Pagination: genDefaultPagination(20),
+            Total: 0
+        })
+        useImperativeHandle(
+            ref,
+            () => ({
+                onRefresh: () => {
+                    getList()
+                }
+            }),
+            []
+        )
+        useEffect(() => {
+            getList()
+        }, [])
+        const getList = useMemoizedFn(async (page?: number) => {
+            setLoading(true)
+            const newQuery: GetAIToolListRequest = {
+                Query: keyWord,
+                ToolName: "",
+                Pagination: {
+                    ...genDefaultPagination(20),
+                    OrderBy: "created_at",
+                    Page: page || 1
+                },
+                OnlyFavorites: false
+            }
+            if (newQuery.Pagination.Page === 1) {
+                setSpinning(true)
+            }
+            try {
+                const res = await grpcGetAIToolList(newQuery)
+                if (!res.Tools) res.Tools = []
+                const newPage = +res.Pagination.Page
+                const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
+                setHasMore(length < +res.Total)
+                let newRes: GetAIToolListResponse = {
+                    Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
+                    Pagination: res?.Pagination || {
+                        ...genDefaultPagination(20)
+                    },
+                    Total: res.Total
+                }
+                setResponse(newRes)
+                if (newPage === 1) {
+                    setIsRef(!isRef)
+                }
+            } catch (error) {}
+            setTimeout(() => {
+                setLoading(false)
+                setSpinning(false)
+            }, 300)
+        })
+        const loadMoreData = useMemoizedFn(() => {
+            getList(+response.Pagination.Page + 1)
+        })
+        return (
+            <div className={styles["tool-list-of-mention"]}>
+                <YakitSpin spinning={spinning}>
+                    <RollingLoadList<AITool>
+                        data={response.Tools}
+                        loadMoreData={loadMoreData}
+                        renderRow={(rowData: AITool, index: number) => (
+                            <div className={styles["row-item"]} onClick={() => onSelect(rowData)}>
+                                {rowData.VerboseName || rowData.Name}
+                            </div>
+                        )}
+                        classNameRow={styles["ai-tool-list-row"]}
+                        classNameList={styles["ai-tool-list"]}
+                        page={+response.Pagination.Page}
+                        hasMore={hasMore}
+                        loading={loading}
+                        defItemHeight={24}
+                        rowKey='ID'
+                        isRef={isRef}
+                    />
+                </YakitSpin>
+            </div>
+        )
+    })
+)
+
+const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {keyWord, onSelect} = props
+        const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
+        const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
+
+        const {
+            loading,
+            data: existsKnowledgeBase,
+            runAsync: existsKnowledgeBaseAsync
+        } = useRequest(
+            async (Keyword?: string) => {
+                const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
+                    Keyword,
+                    Pagination: {Limit: 9999, Page: 1}
+                })
+                const {KnowledgeBases} = result
+
+                const resultData = KnowledgeBases?.map((it) => ({
+                    ...createKnwledgeDataRef.current,
+                    ...it
+                }))
+                return resultData
+            },
+            {
+                manual: true,
+                onSuccess: (value) => {
+                    const FirstknowledgeBaseID = value?.find((item) => item.IsImported === false)?.ID
+                    if (FirstknowledgeBaseID) {
+                        !knowledgeBaseID && setKnowledgeBaseID(FirstknowledgeBaseID)
+                    }
+                }
+            }
+        )
+        useImperativeHandle(
+            ref,
+            () => ({
+                onRefresh: () => {
+                    getList()
+                }
+            }),
+            []
+        )
+        useEffect(() => {
+            getList()
+        }, [])
+        const getList = useMemoizedFn(async () => {
+            try {
+                await existsKnowledgeBaseAsync(keyWord)
+            } catch (error) {}
+        })
+        return (
+            <div className={styles["knowledge-base-list-of-mention"]}>
+                <YakitSpin spinning={loading}>
+                    <RollingLoadList<KnowledgeBase>
+                        data={existsKnowledgeBase || []}
+                        loadMoreData={() => {}}
+                        renderRow={(rowData: KnowledgeBase, index: number) => (
+                            <div className={styles["row-item"]} onClick={() => onSelect(rowData)}>
+                                {rowData.KnowledgeBaseName}
+                            </div>
+                        )}
+                        classNameRow={styles["ai-knowledge-base-list-row"]}
+                        classNameList={styles["ai-knowledge-base-list"]}
+                        page={1}
+                        hasMore={false}
+                        loading={loading}
+                        defItemHeight={24}
+                        rowKey='ID'
+                    />
+                </YakitSpin>
+            </div>
+        )
+    })
+)
