@@ -25,11 +25,11 @@
     position: relative;
     flex-direction: column;
 
-    .mitm-idle-tab-wrap {
+    .tab-wrap {
         display: flex;
         width: 100%;
         height: 100%;
-        .mitm-idle-tab {
+        .tab {
             width: 24px;
             height: 100%;
             background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -61,7 +61,7 @@
                 }
             }
         }
-        .mitm-idle-tab-cont-item {
+        .tab-cont-item {
             overflow: auto;
             width: 100%;
             height: 100%;
@@ -427,18 +427,6 @@
     padding: 20px;
     padding-top: 0;
     height: 650px;
-    .button-add-params {
-        display: flex;
-        align-items: center;
-        font-weight: 500;
-        font-size: 12px;
-
-        svg {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            margin-right: 4px;
-            stroke-width: 1.5px;
-        }
-    }
 
     .table-action-icon {
         padding: 0 4px;

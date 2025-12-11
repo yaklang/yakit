@@ -15,7 +15,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import styles from "./PluginLocalListDetails.module.scss"
 import {FilterPopoverBtn} from "../../funcTemplate"
 import {defaultFilter, defaultSearch} from "../../builtInData"
-import { getRemoteHttpSettingGV } from "@/utils/envfile"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 /**
  * @description 本地插件列表，左右布局，左边为插件列表右边为传入的node

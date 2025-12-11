@@ -7,15 +7,7 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
-import {
-    BanIcon,
-    ChromeFrameSvgIcon,
-    ChromeSvgIcon,
-    PencilAltIcon,
-    PlusIcon,
-    RemoveIcon,
-    TrashIcon
-} from "@/assets/newIcon"
+import {BanIcon, ChromeFrameSvgIcon, ChromeSvgIcon, PencilAltIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -25,14 +17,16 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
-import {OutlineChevronupIcon, OutlineSaveIcon} from "@/assets/icon/outline"
+import {OutlineChevronupIcon, OutlinePlusIcon, OutlineSaveIcon} from "@/assets/icon/outline"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
 import {v4 as uuidv4} from "uuid"
 import {chromeLauncherMinParams, chromeLauncherParamsArr} from "@/defaultConstants/mitm"
 import {SolidCheckIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {useGoogleChromePluginPath} from "@/store"
 import {RemoteMitmGV} from "@/enums/mitm"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {Trans} from "react-i18next"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -58,6 +52,7 @@ const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
 
 const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     const [params, setParams] = useState<{host: string; port: number}>({
         host: props.host ? props.host : "127.0.0.1",
         port: props.port ? props.port : 8083
@@ -187,14 +182,14 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     props.callback(params.host, params.port)
                 })
                 .catch((e) => {
-                    failed(`Chrome 启动失败：${e}，请尝试选择启动默认配置`)
+                    failed(t("MITMChromeLauncher.chromeStartFailed", {e: e.toString()}))
                 })
         })
     })
 
     return (
-        <Form labelCol={{span: 4}} wrapperCol={{span: 18}} style={{padding: 24}}>
-            <Form.Item label={"配置代理"}>
+        <Form labelCol={{span: 5}} wrapperCol={{span: 18}} style={{padding: 24}}>
+            <Form.Item label={t("MITMChromeLauncher.configureProxy")}>
                 <YakitInput.Group className={style["chrome-input-group"]}>
                     <YakitInput
                         prefix={"http://"}
@@ -219,11 +214,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         setSaveUserData(e.target.checked)
                     }}
                 >
-                    保存用户数据
+                    {t("MITMChromeLauncher.saveUserData")}
                 </YakitCheckbox>
             </Form.Item>
             {isSaveUserData && (
-                <Form.Item label={" "} colon={false} help={"如要打开新窗口，请设置新路径存储用户数据"}>
+                <Form.Item label={" "} colon={false} help={t("MITMChromeLauncher.setNewPathForNewWindow")}>
                     <YakitAutoComplete
                         ref={userDataDirRef}
                         style={{width: "calc(100% - 20px)"}}
@@ -231,21 +226,23 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         cacheHistoryListLength={5}
                         initValue={defUserDataDir}
                         value={userDataDir}
-                        placeholder='设置代理'
+                        placeholder={t("MITMChromeLauncher.setStoragePath")}
                         onChange={(v) => {
                             setUserDataDir(v)
                         }}
                     />
-                    <Tooltip title={"选择存储路径"}>
+                    <Tooltip title={t("MITMChromeLauncher.selectStoragePath")}>
                         <CloudUploadOutlined
                             onClick={() => {
-                                    handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-                                    .then((data) => {
-                                        if (data.filePaths.length) {
-                                            let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                                            setUserDataDir(absolutePath)
-                                        }
-                                    })
+                                handleOpenFileSystemDialog({
+                                    title: t("MITMChromeLauncher.pleaseSelectFolder"),
+                                    properties: ["openDirectory"]
+                                }).then((data) => {
+                                    if (data.filePaths.length) {
+                                        let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                                        setUserDataDir(absolutePath)
+                                    }
+                                })
                             }}
                             style={{position: "absolute", right: 0, top: 8, cursor: "pointer"}}
                         />
@@ -261,24 +258,32 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             style={{marginTop: 4}}
                             type={"success"}
                             message={
-                                <>
-                                    本按钮将会启动一个代理已经被正确配置的 Chrome (使用系统 Chrome 浏览器配置)
-                                    <br /> <Text mark={true}>无需用户额外启用代理</Text>
-                                    ，同时把测试浏览器和日常浏览器分离
-                                </>
+                                <Trans
+                                    i18nKey='MITMChromeLauncher.start_proxy_tip'
+                                    ns='mitm'
+                                    components={{
+                                        br: <br />,
+                                        mark: <Text mark />
+                                    }}
+                                />
                             }
                         />
                         <Alert
                             style={{marginTop: 4}}
                             type={"error"}
                             message={
-                                <>
-                                    <Text mark={true}>注意：</Text>
-                                    <br />
-                                    免配置的浏览器启用了 <Text code={true}>{`--ignore-certificate-errors`}</Text> <br />
-                                    这个选项是 <Text mark={true}>生效的</Text>，会忽略所有证书错误，
-                                    <Text mark={true}>仅推荐安全测试时开启</Text>
-                                </>
+                                <Trans
+                                    i18nKey='MITMChromeLauncher.ignore_cert_tip'
+                                    ns='mitm'
+                                    components={{
+                                        br: <br />,
+                                        mark: <Text mark />,
+                                        code: <Text code />
+                                    }}
+                                    values={{
+                                        flag: "--ignore-certificate-errors"
+                                    }}
+                                />
                             }
                         />
                     </Space>
@@ -291,7 +296,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             style={{borderRadius: "40px 0 0 40px"}}
                             onClick={handleStartChromeBefore}
                         >
-                            启动免配置 Chrome
+                            {t("MITMChromeLauncher.startNoConfigChrome")}
                         </div>
                         <div
                             className={style["operation-btn-right"]}
@@ -309,8 +314,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             style={{display: showChormeDropdown ? "block" : "none"}}
                         >
                             {[
-                                {label: "预设参数启动", key: "customSet"},
-                                {label: "最小化参数启动", key: "defaultSet"}
+                                {label: t("MITMChromeLauncher.startWithPresetParams"), key: "customSet"},
+                                {label: t("MITMChromeLauncher.startWithMinimalParams"), key: "defaultSet"}
                             ].map((item) => (
                                 <div
                                     className={classNames(style["operation-dropdown-list-item"], {
@@ -330,27 +335,32 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     </div>
                     {chormeCheck === "customSet" && (
                         <YakitButton type='text' onClick={() => setChromeLauncherParamsVisible(true)}>
-                            更多参数
+                            {t("MITMChromeLauncher.moreParameters")}
                         </YakitButton>
                     )}
                 </div>
                 <div className={style["chrome-start-desc"]}>
-                    预设参数可在更多参数里配置启用参数和参数值，最小化参数不可配置，选择预设参数
-                    <span style={{color: "var(--Colors-Use-Error-Primary)"}}>无法启动</span>时，请选择最小化参数启动
+                    <Trans
+                        i18nKey='MITMChromeLauncher.preset_param_tip'
+                        ns='mitm'
+                        components={{
+                            error: <span style={{color: "var(--Colors-Use-Error-Primary)"}} />
+                        }}
+                    />
                 </div>
                 {chromeLauncherParamsVisible && (
                     <YakitModal
-                        title='浏览器参数配置'
+                        title={t("MITMChromeLauncher.browserParameterConfig")}
                         visible={chromeLauncherParamsVisible}
                         onCancel={() => setChromeLauncherParamsVisible(false)}
                         closable={true}
                         maskClosable={false}
                         mask={false}
-                        width='55%'
+                        width='60%'
                         bodyStyle={{padding: 0}}
                         onOk={() => {
                             if (chromeLauncherParamsSetRef.current.tempEditItem) {
-                                yakitNotify("info", "存在编辑项未保存，请点击保存按钮")
+                                yakitNotify("info", t("MITMChromeLauncher.unsavedEditWarning"))
                                 return
                             }
 
@@ -359,7 +369,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                                 .filter((item) => item)
                             const arr = values.filter((value, index) => values.indexOf(value) !== index)
                             if (arr.length) {
-                                yakitNotify("info", `存在相同参数名：${arr.join(",")}`)
+                                yakitNotify("info", `${t("MITMChromeLauncher.duplicateParameterName")}${arr.join(",")}`)
                                 return
                             }
 
@@ -367,7 +377,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                                 (value) => value.parameterName === "" && value.variableValues
                             )
                             if (flag) {
-                                yakitNotify("info", "存在参数名未填写")
+                                yakitNotify("info", t("MITMChromeLauncher.parameterNameNotFilled"))
                                 return
                             }
 
@@ -391,6 +401,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
 
 const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((props: ChromeLauncherButtonProp) => {
     const {isStartMITM, host, port, onFished, repRuleFlag = false, disableCACertPage, onSetVisible} = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const [started, setStarted] = useState(false)
     const [chromeVisible, setChromeVisible] = useState(false)
 
@@ -416,21 +427,21 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
         ipcRenderer
             .invoke("StopAllChrome")
             .then(() => {
-                info("关闭所有免配置 Chrome 成功")
+                info(t("ChromeLauncherButton.closeAllChromeProxySuccess"))
             })
             .catch((e) => {
-                failed(`关闭所有 Chrome 失败: ${e}`)
+                failed(`${t("ChromeLauncherButton.closeAllChromeFailed")}${e}`)
             })
     })
 
     const clickChromeLauncher = useMemoizedFn(() => {
         if (repRuleFlag) {
             Modal.confirm({
-                title: "温馨提示",
+                title: t("YakitModal.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
-                content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
-                okText: "确认",
-                cancelText: "去配置",
+                content: t("ChromeLauncherButton.confirmEnableWithReplacementRules"),
+                okText: t("YakitButton.confirm"),
+                cancelText: t("ChromeLauncherButton.goToSettings"),
                 closable: true,
                 centered: true,
                 closeIcon: (
@@ -467,13 +478,13 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                         {(started && <ChromeSvgIcon />) || (
                             <ChromeFrameSvgIcon style={{height: 16, color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
                         )}
-                        免配置启动
+                        {t("ChromeLauncherButton.noConfigStart")}
                         {started && (
                             <CheckOutlined style={{color: "var(--Colors-Use-Success-Primary)", marginLeft: 8}} />
                         )}
                     </YakitButton>
                     {started && (
-                        <Tooltip title={"关闭所有免配置 Chrome"}>
+                        <Tooltip title={t("ChromeLauncherButton.closeAllNoConfigChrome")}>
                             <YakitButton
                                 type='outline2'
                                 onClick={() => {
@@ -488,16 +499,16 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
             )) || (
                 <YakitButton type='outline2' size='large' onClick={clickChromeLauncher}>
                     <ChromeFrameSvgIcon style={{height: 16, color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
-                    <span style={{marginLeft: 4}}>免配置启动</span>
+                    <span style={{marginLeft: 4}}>{t("ChromeLauncherButton.noConfigStart")}</span>
                 </YakitButton>
             )}
             {chromeVisible && (
                 <YakitModal
-                    title='确定启动免配置 Chrome 参数'
+                    title={t("ChromeLauncherButton.confirmStartNoConfig")}
                     visible={chromeVisible}
                     onCancel={() => setChromeVisible(false)}
                     closable={true}
-                    width='50%'
+                    width='55%'
                     footer={null}
                     bodyStyle={{padding: 0}}
                 >
@@ -569,6 +580,7 @@ interface ChromeLauncherParamsSetProps {
 }
 const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.forwardRef((props, ref) => {
     const {googleChromePluginPath} = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const [currentItem, setCurrentItem] = useState<ChromeLauncherParams>()
     const [data, setData] = useState<ChromeLauncherParams[]>([])
     const tempEditItem = useRef<ChromeLauncherParams>()
@@ -600,13 +612,12 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
     const resetToDefault = useMemoizedFn(() => {
         // 显示确认对话框
         Modal.confirm({
-            title: "确认恢复默认参数",
+            title: t("ChromeLauncherParamsSet.confirmRestoreDefaultParams"),
             icon: <ExclamationCircleOutlined />,
-            content: "确定要将所有参数恢复到默认状态吗？这将丢失所有自定义设置。",
-            okText: "确认",
-            cancelText: "取消",
+            content: t("ChromeLauncherParamsSet.restoreAllParamsWarning"),
+            okText: t("YakitButton.confirm"),
+            cancelText: t("YakitButton.cancel"),
             closable: true,
-            centered: true,
             closeIcon: (
                 <div
                     onClick={(e) => {
@@ -640,7 +651,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
 
                 // 保存到远程
                 setRemoteValue(RemoteGV.ChromeLauncherParams, JSON.stringify(defaultParams))
-                yakitNotify("success", "已恢复默认参数设置")
+                yakitNotify("success", t("ChromeLauncherParamsSet.defaultParamsRestored"))
             },
             cancelButtonProps: {size: "small", className: "modal-cancel-button"},
             okButtonProps: {size: "small", className: "modal-ok-button"}
@@ -745,7 +756,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
-                title: "参数名",
+                title: t("ChromeLauncherParamsSet.parameterName"),
                 dataKey: "parameterName",
                 customStyle: true,
                 render: (text, record: ChromeLauncherParams) => {
@@ -777,7 +788,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                 }
             },
             {
-                title: "变量值（bool类型值为空）",
+                title: t("ChromeLauncherParamsSet.variableValue"),
                 dataKey: "variableValues",
                 customStyle: true,
                 render: (text, record: ChromeLauncherParams) => {
@@ -810,7 +821,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                 }
             },
             {
-                title: "操作",
+                title: t("YakitTable.action"),
                 dataKey: "action",
                 width: 128,
                 fixed: "right",
@@ -818,7 +829,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                     return (
                         <div className={style["table-action-icon"]}>
                             {record.cellStyle ? (
-                                <Tooltip title={"保存"}>
+                                <Tooltip title={t("YakitButton.save")}>
                                     <SolidStoreIcon
                                         className={classNames(style["action-icon"], style["action-icon-save"])}
                                         onClick={(e) => {
@@ -827,7 +838,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                                     />
                                 </Tooltip>
                             ) : (
-                                <Tooltip title={disabledEdit(record) ? "" : "编辑"}>
+                                <Tooltip title={disabledEdit(record) ? "" : t("YakitButton.edit")}>
                                     <PencilAltIcon
                                         className={classNames(style["action-icon"], {
                                             [style["action-icon-edit-disabled"]]: disabledEdit(record)
@@ -841,7 +852,15 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                                     />
                                 </Tooltip>
                             )}
-                            <Tooltip title={disabledBan2(record) ? "" : disabledBan1(record) ? "启用" : "禁用"}>
+                            <Tooltip
+                                title={
+                                    disabledBan2(record)
+                                        ? ""
+                                        : disabledBan1(record)
+                                        ? t("YakitButton.enable")
+                                        : t("YakitButton.disable")
+                                }
+                            >
                                 <BanIcon
                                     className={classNames(style["action-icon"], {
                                         [style["action-icon-ban-disabled"]]: disabledBan1(record),
@@ -873,7 +892,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                 }
             }
         ]
-    }, [tempEditId])
+    }, [tempEditId, i18n.language])
 
     const onSetCurrentRow = useDebounceFn(
         (rowDate: ChromeLauncherParams) => {
@@ -899,12 +918,12 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                         <YakitInput.Search
                             style={{width: 250}}
                             allowClear
-                            placeholder='请输入参数名搜索'
+                            placeholder={t("ChromeLauncherParamsSet.enterParameterNameToSearch")}
                             onSearch={(value) => setSearchVal(value.trim())}
                         />
                         <YakitButton type='text' onClick={resetToDefault} disabled={tempEditId !== undefined}>
                             <OutlineRefreshIcon style={{marginRight: 4}} />
-                            恢复默认参数
+                            {t("ChromeLauncherParamsSet.restoreDefaultParameters")}
                         </YakitButton>
                     </div>
                 }
@@ -929,11 +948,9 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                                 onEdit(newItem)
                             }, 50)
                         }}
+                        icon={<OutlinePlusIcon />}
                     >
-                        <div className={style["button-add-params"]}>
-                            <PlusIcon />
-                            添加新参数
-                        </div>
+                        {t("ChromeLauncherParamsSet.addNewParameter")}
                     </YakitButton>
                 }
                 isRefresh={false}
