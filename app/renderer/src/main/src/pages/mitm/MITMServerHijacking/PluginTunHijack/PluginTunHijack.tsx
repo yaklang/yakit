@@ -222,14 +222,13 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         }
     })
     const handleDeleteRoute = useMemoizedFn((ipList?: string[]) => {
-        const ip = ipList || selectedRowKeys
         let ExecParams = [
             {Key: "tunName", Value: deviceName},
             {Key: "clear", Value: true}
         ]
-        if (ip.length !== 0) {
+        if (ipList && ipList.length !== 0) {
             ExecParams = [
-                {Key: "ipList", Value: ip.join(",")},
+                {Key: "ipList", Value: ipList.join(",")},
             ]
         }
         pluginTunHijackDelActions.startPluginTunHijack({
@@ -281,7 +280,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     // 退出Tun劫持逻辑
     const onQuitFun = useMemoizedFn(()=>{
         isQuitRef.current = true
-        handleDeleteRoute([])
+        handleDeleteRoute()
         cancelPluginTunHijack()
         // 如有其余操作的关闭来源 需通知其已执行Tun劫持关闭
         // 点击页面关闭时直接关闭
@@ -359,7 +358,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                         <YakitButton type='primary' onClick={addRoute}>
                             添加路由
                         </YakitButton>
-                        <YakitButton type='outline1' colors='danger' onClick={() => handleDeleteRoute()}>
+                        <YakitButton type='outline1' colors='danger' onClick={() => handleDeleteRoute(selectedRowKeys.length > 0 ? selectedRowKeys : undefined)}>
                             {selectedRowKeys.length > 0 ? "删除" : "清空"}
                         </YakitButton>
                         <div className={styles["plugin-tun-hijack-quit-icon"]} onClick={onQuitTunHijackFun}>
