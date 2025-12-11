@@ -32,7 +32,15 @@ import {
 } from "./aiRender"
 
 // 属于该 hook 处理数据的类型
-export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_require"]
+export const UseCasualChatTypes = [
+    "thought",
+    "result",
+    "exec_aiforge_review_require",
+    // 自由对话崩溃的错误信息
+    "fail_react_task",
+    // 自由对话成功结束标志
+    "success_react_task"
+]
 
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -886,6 +894,30 @@ function useCasualChat(params?: UseCasualChatParams) {
                     })
                     return newArr
                 })
+                return
+            }
+
+            if (res.Type === "fail_react_task") {
+                // ReAct任务崩溃的错误信息
+                setContents((old) => {
+                    const newArr = [...old]
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: AIChatQSDataTypeEnum.FAIL_REACT,
+                        data: {
+                            content: ipcContent,
+                            NodeId: res.NodeId,
+                            NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                        }
+                    })
+                    return newArr
+                })
+                return
+            }
+
+            if (res.Type === "success_react_task") {
+                // ReAct任务成功结束标志
+                // 暂时过滤不展示到UI上
                 return
             }
 

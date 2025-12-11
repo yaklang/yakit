@@ -121,6 +121,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                     />
                 )
             case AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION:
+            case AIChatQSDataTypeEnum.FAIL_REACT:
                 return <AiFailPlanCard item={data} />
             default:
                 return <></>
