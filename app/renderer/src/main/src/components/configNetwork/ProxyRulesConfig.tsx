@@ -532,6 +532,9 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                 //检查新增代理节点
                 checkProxyEndpoints(proxy)
                 setStatus("success")
+                if (res.Reason !== "OK") {
+                    setErrorMsg(res.Reason)
+                }
             } else {
                 setStatus("error")
                 setErrorMsg(res.Reason)
@@ -568,6 +571,7 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                         <YakitButton type='primary' onClick={handleTest}>
                             {t("ProxyConfig.detectionStart")}
                         </YakitButton>
+                        {errorMsg ? <div className={styles["proxy-test-modal-detail"]}>{errorMsg}</div> : null}
                     </>
                 )
             case "error":
@@ -644,7 +648,10 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
                         >
                             <YakitSelect
                                 disabled={disabled}
-                                options={Endpoints.map(({Url, Id}) => ({label: Url, value: Id}))}
+                                options={Endpoints.filter(({Disabled}) => !Disabled).map(({Url, Id}) => ({
+                                    label: Url,
+                                    value: Id
+                                }))}
                                 mode='tags'
                                 placeholder={t("ProxyConfig.proxy_address_placeholder")}
                             />
