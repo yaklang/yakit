@@ -392,6 +392,8 @@
 
 
 .http-traffic-analysis-overlay{
+    transform: translateY(0) !important;
+
     &:global(.ant-drawer-bottom.ant-drawer-open.no-mask) {
         transform: unset;
     }
