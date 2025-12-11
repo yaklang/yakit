@@ -112,7 +112,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 ...value.baseFilter
             })
             setFilterData([...value.advancedFilters])
-            info("更新 MITM 过滤器状态")
         })
         return () => {
             grpcClientMITMfilter(mitmVersion).remove()
