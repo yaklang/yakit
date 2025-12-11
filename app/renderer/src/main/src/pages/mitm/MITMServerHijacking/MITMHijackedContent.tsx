@@ -417,7 +417,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const moreRuleLimitMsg = useMemoizedFn(() => {
         return (
             <>
-                检测到配置染色/匹配规则，如性能明显下降，可先将规则{closeDisposition("moreRuleLimit")}
+                检测到性能下降，如配置染色/匹配规则，可先将规则{closeDisposition("moreRuleLimit")}
                 <Tooltip title='关闭则禁用全部规则'>
                     <OutlineInformationcircleIcon className={styles["circle-icon"]} />
                 </Tooltip>
