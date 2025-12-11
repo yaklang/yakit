@@ -442,7 +442,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                                     className={classNames(styles["opt-style"], styles["opt-btn"])}
                                     onClick={() => onInfoDetails(item)}
                                 >
-                                    {t("Layout.MenuDNSLog.detail")}
+                                    {t("YakitButton.detail")}
                                 </div>
                             </div>
                         )

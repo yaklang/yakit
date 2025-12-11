@@ -259,14 +259,15 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             const obj = JSON.parse(data)
                             const {DNSMode, UseLocal} = obj
                             setSelectedMode(DNSMode)
-                            setIsLocal(UseLocal)
+                            const local = DNSMode === "内置" ? false : UseLocal
+                            setIsLocal(local)
                             sendMenuDnslog({
                                 dnsLogType,
                                 token,
                                 domain,
                                 onlyARecord,
                                 DNSMode: DNSMode,
-                                UseLocal: UseLocal
+                                UseLocal: local
                             })
                         }
                     })

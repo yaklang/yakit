@@ -16,12 +16,14 @@ import {
     StartedLocalModelInfo,
     LocalModelConfig,
     GetAIModelListResponse,
-    StopLocalModelRequest
+    StopLocalModelRequest,
+    IsForcedSetAIModalRequest
 } from "../type/aiModel"
 import omit from "lodash/omit"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {AILocalModelTypeEnum} from "../defaultConstant"
+import {onOpenConfigModal} from "./aiModelSelect/AIModelSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -245,5 +247,22 @@ export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse>
                 if (!hiddenError) yakitNotify("error", "grpcClearAllModels 失败:" + err)
                 reject(err)
             })
+    })
+}
+
+export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const {noDataCall, haveDataCall} = params
+        getAIModelList(hiddenError)
+            .then((res) => {
+                if (res.localModels.length === 0 && res.onlineModels.length === 0) {
+                    onOpenConfigModal()
+                    noDataCall(res)
+                } else {
+                    haveDataCall(res)
+                }
+                resolve(null)
+            })
+            .catch(reject)
     })
 }

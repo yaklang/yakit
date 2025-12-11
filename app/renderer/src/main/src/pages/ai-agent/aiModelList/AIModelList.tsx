@@ -100,7 +100,7 @@ export const setAIModal = (params: {
         closable: true,
         maskClosable: false,
         onCancel: () => {
-            emiter.emit("onRefreshAvailableAIModelList", isAdd)
+            // emiter.emit("onRefreshAvailableAIModelList", isAdd)
             m.destroy()
         },
         content: (
@@ -129,7 +129,7 @@ export const setAIModal = (params: {
                         })
                     }}
                     onCancel={() => {
-                        emiter.emit("onRefreshAvailableAIModelList", isAdd)
+                        // emiter.emit("onRefreshAvailableAIModelList", isAdd)
                         m.destroy()
                     }}
                 />

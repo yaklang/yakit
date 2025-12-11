@@ -93,3 +93,8 @@ export interface GetAIModelListResponse {
     onlineModels: ThirdPartyApplicationConfig[]
     localModels: StartedLocalModelInfo[]
 }
+
+export interface IsForcedSetAIModalRequest {
+    noDataCall: (v: GetAIModelListResponse) => void
+    haveDataCall: (v: GetAIModelListResponse) => void
+}
