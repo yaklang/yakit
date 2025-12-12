@@ -289,6 +289,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         emiter.on("onRefreshRuleEvent", onRefreshRuleEvent)
         emiter.on("onMitmRuleMoreLimt", onMitmRuleMoreLimt)
         return () => {
+            if (timerRef.current) clearTimeout(timerRef.current)
             emiter.off("onRefFilterWhiteListEvent", onRefFilterWhiteListEvent)
             emiter.off("onRefreshRuleEvent", onRefreshRuleEvent)
             emiter.off("onMitmRuleMoreLimt", onMitmRuleMoreLimt)
