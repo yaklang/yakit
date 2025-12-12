@@ -6,7 +6,8 @@ import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {setClipboardText} from "@/utils/clipboard"
 import {FileTreeSystemItemProps} from "../type"
 import {historyStore} from "../store/useHistoryFolder"
-import { fileToChatQuestionStore } from "@/pages/ai-re-act/aiReActChat/store"
+import {fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import { YakitMenuItemType } from "@/components/yakitUI/YakitMenu/YakitMenu"
 
 const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded, onResetTree}) => {
     // 文件图标
@@ -18,33 +19,40 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded
 
     // 菜单数据
     const menuData = useMemo(() => {
-        return [
-            ...(data.depth === 1 && isOpen
-                ? [
-                      {
-                          key: "closeFolder",
-                          label: "关闭文件夹"
-                      },
-                      {
-                          key: "refreshFolder",
-                          label: "刷新"
-                      }
-                  ]
-                : []),
+        const menu = [
             {
-                key: "openFolder",
-                label: "在文件夹中显示"
-            },
-            {
-                key: "path",
-                label: "复制路径"
+                key: "refreshFolder",
+                label: "刷新",
+                isHide: !(data.depth === 1 && isOpen)
             },
             {
                 key: "sendToChat",
-                label: "发送到自由对话"
+                label: "发送到自由对话",
+                isHide: false
+            },
+            {
+                type: "divider"
+            },
+            {
+                key: "path",
+                label: "复制路径",
+                isHide: false
+            },
+            {
+                key: "openFolder",
+                label: "在文件夹中显示",
+                isHide: false
+            },
+            {
+                key: "closeFolder",
+                label: "关闭文件夹",
+                isHide: !(data.depth === 1 && isOpen)
             }
         ]
-    }, [])
+
+        return menu.filter((item) => !item.isHide) as YakitMenuItemType[]
+    }, [data.depth, isOpen])
+
     // 菜单点击事件
     const handleDropdown = (key: string) => {
         switch (key) {
@@ -60,9 +68,9 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded
             case "refreshFolder":
                 onResetTree?.()
                 break
-            case 'sendToChat':
-               fileToChatQuestionStore.addFileToChatQuestion(data.path)
-                break   
+            case "sendToChat":
+                fileToChatQuestionStore.addFileToChatQuestion(data.path)
+                break
             default:
                 break
         }
