@@ -96,7 +96,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             try {
                 setImportLoading(false)
                 // 失败时不显示成功提示，但仍然刷新和关闭
-                if (!hasError) {
+                if (!getHasError()) {
                     success("导入知识库成功")
                     await existsKnowledgeBaseAsync()
                     onVisible(false)
@@ -116,7 +116,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [token, getHasError()])
+    }, [token])
 
     const handleImport = useMemoizedFn(async () => {
         try {

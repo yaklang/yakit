@@ -24,6 +24,8 @@ import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {fileToChatQuestionStore, useFileToQuestion} from "./store"
+import {PageNodeItemProps} from "@/store/pageInfo"
+import emiter from "@/utils/eventBus/eventBus"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -90,6 +92,19 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             chatIPCEvents.onSend({token: activeChat.id, type: "casual", params: chatMessage})
         } catch (error) {}
     })
+
+    useEffect(() => {
+        const konwledgeInputStringFn = (params: string) => {
+            try {
+                const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
+                setQuestion(data?.inputString ?? "")
+            } catch (error) {}
+        }
+        emiter.on("konwledgeInputString", konwledgeInputStringFn)
+        return () => {
+            emiter.off("konwledgeInputString", konwledgeInputStringFn)
+        }
+    }, [])
 
     // #endregion
 

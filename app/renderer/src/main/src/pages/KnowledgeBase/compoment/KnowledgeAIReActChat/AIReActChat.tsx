@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 
 import styles from "./AIReActChat.module.scss"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
@@ -19,6 +19,8 @@ import {AIInputEvent} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIReActChatContents} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {ChevronleftButton, RoundedStopButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 import {KnowledgeBaseItem} from "../../hooks/useKnowledgeBase"
+import emiter from "@/utils/eventBus/eventBus"
+import {PageNodeItemProps} from "@/store/pageInfo"
 
 const AIReActChat: React.FC<AIReActChatProps & {knowledgeId?: string; knowledgeBases: KnowledgeBaseItem[]}> =
     React.memo((props) => {
@@ -45,6 +47,19 @@ const AIReActChat: React.FC<AIReActChatProps & {knowledgeId?: string; knowledgeB
         const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
             return {
                 placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
+            }
+        }, [])
+
+        useEffect(() => {
+            const konwledgeInputStringFn = (params: string) => {
+                try {
+                    const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
+                    setQuestion(data?.inputString ?? "")
+                } catch (error) {}
+            }
+            emiter.on("konwledgeInputString", konwledgeInputStringFn)
+            return () => {
+                emiter.off("konwledgeInputString", konwledgeInputStringFn)
             }
         }, [])
         // #endregion

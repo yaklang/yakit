@@ -409,7 +409,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
-            UserQuery: `${name}:` + qs,
+            UserQuery: `请使用知识库${name}回答:` + qs,
             CoordinatorId: "",
             Sequence: 1
         }
