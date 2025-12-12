@@ -202,7 +202,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                         }
                     })
                     setYakitTab([...yakitTab])
-                    setActiveKey(tabs.curTabKey)
+                    onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             }
         })

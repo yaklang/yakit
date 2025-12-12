@@ -392,7 +392,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                     onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
                     onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
                     className={styles["tab-wrap"]}
-                    show={true}
                 />
             </div>
         </div>

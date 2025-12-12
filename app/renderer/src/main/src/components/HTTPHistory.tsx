@@ -66,7 +66,7 @@ import {RemoteGV} from "@/yakitGV"
 import {cloneDeep} from "lodash"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitSideTab} from "./yakitSideTab/YakitSideTab"
-import {YakitSideTabRefProps, YakitTabsProps} from "./yakitSideTab/YakitSideTabType"
+import {YakitTabsProps} from "./yakitSideTab/YakitSideTabType"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -99,7 +99,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
-    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
     const [activeKey, setActiveKey] = useState<string>("web-tree")
     const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
@@ -130,7 +129,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         })
                         return [...prev]
                     })
-                    setActiveKey(tabs.key)
+                    onActiveKey(tabs.key)
                 } catch (error) {}
             }
         })
@@ -218,7 +217,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const val = JSON.parse(value)
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
-            yakitSideTabRef.current?.onActiveKeyToSelect("web-tree", true)
+            setYakitTab((prev) => {
+                prev.forEach((i) => {
+                    if (i.value === "web-tree") {
+                        i.show = true
+                    } else {
+                        i.show = false
+                    }
+                })
+                return [...prev]
+            })
+            onActiveKey("web-tree")
         }
     })
     useEffect(() => {
@@ -246,7 +255,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div className={styles["hTTPHistory-left"]}>
                         <YakitSideTab
                             key={i18n.language}
-                            ref={yakitSideTabRef}
                             yakitTabs={yakitTab}
                             setYakitTabs={setYakitTab}
                             activeKey={activeKey}

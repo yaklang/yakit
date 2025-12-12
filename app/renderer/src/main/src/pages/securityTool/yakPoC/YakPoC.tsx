@@ -77,7 +77,7 @@ import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
-import {YakitSideTabRefProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const HybridScanTaskListDrawer = React.lazy(
@@ -195,7 +195,16 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const onClearAll = useMemoizedFn(() => {
         setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setDeletedGroup([])
-        yakitSideTabRef.current?.onActiveKeyToSelect(type, true)
+        setYakitTab((prev) => {
+            prev.forEach((i) => {
+                if (i.value === type) {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
+        })
     })
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
@@ -208,7 +217,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         } catch (error) {}
     })
 
-    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
     const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
             label: () => "按关键词",
@@ -245,7 +253,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 })
                 return [...prev]
             })
-            setType(t)
+            onActiveKey(t)
         }
     }, [])
 
@@ -268,7 +276,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div className={styles["yakpoc-tab-wrap"]}>
                 <YakitSideTab
-                    ref={yakitSideTabRef}
                     yakitTabs={yakitTab}
                     setYakitTabs={setYakitTab}
                     activeKey={type}

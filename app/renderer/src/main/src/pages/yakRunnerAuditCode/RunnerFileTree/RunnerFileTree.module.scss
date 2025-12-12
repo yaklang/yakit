@@ -173,65 +173,6 @@
 .left-side-bar {
     height: 100%;
     display: flex;
-    // border-left: 1px solid var(--Colors-Use-Neutral-Border);
-    // border-right: 1px solid var(--Colors-Use-Neutral-Border);
-
-    &-list {
-        display: inline-flex;
-        flex-direction: column;
-        align-items: flex-start;
-        background: var(--Colors-Use-Neutral-Bg);
-        border-right: 1px solid var(--Colors-Use-Neutral-Border);
-    }
-
-    &-item {
-        padding: 12px 4px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        cursor: pointer;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        position: relative;
-        user-select: none;
-
-        .item-text {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 16px;
-            writing-mode: vertical-rl;
-            text-orientation: sideways-right;
-            transform: rotate(180deg);
-        }
-        svg {
-            width: 16px;
-            height: 16px;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-    }
-    &-item:hover {
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
-    }
-
-    &-item-active {
-        background-color: var(--Colors-Use-Main-Primary);
-        .item-text {
-            color: var(--Colors-Use-Main-On-Primary);
-        }
-        svg {
-            color: var(--Colors-Use-Main-On-Primary);
-        }
-    }
-
-    &-item-disable {
-        background-color: var(--Colors-Use-Neutral-Disable);
-        cursor: not-allowed;
-    }
-
-    &-item-active:hover {
-        background-color: var(--Colors-Use-Main-Hover);
-    }
 
     &-content {
         flex: 1;

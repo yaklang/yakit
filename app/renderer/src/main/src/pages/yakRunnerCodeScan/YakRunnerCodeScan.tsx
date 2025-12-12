@@ -112,7 +112,7 @@ import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {YakitSideTabRefProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -659,7 +659,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
     const [type, setType] = useState<"keyword" | "group">("group")
-    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
     const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
             label: () => "按组选",
@@ -682,7 +681,17 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         setHidden(!show)
     }, [show])
     const handleTabClick = useMemoizedFn((tab) => {
-        yakitSideTabRef.current?.onActiveKeyToSelect(tab, true)
+        setYakitTab((prev) => {
+            prev.forEach((i) => {
+                if (i.value === tab) {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
+        })
+        onActiveKey(tab)
     })
     const handleTabHidden = useMemoizedFn((isHidden: boolean) => {
         if (isHidden) {
@@ -703,7 +712,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
             {/* 左侧边栏 */}
             <div className={styles["code-scan-tab-wrap"]}>
                 <YakitSideTab
-                    ref={yakitSideTabRef}
                     yakitTabs={yakitTab}
                     setYakitTabs={setYakitTab}
                     activeKey={type}

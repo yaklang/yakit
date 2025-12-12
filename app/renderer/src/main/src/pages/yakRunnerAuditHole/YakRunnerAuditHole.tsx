@@ -35,7 +35,7 @@ import {LeftSideHoleType} from "./LeftSideHoleBar/LeftSideHoleBarType"
 import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
-import {YakitSideTabRefProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const {queryPagesDataById} = usePageInfo(
@@ -60,7 +60,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     useEffect(() => {
         const auditHoleVulnerabilityLevel = (params: string) => {
             try {
-                const data:AuditHoleInfoProps = JSON.parse(params)
+                const data: AuditHoleInfoProps = JSON.parse(params)
                 setQuery((query) => ({...query, ...data}))
             } catch (error) {}
         }
@@ -77,8 +77,6 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
 
-    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
-    const [isUnShow, setUnShow] = useState<boolean>(true)
     const [active, setActive] = useState<LeftSideHoleType>("statistic")
     const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
@@ -107,7 +105,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                         })
                         return [...prev]
                     })
-                    setActive(tabs.key)
+                    onActiveKey(tabs.key)
                 } catch (error) {}
             }
         })
@@ -115,23 +113,29 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const onActiveKey = useMemoizedFn((key) => {
         setActive(key)
     })
-    const openTabsFlag = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === active)?.show !== false
+    const isUnShow = useCreation(() => {
+        return !(yakitTab.find((ele) => ele.value === active)?.show !== false)
     }, [yakitTab, active])
     useDebounceEffect(
         () => {
-            setRemoteValue(RemoteGV.AuditHoleShow, JSON.stringify({contShow: openTabsFlag, key: active}))
+            setRemoteValue(RemoteGV.AuditHoleShow, JSON.stringify({contShow: !isUnShow, key: active}))
         },
-        [openTabsFlag, active],
+        [isUnShow, active],
         {wait: 300}
     )
-    useEffect(() => {
-        setUnShow(!openTabsFlag)
-    }, [openTabsFlag])
     // 操作side开启与关闭
     const onOperateSide = useMemoizedFn((val: boolean) => {
         if (val) {
-            yakitSideTabRef.current?.onActiveKeyToSelect(active, true)
+            setYakitTab((prev) => {
+                prev.forEach((i) => {
+                    if (i.value === active) {
+                        i.show = true
+                    } else {
+                        i.show = false
+                    }
+                })
+                return [...prev]
+            })
         } else {
             setYakitTab((prev) => {
                 prev.forEach((i) => {
@@ -168,9 +172,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                                     setQuery={setQuery}
                                 />
                             }
-                            documentCollectDom={
-                                <DocumentCollect query={query} setQuery={setQuery}/>
-                            }
+                            documentCollectDom={<DocumentCollect query={query} setQuery={setQuery} />}
                         />
                     }
                     secondNodeStyle={

@@ -122,7 +122,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                             }
                         })
                         setYakitTab([...yakitTab])
-                        setActiveKey(tabs.curTabKey)
+                        onActiveKey(tabs.curTabKey)
                     } catch (error) {}
                 }
             })

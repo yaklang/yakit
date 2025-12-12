@@ -743,7 +743,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         })
                         return [...prev]
                     })
-                    setActiveKey(tabs.curTabKey)
+                    onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             }
         })

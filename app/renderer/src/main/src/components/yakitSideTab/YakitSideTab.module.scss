@@ -95,6 +95,15 @@
 .yakit-side-tab-item-active {
     @include tab-item-active();
 }
+.yakit-side-tab-item-active-noHover {
+    &:hover {
+        background-color: var(--Colors-Use-Main-Primary);
+
+        &::after {
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+    }
+}
 .yakit-side-tab-item-show {
     background-color: var(--Colors-Use-Neutral-Text-4-Help-text);
     border-bottom-color: var(--Colors-Use-Neutral-Text-4-Help-text);

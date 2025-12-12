@@ -15,7 +15,7 @@ import {
     OutlineTemplateIcon,
     OutlineWrenchIcon
 } from "@/assets/icon/outline"
-import {YakitSideTabRefProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
@@ -26,7 +26,6 @@ const AIMCP = React.lazy(() => import("./aiMCP/AIMCP"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
-    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
     const [aiAgentTabList, setAiAgentTabList] = useState<YakitTabsProps[]>([
         {value: AIAgentTabListEnum.History, label: () => "历史会话", icon: <OutlineSparklesIcon />, show: true},
@@ -44,7 +43,17 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     }, [aiAgentTabList, active])
 
     const switchAIAgentTab = useMemoizedFn((value: AIAgentTabListEnum) => {
-        yakitSideTabRef.current?.onActiveKeyToSelect(value, true)
+        setAiAgentTabList((prev) => {
+            prev.forEach((i) => {
+                if (i.value === value) {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
+        })
+        handleSetActive(value)
     })
 
     useEffect(() => {
@@ -124,7 +133,6 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     return (
         <div className={styles["ai-agent-side-list"]}>
             <YakitSideTab
-                ref={yakitSideTabRef}
                 type='vertical'
                 yakitTabs={aiAgentTabList}
                 setYakitTabs={setAiAgentTabList}

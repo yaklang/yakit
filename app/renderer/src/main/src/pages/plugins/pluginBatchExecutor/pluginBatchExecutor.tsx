@@ -253,7 +253,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         }
                     })
                     setYakitTab([...yakitTab])
-                    setActiveKey(tabs.curTabKey)
+                    onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             }
         })

@@ -55,7 +55,7 @@ import {useStore} from "@/store/mitmState"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {YakitSideTabRefProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
@@ -152,7 +152,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     // #region 左侧tab
     const hijackTabsRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hijackTabsRef)
-    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
     const [curTabKey, setCurTabKey] = useState<string>("all")
     const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
         {
@@ -197,7 +196,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             })
                             return [...prev]
                         })
-                        setCurTabKey(tabs.curTabKey)
+                        onActiveKey(tabs.curTabKey)
                     } catch (error) {}
                 }
             })
@@ -397,7 +396,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
      */
     const onSendToPatch = useMemoizedFn((s: YakScript) => {
         setScript(s)
-        yakitSideTabRef.current?.onActiveKeyToSelect("hot-patch", true)
+        setYakitTab((prev) => {
+            prev.forEach((i) => {
+                if (i.value === "hot-patch") {
+                    i.show = true
+                } else {
+                    i.show = false
+                }
+            })
+            return [...prev]
+        })
+        onActiveKey("hot-patch")
     })
     /**@description 保存热加载代码到本地插件 */
     const onSaveHotCode = useMemoizedFn(() => {
@@ -953,7 +962,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         <div className={styles["mitm-plugin-hijack-content"]} ref={hijackTabsRef}>
             <div className={styles["mitm-hijack-tab-wrap"]}>
                 <YakitSideTab
-                    ref={yakitSideTabRef}
                     yakitTabs={yakitTab}
                     setYakitTabs={setYakitTab}
                     activeKey={curTabKey}

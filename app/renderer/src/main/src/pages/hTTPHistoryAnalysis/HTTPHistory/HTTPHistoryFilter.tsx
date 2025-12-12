@@ -175,7 +175,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                         }
                         return [...prev]
                     })
-                    setActiveKey(tabs.curTabKey)
+                    onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             } else {
                 if (toWebFuzzer) {
