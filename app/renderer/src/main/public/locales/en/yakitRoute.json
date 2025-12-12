@@ -119,6 +119,7 @@
     "domain": "Domain",
     "manageAllDiscoveredDomainAssets": "Manage All Discovered Domain Assets",
     "ai": "AI",
-    "ai-repository": "Knowledge base"
+    "ai-repository": "Knowledge base",
+    "ssaCompileHistory": "SSACompileHistory"
   }
 }

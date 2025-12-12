@@ -345,12 +345,14 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const [activeKey, setActiveKey] = useState<string>("plugin-log")
 
     const list: StreamResult.Log[] = useCreation(() => {
-        return (messageList || [])
-            .filter((i) => {
-                return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
-            })
-            // .splice(0, 25)
-            .reverse()
+        return (
+            (messageList || [])
+                .filter((i) => {
+                    return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
+                })
+                // .splice(0, 25)
+                .reverse()
+        )
     }, [messageList])
 
     const echartsLists: StreamResult.Log[] = useCreation(() => {
@@ -518,19 +520,26 @@ export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.mem
     const [allTotal, setAllTotal] = useState<number>(0)
 
     const onJumpAuditHole = useMemoizedFn(() => {
-        emiter.emit("openPage", JSON.stringify({
-            route: YakitRoute.YakRunner_Audit_Hole,
-            params: {
-                RuntimeID: [runtimeId]
-            }
-        }))
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.YakRunner_Audit_Hole,
+                params: {
+                    RuntimeID: [runtimeId]
+                }
+            })
+        )
     })
+
+    const query = useMemo(() => {
+        return {
+            RuntimeID: [runtimeId]
+        }
+    }, [runtimeId])
     return (
         <div className={styles["risks-table"]}>
             <YakitAuditHoleTable
-                query={{
-                    RuntimeID: [runtimeId]
-                }}
+                query={query}
                 setAllTotal={setAllTotal}
                 renderTitle={
                     <div className={styles["table-renderTitle"]}>

@@ -1641,8 +1641,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
             let reportName = ""
-            if (pageInfo.projectName) {
-                reportName = `${pageInfo.projectName}代码扫描报告`
+            const projectItem = auditCodeList.find((item) => item.value === pageInfo.projectId)
+            const projectName = pageInfo?.projectName || projectItem?.label
+            
+            if (projectName) {
+                reportName = `${projectName}代码扫描报告`
             }
 
             const params: CreateReportContentProps = {
@@ -1968,6 +1971,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             trigger: "setSelectProjectId"
         })
         const [compileHistoryList, setCompileHistoryList] = useState<{label: string; value: string}[]>([])
+        const isSelectProjectRef = useRef<boolean>(false)
         const getCompileHistoryList = useMemoizedFn(async (ProjectIds: number[]) => {
             const finalParams: QuerySSAProgramRequest = {
                 Filter: {
@@ -1975,18 +1979,32 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 },
                 Pagination: {...genDefaultPagination(500), OrderBy: "created_at"}
             }
-            apiQuerySSAPrograms(finalParams).then((res) => {
-                const newCompileHistoryList = res.Data.map((item) => {
-                    return {
-                        label: formatTimestamp(item.UpdateAt),
-                        value: item.Name
+            let newCompileHistoryList: {label: string; value: string}[] = []
+            apiQuerySSAPrograms(finalParams)
+                .then((res) => {
+                    newCompileHistoryList = res.Data.map((item) => {
+                        return {
+                            label: formatTimestamp(item.UpdateAt),
+                            value: item.Name
+                        }
+                    })
+                    newCompileHistoryList.unshift({label: "编译并扫描最新代码", value: "recompileAndScan"})
+                    setCompileHistoryList(newCompileHistoryList)
+                })
+                .finally(() => {
+                    if (isSelectProjectRef.current) {
+                        isSelectProjectRef.current = false
+                        if (newCompileHistoryList.length > 1) {
+                            form.setFieldsValue({
+                                history: newCompileHistoryList[1].value
+                            })
+                        } else {
+                            form.setFieldsValue({
+                                history: "recompileAndScan"
+                            })
+                        }
                     }
                 })
-                setCompileHistoryList([
-                    {label: "编译并扫描最新代码", value: "recompileAndScan"},
-                    ...newCompileHistoryList
-                ])
-            })
         })
 
         useUpdateEffect(() => {
@@ -2015,6 +2033,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     GroupNames: newSelectGroup,
                     selectTotal
                 })
+                isSelectProjectRef.current = true
                 setSelectProjectId(item ? [item] : [])
                 emiter.emit("onResetCodeScanProject")
             } catch (error) {}
