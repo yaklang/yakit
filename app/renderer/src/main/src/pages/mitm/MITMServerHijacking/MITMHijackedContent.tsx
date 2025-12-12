@@ -165,6 +165,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
 
     /** 黄色提示 start */
+    const [moreRuleLimit, setMoreRuleLimit] = useState<boolean>(false)
+    const timerRef = useRef<NodeJS.Timeout | null>(null)
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
     const [whiteFilter, setWhiteFilter] = useState<{
         baseFilter: MITMFilterSchema
@@ -242,6 +244,23 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 yakitNotify("error", "关闭失败")
             })
     })
+    const setRulesAllDisable = useMemoizedFn(() => {
+        const newRules: MITMContentReplacerRule[] = curRules.map((item) => ({...item, Disabled: true}))
+        const value: MITMContentReplacersRequest = {
+            replacers: newRules,
+            version: mitmVersion
+        }
+        grpcMITMContentReplacers(value, true)
+            .then((val) => {
+                setTimeout(() => {
+                    getRules()
+                }, 500)
+                yakitNotify("success", "已成功开启规则“全部禁用”按钮")
+            })
+            .catch((e) => {
+                yakitNotify("error", "关闭失败")
+            })
+    })
     const getRules = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetCurrentRules", {})
@@ -252,7 +271,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
                 )
                 const flag = findOpenRepRule !== undefined
+                const flag2 = newRules.every((item) => item.Disabled === true)
                 setOpenRepRuleFlag(flag)
+                if (flag2) {
+                    setMoreRuleLimit(false)
+                }
                 if (flag) {
                     setAlertVisible(true)
                 }
@@ -264,9 +287,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         getRules()
         emiter.on("onRefFilterWhiteListEvent", onRefFilterWhiteListEvent)
         emiter.on("onRefreshRuleEvent", onRefreshRuleEvent)
+        emiter.on("onMitmRuleMoreLimt", onMitmRuleMoreLimt)
         return () => {
+            if (timerRef.current) clearTimeout(timerRef.current)
             emiter.off("onRefFilterWhiteListEvent", onRefFilterWhiteListEvent)
             emiter.off("onRefreshRuleEvent", onRefreshRuleEvent)
+            emiter.off("onMitmRuleMoreLimt", onMitmRuleMoreLimt)
         }
     }, [])
     useEffect(() => {
@@ -280,6 +306,17 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const onRefreshRuleEvent = useMemoizedFn((version) => {
         if (version !== mitmVersion) return
         getRules()
+    })
+    const onMitmRuleMoreLimt = useMemoizedFn(() => {
+        if (timerRef.current) clearTimeout(timerRef.current)
+        if (!moreRuleLimit) {
+            setMoreRuleLimit(true)
+            setAlertVisible(true)
+            yakitNotify("info", "开启染色/匹配规则会导致性能下降，如遇风险，请谨慎操作")
+        }
+        timerRef.current = setTimeout(() => {
+            setMoreRuleLimit(false)
+        }, 10000)
     })
     const clearLoadedPlugins = () => {
         return (
@@ -302,7 +339,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             </YakitButton>
         )
     }
-    const closeDisposition = (key: "rule" | "filter" | "all") => {
+    const closeDisposition = (key: "rule" | "filter" | "all" | "moreRuleLimit") => {
         return (
             <YakitButton
                 type='text'
@@ -319,6 +356,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             setFilters()
                             setRules()
                             break
+                        case "moreRuleLimit":
+                            setRulesAllDisable()
+                            break
                         default:
                             break
                     }
@@ -329,87 +369,162 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             </YakitButton>
         )
     }
+
+    const whiteListMsg = useMemoizedFn(() => {
+        return (
+            <>
+                检测到配置{openWhiteFilter()}，如抓包有问题可先将白名单设置{closeDisposition("filter")}
+                <Tooltip title='关闭则会删除过滤器中包含项的所有内容'>
+                    <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                </Tooltip>
+                。
+            </>
+        )
+    })
+
+    const openRepRuleMsg = useMemoizedFn(() => {
+        return (
+            <>
+                检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition("rule")}
+                <Tooltip title='关闭则会开启“全部不替换”按钮'>
+                    <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                </Tooltip>
+                。
+            </>
+        )
+    })
+
+    const whiteListAndOpenRepRuleMsg = useMemoizedFn(() => {
+        return (
+            <>
+                检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
+                {closeDisposition("all")}
+                <Tooltip title='关闭则会开启规则“全部不替换”按钮，并删除过滤器中包含项的所有内容'>
+                    <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                </Tooltip>
+                。
+            </>
+        )
+    })
+
+    const loadedPluginMsg = useMemoizedFn(() => {
+        return (
+            <>
+                检测到加载{loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}取消加载插件。
+            </>
+        )
+    })
+
+    const moreRuleLimitMsg = useMemoizedFn(() => {
+        return (
+            <>
+                检测到性能下降，如配置染色/匹配规则，可先将规则{closeDisposition("moreRuleLimit")}
+                <Tooltip title='关闭则禁用全部规则'>
+                    <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                </Tooltip>
+                。
+            </>
+        )
+    })
+
     const alertMsg = useMemo(() => {
+        if (whiteListFlag && openRepRuleFlag && loadedPluginLen && moreRuleLimit) {
+            return (
+                <>
+                    {whiteListAndOpenRepRuleMsg()}
+                    {loadedPluginMsg()}
+                    {moreRuleLimitMsg()}
+                </>
+            )
+        }
+
         if (whiteListFlag && openRepRuleFlag && loadedPluginLen) {
             return (
                 <>
-                    检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
-                    {closeDisposition("all")}
-                    <Tooltip title='关闭则会开启规则“全部不替换”按钮，并删除过滤器中包含项的所有内容'>
-                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
-                    </Tooltip>
-                    。检测到加载
-                    {loadedPluginLen}个插件，如抓包有问题可点击
-                    {clearLoadedPlugins()}
-                    取消加载插件。
+                    {whiteListMsg()}
+                    {openRepRuleMsg()}
+                    {loadedPluginMsg()}
                 </>
             )
         }
-        if (whiteListFlag && openRepRuleFlag) {
+        if (whiteListFlag && openRepRuleFlag && moreRuleLimit) {
             return (
                 <>
-                    检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
-                    {closeDisposition("all")}
-                    <Tooltip title='关闭则会开启规则“全部不替换”按钮，并删除过滤器中包含项的所有内容'>
-                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
-                    </Tooltip>
+                    {whiteListAndOpenRepRuleMsg()}
+                    {moreRuleLimitMsg()}
                 </>
             )
         }
+        if (whiteListFlag && loadedPluginLen && moreRuleLimit) {
+            return (
+                <>
+                    {whiteListMsg()}
+                    {loadedPluginMsg()}
+                    {moreRuleLimitMsg()}
+                </>
+            )
+        }
+
+        if (openRepRuleFlag && loadedPluginLen && moreRuleLimit) {
+            return (
+                <>
+                    {openRepRuleMsg()}
+                    {loadedPluginMsg()}
+                    {moreRuleLimitMsg()}
+                </>
+            )
+        }
+
+        if (whiteListFlag && openRepRuleFlag) return whiteListAndOpenRepRuleMsg()
         if (whiteListFlag && loadedPluginLen) {
             return (
                 <>
-                    检测到配置{openWhiteFilter()}白名单，如抓包有问题可先将白名单设置{closeDisposition("filter")}
-                    <Tooltip title='关闭则会删除过滤器中包含项的所有内容'>
-                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
-                    </Tooltip>
-                    。检测到加载
-                    {loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}
-                    取消加载插件。
+                    {whiteListMsg()}
+                    {loadedPluginMsg()}
                 </>
             )
         }
+        if (whiteListFlag && moreRuleLimit) {
+            return (
+                <>
+                    {whiteListMsg()}
+                    {moreRuleLimitMsg()}
+                </>
+            )
+        }
+
         if (openRepRuleFlag && loadedPluginLen) {
             return (
                 <>
-                    检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition("rule")}
-                    <Tooltip title='关闭则会开启“全部不替换”按钮'>
-                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
-                    </Tooltip>
-                    。检测到加载
-                    {loadedPluginLen}
-                    个插件，如抓包有问题可点击
-                    {clearLoadedPlugins()}
-                    取消加载插件。
+                    {openRepRuleMsg()}
+                    {loadedPluginMsg()}
                 </>
             )
         }
-        if (whiteListFlag)
+        if (openRepRuleFlag && moreRuleLimit) {
             return (
                 <>
-                    检测到配置{openWhiteFilter()}，如抓包有问题可先将白名单设置{closeDisposition("filter")}
-                    <Tooltip title='关闭则会删除过滤器中包含项的所有内容'>
-                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
-                    </Tooltip>
+                    {openRepRuleMsg()}
+                    {moreRuleLimitMsg()}
                 </>
             )
-        if (openRepRuleFlag)
+        }
+
+        if (loadedPluginLen && moreRuleLimit) {
             return (
                 <>
-                    检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition("rule")}
-                    <Tooltip title='关闭则会开启“全部不替换”按钮'>
-                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
-                    </Tooltip>
+                    {loadedPluginMsg()}
+                    {moreRuleLimitMsg()}
                 </>
             )
-        if (loadedPluginLen)
-            return (
-                <>
-                    检测到加载{loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}取消加载插件
-                </>
-            )
+        }
+
+        if (whiteListFlag) return whiteListMsg()
+        if (openRepRuleFlag) return openRepRuleMsg()
+        if (loadedPluginLen) return loadedPluginMsg()
+        if (moreRuleLimit) return moreRuleLimitMsg()
         return ""
-    }, [openRepRuleFlag, whiteListFlag, loadedPluginLen])
+    }, [openRepRuleFlag, whiteListFlag, loadedPluginLen, moreRuleLimit])
     useEffect(() => {
         if (alertMsg === "") {
             setAlertVisible(false)
