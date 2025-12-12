@@ -1,5 +1,5 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import React, {useEffect, useRef, useState} from "react"
+import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useSize} from "ahooks"
 import styles from "./YakRunnerAuditHole.module.scss"
 import {
     HoleQueryProps,
@@ -16,7 +16,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import {Divider, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineCloseIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {FieldGroup} from "../risks/YakitRiskTable/utils"
 import {FieldName} from "../risks/RiskTable"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
@@ -35,6 +35,7 @@ import {LeftSideHoleType} from "./LeftSideHoleBar/LeftSideHoleBarType"
 import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
+import {YakitSideTabRefProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const {queryPagesDataById} = usePageInfo(
@@ -76,29 +77,70 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
 
+    const yakitSideTabRef = useRef<YakitSideTabRefProps | null>(null)
     const [isUnShow, setUnShow] = useState<boolean>(true)
     const [active, setActive] = useState<LeftSideHoleType>("statistic")
-    // 获取筛选展示状态
+    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
+        {
+            label: () => "统计",
+            value: "statistic",
+            show: false
+        },
+        {
+            label: () => "文件汇总",
+            value: "document-collect",
+            show: false
+        }
+    ])
     useEffect(() => {
-        getRemoteValue(RemoteGV.AuditHoleShow).then((value: string) => {
-            if (value === "true") {
-                setUnShow(false)
+        getRemoteValue(RemoteGV.AuditHoleShow).then((setting: string) => {
+            if (setting) {
+                try {
+                    const tabs = JSON.parse(setting)
+                    setYakitTab((prev) => {
+                        prev.forEach((i) => {
+                            if (i.value === tabs.key) {
+                                i.show = tabs.contShow
+                            } else {
+                                i.show = false
+                            }
+                        })
+                        return [...prev]
+                    })
+                    setActive(tabs.key)
+                } catch (error) {}
             }
         })
     }, [])
-
+    const onActiveKey = useMemoizedFn((key) => {
+        setActive(key)
+    })
+    const openTabsFlag = useCreation(() => {
+        return yakitTab.find((ele) => ele.value === active)?.show !== false
+    }, [yakitTab, active])
+    useDebounceEffect(
+        () => {
+            setRemoteValue(RemoteGV.AuditHoleShow, JSON.stringify({contShow: openTabsFlag, key: active}))
+        },
+        [openTabsFlag, active],
+        {wait: 300}
+    )
+    useEffect(() => {
+        setUnShow(!openTabsFlag)
+    }, [openTabsFlag])
     // 操作side开启与关闭
     const onOperateSide = useMemoizedFn((val: boolean) => {
         if (val) {
-            setUnShow(false)
+            yakitSideTabRef.current?.onActiveKeyToSelect(active, true)
         } else {
-            setUnShow(true)
+            setYakitTab((prev) => {
+                prev.forEach((i) => {
+                    i.show = false
+                })
+                return [...prev]
+            })
         }
     })
-
-    useUpdateEffect(() => {
-        setRemoteValue(RemoteGV.AuditHoleShow, `${!isUnShow}`)
-    }, [isUnShow])
 
     return (
         <YakitSpin spinning={riskLoading}>
@@ -114,9 +156,10 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                     firstNode={
                         <LeftSideHoleBar
                             isUnShow={isUnShow}
-                            setUnShow={setUnShow}
                             active={active}
-                            setActive={setActive}
+                            setActive={onActiveKey}
+                            yakitTab={yakitTab}
+                            setYakitTab={setYakitTab}
                             statisticNode={
                                 <HoleQuery
                                     inViewport={inViewport}
@@ -159,15 +202,19 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
         getGroups()
     })
 
-    useDebounceEffect(()=>{
-        if (!inViewport) return
-        getGroups(false)
-    },[inViewport,query],{
-        wait: 200
-    })
+    useDebounceEffect(
+        () => {
+            if (!inViewport) return
+            getGroups(false)
+        },
+        [inViewport, query],
+        {
+            wait: 200
+        }
+    )
 
     const getGroups = useMemoizedFn((option: boolean = true) => {
-        apiGetSSARiskFieldGroupEx({Filter:query}).then((res) => {
+        apiGetSSARiskFieldGroupEx({Filter: query}).then((res) => {
             const {FileField, SeverityField, RiskTypeField} = res
             setProgramList(FileField.sort((a, b) => b.Total - a.Total))
             setLevelList(SeverityField)
