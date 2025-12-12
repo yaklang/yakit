@@ -10,14 +10,15 @@ const levelColorMap = {
     error: "\x1b[38;2;241;87;87m" // #F15757 红色
 }
 
-// === 常量配置 ===
-const MAX_LOG_COUNT = 50
-
+const MAX_LOG_SIZE = 500
+const KEEP_LOG_COUNT = 50
 // === 工具函数 ===
-function formatLogLine(level, timestamp, message) {
+function formatLogLine(data) {
+    const {level, timestamp, message, isStream} = data
     const key = typeof level === "string" ? level.toLowerCase() : "default"
     const color = levelColorMap[key] || levelColorMap.default
-    return `${color}[${level.toUpperCase()}]\x1b[0m ${timestamp} ${message}\n`
+    if (isStream) return `\n${color}[${level?.toUpperCase()}] ${timestamp} ${message}\x1b[0m \n\n`
+    return `${color}[${level?.toUpperCase()}]\x1b[0m ${timestamp} ${message}\n`
 }
 
 function safeSend(win, channel, data) {
@@ -26,7 +27,7 @@ function safeSend(win, channel, data) {
     }
 }
 
-function trimMap(map, keepCount = MAX_LOG_COUNT) {
+function trimMap(map, keepCount = KEEP_LOG_COUNT) {
     if (map.size <= keepCount) return
     const entries = Array.from(map.entries()).slice(-keepCount)
     map.clear()
@@ -42,9 +43,13 @@ module.exports = {
         // === 写入单条日志 ===
         ipcMain.handle("forward-ai-chat-log-data", (event, data) => {
             if (!data || typeof data !== "object") return
-            const {level, message, timestamp} = data
-
-            const logLine = formatLogLine(level, timestamp, message)
+            const logLine = formatLogLine(data)
+            if (aiChatLogMap.size >= MAX_LOG_SIZE) {
+                const firstKey = aiChatLogMap.keys().next().value
+                if (firstKey) {
+                    aiChatLogMap.delete(firstKey)
+                }   
+            }
             aiChatLogMap.set(crypto.randomUUID(), logLine)
 
             safeSend(childWindow, "ai-chat-log-data", logLine)
@@ -111,7 +116,7 @@ module.exports = {
 
             // === 关闭逻辑 ===
             const clearWindowState = () => {
-                trimMap(aiChatLogMap, MAX_LOG_COUNT)
+                trimMap(aiChatLogMap, KEEP_LOG_COUNT)
                 childWindow = null
                 mainWindow.send("ai-chat-log-window-hash", {hash: ""})
             }

@@ -14,14 +14,9 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {yakitNotify} from "@/utils/notification"
+import { FileInfo } from "../type"
 
-interface FileInfo {
-    path: string
-    size: number
-    isPlainText: boolean
-    content: string
-    language?: string
-}
+
 
 const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
     const path = data?.path ?? ""

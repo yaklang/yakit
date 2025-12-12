@@ -1,0 +1,55 @@
+@mixin ai-chat-mention-body($type) {
+    .ai-#{$type}-list {
+        padding: 0 2px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .ai-#{$type}-list-row {
+        border-radius: 4px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+
+        &:hover {
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+    }
+    .row-item {
+        width: 100%;
+        padding: 4px 6px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
+    }
+}
+.ai-chat-mention {
+    width: 300px;
+    .mention-search {
+        margin: 0 6px;
+    }
+    .tab-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .list-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+.forge-name-list-of-mention {
+    @include ai-chat-mention-body("forge");
+}
+.tool-list-of-mention {
+    @include ai-chat-mention-body("tool");
+}
+
+.knowledge-base-list-of-mention {
+    @include ai-chat-mention-body("knowledge-base");
+}

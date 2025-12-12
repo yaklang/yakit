@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
+import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams} from "./type"
 import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIChatInfo} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
@@ -48,6 +48,7 @@ import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -68,7 +69,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleStartTriageChat = useMemoizedFn((qs: string) => {
         setMode("re-act")
-        handleStart(qs)
+        handleStart({qs})
     })
 
     useEffect(() => {
@@ -94,7 +95,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onSetReAct = useMemoizedFn(() => {
         setMode("re-act")
         setTimeout(() => {
-            emiter.emit("switchAIActTab")
+            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
         }, 100)
     })
 
@@ -157,7 +158,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         getRequest: getSetting,
         onNotifyMessage
     })
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
+    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders, reActTimelines} =
+        chatIPCData
 
     // 保存上次对话信息
     const handleSaveChatInfo = useMemoizedFn(() => {
@@ -173,7 +175,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     ...yakExecResult,
                     execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
                 }),
-                grpcFolders: cloneDeep(grpcFolders)
+                grpcFolders: cloneDeep(grpcFolders),
+                reActTimelines: cloneDeep(reActTimelines)
             }
             setChats &&
                 setChats((old) => {
@@ -186,7 +189,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 })
         }
     })
-    const handleStart = useMemoizedFn((qs: string, extraValue?: AIChatIPCStartParams["extraValue"]) => {
+    const handleStart = useMemoizedFn(({qs, fileToQuestion, extraValue}: HandleStartParams) => {
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
@@ -209,7 +212,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             IsStart: true,
             Params: {
                 ...request
-            }
+            },
+            AttachedFilePath: fileToQuestion
         }
         events.onStart({token: newChat.id, params: startParams, extraValue})
     })
@@ -244,7 +248,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             IsSyncMessage: true,
             SyncType: syncType,
             SyncJsonInput,
-            Params: params
+            Params: params,
+            SyncID: randomString(8)
         }
         events.onSend({token: activeID, type: "", params: info})
     })
@@ -301,6 +306,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         onStop()
                         handleSaveChatInfo()
                         events.onReset()
+                        setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
                         }, 100)
@@ -452,10 +458,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 ? `,参数:${JSON.stringify(request.ForgeParams)}`
                 : `${!!formValue?.UserQuery ? `,输入${formValue?.UserQuery!}` : ""}`
         }`
-        handleStart(qs, {
-            isForge: true,
-            showForgeQuestion: `我要使用 ${request.ForgeName}forge执行任务`,
-            forgeParams: JSON.stringify(formValue, null, 2)
+        handleStart({
+            qs,
+            extraValue: {
+                isForge: true,
+                showForgeQuestion: `我要使用 ${request.ForgeName}forge执行任务`,
+                forgeParams: JSON.stringify(formValue, null, 2)
+            }
         })
         handleClearActiveForge()
     })
@@ -466,9 +475,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             return
         }
         setMode("re-act")
-        handleStart(
-            `我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务${question ? `,输入${question}` : ""}`
-        )
+        handleStart({
+            qs: `我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务${
+                question ? `,输入${question}` : ""
+            }`
+        })
         handleClearActiveTool()
     })
 
@@ -577,35 +588,35 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
-            <div className={styles["chat-wrapper"]}>
-                {mode === "welcome" ? (
-                    <React.Suspense fallback={<div>loading...</div>}>
-                        <AIChatWelcome onTriageSubmit={handleStartTriageChat} />
-                    </React.Suspense>
-                ) : (
-                    <ChatIPCContent.Provider value={{store, dispatcher}}>
+            <ChatIPCContent.Provider value={{store, dispatcher}}>
+                <div className={styles["chat-wrapper"]}>
+                    {mode === "welcome" ? (
+                        <React.Suspense fallback={<div>loading...</div>}>
+                            <AIChatWelcome onTriageSubmit={handleStartTriageChat} onSetReAct={onSetReAct} />
+                        </React.Suspense>
+                    ) : (
                         <AIChatContent />
-                    </ChatIPCContent.Provider>
-                )}
-                <div className={styles["footer-forge-form"]}>
-                    {activeForge && (
-                        <AIForgeForm
-                            wrapperRef={wrapperRef}
-                            info={activeForge}
-                            onBack={handleClearActiveForge}
-                            onSubmit={handleSubmitForge}
-                        />
                     )}
-                    {activeTool && (
-                        <AIToolForm
-                            wrapperRef={wrapperRef}
-                            info={activeTool}
-                            onBack={handleClearActiveTool}
-                            onSubmit={handleSubmitTool}
-                        />
-                    )}
+                    <div className={styles["footer-forge-form"]}>
+                        {activeForge && (
+                            <AIForgeForm
+                                wrapperRef={wrapperRef}
+                                info={activeForge}
+                                onBack={handleClearActiveForge}
+                                onSubmit={handleSubmitForge}
+                            />
+                        )}
+                        {activeTool && (
+                            <AIToolForm
+                                wrapperRef={wrapperRef}
+                                info={activeTool}
+                                onBack={handleClearActiveTool}
+                                onSubmit={handleSubmitTool}
+                            />
+                        )}
+                    </div>
                 </div>
-            </div>
+            </ChatIPCContent.Provider>
             <YakitHint
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceShow}
@@ -668,9 +679,15 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
-                    <YakitButton type='outline2' icon={<OutlineExitIcon />} onClick={onStopTask}>
-                        取消当前任务
-                    </YakitButton>
+                    <YakitPopconfirm
+                        placement='top'
+                        onConfirm={() => onStopTask()}
+                        title='是否确认取消整个任务，确认将停止执行'
+                    >
+                        <YakitButton type='outline2' icon={<OutlineExitIcon />}>
+                            取消当前任务
+                        </YakitButton>
+                    </YakitPopconfirm>
                     {node}
                 </div>
             </div>

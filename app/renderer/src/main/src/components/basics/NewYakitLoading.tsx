@@ -1,6 +1,14 @@
 import React, {useMemo} from "react"
 import {YakitStatusType} from "@/yakitGVDefine"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {
+    getReleaseEditionName,
+    isCommunityEdition,
+    isCommunityMemfit,
+    isEnpriTrace,
+    isEnpriTraceAgent,
+    isIRify,
+    isMemfit
+} from "@/utils/envfile"
 import {Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
@@ -11,6 +19,7 @@ import yakitCE from "@/assets/yakit.jpg"
 import styles from "./newYakitLoading.module.scss"
 import {useTheme} from "@/hook/useTheme"
 import classNames from "classnames"
+import {SolidMemfitMiniLogoIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,54 +65,84 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
         [yakitStatus]
     )
 
+    const startLogo = useMemo(() => {
+        /* 社区版 */
+        if (isCommunityEdition()) {
+            if (isIRify()) {
+                return (
+                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["white-icon"]}>
+                            <img src={yakitSS} alt='暂无图片' />
+                        </div>
+                    </div>
+                )
+            }
+            if (isCommunityMemfit()) {
+                return (
+                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["white-icon"]}>
+                            <SolidMemfitMiniLogoIcon />
+                        </div>
+                    </div>
+                )
+            }
+            return (
+                <div className={styles["yakit-loading-icon-wrapper"]}>
+                    <div className={styles["white-icon"]}>
+                        <img src={yakitCE} alt='暂无图片' />
+                    </div>
+                </div>
+            )
+        }
+
+        /* 企业版 */
+        if (isEnpriTrace()) {
+            if (isIRify()) {
+                return (
+                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["white-icon"]}>
+                            <img src={yakitSS} alt='暂无图片' />
+                        </div>
+                    </div>
+                )
+            }
+            if (isMemfit()) {
+                return (
+                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["white-icon"]}>
+                            <SolidMemfitMiniLogoIcon />
+                        </div>
+                    </div>
+                )
+            }
+            return (
+                <div className={styles["yakit-loading-icon-wrapper"]}>
+                    <div className={styles["white-icon"]}>
+                        <img src={yakitEE} alt='暂无图片' />
+                    </div>
+                </div>
+            )
+        }
+
+        /* 便携版 */
+        if (isEnpriTraceAgent()) {
+            return (
+                <div className={styles["yakit-loading-icon-wrapper"]}>
+                    <div className={styles["white-icon"]}>
+                        <img src={yakitSE} alt='暂无图片' />
+                    </div>
+                </div>
+            )
+        }
+
+        return null
+    }, [])
+
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
                 <div className={styles["body-content"]}>
-                    {/* 社区版 - 启动Logo */}
-                    {isCommunityEdition() && (
-                        <>
-                            {isIRify() ? (
-                                <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["white-icon"]}>
-                                        <img src={yakitSS} alt='暂无图片' />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["white-icon"]}>
-                                        <img src={yakitCE} alt='暂无图片' />
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-                    {/* 企业版 - 启动Logo */}
-                    {isEnpriTrace() && (
-                        <>
-                            {isIRify() ? (
-                                <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["white-icon"]}>
-                                        <img src={yakitSS} alt='暂无图片' />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["white-icon"]}>
-                                        <img src={yakitEE} alt='暂无图片' />
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-                    {/* 便携版 - 启动Logo */}
-                    {isEnpriTraceAgent() && (
-                        <div className={styles["yakit-loading-icon-wrapper"]}>
-                            <div className={styles["white-icon"]}>
-                                <img src={yakitSE} alt='暂无图片' />
-                            </div>
-                        </div>
-                    )}
+                    {startLogo}
 
                     <div className={styles["yakit-loading-title"]}>
                         <div className={styles["title-style"]}>{Title}</div>

@@ -774,10 +774,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     return
                 }
                 if (obj.type && obj.type === "pop_task") {
-                    // 结束任务
-                    const data = obj as AIAgentGrpcApi.ChangeTask
-                    handleUpdateTaskState(data.task.index, "completed")
-                    // 更新任务树数据
+                    // 结束任务 & 请求更新任务树数据
                     sendRequest && sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN})
                     return
                 }

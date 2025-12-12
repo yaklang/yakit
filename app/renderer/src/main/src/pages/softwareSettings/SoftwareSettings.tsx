@@ -9,13 +9,17 @@ import {ProjectManageProp} from "./ProjectManage"
 
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
-import {isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {isCommunityMemfit, isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit} from "@/utils/envfile"
 import yakitEEProject from "@/assets/yakitFontEE.png"
 import yakitSEProject from "@/assets/yakitFontSE.png"
-import yakitSSProject from "@/assets/yakitFontSS.png"
 import yakitEEMiniProject from "@/assets/yakitEE.png"
 import yakitSEMiniProject from "@/assets/yakitSE.png"
-import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
+import {
+    SolidIrifyFontLogoIcon,
+    SolidIrifyMiniLogoIcon,
+    SolidMemfitFontLogoIcon,
+    SolidMemfitMiniLogoIcon
+} from "@/assets/icon/colors"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
@@ -30,11 +34,13 @@ interface SettingsMenuProp {
 }
 const ProjectLogo = (showMini: boolean) => {
     if (isIRify()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
+        return showMini ? <SolidIrifyMiniLogoIcon className={styles['prject-logo-mini']}/> : <SolidIrifyFontLogoIcon />
     } else if (isEnpriTrace()) {
         return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
     } else if (isEnpriTraceAgent()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
+    } else if (isMemfit() || isCommunityMemfit()) {
+        return showMini ? <SolidMemfitMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidMemfitFontLogoIcon />
     } else {
         return <YakitLogoSvgIcon />
     }

@@ -70,11 +70,11 @@ switch (platform) {
             productName: "Memfit AI",
             copyright: "Copyright © 2021 v1ll4n"
         }
-        macIcon = "app/assets/yakitlogo.icns"
-        linuxIcon = "app/assets/yakitlogo.icns"
-        winIcon = "app/assets/yakitlogo.ico"
-        nsisInstallerIcon = "app/assets/yakitlogo.ico"
-        nsisUninstallerIcon = "app/assets/yakitlogo.ico"
+        macIcon = "app/assets/memfitlogo.icns"
+        linuxIcon = "app/assets/memfitlogo.icns"
+        winIcon = "app/assets/memfitlogo.ico"
+        nsisInstallerIcon = "app/assets/memfitlogo.ico"
+        nsisUninstallerIcon = "app/assets/memfitlogo.ico"
         break
 
     default:

@@ -74,7 +74,7 @@
             &::before {
                 border-right: 4px solid var(--bg-hover-color);
             }
-            .node-title svg {
+            .node-title .node-extra .info-icon {
                 display: block;
             }
         }
@@ -92,8 +92,17 @@
                 width: 16px;
                 height: 16px;
                 cursor: pointer;
-                display: none;
+
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
+
+            .node-extra {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                .info-icon {
+                    display: none;
+                }
             }
         }
         .node-content {

@@ -11,6 +11,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import {AITabsEnum} from "../defaultConstant"
+import {TabKey} from "./aiFileSystemList/type"
 
 export interface FileListItem {
     name: string
@@ -46,7 +47,7 @@ const getFileName = (path: string, isDir: boolean): string => {
 
 const FileList: FC<FileListProps> = ({title, fileList}) => {
     const switchAIActTab = () => {
-        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
+        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System, value: TabKey.OperationLog}))
     }
     return (
         <div className={styles["file-list"]}>

@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useMemo, useState} from "react"
-import {AIChatContentProps} from "./type"
+import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useInterval, useMemoizedFn} from "ahooks"
@@ -31,17 +31,13 @@ import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitRes
 import {grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-
-interface AIAgentTabPayload {
-    key: AITabsEnumType
-    value?: string
-}
+import {TabKey} from "../components/aiFileSystemList/type"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    const [activeKey, setActiveKey] = useState<AITabsEnumType>()
+    const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.File_System)
 
     const [tempRiskTotal, setTempRiskTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数,现在不显示具体数量了
     const [tempHTTPTotal, setTempHTTPTotal] = useState<number>(0) // HTTP流量表tab是否显示，大于0就显示
@@ -52,21 +48,37 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
+    const [fileSystemKey, setFileSystemKey] = useState<TabKey>()
+
+    const handleTabStateChange = useMemoizedFn((key: AITabsEnumType, value: AIAgentTabPayload["value"]) => {
+        setActiveKey(key)
+        if (!value) {
+            setRunTimeIDs(initRunTimeIDs)
+            setFileSystemKey(undefined)
+            return
+        }
+        if (key === AITabsEnum.File_System) {
+            setFileSystemKey(value as TabKey)
+        } else {
+            setRunTimeIDs([value])
+            setFileSystemKey(undefined)
+        }
+    })
+
     const onSwitchAIAgentTab = useMemoizedFn((data) => {
         if (data === undefined) return setActiveKey(data)
+        let payload: AIAgentTabPayload
         try {
-            const {key, value} = JSON.parse(data) as AIAgentTabPayload
-            if (key === AITabsEnum.HTTP && !tempHTTPTotal) return
-            if (key === AITabsEnum.Risk && !tempRiskTotal) return
-            setActiveKey(key)
-            if (value) {
-                setRunTimeIDs([value])
-            } else {
-                setRunTimeIDs(initRunTimeIDs)
-            }
+            payload = JSON.parse(data)
         } catch (error) {
             setActiveKey(undefined)
+            return
         }
+        const {key, value} = payload
+
+        if (key === AITabsEnum.HTTP && !tempHTTPTotal) return
+        if (key === AITabsEnum.Risk && !tempRiskTotal) return
+        handleTabStateChange(key, value)
     })
 
     useEffect(() => {
@@ -78,9 +90,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const filterTagDom = useMemo(() => {
         if (initRunTimeIDs === runTimeIDs) return null
+        // 超过20字符截取，显示...
+        const showId = runTimeIDs.at(0)?.slice(0, 30) + "…"
         return (
             <YakitTag color='info' closable onClose={() => setRunTimeIDs(initRunTimeIDs)}>
-                {runTimeIDs}
+                {showId}
             </YakitTag>
         )
     }, [initRunTimeIDs, runTimeIDs])
@@ -158,7 +172,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             case AITabsEnum.Task_Content:
                 return <AIReActTaskChat setShowFreeChat={setShowFreeChat} />
             case AITabsEnum.File_System:
-                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
+                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} />
             case AITabsEnum.Risk:
                 return !!runTimeIDs.length ? (
                     <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
@@ -259,11 +273,20 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 secondNodeStyle: {width: "100%", padding: 0}
             }
         }
+        const isFileSystemKey = activeKey === AITabsEnum.File_System
+        let secondRatio
+        if (showFreeChat) {
+            if (isFileSystemKey) {
+                secondRatio = "60%"
+            } else {
+                secondRatio = "432px"
+            }
+        }
         return {
             freeze: showFreeChat,
             firstMinSize: 500,
             secondMinSize: showFreeChat ? 400 : 30,
-            secondRatio: showFreeChat ? "432px" : undefined,
+            secondRatio,
             secondNodeStyle: {
                 padding: 0,
                 ...(!showFreeChat && {
@@ -357,41 +380,42 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 </div>
             </ExpandAndRetract>
             <div className={styles["ai-chat-tab-wrapper"]}>
-                <div className={styles["ai-chat-content"]}>
-                    <YakitResizeBox
-                        firstNode={
-                            activeKey && (
-                                <div
-                                    className={classNames(styles["tab-content"], {
-                                        [styles["tab-content-right"]]: !showFreeChat
-                                    })}
-                                >
-                                    {renderTabContent(activeKey)}
-                                </div>
-                            )
-                        }
-                        secondNode={
-                            <AIReActChat
-                                chatContainerHeaderClassName={classNames({
-                                    [styles["re-act-chat-container-header"]]: !activeKey
-                                })}
-                                mode={!!activeKey ? "task" : "welcome"}
-                                showFreeChat={showFreeChat}
-                                setShowFreeChat={setShowFreeChat}
-                            />
-                        }
-                        {...resizeBoxProps}
-                    />
-                </div>
                 <YakitSideTab
-                    type='vertical-right'
+                    type='horizontal'
                     yakitTabs={yakitTabs}
                     activeKey={activeKey}
                     onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
                     onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
                     className={styles["tab-wrap"]}
                     show={true}
-                />
+                >
+                    <div className={styles["ai-chat-content"]}>
+                        <YakitResizeBox
+                            firstNode={
+                                activeKey && (
+                                    <div
+                                        className={classNames(styles["tab-content"], {
+                                            [styles["tab-content-right"]]: !showFreeChat
+                                        })}
+                                    >
+                                        {renderTabContent(activeKey)}
+                                    </div>
+                                )
+                            }
+                            secondNode={
+                                <AIReActChat
+                                    chatContainerHeaderClassName={classNames({
+                                        [styles["re-act-chat-container-header"]]: !activeKey
+                                    })}
+                                    mode={!!activeKey ? "task" : "welcome"}
+                                    showFreeChat={showFreeChat}
+                                    setShowFreeChat={setShowFreeChat}
+                                />
+                            }
+                            {...resizeBoxProps}
+                        />
+                    </div>
+                </YakitSideTab>
             </div>
         </div>
     )

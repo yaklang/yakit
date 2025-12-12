@@ -1,5 +1,5 @@
 import React, {memo, useCallback, useEffect, useMemo, useState} from "react"
-import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useMemoizedFn, useMount, useUpdateEffect} from "ahooks"
 import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -20,16 +20,29 @@ import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
-import {genBaseAIChatData} from "@/pages/ai-re-act/hooks/utils"
+import {genBaseAIChatData, isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import emiter from "@/utils/eventBus/eventBus"
+import {PreWrapper} from "../components/ToolInvokerCard"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import TimelineCard from "./TimelineCard/TimelineCard"
 
+export enum AIChatLeft {
+    TaskTree = "task-tree",
+    Timeline = "timeline"
+}
+
+const options = [
+    {label: "任务树", value: AIChatLeft.TaskTree},
+    {label: "时间线", value: AIChatLeft.Timeline}
+]
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
-
+    const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.TaskTree)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
         valuePropName: "expand",
@@ -37,6 +50,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     })
     const handleCancelExpand = useMemoizedFn(() => {
         setExpand(false)
+    })
+
+    const renderDom = useMemoizedFn(() => {
+        switch (activeTab) {
+            case AIChatLeft.TaskTree:
+                return tasks.length > 0 ? (
+                    <AITree tasks={tasks} />
+                ) : (
+                    <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
+                )
+            case AIChatLeft.Timeline:
+                return <TimelineCard />
+            default:
+                break
+        }
     })
 
     return (
@@ -50,18 +78,18 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                     size='small'
                 />
                 <div className={styles["header-title"]}>
-                    任务列表
-                    <YakitRoundCornerTag>{tasks.length}</YakitRoundCornerTag>
+                    <YakitRadioButtons
+                        buttonStyle='solid'
+                        size='middle'
+                        defaultValue={AIChatLeft.TaskTree}
+                        options={options}
+                        value={activeTab}
+                        onChange={({target}) => setActiveTab(target.value)}
+                    />
                 </div>
             </div>
 
-            <div className={styles["task-list"]}>
-                {tasks.length > 0 ? (
-                    <AITree tasks={tasks} />
-                ) : (
-                    <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
-                )}
-            </div>
+            <div className={styles["task-list"]}>{renderDom()}</div>
         </div>
     )
 })
@@ -110,6 +138,25 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         [Footer, Item]
     )
 
+    const onScrollToIndex = useMemoizedFn((id) => {
+        const index = streams.findIndex((item) => {
+            if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+                const taskIndex = item.data.taskIndex
+                return taskIndex === id
+            }
+            return false
+        })
+        if (index !== -1) {
+            scrollToIndex(index, "auto")
+        }
+    })
+    useMount(() => {
+        emiter.on("onAITreeLocatePlanningList", onScrollToIndex)
+        return () => {
+            emiter.off("onAITreeLocatePlanningList", onScrollToIndex)
+        }
+    })
+
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso
@@ -150,7 +197,11 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             .then((res: AIEventQueryResponse) => {
                 const {Events} = res
                 const list: AIChatQSData[] = []
-                Events.filter((ele) => ele.Type === "stream").forEach((item) => {
+                Events.filter((ele) => {
+                    if (ele.Type === AIChatQSDataTypeEnum.STREAM && isToolExecStream(ele.NodeId)) return true
+                    if (ele.Type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT) return true
+                    return false
+                }).forEach((item) => {
                     let ipcContent = ""
                     let ipcStreamDelta = ""
                     try {
@@ -180,7 +231,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 }, 200)
             })
     })
-
     return (
         <div className={styles["ai-chat-tool-drawer-content"]}>
             {loading ? (
@@ -190,7 +240,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     {toolList.map((info) => {
                         const {id, Timestamp, type, data} = info
                         switch (type) {
-                            case "stream":
+                            case AIChatQSDataTypeEnum.STREAM:
+                            case AIChatQSDataTypeEnum.TOOL_CALL_RESULT:
                                 const {NodeIdVerbose, CallToolID, content, NodeId} = data
                                 const {execFileRecord} = yakExecResult
                                 const fileList = execFileRecord.get(CallToolID)
@@ -200,7 +251,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                     <StreamCard
                                         titleText={nodeLabel}
                                         titleIcon={taskAnswerToIconMap[NodeId]}
-                                        content={content}
+                                        content={<PreWrapper code={content} />}
                                         modalInfo={{
                                             time: Timestamp,
                                             title: info.AIService
