@@ -4968,7 +4968,6 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
             } else if (stateSecretHijacking === "randomJA3") {
                 Object.assign(params, {randomJA3: true})
             }
-            setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, "")
         }
     } catch (e) {
         console.error(e)

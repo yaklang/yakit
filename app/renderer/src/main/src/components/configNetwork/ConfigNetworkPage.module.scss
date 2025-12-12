@@ -492,6 +492,12 @@
         }
     }
 
+    .config-tab-item{
+        transform: rotate(180deg);
+        text-orientation: sideways-right;
+        writing-mode: vertical-rl
+    }
+
     .disabled-badge {
         display: inline-block;
         margin-left: 8px;
@@ -529,39 +535,6 @@
 
         .ant-drawer-body {
             padding: 0;
-        }
-    }
-
-    .proxy-rules-config-content {
-        display: flex;
-        height: 100%;
-
-        .config-tab {
-            width: 100px;
-            padding: 0 6px;
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
-            background: var(--Colors-Use-Neutral-Bg-Hover);
-            .config-tab-item {
-                border-radius: 4px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                padding: 16px;
-                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-                border-top: 1px solid transparent;
-                overflow: hidden;
-                justify-content: space-between;
-                font-size: 12px;
-                cursor: pointer;
-                &:hover {
-                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-                }
-            }
-            .config-tab-item-active {
-                background-color: var(--Colors-Use-Main-Primary);
-                color: var(--Colors-Use-Main-On-Primary);
-                &:hover {
-                    background-color: var(--Colors-Use-Main-Primary);
-                }
-            }
         }
     }
 }

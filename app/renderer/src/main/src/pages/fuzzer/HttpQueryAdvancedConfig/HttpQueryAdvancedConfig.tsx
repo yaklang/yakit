@@ -1454,7 +1454,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             />
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
-                onClose={() => setAgentConfigModalVisible(false)}
+                onClose={() => {
+                    setAgentConfigModalVisible(false)
+                    const proxy = form.getFieldValue('proxy') || []
+                    const filterProxy = proxy.filter(item => proxyRouteOptions.some(({ value }) => value === item))
+                    form.setFieldsValue({ proxy: filterProxy })
+                    const v = form.getFieldsValue()
+                    onSetValue({ ...v, proxy: filterProxy })
+                }}
             />
             <BatchTargetModal
                 batchTargetModalVisible={batchTargetModalVisible}

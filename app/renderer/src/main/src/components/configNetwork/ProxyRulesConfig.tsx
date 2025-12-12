@@ -24,7 +24,6 @@ import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {useProxy} from "@/hook/useProxy"
 import {YakitSideTab} from "../yakitSideTab/YakitSideTab"
 import styles from "./ConfigNetworkPage.module.scss"
-import classNames from "classnames"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 const {ipcRenderer} = window.require("electron")
 
@@ -36,7 +35,7 @@ const PasswordDisplay: React.FC<{
     const [visible, setVisible] = useState(false)
     if (!password) return <></>
     return (
-        <span>
+        <span style={{ display: 'flex', justifyContent: 'space-between'}}>
             <span className={styles["password_display_icon_text"]}>
                 {visible ? password : "•".repeat(password.length)}
             </span>
@@ -405,24 +404,16 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             {hideRules ? (
                 renderContent()
             ) : (
-                <div className={styles["proxy-rules-config-content"]}>
-                    <div className={styles["config-tab"]}>
-                        {tab.map(({label, value}) => {
-                            return (
-                                <div
-                                    key={value}
-                                    className={classNames(styles["config-tab-item"], {
-                                        [styles["config-tab-item-active"]]: value === activeKey
-                                    })}
-                                    onClick={() => setActiveKey(value)}
-                                >
-                                    {label}
-                                </div>
-                            )
-                        })}
-                    </div>
+                <YakitSideTab
+                    show={true}
+                    setShow={() => {}}
+                    yakitTabs={tab}
+                    activeKey={activeKey}
+                    onActiveKey={setActiveKey}
+                    btnItemClassName={styles["config-tab-item"]}
+                >
                     {renderContent()}
-                </div>
+                </YakitSideTab>
             )}
             <YakitModal
                 title={t(`ProxyConfig.${editId ? "edit_rule" : "add_rule"}`)}
@@ -506,191 +497,195 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
     )
 }
 
-export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean, onEchoNode?: (proxy: string[]) => void}) => {
-    const {proxy = [], showIcon = false, onEchoNode } = props
-    const [visible, setVisible] = useState(false)
-    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
-    const [errorMsg, setErrorMsg] = useState("")
-    const [form] = Form.useForm()
-    const { proxyConfig: {Endpoints = []} } = useProxy()
-    const {t} = useI18nNamespaces(["yakitUi", "mitm", "payload"])
+export const ProxyTest = memo(
+    (props: {proxy?: string[]; showIcon?: boolean; onEchoNode?: (proxy: string[]) => void}) => {
+        const {proxy = [], showIcon = false, onEchoNode} = props
+        const [visible, setVisible] = useState(false)
+        const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+        const [errorMsg, setErrorMsg] = useState("")
+        const [form] = Form.useForm()
+        const {
+            proxyConfig: {Endpoints = []}
+        } = useProxy()
+        const {t} = useI18nNamespaces(["yakitUi", "mitm", "payload"])
 
-    const onShowModal = useMemoizedFn(async () => {
-        try {
-            const versionValid = await checkProxyVersion()
-            if (!versionValid) {
-                return
+        const onShowModal = useMemoizedFn(async () => {
+            try {
+                const versionValid = await checkProxyVersion()
+                if (!versionValid) {
+                    return
+                }
+                setVisible(true)
+                setStatus("idle")
+                form.setFieldsValue({Target: "cip.cc", Proxy: proxy})
+            } catch (error) {
+                console.error("error:", error)
             }
-            setVisible(true)
-            setStatus("idle")
-            form.setFieldsValue({Target: "cip.cc", Proxy: proxy})
-        } catch (error) {
-            console.error("error:", error)
-        }
-    })
+        })
 
-    const onCancel = useMemoizedFn(() => {
-        setVisible(false)
-        form.resetFields()
-    })
+        const onCancel = useMemoizedFn(() => {
+            setVisible(false)
+            form.resetFields()
+        })
 
-    const handleTest = useMemoizedFn(async () => {
-        try {
-            const {Target, Proxy} = await form.validateFields()
-            setStatus("loading")
-            setErrorMsg("")
+        const handleTest = useMemoizedFn(async () => {
+            try {
+                const {Target, Proxy} = await form.validateFields()
+                setStatus("loading")
+                setErrorMsg("")
 
-            const joined = Array.isArray(Proxy) ? Proxy.join(",") : String(Proxy || "")
-            const params = Object.assign(
-                {
-                    Target
-                },
-                joined.startsWith("ep") ? {EndpointId: joined} : {Proxy: joined}
-            )
+                const joined = Array.isArray(Proxy) ? Proxy.join(",") : String(Proxy || "")
+                const params = Object.assign(
+                    {
+                        Target
+                    },
+                    joined.startsWith("ep") ? {EndpointId: joined} : {Proxy: joined}
+                )
 
-            const res = await ipcRenderer.invoke("CheckProxyAlive", params)
-            if (res.Ok) {
-                //回显节点
-                joined && onEchoNode?.(joined.split(','))
-                setStatus("success")
-                if (!["OK","oK","ok"].includes(res.Reason)) {
+                const res = await ipcRenderer.invoke("CheckProxyAlive", params)
+                if (res.Ok) {
+                    //回显节点
+                    joined && onEchoNode?.(joined.split(","))
+                    setStatus("success")
+                    if (!["OK", "oK", "ok"].includes(res.Reason)) {
+                        setErrorMsg(res.Reason)
+                    }
+                } else {
+                    setStatus("error")
                     setErrorMsg(res.Reason)
                 }
-            } else {
+            } catch (e: any) {
                 setStatus("error")
-                setErrorMsg(res.Reason)
+                setErrorMsg(e.message)
             }
-        } catch (e: any) {
-            setStatus("error")
-            setErrorMsg(e.message)
-        }
-    })
+        })
 
-    const renderContent = () => {
-        switch (status) {
-            case "idle":
-                return (
-                    <YakitButton type='primary' onClick={handleTest}>
-                        {t("ProxyConfig.detectionStart")}
-                    </YakitButton>
-                )
-            case "loading":
-                return (
-                    <YakitSpin
-                        size='large'
-                        tip={t("ProxyConfig.detectionLoading")}
-                        wrapperClassName={styles["proxy-test-modal-loading"]}
-                    />
-                )
-            case "success":
-                return (
-                    <>
-                        <div className={styles["proxy-test-modal-success"]}>
-                            <SolidCheckCircleIcon />
-                            <span>{t("ProxyConfig.detectionSuccess")}</span>
-                        </div>
+        const renderContent = () => {
+            switch (status) {
+                case "idle":
+                    return (
                         <YakitButton type='primary' onClick={handleTest}>
                             {t("ProxyConfig.detectionStart")}
                         </YakitButton>
-                        {errorMsg ? <div className={styles["proxy-test-modal-detail"]}>{errorMsg}</div> : null}
-                    </>
-                )
-            case "error":
-                return (
-                    <>
-                        <div className={styles["proxy-test-modal-detail"]}>
-                            <SolidXcircleIcon />
-                            {errorMsg}
-                        </div>
-                        <SolidExclamationIcon className={styles["proxy-test-modal-failed"]} />
-                        <YakitButton type='primary' onClick={handleTest}>
-                            {t("ProxyConfig.detectionStart")}
-                        </YakitButton>
-                    </>
-                )
+                    )
+                case "loading":
+                    return (
+                        <YakitSpin
+                            size='large'
+                            tip={t("ProxyConfig.detectionLoading")}
+                            wrapperClassName={styles["proxy-test-modal-loading"]}
+                        />
+                    )
+                case "success":
+                    return (
+                        <>
+                            <div className={styles["proxy-test-modal-success"]}>
+                                <SolidCheckCircleIcon />
+                                <span>{t("ProxyConfig.detectionSuccess")}</span>
+                            </div>
+                            <YakitButton type='primary' onClick={handleTest}>
+                                {t("ProxyConfig.detectionStart")}
+                            </YakitButton>
+                            {errorMsg ? <div className={styles["proxy-test-modal-detail"]}>{errorMsg}</div> : null}
+                        </>
+                    )
+                case "error":
+                    return (
+                        <>
+                            <div className={styles["proxy-test-modal-detail"]}>
+                                <SolidXcircleIcon />
+                                {errorMsg}
+                            </div>
+                            <SolidExclamationIcon className={styles["proxy-test-modal-failed"]} />
+                            <YakitButton type='primary' onClick={handleTest}>
+                                {t("ProxyConfig.detectionStart")}
+                            </YakitButton>
+                        </>
+                    )
+            }
         }
-    }
 
-    const disabled = useMemo(() => status === "loading", [status])
+        const disabled = useMemo(() => status === "loading", [status])
 
-    return (
-        <>
-            {showIcon ? (
-                <Tooltip title={t("ProxyConfig.proxyDetection")}>
-                    <YakitButton icon={<OutlineEngineIcon />} type='text2' onClick={onShowModal} />
-                </Tooltip>
-            ) : (
-                <span onClick={onShowModal} className={styles["proxy-test-title"]}>
-                    {t("ProxyConfig.proxyDetection")}
-                </span>
-            )}
-            <YakitModal
-                title={t("ProxyConfig.proxyDetection")}
-                visible={visible}
-                onCancel={onCancel}
-                footer={null}
-                width={600}
-                className={styles["proxy-test-modal"]}
-            >
-                <div className={styles["proxy-test-modal-content"]}>
-                    <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
-                        <Form.Item
-                            label={t("ProxyConfig.Points")}
-                            name='Proxy'
-                            getValueFromEvent={(value) => {
-                                // 只保留最后一个选中的值
-                                if (Array.isArray(value) && value.length > 1) {
-                                    return [value[value.length - 1]]
-                                }
-                                return value
-                            }}
-                            validateTrigger={["onChange", "onBlur"]}
-                            rules={[
-                                {
-                                    validator: (_, value) => {
-                                        if (!value || !Array.isArray(value) || value.length === 0) {
+        return (
+            <>
+                {showIcon ? (
+                    <Tooltip title={t("ProxyConfig.proxyDetection")}>
+                        <YakitButton icon={<OutlineEngineIcon />} type='text2' onClick={onShowModal} />
+                    </Tooltip>
+                ) : (
+                    <span onClick={onShowModal} className={styles["proxy-test-title"]}>
+                        {t("ProxyConfig.proxyDetection")}
+                    </span>
+                )}
+                <YakitModal
+                    title={t("ProxyConfig.proxyDetection")}
+                    visible={visible}
+                    onCancel={onCancel}
+                    footer={null}
+                    width={600}
+                    className={styles["proxy-test-modal"]}
+                >
+                    <div className={styles["proxy-test-modal-content"]}>
+                        <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
+                            <Form.Item
+                                label={t("ProxyConfig.Points")}
+                                name='Proxy'
+                                getValueFromEvent={(value) => {
+                                    // 只保留最后一个选中的值
+                                    if (Array.isArray(value) && value.length > 1) {
+                                        return [value[value.length - 1]]
+                                    }
+                                    return value
+                                }}
+                                validateTrigger={["onChange", "onBlur"]}
+                                rules={[
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value || !Array.isArray(value) || value.length === 0) {
+                                                return Promise.resolve()
+                                            }
+                                            // 获取当前options中的所有值
+                                            const existingOptions = Endpoints.map((opt) => opt.Id)
+                                            // 只校验新输入的值(不在options中的值)
+                                            const newValues = value.filter((v) => !existingOptions.includes(v))
+                                            // 校验代理地址格式: 协议://地址:端口
+                                            const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
+                                            for (const v of newValues) {
+                                                if (!pattern.test(v)) {
+                                                    return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                                }
+                                            }
                                             return Promise.resolve()
                                         }
-                                        // 获取当前options中的所有值
-                                        const existingOptions = Endpoints.map((opt) => opt.Id)
-                                        // 只校验新输入的值(不在options中的值)
-                                        const newValues = value.filter((v) => !existingOptions.includes(v))
-                                        // 校验代理地址格式: 协议://地址:端口
-                                        const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
-                                        for (const v of newValues) {
-                                            if (!pattern.test(v)) {
-                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
-                                            }
-                                        }
-                                        return Promise.resolve()
                                     }
-                                }
-                            ]}
-                        >
-                            <YakitSelect
-                                disabled={disabled}
-                                options={Endpoints.filter(({Disabled}) => !Disabled).map(({Url, Id}) => ({
-                                    label: Url,
-                                    value: Id
-                                }))}
-                                mode='tags'
-                                placeholder={t("ProxyConfig.proxy_address_placeholder")}
-                            />
-                        </Form.Item>
+                                ]}
+                            >
+                                <YakitSelect
+                                    disabled={disabled}
+                                    options={Endpoints.filter(({Disabled}) => !Disabled).map(({Url, Id}) => ({
+                                        label: Url,
+                                        value: Id
+                                    }))}
+                                    mode='tags'
+                                    placeholder={t("ProxyConfig.proxy_address_placeholder")}
+                                />
+                            </Form.Item>
 
-                        <Form.Item
-                            label={t("ProxyConfig.customDetectionTarget")}
-                            name='Target'
-                            rules={[{required: true, message: t("ProxyConfig.customDetectionTargetPlaceholder")}]}
-                        >
-                            <YakitInput disabled={disabled} />
-                        </Form.Item>
-                    </Form>
-                    <div className={styles["test-modal-content-res"]}>{renderContent()}</div>
-                </div>
-            </YakitModal>
-        </>
-    )
-})
+                            <Form.Item
+                                label={t("ProxyConfig.customDetectionTarget")}
+                                name='Target'
+                                rules={[{required: true, message: t("ProxyConfig.customDetectionTargetPlaceholder")}]}
+                            >
+                                <YakitInput disabled={disabled} />
+                            </Form.Item>
+                        </Form>
+                        <div className={styles["test-modal-content-res"]}>{renderContent()}</div>
+                    </div>
+                </YakitModal>
+            </>
+        )
+    }
+)
 
 export default ProxyRulesConfig

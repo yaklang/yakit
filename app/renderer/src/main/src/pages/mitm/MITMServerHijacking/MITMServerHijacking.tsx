@@ -35,10 +35,10 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
-import { useProxy } from "@/hook/useProxy"
 import { useStore } from "@/store/mitmState"
+import {useProxy} from "@/hook/useProxy"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -130,6 +130,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
+    const {proxyRouteOptions, comparePointUrl} = useProxy()
 
     const mitmContent = useContext(MITMContext)
 
@@ -345,7 +346,17 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             </div>
             <DownStreamAgentModal
                 downStreamAgentModalVisible={downStreamAgentModalVisible}
-                onCloseModal={() => setDownStreamAgentModalVisible(false)}
+                onCloseModal={() => {
+                    setDownStreamAgentModalVisible(false)
+                    //如果代理被禁用了 这里要清除代理
+                    if (downstreamProxyStr) {
+                        const isProxyValid = downstreamProxyStr.startsWith('ep') || downstreamProxyStr.startsWith('route')
+                            ? proxyRouteOptions.some(({value}) => value === downstreamProxyStr)
+                            : proxyRouteOptions.some(({value}) => comparePointUrl(value) === downstreamProxyStr)
+                        
+                        !isProxyValid && downStreamTagClose()
+                    }
+                }}
                 downstreamProxyStr={downstreamProxyStr}
                 setDownstreamProxyStr={setDownstreamProxyStr}
                 tip={tip}
@@ -394,7 +405,7 @@ interface DownStreamAgentModalProp {
 const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((props) => {
     const {
         downStreamAgentModalVisible,
-        downstreamProxyStr = '',
+        downstreamProxyStr = "",
         onCloseModal,
         tip,
         onSetTip,
@@ -403,7 +414,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     const [form] = Form.useForm()
     const mitmContent = useContext(MITMContext)
     const {t, i18n} = useI18nNamespaces(["mitm"])
-    const { proxyRouteOptions, getProxyValue, checkProxyEndpoints, proxyConfig, comparePointUrl } = useProxy()    
+    const {proxyRouteOptions, getProxyValue, checkProxyEndpoints, proxyConfig, comparePointUrl} = useProxy()
 
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
@@ -414,7 +425,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         const downstreamProxy = form.getFieldsValue().downstreamProxy || []
         //如果有新增的代理配置 则存配置项
         checkProxyEndpoints(downstreamProxy)
-        const { proxyEndpoints, ProxyRuleIds } = getProxyValue(downstreamProxy)
+        const {proxyEndpoints, ProxyRuleIds} = getProxyValue(downstreamProxy)
 
         const proxyValue: MITMSetDownstreamProxyRequest = {
             downstreamProxy: proxyEndpoints,
@@ -423,7 +434,9 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         }
         grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy.length) {
-            const downstreamProxyName = downstreamProxy.map(item => proxyRouteOptions.find(({value}) => value === item)?.label || item)
+            const downstreamProxyName = downstreamProxy.map(
+                (item) => proxyRouteOptions.find(({value}) => value === item)?.label || item
+            )
             if (tip.indexOf("下游代理") === -1) {
                 onSetTip(
                     `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}` +
@@ -472,20 +485,29 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         }
     })
 
+    const echoDownstreamProxy = useMemoizedFn(() => {
+        const downstreamProxy = downstreamProxyStr
+            .split(",")
+            .filter((i) => !!i)
+            .map((val) => {
+                if (!val.startsWith("route") && !val.startsWith("ep")) {
+                    return proxyConfig.Endpoints.find(({Id}) => comparePointUrl(Id) === val)?.Id || val
+                }
+                return val
+            })
+        //筛除选项没有的
+        const filterDownstreamProxy = downstreamProxy.filter((item) =>
+            proxyRouteOptions.some(({value}) => item === value)
+        )
+        form.setFieldsValue({
+            downstreamProxy: filterDownstreamProxy
+        })
+    })
+
     //回显代理选项
     useEffect(() => {
-        if(downStreamAgentModalVisible){
-            const downstreamProxy = downstreamProxyStr.split(",").filter(i=>!!i).map((val) => {
-                if(!val.startsWith('route')){
-                    return proxyConfig.Endpoints.find(({ Id }) => comparePointUrl(Id) === val )?.Id
-                } 
-                return val
-            }) 
-            form.setFieldsValue({
-                downstreamProxy
-            })
-        }
-    }, [downStreamAgentModalVisible, comparePointUrl, downstreamProxyStr, form, proxyConfig.Endpoints])
+        downStreamAgentModalVisible && echoDownstreamProxy()
+    }, [downStreamAgentModalVisible])
 
     return (
         <>
@@ -524,11 +546,13 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                             }}
                             extra={
                                 <>
-                                <div className={style["agent-down-stream-proxy"]} onClick={onClickDownstreamProxy}>
-                                    {t("AgentConfigModal.proxy_configuration")}
-                                </div>
-                                <Divider type="vertical"/>
-                                <ProxyTest onEchoNode={(downstreamProxy)=>form.setFieldsValue({downstreamProxy})} />
+                                    <div className={style["agent-down-stream-proxy"]} onClick={onClickDownstreamProxy}>
+                                        {t("AgentConfigModal.proxy_configuration")}
+                                    </div>
+                                    <Divider type='vertical' />
+                                    <ProxyTest
+                                        onEchoNode={(downstreamProxy) => form.setFieldsValue({downstreamProxy})}
+                                    />
                                 </>
                             }
                             validateTrigger={["onChange", "onBlur"]}
@@ -567,7 +591,12 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
             </YakitModal>
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
-                onClose={() => setAgentConfigModalVisible(false)}
+                onClose={() => {
+                    setAgentConfigModalVisible(false)
+                    const proxy = form.getFieldValue("downstreamProxy") || []
+                    const filterProxy = proxy.filter((item) => proxyRouteOptions.some(({value}) => value === item))
+                    form.setFieldsValue({downstreamProxy: filterProxy})
+                }}
             />
         </>
     )

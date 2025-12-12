@@ -92,6 +92,11 @@ export const isValidUrlWithProtocol = (url) => {
       return false;
     }
 
+    // 检查是否包含端口号
+    if (!urlObj.port || urlObj.port === '') {
+      return false;
+    }
+
     return true;
   } catch (error) {
     return false;

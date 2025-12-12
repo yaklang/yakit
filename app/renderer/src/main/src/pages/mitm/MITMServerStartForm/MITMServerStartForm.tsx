@@ -124,7 +124,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
     })
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-    const { getProxyValue, proxyRouteOptions, checkProxyEndpoints, proxyConfig: { Endpoints = []} } = useProxy()
+    const { getProxyValue, proxyRouteOptions, checkProxyEndpoints, comparePointUrl , proxyConfig: { Endpoints = []} } = useProxy()
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
@@ -153,6 +153,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     }, [mitmContent.mitmStore.version])
 
     const setDownstreamProxyValue = useMemoizedFn((e = "") => {
+        // 新增的代理值是Url 需要转成对应的Id
         const downstreamProxy = e
             .split(",")
             .filter((i) => !!i)
@@ -160,10 +161,14 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 if (item.startsWith("ep") || item.startsWith("route")) {
                     return item
                 } else {
-                    return Endpoints.find(({Url}) => Url === item)?.Id || item
+                    return Endpoints.find(({ Id }) => comparePointUrl(Id) === item)?.Id || item
                 }
             })
-        form.setFieldsValue({downstreamProxy})
+        //筛除选项没有的
+        const filterDownstreamProxy = downstreamProxy.filter((item) =>
+            proxyRouteOptions.some(({value}) => item === value)
+        )
+        form.setFieldsValue({downstreamProxy: filterDownstreamProxy})
     })
 
 
@@ -577,7 +582,12 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 {/* 代理劫持弹窗 */}
                 <ProxyRulesConfig 
                     visible={agentConfigModalVisible} 
-                    onClose={() => setAgentConfigModalVisible(false)} 
+                    onClose={() => {
+                        setAgentConfigModalVisible(false)
+                        const proxy = form.getFieldValue('downstreamProxy') || []
+                        const filterProxy = proxy.filter(item => proxyRouteOptions.some(({ value }) => value === item))
+                        form.setFieldsValue({ downstreamProxy: filterProxy })
+                    }}
                 />
                 <React.Suspense fallback={<div>loading...</div>}>
                     <MITMFormAdvancedConfiguration

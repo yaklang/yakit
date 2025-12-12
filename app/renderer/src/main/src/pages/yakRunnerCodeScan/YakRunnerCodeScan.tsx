@@ -2864,7 +2864,12 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 <ProxyRulesConfig
                     hideRules
                     visible={agentConfigModalVisible}
-                    onClose={() => setAgentConfigModalVisible(false)}
+                    onClose={() => {
+                        setAgentConfigModalVisible(false)
+                        const proxy = form.getFieldValue("proxy") || []
+                        const filterProxy = proxy.filter((item) => Endpoints.some(({Id}) => Id === item))
+                        form.setFieldsValue({proxy: filterProxy})
+                    }}
                 />
             </div>
         )
