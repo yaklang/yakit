@@ -1225,7 +1225,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 新建|编辑 tool 的关闭后跳转回 ai-agent 页面
                 removeMenuPage({route: route, menuName: ""}, {route: YakitRoute.AI_Agent, menuName: ""})
                 break
-
+            
+            case YakitRoute.MITMHacker:
+                removeMenuPage({route: route, menuName: ""})
+                keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
+                break
             default:
                 removeMenuPage({route: route, menuName: ""})
                 break
@@ -2031,8 +2035,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
 
             case YakitRoute.MITMHacker:
-                removeMenuPage(data)
-                keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
+                emiter.emit("onCloseTunHijackByPage")
+                // removeMenuPage(data)
+                // keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
                 break
             default:
                 removeMenuPage(data)

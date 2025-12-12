@@ -38,6 +38,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import ProxyRulesConfig from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import { useProxy } from "@/hook/useProxy"
+import { useStore } from "@/store/mitmState"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -186,8 +187,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         [initPageInfo()?.immediatelyLaunchedInfo, initV2PageInfo()?.immediatelyLaunchedInfo, status, mitmVersion],
         {wait: 100}
     )
-
-    const stop = useMemoizedFn(() => {
+    const stopFun = useMemoizedFn(() => {
         // setLoading(true)
         return new Promise((resolve, reject) => {
             grpcMITMStopCall(mitmVersion)
@@ -207,6 +207,26 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 })
         })
     })
+
+    const {tunSessionState} = useStore()
+    const stop = useMemoizedFn(() => {
+        if(tunSessionState.deviceName){
+            emiter.emit("onCloseTunHijackConfirmModal", "mitm")
+        }else{
+           stopFun()
+        }
+    })
+
+    const onCloseChromeByTunHijack = useMemoizedFn(() => {
+        stopFun()
+    })
+
+    useEffect(()=>{
+        emiter.on("onCloseTunHijackCallback", onCloseChromeByTunHijack)
+        return ()=>{
+            emiter.off("onCloseTunHijackCallback", onCloseChromeByTunHijack)
+        }
+    },[])
 
     useEffect(() => {
         // 获取 ws 开关状态

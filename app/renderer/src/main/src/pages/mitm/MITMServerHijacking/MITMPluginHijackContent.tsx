@@ -48,11 +48,18 @@ import {openConsoleNewWindow} from "@/utils/openWebsite"
 import usePluginTrace from "./PluginTrace/usePluginTrace"
 import {PluginTraceRefProps} from "./PluginTrace/type"
 import {pluginTraceRefFunDef} from "./PluginTrace/PluginTrace"
+import {PluginTunHijack, PluginTunHijackDef} from "./PluginTunHijack/PluginTunHijack"
+import {PluginTunHijackRefProps} from "./PluginTunHijack/PluginTunHijackType"
+import usePluginTunHijack from "./PluginTunHijack/usePluginTunHijack"
+import {useStore} from "@/store/mitmState"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitRoute} from "@/enums/yakitRoute"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
 
-type tabKeys = "all" | "loaded" | "hot-patch" | "trace"
+type tabKeys = "all" | "loaded" | "hot-patch" | "trace" | "tun-hijack"
 interface TabsItem {
     key: tabKeys
     label: ReactElement | string
@@ -167,6 +174,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         {
             key: "trace",
             label: "插件追踪",
+            contShow: false // 初始为false
+        },
+        {
+            key: "tun-hijack",
+            label: "Tun劫持",
             contShow: false // 初始为false
         }
     ])
@@ -538,6 +550,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                     </>
                 )
             case "trace":
+            case "tun-hijack":
                 return <></>
             default:
                 return (
@@ -582,6 +595,110 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         }
         pluginTraceActions.startPluginTrace()
     })
+
+    const {tunSessionState, setTunSessionState} = useStore()
+    const PluginTunHijackRef = useRef<PluginTunHijackRefProps>(PluginTunHijackDef)
+    const [pluginTunHijackData, pluginTunHijackActions] = usePluginTunHijack({
+        PluginName: "Tun劫持服务",
+        onEnd: () => {
+            isQuitRef.current = false
+            setTunSessionState({
+                deviceName: null,
+                configuredRoutes: []
+            })
+            onClosePage()
+        }
+    })
+    const isQuitRef = useRef<boolean>(false)
+    const handleDeleteRoute = useMemoizedFn((ipList?: string[]) => {
+        let ExecParams = [
+            {Key: "tunName", Value: tunSessionState.deviceName || ""},
+            {Key: "clear", Value: true}
+        ]
+        if (ipList && ipList.length !== 0) {
+            ExecParams = [{Key: "ipList", Value: ipList.join(",")}]
+        }
+        pluginTunHijackDelActions.startPluginTunHijack({
+            ExecParams: ExecParams as YakExecutorParam[]
+        })
+    })
+    const [pluginTunHijackDel, pluginTunHijackDelActions] = usePluginTunHijack({
+        PluginName: "路由表删除",
+        onEnd: () => {
+            if (isQuitRef.current) {
+                // 先行清除后再关闭Tun劫持
+                pluginTunHijackActions.cancelPluginTunHijackById()
+            } else {
+                PluginTunHijackRef.current.updatePluginTunHijack()
+            }
+        }
+    })
+
+    // 关闭来源
+    const formPageRef = useRef<"mitm" | "page">()
+    const onCloseTunHijackConfirmModalFun = useMemoizedFn((fromPage: "mitm" | "page") => {
+        formPageRef.current = fromPage
+        onQuitTunHijackFun()
+    })
+
+    useEffect(() => {
+        emiter.on("onCloseTunHijackConfirmModal", onCloseTunHijackConfirmModalFun)
+        return () => {
+            emiter.off("onCloseTunHijackConfirmModal", onCloseTunHijackConfirmModalFun)
+        }
+    }, [])
+
+    // 页面关闭逻辑
+    const onClosePage = useMemoizedFn(() => {
+        // 如有其余操作的关闭来源 需通知其已执行Tun劫持关闭
+        // 点击页面关闭时直接关闭
+        if (formPageRef.current === "mitm") {
+            emiter.emit("onCloseTunHijackCallback", formPageRef.current)
+        } else if (formPageRef.current === "page") {
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.MITMHacker}))
+        }
+        formPageRef.current = undefined
+    })
+
+    // 退出Tun劫持逻辑
+    const onQuitFun = useMemoizedFn(() => {
+        info("正在关闭Tun劫持服务，请稍后...")
+        isQuitRef.current = true
+        handleDeleteRoute()
+    })
+
+    const [quitVisible, setQuitVisible] = useState<boolean>(false)
+    const [quitNoPrompt, setQuitNoPrompt] = useState<boolean>(false)
+    const TunHijackQuitHint = "TunHijackQuitHint"
+
+    const onQuitTunHijackFun = useMemoizedFn(() => {
+        if (!quitNoPrompt) {
+            setQuitVisible(true)
+        } else {
+            onQuitFun()
+        }
+    })
+
+    const handleQuitOK = useMemoizedFn(() => {
+        setRemoteValue(TunHijackQuitHint, quitNoPrompt ? "true" : "false")
+        setQuitVisible(false)
+        onQuitFun()
+    })
+
+    const handleQuitCancel = useMemoizedFn(() => {
+        isQuitRef.current = false
+        formPageRef.current = undefined
+        setQuitVisible(false)
+    })
+
+    useEffect(() => {
+        getRemoteValue(TunHijackQuitHint)
+            .then((res) => {
+                const replace = res === "true"
+                setQuitNoPrompt(replace)
+            })
+            .catch(() => {})
+    }, [])
 
     const onRenderContent = useMemoizedFn(() => {
         switch (curTabKey) {
@@ -777,6 +894,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         pluginTraceList={pluginTraceActions.pluginTraceList}
                     />
                 )
+            case "tun-hijack":
+                return (
+                    <PluginTunHijack
+                        ref={PluginTunHijackRef}
+                        pluginTunHijackData={pluginTunHijackData}
+                        pluginTunHijackActions={pluginTunHijackActions}
+                        pluginTunHijackDel={pluginTunHijackDel}
+                        onQuitTunHijackFun={onQuitTunHijackFun}
+                        handleDeleteRoute={handleDeleteRoute}
+                    />
+                )
             default:
                 return <></>
         }
@@ -860,6 +988,20 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                     {onRenderContent()}
                 </div>
             </div>
+            <YakitHint
+                visible={quitVisible}
+                title='关闭Tun代理会清空路由表'
+                content={"关闭Tun代理后会清空路由表，不删除会导致无法访问劫持网站"}
+                footerExtra={
+                    <YakitCheckbox checked={quitNoPrompt} onChange={(e) => setQuitNoPrompt(e.target.checked)}>
+                        不再提醒
+                    </YakitCheckbox>
+                }
+                okButtonText='好的'
+                onOk={handleQuitOK}
+                cancelButtonText='取消'
+                onCancel={handleQuitCancel}
+            />
         </div>
     )
 })
