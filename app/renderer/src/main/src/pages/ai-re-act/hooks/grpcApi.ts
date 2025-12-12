@@ -252,7 +252,7 @@ export declare namespace AIAgentGrpcApi {
         goal: string
         /**
          * 后端发送的任务状态
-         * progress: "processing" | "completed" | "aborted"
+         * progress: "processing" | "completed" | "aborted" | "skipped"
          */
         progress?: string
         subtasks?: AITaskInfoProps[]

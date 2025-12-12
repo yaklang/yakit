@@ -104,7 +104,10 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </YakitPopover>
                     {data.progress === "processing" && (
-                        <YakitPopconfirm title={"是否确认取消该子任务，取消后会按顺序执行下一个子任务?"} onConfirm={() => onCancelTask()}>
+                        <YakitPopconfirm
+                            title={"是否确认取消该子任务，取消后会按顺序执行下一个子任务?"}
+                            onConfirm={() => onCancelTask()}
+                        >
                             <OutlineExitIcon />
                         </YakitPopconfirm>
                     )}
@@ -145,6 +148,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             case "completed":
                 return [<TaskSuccessIcon key='success' />, getWrapper(styles["node-wrapper-success"])]
             case "aborted":
+            case "skipped":
                 return [<TaskErrorIcon key='error' />, getWrapper(styles["node-wrapper-error"])]
             case "processing":
                 return [<TaskInProgressIcon key='in-progress' />, getWrapper(styles["node-wrapper-in-progress"])]
