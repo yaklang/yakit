@@ -20,6 +20,9 @@ import {isEqual} from "lodash"
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {AIAgentSetting} from "../../aiAgentType"
 
 export const onOpenConfigModal = () => {
     const m = YakitModalConfirm({
@@ -65,10 +68,20 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
     const refRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(refRef)
+    const lastAIService = useRef<string>(setting?.AIService || "")
 
     useEffect(() => {
         if (!inViewport) return
-        getAIModelListOption(!modelValue)
+        getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+            .then((res) => {
+                if (!res) return
+                try {
+                    const cache = JSON.parse(res) as AIAgentSetting
+                    if (typeof cache !== "object") return
+                    getAIModelListOption(!cache.AIService)
+                } catch (error) {}
+            })
+            .catch(() => {})
         emiter.on("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
         return () => {
             emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
