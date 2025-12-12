@@ -19,5 +19,7 @@ export enum MITMConsts {
     MITMDefaultFilterWebsocket = "YAKIT_MITMDefaultFilterWebsocket",
 
     // 时间戳记录
-    MITMStartTimeStamp = "YAKIT_MITMStartTimeStamp"
+    MITMStartTimeStamp = "YAKIT_MITMStartTimeStamp",
+    //勾选的代理
+    MITMDownStreamProxy = "YAKIT_MITMDownStreamProxy"
 }

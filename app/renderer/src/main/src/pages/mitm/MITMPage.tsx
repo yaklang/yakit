@@ -329,7 +329,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 `代理节点：${maskProxyPassword(downstreamProxy)}`
                     tip += `下游代理：${proxyStr}`
             }
-            setDownstreamProxyStr(downstreamProxy || "")
+            setDownstreamProxyStr(downstreamProxyRuleId || downstreamProxy || "")
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
                     tip += "|仅国密 TLS"

@@ -14,6 +14,19 @@ const updateGlobalConfig = (config: GlobalProxyRulesConfig) => {
   subscribers.forEach(cb => cb())
 }
 
+// 使用 URL 对象解析Url
+const parseUrl = (url: string) => {
+  try {
+    const { username = '', password = '', protocol = '', host = '', pathname = '', search = '', hash = '' } = new URL(url)
+    const path = pathname === '/' ? '' : pathname
+    const Url = `${protocol}//${host}${path}${search}${hash}`
+    return { Url, UserName: username, Password: password }
+  } catch (error) {
+    // 如果解析失败，返回原始 URL 和空的用户名密码
+    return { Url: url, UserName: '', Password: '' }
+  }
+}
+
 /**
  * 获取代理配置的hook
  * 返回 proxyRouteOptions proxyConfig saveProxyConfig checkProxyEndpoints使用
@@ -79,11 +92,11 @@ export const useProxy = () => {
   const proxyRouteOptions = useMemo(() => {
     const { Routes = [], Endpoints = [] } = proxyConfig
     return [
-      ...Routes.map(({ Name, Id }) => ({
+      ...Routes.filter(({ Disabled })=> !Disabled).map(({ Name, Id }) => ({
         label: `规则组: ${Name}`,
         value: Id
       })),
-      ...Endpoints.map(({ Url, Id, }) => ({
+      ...Endpoints.filter(({ Disabled })=> !Disabled).map(({ Url, Id, }) => ({
         label: `代理节点: ${Url}`,
         value: Id
       }))
@@ -123,7 +136,10 @@ export const useProxy = () => {
         ...proxyConfig,
         Endpoints: [
           ...proxyConfig.Endpoints,
-          ...newEndpoints.map((Url) => ({ Name: Url, Url, Id: `ep-${randomString(8)}`, UserName: '', Password: '' }))
+          ...newEndpoints.map((url) => {
+            const { Url, UserName, Password } = parseUrl(url)
+            return { Name: Url, Url, Id: `ep-${randomString(8)}`, UserName, Password }
+          })
         ]
       }
       saveProxyConfig(config)
@@ -138,6 +154,7 @@ export const useProxy = () => {
     proxyRouteOptions,
     getProxyValue,
     proxyConfig,
+    comparePointUrl,
     saveProxyConfig,
     checkProxyEndpoints
   }

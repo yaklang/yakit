@@ -123,7 +123,6 @@
     "title": "Proxy Rules Configuration",
     "tip": "Customize Proxy Rule Groups According To Your Needs",
     "clear_all": "Clear All",
-    "add_new": "+ Add New",
     "add_new_point": "+ Add New point",
     "add_new_route": "+ Add New rule",
     "disable_add_new_route": "Please configure at least one proxy node.",
@@ -150,7 +149,7 @@
     "please_enter_username": "Please Enter Username",
     "password_label": "Password",
     "please_enter_password": "Please Enter Password",
-    "proxy_address_placeholder": "Please Enter Valid Proxy Address (E.g.: http://127.0.0.1:8080)",
+    "proxy_address_placeholder": "Please select or enter a proxy address. If the proxy requires a password, the format is: http://user:pass@ip:port",
     "data_migration": "data Migration",
     "migration":"Migration",
     "not_migration":"Not Migration",
@@ -161,6 +160,15 @@
     "Points": "Points",
     "address_tip": "After configuration, only the target address uses the proxy, and all other traffic does not use the proxy.",
     "delete_point_title": "Delete Points",
-    "delete_point_tips": "This Points is still referenced by {i} rules; deleting it will remove it from those rules as well. Continue?"
+    "delete_point_tips": "This Points is still referenced by {i} rules; deleting it will remove it from those rules as well. Continue?",
+    "disabled": "Disabled" ,
+    "detectionStart":"Start Detection",
+    "detectionLoading":"Testing in progress, please wait patiently...",
+    "detectionSuccess": "Test passed",
+    "proxyDetection": "Proxy Detection",
+    "customDetectionTarget": "Custom Detection Target",
+    "customDetectionTargetPlaceholder": "Please enter the detection target",
+    "disable_point_title": "Disable Points",
+    "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?"
   }
 }

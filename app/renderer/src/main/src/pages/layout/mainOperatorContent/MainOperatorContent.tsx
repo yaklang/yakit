@@ -1375,6 +1375,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (downstreamProxyStr) {
                 newAdvancedConfigValue.proxy = downstreamProxyStr.split(",")
             }
+            if(res.enableGMTLS) {
+                newAdvancedConfigValue.isGmTLS = true
+            }
+            if(res.randomJA3) {
+                newAdvancedConfigValue.randomJA3 = true
+            }
 
             // 获取全局热加载缓存信息
             const hotPatchCode = await getHotPatchCodeInfo()
