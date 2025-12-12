@@ -44,7 +44,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
 import {handleOpenFileSystemDialog, OpenDialogOptions} from "@/utils/fileSystemDialog"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {historyStore} from "../components/aiFileSystemList/store/useHistoryFolder"
+import {historyStore, loadRemoteHistory} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -320,12 +320,13 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         })
         if (!filePaths.length) return
         const absolutePath: string = filePaths[0].replace(/\\/g, "\\")
-        historyStore.addHistoryItem({
-            path: absolutePath,
-            isFolder: properties?.includes("openDirectory") ?? true,
+        loadRemoteHistory().then(() => {
+            historyStore.addHistoryItem({
+                path: absolutePath,
+                isFolder: properties?.includes("openDirectory") ?? true
+            })
+            onSetReAct?.()
         })
-     
-        onSetReAct?.()
     }
 
     return (

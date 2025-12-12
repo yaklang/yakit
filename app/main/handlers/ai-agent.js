@@ -40,7 +40,7 @@ module.exports = (win, getClient) => {
             stream.write({...params})
             const qs = params?.Params?.UserQuery
             if (!!qs) {
-                stream.write({IsFreeInput: true, FreeInput: qs})
+                stream.write({IsFreeInput: true, FreeInput: qs, AttachedFilePath: params?.AttachedFilePath})
             }
         } catch (error) {
             throw new Error(error)

@@ -5,13 +5,8 @@ import FilePreview from "../FilePreview/FilePreview"
 import FileTreeSystemListWapper from "../FileTreeSystemList/FileTreeSystemList"
 import {useMemoizedFn} from "ahooks"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
-import {HistoryItem} from "../type"
 import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
 import {useCustomFolder, customFolderStore} from "../store/useCustomFolder"
-
-const filterIsDir = (items: HistoryItem[], flag = true) => {
-    return items.filter((item) => item.isFolder === flag)
-}
 
 const FileTreeSystem = () => {
     // 单选
@@ -28,24 +23,10 @@ const FileTreeSystem = () => {
         customFolderStore.addCustomFolderItem({path, isFolder})
     })
     const filstNode = useMemoizedFn(() => {
-        const customFileDom = (
-            <FileTreeSystemListWapper
-                isOpen
-                key='customFile'
-                title='已打开文件'
-                selected={selected}
-                isFolder={false}
-                historyFolder={filterIsDir(historyFolder, false)}
-                path={customFolder.filter((item) => !item.isFolder).map((item) => item.path)}
-                setOpenFolder={onSetFolder}
-                setSelected={setSelected}
-            />
-        )
-
         const aiFolderDom = (
             <FileTreeSystemListWapper
                 key='aiFolder'
-                path={grpcFolders}
+                path={grpcFolders.map((item) => ({path: item, isFolder: true}))}
                 selected={selected}
                 setSelected={setSelected}
                 title='AI Artifacts'
@@ -57,15 +38,15 @@ const FileTreeSystem = () => {
             <FileTreeSystemListWapper
                 isOpen
                 key='customFolder'
-                title='已打开文件系统'
+                title='已打开文件/文件夹'
                 selected={selected}
-                historyFolder={filterIsDir(historyFolder)}
-                path={customFolder.filter((item) => item.isFolder).map((item) => item.path)}
+                historyFolder={historyFolder}
+                path={customFolder}
                 setOpenFolder={onSetFolder}
                 setSelected={setSelected}
             />
         )
-        return [aiFolderDom, customFileDom, customFolderDom]
+        return [aiFolderDom, customFolderDom]
     })
     const filePreviewData = useMemo(() => {
         if (selected?.isFolder) return undefined
@@ -74,7 +55,7 @@ const FileTreeSystem = () => {
 
     return (
         <YakitResizeBox
-            firstRatio='300px'
+            firstRatio='50%'
             firstNodeStyle={{padding: "4px", overflowY: "auto"}}
             lineDirection='right'
             firstMinSize={200}

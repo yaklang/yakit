@@ -54,3 +54,8 @@
         }
     }
 }
+.dropdown-menu {
+  > div:first-of-type {
+    width: 100%;
+  }
+}

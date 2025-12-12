@@ -17,35 +17,67 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     path,
     title,
     isOpen,
-    isFolder = true,
     selected,
     historyFolder,
     setOpenFolder,
     setSelected
 }) => {
-    const label = isFolder ? "文件夹" : "文件"
-    const onOpenFileFolder = async (flag = isFolder) => {
-        const args: OpenDialogOptions["properties"] = flag  ? ["openDirectory"] : ["openFile"]
+    const onOpenFileFolder = async (flag) => {
+        const label = flag ? "文件夹" : "文件"
+        const args: OpenDialogOptions["properties"] = flag ? ["openDirectory"] : ["openFile"]
         const {filePaths} = await handleOpenFileSystemDialog({title: `请选择${label}`, properties: args})
         if (!filePaths.length) return
         let absolutePath: string = filePaths[0].replace(/\\/g, "\\")
         setOpenFolder?.(absolutePath, flag)
     }
-
+    const dropdownMenu = useMemo(() => {
+        return {
+            data: [
+                {
+                    label: "打开文件",
+                    key: "open-file"
+                },
+                {
+                    label: "打开文件夹",
+                    key: "open-folder"
+                }
+            ],
+            onClick: ({key}) => {
+                switch (key) {
+                    case "open-file":
+                        onOpenFileFolder(false)
+                        break
+                    case "open-folder":
+                    default:
+                        onOpenFileFolder(true)
+                        break
+                }
+            }
+        }
+    }, [])
     const renderContent = useMemoizedFn(() => {
         if (isOpen && path.length === 0) {
             return (
-                <YakitButton onClick={() => onOpenFileFolder()} style={{width: "100%"}} type='outline2'>
-                    点击打开{label}
-                </YakitButton>
+                <YakitDropdownMenu
+                    menu={dropdownMenu}
+                    dropdown={{
+                        trigger: ["click"],
+                        placement: "bottomLeft",
+                        overlayClassName: styles["dropdown-menu"]
+                    }}
+                >
+                    <YakitButton style={{width: "100%"}} type='outline2'>
+                        打开文件夹管理
+                    </YakitButton>
+                </YakitDropdownMenu>
             )
         }
         return path.map((item) => (
             <FileTreeSystemList
-                key={item}
-                path={item}
+                key={item.path}
+                path={item.path}
                 isOpen={isOpen}
-                isFolder={isFolder}
+                isFolder={item.isFolder}
                 selected={selected}
                 setSelected={setSelected}
             />
@@ -95,6 +127,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                 break
             case FileListTileMenu.History:
                 const folderPath = keyPath[0]
+                const isFolder  =historyFolder?.find(i=>i.path === key)?.isFolder ?? true
                 setOpenFolder?.(folderPath, isFolder)
                 break
             default:
@@ -121,7 +154,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                         className={styles["file-tree-system-title-icon"]}
                         hidden={!isOpen}
                         type='text2'
-                        title={`打开${label}`}
+                        title={`打开文件夹`}
                         icon={<OutlinePluscircleIcon />}
                     />
                 </YakitDropdownMenu>

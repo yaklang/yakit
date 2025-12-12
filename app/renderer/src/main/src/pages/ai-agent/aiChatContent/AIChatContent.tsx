@@ -273,11 +273,20 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 secondNodeStyle: {width: "100%", padding: 0}
             }
         }
+        const isFileSystemKey = activeKey === AITabsEnum.File_System
+        let secondRatio
+        if (showFreeChat) {
+            if (isFileSystemKey) {
+                secondRatio = "60%"
+            } else {
+                secondRatio = "432px"
+            }
+        }
         return {
             freeze: showFreeChat,
             firstMinSize: 500,
             secondMinSize: showFreeChat ? 400 : 30,
-            secondRatio: showFreeChat ? "432px" : undefined,
+            secondRatio,
             secondNodeStyle: {
                 padding: 0,
                 ...(!showFreeChat && {

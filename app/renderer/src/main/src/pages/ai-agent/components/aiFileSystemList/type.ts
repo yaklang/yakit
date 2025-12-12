@@ -11,9 +11,8 @@ export interface AIFileSystemListProps {
 }
 
 export interface FileTreeSystemListWapperProps {
-    path: string[]
+    path: HistoryItem[]
     title: string
-    isFolder?: boolean
     isOpen?: boolean
     selected?: FileNodeProps
     historyFolder?: HistoryItem[]

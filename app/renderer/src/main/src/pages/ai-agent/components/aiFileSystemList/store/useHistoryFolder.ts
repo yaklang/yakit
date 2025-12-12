@@ -8,7 +8,7 @@ const RECENT_COUNT = 5
 
 const store = createExternalStore<HistoryItem[]>([])
 
-const loadRemoteHistory = async () => {
+export const loadRemoteHistory = async () => {
     try {
         const saved = await getRemoteValue(REMOTE_KEY)
         if (saved) {
