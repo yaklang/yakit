@@ -7,7 +7,7 @@ on:
 
 jobs:
     build_memfit:
-        runs-on: macos-13
+        runs-on: macos-15
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
