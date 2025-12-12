@@ -23,12 +23,16 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     setSelected
 }) => {
     const onOpenFileFolder = async (flag) => {
-        const label = flag ? "文件夹" : "文件"
+      try {
+          const label = flag ? "文件夹" : "文件"
         const args: OpenDialogOptions["properties"] = flag ? ["openDirectory"] : ["openFile"]
         const {filePaths} = await handleOpenFileSystemDialog({title: `请选择${label}`, properties: args})
         if (!filePaths.length) return
         let absolutePath: string = filePaths[0].replace(/\\/g, "\\")
         setOpenFolder?.(absolutePath, flag)
+      } catch  {
+        
+      }
     }
     const dropdownMenu = useMemo(() => {
         return {

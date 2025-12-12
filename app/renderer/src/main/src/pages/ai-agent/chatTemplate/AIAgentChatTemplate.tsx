@@ -138,19 +138,18 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         [Footer, Item]
     )
 
-    const onScrollToIndex = (id) => {
+    const onScrollToIndex = useMemoizedFn((id) => {
         const index = streams.findIndex((item) => {
-            if (item.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE) {
-                const i = item.data.task
-                return i.index === id
+            if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+                const taskIndex = item.data.taskIndex
+                return taskIndex === id
             }
             return false
         })
         if (index !== -1) {
             scrollToIndex(index, "auto")
         }
-    }
-
+    })
     useMount(() => {
         emiter.on("onAITreeLocatePlanningList", onScrollToIndex)
         return () => {

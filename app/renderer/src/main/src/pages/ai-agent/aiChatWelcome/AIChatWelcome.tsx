@@ -314,19 +314,21 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     }, [])
 
     const onOpenFileFolder = async (properties: OpenDialogOptions["properties"]) => {
-        const {filePaths} = await handleOpenFileSystemDialog({
-            title: "请选择文件夹",
-            properties
-        })
-        if (!filePaths.length) return
-        const absolutePath: string = filePaths[0].replace(/\\/g, "\\")
-        loadRemoteHistory().then(() => {
-            historyStore.addHistoryItem({
-                path: absolutePath,
-                isFolder: properties?.includes("openDirectory") ?? true
+        try {
+            const {filePaths} = await handleOpenFileSystemDialog({
+                title: "请选择文件夹",
+                properties
             })
-            onSetReAct?.()
-        })
+            if (!filePaths.length) return
+            const absolutePath: string = filePaths[0].replace(/\\/g, "\\")
+            loadRemoteHistory().then(() => {
+                historyStore.addHistoryItem({
+                    path: absolutePath,
+                    isFolder: properties?.includes("openDirectory") ?? true
+                })
+                onSetReAct?.()
+            })
+        } catch {}
     }
 
     return (
