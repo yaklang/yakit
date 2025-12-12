@@ -28,7 +28,6 @@ import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
-import {KnowledgeBaseQA} from "./KnowledgeBaseQA/KnowledgeBaseQA"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 import {CreateKnowledgeBaseData} from "../TKnowledgeBase"
@@ -46,7 +45,7 @@ import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
-import {AIAgentChatMode} from "@/pages/ai-agent/aiAgentChat/type"
+import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {cloneDeep} from "lodash"
@@ -304,7 +303,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     ...yakExecResult,
                     execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
                 }),
-                grpcFolders: cloneDeep(grpcFolders)
+                grpcFolders: cloneDeep(grpcFolders),
+                reActTimelines: cloneDeep(reActTimelines)
             }
             setChats &&
                 setChats((old) => {
@@ -378,7 +378,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         onNotifyMessage
     })
 
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
+    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders, reActTimelines} =
+        chatIPCData
 
     /** 停止回答后的状态调整||清空Review状态 */
     const handleStopAfterChangeState = useMemoizedFn(() => {
@@ -404,7 +405,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         }, 100)
     })
 
-    const handleStart = useMemoizedFn((qs: string, extraValue?: AIChatIPCStartParams["extraValue"]) => {
+    const handleStart = useMemoizedFn(({qs, extraValue}: HandleStartParams) => {
         const name = knowledgeBases.find((it) => it.ID === knowledgeBaseID)?.KnowledgeBaseName
 
         const request: AIStartParams = {
