@@ -28,7 +28,7 @@ import {fileToChatQuestionStore, useFileToQuestion} from "./store"
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName} = props
+    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话"} = props
 
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
@@ -67,7 +67,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             yakitNotify("error", "请先配置 AI ReAct 参数")
             return
         }
-        const fileArr = fileToQuestion.filter(i => qs.includes(i))
+        const fileArr = fileToQuestion.filter((i) => qs.includes(i))
         if (execute) {
             handleSend(qs, fileArr)
         } else {
@@ -152,7 +152,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={classNames(styles["chat-header"], chatContainerHeaderClassName)}>
                             <div className={styles["chat-header-title"]}>
                                 <ColorsChatIcon />
-                                自由对话
+                                {title}
                             </div>
                             <div className={styles["chat-header-extra"]}>
                                 {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}

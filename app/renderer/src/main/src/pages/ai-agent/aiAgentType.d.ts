@@ -7,7 +7,9 @@ import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIStreamOutput, AITaskInfoProps} from "../ai-re-act/hooks/aiRender"
 import {UseYakExecResultState} from "../ai-re-act/hooks/type"
 
-export interface AIAgentProps {}
+export interface AIAgentProps {
+    pageId: string
+}
 
 // #region 页面全局变量
 // 全局配置信息
@@ -76,4 +78,3 @@ export interface AIChatToolDrawerContentProps {
     callToolId: string
 }
 // #endregion
-

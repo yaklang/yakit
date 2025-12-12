@@ -32,7 +32,6 @@ import {KnowledgeBaseQA} from "./KnowledgeBaseQA/KnowledgeBaseQA"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 import {CreateKnowledgeBaseData} from "../TKnowledgeBase"
-import {AIReActChat} from "./KnowledgeAIReActChat/AIReActChat"
 
 import ChatIPCContent, {
     AIChatIPCSendParams,
@@ -56,6 +55,7 @@ import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -268,11 +268,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         }
     })
 
-    const targetSelectedKnowledgeBaseItem = useMemo(() => {
-        const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
-        return result
-    }, [knowledgeBases, knowledgeBaseID])
-
     useImperativeHandle(ref, () => ({
         onOK
     }))
@@ -410,9 +405,11 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     })
 
     const handleStart = useMemoizedFn((qs: string, extraValue?: AIChatIPCStartParams["extraValue"]) => {
+        const name = knowledgeBases.find((it) => it.ID === knowledgeBaseID)?.KnowledgeBaseName
+
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
-            UserQuery: qs,
+            UserQuery: `${name}:` + qs,
             CoordinatorId: "",
             Sequence: 1
         }
@@ -564,13 +561,16 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         api={api}
                         setOpenQA={setShowFreeChat}
                     />
-                    <AIReActChat
-                        mode={"task"}
-                        showFreeChat={showFreeChat}
-                        setShowFreeChat={setShowFreeChat}
-                        knowledgeId={knowledgeBaseID}
-                        knowledgeBases={knowledgeBases}
-                    />
+                    {showFreeChat ? (
+                        <div style={{width: 520, borderRight: "1px solid var(--Colors-Use-Neutral-Border)"}}>
+                            <AIReActChat
+                                mode={"task"}
+                                showFreeChat={showFreeChat}
+                                setShowFreeChat={setShowFreeChat}
+                                title='AI 召回'
+                            />
+                        </div>
+                    ) : null}
                 </div>
             </ChatIPCContent.Provider>
         </AIAgentContext.Provider>

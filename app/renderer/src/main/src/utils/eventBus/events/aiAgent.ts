@@ -12,4 +12,6 @@ export type AIAgentEventProps = {
     onRefreshAIModelList?: string
     /** ai任务树定位规划列表 */
     onAITreeLocatePlanningList?: string
+    // 知识库 路由传递的参数
+    konwledgeInputString: string
 }

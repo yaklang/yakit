@@ -164,7 +164,15 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                     <div
                                         className={styles["ai-button"]}
                                         onClick={() => {
-                                            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                                            emiter.emit(
+                                                "openPage",
+                                                JSON.stringify({
+                                                    route: YakitRoute.AI_Agent,
+                                                    params: {
+                                                        inputString: "使用知识库回答:"
+                                                    }
+                                                })
+                                            )
                                         }}
                                     >
                                         <OutlineAiChatIcon />

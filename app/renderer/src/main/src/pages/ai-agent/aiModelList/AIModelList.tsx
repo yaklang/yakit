@@ -175,11 +175,12 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(onlineListRef)
 
     useEffect(() => {
+        if (!inViewport) return
         emiter.on("onRefreshAIModelList", onRefresh)
         return () => {
             emiter.off("onRefreshAIModelList", onRefresh)
         }
-    }, [])
+    }, [inViewport])
 
     useEffect(() => {
         if (inViewport) {

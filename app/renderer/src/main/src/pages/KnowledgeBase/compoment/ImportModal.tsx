@@ -10,6 +10,7 @@ import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {KnowledgeBaseContentProps} from "../TKnowledgeBase"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {extractFileName} from "../utils"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -35,7 +36,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
         MessageType: ""
     })
     const [token, setToken] = useSafeState<string>("")
-    const [hasError, setHasError] = useSafeState(false)
+    const [hasError, setHasError, getHasError] = useGetSetState(false)
     const knowledgeBaseNameRef = useRef<string>("")
     const {addKnowledgeBase, knowledgeBases} = useKnowledgeBase()
 
@@ -92,16 +93,18 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
         }
 
         const handleEnd = async () => {
-            setImportLoading(false)
-            // 失败时不显示成功提示，但仍然刷新和关闭
-            if (!hasError) {
-                success("导入知识库成功")
-                await existsKnowledgeBaseAsync()
-                onVisible(false)
-                form.resetFields()
-                setChecked(true)
-            }
-            setProgress({Percent: 0, Message: "", MessageType: ""})
+            try {
+                setImportLoading(false)
+                // 失败时不显示成功提示，但仍然刷新和关闭
+                if (!hasError) {
+                    success("导入知识库成功")
+                    await existsKnowledgeBaseAsync()
+                    onVisible(false)
+                    form.resetFields()
+                    setChecked(true)
+                }
+                setProgress({Percent: 0, Message: "", MessageType: ""})
+            } catch (_) {}
         }
 
         ipcRenderer.on(`${token}-data`, handleData)
@@ -113,10 +116,11 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [token, hasError])
+    }, [token, getHasError()])
 
     const handleImport = useMemoizedFn(async () => {
         try {
+            setHasError(false)
             const values = await form.validateFields()
             setImportLoading(true)
             setProgress({Percent: 0, Message: "开始导入...", MessageType: "info"})
@@ -139,7 +143,6 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             )
         } catch (error: any) {
             if (error?.errorFields) {
-                // 表单验证错误
                 return
             }
             setImportLoading(false)

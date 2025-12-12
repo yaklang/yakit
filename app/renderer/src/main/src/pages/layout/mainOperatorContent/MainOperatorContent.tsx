@@ -704,7 +704,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 } else {
                     addPoC(params)
                 }
-
                 break
             case YakitRoute.SimpleDetect:
                 addSimpleDetect(params)
@@ -753,6 +752,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.DB_Report:
                 dbReport()
+                break
+            case YakitRoute.AI_Agent:
+                addAIREPOSITORY(params)
                 break
             default:
                 break
@@ -827,7 +829,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             singleNode: true
         }
         setPagesData(YakitRoute.Rule_Management, pageNodeInfo)
-        openMenuPage({route: YakitRoute.Rule_Management},{
+        openMenuPage(
+            {route: YakitRoute.Rule_Management},
+            {
                 pageParams: {
                     ruleManagementPageInfo: data
                         ? {
@@ -835,7 +839,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                           }
                         : undefined
                 }
-            })
+            }
+        )
     })
 
     const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {
@@ -1029,6 +1034,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {
                 pageParams: {
                     simpleDetectPageInfo: {...data}
+                }
+            }
+        )
+    })
+    const addAIREPOSITORY = useMemoizedFn((data) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.AI_Agent).length
+        if (isExist) {
+            emiter.emit("konwledgeInputString", JSON.stringify(data))
+        }
+        openMenuPage(
+            {route: YakitRoute.AI_Agent},
+            {
+                pageParams: {
+                    AIRepository: {...data}
                 }
             }
         )
@@ -1764,6 +1783,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_ScanHistory:
                 onSetYakRunnerScanHistory(singleUpdateNode, 1)
                 break
+            case YakitRoute.AI_Agent:
+                onSetYakAIAgent(singleUpdateNode, 1)
+                break
             default:
                 break
         }
@@ -1902,6 +1924,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         setPagesData(YakitRoute.YakRunner_ScanHistory, pageNodeInfo)
     })
+
+    const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.AI_Agent,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                AIRepository: node.pageParams?.AIRepository
+                    ? {
+                          ...node.pageParams.AIRepository
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.AI_Agent
+        }
+        setPagesData(YakitRoute.AI_Agent, pageNodeInfo)
+    })
+
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,

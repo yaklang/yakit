@@ -9,12 +9,12 @@ import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
-import { HTTPResponseMatcher } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {HTTPResponseMatcher} from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
-import { ConcurrencyAdvancedConfigValue } from "@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency"
-import { FilterLibRuleKind } from "@/pages/ruleManagement/RuleManagementType"
+import {ConcurrencyAdvancedConfigValue} from "@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency"
+import {FilterLibRuleKind} from "@/pages/ruleManagement/RuleManagementType"
 
 /**
  * @description 页面暂存数据
@@ -88,6 +88,8 @@ interface PageParamsInfoProps {
     ruleManagementPageInfo?: RuleManagementPageInfoProps
     /** 审计漏洞页面 */
     auditHoleInfo?: AuditHoleInfoProps
+    /** 知识库页面 */
+    AIRepository?: AIRepositoryProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -116,6 +118,11 @@ export interface SimpleDetectPageInfoProps {
     /**执行批量执行的runtimeId */
     runtimeId: string
 }
+
+export interface AIRepositoryProps {
+    inputString: string
+}
+
 export interface WebsocketFuzzerPageInfoProps {
     wsTls?: boolean
     wsRequest?: Uint8Array

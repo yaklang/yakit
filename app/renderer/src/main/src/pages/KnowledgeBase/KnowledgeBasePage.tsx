@@ -5,6 +5,7 @@ import {
     useAsyncEffect,
     useCreation,
     useDebounceFn,
+    useInViewport,
     useMemoizedFn,
     useRequest,
     useSafeState,
@@ -257,39 +258,26 @@ const KnowledgeBase: FC = () => {
         }
     }, [])
 
+    const refRef = useRef<HTMLDivElement>(null)
     const [aiModelOptions, setAIModelOptions] = useSafeState<string>("")
+    const [inViewport = true] = useInViewport(refRef)
 
     const getAIModelListOption = useDebounceFn(
-        (refreshValue?: boolean) => {
+        (_) => {
             isForcedSetAIModal({
                 noDataCall: () => {
                     setAIModelOptions("")
                 },
-                haveDataCall: (res) => {
-                    refreshValue && onInitValue(res)
-                }
+                haveDataCall: (_) => {}
             })
         },
         {wait: 200, leading: true}
     ).run
 
-    const onInitValue = useMemoizedFn((res) => {
-        if (res && res.onlineModels.length > 0) {
-            setAIModelOptions((res.onlineModels[0].Type as string) || "")
-        } else if (res && res.localModels.length > 0) {
-            setAIModelOptions((res.localModels[0].Name as string) || "")
-        }
-    })
-
-    useAsyncEffect(async () => {
-        const result = await getAIModelList()
-        onInitValue(result)
-    }, [])
-
     useEffect(() => {
-        getAIModelListOption(!aiModelOptions)
+        inViewport && getAIModelListOption(!aiModelOptions)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [aiModelOptions])
+    }, [aiModelOptions, inViewport])
 
     const knowledgeBaseEntrance = useMemo(() => {
         switch (true) {
@@ -345,6 +333,8 @@ const KnowledgeBase: FC = () => {
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
+            <div ref={refRef} />
+
             <div className={styles["repository-container"]}>{knowledgeBaseEntrance}</div>
             <YakitHint
                 visible={visible}
