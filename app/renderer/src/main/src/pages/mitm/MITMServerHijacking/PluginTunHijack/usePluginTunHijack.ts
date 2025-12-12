@@ -33,9 +33,7 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
         onError: () => {
             onError?.()
         },
-        setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-        }
+        isShowEnd: false
     })
 
     const startPluginTunHijack = useMemoizedFn((p?: OptionalDebugPluginRequest) => {
@@ -51,7 +49,8 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
         }
         apiDebugPlugin({
             params,
-            token: tokenRef.current
+            token: tokenRef.current,
+            isShowStartInfo: false
         }).then((res) => {
             setIsExecuting(true)
             debugPluginStreamEvent.start()

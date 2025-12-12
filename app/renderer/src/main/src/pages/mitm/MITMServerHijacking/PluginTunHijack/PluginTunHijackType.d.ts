@@ -19,9 +19,14 @@ export interface PluginTunHijackProps {
     ref?: React.ForwardedRef<PluginTunHijackRefProps>
     pluginTunHijackData: PluginTunHijackStateProps
     pluginTunHijackActions: pluginTunHijackActionsProps
+    pluginTunHijackDel: PluginTunHijackStateProps
+    onQuitTunHijackFun: () => void
+    handleDeleteRoute: (ipList?: string[]) => void
 }
 
-export interface PluginTunHijackRefProps {}
+export interface PluginTunHijackRefProps {
+    updatePluginTunHijack: () => void
+}
 
 export interface PluginTunHijackParams {
     PluginName: "Tun劫持服务" | "路由表增加" | "路由表删除" | "路由表查询"
@@ -30,8 +35,11 @@ export interface PluginTunHijackParams {
 }
 
 export interface PluginTunHijackTableProps {
-    cancelPluginTunHijack: () => void
+    ref?: React.ForwardedRef<PluginTunHijackRefProps>
     deviceName: string
+    pluginTunHijackDel: PluginTunHijackStateProps
+    onQuitTunHijackFun: () => void
+    handleDeleteRoute: (ipList?: string[]) => void
 }
 
 type OptionalDebugPluginRequest = Partial<DebugPluginRequest>
