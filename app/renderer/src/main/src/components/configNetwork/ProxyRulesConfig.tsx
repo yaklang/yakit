@@ -24,7 +24,7 @@ import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {useProxy} from "@/hook/useProxy"
 import {YakitSideTab} from "../yakitSideTab/YakitSideTab"
 import styles from "./ConfigNetworkPage.module.scss"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 const {ipcRenderer} = window.require("electron")
 
 const generateEndpointId = () => `ep-${randomString(8)}`
@@ -35,7 +35,7 @@ const PasswordDisplay: React.FC<{
     const [visible, setVisible] = useState(false)
     if (!password) return <></>
     return (
-        <span style={{ display: 'flex', justifyContent: 'space-between'}}>
+        <span style={{display: "flex", justifyContent: "space-between"}}>
             <span className={styles["password_display_icon_text"]}>
                 {visible ? password : "•".repeat(password.length)}
             </span>
@@ -69,7 +69,6 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         {value: "route", label: t("ProxyConfig.Routes")}
     ]
     const isEndpoints = useMemo(() => activeKey === "point", [activeKey])
-
 
     const handleOk = useMemoizedFn(() => {
         form.validateFields().then((values) => {
@@ -434,7 +433,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                                 rules={[
                                     {required: true, message: t("ProxyConfig.please_enter_proxy_address")},
                                     {
-                                        pattern: /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//,
+                                        pattern: /^(https?|socks[45]):\/\/[^:\/\s]+:\d+$/,
                                         message: t("ProxyConfig.valid_proxy_address_tip")
                                     }
                                 ]}
@@ -650,9 +649,8 @@ export const ProxyTest = memo(
                                             // 只校验新输入的值(不在options中的值)
                                             const newValues = value.filter((v) => !existingOptions.includes(v))
                                             // 校验代理地址格式: 协议://地址:端口
-                                            const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
                                             for (const v of newValues) {
-                                                if (!pattern.test(v)) {
+                                                if (!isValidUrlWithProtocol(v)) {
                                                     return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
                                                 }
                                             }

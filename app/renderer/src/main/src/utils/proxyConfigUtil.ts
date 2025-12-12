@@ -73,32 +73,13 @@ export const checkProxyVersion = async (): Promise<boolean> => {
 
 
 
-export const isValidUrlWithProtocol = (url) => {
-  try {
-    const urlObj = new URL(url);
-    // 检查协议是否合法
-    const validProtocols = ['http:', 'https:', 'ftp:', 'ws:', 'wss:'];
-    if (!validProtocols.includes(urlObj.protocol)) {
-      return false;
+export const isValidUrlWithProtocol = (url: string): boolean => {
+    try {
+        // 使用正则表达式验证代理 URL 格式: 协议://主机:端口
+        // 仅支持 http, https, socks4, socks5 四种协议
+        const proxyPattern = /^(https?|socks[45]):\/\/[^:\/\s]+:\d+$/
+        return proxyPattern.test(url)
+    } catch (error) {
+        return false
     }
-
-    // URL包含协议
-    if (!url.includes('://')) {
-      return false;
-    }
-
-    // 检查hostname是否有效
-    if (!urlObj.hostname || urlObj.hostname === '') {
-      return false;
-    }
-
-    // 检查是否包含端口号
-    if (!urlObj.port || urlObj.port === '') {
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    return false;
-  }
 }
