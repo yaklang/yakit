@@ -7,6 +7,7 @@ export interface AIReActChatProps {
     chatContainerHeaderClassName?: string
     showFreeChat: boolean
     setShowFreeChat: (show: boolean) => void
+    title?: React.ReactNode
 }
 
 export interface AIReActLogProps {

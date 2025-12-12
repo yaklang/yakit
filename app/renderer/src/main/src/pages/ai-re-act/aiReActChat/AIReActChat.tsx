@@ -24,11 +24,13 @@ import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {fileToChatQuestionStore, useFileToQuestion} from "./store"
+import {PageNodeItemProps} from "@/store/pageInfo"
+import emiter from "@/utils/eventBus/eventBus"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName} = props
+    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话"} = props
 
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
@@ -67,7 +69,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             yakitNotify("error", "请先配置 AI ReAct 参数")
             return
         }
-        const fileArr = fileToQuestion.filter(i => qs.includes(i))
+        const fileArr = fileToQuestion.filter((i) => qs.includes(i))
         if (execute) {
             handleSend(qs, fileArr)
         } else {
@@ -90,6 +92,19 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             chatIPCEvents.onSend({token: activeChat.id, type: "casual", params: chatMessage})
         } catch (error) {}
     })
+
+    useEffect(() => {
+        const konwledgeInputStringFn = (params: string) => {
+            try {
+                const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
+                setQuestion(data?.inputString ?? "")
+            } catch (error) {}
+        }
+        emiter.on("konwledgeInputString", konwledgeInputStringFn)
+        return () => {
+            emiter.off("konwledgeInputString", konwledgeInputStringFn)
+        }
+    }, [])
 
     // #endregion
 
@@ -152,7 +167,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={classNames(styles["chat-header"], chatContainerHeaderClassName)}>
                             <div className={styles["chat-header-title"]}>
                                 <ColorsChatIcon />
-                                自由对话
+                                {title}
                             </div>
                             <div className={styles["chat-header-extra"]}>
                                 {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}

@@ -9,6 +9,8 @@ import {useEffect, useRef} from "react"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {KnowledgeBaseContentProps} from "../TKnowledgeBase"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
+import {extractFileName} from "../utils"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,10 +23,11 @@ interface GeneralProgress {
 interface TImportModalProps {
     visible: boolean
     onVisible: (visible: boolean) => void
+    setChecked: (checked: boolean) => void
 }
 
 const ImportModal: React.FC<TImportModalProps> = (props) => {
-    const {visible, onVisible} = props
+    const {visible, onVisible, setChecked} = props
     const [form] = Form.useForm()
     const [importLoading, setImportLoading] = useSafeState(false)
     const [progress, setProgress] = useSafeState<GeneralProgress>({
@@ -33,9 +36,9 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
         MessageType: ""
     })
     const [token, setToken] = useSafeState<string>("")
-    const [hasError, setHasError] = useSafeState(false)
+    const [hasError, setHasError, getHasError] = useGetSetState(false)
     const knowledgeBaseNameRef = useRef<string>("")
-    const {addKnowledgeBase} = useKnowledgeBase()
+    const {addKnowledgeBase, knowledgeBases} = useKnowledgeBase()
 
     useEffect(() => {
         if (visible) {
@@ -90,15 +93,18 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
         }
 
         const handleEnd = async () => {
-            setImportLoading(false)
-            // 失败时不显示成功提示，但仍然刷新和关闭
-            if (!hasError) {
-                success("导入知识库成功")
-            }
-            await existsKnowledgeBaseAsync()
-            onVisible(false)
-            form.resetFields()
-            setProgress({Percent: 0, Message: "", MessageType: ""})
+            try {
+                setImportLoading(false)
+                // 失败时不显示成功提示，但仍然刷新和关闭
+                if (!getHasError()) {
+                    success("导入知识库成功")
+                    await existsKnowledgeBaseAsync()
+                    onVisible(false)
+                    form.resetFields()
+                    setChecked(true)
+                }
+                setProgress({Percent: 0, Message: "", MessageType: ""})
+            } catch (_) {}
         }
 
         ipcRenderer.on(`${token}-data`, handleData)
@@ -110,10 +116,11 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [token, hasError])
+    }, [token])
 
     const handleImport = useMemoizedFn(async () => {
         try {
+            setHasError(false)
             const values = await form.validateFields()
             setImportLoading(true)
             setProgress({Percent: 0, Message: "开始导入...", MessageType: "info"})
@@ -136,7 +143,6 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             )
         } catch (error: any) {
             if (error?.errorFields) {
-                // 表单验证错误
                 return
             }
             setImportLoading(false)
@@ -180,7 +186,17 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             <div className={styles["import-hint"]}>
                 只可导入从知识库里导出的rag文件，导入文件暂不支持修改。导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。
             </div>
-            <Form form={form} layout='vertical' className={styles["import-form"]}>
+            <Form
+                form={form}
+                layout='vertical'
+                className={styles["import-form"]}
+                onValuesChange={(changedValues) => {
+                    if (changedValues.importPath) {
+                        const fileName = extractFileName(changedValues.importPath)
+                        form.setFieldsValue({knowledgeBaseName: fileName})
+                    }
+                }}
+            >
                 <YakitFormDragger
                     formItemProps={{
                         label: "导入文件路径",
@@ -219,7 +235,25 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                     disabled={importLoading}
                     fileExtensionIsExist={false}
                 />
-                <Form.Item label='新知识库名称' name='knowledgeBaseName'>
+
+                <Form.Item
+                    label='新知识库名称'
+                    name='knowledgeBaseName'
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator(_, value) {
+                                const findKnowledgeIdx = knowledgeBases.findIndex(
+                                    (it) => it.KnowledgeBaseName === value
+                                )
+                                if (findKnowledgeIdx === 0) {
+                                    return Promise.reject("知识库名称重复，请重新输入")
+                                }
+                                return Promise.resolve()
+                            }
+                        }
+                    ]}
+                >
                     <YakitInput placeholder='请输入新知识库名称' disabled={importLoading} />
                 </Form.Item>
 

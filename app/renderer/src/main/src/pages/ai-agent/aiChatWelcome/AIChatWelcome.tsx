@@ -46,6 +46,9 @@ import {handleOpenFileSystemDialog, OpenDialogOptions} from "@/utils/fileSystemD
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {historyStore, loadRemoteHistory} from "../components/aiFileSystemList/store/useHistoryFolder"
 
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, count)
@@ -65,6 +68,21 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const {onTriageSubmit, onSetReAct} = props
+
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById,
+            removePagesDataCacheById: s.removePagesDataCacheById
+        }),
+        shallow
+    )
+
+    const initKnowledgeStr = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+        return currentItem?.pageParamsInfo.AIRepository?.inputString ?? ""
+    })
+
     // #region 问题相关逻辑
     const textareaProps: AIChatTextareaProps["textareaProps"] = useCreation(() => {
         return {
@@ -72,8 +90,22 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         }
     }, [])
 
+    useEffect(() => {
+        const konwledgeInputStringFn = (params: string) => {
+            try {
+                const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
+                setQuestion(data?.inputString ?? "")
+                removePagesDataCacheById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+            } catch (error) {}
+        }
+        emiter.on("konwledgeInputString", konwledgeInputStringFn)
+        return () => {
+            emiter.off("konwledgeInputString", konwledgeInputStringFn)
+        }
+    }, [])
+
     const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
-    const [question, setQuestion] = useState<string>("")
+    const [question, setQuestion] = useState<string>(initKnowledgeStr())
     const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
     const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
     const [questionList, setQuestionList] = useState<string[]>([])

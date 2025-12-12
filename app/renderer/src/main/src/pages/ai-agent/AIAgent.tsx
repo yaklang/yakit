@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AIAgentProps, AIAgentSetting} from "./aiAgentType"
 import {AIAgentSideList} from "./AIAgentSideList"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./useContext/AIAgentContext"

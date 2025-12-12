@@ -1429,6 +1429,7 @@ message QueryKnowledgeBaseByAIRequest {
   string EnhancePlan = 2;
   int64 KnowledgeBaseID = 3;
   bool QueryAllCollections = 4;
+  string AIService = 5;
 }
 
 message QueryKnowledgeBaseByAIResponse {

@@ -1,4 +1,4 @@
-import {type FC, memo, useMemo, useReducer} from "react"
+import {type FC, memo, useEffect, useMemo, useReducer} from "react"
 
 import KnowledgeBaseTable from "./KnowledgeBaseTable"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
@@ -14,17 +14,14 @@ import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/
 import type {TKnowledgeBaseSidebarProps} from "./KnowledgeBaseSidebar"
 
 import styles from "../knowledgeBase.module.scss"
-import {
-    DeleteConfirm,
-    EditKnowledgenBaseModal,
-    ExportModal
-    // ExportModal
-} from "./OperateKnowledgenBaseItem"
+import {DeleteConfirm, EditKnowledgenBaseModal} from "./OperateKnowledgenBaseItem"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {Tooltip} from "antd"
-import {failed} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
+import {useSafeState} from "ahooks"
+const {ipcRenderer} = window.require("electron")
 
 type TKnowledgeBaseContainerProps = TKnowledgeBaseSidebarProps & {
     streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
@@ -35,10 +32,7 @@ const initialValue = {
     deleteVisible: false,
     insertVisible: false,
     editVisble: false,
-    exprotVisible: {
-        open: false,
-        filePath: ""
-    }
+    exprotVisible: false
 }
 
 const reducer = (state: typeof initialValue, payload: typeof initialValue) => ({
@@ -92,27 +86,54 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
         dispatch({...state, editVisble: visible})
     }
 
-    const onExportVisible: (preValue: {open: boolean; filePath?: string}) => void = async (preValue) => {
-        // 打开保存文件对话框
+    const [exportToken, setExportToken] = useSafeState("")
+    const onExportKnowledgeBase = async (KnowledgeBaseId: number) => {
+        const defaultName = findKnowledgeBaseItems.KnowledgeBaseName
+            ? `export-${findKnowledgeBaseItems.KnowledgeBaseName}`
+            : "default-knowledge"
+
         try {
             const file = await handleSaveFileSystemDialog({
                 title: "导出知识库",
-                defaultPath: "knowledge",
+                defaultPath: defaultName,
                 filters: [{name: "Files", extensions: ["rag"]}]
             })
 
-            if (!file?.filePath) return
-            dispatch({
-                ...state,
-                exprotVisible: {
-                    open: preValue.open,
-                    filePath: file.filePath
-                }
-            })
+            if (!file || file.canceled) return
+
+            const filePath = file.filePath
+            if (!filePath) return
+
+            const token = `export-kb-${Date.now()}`
+            setExportToken(token)
+
+            await ipcRenderer.invoke("ExportKnowledgeBase", {KnowledgeBaseId, TargetPath: filePath}, token)
         } catch (error) {
             failed("导出知识库失败：" + error)
         }
     }
+
+    useEffect(() => {
+        if (!exportToken) return
+
+        const onError = (_: any, err: any) => {
+            failed("导出知识库失败: " + err)
+            setExportToken("")
+        }
+
+        const onEnd = () => {
+            success("导出知识库成功")
+            setExportToken("")
+        }
+
+        ipcRenderer.on(`${exportToken}-error`, onError)
+        ipcRenderer.on(`${exportToken}-end`, onEnd)
+
+        return () => {
+            ipcRenderer.removeAllListeners(`${exportToken}-error`)
+            ipcRenderer.removeAllListeners(`${exportToken}-end`)
+        }
+    }, [exportToken])
 
     const resultContainer = useMemo(() => {
         if (
@@ -134,15 +155,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
                             </div>
                         </div>
                         <div className={styles["header-right"]}>
-                            <div
-                                className={styles["ai-button"]}
-                                onClick={() =>
-                                    setOpenQA({
-                                        status: true,
-                                        all: false
-                                    })
-                                }
-                            >
+                            <div className={styles["ai-button"]} onClick={() => setOpenQA(true)}>
                                 <LightningBoltIcon />
                                 AI 召回
                             </div>
@@ -181,7 +194,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
                     api={api}
                     onEditVisible={onEditVisible}
                     onDeleteVisible={onDeleteVisible}
-                    onExportVisible={onExportVisible}
+                    onExportKnowledgeBase={onExportKnowledgeBase}
                     setOpenQA={setOpenQA}
                 />
             )
@@ -210,11 +223,6 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
                 visible={state.editVisble}
                 setVisible={onEditVisible}
                 items={targetEditKnowledgeBase}
-            />
-            <ExportModal
-                exportVisible={state.exprotVisible}
-                setExportVisible={onExportVisible}
-                KnowledgeBaseId={knowledgeBaseID}
             />
         </>
     )
