@@ -10,6 +10,4 @@ export type AIAgentEventProps = {
     onRefreshAvailableAIModelList?: string
     /** 刷新ai模型列表 */
     onRefreshAIModelList?: string
-    /** ai任务树定位规划列表 */
-    onAITreeLocatePlanningList?: string
 }

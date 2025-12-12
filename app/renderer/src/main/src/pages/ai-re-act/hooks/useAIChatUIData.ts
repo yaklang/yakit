@@ -58,14 +58,7 @@ function useAIChatUIData() {
         return chatIPCData.casualChat
     }, [activeChat, chatIPCData.casualChat])
 
-    const reActTimelines = useCreation(() => {
-        if (!!activeChat?.answer?.reActTimelines) {
-            return activeChat.answer.reActTimelines
-        }
-        return chatIPCData.reActTimelines
-    }, [activeChat, chatIPCData.reActTimelines])
-
-    return {runTimeIDs, grpcFolders, taskChat, yakExecResult, aiPerfData, casualChat, reActTimelines}
+    return {runTimeIDs, grpcFolders, taskChat, yakExecResult, aiPerfData, casualChat}
 }
 
 export default useAIChatUIData

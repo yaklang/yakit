@@ -20,7 +20,6 @@ import emiter from "@/utils/eventBus/eventBus"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AIReviewType} from "../hooks/aiRender"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat} = props
@@ -102,22 +101,17 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
                         {!!getTaskId() && (
-                            <YakitPopconfirm
-                                onConfirm={() => onStopTask()}
-                                title='是否确认取消整个任务，确认将停止执行'
-                                placement='top'
+                            <YakitButton
+                                type='outline1'
+                                icon={<OutlineExitIcon />}
+                                onClick={onStopTask}
+                                className={styles["task-button"]}
+                                radius='28px'
+                                size='large'
+                                colors='danger'
                             >
-                                <YakitButton
-                                    type='outline1'
-                                    icon={<OutlineExitIcon />}
-                                    className={styles["task-button"]}
-                                    radius='28px'
-                                    size='large'
-                                    colors='danger'
-                                >
-                                    取消当前任务
-                                </YakitButton>
-                            </YakitPopconfirm>
+                                取消当前任务
+                            </YakitButton>
                         )}
                         <YakitButton
                             type='outline2'

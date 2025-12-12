@@ -1727,7 +1727,6 @@ message AIInputEvent {
 
   bool IsFreeInput = 11;
   string FreeInput = 12;
-  repeated string AttachedFilePath = 14;
 }
 
 

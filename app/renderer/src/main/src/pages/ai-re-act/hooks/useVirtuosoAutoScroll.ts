@@ -13,12 +13,12 @@ const useVirtuosoAutoScroll = () => {
         return isAtBottomRef.current
     })
 
-    const scrollToIndex = useCallback((index: "LAST" | number, behavior?: "auto" | "smooth" ) => {
+    const scrollToIndex = useCallback((index: "LAST" | number) => {
         requestIdleCallback(() => {
             virtuosoRef.current?.scrollToIndex({
                 index,
                 align: "end",
-                behavior: behavior || "smooth"
+                behavior: "smooth"
             })
         })
     }, [])

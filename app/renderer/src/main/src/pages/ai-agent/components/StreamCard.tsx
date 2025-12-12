@@ -7,7 +7,7 @@ import ModalInfo, {type ModalInfoProps} from "./ModelInfo"
 import { AIYakExecFileRecord } from "@/pages/ai-re-act/hooks/aiRender"
 
 interface StreamCardProps {
-    content?: ReactNode
+    content?: string
     fileList?: AIYakExecFileRecord[]
     prompt?: string
     titleText?: string

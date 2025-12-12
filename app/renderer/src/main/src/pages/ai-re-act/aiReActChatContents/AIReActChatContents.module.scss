@@ -25,16 +25,7 @@
         }
     }
     .spin {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        gap: 4px;
-        padding: 4px;
-        box-sizing: border-box;
-        div {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            font-size: 12px;
-        }
+        align-items: center;
     }
 }
 .ai-reference-node {
