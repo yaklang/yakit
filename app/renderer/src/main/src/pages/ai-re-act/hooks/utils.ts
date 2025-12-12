@@ -43,8 +43,13 @@ export const handleGrpcDataPushLog = (params: {info: AIOutputEvent; pushLog: (lo
 const genExecTask = (params: {task: AIAgentGrpcApi.PlanTask; level: number; tasks: AITaskInfoProps[]}) => {
     const {task, level, tasks} = params
 
-    tasks.push({...task, subtasks: undefined, level})
-    if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) return
+    if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) {
+        tasks.push({...task, subtasks: undefined, level, isLeaf: true})
+        return
+    } else {
+        tasks.push({...task, subtasks: undefined, level, isLeaf: false})
+    }
+
     for (let subtask of task.subtasks) {
         genExecTask({level: level + 1, task: subtask, tasks: tasks})
     }

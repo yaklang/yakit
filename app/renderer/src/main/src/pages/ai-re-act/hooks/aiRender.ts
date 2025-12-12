@@ -96,6 +96,8 @@ export interface AIToolCallDecision extends Omit<AIAgentGrpcApi.ToolCallDecision
 export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
     /** 层级(代表在树里的第几层) */
     level: number
+    /** 是否是叶子任务节点 */
+    isLeaf: boolean
 }
 
 /** 任务规划-执行崩溃后的错误信息展示 */
