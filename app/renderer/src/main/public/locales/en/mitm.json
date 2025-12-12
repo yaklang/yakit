@@ -123,7 +123,6 @@
     "title": "Proxy Rules Configuration",
     "tip": "Customize Proxy Rule Groups According To Your Needs",
     "clear_all": "Clear All",
-    "add_new": "+ Add New",
     "add_new_point": "+ Add New point",
     "add_new_route": "+ Add New rule",
     "disable_add_new_route": "Please configure at least one proxy node.",
@@ -168,6 +167,8 @@
     "detectionSuccess": "Test passed",
     "proxyDetection": "Proxy Detection",
     "customDetectionTarget": "Custom Detection Target",
-    "customDetectionTargetPlaceholder": "Please enter the detection target"
+    "customDetectionTargetPlaceholder": "Please enter the detection target",
+    "disable_point_title": "Disable Points",
+    "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?"
   }
 }

@@ -36,7 +36,7 @@ import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectTy
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import { useProxy } from "@/hook/useProxy"
 import { useStore } from "@/store/mitmState"
 
@@ -485,7 +485,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                 downstreamProxy
             })
         }
-    }, [downStreamAgentModalVisible])
+    }, [downStreamAgentModalVisible, comparePointUrl, downstreamProxyStr, form, proxyConfig.Endpoints])
 
     return (
         <>
@@ -528,7 +528,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </div>
                                 <Divider type="vertical"/>
-                                <ProxyTest />
+                                <ProxyTest onEchoNode={(downstreamProxy)=>form.setFieldsValue({downstreamProxy})} />
                                 </>
                             }
                             validateTrigger={["onChange", "onBlur"]}
@@ -543,9 +543,8 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                         // 只校验新输入的值(不在options中的值)
                                         const newValues = value.filter((v) => !existingOptions.includes(v))
                                         // 校验代理地址格式: 协议://地址:端口
-                                        const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
                                         for (const v of newValues) {
-                                            if (!pattern.test(v)) {
+                                            if (!isValidUrlWithProtocol(v)) {
                                                 return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
                                             }
                                         }

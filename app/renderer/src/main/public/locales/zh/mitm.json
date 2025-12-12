@@ -154,7 +154,7 @@
     "migration":"迁移",
     "not_migration":"不迁移",
     "migration_title": "是否将下游代理配置数据迁移到新版本，不迁移则认为放弃历史数据。",
-    "recordPointsCount": "现有节点 {i}条",
+    "recordPointsCount": "现有节点 {i}个",
     "recordRoutesCount": "现有规则 {i}条",
     "Routes": "代理规则",
     "Points": "代理节点",
@@ -167,6 +167,8 @@
     "detectionSuccess": "检测通过",
     "proxyDetection": "代理检测",
     "customDetectionTarget": "自定义检测目标",
-    "customDetectionTargetPlaceholder": "请输入检测目标"
+    "customDetectionTargetPlaceholder": "请输入检测目标",
+    "disable_point_title": "禁用代理节点",
+    "disable_point_tips": "该节点仍被 {i} 条规则引用，禁用后会同时从这些规则中移除。是否继续？"
   }
 }

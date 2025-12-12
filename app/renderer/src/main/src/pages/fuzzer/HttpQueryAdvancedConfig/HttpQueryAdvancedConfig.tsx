@@ -59,7 +59,7 @@ import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstant
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import { useProxy } from "@/hook/useProxy"
 
 const {ipcRenderer} = window.require("electron")
@@ -548,9 +548,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             // 只校验新输入的值(不在options中的值)
                                             const newValues = value.filter((v) => !existingOptions.includes(v))
                                             // 校验代理地址格式: 协议://地址:端口
-                                            const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
                                             for (const v of newValues) {
-                                                if (!pattern.test(v)) {
+                                                if (!isValidUrlWithProtocol(v)) {
                                                     return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
                                                 }
                                             }
@@ -585,7 +584,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         size='small'
                                         type='text'
                                     >
-                                        <ProxyTest />
+                                        <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})} />
                                     </YakitButton>
                                 </div>
                             </Form.Item>

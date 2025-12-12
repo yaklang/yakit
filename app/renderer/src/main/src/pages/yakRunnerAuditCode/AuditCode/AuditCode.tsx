@@ -131,7 +131,7 @@ import {RJSFSchema} from "@rjsf/utils"
 import {TrashIcon} from "@/assets/newIcon"
 import {IRifyUpdateProjectManagerModal} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
 import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
 const {YakitPanel} = YakitCollapse
@@ -1709,7 +1709,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                             {t("AgentConfigModal.proxy_configuration")}
                                         </div>
                                             <Divider type="vertical" />
-                                            <ProxyTest />
+                                            <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})}/>
                                         </>
                                     }
                                     validateTrigger={["onChange", "onBlur"]}
@@ -1724,9 +1724,8 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                                 // 只校验新输入的值(不在options中的值)
                                                 const newValues = value.filter((v) => !existingOptions.includes(v))
                                                 // 校验代理地址格式: 协议://地址:端口
-                                                const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
                                                 for (const v of newValues) {
-                                                    if (!pattern.test(v)) {
+                                                    if (!isValidUrlWithProtocol(v)) {
                                                         return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
                                                     }
                                                 }

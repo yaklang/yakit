@@ -34,7 +34,7 @@ import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectTy
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
+import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -152,6 +152,21 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
 
+    const setDownstreamProxyValue = useMemoizedFn((e = "") => {
+        const downstreamProxy = e
+            .split(",")
+            .filter((i) => !!i)
+            .map((item) => {
+                if (item.startsWith("ep") || item.startsWith("route")) {
+                    return item
+                } else {
+                    return Endpoints.find(({Url}) => Url === item)?.Id || item
+                }
+            })
+        form.setFieldsValue({downstreamProxy})
+    })
+
+
     useEffect(() => {
         if (props.status !== "idle") return
         // 设置 MITM 初始启动插件选项
@@ -169,16 +184,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             form.setFieldsValue({enableHttp2: !!e})
         })
 
-        getRemoteValue(MITMConsts.MITMDownStreamProxy).then((e = '') => {
-            const downstreamProxy = e.split(',').filter(i=>!!i).map(item => {
-                if(item.startsWith('ep')|| item.startsWith('route')){
-                    return item
-                }else {
-                    return Endpoints.find(({Url})=> Url === item)?.Id || item
-                }
-            })
-            form.setFieldsValue({ downstreamProxy })
-        })
+        getRemoteValue(MITMConsts.MITMDownStreamProxy).then(setDownstreamProxyValue)
 
         getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
             if (e === "1") {
@@ -405,7 +411,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                     {t("AgentConfigModal.proxy_configuration")}
                                 </span>
                                 <Divider type="vertical"/>
-                                <ProxyTest />
+                                <ProxyTest onEchoNode={(downstreamProxy)=>form.setFieldsValue({downstreamProxy})}/>
                             </span>
                         }
                         getValueFromEvent={(value) => {
@@ -427,9 +433,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                     // 只校验新输入的值(不在options中的值)
                                     const newValues = value.filter((v) => !existingOptions.includes(v))
                                     // 校验代理地址格式: 协议://地址:端口
-                                    const pattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^:\/\s]+:\d+$/
                                     for (const v of newValues) {
-                                        if (!pattern.test(v)) {
+                                        if (!isValidUrlWithProtocol(v)) {
                                             return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
                                         }
                                     }

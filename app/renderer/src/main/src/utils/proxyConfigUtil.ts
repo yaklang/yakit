@@ -17,7 +17,21 @@ const compareVersion = (current: string, min: string): boolean => {
     const parseVer = (v: string) => {
         const [base, suffix] = v.split("-")
         const [major, minor, patch] = base.split(".").map(Number)
-        return { major, minor, patch, suffix: suffix || "" }
+        
+        // 解析后缀，提取前缀和数字部分（如 "beta16" -> {prefix: "beta", num: 16}）
+        let suffixPrefix = ""
+        let suffixNum = 0
+        if (suffix) {
+            const match = suffix.match(/^([a-zA-Z]+)(\d+)?$/)
+            if (match) {
+                suffixPrefix = match[1] || ""
+                suffixNum = match[2] ? parseInt(match[2]) : 0
+            } else {
+                suffixPrefix = suffix
+            }
+        }
+        
+        return { major, minor, patch, suffixPrefix, suffixNum }
     }
     const curr = parseVer(current)
     const minVer = parseVer(min)
@@ -28,10 +42,11 @@ const compareVersion = (current: string, min: string): boolean => {
     if (curr.patch !== minVer.patch) return curr.patch > minVer.patch
 
     // 版本号相同，比较后缀（如 beta10）
-    if (curr.suffix === minVer.suffix) return true
-    if (!curr.suffix) return true // 没有后缀 > 有后缀
-    if (!minVer.suffix) return false // 有后缀 < 没有后缀
-    return curr.suffix.localeCompare(minVer.suffix) >= 0
+    if (!curr.suffixPrefix && !minVer.suffixPrefix) return true
+    if (!curr.suffixPrefix) return true // 没有后缀 > 有后缀
+    if (!minVer.suffixPrefix) return false // 有后缀 < 没有后缀
+    
+    return curr.suffixNum >= minVer.suffixNum
 }
 
 /**
@@ -41,8 +56,6 @@ const compareVersion = (current: string, min: string): boolean => {
 export const checkProxyVersion = async (): Promise<boolean> => {
     try {
         const localVersion = await grpcFetchLocalYakVersion()
-
-        console.log(localVersion,'localVersion');
 
         const isValid = compareVersion(localVersion, MIN_PROXY_VERSION)
 
@@ -56,4 +69,31 @@ export const checkProxyVersion = async (): Promise<boolean> => {
         yakitFailed("检查引擎版本失败")
         return false
     }
+}
+
+
+
+export const isValidUrlWithProtocol = (url) => {
+  try {
+    const urlObj = new URL(url);
+    // 检查协议是否合法
+    const validProtocols = ['http:', 'https:', 'ftp:', 'ws:', 'wss:'];
+    if (!validProtocols.includes(urlObj.protocol)) {
+      return false;
+    }
+
+    // URL包含协议
+    if (!url.includes('://')) {
+      return false;
+    }
+
+    // 检查hostname是否有效
+    if (!urlObj.hostname || urlObj.hostname === '') {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
 }

@@ -25,6 +25,7 @@ import {useProxy} from "@/hook/useProxy"
 import {YakitSideTab} from "../yakitSideTab/YakitSideTab"
 import styles from "./ConfigNetworkPage.module.scss"
 import classNames from "classnames"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 const {ipcRenderer} = window.require("electron")
 
 const generateEndpointId = () => `ep-${randomString(8)}`
@@ -52,12 +53,11 @@ const PasswordDisplay: React.FC<{
 export interface ProxyRulesConfigProps {
     visible: boolean
     onClose: () => void
-    onRoutesChange?: (count: number) => void
     hideRules?: boolean
 }
 
 const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
-    const {visible, hideRules = false, onClose, onRoutesChange} = props
+    const {visible, hideRules = false, onClose} = props
     const {proxyConfig, saveProxyConfig} = useProxy()
     const [form] = Form.useForm()
     const [modalVisible, setModalVisible] = useState(false)
@@ -71,9 +71,6 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
     ]
     const isEndpoints = useMemo(() => activeKey === "point", [activeKey])
 
-    useEffect(() => {
-        onRoutesChange?.(Routes.length)
-    }, [Routes, onRoutesChange])
 
     const handleOk = useMemoizedFn(() => {
         form.validateFields().then((values) => {
@@ -170,9 +167,28 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
 
     const onToggleDisable = useMemoizedFn((toggleId: string) => {
         if (isEndpoints) {
-            saveProxyConfig({
-                Endpoints: Endpoints.map((item) => (item.Id === toggleId ? {...item, Disabled: !item.Disabled} : item)),
-                Routes
+            const handleToggleDisable = () =>
+                saveProxyConfig({
+                    Endpoints: Endpoints.map((item) =>
+                        item.Id === toggleId ? {...item, Disabled: !item.Disabled} : item
+                    ),
+                    Routes
+                })
+
+            const relatedRoutes = Routes.filter(({EndpointIds = []}) => EndpointIds.includes(toggleId))
+            if (relatedRoutes.length === 0) {
+                handleToggleDisable()
+                return
+            }
+            Modal.confirm({
+                title: t("ProxyConfig.disable_point_title"),
+                content: t("ProxyConfig.disable_point_tips", {i: relatedRoutes.length}),
+                okText: t("YakitButton.disable"),
+                cancelText: t("YakitButton.cancel"),
+                centered: true,
+                onOk: () => handleToggleDisable(),
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
             })
         } else {
             saveProxyConfig({
@@ -258,7 +274,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                         title: t("ProxyConfig.target_address"),
                         dataIndex: "Patterns",
                         render: (Patterns = []) => (
-                            <div style={{display: "flex", flexDirection: "column", maxHeight: 100, overflow: "scroll"}}>
+                            <div style={{display: "flex", flexDirection: "column", maxHeight: 100, overflow: "auto"}}>
                                 {Patterns.map((pattern, index) => (
                                     <div key={index}>{pattern}</div>
                                 ))}
@@ -269,7 +285,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                         title: t("ProxyConfig.proxy_address"),
                         dataIndex: "EndpointIds",
                         render: (EndpointIds) => (
-                            <div style={{display: "flex", flexDirection: "column", maxHeight: 100, overflow: "scroll"}}>
+                            <div style={{display: "flex", flexDirection: "column", maxHeight: 100, overflow: "auto"}}>
                                 {EndpointIds.map((id) => {
                                     const {Url, Disabled} = Endpoints.find(({Id}) => Id === id) || {}
                                     return Url ? (
@@ -490,22 +506,27 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
     )
 }
 
-export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) => {
-    const {proxy = [], showIcon = false} = props
+export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean, onEchoNode?: (proxy: string[]) => void}) => {
+    const {proxy = [], showIcon = false, onEchoNode } = props
     const [visible, setVisible] = useState(false)
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
     const [errorMsg, setErrorMsg] = useState("")
     const [form] = Form.useForm()
-    const {
-        proxyConfig: {Endpoints = []},
-        checkProxyEndpoints
-    } = useProxy()
+    const { proxyConfig: {Endpoints = []} } = useProxy()
     const {t} = useI18nNamespaces(["yakitUi", "mitm", "payload"])
 
-    const onShowModal = useMemoizedFn(() => {
-        setVisible(true)
-        setStatus("idle")
-        form.setFieldsValue({Target: "cip.cc", Proxy: proxy})
+    const onShowModal = useMemoizedFn(async () => {
+        try {
+            const versionValid = await checkProxyVersion()
+            if (!versionValid) {
+                return
+            }
+            setVisible(true)
+            setStatus("idle")
+            form.setFieldsValue({Target: "cip.cc", Proxy: proxy})
+        } catch (error) {
+            console.error("error:", error)
+        }
     })
 
     const onCancel = useMemoizedFn(() => {
@@ -529,10 +550,10 @@ export const ProxyTest = memo((props: {proxy?: string[]; showIcon?: boolean}) =>
 
             const res = await ipcRenderer.invoke("CheckProxyAlive", params)
             if (res.Ok) {
-                //检查新增代理节点
-                checkProxyEndpoints(proxy)
+                //回显节点
+                joined && onEchoNode?.(joined.split(','))
                 setStatus("success")
-                if (res.Reason !== "OK") {
+                if (!["OK","oK","ok"].includes(res.Reason)) {
                     setErrorMsg(res.Reason)
                 }
             } else {
