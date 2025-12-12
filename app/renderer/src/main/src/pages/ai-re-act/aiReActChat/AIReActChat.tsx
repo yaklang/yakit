@@ -124,13 +124,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     })
 
     useEffect(() => {
-        if (!fileToQuestion) return
+        if (!fileToQuestion.length) return
         const lastFile = fileToQuestion[fileToQuestion.length - 1]
+        if (!lastFile) return
         if (question) {
             setQuestion((prev) => `${prev} ${lastFile} `)
             return
         }
-        setQuestion(lastFile)
+        setQuestion(`${lastFile} `)
     }, [fileToQuestion])
 
     return (
