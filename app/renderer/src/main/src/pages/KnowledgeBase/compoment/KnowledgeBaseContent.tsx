@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo} from "react"
+import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 
@@ -39,15 +39,13 @@ import ChatIPCContent, {
     ChatIPCContextDispatcher,
     ChatIPCContextStore
 } from "../../ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {AIChatIPCNotifyMessage, AIChatIPCStartParams, ChatIPCSendType} from "../../ai-re-act/hooks/type"
+import {AIChatIPCNotifyMessage, ChatIPCSendType} from "../../ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
-import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
 import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
-import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {cloneDeep} from "lodash"
 import {AIAgentSettingDefault, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
@@ -55,6 +53,8 @@ import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/p
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -67,6 +67,7 @@ interface KnowledgeBaseContentProps {
     apiRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["api"] | undefined>
     refreshAsync: () => Promise<CreateKnowledgeBaseData[] | undefined>
     binariesToInstallRefreshAsync?: () => Promise<any[]>
+    inViewport: boolean
 }
 
 const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
@@ -80,7 +81,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         binariesToInstall,
         apiRef,
         refreshAsync,
-        binariesToInstallRefreshAsync
+        binariesToInstallRefreshAsync,
+        inViewport
     } = props
     const [showFreeChat, setShowFreeChat] = useSafeState(false)
     const [streams, api] = useMultipleHoldGRPCStream()
@@ -232,9 +234,15 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             }
             return
         } else {
-            knowledgeBases.forEach(async (updateItems) => {
-                updateItems.streamstep === 2 && updateItems.streamToken && (await starKnowledgeeBaseEntry(updateItems))
-            })
+            try {
+                for (const updateItems of knowledgeBases) {
+                    if (updateItems.streamstep === 2 && updateItems.streamToken) {
+                        await starKnowledgeeBaseEntry(updateItems)
+                    }
+                }
+            } catch (error) {
+                failed(error + "")
+            }
         }
     }, [knowledgeBases, previousKnowledgeBases])
 
@@ -343,6 +351,23 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const handleTaskStart = useMemoizedFn(() => {
         onSetKeyTask()
     })
+
+    useEffect(() => {
+        if (inViewport) {
+            // 获取缓存的全局配置数据
+            getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+                .then((res) => {
+                    if (!res) return
+                    try {
+                        const cache = JSON.parse(res) as AIAgentSetting
+                        if (typeof cache !== "object") return
+                        setSetting(cache)
+                    } catch (error) {}
+                })
+                .catch(() => {})
+        }
+        return () => {}
+    }, [inViewport])
 
     const onSetKeyTask = useMemoizedFn(() => {
         setMode("task")

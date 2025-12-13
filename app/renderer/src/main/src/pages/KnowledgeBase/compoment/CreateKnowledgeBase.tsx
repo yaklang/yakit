@@ -58,7 +58,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                                     (it) => it.KnowledgeBaseName === value
                                 )
                                 if (findKnowledgeIdx === 0) {
-                                    return Promise.reject("知识库名称重复，请重新输入")
+                                    return Promise.reject(new Error("知识库名称重复，请重新输入"))
                                 }
                             }
 

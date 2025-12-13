@@ -15,7 +15,7 @@ import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
 /** 清空用户缓存的固定值 */
-const AIAgentCacheClearValue = "20250808"
+export const AIAgentCacheClearValue = "20250808"
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
