@@ -104,7 +104,9 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                     setChecked(true)
                 }
                 setProgress({Percent: 0, Message: "", MessageType: ""})
-            } catch (_) {}
+            } catch (error) {
+                failed(error + "")
+            }
         }
 
         ipcRenderer.on(`${token}-data`, handleData)

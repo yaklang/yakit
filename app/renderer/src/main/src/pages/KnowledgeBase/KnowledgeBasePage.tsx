@@ -193,7 +193,8 @@ const KnowledgeBase: FC = () => {
 
     useAsyncEffect(async () => {
         if (!installPlug) {
-            existsKnowledgeBaseAsync().then((res) => {
+            try {
+                const res = await existsKnowledgeBaseAsync()
                 const initKnowledgeBase =
                     res?.map((it) => ({
                         ...it,
@@ -202,7 +203,9 @@ const KnowledgeBase: FC = () => {
                         historyGenerateKnowledgeList: []
                     })) ?? []
                 res && initialize(initKnowledgeBase)
-            })
+            } catch (error) {
+                failed(error + "")
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [installPlug])

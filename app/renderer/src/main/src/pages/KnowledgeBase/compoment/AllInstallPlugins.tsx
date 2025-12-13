@@ -101,11 +101,15 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         {
             manual: true,
             onSuccess: async () => {
-                success("知识库所需插件安装完成")
-                setOverallProgress(100)
-                onInstallPlug(false)
-                setInstallTokens([])
-                await binariesToInstallRefreshAsync()
+                try {
+                    success("知识库所需插件安装完成")
+                    setOverallProgress(100)
+                    onInstallPlug(false)
+                    setInstallTokens([])
+                    await binariesToInstallRefreshAsync()
+                } catch (error) {
+                    failed(error + "")
+                }
             },
             onError: (err) => {
                 failed(`插件安装失败: ${err}`)
@@ -185,7 +189,17 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                 <YakitEmpty title='检测到有插件未下载' description='请点击下载后，再创建知识库' />
 
                 <div className={styles["install-button-box"]}>
-                    <YakitButton icon={<CloudDownloadIcon />} onClick={() => runInstallAll()} loading={loading}>
+                    <YakitButton
+                        icon={<CloudDownloadIcon />}
+                        onClick={() => {
+                            try {
+                                runInstallAll()
+                            } catch (error) {
+                                failed(error + "")
+                            }
+                        }}
+                        loading={loading}
+                    >
                         一键下载
                     </YakitButton>
                     <YakitButton type='text' onClick={() => showDetail()}>
