@@ -218,7 +218,10 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
         async (parmas) => {
             await ipcRenderer.invoke("UpdateKnowledgeBase", {
                 KnowledgeBaseId: items?.ID,
-                ...parmas
+                KnowledgeBaseName: parmas?.KnowledgeBaseName,
+                KnowledgeBaseDescription: parmas?.KnowledgeBaseDescription,
+                KnowledgeBaseType: parmas?.KnowledgeBaseType,
+                Tags: parmas?.Tags ?? []
             })
         },
         {

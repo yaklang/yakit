@@ -192,7 +192,7 @@ const KnowledgeBase: FC = () => {
     }, [existsKnowledgeBase])
 
     useAsyncEffect(async () => {
-        if (!installPlug) {
+        if (!installPlug && !loading) {
             try {
                 const res = await existsKnowledgeBaseAsync()
                 const initKnowledgeBase =
@@ -208,7 +208,7 @@ const KnowledgeBase: FC = () => {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [installPlug])
+    }, [installPlug, loading])
 
     useEffect(() => {
         const FirstknowledgeBaseID = knowledgeBases?.find((item) => item.IsImported === false)?.ID
@@ -217,7 +217,11 @@ const KnowledgeBase: FC = () => {
     }, [])
 
     useUpdateEffect(() => {
-        refreshAsync()
+        try {
+            refreshAsync()
+        } catch (err) {
+            failed(err + "")
+        }
     }, [knowledgeBases])
 
     // 创建知识库回调事件
@@ -236,7 +240,7 @@ const KnowledgeBase: FC = () => {
             createKnwledgeDataRef.current = transformFormData
             await createKnowledgRunAsync(transformFormData)
         } catch (error) {
-            // failed(error + "")
+            failed(error + "")
         }
     }
 
@@ -328,11 +332,23 @@ const KnowledgeBase: FC = () => {
                         apiRef={apiRef}
                         refreshAsync={refreshAsync}
                         binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
+                        inViewport={inViewport}
                     />
                 )
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [existsKnowledgeBase, installPlug, loading, knowledgeBaseID])
+    }, [
+        installPlug,
+        loading,
+        existsKnowledgeLoading,
+        binariesToInstall,
+        existsKnowledgeBase?.length,
+        createKnowledgLoading,
+        knowledgeBaseID,
+        knowledgeBases,
+        inViewport,
+        previousKnowledgeBases
+    ])
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
