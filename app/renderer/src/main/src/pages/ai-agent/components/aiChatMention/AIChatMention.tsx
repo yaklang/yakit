@@ -20,6 +20,7 @@ import {genDefaultPagination} from "@/pages/invoker/schema"
 import {grpcGetAIToolList} from "../../aiToolList/utils"
 import {CreateKnowledgeBaseData, KnowledgeBaseContentProps} from "@/pages/KnowledgeBase/TKnowledgeBase"
 import {KnowledgeBase} from "@/components/playground/knowlegeBase/types"
+import {failed} from "@/utils/notification"
 const {ipcRenderer} = window.require("electron")
 const defaultRef: AIChatMentionListRefProps = {
     onRefresh: () => {}
@@ -36,7 +37,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         setActiveKey(k as AIMentionTabsEnum)
     })
     const onSelectForge = useMemoizedFn((forgeItem: AIForge) => {
-        console.log('forgeItem',forgeItem)
+        console.log("forgeItem", forgeItem)
         onSelect(AIMentionTabsEnum.Forge_Name, forgeItem.ForgeVerboseName || forgeItem.ForgeName)
     })
     const onSelectTool = useMemoizedFn((toolItem: AITool) => {
@@ -344,7 +345,9 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         const getList = useMemoizedFn(async () => {
             try {
                 await existsKnowledgeBaseAsync(keyWord)
-            } catch (error) {}
+            } catch (error) {
+                failed(error + "")
+            }
         })
         return (
             <div className={styles["knowledge-base-list-of-mention"]}>
