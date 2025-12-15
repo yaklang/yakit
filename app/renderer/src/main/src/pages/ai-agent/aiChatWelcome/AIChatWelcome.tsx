@@ -48,6 +48,7 @@ import {historyStore, loadRemoteHistory} from "../components/aiFileSystemList/st
 
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -67,6 +68,7 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
 }
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["AIAgent"])
     const {onTriageSubmit, onSetReAct} = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -380,8 +382,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                 <div className={styles["content-absolute"]}>
                     <div className={styles["input-wrapper"]}>
                         <div className={styles["input-heard"]}>
-                            <div className={styles["title"]}>AI-Agent 安全助手</div>
-                            <div className={styles["subtitle"]}>专注于安全编码与漏洞分析的智能助手</div>
+                            <div className={styles["title"]}>Memfit AI Agent</div>
+                            <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
                         <div className={styles["input-body-wrapper"]}>
                             <ReactResizeDetector
