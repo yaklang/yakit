@@ -5,5 +5,8 @@ export type AIReActEventProps = {
     /**string>{AIAgentTriggerEventInfo} */
     onReActChatEvent: string
     switchAIActTab?: string
-    switchAIAgentTab: AIAgentTabListEnum
+    /**
+     * string>{AIAgentTriggerEventInfo}
+     */
+    switchAIAgentTab: string
 }

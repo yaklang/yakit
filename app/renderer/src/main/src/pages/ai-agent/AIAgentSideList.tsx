@@ -1,6 +1,6 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {useCreation, useMemoizedFn} from "ahooks"
-import {AiAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
+import React, {ReactNode, useEffect, useState} from "react"
+import {useMemoizedFn} from "ahooks"
+import {AiAgentTabList, AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
 
@@ -20,20 +20,36 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
     const [show, setShow] = useState<boolean>(true)
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
+        setShow(true)
         setActive(value)
     })
 
-    const switchAIAgentTab = useMemoizedFn((value: AIAgentTabListEnum) => {
-        setShow(true)
-        handleSetActive(value)
-    })
-
     useEffect(() => {
-        emiter.on("switchAIAgentTab", switchAIAgentTab)
+        emiter.on("switchAIAgentTab", onSwitchAIAgentTab)
         return () => {
-            emiter.off("switchAIAgentTab", switchAIAgentTab)
+            emiter.off("switchAIAgentTab", onSwitchAIAgentTab)
         }
     }, [])
+
+    const onSwitchAIAgentTab = useMemoizedFn((data: string) => {
+        try {
+            const info: Omit<AIAgentTriggerEventInfo, "type"> & {type: `${SwitchAIAgentTabEventEnum}`} =
+                JSON.parse(data)
+            const {type, params} = info
+            if (!params) return
+            switch (type) {
+                case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
+                    setActive(params.active as AIAgentTabListEnum)
+                    setShow(params.show !== false)
+                    break
+                case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
+                    setShow(params.show !== false)
+                    break
+                default:
+                    break
+            }
+        } catch (error) {}
+    })
 
     /** 向对话框组件进行事件触发的通信 */
     const onEmiter = useMemoizedFn((key: string) => {

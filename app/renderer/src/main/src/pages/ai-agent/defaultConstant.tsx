@@ -133,7 +133,10 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
 
     return data
 }
-
+export enum SwitchAIAgentTabEventEnum {
+    SET_TAB_ACTIVE = "setTabActive",
+    SET_TAB_SHOW = "setTabShow"
+}
 export enum AITabsEnum {
     Task_Content = "task-content",
     File_System = "file-system",

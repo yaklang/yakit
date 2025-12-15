@@ -30,7 +30,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {Tooltip} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import emiter from "@/utils/eventBus/eventBus"
-import {AIAgentTabListEnum, AITabsEnum} from "../defaultConstant"
+import {AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
 import {YakitRoute} from "@/enums/yakitRoute"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
@@ -259,13 +259,31 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         }
     })
     const onForgeMore = useMemoizedFn(() => {
-        emiter.emit("switchAIAgentTab", AIAgentTabListEnum.Forge_Name)
+        emiter.emit(
+            "switchAIAgentTab",
+            JSON.stringify({
+                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                params: {
+                    active: AIAgentTabListEnum.Forge_Name,
+                    show: true
+                }
+            })
+        )
     })
     const onKnowledgeBaseMore = useMemoizedFn(() => {
         emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
     })
     const onToolMore = useMemoizedFn(() => {
-        emiter.emit("switchAIAgentTab", AIAgentTabListEnum.Tool)
+        emiter.emit(
+            "switchAIAgentTab",
+            JSON.stringify({
+                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                params: {
+                    active: AIAgentTabListEnum.Tool,
+                    show: true
+                }
+            })
+        )
     })
 
     const onCheckItem = useMemoizedFn((item: AIRecommendItemProps["item"]) => {
