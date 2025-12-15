@@ -43,6 +43,37 @@ jobs:
                     echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
                   fi
 
+            - name: Validate version with tag suffix
+              run: |
+                TAG="$GITHUB_REF_NAME"
+                VERSION="${{ inputs.version }}"
+
+                echo "TAG=$TAG"
+                echo "INPUT_VERSION=$VERSION"
+
+                if [[ "$TAG" == *"-memfit" ]]; then
+                  if [[ "$VERSION" != "memfit" ]]; then
+                    echo "Error: tag ends with -memfit, only 'memfit' is allowed." >&2
+                    exit 1
+                  fi
+
+                elif [[ "$TAG" == *"-irify" ]]; then
+                  if [[ "$VERSION" != "irify" && "$VERSION" != "irifyee" ]]; then
+                    echo "Error: tag ends with -irify, only 'irify' or 'irifyee' are allowed." >&2
+                    exit 1
+                  fi
+
+                elif [[ "$TAG" == *"-render" ]]; then
+                  echo "Error: tag ends with -render." >&2
+                  exit 1
+
+                else
+                  if [[ "$VERSION" != "ce" && "$VERSION" != "ee" ]]; then
+                    echo "Error: normal tag, only 'ce' or 'ee' are allowed." >&2
+                    exit 1
+                  fi
+                fi
+
             - name: Generate OSS File Path
               run: |
                   if [ "${{ inputs.version }}" = "ce" ]; then
