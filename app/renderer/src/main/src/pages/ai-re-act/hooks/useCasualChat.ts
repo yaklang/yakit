@@ -14,14 +14,13 @@ import {
 import {v4 as uuidv4} from "uuid"
 import {AIChatLogData, handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
 import {
-    AIInputEventSyncTypeEnum,
     AIReviewJudgeLevelMap,
     CasualDefaultToolResultSummary,
     convertNodeIdToVerbose,
     DefaultAIToolResult
 } from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,

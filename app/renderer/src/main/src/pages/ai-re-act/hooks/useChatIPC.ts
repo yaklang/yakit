@@ -18,10 +18,10 @@ import {
     UseChatIPCParams,
     UseChatIPCState
 } from "./type"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
 import cloneDeep from "lodash/cloneDeep"
-import {AIInputEventSyncTypeEnum, DeafultAIQuestionQueues} from "./defaultConstant"
+import { DeafultAIQuestionQueues, DefaultMemoryList} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -114,16 +114,23 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
     const [questionQueue, setQuestionQueue] = useState<AIQuestionQueues>(cloneDeep(DeafultAIQuestionQueues))
-    // 开始定时循环获取问题队列
+    // 实时记忆列表
+    const [memoryList, setMemoryList] = useState<AIAgentGrpcApi.MemoryEntryList>({...DefaultMemoryList})
+
+    // 开始时，获取一次(问题队列|记忆列表)
     const handleStartQuestionQueue = useMemoizedFn(() => {
         setTimeout(() => {
             sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT})
         }, 50)
     })
 
     useInterval(
         () => {
+            // 获取最新问题队列数据
             sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+            // 获取最新记忆列表数据
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT})
         },
         execute ? 5000 : undefined
     )
@@ -297,6 +304,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                     const reactTaskInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskToAsync
                     reactTaskToAsync.current = reactTaskInfo.task_id
                     if (casualChatID.current === reactTaskToAsync.current) handleResetCasualChatID()
+                    return
+                }
+
+                if (res.Type === "memory_context") {
+                    // 实时记忆列表
+                    const lists = JSON.parse(ipcContent) as AIAgentGrpcApi.MemoryEntryList
+                    setMemoryList(lists)
                     return
                 }
 
@@ -492,7 +506,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             grpcFolders,
             questionQueue,
             casualStatus,
-            reActTimelines
+            reActTimelines,
+            memoryList
         },
         {
             fetchToken,

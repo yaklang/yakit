@@ -3,7 +3,6 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {
-    AIInputEventSyncTypeEnum,
     AIReviewJudgeLevelMap,
     convertNodeIdToVerbose,
     DefaultAIToolResult,
@@ -21,7 +20,7 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,

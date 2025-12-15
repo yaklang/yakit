@@ -1,5 +1,5 @@
 import {AIToolResult} from "./aiRender"
-import {AIOutputI18n} from "./grpcApi"
+import {AIAgentGrpcApi, AIOutputI18n} from "./grpcApi"
 import {AIQuestionQueues} from "./type"
 
 export const DefaultAIToolResult: AIToolResult = {
@@ -90,39 +90,20 @@ export const DeafultAIQuestionQueues: AIQuestionQueues = {
     data: []
 }
 
-export enum AIInputEventSyncTypeEnum {
-    /** 获取树 */
-    SYNC_TYPE_PLAN = "plan",
-    SYNC_TYPE_CONSUMPTION = "consumption",
-    SYNC_TYPE_PING = "ping",
-    SYNC_TYPE_SET_CONFIG = "set_config",
-    SYNC_TYPE_PROCESS_EVENT = "sync_process_event",
-    /** 获取队列信息 */
-    SYNC_TYPE_QUEUE_INFO = "queue_info",
-    /** 查看上下文 */
-    SYNC_TYPE_TIMELINE = "timeline",
-    SYNC_TYPE_KNOWLEDGE = "enhance_knowledge",
-    /**@deprecated 更新AI配置 更改为hotpatchType*/
-    SYNC_TYPE_UPDATE_CONFIG = "update_config",
-    SYNC_TYPE_MEMORY_CONTEXT = "memory_sync",
-    SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_task",
-    /** 队列置顶 */
-    SYNC_TYPE_REACT_JUMP_QUEUE = "react_jump_queue",
-    /** 移除队列 */
-    SYNC_TYPE_REACT_REMOVE_TASK = "react_remove_task",
-    /** 清空队列 */
-    SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task",
-    /** 取消指定任务 */
-    SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task",
-    /** 取消指定的任务树上的某个节点 */
-    SYNC_TYPE_SKIP_SUBTASK_IN_PLAN = "skip_subtask_in_plan",
-    /** 重跑指定的任务树上的某个节点 */
-    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan"
-}
-
-export enum AIInputEventHotPatchTypeEnum {
-    HotPatchType_AllowRequireForUserInteract = "AllowRequireForUserInteract",
-    HotPatchType_AgreePolicy = "AgreePolicy",
-    HotPatchType_AIService = "AIService",
-    HotPatchType_RiskControlScore = "RiskControlScore"
+/** 记忆列表默认值 */
+export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
+    memories: [],
+    memory_pool_limit: 0,
+    memory_session_id: "default",
+    total_memories: 0,
+    total_size: 0,
+    score_overview: {
+        A_total: 0,
+        C_total: 0,
+        E_total: 0,
+        O_total: 0,
+        P_total: 0,
+        R_total: 0,
+        T_total: 0
+    }
 }

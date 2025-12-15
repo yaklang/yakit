@@ -5,7 +5,6 @@ import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
-import {AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum} from "./defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -13,6 +12,7 @@ export interface McpConfig {
     Key: string
     Url: string
 }
+
 export interface AIStartParams {
     CoordinatorId?: string
     Sequence?: number
@@ -97,6 +97,47 @@ export interface AIStartParams {
     UserInteractLimit?: number
     /** timeline sessionID  用于多轮对话保持上下文 */
     TimelineSessionID?: string
+}
+
+/** AIInputEvent-HotpatchType 的可选值 */
+export enum AIInputEventHotPatchTypeEnum {
+    HotPatchType_AllowRequireForUserInteract = "AllowRequireForUserInteract",
+    HotPatchType_AgreePolicy = "AgreePolicy",
+    HotPatchType_AIService = "AIService",
+    HotPatchType_RiskControlScore = "RiskControlScore"
+}
+
+/** AIInputEvent-SyncType 的可选值 */
+export enum AIInputEventSyncTypeEnum {
+    /** 获取正在执行的任务树 */
+    SYNC_TYPE_PLAN = "plan",
+    SYNC_TYPE_CONSUMPTION = "consumption",
+    SYNC_TYPE_PING = "ping",
+    SYNC_TYPE_SET_CONFIG = "set_config",
+    SYNC_TYPE_PROCESS_EVENT = "sync_process_event",
+    /** 获取队列信息 */
+    SYNC_TYPE_QUEUE_INFO = "queue_info",
+    /** 查看上下文 */
+    SYNC_TYPE_TIMELINE = "timeline",
+    SYNC_TYPE_KNOWLEDGE = "enhance_knowledge",
+    /**@deprecated 更新AI配置 更改为hotpatchType*/
+    SYNC_TYPE_UPDATE_CONFIG = "update_config",
+    /** 获取当前会话的记忆列表 */
+    SYNC_TYPE_MEMORY_CONTEXT = "memory_sync",
+    SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_task",
+    /** 队列置顶 */
+    SYNC_TYPE_REACT_JUMP_QUEUE = "react_jump_queue",
+    /** 移除队列 */
+    SYNC_TYPE_REACT_REMOVE_TASK = "react_remove_task",
+    /** 清空队列 */
+    SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task",
+    /** 取消指定任务 */
+    SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task",
+    /** 取消指定的任务树上的某个节点 */
+    SYNC_TYPE_SKIP_SUBTASK_IN_PLAN = "skip_subtask_in_plan",
+    /** 重跑指定的任务树上的某个节点 */
+    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan"
+    /** */
 }
 
 export interface AIInputEvent {
@@ -506,6 +547,41 @@ export declare namespace AIAgentGrpcApi {
 
         ShrinkResult?: string
         ShrinkSimilarResult?: string
+    }
+
+    /** 记忆数据-单项 */
+    export interface MemoryEntry {
+        id: string
+        created_at: string
+        created_at_timestamp: number
+        content: string
+        tags: string[]
+        c_score: number
+        o_score: number
+        r_score: number
+        e_score: number
+        p_score: number
+        a_score: number
+        t_score: number
+        core_pact_vector: number[]
+        potential_questions: string[]
+    }
+    /** 记忆列表 */
+    export interface MemoryEntryList {
+        memories: MemoryEntry[]
+        memory_pool_limit: number
+        memory_session_id: string
+        total_memories: number
+        total_size: number
+        score_overview: {
+            A_total: number
+            C_total: number
+            E_total: number
+            O_total: number
+            P_total: number
+            R_total: number
+            T_total: number
+        }
     }
 }
 

@@ -34,6 +34,7 @@ import {
     SolidToolIcon
 } from "@/assets/icon/solid"
 import {MCPServerType} from "./type/aiMCP"
+import {DefaultMemoryList} from "../ai-re-act/hooks/defaultConstant"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -245,7 +246,8 @@ export const defaultChatIPCData: UseChatIPCState = {
         data: []
     },
     casualStatus: {loading: false, title: ""},
-    reActTimelines: []
+    reActTimelines: [],
+    memoryList: {...DefaultMemoryList}
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},

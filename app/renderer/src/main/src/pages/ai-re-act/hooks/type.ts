@@ -165,6 +165,8 @@ export interface UseChatIPCState {
     casualStatus: CasualLoadingStatus
     /** 实时时间线 */
     reActTimelines: AIAgentGrpcApi.TimelineItem[]
+    /** 记忆列表 */
+    memoryList: AIAgentGrpcApi.MemoryEntryList
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */

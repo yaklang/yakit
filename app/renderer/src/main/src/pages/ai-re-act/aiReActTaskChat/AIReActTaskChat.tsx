@@ -16,11 +16,10 @@ import {
 } from "@/assets/icon/outline"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import emiter from "@/utils/eventBus/eventBus"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
-import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AIReviewType} from "../hooks/aiRender"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat} = props
