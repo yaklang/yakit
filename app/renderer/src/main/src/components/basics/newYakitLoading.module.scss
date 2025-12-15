@@ -80,12 +80,20 @@
                 top: 0;
                 left: 0;
 
-                img,svg {
+                img {
                     width: 160px;
                     height: 160px;
                     position: absolute;
                     top: 0;
                     left: 0;
+                }
+                svg{
+                    width: 120px;
+                    height: 120px;
+                     position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%,-50%);
                 }
             }
         }

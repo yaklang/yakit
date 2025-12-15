@@ -14,12 +14,11 @@ import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
-import yakitSS from "@/assets/yakitSS.png"
 import yakitCE from "@/assets/yakit.jpg"
 import styles from "./newYakitLoading.module.scss"
 import {useTheme} from "@/hook/useTheme"
 import classNames from "classnames"
-import {SolidMemfitMiniLogoIcon} from "@/assets/icon/colors"
+import {SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -72,7 +71,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                 return (
                     <div className={styles["yakit-loading-icon-wrapper"]}>
                         <div className={styles["white-icon"]}>
-                            <img src={yakitSS} alt='暂无图片' />
+                            <SolidIrifyMiniLogoIcon />
                         </div>
                     </div>
                 )
@@ -101,7 +100,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                 return (
                     <div className={styles["yakit-loading-icon-wrapper"]}>
                         <div className={styles["white-icon"]}>
-                            <img src={yakitSS} alt='暂无图片' />
+                            <SolidIrifyMiniLogoIcon />
                         </div>
                     </div>
                 )
