@@ -148,7 +148,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         }
         setQuestion(`${lastFile} `)
     }, [fileToQuestion])
-
     return (
         <>
             <div
@@ -175,11 +174,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         </div>
                         <AIReActChatContents chats={casualChat.contents} />
                     </div>
-                    <div
-                        className={classNames(styles["chat-footer"], {
-                            [styles["chat-footer-query"]]: execute && questionQueue?.total > 0
-                        })}
-                    >
+                    <div className={classNames(styles["chat-footer"])}>
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
                                 {execute && questionQueue?.total > 0 && <AITaskQuery />}

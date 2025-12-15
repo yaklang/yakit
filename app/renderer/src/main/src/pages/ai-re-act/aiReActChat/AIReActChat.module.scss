@@ -170,7 +170,7 @@
 }
 
 .chat-footer {
-    height: 96px;
+    min-height: 96px;
     padding: 0px 12px 0 12px;
     display: flex;
     justify-content: center;
@@ -182,29 +182,9 @@
     }
 
     .footer-inputs {
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        gap: 4px;
-        z-index: 9;
-        .clear-context {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            .clear-btn {
-                border-radius: 20px;
-            }
-        }
     }
 }
-.chat-footer-query {
-    height: 124px;
-    padding: 8px 12px 0 12px;
-}
+
 // #endregion
 
 // #region Footer

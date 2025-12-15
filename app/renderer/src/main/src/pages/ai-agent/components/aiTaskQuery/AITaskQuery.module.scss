@@ -8,6 +8,9 @@
 }
 .ai-task-query {
     min-height: 24px;
+    max-height: 300px;
+    margin: 4px 0;
+    position: relative;
     .list-todo-icon {
         svg {
             width: 16px;
