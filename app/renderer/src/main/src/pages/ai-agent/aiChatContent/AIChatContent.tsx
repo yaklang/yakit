@@ -24,7 +24,7 @@ import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEchart
 import {formatTime} from "@/utils/timeUtil"
 import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon} from "@/assets/icon/outline"
+import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon, OutlinePlussmIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -32,6 +32,7 @@ import {grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TabKey} from "../components/aiFileSystemList/type"
+import {onNewChat} from "../historyChat/HistoryChat"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
@@ -305,7 +306,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
         }
     }, [activeKey, showFreeChat])
-
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
@@ -323,8 +323,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 <div className={styles["expand-retract-content"]}>
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>
-                            <SolidChatalt2Icon />
-                            新会话
+                            <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
+                            <span>新会话</span>
                         </div>
                         <div className={styles["extra"]}>
                             {currentPressuresEcharts?.data?.length > 0 && (
@@ -362,7 +362,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                 </div>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-
+                            <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
+                                新建会话
+                            </YakitButton>
                             <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                 日志
                             </YakitButton>

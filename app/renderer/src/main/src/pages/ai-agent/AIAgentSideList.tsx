@@ -51,30 +51,13 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         } catch (error) {}
     })
 
-    /** 向对话框组件进行事件触发的通信 */
-    const onEmiter = useMemoizedFn((key: string) => {
-        const info: AIAgentTriggerEventInfo = {type: ""}
-        switch (key) {
-            case "new-chat":
-                info.type = "new-chat"
-
-                break
-            default:
-                break
-        }
-        if (info.type) emiter.emit("onReActChatEvent", JSON.stringify(info))
-    })
     const renderTabContent = useMemoizedFn((key: AIAgentTabListEnum) => {
         let content: ReactNode = <></>
         switch (key) {
             case AIAgentTabListEnum.History:
                 content = (
                     <React.Suspense>
-                        <HistoryChat
-                            onNewChat={() => {
-                                onEmiter("new-chat")
-                            }}
-                        />
+                        <HistoryChat />
                     </React.Suspense>
                 )
                 break

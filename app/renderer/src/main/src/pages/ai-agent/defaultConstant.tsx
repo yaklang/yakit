@@ -133,8 +133,11 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
 
     return data
 }
+/**ai 左侧tab变化信号 */
 export enum SwitchAIAgentTabEventEnum {
+    /** 切换active */
     SET_TAB_ACTIVE = "setTabActive",
+    /** 选中tab是否显示 */
     SET_TAB_SHOW = "setTabShow"
 }
 export enum AITabsEnum {
@@ -259,4 +262,13 @@ export const taskAnswerToIconMap: Record<string, ReactNode> = {
     summary: <SolidHashtagIcon />,
     "call-tools": <SolidToolIcon />,
     decision: <SolidCursorclickIcon />
+}
+
+export enum ReActChatEventEnum {
+    /** 新建会话 */
+    NEW_CHAT = "new-chat",
+    /** 使用forge */
+    OPEN_FORGE_FORM = "open-forge-form",
+    /** 使用工具 */
+    USE_AI_TOOL = "use-ai-tool"
 }

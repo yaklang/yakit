@@ -6,7 +6,7 @@ import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatInfo} from "../type/aiChat"
 import {EditChatNameModal} from "../UtilModals"
-import {YakitAIAgentPageID} from "../defaultConstant"
+import {ReActChatEventEnum, YakitAIAgentPageID} from "../defaultConstant"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
@@ -16,10 +16,15 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
 import styles from "./HistoryChat.module.scss"
+import {AIAgentTriggerEventInfo} from "../aiAgentType"
+import emiter from "@/utils/eventBus/eventBus"
 
+/** 向对话框组件进行事件触发的通信 */
+export const onNewChat = () => {
+    const info: AIAgentTriggerEventInfo = {type: ReActChatEventEnum.NEW_CHAT}
+    emiter.emit("onReActChatEvent", JSON.stringify(info))
+}
 const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
-    const {onNewChat} = props
-
     const {chats, activeChat} = useAIAgentStore()
     const {setChats, setActiveChat} = useAIAgentDispatcher()
     const activeID = useMemo(() => {
@@ -87,7 +92,6 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
             setDelLoading((old) => old.filter((el) => el !== id))
         }, 200)
     })
-
     return (
         <div className={styles["history-chat"]}>
             <div className={styles["header-wrapper"]}>
@@ -96,7 +100,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                         历史会话
                         <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
                     </div>
-                    <YakitButton icon={<OutlinePlussmIcon />} onClick={onNewChat} />
+                    <YakitButton icon={<OutlinePlussmIcon />} onClick={() => onNewChat()} />
                 </div>
 
                 <div className={styles["header-second"]}>
