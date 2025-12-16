@@ -436,7 +436,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                     </>
                 )}
                 <Form.Item label='指纹扫描并发' name='Concurrent'>
-                    <YakitInputNumber type='horizontal' min={0} />
+                    <YakitInputNumber type='horizontal' min={1} />
                 </Form.Item>
                 <Form.Item label='主动模式' name='Active' valuePropName='checked' extra='允许指纹探测主动发包'>
                     <YakitSwitch />
@@ -461,7 +461,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                     name='ProbeTimeout'
                     extra='某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包'
                 >
-                    <YakitInputNumber type='horizontal' min={0} />
+                    <YakitInputNumber type='horizontal' min={1} />
                 </Form.Item>
                 <Form.Item
                     label='TCP 代理'
@@ -580,7 +580,7 @@ export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps>
                             <YakitCheckbox />
                         </Form.Item>
                         <Form.Item noStyle name='BasicCrawlerRequestMax'>
-                            <YakitInputNumber min={0} addonBefore='爬虫请求数' />
+                            <YakitInputNumber min={1} addonBefore='爬虫请求数' />
                         </Form.Item>
                     </div>
                 </Form.Item>
@@ -663,7 +663,7 @@ export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = Rea
                 {!skippedHostAliveScan && (
                     <>
                         <Form.Item label='存活检测并发' name='HostAliveConcurrent'>
-                            <YakitInputNumber type='horizontal' min={0} />
+                            <YakitInputNumber type='horizontal' min={1} />
                         </Form.Item>
                         <Form.Item
                             label='TCP Ping 端口'

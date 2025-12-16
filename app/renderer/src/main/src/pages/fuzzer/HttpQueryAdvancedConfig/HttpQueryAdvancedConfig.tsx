@@ -59,9 +59,9 @@ import {
 import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
-import { useProxy } from "@/hook/useProxy"
+import {useProxy} from "@/hook/useProxy"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -590,21 +590,18 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 />
                             </Form.Item>
                             <Form.Item label={<> </>}>
-                                <div style={{ display: 'flex', alignItems: 'center'}}>
-                                <YakitButton
-                                    size='small'
-                                    type='text'
-                                    onClick={onClickDownstreamProxy}
-                                    icon={<PlusSmIcon />}
-                                >
-                                    {t("AgentConfigModal.proxy_configuration")}
-                                </YakitButton>
-                                    <Divider type="vertical"/>
+                                <div style={{display: "flex", alignItems: "center"}}>
                                     <YakitButton
                                         size='small'
                                         type='text'
+                                        onClick={onClickDownstreamProxy}
+                                        icon={<PlusSmIcon />}
                                     >
-                                        <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})} />
+                                        {t("AgentConfigModal.proxy_configuration")}
+                                    </YakitButton>
+                                    <Divider type='vertical' />
+                                    <YakitButton size='small' type='text'>
+                                        <ProxyTest onEchoNode={(proxy) => form.setFieldsValue({proxy})} />
                                     </YakitButton>
                                 </div>
                             </Form.Item>
@@ -966,10 +963,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     name='repeatTimes'
                                     help={t("HttpQueryAdvancedConfig.concurrency_test_tip")}
                                 >
-                                    <YakitInputNumber type='horizontal' size='small' />
+                                    <YakitInputNumber type='horizontal' size='small' min={0} />
                                 </Form.Item>
                                 <Form.Item label={t("HttpQueryAdvancedConfig.concurrent_threads")} name='concurrent'>
-                                    <YakitInputNumber type='horizontal' size='small' />
+                                    <YakitInputNumber type='horizontal' size='small' min={1} />
                                 </Form.Item>
 
                                 <Form.Item label={t("HttpQueryAdvancedConfig.random_delay2")} style={{marginBottom: 0}}>
@@ -1116,7 +1113,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     <YakitSwitch />
                                 </Form.Item>
                                 <Form.Item label={t("HttpQueryAdvancedConfig.redirect_count")} name='redirectCount'>
-                                    <YakitInputNumber type='horizontal' size='small' />
+                                    <YakitInputNumber type='horizontal' size='small' min={0} />
                                 </Form.Item>
                                 <Form.Item
                                     label={t("HttpQueryAdvancedConfig.js_redirect")}

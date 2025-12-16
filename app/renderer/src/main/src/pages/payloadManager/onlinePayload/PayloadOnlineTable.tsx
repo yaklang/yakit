@@ -178,6 +178,7 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
                 >
                     <YakitInputNumber
                         // size='small'
+                        min={0}
                         style={{width: "100%"}}
                         value={editParams.HitCount}
                         placeholder='请输入命中次数...'

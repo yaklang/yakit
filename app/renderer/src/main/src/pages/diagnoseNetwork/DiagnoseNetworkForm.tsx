@@ -39,7 +39,7 @@ export const DiagnoseNetworkForm: React.FC<DiagnoseNetworkFormProp> = (props) =>
                    value={params.ConnectTarget} required={true}
         />
         <InputInteger label={"超时时间"} setValue={NetworkTimeout => setParams({...params, NetworkTimeout})}
-                      value={params.NetworkTimeout}/>
+                      value={params.NetworkTimeout} min={1} />
         <InputItem label={"代理地址"} help={"可选，如果填写的话则需要补充代理测试的目标"} setValue={Proxy => setParams({...params, Proxy})} value={params.Proxy}/>
         {!!params.Proxy && <InputItem label={"测试地址"} help={"填入需要测试的代理地址，例如 www.google.com"} setValue={ProxyToAddr => setParams({...params, ProxyToAddr})} value={params.ProxyToAddr}/>}
         <Form.Item colon={false} label={" "}>
