@@ -58,7 +58,7 @@ export const useProxy = () => {
     if (!!findPoint) {
       const { Url, UserName, Password } = findPoint
       if (UserName && Password) {
-        const protocolMatch = Url.match(/^(https?:\/\/)(.*)$/)
+        const protocolMatch = Url.match(/^((?:https?|socks[45]):\/\/)(.*)$/)
         if (protocolMatch) {
           const protocol = protocolMatch[1]
           const domain = protocolMatch[2]
