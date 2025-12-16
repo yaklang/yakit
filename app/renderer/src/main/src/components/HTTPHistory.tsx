@@ -438,8 +438,11 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showSetting = true,
         showRefresh = true,
         showFlod = true,
-        selectedKeys = []
+        selectedKeys: propsSelectedKeys
     } = props
+
+    // 稳定 selectedKeys 引用，避免频繁触发子组件更新
+    const selectedKeys = useMemo(() => propsSelectedKeys || [], [propsSelectedKeys])
 
     const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
