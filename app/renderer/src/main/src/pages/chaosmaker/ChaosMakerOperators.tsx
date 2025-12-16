@@ -338,6 +338,7 @@ export const AddBASAgent: React.FC<AddBASAgentProp> = (props) => {
                 setValue={(Timeout) => setParams({...params, Timeout})}
                 value={params.Timeout}
                 disable={loading}
+                min={0}
             />
             <Form.Item colon={false} label={" "}>
                 <YakitButton type='primary' htmlType='submit' loading={loading}>

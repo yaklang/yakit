@@ -593,6 +593,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
                                                 setDepth(value)
                                             }
                                         }}
+                                        min={0}
                                     />
 
                                     <GenerateKnowledge

@@ -1053,6 +1053,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             size='small'
                                             value={concurrency}
                                             onChange={(v) => setConcurrency(v as number)}
+                                            min={0}
                                         />
                                     </div>
                                     <div className={styles["exec-form-item"]}>

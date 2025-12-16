@@ -328,6 +328,7 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
                                         setDepth(value)
                                     }
                                 }}
+                                min={0}
                             />
                             <Divider type={"vertical"} />
                             <GenerateKnowledge

@@ -179,6 +179,7 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
                         onChange={(value) => {
                             setEditParams({...editParams, HitCount: value as number})
                         }}
+                        min={0}
                     />
                 </Form.Item>
                 <div className={styles["opt-btn"]}>

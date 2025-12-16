@@ -145,7 +145,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
     const onReduce = useMemoizedFn(() => {
         if (props.disabled) return
         const newVal = value || value === 0 ? onDecrease(Number(value), step) || 0 : Number(props.min || 0)
-        if (newVal && props.min && newVal <= props.min) {
+        if (props.min !== undefined && newVal <= props.min) {
             const precisionFactor = Math.pow(10, precisionRef.current)
             const min = toPrecision((precisionFactor * Number(props.min)) / precisionFactor)
             setValue(min)

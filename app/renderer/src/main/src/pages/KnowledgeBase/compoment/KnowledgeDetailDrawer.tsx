@@ -347,6 +347,7 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
                                         setDepth(value)
                                     }
                                 }}
+                                min={0}
                             />
                             <Divider type={"vertical"} />
                             <GenerateKnowledge

@@ -127,7 +127,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                         <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
                     </Form.Item>
                     <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
-                        <YakitInputNumber />
+                        <YakitInputNumber min={0} />
                     </Form.Item>
                 </React.Fragment>
             ) : (
@@ -144,7 +144,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                             <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
                         </Form.Item>
                         <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
-                            <YakitInputNumber />
+                            <YakitInputNumber min={0} />
                         </Form.Item>
                     </Collapse.Panel>
                 </YakitCollapse>

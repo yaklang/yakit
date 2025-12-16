@@ -565,6 +565,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (pro
                                                 setDepth(value)
                                             }
                                         }}
+                                        min={0}
                                     />
                                     <GenerateKnowledge
                                         generateKnowledgeDataList={selectList}
