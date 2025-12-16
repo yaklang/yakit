@@ -2405,7 +2405,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         })
 
         const onCancelAudit = () => {
-            apiCancelDebugPlugin(tokenRef.current).then(() => {
+            apiCancelDebugPlugin(tokenRef.current)
+            apiCancelDebugPlugin(tokenCompileRef.current).then(() => {
                 setIsExpand(true)
                 setExecuteStatus("finished")
             })
