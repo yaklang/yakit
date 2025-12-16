@@ -18,6 +18,7 @@ import {
 import {
     BuildingKnowledgeBase,
     BuildingKnowledgeBaseEntry,
+    checkAIModelAvailability,
     compareKnowledgeBaseChange,
     extractAddedHistory,
     findChangedObjects
@@ -55,6 +56,14 @@ import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
+import {Form, Progress} from "antd"
+import {ImportModal} from "./ImportModal"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -68,6 +77,7 @@ interface KnowledgeBaseContentProps {
     refreshAsync: () => Promise<CreateKnowledgeBaseData[] | undefined>
     binariesToInstallRefreshAsync?: () => Promise<any[]>
     inViewport: boolean
+    streamsRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["streams"] | undefined>
 }
 
 const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
@@ -87,6 +97,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const [showFreeChat, setShowFreeChat] = useSafeState(false)
     const [streams, api] = useMultipleHoldGRPCStream()
 
+    const [addMode, setAddMode] = useSafeState<string[]>(["manual"])
+    const [isAIModelAvailable, setIsAIModelAvailable] = useSafeState(false)
+    const [aIModelAvailableTokens, setAIModelAvailableTokens] = useSafeState("")
+
     const onOK = async () => {
         try {
             await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
@@ -97,6 +111,36 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             failed(`关闭知识库页面失败: ${e + ""}`)
         }
     }
+
+    // 知识库可用诊断 callback
+    const handleValidateAIModelUsable = useMemoizedFn(async () => {
+        try {
+            const streamToken = randomString(50)
+            setAIModelAvailableTokens(streamToken)
+            const plugin = await grpcFetchLocalPluginDetail({Name: "知识库可用性诊断"}, true)
+            await checkAIModelAvailability(plugin, streamToken)
+            setIsAIModelAvailable(true)
+
+            api?.createStream(streamToken, {
+                taskName: "debug-plugin",
+                apiKey: "DebugPlugin",
+                autoClear: false,
+                token: streamToken,
+                onEnd: async () => {
+                    success("知识库可用诊断完成")
+                },
+                onError: (e) => {
+                    failed(e + "")
+                }
+            })
+        } catch (error) {
+            failed(error + "")
+        }
+    })
+
+    useEffect(() => {
+        handleValidateAIModelUsable()
+    }, [])
 
     // 每次变化时更新 ref
     useDeepCompareEffect(() => {
@@ -152,6 +196,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             }
                         },
                         onError: (err) => {
+                            editKnowledgeBase(kb.ID, {
+                                ...kb,
+                                streamstep: "success"
+                            })
                             try {
                                 api.removeStream && api.removeStream(kb.streamToken)
                             } catch {
@@ -189,6 +237,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             }
                         },
                         onError: (err) => {
+                            editKnowledgeBase(kb.ID, {
+                                ...kb,
+                                streamstep: "success"
+                            })
                             try {
                                 api.removeStream && api.removeStream(kb.streamToken)
                             } catch {
@@ -222,6 +274,13 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         },
                         onError: (e) => {
                             try {
+                                editKnowledgeBase(generateKnowledge.ID, {
+                                    ...targetKnowledgeBases,
+                                    historyGenerateKnowledgeList:
+                                        targetKnowledgeBases.historyGenerateKnowledgeList.filter(
+                                            (it) => it.token !== generateKnowledge.token
+                                        )
+                                })
                                 api.removeStream && api.removeStream(generateKnowledge.token)
                             } catch {
                                 failed(`知识库条目构建流失败: ${e}`)
@@ -263,6 +322,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     },
                     onError: (e) => {
                         try {
+                            editKnowledgeBase(updateItems.ID, {
+                                ...updateItems,
+                                streamstep: "success"
+                            })
                             api.removeStream && api.removeStream(updateItems.streamToken)
                         } catch {
                             failed(`知识库条目构建流失败: ${e}`)
@@ -279,6 +342,16 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         onOK
     }))
 
+    const [createVisible, setCreateVisible] = useSafeState(false)
+    const [importVisible, setImportVisible] = useSafeState(false)
+    const [form] = Form.useForm()
+
+    const handleCreateKnowledgeBase = useMemoizedFn(() => {
+        form.resetFields()
+        setCreateVisible((preValue) => !preValue)
+    })
+
+    // TODO  AI 召回逻辑
     const [reviewInfo, setReviewInfo] = useSafeState<AIChatQSData>()
     const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
         string,
@@ -574,19 +647,44 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         knowledgeBaseID={knowledgeBaseID}
                         setKnowledgeBaseID={(id) => createNewEvents(id)}
                         api={api}
+                        streams={streams}
                         setOpenQA={setShowFreeChat}
                         binariesToInstall={binariesToInstall}
                         refreshAsync={refreshAsync}
                         binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
+                        setAddMode={setAddMode}
+                        addMode={addMode}
+                        handleValidateAIModelUsable={handleValidateAIModelUsable}
+                        isAIModelAvailable={isAIModelAvailable}
+                        setIsAIModelAvailable={setIsAIModelAvailable}
+                        aIModelAvailableTokens={aIModelAvailableTokens}
                     />
-                    <KnowledgeBaseContainer
-                        knowledgeBases={knowledgeBases}
-                        knowledgeBaseID={knowledgeBaseID}
-                        setKnowledgeBaseID={(id) => createNewEvents(id)}
-                        streams={streams}
-                        api={api}
-                        setOpenQA={setShowFreeChat}
-                    />
+                    {knowledgeBaseID ? (
+                        <KnowledgeBaseContainer
+                            knowledgeBases={knowledgeBases}
+                            knowledgeBaseID={knowledgeBaseID}
+                            setKnowledgeBaseID={(id) => createNewEvents(id)}
+                            streams={streams}
+                            api={api}
+                            setOpenQA={setShowFreeChat}
+                        />
+                    ) : (
+                        <div className={styles["knowledge-base-container-empty"]}>
+                            <YakitEmpty />
+                            <div className={styles["empty-button"]}>
+                                <YakitButton onClick={() => handleCreateKnowledgeBase()}>创建知识库</YakitButton>
+                                <YakitButton
+                                    type='outline2'
+                                    onClick={() => {
+                                        setImportVisible((prevalue) => !prevalue)
+                                    }}
+                                >
+                                    导入知识库
+                                </YakitButton>
+                            </div>
+                        </div>
+                    )}
+
                     {showFreeChat ? (
                         <div style={{width: 520, borderRight: "1px solid var(--Colors-Use-Neutral-Border)"}}>
                             <AIReActChat
@@ -598,6 +696,42 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         </div>
                     ) : null}
                 </div>
+                <KnowledgeBaseFormModal
+                    visible={createVisible}
+                    title='新增知识库'
+                    handOpenKnowledgeBasesModal={handleCreateKnowledgeBase}
+                    setKnowledgeBaseID={setKnowledgeBaseID}
+                    form={form}
+                    setAddMode={setAddMode}
+                />
+                <ImportModal visible={importVisible} onVisible={setImportVisible} setAddMode={setAddMode} />
+                {streams[aIModelAvailableTokens] ? (
+                    <YakitModal
+                        visible={isAIModelAvailable}
+                        title='知识库可用诊断'
+                        footer={null}
+                        width={"50%"}
+                        onCloseX={() => {
+                            if (streams[aIModelAvailableTokens]?.progressState?.[0]?.progress === 1) {
+                                api.removeStream && api.removeStream(aIModelAvailableTokens)
+                            }
+                            setIsAIModelAvailable(false)
+                        }}
+                    >
+                        <Progress
+                            style={{display: "flex", gap: 8, alignItems: "center"}}
+                            percent={Math.round(streams[aIModelAvailableTokens]?.progressState?.[0]?.progress * 100)}
+                        />
+                        <div className={styles["validate-ai-model-container"]}>
+                            <PluginExecuteResult
+                                streamInfo={streams[aIModelAvailableTokens]}
+                                runtimeId={streams[aIModelAvailableTokens]?.runtimeId ?? ""}
+                                loading={streams[aIModelAvailableTokens]?.loading ?? false}
+                                defaultActiveKey='日志'
+                            />
+                        </div>
+                    </YakitModal>
+                ) : null}
             </ChatIPCContent.Provider>
         </AIAgentContext.Provider>
     )

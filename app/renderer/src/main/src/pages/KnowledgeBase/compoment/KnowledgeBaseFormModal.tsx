@@ -21,6 +21,7 @@ interface TKnowledgeBaseFormModalProps {
     handOpenKnowledgeBasesModal: () => void
     form: FormInstance<any>
     setKnowledgeBaseID: (id: string) => void
+    setAddMode: Dispatch<SetStateAction<string[]>>
 }
 
 const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
@@ -28,7 +29,8 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
     visible,
     handOpenKnowledgeBasesModal,
     form,
-    setKnowledgeBaseID
+    setKnowledgeBaseID,
+    setAddMode
 }) => {
     const {addKnowledgeBase} = useKnowledgeBase()
 
@@ -68,9 +70,11 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
             streamToken,
             streamstep: 1,
             addManuallyItem: false,
-            historyGenerateKnowledgeList: []
+            historyGenerateKnowledgeList: [],
+            IsImported: false
         }
         await runAsync(transformFormData)
+        setAddMode((pre) => [...pre, "manual"])
     }
 
     return (
@@ -82,7 +86,6 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
             width={600}
             destroyOnClose
             maskClosable={false}
-            wrapClassName={styles["create-knowledge-modal"]}
             footer={
                 <div className={styles["delete-yakit-hint"]}>
                     <YakitButton type='outline1' onClick={handOpenKnowledgeBasesModal}>

@@ -5,7 +5,7 @@ import {failed, success} from "@/utils/notification"
 import {Form, Progress} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import styles from "../knowledgeBase.module.scss"
-import {useEffect, useRef} from "react"
+import {Dispatch, SetStateAction, useEffect, useRef} from "react"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {KnowledgeBaseContentProps} from "../TKnowledgeBase"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
@@ -23,11 +23,11 @@ interface GeneralProgress {
 interface TImportModalProps {
     visible: boolean
     onVisible: (visible: boolean) => void
-    setChecked: (checked: boolean) => void
+    setAddMode: Dispatch<SetStateAction<string[]>>
 }
 
 const ImportModal: React.FC<TImportModalProps> = (props) => {
-    const {visible, onVisible, setChecked} = props
+    const {visible, onVisible, setAddMode} = props
     const [form] = Form.useForm()
     const [importLoading, setImportLoading] = useSafeState(false)
     const [progress, setProgress] = useSafeState<GeneralProgress>({
@@ -101,7 +101,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                     await existsKnowledgeBaseAsync()
                     onVisible(false)
                     form.resetFields()
-                    setChecked(true)
+                    setAddMode((it) => [...it, "external"])
                 }
                 setProgress({Percent: 0, Message: "", MessageType: ""})
             } catch (error) {

@@ -461,6 +461,19 @@
         overflow: hidden;
         display: flex;
         min-width: 0;
+        .knowledge-base-container-empty{
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            .empty-button{
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+        }
     }
     .tab-content {
         // width: 100%;
@@ -687,19 +700,18 @@
     .repository-manage-search {
         padding: 8px 12px 8px 12px;
     }
-    .repository-manage-checked{
+    .repository-manage-options{
         display: flex;
         align-items: center;
         padding: 8px 12px 8px 12px;
-        justify-content: flex-end;
-        span{
-            svg{
-                width: 16px;
-                height: 16px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            }           
+        justify-content: space-between;
+        gap: 8px;
+        .select-box{
+            width: 100px;
         }
-
+        .tag{
+            @extend %building-knowledge-items;
+        }
     }
     .knowledge-base-info-body {
         flex: 1;
@@ -1562,6 +1574,10 @@
     }   
 }
 
+.validate-ai-model-container{
+    height: 520px;
+    display: flex;
+}
 
 .knowledge-base-render{
     display: flex; 

@@ -2,8 +2,8 @@ import {FC, useEffect} from "react"
 
 import {SolidDotsverticalIcon} from "@/assets/icon/solid"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {getNextSelectedID, knowledgeTypeOptions, manageMenuList} from "../utils"
-import {useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {knowledgeTypeOptions, manageMenuList} from "../utils"
+import {useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import styles from "../knowledgeBase.module.scss"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
@@ -12,7 +12,7 @@ import {failed, success} from "@/utils/notification"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Form, Progress} from "antd"
+import {Form} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -168,17 +168,22 @@ const DeleteConfirm: FC<
         {
             manual: true,
             onSuccess: async () => {
-                const selectedID = knowledgeBase && getNextSelectedID(knowledgeBase, KnowledgeBaseId)
-                selectedID && setKnowledgeBaseID?.(selectedID)
-                deleteKnowledgeBase(KnowledgeBaseId)
-                const streamToken = knowledgeBase?.find((it) => it.ID === KnowledgeBaseId)?.streamToken
-                if (streamToken && api?.tokens.includes(streamToken)) {
-                    await apiCancelDebugPlugin(streamToken)
-                    api?.removeStream(streamToken)
-                }
+                try {
+                    const nextKnowledgeBase = knowledgeBase?.filter((it) => it.ID !== KnowledgeBaseId) ?? []
+                    const selectedID = nextKnowledgeBase[0]?.ID ?? ""
+                    setKnowledgeBaseID?.(selectedID)
+                    deleteKnowledgeBase(KnowledgeBaseId)
+                    const streamToken = knowledgeBase?.find((it) => it.ID === KnowledgeBaseId)?.streamToken
+                    if (streamToken && api?.tokens.includes(streamToken)) {
+                        await apiCancelDebugPlugin(streamToken)
+                        api?.removeStream(streamToken)
+                    }
 
-                setVisible(false)
-                success("删除知识库成功")
+                    setVisible(false)
+                    success("删除知识库成功")
+                } catch (error) {
+                    failed(error + "")
+                }
             },
             onError: (error) => {
                 failed(`删除知识库失败: ${error}`)

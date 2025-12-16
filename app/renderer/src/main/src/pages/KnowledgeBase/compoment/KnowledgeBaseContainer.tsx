@@ -40,13 +40,17 @@ const reducer = (state: typeof initialValue, payload: typeof initialValue) => ({
     ...payload
 })
 
-const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
-    knowledgeBaseID,
-    streams,
-    api,
-    setKnowledgeBaseID,
-    setOpenQA
-}) => {
+const KnowledgeBaseContainer: FC<
+    Omit<
+        TKnowledgeBaseContainerProps,
+        | "setAddMode"
+        | "addMode"
+        | "handleValidateAIModelUsable"
+        | "isAIModelAvailable"
+        | "setIsAIModelAvailable"
+        | "aIModelAvailableTokens"
+    >
+> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [state, dispatch] = useReducer(reducer, initialValue)
 
