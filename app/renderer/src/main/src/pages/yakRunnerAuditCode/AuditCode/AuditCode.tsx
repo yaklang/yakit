@@ -1509,6 +1509,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const {t, i18n} = useI18nNamespaces(["mitm"])
     const {
         proxyConfig: {Endpoints = []},
+        proxyPointsOptions,
         checkProxyEndpoints
     } = useProxy()
 
@@ -1736,7 +1737,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                 >
                                     <YakitSelect
                                         allowClear
-                                        options={Endpoints.map(({Url}) => ({label: Url, value: Url}))}
+                                        options={proxyPointsOptions}
                                         mode='tags'
                                         placeholder={t("ProxyConfig.example_proxy_address")}
                                     />
@@ -1789,12 +1790,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
             <ProxyRulesConfig
                 hideRules
                 visible={agentConfigModalVisible}
-                onClose={() => {
-                    setAgentConfigModalVisible(false)
-                    const proxy = form.getFieldValue("proxy") || []
-                    const filterProxy = proxy.filter((item) => Endpoints.some(({Id}) => Id === item))
-                    form.setFieldsValue({proxy: filterProxy})
-                }}
+                onClose={() => setAgentConfigModalVisible(false)}
             />
         </YakitSpin>
     )

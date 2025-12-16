@@ -169,6 +169,8 @@
     "customDetectionTarget": "自定义检测目标",
     "customDetectionTargetPlaceholder": "请输入检测目标",
     "disable_point_title": "禁用代理节点",
-    "disable_point_tips": "该节点仍被 {i} 条规则引用，禁用后会同时从这些规则中移除。是否继续？"
+    "disable_point_tips": "该节点仍被 {i} 条规则引用，禁用后会同时从这些规则中移除。是否继续？",
+    "downstream_agent": "下游代理",
+    "select_disabled_tip":"选中的代理已被禁用，建议更换可用的代理"
   }
 }

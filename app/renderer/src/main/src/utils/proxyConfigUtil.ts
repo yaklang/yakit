@@ -1,5 +1,6 @@
 import { grpcFetchLocalYakVersion } from "@/apiUtils/grpc"
 import { yakitFailed } from "./notification"
+import validator from "validator"
 
 /** 代理规则配置storage key */
 export const PROXY_CONFIG_STORAGE_KEY = "GLOBAL_PROXY_RULES_CONFIG_V1"
@@ -75,10 +76,18 @@ export const checkProxyVersion = async (): Promise<boolean> => {
 
 export const isValidUrlWithProtocol = (url: string): boolean => {
     try {
-        // 使用正则表达式验证代理 URL 格式: 协议://主机:端口
-        // 仅支持 http, https, socks4, socks5 四种协议
-        const proxyPattern = /^(https?|socks[45]):\/\/[^:\/\s]+:\d+$/
-        return proxyPattern.test(url)
+        // 使用 validator 验证 URL 格式
+        // protocols: 仅支持 http, https, socks4, socks4a, socks5 五种协议
+        // require_protocol: 必须包含协议
+        // require_host: 必须包含主机名
+        // require_port: 必须包含端口号
+        return validator.isURL(url, {
+            protocols: ["http", "https", "socks4", "socks4a", "socks5"],
+            require_protocol: true,
+            require_host: true,
+            require_port: true,
+            allow_underscores: true
+        })
     } catch (error) {
         return false
     }

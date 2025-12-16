@@ -17,7 +17,7 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import style from "./MITMPage.module.scss"
-import {useCreation, useDebounceEffect, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDeepCompareEffect, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -134,7 +134,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
-    const { proxyConfig:{ Routes = [] } } = useProxy()
+    const { proxyConfig:{ Routes = [] }, proxyRouteOptions, comparePointUrl } = useProxy()
+    const {t, i18n} = useI18nNamespaces(["mitm"])
 
     const mitmContent = useContext(MITMContext)
 
@@ -326,7 +327,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             if(downstreamProxyRuleId || downstreamProxy){
                 const proxyStr = downstreamProxyRuleId ? 
                 `规则组：${Routes.find(({Id})=> Id === downstreamProxyRuleId)?.Name}` : 
-                `代理节点：${maskProxyPassword(downstreamProxy)}`
+                `${maskProxyPassword(downstreamProxy)}`
                     tip += `下游代理：${proxyStr}`
             }
             setDownstreamProxyStr(downstreamProxyRuleId || downstreamProxy || "")
@@ -341,6 +342,30 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setTip(tip)
         }
     )
+
+    useDeepCompareEffect(() => {
+        if (!downstreamProxyStr) return
+
+        const getLabel = () => {
+            if (downstreamProxyStr.startsWith("route") || downstreamProxyStr.startsWith("ep")) {
+                const option = proxyRouteOptions.find(({value}) => value === downstreamProxyStr)
+                if (downstreamProxyStr.startsWith("ep")) {
+                    return `${maskProxyPassword(comparePointUrl(downstreamProxyStr))}${
+                        option?.disabled ? ` (${t("ProxyConfig.disabled")})` : ""
+                    }`
+                }
+                return proxyRouteOptions.find(({value}) => value === downstreamProxyStr)?.label
+            }
+            return maskProxyPassword(downstreamProxyStr)
+        }
+
+        const label = getLabel()
+        if (!label) return
+
+        const newTip = `${t("ProxyConfig.downstream_agent")}：${label}`
+        setTip((prev) => (prev === newTip ? prev : newTip))
+    }, [proxyRouteOptions])
+
 
     const [visible, setVisible] = useState<boolean>(false)
     const mitmPageRef = useRef<any>()

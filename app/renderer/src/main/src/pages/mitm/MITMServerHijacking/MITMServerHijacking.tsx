@@ -130,7 +130,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
-    const {proxyRouteOptions, comparePointUrl} = useProxy()
 
     const mitmContent = useContext(MITMContext)
 
@@ -346,17 +345,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             </div>
             <DownStreamAgentModal
                 downStreamAgentModalVisible={downStreamAgentModalVisible}
-                onCloseModal={() => {
-                    setDownStreamAgentModalVisible(false)
-                    //如果代理被禁用了 这里要清除代理
-                    if (downstreamProxyStr) {
-                        const isProxyValid = downstreamProxyStr.startsWith('ep') || downstreamProxyStr.startsWith('route')
-                            ? proxyRouteOptions.some(({value}) => value === downstreamProxyStr)
-                            : proxyRouteOptions.some(({value}) => comparePointUrl(value) === downstreamProxyStr)
-                        
-                        !isProxyValid && downStreamTagClose()
-                    }
-                }}
+                onCloseModal={() => setDownStreamAgentModalVisible(false)}
                 downstreamProxyStr={downstreamProxyStr}
                 setDownstreamProxyStr={setDownstreamProxyStr}
                 tip={tip}
@@ -423,9 +412,13 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         const tipArr = tip.split("|")
 
         const downstreamProxy = form.getFieldsValue().downstreamProxy || []
+        if(downstreamProxy.some(item => proxyRouteOptions.find(({ value })=> value === item)?.disabled )){
+            yakitNotify("warning", t('ProxyConfig.select_disabled_tip'))
+        }
         //如果有新增的代理配置 则存配置项
         checkProxyEndpoints(downstreamProxy)
         const {proxyEndpoints, ProxyRuleIds} = getProxyValue(downstreamProxy)
+        setRemoteValue(MITMConsts.MITMDownStreamProxy, downstreamProxy.join(','))
 
         const proxyValue: MITMSetDownstreamProxyRequest = {
             downstreamProxy: proxyEndpoints,
@@ -434,9 +427,16 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         }
         grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy.length) {
-            const downstreamProxyName = downstreamProxy.map(
-                (item) => proxyRouteOptions.find(({value}) => value === item)?.label || item
-            )
+            const downstreamProxyName = downstreamProxy.map((item) => {
+                if (item.startsWith("route") || item.startsWith("ep")) {
+                    const option = proxyRouteOptions.find(({value}) => value === item)
+                    if (item.startsWith("ep")) {
+                        return `${comparePointUrl(item)}${option?.disabled ? ` (${t("ProxyConfig.disabled")})` : ""}`
+                    }
+                    return proxyRouteOptions.find(({value}) => value === item)?.label
+                }
+                return item
+            })
             if (tip.indexOf("下游代理") === -1) {
                 onSetTip(
                     `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}` +
@@ -591,12 +591,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
             </YakitModal>
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
-                onClose={() => {
-                    setAgentConfigModalVisible(false)
-                    const proxy = form.getFieldValue("downstreamProxy") || []
-                    const filterProxy = proxy.filter((item) => proxyRouteOptions.some(({value}) => value === item))
-                    form.setFieldsValue({downstreamProxy: filterProxy})
-                }}
+                onClose={() => setAgentConfigModalVisible(false)}
             />
         </>
     )

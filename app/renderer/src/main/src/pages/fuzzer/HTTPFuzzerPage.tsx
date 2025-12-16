@@ -2622,11 +2622,11 @@ interface FuzzerExtraShowProps {
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
     const { droppedCount, advancedConfigValue, setAdvancedConfigValue, onlyOneResponse, httpResponse } = props
-    const { t, i18n } = useI18nNamespaces(["webFuzzer"])
+    const { t, i18n } = useI18nNamespaces(["webFuzzer", "mitm"])
     const [systemProxy, setSystemProxy] = useState<GetSystemProxyResult>()
     const divRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(divRef)
-    const { proxyRouteOptions } = useProxy();
+    const { proxyRouteOptions, comparePointUrl } = useProxy();
     useEffect(() => {
         if (!inViewport) return
         getConfigSystemProxy()
@@ -2655,8 +2655,19 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
         })
     })
     const proxyTooltipContent = useMemo(() => {
-        return advancedConfigValue.proxy?.map((item) => maskProxyPassword(proxyRouteOptions.find(({value})=> value === item)?.label || item))
-    }, [advancedConfigValue.proxy, proxyRouteOptions])
+        return advancedConfigValue.proxy?.map((item) => {
+            if (item.startsWith("route") || item.startsWith("ep")) {
+                const option = proxyRouteOptions.find(({value}) => value === item)
+                if (item.startsWith("ep")) {
+                    return `${maskProxyPassword(comparePointUrl(item))}${
+                        option?.disabled ? ` (${t("ProxyConfig.disabled")})` : ""
+                    }`
+                }
+                return proxyRouteOptions.find(({value}) => value === item)?.label
+            }
+            return maskProxyPassword(item)
+        })
+    }, [advancedConfigValue.proxy, proxyRouteOptions, comparePointUrl, t])
 
     return (
         <div className={styles["display-flex"]} ref={divRef}>
