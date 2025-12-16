@@ -61,7 +61,11 @@ import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
 import {SolidCheckCircleIcon, SolidHomeIcon} from "@/assets/icon/solid"
 import {setNowProjectDescription} from "@/pages/globalVariable"
-import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {
+    handleAIConfig,
+    apiGetGlobalNetworkConfig,
+    apiSetGlobalNetworkConfig
+} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -1423,19 +1427,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         </div>
                                         <NewThirdPartyApplicationConfig
                                             isOnlyShowAiType={true}
-                                            onAdd={(e) => {
-                                                let existed = false
-                                                const existedResult = (obj.AppConfigs || []).map((i) => {
-                                                    if (i.Type === e.Type) {
-                                                        existed = true
-                                                        return {...i, ...e}
-                                                    }
-                                                    return {...i}
-                                                })
-                                                if (!existed) {
-                                                    existedResult.push(e)
+                                            onAdd={(data) => {
+                                                // 新增，有影响ai优化级
+                                                const newParams = handleAIConfig({
+                                                    AppConfigs: obj.AppConfigs,
+                                                    AiApiPriority: obj.AiApiPriority
+                                                }, data)
+                                                if (!newParams) {
+                                                    yakitNotify("error", "onFuzzerModal 参数错误")
+                                                    return
                                                 }
-                                                const params = {...obj, AppConfigs: existedResult}
+                                                const params:GlobalNetworkConfig = {...obj,...newParams}
                                                 apiSetGlobalNetworkConfig(params).then(() => {
                                                     openAIByChatCS({...val})
                                                     m.destroy()

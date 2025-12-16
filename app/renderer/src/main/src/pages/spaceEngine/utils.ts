@@ -1,4 +1,8 @@
-import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {
+    GlobalNetworkConfig,
+    HandleAIConfigProps,
+    ThirdPartyApplicationConfig
+} from "@/components/configNetwork/ConfigNetworkPage"
 import {SpaceEngineStartParams, SpaceEngineStatus} from "@/models/SpaceEngine"
 import { PcapMetadata } from "@/models/Traffic"
 import {yakitNotify} from "@/utils/notification"
@@ -64,6 +68,45 @@ export const apiSetGlobalNetworkConfig: (params: GlobalNetworkConfig) => Promise
     })
 }
 
+/**
+ *@description 传入第三方配置和ai排序，得到最新的数据
+ * @param {HandleAIConfigProps} config
+ * @param {HandleAIConfigProps} data
+ * @returns {HandleAIConfigProps|null} 全局配置
+ */
+export const handleAIConfig = (
+    config: HandleAIConfigProps,
+    data: ThirdPartyApplicationConfig
+): HandleAIConfigProps | null => {
+    if (!config || !data) return null
+    const existedResult: ThirdPartyApplicationConfig[] = config?.AppConfigs || []
+    let newAiApiPriority: string[] = config?.AiApiPriority || []
+    const index = (config?.AppConfigs || []).findIndex((i) => i.Type === data.Type)
+    if (index === -1) {
+        existedResult.push(data)
+        const existedAIPriority = existedResult.map((i) => i.Type)
+        const setAIPriority: string[] = []
+        const noSetAIPriority: string[] = []
+        config?.AiApiPriority.forEach((ele) => {
+            if (existedAIPriority.includes(ele)) {
+                setAIPriority.push(ele)
+            } else {
+                noSetAIPriority.push(ele)
+            }
+        })
+        newAiApiPriority = [...setAIPriority, ...noSetAIPriority]
+    } else {
+        existedResult[index] = {
+            ...existedResult[index],
+            ...data
+        }
+    }
+    const params: HandleAIConfigProps = {
+        AppConfigs: existedResult,
+        AiApiPriority: newAiApiPriority
+    }
+    return params
+}
 /** GetPcapMetadata */
 export const apiGetPcapMetadata: () => Promise<PcapMetadata> = () => {
     return new Promise((resolve, reject) => {

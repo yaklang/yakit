@@ -64,7 +64,7 @@ import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AddAIModel} from "./addAIModel/AddAIModel"
 import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
-import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {DragDropContext, Droppable, Draggable} from "@hello-pangea/dnd"
 import {SolidDragsortIcon} from "@/assets/icon/solid"
@@ -102,7 +102,6 @@ export const setAIModal = (params: {
         closable: true,
         maskClosable: false,
         onCancel: () => {
-            // emiter.emit("onRefreshAvailableAIModelList", isAdd)
             m.destroy()
         },
         content: (
@@ -112,26 +111,25 @@ export const setAIModal = (params: {
                     formValues={formValues}
                     disabledType={!!formValues}
                     onAdd={(data) => {
-                        if (!config) return
-                        const existedResult: ThirdPartyApplicationConfig[] = config?.AppConfigs || []
-                        const index = (config?.AppConfigs || []).findIndex((i) => i.Type === data.Type)
-                        if (index === -1) {
-                            existedResult.push(data)
-                        } else {
-                            existedResult[index] = {
-                                ...existedResult[index],
-                                ...data
-                            }
+                        // 新增，有影响ai优化级
+                        const params = handleAIConfig(
+                            {
+                                AppConfigs: config.AppConfigs,
+                                AiApiPriority: config.AiApiPriority
+                            },
+                            data
+                        )
+                        if (!params) {
+                            yakitNotify("error", "setAIModal 参数错误")
+                            return
                         }
-                        const params: GlobalNetworkConfig = {...config, AppConfigs: existedResult}
-                        apiSetGlobalNetworkConfig(params).then(() => {
+                        apiSetGlobalNetworkConfig({...config, ...params}).then(() => {
                             onSuccess()
                             emiter.emit("onRefreshAvailableAIModelList", isAdd)
                             m.destroy()
                         })
                     }}
                     onCancel={() => {
-                        // emiter.emit("onRefreshAvailableAIModelList", isAdd)
                         m.destroy()
                     }}
                 />
@@ -328,6 +326,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         const {setOnlineTotal, onAdd} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
+        const noAiAppConfigRef = useRef<ThirdPartyApplicationConfig[]>([])
         const configRef = useRef<GlobalNetworkConfig>()
         const onlineListRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(onlineListRef)
@@ -349,7 +348,16 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             apiGetGlobalNetworkConfig()
                 .then((res) => {
                     configRef.current = res
-                    const appConfigs = res.AppConfigs.filter((ele) => res.AiApiPriority.includes(ele.Type))
+                    const appConfigs: ThirdPartyApplicationConfig[] = []
+                    const noAiAppConfigs: ThirdPartyApplicationConfig[] = []
+                    res.AppConfigs.forEach((ele) => {
+                        if (res.AiApiPriority.includes(ele.Type)) {
+                            appConfigs.push(ele)
+                        } else {
+                            noAiAppConfigs.push(ele)
+                        }
+                    })
+                    noAiAppConfigRef.current = noAiAppConfigs
                     setList(appConfigs || [])
                     setOnlineTotal(appConfigs?.length || 0)
                 })
@@ -358,6 +366,9 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                         setSpinning(false)
                     }, 200)
                 })
+        })
+        const getNewAppConfig = useMemoizedFn((list: ThirdPartyApplicationConfig[]) => {
+            return [...list, ...noAiAppConfigRef.current]
         })
         const onEdit = useMemoizedFn((item: ThirdPartyApplicationConfig) => {
             if (!configRef.current) return
@@ -373,14 +384,14 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             if (!configRef.current) return
             const newList = list.filter((i) => i.Type !== item.Type)
             setList(newList)
-            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: newList}).then(() => {
+            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig(newList)}).then(() => {
                 getList()
                 emiter.emit("onRefreshAvailableAIModelList")
             })
         })
         const onRemoveAll = useMemoizedFn(() => {
             if (!configRef.current) return
-            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: []}).then(() => {
+            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig([])}).then(() => {
                 getList()
                 emiter.emit("onRefreshAvailableAIModelList")
             })
@@ -404,9 +415,14 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             }
         })
         const updateOrder = useDebounceFn(
-            (newList) => {
+            (newList: ThirdPartyApplicationConfig[]) => {
                 if (!configRef.current) return
-                apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: newList})
+                const aiApiPriority = newList.map((ele) => ele.Type)
+                apiSetGlobalNetworkConfig({
+                    ...configRef.current,
+                    AppConfigs: getNewAppConfig(newList),
+                    AiApiPriority: aiApiPriority
+                })
             },
             {wait: 500}
         ).run
