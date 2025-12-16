@@ -141,6 +141,7 @@ service Yak {
   rpc DownloadMITMCert(Empty) returns (MITMCert);
   rpc DownloadMITMGMCert(Empty) returns (MITMCert);
 
+  rpc WatchProcessConnection(stream WatchProcessRequest) returns (stream WatchProcessResponse);
   rpc MITMV2(stream MITMV2Request) returns (stream MITMV2Response);
 
   // 开启端口
@@ -8168,8 +8169,35 @@ message GetSupportedLocalModelsResponse {
   repeated LocalModelConfig Models = 1;
 }
 
+message WatchProcessStartParams {
+  int64 CheckIntervalSeconds = 1;
+  bool DisableReserveDNS = 2;
+}
 
+message WatchProcessRequest {
+  WatchProcessStartParams StartParams = 1;
+  int32 QueryPid = 2; // query process detail info(connection info)
+}
 
+message ProcessInfo {
+  int32 Pid = 1;
+  string Name = 2;
+  string Exe = 3;
+  string Cmdline = 4;
+}
+
+message ConnectionInfo {
+  string LocalAddress = 1;
+  string RemoteAddress = 2;
+  string Status = 3;
+  repeated string Domain = 4;
+}
+
+message WatchProcessResponse {
+  string Action = 1; // start | exit | refresh
+  ProcessInfo Process = 2;
+  repeated ConnectionInfo Connections = 3;
+}
 
 message MITMV2Request{
   /*
@@ -8265,7 +8293,8 @@ message MITMV2Request{
   bool RecoverContext = 45; // recover mitm context plugin config...
   int64 PluginConcurrency = 47; // 设置插件并发数，默认30
   string DownstreamProxyRuleId = 48;
-
+  // 不启用系统代理（环境变量 http_proxy/https_proxy 等）
+  bool DisableSystemProxy = 49;
 }
 
 message MITMV2Response {

@@ -92,6 +92,8 @@ export enum RemoteGV {
     YakitDraggerContentFileLimit = "yakit_dragger_content_file_limit",
     /**@name mitm禁用初始页 */
     MITMDisableCACertPage = "mitm_disable_CACertPage",
+    /**@name mitm禁用系统代理 */
+    MITMDisableSystemProxy = "mitm_disable_SystemProxy",
     /**@name 缓存一级菜单选择的tab的key值 */
     SelectFirstMenuTabKey = "select-first-menu-tab-key",
     /**@name 缓存谷歌免配置更多参数 */

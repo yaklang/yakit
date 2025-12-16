@@ -166,6 +166,8 @@ interface ExtraMITMServerV2 {
     FilterWebsocket: boolean
     /**禁用初始页 */
     DisableCACertPage: boolean
+    /**禁用系统代理 */
+    DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
 }
@@ -198,6 +200,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   HostsMapping: value.extra.hosts,
                   FilterWebsocket: value.extra.filterWebsocket,
                   DisableCACertPage: value.extra.disableCACertPage,
+                  DisableSystemProxy: value.extra.DisableSystemProxy,
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
                   PluginConcurrency: value.extra.PluginConcurrency,
               }

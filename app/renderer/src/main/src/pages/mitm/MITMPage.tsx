@@ -482,6 +482,8 @@ export interface ExtraMITMServerProps {
     filterWebsocket: boolean
     /**禁用初始页 */
     disableCACertPage: boolean
+    /**禁用系统代理 */
+    DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
 }

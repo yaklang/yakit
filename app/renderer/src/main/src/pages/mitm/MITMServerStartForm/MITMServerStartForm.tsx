@@ -278,6 +278,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             hosts: params.etcHosts,
             filterWebsocket: params.filterWebsocket,
             disableCACertPage: params.disableCACertPage,
+            DisableSystemProxy: params.DisableSystemProxy,
             DisableWebsocketCompression: params.DisableWebsocketCompression,
             PluginConcurrency: params.PluginConcurrency
         }
