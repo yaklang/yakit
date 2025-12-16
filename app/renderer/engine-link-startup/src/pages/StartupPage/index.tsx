@@ -56,9 +56,13 @@ import yakitSELogo from "@/assets/yakitSELogo.png"
 import irifyRight from "@/assets/irify-right.png"
 import yakitRight from "@/assets/yakit-right.png"
 import memfitRight from "@/assets/memfit-right.webm"
+import memfitRightDark from "@/assets/memfit-right-dark.webm"
 
 import styles from "./index.module.scss"
 import {SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon} from "@/assets/colors"
+
+import {useTheme} from "@/hooks/useTheme"
+
 const {ipcRenderer} = window.require("electron")
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -776,14 +780,25 @@ export const StartupPage: React.FC = () => {
         return {src: yakitLogo, width: 112, height: 41}
     }, [])
 
+    const {theme} = useTheme()
+
     const startupRightImg = useMemo(() => {
         if (isIRify()) {
             return <img src={irifyRight} alt='暂无图片' />
         }
         if (isCommunityMemfit() || isMemfit())
-            return <video src={memfitRight} autoPlay loop muted playsInline preload='auto' />
+            return (
+                <video
+                    src={theme === "light" ? memfitRight : memfitRightDark}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload='auto'
+                />
+            )
         return <img src={yakitRight} alt='暂无图片' />
-    }, [])
+    }, [theme])
 
     return (
         <div className={styles["startup-wrapper"]}>
