@@ -156,6 +156,7 @@ interface AIChatQSDataBase<T extends string, U> {
     data: U
     id: string
     AIService: AIOutputEvent["AIService"]
+    AIModelName: AIOutputEvent["AIModelName"]
     Timestamp: AIOutputEvent["Timestamp"]
     /** 前端专属数据，供前端逻辑和UI处理使用 */
     extraValue?: AIChatIPCStartParams["extraValue"]

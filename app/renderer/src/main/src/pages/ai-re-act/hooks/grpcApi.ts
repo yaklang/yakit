@@ -201,6 +201,8 @@ export interface AIOutputEvent {
     CallToolID: string
     /** 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称 */
     AIService: string
+    /** 如果是 AI 服务相关的事件，那么这里是 AI 模型的名称 */
+    AIModelName: string
 }
 // #endregion
 

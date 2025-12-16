@@ -1702,6 +1702,7 @@ message AIOutputEvent {
   string ContentType = 18; // markdown / yaklang_code / plain_code
   string CallToolID = 19; // 如果是调用工具相关的事件，那么这里是调用的ID
   string AIService = 20; // 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称
+  string AIModelName = 22; // AI 模型名称
   string TaskUUID = 21; // 任务的唯一ID
 }
 

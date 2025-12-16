@@ -254,7 +254,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                         content={<PreWrapper code={content} />}
                                         modalInfo={{
                                             time: Timestamp,
-                                            title: info.AIService
+                                            title: info.AIModelName
                                         }}
                                         fileList={fileList}
                                     />

@@ -69,7 +69,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
             subTitle={userAction.btnText}
             tip={userAction.userInput}
             modalInfo={{
-                title: info.AIService,
+                title: info.AIModelName,
                 time: timestamp
             }}
         />

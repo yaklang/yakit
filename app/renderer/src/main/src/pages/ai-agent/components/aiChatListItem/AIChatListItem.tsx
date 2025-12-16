@@ -73,7 +73,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         modalInfo={{
                             time: Timestamp,
                             callToolId: data.callToolId,
-                            title: item.AIService
+                            title: item.AIModelName
                         }}
                         execError={data.execError}
                     />

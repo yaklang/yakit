@@ -15,6 +15,7 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
     return {
         id: uuidv4(),
         AIService: info.AIService,
+        AIModelName: info.AIModelName,
         Timestamp: info.Timestamp
     }
 }
