@@ -50,7 +50,6 @@ import {FormExtraSettingProps} from "@/pages/plugins/operator/localPluginExecute
 import useStore from "../hooks/useStore"
 import {loadAuditFromYakURLRaw} from "../utils"
 import {
-    OutlineArrowcirclerightIcon,
     OutlineBugIcon,
     OutlineChevronrightIcon,
     OutlineClockIcon,
@@ -78,11 +77,9 @@ import {
 } from "@/assets/icon/solid"
 import {AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {
     apiDeleteQuerySyntaxFlowResult,
     apiFetchQuerySyntaxFlowResult,
@@ -119,8 +116,6 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
@@ -130,7 +125,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {RJSFSchema} from "@rjsf/utils"
 import {TrashIcon} from "@/assets/newIcon"
 import {IRifyUpdateProjectManagerModal} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
-import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
@@ -1507,6 +1502,9 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const [plugin, setPlugin] = useState<YakScript>()
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
     const {t, i18n} = useI18nNamespaces(["mitm"])
+    const jsonSchemaListRef = useRef<{
+        [key: string]: any
+    }>({})
     const {
         proxyConfig: {Endpoints = []},
         checkProxyEndpoints
@@ -1621,6 +1619,17 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                             return item
                         })
                     }
+                    const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+                    if (result.jsonSchemaError.length > 0) {
+                        failed(`jsonSchema校验失败`)
+                        return
+                    }
+                    result.jsonSchemaSuccess.forEach((item) => {
+                        requestParams.ExecParams.push({
+                            Key: item.key,
+                            Value: JSON.stringify(item.value)
+                        })
+                    })
                     onStartAudit(requestParams)
                 })
                 .catch(() => {})
@@ -1702,14 +1711,14 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                     label='代理'
                                     extra={
                                         <>
-                                        <div
-                                            className={styles["agent-down-stream-proxy"]}
-                                            onClick={onClickDownstreamProxy}
-                                        >
-                                            {t("AgentConfigModal.proxy_configuration")}
-                                        </div>
-                                            <Divider type="vertical" />
-                                            <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})}/>
+                                            <div
+                                                className={styles["agent-down-stream-proxy"]}
+                                                onClick={onClickDownstreamProxy}
+                                            >
+                                                {t("AgentConfigModal.proxy_configuration")}
+                                            </div>
+                                            <Divider type='vertical' />
+                                            <ProxyTest onEchoNode={(proxy) => form.setFieldsValue({proxy})} />
                                         </>
                                     }
                                     validateTrigger={["onChange", "onBlur"]}
@@ -1774,6 +1783,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                             extraParamsGroup={groupParams}
                             pluginType={"yak"}
                             isDefaultActiveKey={false}
+                            jsonSchemaListRef={jsonSchemaListRef}
                         />
                     </>
                 )}
@@ -2797,8 +2807,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 params:
                                     selectedRowKeys.length === 0
                                         ? {
-                                            DeleteAllProject: true
-                                        }
+                                              DeleteAllProject: true
+                                          }
                                         : {
                                               Filter: {
                                                   IDs: selectedRowKeys.map((item) => parseInt(item + ""))
