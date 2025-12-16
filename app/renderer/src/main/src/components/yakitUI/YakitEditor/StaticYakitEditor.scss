@@ -58,6 +58,49 @@
         border-radius: 4px;
     }
 
+    .host-privacy-mask-hidden {
+        position: relative;
+        color: transparent !important;
+        background-color: var(--yakit-colors-Neutral-40);
+        border-radius: 3px;
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--yakit-colors-Neutral-40);
+            border-radius: 3px;
+            z-index: 1;
+        }
+        &::after {
+            content: "隐私模式";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            background-color: var(--yakit-colors-Neutral-40);
+            padding: 0 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        &:hover {
+            background-color: var(--yakit-colors-Neutral-50);
+            &::before {
+                background-color: var(--yakit-colors-Neutral-50);
+            }
+            &::after {
+                background-color: var(--yakit-colors-Neutral-50);
+            }
+        }
+    }
+
     .unicode-decode {
         background-color: var(--yakit-colors-Neutral-40);
     }
