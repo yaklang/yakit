@@ -2628,7 +2628,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         }, [streamInfo])
 
         const onStartAuditFun = useMemoizedFn(async (value) => {
-            if ((pageInfo.GroupNames || []).length === 0) {
+            if ((pageInfo.selectTotal || 0) === 0) {
                 warn("请选择扫描规则")
                 return
             }
