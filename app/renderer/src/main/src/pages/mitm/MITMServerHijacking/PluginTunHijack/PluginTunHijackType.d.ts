@@ -29,7 +29,7 @@ export interface PluginTunHijackRefProps {
 }
 
 export interface PluginTunHijackParams {
-    PluginName: "Tun劫持服务" | "路由表增加" | "路由表删除" | "路由表查询"
+    PluginName: "Tun劫持服务" | "路由表增加" | "路由表删除" | "路由表查询" | "劫持进程"
     onError?: () => void
     onEnd?: () => void
 }
@@ -48,4 +48,38 @@ type OptionalDebugPluginRequest = Partial<DebugPluginRequest>
 export interface HijackTableDataProps {
     ip_addr: string
     tun_name: string
+}
+
+interface WatchProcessStartParams {
+    CheckIntervalSeconds?: number
+    DisableReserveDNS?: boolean
+}
+
+export interface WatchProcessRequest {
+    StartParams?: WatchProcessStartParams
+    QueryPid?: number
+}
+
+
+export interface ProcessInfo {
+    Pid: number
+    Name: string
+    Exe: string
+    Cmdline: string
+}
+
+interface ConnectionInfo {
+    LocalAddress: string
+    RemoteAddress: string
+    Status: string
+    Domain: string[]
+}
+export interface WatchProcessResponse {
+    Action: "start" | "exit" | "refresh"
+    Process: ProcessInfo
+    Connections: ConnectionInfo[]
+}
+
+export interface TunHijackProcessTableProps {
+    deviceName: string
 }
