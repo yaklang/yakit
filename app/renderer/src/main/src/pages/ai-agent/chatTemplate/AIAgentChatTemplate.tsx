@@ -1,5 +1,5 @@
 import React, {memo, useCallback, useEffect, useMemo, useState} from "react"
-import {useControllableValue, useMemoizedFn, useMount, useUpdateEffect} from "ahooks"
+import {useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect} from "ahooks"
 import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -29,6 +29,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {PreWrapper} from "../components/ToolInvokerCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import TimelineCard from "./TimelineCard/TimelineCard"
+import AIMemoryList from "./aiMemoryList/AIMemoryList"
+import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -42,12 +44,16 @@ const options = [
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
+    const {chatIPCData} = useChatIPCStore()
     const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.TaskTree)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
         valuePropName: "expand",
         trigger: "setExpand"
     })
+    const length = useCreation(() => {
+        return chatIPCData?.memoryList?.memories?.length
+    }, [chatIPCData?.memoryList?.memories?.length])
     const handleCancelExpand = useMemoizedFn(() => {
         setExpand(false)
     })
@@ -69,27 +75,34 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
-            <div className={styles["side-header"]}>
-                <YakitButton
-                    type='outline2'
-                    className={styles["side-header-btn"]}
-                    icon={<OutlineChevronrightIcon />}
-                    onClick={handleCancelExpand}
-                    size='small'
-                />
-                <div className={styles["header-title"]}>
-                    <YakitRadioButtons
-                        buttonStyle='solid'
-                        size='middle'
-                        defaultValue={AIChatLeft.TaskTree}
-                        options={options}
-                        value={activeTab}
-                        onChange={({target}) => setActiveTab(target.value)}
+            <div className={styles["list-wrapper"]}>
+                <div className={styles["side-header"]}>
+                    <YakitButton
+                        type='outline2'
+                        className={styles["side-header-btn"]}
+                        icon={<OutlineChevronrightIcon />}
+                        onClick={handleCancelExpand}
+                        size='small'
                     />
+                    <div className={styles["header-title"]}>
+                        <YakitRadioButtons
+                            buttonStyle='solid'
+                            size='middle'
+                            defaultValue={AIChatLeft.TaskTree}
+                            options={options}
+                            value={activeTab}
+                            onChange={({target}) => setActiveTab(target.value)}
+                        />
+                    </div>
                 </div>
-            </div>
 
-            <div className={styles["task-list"]}>{renderDom()}</div>
+                <div className={styles["task-list"]}>{renderDom()}</div>
+            </div>
+            {!!length && (
+                <div className={styles["memory-wrapper"]}>
+                    <AIMemoryList />
+                </div>
+            )}
         </div>
     )
 })

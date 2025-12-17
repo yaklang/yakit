@@ -969,6 +969,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                         Timestamp: Date.now(),
                         data: {qs: FreeInput || "", setting: request},
                         AIService: "",
+                        AIModelName: "",
                         extraValue: extraValue
                     })
                     return newArr
