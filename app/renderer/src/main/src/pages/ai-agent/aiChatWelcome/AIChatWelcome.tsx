@@ -42,13 +42,16 @@ import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
-import {handleOpenFileSystemDialog, OpenDialogOptions} from "@/utils/fileSystemDialog"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {historyStore, loadRemoteHistory} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import FileTreeList from "./FileTreeList/FileTreeList"
+import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
+import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
+import {FileListStoreKey, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import OpenFileDropdown, { OpenFileDropdownItem } from "./OpenFileDropdown/OpenFileDropdown"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -113,6 +116,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [questionList, setQuestionList] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
+
+    // 控制下拉菜单
+    const [openDrawer, setOpenDrawer] = useState<boolean>(false)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
@@ -241,6 +247,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     const handleTriageSubmit = useMemoizedFn((qs: string) => {
         onTriageSubmit(qs)
+        fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })
     const onMore = useMemoizedFn((item: string) => {
@@ -339,63 +346,34 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
 
-    const dropdownMenu = useMemo(() => {
-        return {
-            data: [
-                {
-                    label: "打开文件",
-                    key: "open-file"
-                },
-                {
-                    label: "打开文件夹",
-                    key: "open-folder"
-                }
-            ],
-            onClick: ({key}) => {
-                switch (key) {
-                    case "open-file":
-                        onOpenFileFolder(["openFile"])
-                        break
-                    case "open-folder":
-                    default:
-                        onOpenFileFolder(["openDirectory"])
-                        break
-                }
-            }
-        }
-    }, [])
+    const customFolder = useCustomFolder()
 
-    const onOpenFileFolder = async (properties: OpenDialogOptions["properties"]) => {
-        try {
-            const {filePaths} = await handleOpenFileSystemDialog({
-                title: "请选择文件夹",
-                properties
-            })
-            if (!filePaths.length) return
-            const absolutePath: string = filePaths[0].replace(/\\/g, "\\")
-            loadRemoteHistory().then(() => {
-                historyStore.addHistoryItem({
-                    path: absolutePath,
-                    isFolder: properties?.includes("openDirectory") ?? true
-                })
-                onSetReAct?.()
-            })
-        } catch {}
+    const onOpenFileFolder = async (data:OpenFileDropdownItem) => {
+        if (!data.path) return
+        loadRemoteHistory().then(() => {
+            historyStore.addHistoryItem(data)
+            setOpenDrawer(true)
+        })
     }
 
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
-            <YakitDropdownMenu
-                menu={dropdownMenu}
-                dropdown={{
-                    trigger: ["click"],
-                    placement: "bottomLeft"
-                }}
-            >
-                <YakitButton className={styles["open-folder-button"]} type='outline1'>
-                    打开文件夹管理
-                </YakitButton>
-            </YakitDropdownMenu>
+            <div className={styles["open-file-tree-button"]}>
+                {!customFolder.length ? (
+                    <OpenFileDropdown cb={onOpenFileFolder}>
+                        <YakitButton type='outline1'>打开文件夹管理</YakitButton>
+                    </OpenFileDropdown>
+                ) : (
+                    <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
+                        {openDrawer ? "收起" : "展开"}
+                    </YakitButton>
+                )}
+            </div>
+            <div className={`${styles["file-tree-list"]} ${(customFolder.length && openDrawer) ? styles["open"] : styles["close"]}`}>
+                <div className={styles["file-tree-list-inner"]}>
+                    <FileTreeList />
+                </div>
+            </div>
             <div className={styles["content"]}>
                 <div className={styles["content-absolute"]}>
                     <div className={styles["input-wrapper"]}>
@@ -404,6 +382,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
                         <div className={styles["input-body-wrapper"]}>
+                            <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return
@@ -435,6 +414,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                 <div className={styles["line"]} ref={lineStartRef} />
                             </AIChatTextarea>
                         </div>
+
                         {checkItems.length > 0 ? (
                             <div className={styles["suggestion-tips-wrapper"]}>
                                 <div className={styles["suggestion-tips-title"]}>

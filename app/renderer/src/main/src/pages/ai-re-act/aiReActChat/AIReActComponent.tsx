@@ -2,7 +2,7 @@ import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/Yak
 import styles from "./AIReActChat.module.scss"
 import {SolidStopIcon} from "@/assets/icon/solid"
 import React from "react"
-import {OutlineChevrondownIcon, OutlineChevronleftIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineChevronleftIcon, OutlinePaperclipIcon} from "@/assets/icon/outline"
 
 export const RoundedStopButton: React.FC<YakitButtonProp> = React.memo((props) => {
     return (
@@ -31,4 +31,16 @@ export const ChevrondownButton: React.FC<YakitButtonProp> = React.memo((props) =
 
 export const ChevronleftButton: React.FC<YakitButtonProp> = React.memo((props) => {
     return <ChevrondownButton icon={<OutlineChevronleftIcon />} {...props} />
+})
+
+export const UploadFileButton: React.FC<YakitButtonProp> = React.memo((props) => {
+    return (
+        <YakitButton
+            type='text2'
+            className={styles["upload-file-icon"]}
+            icon={<OutlinePaperclipIcon />}
+            radius='50%'
+            {...props}
+        />
+    )
 })

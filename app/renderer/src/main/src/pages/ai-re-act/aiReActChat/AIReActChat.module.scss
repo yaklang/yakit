@@ -182,6 +182,16 @@
     }
 
     .footer-inputs {
+        .extra-footer-right {
+            display: flex;
+            align-items: center;
+            &-divider {
+                width: 1px;
+                height: 16px;
+                background: var(--Colors-Use-Neutral-Border);
+                margin: 0 8px;
+            }
+        }
     }
 }
 

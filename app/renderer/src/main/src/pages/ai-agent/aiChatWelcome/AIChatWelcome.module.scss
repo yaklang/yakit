@@ -21,6 +21,39 @@
     background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Neutral-Bg) 50%);
     overflow: auto;
 
+    .file-tree-list {
+        width: 25%;
+        max-width: 300px;
+        position: absolute;
+        top: 50px;
+        left: 10px;
+        z-index: 1;
+        background-color: var(--Colors-Use-Basic-Background);
+        border-radius: 8px;
+        overflow: hidden;
+
+        height: 0;
+        transition: height 300ms ease;
+        &-inner {
+            width: 100%;
+            height: 100%;
+            padding: 8px;
+        }
+    }
+
+    .file-tree-list.open {
+        height: 70vh;
+    }
+    .file-tree-list.open .file-tree-list-inner {
+        overflow: overlay;
+    }
+    .file-tree-list.close {
+        height: 0;
+        &-inner {
+            overflow: hidden;
+        }
+    }
+
     .content {
         @extend %display-flex-center;
         width: 784px;
@@ -46,6 +79,7 @@
         flex: 1 0 0;
         height: 460px;
         padding-top: 10%;
+        width: 0;
         .input-heard {
             @extend %display-column-center;
             align-items: flex-start;
@@ -241,10 +275,11 @@
             transform: scale(0);
         }
     }
-    .open-folder-button{
+    .open-file-tree-button {
         position: absolute;
         top: 16px;
         left: 16px;
+        z-index: 1;
     }
 }
 .recommend-list-wrapper {

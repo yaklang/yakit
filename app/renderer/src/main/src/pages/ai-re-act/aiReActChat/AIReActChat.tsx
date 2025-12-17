@@ -14,7 +14,7 @@ import {AIModelSelect} from "@/pages/ai-agent/aiModelList/aiModelSelect/AIModelS
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
-import {ChevrondownButton, ChevronleftButton, RoundedStopButton} from "./AIReActComponent"
+import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButton} from "./AIReActComponent"
 import {AIInputEvent, AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -25,12 +25,13 @@ import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCConten
 import {fileToChatQuestionStore, useFileToQuestion} from "./store"
 import {PageNodeItemProps} from "@/store/pageInfo"
 import emiter from "@/utils/eventBus/eventBus"
+import FreeDialogFileList from "@/pages/ai-agent/aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
+import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话"} = props
-
+    const {mode, chatContainerClassName, chatContainerHeaderClassName, storeKey, title = "自由对话"} = props
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
@@ -49,7 +50,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {activeChat, setting} = useAIAgentStore()
 
-    const fileToQuestion = useFileToQuestion()
+    const fileToQuestion = useFileToQuestion(storeKey)
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
@@ -68,14 +69,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             yakitNotify("error", "请先配置 AI ReAct 参数")
             return
         }
-        const fileArr = fileToQuestion.filter((i) => qs.includes(i))
         if (execute) {
-            handleSend(qs, fileArr)
+            handleSend(qs, fileToQuestion)
         } else {
-            handleStart({qs, fileToQuestion: fileArr})
+            handleStart({qs, fileToQuestion})
         }
         setQuestion("")
-        fileToChatQuestionStore.claearFileToChatQuestion()
+        fileToChatQuestionStore.clear(storeKey)
     })
 
     /**自由对话 */
@@ -137,16 +137,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         setTimelineVisible(false)
     })
 
-    useEffect(() => {
-        if (!fileToQuestion.length) return
-        const lastFile = fileToQuestion[fileToQuestion.length - 1]
-        if (!lastFile) return
-        if (question) {
-            setQuestion((prev) => `${prev} ${lastFile} `)
-            return
-        }
-        setQuestion(`${lastFile} `)
-    }, [fileToQuestion])
     return (
         <>
             <div
@@ -177,13 +167,25 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
                                 {execute && questionQueue?.total > 0 && <AITaskQuery />}
+                                <FreeDialogFileList storeKey={storeKey} />
                                 <AIChatTextarea
                                     loading={false}
                                     question={question}
                                     setQuestion={setQuestion}
                                     textareaProps={textareaProps}
                                     onSubmit={handleSubmit}
-                                    extraFooterRight={execute && <RoundedStopButton onClick={handleStop} />}
+                                    extraFooterRight={
+                                        <div className={styles["extra-footer-right"]}>
+                                            <OpenFileDropdown
+                                                cb={(data) => fileToChatQuestionStore.add(storeKey, data.path)}
+                                            >
+                                                <UploadFileButton title='打开文件夹' />
+                                            </OpenFileDropdown>
+
+                                            <div className={styles["extra-footer-right-divider"]} />
+                                            {execute && <RoundedStopButton onClick={handleStop} />}
+                                        </div>
+                                    }
                                     extraFooterLeft={
                                         <>
                                             <AIModelSelect />

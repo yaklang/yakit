@@ -6,8 +6,8 @@ import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {setClipboardText} from "@/utils/clipboard"
 import {FileTreeSystemItemProps} from "../type"
 import {historyStore} from "../store/useHistoryFolder"
-import {fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
 import { YakitMenuItemType } from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { FileListStoreKey, fileToChatQuestionStore } from "@/pages/ai-re-act/aiReActChat/store"
 
 const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded, onResetTree}) => {
     // 文件图标
@@ -69,7 +69,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded
                 onResetTree?.()
                 break
             case "sendToChat":
-                fileToChatQuestionStore.addFileToChatQuestion(data.path)
+                  fileToChatQuestionStore.add(FileListStoreKey.FileList,data.path)
                 break
             default:
                 break
