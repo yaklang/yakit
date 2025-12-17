@@ -2510,11 +2510,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         // CreateSSAProject 创建项目管理数据
                         projectIdCacheRef.current = verifyStart?.BaseInfo?.project_id
                         jsonCacheRef.current = startLog?.data || ""
-
-                        if (verifyStart?.project_exists === false) {
-                            await onCreateSSAProject(startLog?.data || "")
-                        }
-
                         switch (kind) {
                             // 链接错误
                             case "connectFailException":
@@ -2582,6 +2577,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 ])
                                 break
                             default:
+                                if (verifyStart?.project_exists === false) {
+                                    await onCreateSSAProject(startLog?.data || "")
+                                }
                                 //  真正的启动
                                 isRealStartRef.current = true
                                 setIsExpand(false)
