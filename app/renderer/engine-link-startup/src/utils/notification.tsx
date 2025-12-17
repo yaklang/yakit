@@ -35,6 +35,7 @@ export const yakitNotify = (notifyType: NotifyType, props: ArgsProps | string | 
         ...newProps,
         icon: getIcon(notifyType),
         placement: "bottomRight",
-        className: "yakit-notification-" + notifyType
+        className: "yakit-notification-" + notifyType,
+        bottom: 8
     })
 }

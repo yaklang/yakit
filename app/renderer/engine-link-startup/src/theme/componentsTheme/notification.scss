@@ -9,11 +9,11 @@
         background: var(--Colors-Use-Error-Bg-Hover);
         border: 1px solid var(--Colors-Use-Error-Border);
         border-radius: 4px;
-        padding: 16px 12px;
+        padding: 8px 12px;
     }
 
     .ant-notification-notice-message {
-        margin-bottom: 4px;
+        margin-bottom: 0px;
         margin-left: 28px;
         font-size: 14px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -50,11 +50,11 @@
         background: var(--Colors-Use-Success-Bg);
         border: 1px solid var(--Colors-Use-Success-Border);
         border-radius: 4px;
-        padding: 16px 12px;
+        padding: 8px 12px;
     }
 
     .ant-notification-notice-message {
-        margin-bottom: 4px;
+        margin-bottom: 0px;
         margin-left: 28px;
         font-size: 14px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -91,11 +91,11 @@
         background: var(--Colors-Use-Warning-Bg);
         border: 1px solid var(--Colors-Use-Warning-Border);
         border-radius: 4px;
-        padding: 16px 12px;
+        padding: 8px 12px;
     }
 
     .ant-notification-notice-message {
-        margin-bottom: 4px;
+        margin-bottom: 0px;
         margin-left: 28px;
         font-size: 14px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -124,17 +124,18 @@
 }
 
 .yakit-notification-info {
-    background: var(--Colors-Use-Basic-Background);
+    background: var(--Colors-Use-Purple-Bg);
     box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
     padding: 0;
 
     .ant-notification-notice-content {
+        border: 1px solid var(--Colors-Use-Purple-Border);
         border-radius: 4px;
-        padding: 16px 12px;
+        padding: 8px 12px;
     }
 
     .ant-notification-notice-message {
-        margin-bottom: 4px;
+        margin-bottom: 0px;
         margin-left: 0;
         font-size: 14px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -153,7 +154,7 @@
     }
 
     .ant-notification-notice-with-icon .ant-notification-notice-description {
-        margin-left: 28px;
+        margin-left: 0;
         font-size: 12px;
         line-height: 16px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -181,12 +182,17 @@
     color: var(--Colors-Use-Warning-Primary);
 }
 
+.ant-notification {
+    max-height: 60vh;
+    overflow-y: auto;
+}
 .ant-notification-notice {
     border-radius: 4px;
-    background-color: var(--Colors-Use-Neutral-Bg);
-    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    margin-bottom: 5px;
 }
-.ant-notification-notice-close{
+
+.ant-notification-notice-close {
+    top: 8px;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     &:hover {
         color: var(--Colors-Use-Neutral-Text-1-Title);
