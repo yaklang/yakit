@@ -1962,10 +1962,6 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     // CreateSSAProject 创建项目管理数据
                     projectIdCacheRef.current = verifyStart?.BaseInfo?.project_id
                     jsonCacheRef.current = startLog?.data || ""
-
-                    if (verifyStart?.project_exists === false) {
-                        await onCreateSSAProject(startLog?.data || "")
-                    }
                     // 参数中是否勾选了立即编译
                     isCompileImmediatelyRef.current = verifyStart.compile_immediately
                     switch (kind) {
@@ -2035,6 +2031,9 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                             ])
                             break
                         default:
+                            if (verifyStart?.project_exists === false) {
+                                await onCreateSSAProject(startLog?.data || "")
+                            }
                             if (!isCompileImmediatelyRef.current) {
                                 success("创建项目成功，请手动编译")
                                 setShowCompileModal(false)
