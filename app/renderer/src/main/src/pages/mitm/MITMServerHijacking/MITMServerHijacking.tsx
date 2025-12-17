@@ -20,6 +20,8 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
+import {RemoteGV} from "@/yakitGV"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {
     MITMEnablePluginModeRequest,
     MITMFilterWebsocketRequest,
@@ -29,6 +31,7 @@ import {
     grpcMITMFilterWebsocket,
     grpcMITMHotPort,
     grpcMITMSetDownstreamProxy,
+    grpcMITMSetDisableSystemProxy,
     grpcMITMStopCall
 } from "../MITMHacker/utils"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -130,6 +133,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
+    const [disableSystemProxy, setDisableSystemProxy] = useState<boolean>(false)
+    const {t, i18n} = useI18nNamespaces(["webFuzzer",'mitm'])
 
     const mitmContent = useContext(MITMContext)
 
@@ -234,6 +239,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             const v = e === "true" ? true : false
             setFilterWebsocket(v)
         })
+        // 获取禁用系统代理状态
+        getRemoteValue(RemoteGV.MITMDisableSystemProxy).then((e) => {
+            const v = e === "true" ? true : false
+            setDisableSystemProxy(v)
+        })
     }, [])
 
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
@@ -306,9 +316,40 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             </label>
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setDownStreamAgentModalVisible(true)}>
-                            下游代理
-                        </div>
+                        <YakitPopover
+                            trigger={"click"}
+                            placement='bottom'
+                            title={
+                                <div
+                                    className={style["proxy_configuration_top"]}
+                                    onClick={() => setDownStreamAgentModalVisible(true)}
+                                >
+                                    {t("ProxyConfig.downstream_agent")}
+                                </div>
+                            }
+                            content={
+                                <div
+                                    className={style["proxy_configuration_bottom"]}
+                                >
+                                    <span>{t("HttpQueryAdvancedConfig.disable_system_proxy")}</span>
+                                    <YakitSwitch
+                                        size='large'
+                                        checked={disableSystemProxy}
+                                        onChange={(checked) => {
+                                            setDisableSystemProxy(checked)
+                                            setRemoteValue(RemoteGV.MITMDisableSystemProxy, checked ? "true" : "")
+                                            // 调用grpc设置禁用系统代理
+                                            grpcMITMSetDisableSystemProxy({
+                                                version: mitmVersion,
+                                                setDisableSystemProxy: checked
+                                            })
+                                        }}
+                                    />
+                                </div>
+                            }
+                        >
+                            <div className={style["link-item"]}>{t("AgentConfigModal.proxy_configuration")}</div>
+                        </YakitPopover>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setVisible(true)}>
                             规则配置

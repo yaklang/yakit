@@ -135,6 +135,8 @@
     "operation": "操作",
     "add_rule": "新增代理规则",
     "edit_rule": "编辑代理规则",
+    "add_point": "新增代理节点",
+    "edit_point": "编辑代理节点",
     "rule_group_name_label": "规则组名",
     "please_enter_rule_group_name": "请输入规则组名",
     "proxy_address_label": "代理地址",

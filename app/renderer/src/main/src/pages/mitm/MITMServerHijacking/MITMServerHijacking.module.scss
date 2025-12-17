@@ -588,3 +588,16 @@
         }
     }
 }
+
+.proxy_configuration_top{
+    text-align: center;
+    height: 33px;
+    line-height: 33px;
+    cursor: pointer;
+}
+
+.proxy_configuration_bottom{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}

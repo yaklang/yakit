@@ -720,6 +720,25 @@ export const grpcMITMSetDownstreamProxy: APIFunc<MITMSetDownstreamProxyRequest, 
             })
     })
 }
+
+
+export interface MITMSetDisableSystemProxyRequest extends MITMBaseData {
+    setDisableSystemProxy: boolean
+}
+/**设置禁用系统代理 */
+export const grpcMITMSetDisableSystemProxy: APIFunc<MITMSetDisableSystemProxyRequest, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const {version} = params
+        const url = `mitm${version}-set-disable-system-proxy`
+        ipcRenderer
+            .invoke(url, params.setDisableSystemProxy)
+            .then(resolve)
+            .catch((e) => {
+                reject(e)
+            })
+    })
+}
+
 export interface MITMHotPortRequest extends MITMBaseData {
     host: string
     port: number

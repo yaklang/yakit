@@ -135,6 +135,8 @@
     "operation": "Operation",
     "add_rule": "Add Proxy Rule",
     "edit_rule": "Edit Proxy Rule",
+    "add_point": "Add Proxy Point",
+    "edit_point": "Edit Proxy Point",
     "rule_group_name_label": "Rule Group Name",
     "please_enter_rule_group_name": "Please Enter Rule Group Name",
     "proxy_address_label": "Proxy Address",

@@ -8295,6 +8295,8 @@ message MITMV2Request{
   string DownstreamProxyRuleId = 48;
   // 不启用系统代理（环境变量 http_proxy/https_proxy 等）
   bool DisableSystemProxy = 49;
+  // runtime change system proxy enable/disable
+  bool SetDisableSystemProxy = 50;
 }
 
 message MITMV2Response {

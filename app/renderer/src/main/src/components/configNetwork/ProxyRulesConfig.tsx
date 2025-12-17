@@ -58,7 +58,7 @@ export interface ProxyRulesConfigProps {
 
 const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
     const {visible, hideRules = false, onClose} = props
-    const {proxyConfig: { Endpoints, Routes }, saveProxyConfig, proxyPointsOptions} = useProxy()
+    const {proxyConfig: { Endpoints, Routes }, saveProxyConfig} = useProxy()
     const [form] = Form.useForm()
     const [modalVisible, setModalVisible] = useState(false)
     const [activeKey, setActiveKey] = useState("point")
@@ -87,7 +87,6 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                       Name,
                       Patterns
                   }
-
             const updateList = <T extends {Id: string}>(list: T[]): T[] =>
                 editId
                     ? list.map((item) => (item.Id === editId ? ({...item, ...newItem} as unknown as T) : item))
@@ -415,7 +414,11 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                 </YakitSideTab>
             )}
             <YakitModal
-                title={t(`ProxyConfig.${editId ? "edit_rule" : "add_rule"}`)}
+                title={t(
+                    isEndpoints
+                        ? `ProxyConfig.${editId ? "edit_point" : "add_point"}`
+                        : `ProxyConfig.${editId ? "edit_rule" : "add_rule"}`
+                )}
                 visible={modalVisible}
                 onOk={handleOk}
                 maskClosable={false}
@@ -486,7 +489,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                                 rules={[{required: true, message: t("ProxyConfig.please_enter_proxy_address")}]}
                             >
                                 <YakitSelect
-                                    options={proxyPointsOptions}
+                                    options={Endpoints.map(({Url, Id}) => ({label: Url, value: Id}))}
                                     placeholder={t("ProxyConfig.example_proxy_address")}
                                     mode='multiple'
                                 />
@@ -513,10 +516,7 @@ export const ProxyTest = memo(
         const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
         const [errorMsg, setErrorMsg] = useState("")
         const [form] = Form.useForm()
-        const {
-            proxyConfig: {Endpoints = []},
-            proxyPointsOptions
-        } = useProxy()
+        const { proxyConfig: {Endpoints = []} } = useProxy()
         const {t} = useI18nNamespaces(["yakitUi", "mitm", "payload"])
 
         const onShowModal = useMemoizedFn(async () => {
@@ -683,7 +683,7 @@ export const ProxyTest = memo(
                             >
                                 <YakitSelect
                                     disabled={disabled}
-                                    options={proxyPointsOptions}
+                                    options={Endpoints.map(({Url, Id}) => ({label: Url, value: Id}))}
                                     mode='tags'
                                     placeholder={t("ProxyConfig.proxy_address_placeholder")}
                                 />
