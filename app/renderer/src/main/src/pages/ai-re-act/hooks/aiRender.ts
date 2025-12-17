@@ -1,6 +1,6 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIAgentGrpcApi, AIOutputEvent, AIOutputI18n} from "./grpcApi"
-import {AIChatIPCStartParams, AIQuestionQueues} from "./type"
+import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n} from "./grpcApi"
+import {AIChatIPCStartParams} from "./type"
 
 // #region 基础通用数据字段
 interface AIOutputBaseInfo {
@@ -161,7 +161,7 @@ interface AIChatQSDataBase<T extends string, U> {
     extraValue?: AIChatIPCStartParams["extraValue"]
 }
 
-type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
+type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, {qs: string; setting: AIInputEvent}>
 /** @deprecated 日志类型已无用，迁移成一个新页面 */
 type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>

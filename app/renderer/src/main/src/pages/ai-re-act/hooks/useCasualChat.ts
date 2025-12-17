@@ -967,7 +967,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                         id: uuidv4(),
                         type: AIChatQSDataTypeEnum.QUESTION,
                         Timestamp: Date.now(),
-                        data: FreeInput || "",
+                        data: {qs: FreeInput || "", setting: request},
                         AIService: "",
                         extraValue: extraValue
                     })

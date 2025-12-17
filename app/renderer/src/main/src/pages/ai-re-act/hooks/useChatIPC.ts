@@ -21,7 +21,7 @@ import {
 import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
 import cloneDeep from "lodash/cloneDeep"
-import { DeafultAIQuestionQueues, DefaultMemoryList} from "./defaultConstant"
+import {DeafultAIQuestionQueues, DefaultMemoryList} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -467,7 +467,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         // 初次用户对话的问题，属于自由对话中的问题
         casualChatEvent.handleSend({
-            request: {IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""},
+            request: {...params, IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""},
             extraValue
         })
 
