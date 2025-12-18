@@ -541,6 +541,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
             const checked = !isAutoHidden
             setIsAutoHidden(checked)
             setRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode, `${checked}`)
+            emiter.emit("switchSideHiddenMode", `${checked}`)
         }),
         {wait: 200, leading: true}
     ).run

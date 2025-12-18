@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AIAgentProps, AIAgentSetting} from "./aiAgentType"
 import {AIAgentSideList} from "./AIAgentSideList"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./useContext/AIAgentContext"
@@ -29,6 +29,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
+
+    const sideHiddenModeRef = useRef<string>()
 
     // 缓存全局配置数据
     useUpdateEffect(() => {
@@ -112,23 +114,37 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         [wrapperSize],
         {wait: 100, trailing: false}
     )
+    useEffect(() => {
+        initSideHiddenMode()
+        emiter.on("switchSideHiddenMode", switchSideHiddenMode)
+        return () => {
+            emiter.off("switchSideHiddenMode", switchSideHiddenMode)
+        }
+    }, [])
+    const switchSideHiddenMode = useMemoizedFn((data) => {
+        sideHiddenModeRef.current = data
+    })
+    const initSideHiddenMode = useMemoizedFn(() => {
+        getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
+            .then((data) => {
+                sideHiddenModeRef.current = data
+            })
+            .catch(() => {})
+    })
+
     const onSendSwitchAIAgentTab = useDebounceFn(
         useMemoizedFn(() => {
-            getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
-                .then((res) => {
-                    if (res !== "false") {
-                        emiter.emit(
-                            "switchAIAgentTab",
-                            JSON.stringify({
-                                type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW,
-                                params: {
-                                    show: false
-                                }
-                            })
-                        )
-                    }
-                })
-                .catch(() => {})
+            if (sideHiddenModeRef.current !== "false") {
+                emiter.emit(
+                    "switchAIAgentTab",
+                    JSON.stringify({
+                        type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW,
+                        params: {
+                            show: false
+                        }
+                    })
+                )
+            }
         }),
         {wait: 200, leading: true}
     ).run
