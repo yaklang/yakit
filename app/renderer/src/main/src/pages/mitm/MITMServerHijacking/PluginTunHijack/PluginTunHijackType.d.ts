@@ -44,7 +44,6 @@ export interface PluginTunHijackTableProps {
 
 type OptionalDebugPluginRequest = Partial<DebugPluginRequest>
 
-
 export interface HijackTableDataProps {
     ip_addr: string
     tun_name: string
@@ -60,7 +59,6 @@ export interface WatchProcessRequest {
     QueryPid?: number
 }
 
-
 export interface ProcessInfo {
     Pid: number
     Name: string
@@ -75,11 +73,26 @@ interface ConnectionInfo {
     Domain: string[]
 }
 export interface WatchProcessResponse {
-    Action: "start" | "exit" | "refresh"
+    Action: "start" | "exit" | "refresh" | "refresh_connections"
     Process: ProcessInfo
     Connections: ConnectionInfo[]
 }
 
 export interface TunHijackProcessTableProps {
     deviceName: string
+    setTableType: (type: "process" | "route") => void
+    pluginTunHijackAddActionsFun: (target: string) => void
+    searchVal: string
+}
+
+export interface HijackProcessInfoModalProps {
+    hijackProcessInfo?: ConnectionInfo[]
+    setHijackProcessInfo: (info?: ConnectionInfo[]) => void
+    pluginTunHijackAddActionsFun: (target: string) => void
+    setTableType: (type: "process" | "route") => void
+}
+
+export interface ConnectionInfoItemProps {
+    data: ConnectionInfo
+    onPluginTunHijackAddActionsByConnection: (target: string) => void
 }
