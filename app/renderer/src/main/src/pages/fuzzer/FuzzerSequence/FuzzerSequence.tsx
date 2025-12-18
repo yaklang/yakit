@@ -123,6 +123,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { isEmpty } from "lodash"
 import { AdvancedSetV2, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurrency"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import { useProxy } from "@/hook/useProxy"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -229,6 +230,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [concurrencyResponseMap, {set: setConcurrencyResponse, get: getConcurrencyResponse, reset: resetConcurrencyResponse}] = useMap<string, ResponseProps>()
     // 并发展示组的全部响应
     const [showAllRes, setShowAllRes] = useState(false)
+
+    const { getProxyValue } = useProxy();
     
     const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
         string,
@@ -1048,6 +1051,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (webFuzzerPageInfo) {
                 // 用于表格显示最大数量
                 fuzzerTableMaxDataRef.current.set(item.id, webFuzzerPageInfo.advancedConfigValue.resNumlimit)
+                
+                const { proxy = [] } = webFuzzerPageInfo.advancedConfigValue;
+                const { proxyEndpoints, ProxyRuleIds } = getProxyValue(proxy)
+
                 const httpParamsItem: FuzzerRequestProps = {
                     ...advancedConfigValueToFuzzerRequests(webFuzzerPageInfo.advancedConfigValue),
                     RequestRaw: Buffer.from(webFuzzerPageInfo.request, "utf8"), // StringToUint8Array(request, "utf8"),
@@ -1058,7 +1065,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     InheritVariables: item.inheritVariables,
                     FuzzerIndex: item.id,
                     FuzzerTabIndex: item.pageId,
-                    EngineDropPacket: true
+                    EngineDropPacket: true,
+                    Proxy: proxyEndpoints,
+                    ...ProxyRuleIds ? { ProxyRuleId: ProxyRuleIds} : {},
                 }
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
                 httpParams.push(httpParamsItem)

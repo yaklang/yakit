@@ -444,7 +444,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                                     }
                                 ]}
                             >
-                                <YakitInput placeholder={t("ProxyConfig.example_proxy_address")} disabled={!!editId} />
+                                <YakitInput placeholder={t("ProxyConfig.example_proxy_address")}/>
                             </Form.Item>
 
                             <Form.Item label={t("AgentConfigModal.username")} name='UserName'>
@@ -631,10 +631,9 @@ export const ProxyTest = memo(
             ) : (
                 <span
                     onClick={() => !btnDisabled && onShowModal()}
-                    className={classNames(
-                        [styles["proxy-test-title"]],
-                        btnDisabled ? styles["proxy-test-title-disabled"] : ''
-                    )}
+                    className={classNames([styles["proxy-test-title"]], {
+                        [styles["proxy-test-title-disabled"]]: btnDisabled
+                    })}
                 >
                     {t("ProxyConfig.proxyDetection")}
                 </span>

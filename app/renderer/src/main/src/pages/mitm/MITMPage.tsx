@@ -343,9 +343,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     )
 
-    useDeepCompareEffect(() => {
+    const changeTip = useMemoizedFn(()=>{
         if (!downstreamProxyStr) return
-
         const getLabel = () => {
             if (downstreamProxyStr.startsWith("route") || downstreamProxyStr.startsWith("ep")) {
                 const option = proxyRouteOptions.find(({value}) => value === downstreamProxyStr)
@@ -364,6 +363,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         const newTip = `${t("ProxyConfig.downstream_agent")}：${label}`
         setTip((prev) => (prev === newTip ? prev : newTip))
+    })
+
+    useDeepCompareEffect(() => {
+       changeTip()
     }, [proxyRouteOptions])
 
 

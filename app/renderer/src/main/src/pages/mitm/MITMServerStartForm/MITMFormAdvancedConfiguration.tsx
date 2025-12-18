@@ -23,7 +23,7 @@ import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -81,50 +81,36 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
         const {t, i18n} = useI18nNamespaces(["webFuzzer"])
-        
+
+        const getValue = useMemoizedFn(() => {
+            const v = form.getFieldsValue()
+            if (Object.keys(v).length > 0) {
+                return {...v, etcHosts}
+            } else {
+                return {
+                    certs: certsDef,
+                    etcHosts: etcHostsDef,
+                    preferGMTLS: preferGMTLSDef,
+                    onlyEnableGMTLS: onlyEnableGMTLSDef,
+                    enableProxyAuth: enableProxyAuthDef,
+                    dnsServers: dnsServersDef,
+                    proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
+                    proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
+                    filterWebsocket: filterWebsocketDef,
+                    disableCACertPage: disableCACertPageDef,
+                    DisableSystemProxy: disableSystemProxyDef,
+                    DisableWebsocketCompression: disableWebsocketCompressionDef,
+                    PluginConcurrency: pluginConcurrencyDef
+                }
+            }
+        })
 
         useImperativeHandle(
             ref,
             () => ({
-                getValue: () => {
-                    const v = form.getFieldsValue()
-                    if (Object.keys(v).length > 0) {
-                        return {...v, etcHosts}
-                    } else {
-                        return {
-                            certs: certsDef,
-                            etcHosts: etcHostsDef,
-                            preferGMTLS: preferGMTLSDef,
-                            onlyEnableGMTLS: onlyEnableGMTLSDef,
-                            enableProxyAuth: enableProxyAuthDef,
-                            dnsServers: dnsServersDef,
-                            proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
-                            proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
-                            filterWebsocket: filterWebsocketDef,
-                            disableCACertPage: disableCACertPageDef,
-                            DisableSystemProxy: disableSystemProxyDef,
-                            DisableWebsocketCompression: disableWebsocketCompressionDef,
-                            PluginConcurrency: pluginConcurrencyDef
-                        }
-                    }
-                }
+                getValue
             }),
-            [
-                certsDef,
-                preferGMTLSDef,
-                onlyEnableGMTLSDef,
-                enableProxyAuthDef,
-                proxyUsernameDef,
-                proxyPasswordDef,
-                dnsServersDef,
-                filterWebsocketDef,
-                disableCACertPageDef,
-                disableSystemProxyDef,
-                disableWebsocketCompressionDef,
-                pluginConcurrencyDef,
-                visible,
-                form
-            ]
+            [getValue]
         )
 
         useEffect(() => {
