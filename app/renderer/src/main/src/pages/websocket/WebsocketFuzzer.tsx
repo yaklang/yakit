@@ -27,6 +27,9 @@ import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import styles from "./WebsocketFuzzer.module.scss"
 import i18n from "@/i18n/i18n"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {OutlineCogIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 interface WebsocketFuzzerProp {
@@ -116,6 +119,8 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
     const [proxy, setProxy] = useState<string>("")
     const [token, setToken] = useState<string>(randomString(30))
     const [ursp, setUrsp] = useState<string>("")
+    const [clearSendData, setClearSendData] = useState(true)
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const flowsRef = useRef<WebsocketFlowFromFuzzer[]>([])
 
     useEffect(() => {
@@ -200,7 +205,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                 token
             )
             .then(() => {
-                setWsToServer("")
+                if (clearSendData) setWsToServer("")
             })
     })
 
@@ -362,6 +367,24 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                     }
                     extra={
                         <div className={styles["websocketClientOperator-card-extra"]}>
+                            <YakitPopover
+                                trigger='click'
+                                placement='bottomRight'
+                                title={t("YakitDraggerContent.setting")}
+                                content={
+                                    <div
+                                        style={{display: "flex", justifyContent: "space-evenly", alignItems: "center"}}
+                                    >
+                                        <span>{t("WebsocketFuzzer.clear_send_data")}</span>
+                                        <YakitSwitch
+                                            checked={clearSendData}
+                                            onChange={() => setClearSendData((pre) => !pre)}
+                                        />
+                                    </div>
+                                }
+                            >
+                                <OutlineCogIcon className={styles["UISettingSvgIcon"]} />
+                            </YakitPopover>
                             <YakitButton
                                 disabled={!(executing && !!ursp)}
                                 type='primary'

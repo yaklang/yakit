@@ -657,5 +657,8 @@
   },
   "ConcurrencyAllRes": {
     "get_config_key_failed": "获取并发配置折叠面板的激活key失败："
+  },
+  "WebsocketFuzzer": {
+    "clear_send_data": "清空发送数据"
   }
 }
