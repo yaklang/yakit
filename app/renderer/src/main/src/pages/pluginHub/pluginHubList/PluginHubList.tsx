@@ -142,7 +142,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const [hiddenDetail, setHiddenDetail] = useState<boolean>(false)
     const onClickPlugin = useMemoizedFn((info: PluginToDetailInfo) => {
         if (!isDetail) {
-            setHiddenDetail(false)
+            setShow(true)
         }
         toPluginDetail(info)
     })

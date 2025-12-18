@@ -133,6 +133,8 @@ const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
     const renderLabel = useCreation(() => {
         if (typeof item.label === "string") {
             return t?.(item.label) || item.label
+        } else if (typeof item.label === "function") {
+            return item.label()
         } else {
             return item.label
         }

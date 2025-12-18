@@ -160,11 +160,12 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
         const [label] = node
+        const finalLabel = label ?? (typeof tab.label === "function" ? tab.label() : tab.label)
         if (tab.value === AITabsEnum.Risk) {
-            return <>{label || tab.label}</>
+            return <>{finalLabel}</>
         }
 
-        return label || tab.label
+        return finalLabel
     })
 
     const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {

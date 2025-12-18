@@ -27,7 +27,8 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
 
 export interface YakitTabsProps {
     icon?: ReactNode
-    label: string | ReactNode
+    // lable需要翻译，需要传t函数。若不做翻译，就不传t。也可以传自定义函数处理label
+    label: string | (() => ReactNode)
     value: string
     hint?: () => string
 }
