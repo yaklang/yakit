@@ -54,6 +54,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     downbodyParams?: HTTPFlowBodyByIdRequest
     onlyBasicMenu?: boolean // 是否只展示最基础菜单 默认不是
     showDownBodyMenu?: boolean
+    noSendToComparer?: boolean // 是否隐藏内置的发送到对比器菜单 默认false
     onClickUrlMenu?: () => void
     onClickOpenBrowserMenu?: () => void
     onClickOpenPacketNewWindowMenu?: () => void
@@ -79,6 +80,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         pageId,
         downbodyParams,
         showDownBodyMenu = true,
+        noSendToComparer = false,
         onClickUrlMenu,
         onClickOpenBrowserMenu,
         onClickOpenPacketNewWindowMenu,
@@ -561,45 +563,48 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         }
 
         // 发送到对比器
-        menuItems.sendToComparer = {
-            menu: [
-                {
-                    key: "sendToComparer",
-                    label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
-                    children: [
-                        {
-                            key: "sendToComparerLeft",
-                            label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
-                        },
-                        {
-                            key: "sendToComparerRight",
-                            label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
-                        }
-                    ]
-                }
-            ],
-            onRun: (editor: YakitIMonacoEditor, key: string) => {
-                const text = editor.getModel()?.getValue() || ""
-                if (!text) {
-                    info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
-                    return
-                }
+        if (!noSendToComparer) {
+            menuItems.sendToComparer = {
+                menu: [
+                    {
+                        key: "sendToComparer",
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
+                        children: [
+                            {
+                                key: "sendToComparerLeft",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
+                            },
+                            {
+                                key: "sendToComparerRight",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
+                            }
+                        ]
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    const text = editor.getModel()?.getValue() || ""
+                    if (!text) {
+                        info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
+                        return
+                    }
 
-                switch (key) {
-                    case "sendToComparerLeft":
-                        setCompareLeft({
-                            content: text,
-                            language: "http"
-                        })
-                        break
-                    case "sendToComparerRight":
-                        setCompareRight({
-                            content: text,
-                            language: "http"
-                        })
-                        break
-                    default:
-                        break
+                    switch (key) {
+                        case "sendToComparerLeft":
+                            setCompareLeft({
+                                content: text,
+                                language: "http"
+                            })
+                            break
+                        case "sendToComparerRight":
+                            setCompareRight({
+                                content: text,
+                                language: "http"
+                            })
+                            webFuzzerCallBack?.()
+                            break
+                        default:
+                            break
+                    }
                 }
             }
         }
@@ -626,7 +631,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         userInfo.isLogin,
         i18n.language,
         setCompareLeft,
-        setCompareRight
+        setCompareRight,
+        noSendToComparer,
     ])
 
     return (
