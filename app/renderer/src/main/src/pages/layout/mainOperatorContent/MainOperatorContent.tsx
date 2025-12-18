@@ -3655,7 +3655,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (selectSubMenu.id !== "0") {
                 if (selectSubMenu.groupId === "0") {
                     if (currentTabKey === YakitRoute.HTTPFuzzer) setType("config")
-                    removeCurrentSelectGroupId(currentTabKey)
+                    if(currentTabKey === pageItem.route) removeCurrentSelectGroupId(currentTabKey)
                 } else {
                     if (currentTabKey === YakitRoute.HTTPFuzzer) {
                         addFuzzerSequenceList({
