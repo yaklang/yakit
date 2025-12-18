@@ -293,7 +293,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 下面注释的代码为 触发UI分裂的回调
-                        // onTaskStart && onTaskStart(startInfo.coordinator_id)
+                        onTaskStart && onTaskStart()
                         planCoordinatorId.current = startInfo.coordinator_id
                     }
                     return

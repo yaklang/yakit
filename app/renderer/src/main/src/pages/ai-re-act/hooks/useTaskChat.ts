@@ -72,12 +72,12 @@ function useTaskChat(params?: UseTaskChatParams) {
     const [streams, setStreams] = useState<AIChatQSData[]>([])
     // #endregion
 
-    useEffect(() => {
-        /**NOTE - 临时解决方案，后续session时再讨论具体方案 */
-        if (onTaskStart && streams.length === 1) {
-            onTaskStart()
-        }
-    }, [streams.length])
+    // useEffect(() => {
+    //     /**NOTE - 临时解决方案，后续session时再讨论具体方案 */
+    //     if (onTaskStart && streams.length === 1) {
+    //         onTaskStart()
+    //     }
+    // }, [streams.length])
 
     // #region 工具执行过程相关数据和逻辑
     /** @description 工具执行过程的数据和工具相关的流数据，在执行过程中，顺序是无序，所以需要对其关联记录 */
