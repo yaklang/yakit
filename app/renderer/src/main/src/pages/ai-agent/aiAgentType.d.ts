@@ -24,7 +24,10 @@ export interface AIAgentTriggerEventInfo {
 // #endregion
 
 // #region UI左侧组件定义
-export interface AIAgentSideListProps {}
+export interface AIAgentSideListProps {
+    show: boolean
+    setShow: (s: boolean) => void
+}
 
 // 编辑对话名字
 export interface EditChatNameModalProps {

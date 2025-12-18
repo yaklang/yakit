@@ -30,6 +30,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
+    const [show, setShow] = useState<boolean>(true)
+
     const sideHiddenModeRef = useRef<string>()
 
     // 缓存全局配置数据
@@ -134,6 +136,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
     const onSendSwitchAIAgentTab = useDebounceFn(
         useMemoizedFn(() => {
+            if (!show) return
             if (sideHiddenModeRef.current !== "false") {
                 emiter.emit(
                     "switchAIAgentTab",
@@ -153,12 +156,12 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         <AIAgentContext.Provider value={{store, dispatcher}}>
             <div id={YakitAIAgentPageID} className={styles["ai-agent"]}>
                 <div className={classNames(styles["ai-side-list"], {[styles["ai-side-list-mini"]]: isMini})}>
-                    <AIAgentSideList />
+                    <AIAgentSideList show={show} setShow={setShow} />
                 </div>
 
                 <div
                     className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}
-                    onFocus={onSendSwitchAIAgentTab}
+                    onClick={onSendSwitchAIAgentTab}
                 >
                     <AIAgentChat />
                 </div>

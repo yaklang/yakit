@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useControllableValue, useMemoizedFn} from "ahooks"
 import {AiAgentTabList, AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
@@ -18,7 +18,11 @@ const AIMCP = React.lazy(() => import("./aiMCP/AIMCP"))
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
-    const [show, setShow] = useState<boolean>(true)
+    const [show, setShow] = useControllableValue<boolean>(props, {
+        defaultValue: true,
+        valuePropName: "show",
+        trigger: "setShow"
+    })
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
         setShow(true)
         setActive(value)
