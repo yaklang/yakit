@@ -124,12 +124,12 @@
 }
 
 .yakit-notification-info {
-    background: var(--Colors-Use-Purple-Bg);
+    background: var(--Colors-Use-Basic-Background);
     box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
     padding: 0;
 
     .ant-notification-notice-content {
-        border: 1px solid var(--Colors-Use-Purple-Border);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         padding: 8px 12px;
     }
