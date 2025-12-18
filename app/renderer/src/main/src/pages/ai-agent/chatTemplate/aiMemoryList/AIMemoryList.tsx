@@ -64,7 +64,7 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
 
     return (
         <div className={styles["ai-memory-list-wrapper"]}>
-            <div className={styles["ai-memory-list-heard"]}>近期记忆</div>
+            <div className={styles["ai-memory-list-heard"]}>近期记忆({list.length})</div>
             <RollingLoadList<AIAgentGrpcApi.MemoryEntry>
                 data={list}
                 loadMoreData={() => {}}

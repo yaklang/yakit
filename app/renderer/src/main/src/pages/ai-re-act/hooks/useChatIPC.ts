@@ -115,7 +115,15 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
     const [questionQueue, setQuestionQueue] = useState<AIQuestionQueues>(cloneDeep(DeafultAIQuestionQueues))
     // 实时记忆列表
-    const [memoryList, setMemoryList] = useState<AIAgentGrpcApi.MemoryEntryList>({...DefaultMemoryList})
+    const reactMemorys = useRef<AIAgentGrpcApi.MemoryEntryList>(cloneDeep(DefaultMemoryList))
+    const taskMemorys = useRef<AIAgentGrpcApi.MemoryEntryList>(cloneDeep(DefaultMemoryList))
+    const [memoryList, setMemoryList] = useState<AIAgentGrpcApi.MemoryEntryList>(cloneDeep(DefaultMemoryList))
+
+    const handleResetMemoryList = useMemoizedFn(() => {
+        reactMemorys.current = cloneDeep(DefaultMemoryList)
+        taskMemorys.current = cloneDeep(DefaultMemoryList)
+        setMemoryList(cloneDeep(DefaultMemoryList))
+    })
 
     // 开始时，获取一次(问题队列|记忆列表)
     const handleStartQuestionQueue = useMemoizedFn(() => {
@@ -248,6 +256,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetGrpcStatus()
         setRunTimeIDs([])
         setGrpcFolders([])
+        handleResetMemoryList()
         // handleResetQuestionQueueTimer()
         setQuestionQueue(cloneDeep(DeafultAIQuestionQueues))
         // logEvents.clearLogs()
@@ -310,7 +319,54 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (res.Type === "memory_context") {
                     // 实时记忆列表
                     const lists = JSON.parse(ipcContent) as AIAgentGrpcApi.MemoryEntryList
-                    setMemoryList(lists)
+                    if (planCoordinatorId.current === res.CoordinatorId) {
+                        taskMemorys.current = lists
+                    } else {
+                        reactMemorys.current = lists
+                    }
+                    try {
+                        const newMemoryEntryList: AIAgentGrpcApi.MemoryEntryList = {
+                            memories: [
+                                ...(taskMemorys.current.memories || []),
+                                ...(reactMemorys.current.memories || [])
+                            ],
+                            memory_pool_limit:
+                                Number(taskMemorys.current.memory_pool_limit) +
+                                Number(reactMemorys.current.memory_pool_limit),
+                            memory_session_id: reactMemorys.current.memory_session_id,
+                            total_memories:
+                                Number(taskMemorys.current.total_memories) +
+                                Number(reactMemorys.current.total_memories),
+                            total_size:
+                                Number(taskMemorys.current.total_size) + Number(reactMemorys.current.total_size),
+                            score_overview: {
+                                A_total:
+                                    Number(taskMemorys.current.score_overview.A_total) +
+                                    Number(reactMemorys.current.score_overview.A_total),
+                                C_total:
+                                    Number(taskMemorys.current.score_overview.C_total) +
+                                    Number(reactMemorys.current.score_overview.C_total),
+                                E_total:
+                                    Number(taskMemorys.current.score_overview.E_total) +
+                                    Number(reactMemorys.current.score_overview.E_total),
+
+                                O_total:
+                                    Number(taskMemorys.current.score_overview.O_total) +
+                                    Number(reactMemorys.current.score_overview.O_total),
+                                P_total:
+                                    Number(taskMemorys.current.score_overview.P_total) +
+                                    Number(reactMemorys.current.score_overview.P_total),
+                                R_total:
+                                    Number(taskMemorys.current.score_overview.R_total) +
+                                    Number(reactMemorys.current.score_overview.R_total),
+                                T_total:
+                                    Number(taskMemorys.current.score_overview.T_total) +
+                                    Number(reactMemorys.current.score_overview.T_total)
+                            }
+                        }
+                        setMemoryList(newMemoryEntryList)
+                    } catch (error) {}
+
                     return
                 }
 
