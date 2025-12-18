@@ -80,7 +80,7 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
 }
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
-    const {t, i18n} = useI18nNamespaces(["AIAgent"])
+    const {t, i18n} = useI18nNamespaces(["aiAgent"])
     const {onTriageSubmit, onSetReAct} = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
