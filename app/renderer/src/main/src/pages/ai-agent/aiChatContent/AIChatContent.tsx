@@ -33,7 +33,9 @@ import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TabKey} from "../components/aiFileSystemList/type"
 import {onNewChat} from "../historyChat/HistoryChat"
-import { FileListStoreKey } from "@/pages/ai-re-act/aiReActChat/store"
+import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
+import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
+import {Divider} from "antd"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
@@ -326,6 +328,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                         <div className={styles["title"]}>
                             <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
                             <span>新会话</span>
+                            <Divider type='vertical' />
+                            <SideSettingButton />
                         </div>
                         <div className={styles["extra"]}>
                             {currentPressuresEcharts?.data?.length > 0 && (

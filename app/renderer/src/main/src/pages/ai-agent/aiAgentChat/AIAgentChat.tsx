@@ -189,17 +189,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 })
         }
     })
-    const onSendSwitchAIAgentTab = useMemoizedFn(() => {
-        emiter.emit(
-            "switchAIAgentTab",
-            JSON.stringify({
-                type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW,
-                params: {
-                    show: false
-                }
-            })
-        )
-    })
     const handleStart = useMemoizedFn(({qs, fileToQuestion, extraValue}: HandleStartParams) => {
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
@@ -227,7 +216,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             AttachedFilePath: fileToQuestion
         }
         events.onStart({token: newChat.id, params: startParams, extraValue})
-        onSendSwitchAIAgentTab()
     })
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
         handleSendInteractiveMessage(params, "casual")
@@ -250,7 +238,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             InteractiveJSONInput: value
         }
         events.onSend({token: activeID, type, params: info, optionValue})
-        onSendSwitchAIAgentTab()
         handleStopAfterChangeState()
     })
     /**发送 IsSyncMessage 消息 */
@@ -264,7 +251,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             Params: params,
             SyncID: randomString(8)
         }
-        onSendSwitchAIAgentTab()
         events.onSend({token: activeID, type: "", params: info})
     })
 
@@ -277,7 +263,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             HotpatchType: hotpatchType,
             Params: params
         }
-        onSendSwitchAIAgentTab()
         events.onSend({token: activeID, type: "", params: info})
     })
 

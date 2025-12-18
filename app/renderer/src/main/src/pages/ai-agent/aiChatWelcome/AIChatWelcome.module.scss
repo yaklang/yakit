@@ -486,3 +486,9 @@
         var(--Colors-Use-Blue-Primary) 100%
     );
 }
+
+.pin-off-icon {
+    svg {
+        color: var(--Colors-Use-Main-Primary);
+    }
+}

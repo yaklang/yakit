@@ -16,5 +16,7 @@ export enum RemoteAIAgentGV {
     AIAgentReplaceForgeNoPrompt = "ai-agent-replace-forge-no-prompt",
 
     /** @name 替换tool时是否隐藏提示框, 直接进行替换 */
-    AIAgentReplaceToolNoPrompt = "ai-agent-replace-tool-no-prompt"
+    AIAgentReplaceToolNoPrompt = "ai-agent-replace-tool-no-prompt",
+    /** @name ai侧边栏展开收起模式 */
+    AIAgentSideShowMode = "ai-agent-side-show-mode"
 }

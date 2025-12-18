@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {AIAgentProps, AIAgentSetting} from "./aiAgentType"
 import {AIAgentSideList} from "./AIAgentSideList"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./useContext/AIAgentContext"
@@ -6,13 +6,14 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatInfo} from "./type/aiChat"
-import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
-import {AIAgentSettingDefault, YakitAIAgentPageID} from "./defaultConstant"
+import {useDebounceFn, useMemoizedFn, useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
 import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20250808"
@@ -95,7 +96,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 }
             })
             .catch(() => {})
-
         return () => {}
     }, [])
     // #endregion
@@ -112,6 +112,26 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         [wrapperSize],
         {wait: 100, trailing: false}
     )
+    const onSendSwitchAIAgentTab = useDebounceFn(
+        useMemoizedFn(() => {
+            getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
+                .then((res) => {
+                    if (res !== "false") {
+                        emiter.emit(
+                            "switchAIAgentTab",
+                            JSON.stringify({
+                                type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW,
+                                params: {
+                                    show: false
+                                }
+                            })
+                        )
+                    }
+                })
+                .catch(() => {})
+        }),
+        {wait: 200, leading: true}
+    ).run
 
     return (
         <AIAgentContext.Provider value={{store, dispatcher}}>
@@ -120,7 +140,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                     <AIAgentSideList />
                 </div>
 
-                <div className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}>
+                <div
+                    className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}
+                    onFocus={onSendSwitchAIAgentTab}
+                >
                     <AIAgentChat />
                 </div>
             </div>

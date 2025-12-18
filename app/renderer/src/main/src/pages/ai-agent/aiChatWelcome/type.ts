@@ -1,3 +1,4 @@
+import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ReactNode} from "react"
 
 export interface AIChatWelcomeProps {
@@ -35,3 +36,5 @@ export interface RandomAIMaterialsDataProps {
     forges: AIMaterialsData
     knowledgeBases: AIMaterialsData
 }
+
+export interface SideSettingButtonProps extends YakitButtonProp {}

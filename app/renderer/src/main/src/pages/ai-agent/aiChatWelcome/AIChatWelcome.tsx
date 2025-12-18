@@ -4,16 +4,23 @@ import {
     AIMaterialsData,
     AIRecommendItemProps,
     AIRecommendProps,
-    RandomAIMaterialsDataProps
+    RandomAIMaterialsDataProps,
+    SideSettingButtonProps
 } from "./type"
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
-import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {AIChatTextareaProps} from "../template/type"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowrightIcon, OutlineInformationcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowrightIcon,
+    OutlineInformationcircleIcon,
+    OutlinePinIcon,
+    OutlinePinOffIcon,
+    OutlineRefreshIcon
+} from "@/assets/icon/outline"
 import {
     AIDownAngleLeftIcon,
     AIDownAngleRightIcon,
@@ -27,7 +34,7 @@ import {
     HoverAIToolIcon
 } from "./icon"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Tooltip} from "antd"
+import {Divider, Tooltip} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
@@ -51,8 +58,11 @@ import FileTreeList from "./FileTreeList/FileTreeList"
 import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
 import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
 import {FileListStoreKey, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
-import OpenFileDropdown, { OpenFileDropdownItem } from "./OpenFileDropdown/OpenFileDropdown"
-
+import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {OutlinePlusIcon} from "@/assets/newIcon"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, count)
@@ -348,7 +358,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     const customFolder = useCustomFolder()
 
-    const onOpenFileFolder = async (data:OpenFileDropdownItem) => {
+    const onOpenFileFolder = async (data: OpenFileDropdownItem) => {
         if (!data.path) return
         loadRemoteHistory().then(() => {
             historyStore.addHistoryItem(data)
@@ -368,8 +378,14 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                         {openDrawer ? "收起" : "展开"}
                     </YakitButton>
                 )}
+                <Divider type='vertical' />
+                <SideSettingButton />
             </div>
-            <div className={`${styles["file-tree-list"]} ${(customFolder.length && openDrawer) ? styles["open"] : styles["close"]}`}>
+            <div
+                className={`${styles["file-tree-list"]} ${
+                    customFolder.length && openDrawer ? styles["open"] : styles["close"]
+                }`}
+            >
                 <div className={styles["file-tree-list-inner"]}>
                     <FileTreeList />
                 </div>
@@ -499,6 +515,45 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 })
 
 export default AIChatWelcome
+
+export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
+    const [isAutoHidden, setIsAutoHidden] = useState<boolean>(true)
+    useEffect(() => {
+        onGetSideSetting()
+    }, [])
+    const onGetSideSetting = useMemoizedFn(() => {
+        getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
+            .then((res) => {
+                setIsAutoHidden(res !== "false")
+            })
+            .catch(() => {})
+    })
+    const onSideSetting = useDebounceFn(
+        useMemoizedFn((e) => {
+            e.stopPropagation()
+            const checked = !isAutoHidden
+            setIsAutoHidden(checked)
+            setRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode, `${checked}`)
+        }),
+        {wait: 200, leading: true}
+    ).run
+    return (
+        <Tooltip
+            title={
+                isAutoHidden
+                    ? "已开启固定菜单栏，点击icon则可关闭"
+                    : "点击icon高亮后则开启固定菜单栏，菜单栏不会在失焦后自动关闭"
+            }
+        >
+            <YakitButton
+                type={isAutoHidden ? "text2" : "outline1"}
+                icon={isAutoHidden ? <OutlinePinOffIcon /> : <OutlinePinIcon />}
+                onClick={onSideSetting}
+                {...props}
+            />
+        </Tooltip>
+    )
+})
 
 const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
     const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem, checkItems} = props
