@@ -14,12 +14,10 @@ import {getHTTPFlowExportFields} from "@/components/HTTPFlowTable/HTTPFlowExport
 import {
     OutlineChevrondownIcon,
     OutlineCogIcon,
-    OutlineLog2Icon,
     OutlineRefreshIcon,
     OutlineReplyIcon,
     OutlineSearchIcon,
-    OutlineSelectorIcon,
-    OutlineTerminalIcon
+    OutlineSelectorIcon
 } from "@/assets/icon/outline"
 import classNames from "classnames"
 import {RemoteHistoryGV} from "@/enums/history"
@@ -66,7 +64,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 import {WebTree} from "@/components/WebTree/WebTree"
 import ReactResizeDetector from "react-resize-detector"
-import {HistoryProcess} from "@/components/HTTPHistory"
+import {HistoryProcess, HistoryTab} from "@/components/HTTPHistory"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {v4 as uuidv4} from "uuid"
 import {isEqual} from "lodash"
@@ -101,7 +99,6 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import styles from "./HTTPHistoryFilter.module.scss"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 const {ipcRenderer} = window.require("electron")
 
@@ -140,51 +137,22 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
     const [activeKey, setActiveKey] = useState<string>("web-tree")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            icon: <OutlineLog2Icon />,
-            label: () => t("HTTPHistory.websiteTree"),
-            value: "web-tree",
-            show: true
-        },
-        {
-            icon: <OutlineTerminalIcon />,
-            label: () => t("HTTPHistory.process"),
-            value: "process",
-            show: false
-        }
-    ])
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteHistoryGV.HTTPHistoryFilterLeftTabs).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    setYakitTab((prev) => {
-                        if (toWebFuzzer) {
-                            prev.forEach((i) => {
-                                i.show = false
-                            })
-                        } else {
-                            prev.forEach((i) => {
-                                if (i.value === tabs.curTabKey) {
-                                    i.show = tabs.contShow
-                                } else {
-                                    i.show = false
-                                }
-                            })
-                        }
-                        return [...prev]
-                    })
+                    if (toWebFuzzer) {
+                        setOpenTabsFlag(false)
+                    } else {
+                        setOpenTabsFlag(tabs.contShow)
+                    }
                     onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             } else {
                 if (toWebFuzzer) {
-                    setYakitTab((prev) => {
-                        prev.forEach((i) => {
-                            i.show = false
-                        })
-                        return [...prev]
-                    })
+                    setOpenTabsFlag(false)
                 }
             }
         })
@@ -192,10 +160,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     const onActiveKey = useMemoizedFn((key) => {
         setActiveKey(key)
     })
-
-    const openTabsFlag = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-    }, [yakitTab, activeKey])
 
     useDebounceEffect(
         () => {
@@ -262,10 +226,12 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                     <div className={styles["HTTPHistoryFilter-left"]}>
                         <YakitSideTab
                             key={i18n.language}
-                            yakitTabs={yakitTab}
-                            setYakitTabs={setYakitTab}
+                            t={t}
+                            yakitTabs={HistoryTab}
                             activeKey={activeKey}
                             onActiveKey={onActiveKey}
+                            show={openTabsFlag}
+                            setShow={setOpenTabsFlag}
                         />
                         <div className={styles["tab-content"]}>
                             <ReactResizeDetector

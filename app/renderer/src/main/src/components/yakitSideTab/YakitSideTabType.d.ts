@@ -21,13 +21,14 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
 
     className?: string
     btnItemClassName?: string
+
+    t?: (keys: KeyOrKeys, vars?: Vars, defaultValue?: string) => string
 }
 
 export interface YakitTabsProps {
     icon?: ReactNode
-    label: ReactNode | (() => ReactNode | string)
+    label: string | ReactNode
     value: string
-    show?: boolean
     hint?: () => string
 }
 
@@ -38,4 +39,5 @@ export interface YakitTabsItemProps {
     onTabPaneRender?: (item: YakitTabsProps, node: ReactNode[]) => ReactNode
     rotate?: "left" | "right"
     barHint?: (k: string) => string
+    t?: YakitSideTabProps["t"]
 }

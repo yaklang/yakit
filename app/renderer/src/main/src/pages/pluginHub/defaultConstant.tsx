@@ -12,6 +12,15 @@ import {YakitPluginOnlineDetail} from "../plugins/online/PluginsOnlineType"
 import {ExportYakScriptStreamRequest} from "../plugins/local/PluginsLocalType"
 import {defaultFilter, defaultSearch} from "../plugins/builtInData"
 import {convertLocalPluginsRequestParams} from "../plugins/utils"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+
+export const HubSideBarList: YakitTabsProps[] = [
+    {value: "online", label: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: () => "插件商店"},
+    {value: "own", label: "我的", icon: <OutlineOwnPluginIcon />, hint: () => "我的插件"},
+    {value: "local", label: "本地", icon: <OutlineLocalPluginIcon />, hint: () => "本地插件"},
+    {value: "setting", label: "配置", icon: <OutlineAdjustmentsIcon />, hint: () => "配置"},
+    {value: "recycle", label: "回收站", icon: <OutlineTrashSecondIcon />, hint: () => "回收站"}
+]
 
 /** @name 插件导出-默认参数 */
 export const DefaultExportRequest: ExportYakScriptStreamRequest = {

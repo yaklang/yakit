@@ -58,7 +58,24 @@ import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
-
+const RunnerFileTreeTab: YakitTabsProps[] = [
+    {
+        label: "全部",
+        value: "all"
+    },
+    {
+        label: "漏洞文件",
+        value: "file"
+    },
+    {
+        label: "规则汇总",
+        value: "rule"
+    },
+    {
+        label: "全局过滤函数",
+        value: "global-filtering-function"
+    }
+]
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
     const {fileTree, activeFile, projectName, pageInfo} = useStore()
@@ -322,24 +339,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     })
 
     const [active, setActive] = useState<ActiveProps>("all")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "全部",
-            value: "all"
-        },
-        {
-            label: () => "漏洞文件",
-            value: "file"
-        },
-        {
-            label: () => "规则汇总",
-            value: "rule"
-        },
-        {
-            label: () => "全局过滤函数",
-            value: "global-filtering-function"
-        }
-    ])
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<ActiveProps>>(new Set(["all"]))
@@ -460,8 +459,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         <div className={styles["runner-file-tree"]}>
             {/* 左侧边栏 */}
             <YakitSideTab
-                yakitTabs={yakitTab}
-                setYakitTabs={setYakitTab}
+                yakitTabs={RunnerFileTreeTab}
                 activeKey={active}
                 onActiveKey={onSetActive}
                 show={true}

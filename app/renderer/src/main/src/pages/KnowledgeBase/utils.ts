@@ -55,6 +55,11 @@ export enum KnowledgeTabListEnum {
     Plugin = "plugin",
     AI_Model = "AIModel"
 }
+export const KnowledgeTabList: YakitSideTabProps["yakitTabs"] = [
+    {value: KnowledgeTabListEnum.Knowledge, label: "知识库"},
+    {value: KnowledgeTabListEnum.Plugin, label: "插件"},
+    {value: KnowledgeTabListEnum.AI_Model, label: "AI模型"}
+]
 
 const knowledgeTypeOptions = [
     {

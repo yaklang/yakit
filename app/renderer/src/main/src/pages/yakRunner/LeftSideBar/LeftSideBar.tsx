@@ -8,11 +8,12 @@ import {YakHelpDoc} from "../YakHelpDoc/YakHelpDoc"
 import classNames from "classnames"
 import styles from "./LeftSideBar.module.scss"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {YakRunnerTab} from "../YakRunner"
 
 const {ipcRenderer} = window.require("electron")
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-    const {addFileTab, isUnShow, active, setActive, yakitTab, setYakitTab} = props
+    const {addFileTab, isUnShow, active, setActive, setIsUnShow} = props
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["file-tree"]))
@@ -32,10 +33,11 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
         >
             {/* 左侧边栏 */}
             <YakitSideTab
-                yakitTabs={yakitTab}
-                setYakitTabs={setYakitTab}
+                yakitTabs={YakRunnerTab}
                 activeKey={active}
                 onActiveKey={onSetActive}
+                show={!isUnShow}
+                setShow={(v) => setIsUnShow(!v)}
             />
 
             {/* 侧边栏对应展示内容 */}

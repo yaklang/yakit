@@ -42,6 +42,19 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 })
 export default ModifyNotepad
 
+const ModifyNotepadContentTab: YakitTabsProps[] = [
+    {
+        icon: <OutlineListOneIcon />,
+        label: "目录",
+        value: "catalogue"
+    },
+    {
+        icon: <OutlineListTwoIcon />,
+        label: "列表",
+        value: "list"
+    }
+]
+
 export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {tabName, spinning, listDom} = props
@@ -95,41 +108,18 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
         //#endregion
         //#region 侧边栏
         const [activeKey, setActiveKey] = useState<string>("catalogue")
-        const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-            {
-                icon: <OutlineListOneIcon />,
-                label: () => "目录",
-                value: "catalogue",
-                show: true
-            },
-            {
-                icon: <OutlineListTwoIcon />,
-                label: () => "列表",
-                value: "list",
-                show: false
-            }
-        ])
+        const [show, setShow] = useState<boolean>(true)
         useEffect(() => {
             getRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey).then((setting: string) => {
                 if (setting) {
                     try {
                         const tabs = JSON.parse(setting)
-                        yakitTab.forEach((i) => {
-                            if (i.value === tabs.curTabKey) {
-                                i.show = tabs.contShow
-                            } else {
-                                i.show = false
-                            }
-                        })
-                        setYakitTab([...yakitTab])
+                        setShow(tabs.contShow)
                         onActiveKey(tabs.curTabKey)
                     } catch (error) {}
                 }
             })
         }, [])
-        const show = useCreation(() => {
-            return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-        }, [yakitTab, activeKey])
         const onActiveKey = useMemoizedFn((key) => {
             setActiveKey(key)
         })
@@ -162,10 +152,11 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                             firstNode={
                                 <div className={styles["notepad-tab-body"]}>
                                     <YakitSideTab
-                                        yakitTabs={yakitTab}
-                                        setYakitTabs={setYakitTab}
+                                        yakitTabs={ModifyNotepadContentTab}
                                         activeKey={activeKey}
                                         onActiveKey={onActiveKey}
+                                        show={show}
+                                        setShow={setShow}
                                     />
                                     <div className={styles["notepad-tab-content"]}>
                                         {activeKey === "catalogue" && (

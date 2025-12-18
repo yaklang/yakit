@@ -12,18 +12,11 @@ import emiter from "@/utils/eventBus/eventBus"
 import {useStore} from "@/store"
 import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
-import {
-    OutlineAdjustmentsIcon,
-    OutlineLocalPluginIcon,
-    OutlineOnlinePluginIcon,
-    OutlineOwnPluginIcon,
-    OutlineTrashSecondIcon
-} from "@/assets/icon/outline"
-import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
+import { HubSideBarList } from "../defaultConstant"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -110,19 +103,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         trigger: "setActive"
     })
     const activeRef = useRef<PluginSourceType>(active)
-    const [hubSideBarList, setHubSideBarList] = useState<YakitTabsProps[]>([
-        {
-            value: "online",
-            label: () => "插件商店",
-            icon: <OutlineOnlinePluginIcon />,
-            show: true,
-            hint: () => "插件商店"
-        },
-        {value: "own", label: () => "我的", icon: <OutlineOwnPluginIcon />, show: false, hint: () => "我的插件"},
-        {value: "local", label: () => "本地", icon: <OutlineLocalPluginIcon />, show: false, hint: () => "本地插件"},
-        {value: "setting", label: () => "配置", icon: <OutlineAdjustmentsIcon />, show: false, hint: () => "配置"},
-        {value: "recycle", label: () => "回收站", icon: <OutlineTrashSecondIcon />, show: false, hint: () => "回收站"}
-    ])
+    const [show, setShow] = useState<boolean>(true)
     // 无详情页的列表tab类型
     const noDetailTabs = useRef<PluginSourceType[]>(["recycle", "setting"])
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
@@ -130,27 +111,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
     const onSetActive = useMemoizedFn((type: PluginSourceType, openFlag = false) => {
         if (noDetailTabs.current.includes(active) || openFlag || (!isLogin && type === "own")) {
-            setHubSideBarList((prev) => {
-                prev.forEach((i) => {
-                    if (type === i.value) {
-                        i.show = true
-                    } else {
-                        i.show = false
-                    }
-                })
-                return [...prev]
-            })
-        } else {
-            setHubSideBarList((prev) => {
-                prev.forEach((i) => {
-                    if (type === i.value) {
-                        i.show = !i.show
-                    } else {
-                        i.show = false
-                    }
-                })
-                return [...prev]
-            })
+            setShow(true)
         }
 
         if (type !== active) {
@@ -161,7 +122,6 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         }
     })
     useEffect(() => {
-        const show = hubSideBarList.find((ele) => ele.value === active)?.show !== false
         if (isDetail) {
             setHiddenDetail(!show)
         } else {
@@ -169,7 +129,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         }
         setHiddenDetailPage(noDetailTabs.current.includes(active))
         activeRef.current = active
-    }, [hubSideBarList, active, isDetail])
+    }, [show, active, isDetail])
     useEffect(() => {
         if (!isLogin && activeRef.current === "own") {
             onSetActive("own", true)
@@ -232,16 +192,16 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     /** ---------- 通信监听 Start ---------- */
 
     const barHint = useMemoizedFn((key: string) => {
-        const item = hubSideBarList.find((item) => item.value === key)
+        const item = HubSideBarList.find((item) => item.value === key)
         if (key !== active) {
             return `点击进入${item ? item.hint?.() : "列表"}`
         } else {
             if (noDetailTabs.current.includes(key as PluginSourceType)) return ""
             if (key === "own" && !isLogin) return ""
             if (isDetail) {
-                return !item?.show ? "展开详情列表" : "收起详情列表"
+                return !show ? "展开详情列表" : "收起详情列表"
             } else {
-                return !item?.show ? "展开高级筛选" : "收起高级筛选"
+                return !show ? "展开高级筛选" : "收起高级筛选"
             }
         }
     })
@@ -250,9 +210,11 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         <div className={styles["plugin-hub-list"]}>
             <div className={styles["side-bar-list"]}>
                 <YakitSideTab
-                    yakitTabs={hubSideBarList}
+                    yakitTabs={HubSideBarList}
                     activeKey={active}
                     onActiveKey={(v) => onSetActive(v as PluginSourceType)}
+                    show={show}
+                    setShow={setShow}
                     barHint={barHint}
                 />
             </div>

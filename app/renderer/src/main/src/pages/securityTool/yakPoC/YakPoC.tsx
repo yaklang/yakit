@@ -94,6 +94,17 @@ export const onToManageGroup = () => {
     )
 }
 
+const YakPoCTab: YakitTabsProps[] = [
+    {
+        label: "按关键词",
+        value: "keyword"
+    },
+    {
+        label: "按组选",
+        value: "group"
+    }
+]
+
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const {pageId} = props
@@ -195,16 +206,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const onClearAll = useMemoizedFn(() => {
         setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setDeletedGroup([])
-        setYakitTab((prev) => {
-            prev.forEach((i) => {
-                if (i.value === type) {
-                    i.show = true
-                } else {
-                    i.show = false
-                }
-            })
-            return [...prev]
-        })
+        setHidden(false)
     })
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
@@ -217,69 +219,27 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         } catch (error) {}
     })
 
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "按关键词",
-            value: "keyword",
-            show: true
-        },
-        {
-            label: () => "按组选",
-            value: "group",
-            show: false
-        }
-    ])
     const onActiveKey = useMemoizedFn((key) => {
         setType(key)
     })
-    const show = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === type)?.show !== false
-    }, [yakitTab, type])
-
-    useEffect(() => {
-        setHidden(!show)
-    }, [show])
 
     useEffect(() => {
         if (pageInfo.selectGroup?.length) {
             const t = pageInfo.selectGroup && pageInfo.selectGroup?.length > 0 ? "group" : "keyword"
-            setYakitTab((prev) => {
-                prev.forEach((i) => {
-                    if (i.value === t) {
-                        i.show = true
-                    } else {
-                        i.show = false
-                    }
-                })
-                return [...prev]
-            })
+            setHidden(false)
             onActiveKey(t)
         }
     }, [])
-
-    // 当其他地方直接设置setHidden(true)时，tab相关状态也需要更新
-    const handleHidden = useMemoizedFn(() => {
-        if (hidden) {
-            setYakitTab((prev) => {
-                prev.forEach((i) => {
-                    i.show = false
-                })
-                return [...prev]
-            })
-        }
-    })
-    useUpdateEffect(() => {
-        handleHidden()
-    }, [hidden])
 
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div className={styles["yakpoc-tab-wrap"]}>
                 <YakitSideTab
-                    yakitTabs={yakitTab}
-                    setYakitTabs={setYakitTab}
+                    yakitTabs={YakPoCTab}
                     activeKey={type}
                     onActiveKey={onActiveKey}
+                    show={!hidden}
+                    setShow={(v) => setHidden(!v)}
                 />
             </div>
             <div

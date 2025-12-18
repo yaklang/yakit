@@ -67,15 +67,15 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 const HybridScanTaskListDrawer = React.lazy(() => import("./HybridScanTaskListDrawer"))
 
+const PluginBatchExecutorTab: YakitTabsProps[] = [
+    {
+        label: "插件",
+        value: "plugin"
+    }
+]
+
 interface PluginBatchExecutorProps {
     id: string
-}
-
-type PluginTabKeys = "plugin"
-interface PluginTabsItem {
-    key: PluginTabKeys
-    label: ReactElement | string
-    contShow: boolean
 }
 
 export const isEmpty = (uint8Array: Uint8Array) => {
@@ -233,26 +233,13 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
     // #region 左侧tab
     const [activeKey, setActiveKey] = useState<string>("plugin")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "插件",
-            value: "plugin",
-            show: true
-        }
-    ])
+    const [show, setShow] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteGV.PluginBatchExecTabs).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    yakitTab.forEach((i) => {
-                        if (i.value === tabs.curTabKey) {
-                            i.show = tabs.contShow
-                        } else {
-                            i.show = false
-                        }
-                    })
-                    setYakitTab([...yakitTab])
+                    setShow(tabs.contShow)
                     onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             }
@@ -261,14 +248,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const onActiveKey = useMemoizedFn((key) => {
         setActiveKey(key)
     })
-    const openTab = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-    }, [yakitTab, activeKey])
     useDebounceEffect(
         () => {
-            setRemoteValue(RemoteGV.PluginBatchExecTabs, JSON.stringify({contShow: openTab, curTabKey: activeKey}))
+            setRemoteValue(RemoteGV.PluginBatchExecTabs, JSON.stringify({contShow: show, curTabKey: activeKey}))
         },
-        [openTab, activeKey],
+        [show, activeKey],
         {wait: 300}
     )
     // #endregion
@@ -277,14 +261,15 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         <div className={styles["plugin-batch-wrapper"]}>
             <div className={styles["plugin-tab-wrap"]}>
                 <YakitSideTab
-                    yakitTabs={yakitTab}
-                    setYakitTabs={setYakitTab}
+                    yakitTabs={PluginBatchExecutorTab}
                     activeKey={activeKey}
                     onActiveKey={onActiveKey}
+                    show={show}
+                    setShow={setShow}
                 />
             </div>
             <PluginLocalListDetails
-                hidden={!openTab}
+                hidden={!show}
                 selectList={selectList}
                 setSelectList={setSelectList}
                 search={search}

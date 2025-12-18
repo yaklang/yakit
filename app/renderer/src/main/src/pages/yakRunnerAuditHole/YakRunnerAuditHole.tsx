@@ -37,6 +37,16 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
+export const YakRunnerAuditHoleTab: YakitTabsProps[] = [
+    {
+        label: "统计",
+        value: "statistic"
+    },
+    {
+        label: "文件汇总",
+        value: "document-collect"
+    }
+]
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -78,33 +88,13 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const [inViewport = true] = useInViewport(riskBodyRef)
 
     const [active, setActive] = useState<LeftSideHoleType>("statistic")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "统计",
-            value: "statistic",
-            show: false
-        },
-        {
-            label: () => "文件汇总",
-            value: "document-collect",
-            show: false
-        }
-    ])
+    const [isUnShow, setIsUnShow] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteGV.AuditHoleShow).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    setYakitTab((prev) => {
-                        prev.forEach((i) => {
-                            if (i.value === tabs.key) {
-                                i.show = tabs.contShow
-                            } else {
-                                i.show = false
-                            }
-                        })
-                        return [...prev]
-                    })
+                    setIsUnShow(!tabs.contShow)
                     onActiveKey(tabs.key)
                 } catch (error) {}
             }
@@ -113,9 +103,6 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const onActiveKey = useMemoizedFn((key) => {
         setActive(key)
     })
-    const isUnShow = useCreation(() => {
-        return !(yakitTab.find((ele) => ele.value === active)?.show !== false)
-    }, [yakitTab, active])
     useDebounceEffect(
         () => {
             setRemoteValue(RemoteGV.AuditHoleShow, JSON.stringify({contShow: !isUnShow, key: active}))
@@ -125,25 +112,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     )
     // 操作side开启与关闭
     const onOperateSide = useMemoizedFn((val: boolean) => {
-        if (val) {
-            setYakitTab((prev) => {
-                prev.forEach((i) => {
-                    if (i.value === active) {
-                        i.show = true
-                    } else {
-                        i.show = false
-                    }
-                })
-                return [...prev]
-            })
-        } else {
-            setYakitTab((prev) => {
-                prev.forEach((i) => {
-                    i.show = false
-                })
-                return [...prev]
-            })
-        }
+        setIsUnShow(!val)
     })
 
     return (
@@ -160,10 +129,9 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                     firstNode={
                         <LeftSideHoleBar
                             isUnShow={isUnShow}
+                            setIsUnShow={setIsUnShow}
                             active={active}
                             setActive={onActiveKey}
-                            yakitTab={yakitTab}
-                            setYakitTab={setYakitTab}
                             statisticNode={
                                 <HoleQuery
                                     inViewport={inViewport}

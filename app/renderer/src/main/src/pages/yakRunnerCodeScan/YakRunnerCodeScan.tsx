@@ -637,7 +637,16 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         </>
     )
 })
-
+const YakRunnerCodeScanTab: YakitTabsProps[] = [
+    {
+        label: "按组选",
+        value: "group"
+    },
+    {
+        label: "按关键词",
+        value: "keyword"
+    }
+]
 export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     const {pageId} = props
     const {queryPagesDataById} = usePageInfo(
@@ -659,46 +668,16 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
     const [type, setType] = useState<"keyword" | "group">("group")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "按组选",
-            value: "group",
-            show: true
-        },
-        {
-            label: () => "按关键词",
-            value: "keyword",
-            show: false
-        }
-    ])
     const onActiveKey = useMemoizedFn((key) => {
         setType(key)
     })
-    const show = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === type)?.show !== false
-    }, [yakitTab, type])
-    useEffect(() => {
-        setHidden(!show)
-    }, [show])
     const handleTabClick = useMemoizedFn((tab) => {
-        setYakitTab((prev) => {
-            prev.forEach((i) => {
-                if (i.value === tab) {
-                    i.show = true
-                } else {
-                    i.show = false
-                }
-            })
-            return [...prev]
-        })
+        setHidden(false)
         onActiveKey(tab)
     })
     const handleTabHidden = useMemoizedFn((isHidden: boolean) => {
         if (isHidden) {
-            yakitTab.forEach((i) => {
-                i.show = false
-            })
-            setYakitTab([...yakitTab])
+            setHidden(true)
         } else {
             handleTabClick(type)
         }
@@ -712,10 +691,11 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
             {/* 左侧边栏 */}
             <div className={styles["code-scan-tab-wrap"]}>
                 <YakitSideTab
-                    yakitTabs={yakitTab}
-                    setYakitTabs={setYakitTab}
+                    yakitTabs={YakRunnerCodeScanTab}
                     activeKey={type}
                     onActiveKey={onActiveKey}
+                    show={!hidden}
+                    setShow={(v) => setHidden(!v)}
                 />
             </div>
 

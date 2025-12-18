@@ -85,6 +85,7 @@ interface MITMPluginHijackContentProps {
     setTags: (s: string[]) => void
     setSearchKeyword: (s: string) => void
     setFieldKeywords: (s: string) => void
+    openTabsFlag: boolean
     onSetOpenTabsFlag: (s: boolean) => void
     onSetLoadedPluginLen: (s: number) => void
     showPluginHistoryList: string[]
@@ -110,6 +111,28 @@ const HotLoadDefaultData: YakScript = {
     UserId: 0,
     UUID: ""
 }
+const MITMHijackTab: YakitTabsProps[] = [
+    {
+        label: "全部",
+        value: "all"
+    },
+    {
+        label: "已启用",
+        value: "loaded"
+    },
+    {
+        label: "热加载",
+        value: "hot-patch"
+    },
+    {
+        value: "trace",
+        label: "插件追踪"
+    },
+    {
+        value: "tun-hijack",
+        label: "Tun劫持"
+    }
+]
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = React.memo((props) => {
     const {
         isHasParams,
@@ -135,6 +158,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         setTags,
         setSearchKeyword,
         setFieldKeywords,
+        openTabsFlag,
         onSetOpenTabsFlag,
         onSetLoadedPluginLen,
         showPluginHistoryList,
@@ -153,51 +177,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const hijackTabsRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hijackTabsRef)
     const [curTabKey, setCurTabKey] = useState<string>("all")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "全部",
-            value: "all",
-            show: true
-        },
-        {
-            label: () => "已启用",
-            value: "loaded",
-            show: false
-        },
-        {
-            label: () => "热加载",
-            value: "hot-patch",
-            show: false
-        },
-        {
-            value: "trace",
-            label: () => "插件追踪",
-            show: false
-        },
-        {
-            value: "tun-hijack",
-            label: () => "Tun劫持",
-            show: false
-        }
-    ])
     useEffect(() => {
         if (inViewport) {
             getRemoteValue(RemoteGV.NewMitmHijackedLeftTabs).then((setting: string) => {
                 if (setting) {
                     try {
                         const tabs = JSON.parse(setting)
-                        setYakitTab((prev) => {
-                            prev.forEach((i) => {
-                                if (i.value === tabs.curTabKey) {
-                                    i.show = tabs.contShow
-                                } else {
-                                    i.show = false
-                                }
-                            })
-                            return [...prev]
-                        })
+                        onSetOpenTabsFlag(tabs.contShow)
                         onActiveKey(tabs.curTabKey)
                     } catch (error) {}
+                } else {
+                    onSetOpenTabsFlag(true)
                 }
             })
         }
@@ -205,22 +195,19 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const onActiveKey = useMemoizedFn((key) => {
         setCurTabKey(key)
     })
-    const show = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === curTabKey)?.show !== false
-    }, [yakitTab, curTabKey])
     useEffect(() => {
         setIsFullScreen(false)
     }, [curTabKey])
-    useEffect(() => {
-        if (inViewport) {
-            onSetOpenTabsFlag(show)
-        }
-    }, [show, inViewport])
     useDebounceEffect(
         () => {
-            setRemoteValue(RemoteGV.NewMitmHijackedLeftTabs, JSON.stringify({contShow: show, curTabKey: curTabKey}))
+            if (inViewport) {
+                setRemoteValue(
+                    RemoteGV.NewMitmHijackedLeftTabs,
+                    JSON.stringify({contShow: openTabsFlag, curTabKey: curTabKey})
+                )
+            }
         },
-        [show, curTabKey],
+        [openTabsFlag, curTabKey, inViewport],
         {wait: 300}
     )
     // #endregion
@@ -396,16 +383,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
      */
     const onSendToPatch = useMemoizedFn((s: YakScript) => {
         setScript(s)
-        setYakitTab((prev) => {
-            prev.forEach((i) => {
-                if (i.value === "hot-patch") {
-                    i.show = true
-                } else {
-                    i.show = false
-                }
-            })
-            return [...prev]
-        })
+        onSetOpenTabsFlag(true)
         onActiveKey("hot-patch")
     })
     /**@description 保存热加载代码到本地插件 */
@@ -962,10 +940,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         <div className={styles["mitm-plugin-hijack-content"]} ref={hijackTabsRef}>
             <div className={styles["mitm-hijack-tab-wrap"]}>
                 <YakitSideTab
-                    yakitTabs={yakitTab}
-                    setYakitTabs={setYakitTab}
+                    yakitTabs={MITMHijackTab}
                     activeKey={curTabKey}
                     onActiveKey={onActiveKey}
+                    show={openTabsFlag}
+                    setShow={onSetOpenTabsFlag}
                 />
                 <div
                     className={classNames(styles["mitm-hijack-tab-cont-item"])}

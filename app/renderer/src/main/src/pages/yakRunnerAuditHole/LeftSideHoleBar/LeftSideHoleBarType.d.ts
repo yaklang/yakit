@@ -1,10 +1,9 @@
 
 export interface LeftSideHoleBarProps {
     isUnShow: boolean
+    setIsUnShow: (v: show) => void
     active: LeftSideType
     setActive: (v: LeftSideType) => void
-    yakitTab: YakitTabsProps[]
-    setYakitTab: (v: YakitTabsProps[]) => void
     statisticNode: React.ReactNode
     documentCollectDom: React.ReactNode
 }

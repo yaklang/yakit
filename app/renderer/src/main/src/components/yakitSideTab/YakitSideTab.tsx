@@ -17,7 +17,8 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
         children,
         onTabPaneRender,
         className = "",
-        btnItemClassName = ""
+        btnItemClassName = "",
+        t
     } = props
     const [show, setShow] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -25,40 +26,10 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
         trigger: "setShow"
     })
     const onChange = useMemoizedFn((item) => {
-        if (type === "vertical") {
-            if (props.show === undefined) {
-                setYakitTabs?.(
-                    yakitTabs.map((ele) => {
-                        if (ele.value === item.value) {
-                            return {
-                                ...ele,
-                                show: !ele.show
-                            }
-                        } else {
-                            return {
-                                ...ele,
-                                show: false
-                            }
-                        }
-                    })
-                )
-            } else if (props.setShow !== undefined) {
-                setShow((v) => !v)
-            }
+        if (item.value === activeKey) {
+            setShow((v) => !v)
         } else {
-            if (item.value === activeKey) {
-                setYakitTabs?.(
-                    yakitTabs.map((ele) => {
-                        if (ele.value === item.value) {
-                            return {
-                                ...ele,
-                                show: !ele.show
-                            }
-                        }
-                        return ele
-                    })
-                )
-            }
+            setShow(true)
         }
         onActiveKey(item.value)
     })
@@ -79,12 +50,12 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
                                             item.value === activeKey &&
                                             props.show === true &&
                                             props.setShow === undefined,
-                                        [styles["yakit-side-tab-item-show"]]:
-                                            item.value === activeKey && (item.show === false || !show)
+                                        [styles["yakit-side-tab-item-show"]]: item.value === activeKey && !show
                                     })}
                                     onTabPaneRender={onTabPaneRender}
                                     rotate={"left"}
                                     barHint={barHint}
+                                    t={t}
                                 />
                             ))}
                         </div>
@@ -108,6 +79,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
                                     onTabPaneRender={onTabPaneRender}
                                     rotate={"right"}
                                     barHint={barHint}
+                                    t={t}
                                 />
                             ))}
                         </div>
@@ -126,6 +98,8 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
                                         [styles["yakit-side-tab-horizontal-item-active"]]: item.value === activeKey
                                     })}
                                     onTabPaneRender={onTabPaneRender}
+                                    barHint={barHint}
+                                    t={t}
                                 />
                             ))}
                         </div>
@@ -153,14 +127,15 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
 })
 
 const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
-    const {item, onChange, className = "", onTabPaneRender, rotate, barHint} = props
+    const {item, onChange, className = "", onTabPaneRender, rotate, barHint, t} = props
     const [hover, setHover] = useState(false)
 
     const renderLabel = useCreation(() => {
-        if (typeof item.label === "function") {
-            return item.label()
+        if (typeof item.label === "string") {
+            return t?.(item.label) || item.label
+        } else {
+            return item.label
         }
-        return item.label
     }, [item.label])
 
     const node: ReactNode[] = useCreation(() => {
@@ -205,13 +180,7 @@ const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
     return (
         <>
             {hint ? (
-                <Tooltip
-                    key={`${item.value}`}
-                    title={hint}
-                    placement='right'
-                    destroyTooltipOnHide
-                    visible={hover}
-                >
+                <Tooltip key={`${item.value}`} title={hint} placement='right' destroyTooltipOnHide visible={hover}>
                     {tabDom()}
                 </Tooltip>
             ) : (

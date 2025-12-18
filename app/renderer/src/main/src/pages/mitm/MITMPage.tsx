@@ -434,6 +434,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 }
 
 const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
+const MITMIdleTab: YakitTabsProps[] = [
+    {
+        label: "插件",
+        value: "plugin"
+    }
+]
 export interface ExtraMITMServerProps {
     /**@name 国密劫持*/
     enableGMTLS?: boolean
@@ -510,7 +516,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
 
-    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
     /**
      * @description 插件勾选
@@ -721,49 +727,33 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const idleTabsRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(idleTabsRef)
     const [activeKey, setActiveKey] = useState<string>("plugin")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "插件",
-            value: "plugin",
-            show: true
-        }
-    ])
     useEffect(() => {
-        getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
-            if (setting) {
-                try {
-                    const tabs = JSON.parse(setting)
-                    setYakitTab((prev) => {
-                        prev.forEach((i) => {
-                            if (i.value === tabs.curTabKey) {
-                                i.show = tabs.contShow
-                            } else {
-                                i.show = false
-                            }
-                        })
-                        return [...prev]
-                    })
-                    onActiveKey(tabs.curTabKey)
-                } catch (error) {}
-            }
-        })
+        if (inViewport) {
+            getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
+                if (setting) {
+                    try {
+                        const tabs = JSON.parse(setting)
+                        setOpenTabsFlag(tabs.contShow)
+                        onActiveKey(tabs.curTabKey)
+                    } catch (error) {}
+                }
+            })
+        }
+        
     }, [inViewport])
     const onActiveKey = useMemoizedFn((key) => {
         setActiveKey(key)
     })
-    const show = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-    }, [yakitTab, activeKey])
-    useEffect(() => {
-        if (inViewport) {
-            setOpenTabsFlag(show)
-        }
-    }, [show, inViewport])
     useDebounceEffect(
         () => {
-            setRemoteValue(RemoteGV.MitmIdleLeftTabs, JSON.stringify({contShow: show, curTabKey: activeKey}))
+            if (inViewport) {
+                setRemoteValue(
+                    RemoteGV.MitmIdleLeftTabs,
+                    JSON.stringify({contShow: openTabsFlag, curTabKey: activeKey})
+                )
+            }
         },
-        [show, activeKey],
+        [openTabsFlag, activeKey, inViewport],
         {wait: 300}
     )
     // #endregion
@@ -782,10 +772,11 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 return (
                     <div className={style["mitm-idle-tab-wrap"]} ref={idleTabsRef}>
                         <YakitSideTab
-                            yakitTabs={yakitTab}
-                            setYakitTabs={setYakitTab}
+                            yakitTabs={MITMIdleTab}
                             activeKey={activeKey}
                             onActiveKey={onActiveKey}
+                            show={openTabsFlag}
+                            setShow={setOpenTabsFlag}
                         />
                         <div
                             className={style["mitm-idle-tab-cont-item"]}
@@ -917,6 +908,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setTotal={setTotalFun}
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
+                        openTabsFlag={openTabsFlag}
                         onSetOpenTabsFlag={setOpenTabsFlag}
                         onSetLoadedPluginLen={setLoadedPluginLen}
                         showPluginHistoryList={showPluginHistoryList}

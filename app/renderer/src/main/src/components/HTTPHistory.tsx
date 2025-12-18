@@ -95,40 +95,30 @@ interface HTTPHistoryProp extends HistoryTableTitleShow {
     pageType: HTTPHistorySourcePageType
     params?: YakQueryHTTPFlowRequest
 }
+export const HistoryTab: YakitTabsProps[] = [
+    {
+        icon: <OutlineLog2Icon />,
+        label: "HTTPHistory.websiteTree",
+        value: "web-tree"
+    },
+    {
+        icon: <OutlineTerminalIcon />,
+        label: "HTTPHistory.process",
+        value: "process"
+    }
+]
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
     const [activeKey, setActiveKey] = useState<string>("web-tree")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            icon: <OutlineLog2Icon />,
-            label: () => t("HTTPHistory.websiteTree"),
-            value: "web-tree",
-            show: true
-        },
-        {
-            icon: <OutlineTerminalIcon />,
-            label: () => t("HTTPHistory.process"),
-            value: "process",
-            show: false
-        }
-    ])
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteHistoryGV.HistoryLeftTabs).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    setYakitTab((prev) => {
-                        prev.forEach((i) => {
-                            if (i.value === tabs.key) {
-                                i.show = tabs.contShow
-                            } else {
-                                i.show = false
-                            }
-                        })
-                        return [...prev]
-                    })
+                    setOpenTabsFlag(tabs.contShow)
                     onActiveKey(tabs.key)
                 } catch (error) {}
             }
@@ -138,10 +128,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onActiveKey = useMemoizedFn((key) => {
         setActiveKey(key)
     })
-
-    const openTabsFlag = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-    }, [yakitTab, activeKey])
 
     useDebounceEffect(
         () => {
@@ -217,16 +203,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const val = JSON.parse(value)
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
-            setYakitTab((prev) => {
-                prev.forEach((i) => {
-                    if (i.value === "web-tree") {
-                        i.show = true
-                    } else {
-                        i.show = false
-                    }
-                })
-                return [...prev]
-            })
+            setOpenTabsFlag(true)
             onActiveKey("web-tree")
         }
     })
@@ -255,10 +232,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div className={styles["hTTPHistory-left"]}>
                         <YakitSideTab
                             key={i18n.language}
-                            yakitTabs={yakitTab}
-                            setYakitTabs={setYakitTab}
+                            t={t}
+                            yakitTabs={HistoryTab}
                             activeKey={activeKey}
                             onActiveKey={onActiveKey}
+                            show={openTabsFlag}
+                            setShow={setOpenTabsFlag}
                         />
                         <div className={styles["tab-content"]}>
                             <ReactResizeDetector

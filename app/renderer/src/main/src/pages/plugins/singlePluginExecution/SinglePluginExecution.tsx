@@ -49,6 +49,12 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?:
     }
     return linkPluginConfig
 }
+const SinglePluginExecutionTab: YakitTabsProps[] = [
+    {
+        label: "插件",
+        value: "plugin"
+    }
+]
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const [yakScriptId, setYakScriptId] = useState<number>(props.yakScriptId)
@@ -182,26 +188,13 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
 
     // #region 左侧tab
     const [activeKey, setActiveKey] = useState<string>("plugin")
-    const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-        {
-            label: () => "插件",
-            value: "plugin",
-            show: true
-        }
-    ])
+    const [show, setShow] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteGV.SinglePluginExecTabs).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    yakitTab.forEach((i) => {
-                        if (i.value === tabs.curTabKey) {
-                            i.show = tabs.contShow
-                        } else {
-                            i.show = false
-                        }
-                    })
-                    setYakitTab([...yakitTab])
+                    setShow(tabs.contShow)
                     onActiveKey(tabs.curTabKey)
                 } catch (error) {}
             }
@@ -210,14 +203,11 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const onActiveKey = useMemoizedFn((key) => {
         setActiveKey(key)
     })
-    const openTab = useCreation(() => {
-        return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-    }, [yakitTab, activeKey])
     useDebounceEffect(
         () => {
-            setRemoteValue(RemoteGV.SinglePluginExecTabs, JSON.stringify({contShow: openTab, curTabKey: activeKey}))
+            setRemoteValue(RemoteGV.SinglePluginExecTabs, JSON.stringify({contShow: show, curTabKey: activeKey}))
         },
-        [openTab, activeKey],
+        [show, activeKey],
         {wait: 300}
     )
     // #endregion
@@ -228,15 +218,16 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             {!hidden && (
                 <div className={styles["plugin-tab-wrap"]}>
                     <YakitSideTab
-                        yakitTabs={yakitTab}
-                        setYakitTabs={setYakitTab}
+                        yakitTabs={SinglePluginExecutionTab}
                         activeKey={activeKey}
                         onActiveKey={onActiveKey}
+                        show={show}
+                        setShow={setShow}
                     />
                 </div>
             )}
             <PluginLocalListDetails
-                hidden={hidden ? true : !openTab}
+                hidden={hidden ? true : !show}
                 selectList={selectList}
                 setSelectList={setSelectList}
                 search={search}
