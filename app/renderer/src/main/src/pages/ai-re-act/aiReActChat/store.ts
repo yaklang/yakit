@@ -1,9 +1,12 @@
-import {createExternalStore, ExternalStore} from "@/utils/createExternalStore"
-import {useSyncExternalStore} from "react"
+import { createExternalStore, ExternalStore } from "@/utils/createExternalStore"
+import { useSyncExternalStore } from "react"
 
-type FileListStore = ExternalStore<string[]>
+export interface FileToChatQuestionList {
+    path: string
+    isFolder: boolean
+}
 
-const storeMap = new Map<Key, FileListStore>()
+type FileListStore = ExternalStore<FileToChatQuestionList[]>
 
 export type Key = FileListStoreKey | string
 
@@ -12,26 +15,34 @@ export enum FileListStoreKey {
     Konwledge = "konwledge",
 }
 
+const storeMap = new Map<Key, FileListStore>()
+
 function getStore(key: Key): FileListStore {
     let store = storeMap.get(key)
     if (!store) {
-        store = createExternalStore<string[]>([])
+        store = createExternalStore<FileToChatQuestionList[]>([])
         storeMap.set(key, store)
     }
     return store
 }
+
 export const fileToChatQuestionStore = {
-    add(key: Key, filePath: string): void {
+    add(key: Key, file: FileToChatQuestionList): void {
         const store = getStore(key)
         store.setSnapshot((prev) => {
-            if (prev.includes(filePath)) return prev
-            return [...prev, filePath]
+            const exists = prev.some(
+                (item) => item.path === file.path
+            )
+            if (exists) return prev
+            return [...prev, file]
         })
     },
 
     remove(key: Key, filePath: string): void {
         const store = getStore(key)
-        store.setSnapshot((prev) => prev.filter((item) => item !== filePath))
+        store.setSnapshot((prev) =>
+            prev.filter((item) => item.path !== filePath)
+        )
     },
 
     clear(key: Key): void {
@@ -40,7 +51,7 @@ export const fileToChatQuestionStore = {
     }
 }
 
-export function useFileToQuestion(key: Key): string[] {
+export function useFileToQuestion(key: Key): FileToChatQuestionList[] {
     const store = getStore(key)
     return useSyncExternalStore(store.subscribe, store.getSnapshot)
 }

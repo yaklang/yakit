@@ -67,9 +67,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
 
-    const handleStartTriageChat = useMemoizedFn((qs: string) => {
+    const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
         setMode("re-act")
-        handleStart({qs})
+        handleStart(data)
     })
 
     useEffect(() => {

@@ -13,6 +13,7 @@ import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
+import AIFileChatContent from "../aIFileChatContent/AIFileChatContent"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -47,9 +48,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return (
                     <AITriageChatContent
                         isAnswer={false}
-                        content={data}
+                        content={<AIFileChatContent {...data} extraValue={extraValue} />}
                         extraValue={extraValue}
                         {...chatContentExtraProps}
+                        contentClassName={styles["file-content-wrapper"]}
                     />
                 )
             case AIChatQSDataTypeEnum.STREAM:

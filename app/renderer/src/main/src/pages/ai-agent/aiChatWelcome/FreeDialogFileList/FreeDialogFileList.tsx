@@ -27,7 +27,7 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
     return (
         <div className={styles["free-dialog-file-list"]} ref={ref}>
             <div ref={listRef} className={styles["file-item"]}>
-                {fileToQuestion.map((path) => (
+                {fileToQuestion.map(({path}) => (
                     <YakitButton
                         key={path}
                         type='outline2'
@@ -52,7 +52,7 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
                         <div className={styles["popover-content"]}>
                             <div className={styles["popover-btn-title"]}>
                                 <div>
-                                    文件列表{" "}
+                                    文件列表
                                     <YakitTag size='small' fullRadius>
                                         {fileToQuestion.length}
                                     </YakitTag>
@@ -69,7 +69,7 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
                             </div>
 
                             <div className={styles["popover-btn-list"]}>
-                                {fileToQuestion.map((path) => (
+                                {fileToQuestion.map(({path}) => (
                                     <div key={path} title={path} className={styles["popover-btn-list-item"]}>
                                         <p>{path}</p>
                                         <YakitButton

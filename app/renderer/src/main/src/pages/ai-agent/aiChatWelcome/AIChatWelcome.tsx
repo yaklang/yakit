@@ -57,12 +57,11 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
 import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
 import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
-import {FileListStoreKey, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {OutlinePlusIcon} from "@/assets/newIcon"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, count)
@@ -133,7 +132,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
-
+    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
     const [inViewPort = true] = useInViewport(welcomeRef)
 
     const tokenRef = useRef<string>(randomString(40))
@@ -256,7 +255,15 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
 
     const handleTriageSubmit = useMemoizedFn((qs: string) => {
-        onTriageSubmit(qs)
+        const fileToQuestionPath = fileToQuestion.map((item) => item.path)
+        onTriageSubmit({
+            qs,
+            fileToQuestion: fileToQuestionPath,
+            extraValue: {
+                // 自由对话文件列表
+                freeDialogFileList: fileToQuestion
+            }
+        })
         fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })

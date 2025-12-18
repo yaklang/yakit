@@ -196,7 +196,7 @@ export interface UseChatIPCEvents {
     /** 开始执行接口流 */
     onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
-    onSend: (AIChatSendParams) => void
+    onSend: (params:AIChatSendParams) => void
     /** 主动结束正在执行中的接口流 */
     onClose: (
         token: string,

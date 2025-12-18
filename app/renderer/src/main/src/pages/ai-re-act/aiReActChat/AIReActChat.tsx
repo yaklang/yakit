@@ -27,6 +27,7 @@ import {PageNodeItemProps} from "@/store/pageInfo"
 import emiter from "@/utils/eventBus/eventBus"
 import FreeDialogFileList from "@/pages/ai-agent/aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
+import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -69,26 +70,33 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             yakitNotify("error", "请先配置 AI ReAct 参数")
             return
         }
+        const fileToQuestionPath = fileToQuestion.map((item) => item.path)
+        const params = {qs, fileToQuestion: fileToQuestionPath, extraValue: {freeDialogFileList: fileToQuestion}}
         if (execute) {
-            handleSend(qs, fileToQuestion)
+            handleSend(params)
         } else {
-            handleStart({qs, fileToQuestion})
+            handleStart(params)
         }
         setQuestion("")
         fileToChatQuestionStore.clear(storeKey)
     })
 
     /**自由对话 */
-    const handleSend = useMemoizedFn((qs: string, fileArr: string[]) => {
+    const handleSend = useMemoizedFn((data: HandleStartParams) => {
         if (!activeChat?.id) return
         try {
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
-                FreeInput: qs,
-                AttachedFilePath: fileArr
+                FreeInput: data.qs,
+                AttachedFilePath: data.fileToQuestion
             }
             // 发送到服务端
-            chatIPCEvents.onSend({token: activeChat.id, type: "casual", params: chatMessage})
+            chatIPCEvents.onSend({
+                token: activeChat.id,
+                type: "casual",
+                params: chatMessage,
+                extraValue: data.extraValue
+            })
         } catch (error) {}
     })
 
@@ -177,7 +185,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     extraFooterRight={
                                         <div className={styles["extra-footer-right"]}>
                                             <OpenFileDropdown
-                                                cb={(data) => fileToChatQuestionStore.add(storeKey, data.path)}
+                                                cb={(data) => fileToChatQuestionStore.add(storeKey, data)}
                                             >
                                                 <UploadFileButton title='打开文件夹' />
                                             </OpenFileDropdown>
