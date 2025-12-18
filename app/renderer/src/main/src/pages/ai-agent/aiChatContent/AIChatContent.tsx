@@ -148,11 +148,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         setIsExpand(!isExpand)
     })
     const yakitTabs = useCreation(() => {
-        let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.File_System]]
-
-        if (!!taskChat?.streams?.length) {
-            tab.push(AITabs[AITabsEnum.Task_Content])
-        }
+        let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.File_System], AITabs[AITabsEnum.Task_Content]]
         if (!!tempHTTPTotal) {
             tab.push(AITabs[AITabsEnum.HTTP])
         }
@@ -278,7 +274,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 secondNodeStyle: {width: "100%", padding: 0}
             }
         }
-        const isFileSystemKey = activeKey === AITabsEnum.File_System
+        const isFileSystemKey = activeKey === AITabsEnum.File_System|| taskChat.streams.length <= 0
         let secondRatio
         if (showFreeChat) {
             if (isFileSystemKey) {

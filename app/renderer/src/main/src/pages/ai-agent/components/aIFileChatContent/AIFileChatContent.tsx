@@ -50,11 +50,13 @@ const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}
         return new Map(freeDialogFileList.map((item) => [item.path, item]))
     }, [freeDialogFileList])
 
-    const attachedFilePathList = setting.AttachedFilePath
+    const attachedFilePathList = setting?.AttachedFilePath
 
     return (
         <div className={styles.wrapper}>
-            <div className={styles.qs}>{qs}</div>
+            <div className={styles.qs} style={{padding: !attachedFilePathList?.length ? 0 : "8px"}}>
+                {qs}
+            </div>
 
             {!!attachedFilePathList?.length && (
                 <div className={styles.file}>

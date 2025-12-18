@@ -14,6 +14,7 @@ import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
 import AIFileChatContent from "../aIFileChatContent/AIFileChatContent"
+import classNames from "classnames"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -45,13 +46,18 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         const {id, type, Timestamp, data, extraValue} = item
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
+                const hasFreeDialogFileList =
+                    Array.isArray(extraValue?.freeDialogFileList) && (extraValue?.freeDialogFileList?.length ?? 0) > 0
+
                 return (
                     <AITriageChatContent
                         isAnswer={false}
                         content={<AIFileChatContent {...data} extraValue={extraValue} />}
                         extraValue={extraValue}
                         {...chatContentExtraProps}
-                        contentClassName={styles["file-content-wrapper"]}
+                        contentClassName={classNames({
+                            [styles["file-content-wrapper"]]: hasFreeDialogFileList
+                        })}
                     />
                 )
             case AIChatQSDataTypeEnum.STREAM:

@@ -367,10 +367,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     const onOpenFileFolder = async (data: OpenFileDropdownItem) => {
         if (!data.path) return
-        loadRemoteHistory().then(() => {
-            historyStore.addHistoryItem(data)
-            setOpenDrawer(true)
-        })
+        historyStore.addHistoryItem(data)
+        setOpenDrawer(true)
     }
 
     return (

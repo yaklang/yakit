@@ -22,8 +22,6 @@ export const loadRemoteHistory = async () => {
     }
 }
 
-loadRemoteHistory()
-
 export const historyStore = {
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,

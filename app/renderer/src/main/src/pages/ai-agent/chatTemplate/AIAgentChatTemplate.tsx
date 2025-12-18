@@ -37,15 +37,12 @@ export enum AIChatLeft {
     Timeline = "timeline"
 }
 
-const options = [
-    {label: "任务树", value: AIChatLeft.TaskTree},
-    {label: "时间线", value: AIChatLeft.Timeline}
-]
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
     const {chatIPCData} = useChatIPCStore()
-    const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.TaskTree)
+    const {taskChat} = useAIChatUIData()
+    const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
         valuePropName: "expand",
@@ -72,6 +69,25 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                 break
         }
     })
+
+    const options = useMemo(() => {
+        const hasStreams = (taskChat?.streams?.length ?? 0) > 0
+
+        return hasStreams
+            ? [
+                  {label: "任务树", value: AIChatLeft.TaskTree},
+                  {label: "时间线", value: AIChatLeft.Timeline}
+              ]
+            : [{label: "时间线", value: AIChatLeft.Timeline}]
+    }, [taskChat?.streams?.length])
+
+    const hasTaskTree = (taskChat?.streams?.length ?? 0) > 0
+
+    useEffect(() => {
+        if (hasTaskTree && activeTab === AIChatLeft.Timeline) {
+            setActiveTab(AIChatLeft.TaskTree)
+        }
+    }, [hasTaskTree])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>

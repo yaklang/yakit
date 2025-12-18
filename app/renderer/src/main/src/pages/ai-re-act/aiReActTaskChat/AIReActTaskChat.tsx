@@ -23,6 +23,7 @@ import {AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat} = props
+    const {taskChat} = useAIChatUIData()
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
 
@@ -35,22 +36,24 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     return (
         <div className={styles["ai-re-act-task-chat"]}>
             <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
-            <div className={styles["chat-content-wrapper"]}>
-                <div className={styles["header"]}>
-                    <div className={styles["title"]}>
-                        <ColorsBrainCircuitIcon />
-                        深度规划
+            {!!taskChat?.streams?.length && (
+                <div className={styles["chat-content-wrapper"]}>
+                    <div className={styles["header"]}>
+                        <div className={styles["title"]}>
+                            <ColorsBrainCircuitIcon />
+                            深度规划
+                        </div>
+                        <div className={styles["extra"]}>
+                            <YakitButton
+                                type='text2'
+                                icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                                onClick={onIsExpand}
+                            />
+                        </div>
                     </div>
-                    <div className={styles["extra"]}>
-                        <YakitButton
-                            type='text2'
-                            icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                            onClick={onIsExpand}
-                        />
-                    </div>
+                    <AIReActTaskChatContent />
                 </div>
-                <AIReActTaskChatContent />
-            </div>
+            )}
         </div>
     )
 })
@@ -140,11 +143,14 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         valuePropName: "leftExpand",
         trigger: "setLeftExpand"
     })
+    const hasStreams = (taskChat?.streams?.length ?? 0) > 0
+
     return (
         <div
             className={classNames(styles["content-left-side"], {
                 [styles["content-left-side-hidden"]]: !leftExpand
             })}
+            style={hasStreams ? undefined : {width: "100%"}}
         >
             <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} tasks={taskChat.plan} />
             <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>

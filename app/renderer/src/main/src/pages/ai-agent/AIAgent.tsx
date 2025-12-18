@@ -14,6 +14,7 @@ import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
+import { loadRemoteHistory } from "./components/aiFileSystemList/store/useHistoryFolder"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20250808"
@@ -100,6 +101,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 }
             })
             .catch(() => {})
+
+        // 加载历史文件数据
+        loadRemoteHistory().catch(() => {})
         return () => {}
     }, [])
     // #endregion
