@@ -42,8 +42,8 @@ const UseCasualAndTaskTypes = [
     "ai_review_countdown",
     "ai_review_end",
     // 文件系统操作相关
-    "filesystem_pin_directory",
-    "filesystem_pin_filename",
+    // "filesystem_pin_directory",
+    // "filesystem_pin_filename",
     // 决策总结
     "tool_call_decision",
     // 任务规划崩溃的错误信息

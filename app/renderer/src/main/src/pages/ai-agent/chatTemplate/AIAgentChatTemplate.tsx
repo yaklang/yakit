@@ -87,7 +87,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         if (hasTaskTree && activeTab === AIChatLeft.Timeline) {
             setActiveTab(AIChatLeft.TaskTree)
         }
-    }, [hasTaskTree])
+    }, [])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>

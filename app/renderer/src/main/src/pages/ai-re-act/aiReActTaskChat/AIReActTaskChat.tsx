@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {AIReActTaskChatContentProps, AIReActTaskChatLeftSideProps, AIReActTaskChatProps} from "./AIReActTaskChatType"
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
@@ -34,12 +34,12 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     })
 
     useEffect(() => {
-      setTimeLine(leftExpand)
-    },[leftExpand])
+        setTimeLine(leftExpand)
+    }, [leftExpand])
 
     return (
         <div className={styles["ai-re-act-task-chat"]}>
-            <AIReActTaskChatLeftSide  leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
+            <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
             {!!taskChat?.streams?.length && (
                 <div className={styles["chat-content-wrapper"]}>
                     <div className={styles["header"]}>
@@ -147,7 +147,9 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         valuePropName: "leftExpand",
         trigger: "setLeftExpand"
     })
-    const hasStreams = (taskChat?.streams?.length ?? 0) > 0
+    const hasStreams = useMemo(() => {
+        return (taskChat?.streams?.length ?? 0) > 0
+    }, [taskChat?.streams?.length])
 
     return (
         <div
