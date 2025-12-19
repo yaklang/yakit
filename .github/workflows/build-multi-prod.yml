@@ -13,6 +13,14 @@ jobs:
     prepare_engine:
         runs-on: macos-15
 
+        env:
+            CI: ""
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
         outputs:
             engine_version: ${{ steps.engine_ver.outputs.version }}
         steps:
@@ -34,7 +42,7 @@ jobs:
                   path: bins
                   key: macos-yak-engine-${{ steps.engine_ver.outputs.version }}
 
-        # ---------- Linux ----------
+            # ---------- Linux ----------
             - name: Download Yak Engine (Linux)
               run: |
                   if [ ! -f bins/yak_linux_amd64.zip ]; then
@@ -51,7 +59,7 @@ jobs:
                     rm bins/yak_linux_arm64
                   fi
 
-        # ---------- Windows ----------
+            # ---------- Windows ----------
             - name: Download Yak Engine (Windows)
               run: |
                   if [ ! -f bins/yak_windows_normal_amd64.zip ]; then
@@ -68,7 +76,7 @@ jobs:
                     rm bins/yak_windows_amd64.exe
                   fi
 
-        # ---------- MacOS ----------
+            # ---------- MacOS ----------
             - name: Download Yak Engine (macOS)
               run: |
                   if [ ! -f bins/yak_darwin_amd64 ]; then
