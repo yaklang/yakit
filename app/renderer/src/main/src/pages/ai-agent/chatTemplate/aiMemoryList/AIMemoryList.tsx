@@ -65,81 +65,83 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
     return (
         <div className={styles["ai-memory-list-wrapper"]}>
             <div className={styles["ai-memory-list-heard"]}>近期记忆({list.length})</div>
-            <RollingLoadList<AIAgentGrpcApi.MemoryEntry>
-                data={list}
-                loadMoreData={() => {}}
-                renderRow={(item, index) => (
-                    <YakitPopover
-                        placement='rightBottom'
-                        key={item.id}
-                        overlayClassName={styles["memory-popover-wrapper"]}
-                        content={
-                            <div className={styles["memory-popover-content"]}>
-                                <div className={styles["memory-popover-score-wrapper"]}>
-                                    <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（归一化直方图）</div>
-                                    <div className={styles["score-list"]}>
-                                        {getScoreList(item).map((score, index) => (
-                                            <div
-                                                className={classNames(styles["score-item"], {
-                                                    [styles["score-item-height-color"]]: score.value >= 0.7
-                                                })}
-                                                key={score.label}
-                                            >
-                                                <span>
-                                                    {score.label}={score.value}
-                                                </span>
-                                                {index !== item.core_pact_vector.length - 1 && (
-                                                    <div className={styles["divider"]} />
-                                                )}
+            <div className={styles["ai-memory-list-wrapper"]}>
+                <RollingLoadList<AIAgentGrpcApi.MemoryEntry>
+                    data={list}
+                    loadMoreData={() => {}}
+                    renderRow={(item, index) => (
+                        <YakitPopover
+                            placement='rightBottom'
+                            key={item.id}
+                            overlayClassName={styles["memory-popover-wrapper"]}
+                            content={
+                                <div className={styles["memory-popover-content"]}>
+                                    <div className={styles["memory-popover-score-wrapper"]}>
+                                        <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（归一化直方图）</div>
+                                        <div className={styles["score-list"]}>
+                                            {getScoreList(item).map((score, index) => (
+                                                <div
+                                                    className={classNames(styles["score-item"], {
+                                                        [styles["score-item-height-color"]]: score.value >= 0.7
+                                                    })}
+                                                    key={score.label}
+                                                >
+                                                    <span>
+                                                        {score.label}={score.value}
+                                                    </span>
+                                                    {index !== item.core_pact_vector.length - 1 && (
+                                                        <div className={styles["divider"]} />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AIMemoryScoreEcharts
+                                            data={{
+                                                xData: [],
+                                                yData: [
+                                                    item.c_score,
+                                                    item.o_score,
+                                                    item.r_score,
+                                                    item.e_score,
+                                                    item.p_score,
+                                                    item.a_score,
+                                                    item.t_score
+                                                ]
+                                            }}
+                                            style={{width: "100%", height: 220}}
+                                        />
+                                    </div>
+                                    <div className={styles["memory-popover-potential-questions"]}>
+                                        {item.potential_questions.map((ele) => (
+                                            <div className={styles["potential-questions-item"]} key={ele} title={ele}>
+                                                <span>{ele}</span>
                                             </div>
                                         ))}
                                     </div>
-                                    <AIMemoryScoreEcharts
-                                        data={{
-                                            xData: [],
-                                            yData: [
-                                                item.c_score,
-                                                item.o_score,
-                                                item.r_score,
-                                                item.e_score,
-                                                item.p_score,
-                                                item.a_score,
-                                                item.t_score
-                                            ]
-                                        }}
-                                        style={{width: "100%", height: 220}}
-                                    />
                                 </div>
-                                <div className={styles["memory-popover-potential-questions"]}>
-                                    {item.potential_questions.map((ele) => (
-                                        <div className={styles["potential-questions-item"]} key={ele} title={ele}>
-                                            <span>{ele}</span>
-                                        </div>
+                            }
+                        >
+                            <div key={item.id} className={styles["memory-item"]}>
+                                <div className={styles["memory-content"]}>{item.content}</div>
+                                <div className={styles["memory-tags"]} title={item.tags.join(",")}>
+                                    {item.tags.map((tag) => (
+                                        <YakitTag size='small' key={tag} fullRadius={true}>
+                                            {tag}
+                                        </YakitTag>
                                     ))}
                                 </div>
                             </div>
-                        }
-                    >
-                        <div key={item.id} className={styles["memory-item"]}>
-                            <div className={styles["memory-content"]}>{item.content}</div>
-                            <div className={styles["memory-tags"]} title={item.tags.join(",")}>
-                                {item.tags.map((tag) => (
-                                    <YakitTag size='small' key={tag} fullRadius={true}>
-                                        {tag}
-                                    </YakitTag>
-                                ))}
-                            </div>
-                        </div>
-                    </YakitPopover>
-                )}
-                page={1}
-                hasMore={false}
-                loading={false}
-                defItemHeight={88}
-                classNameList={styles["ai-memory-list"]}
-                classNameRow={styles["ai-memory-list-row"]}
-                rowKey='id'
-            />
+                        </YakitPopover>
+                    )}
+                    page={1}
+                    hasMore={false}
+                    loading={false}
+                    defItemHeight={88}
+                    classNameList={styles["ai-memory-list"]}
+                    classNameRow={styles["ai-memory-list-row"]}
+                    rowKey='id'
+                />
+            </div>
             <div className={styles["ai-memory-list-footer"]}>
                 <ReactResizeDetector
                     onResize={(w, h) => {
