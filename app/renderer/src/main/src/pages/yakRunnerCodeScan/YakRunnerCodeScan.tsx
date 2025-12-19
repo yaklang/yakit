@@ -108,12 +108,13 @@ import {QuerySSAProgramRequest} from "../yakRunnerScanHistory/YakRunnerScanHisto
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {AfreshAuditModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
-import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
+import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -1611,7 +1612,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             let reportName = ""
             const projectItem = auditCodeList.find((item) => item.value === pageInfo.projectId)
             const projectName = pageInfo?.projectName || projectItem?.label
-            
+
             if (projectName) {
                 reportName = `${projectName}代码扫描报告`
             }
@@ -2239,6 +2240,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
         // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
         const isRealStartRef = useRef<boolean>(false)
+        const jsonSchemaListRef = useRef<{
+            [key: string]: any
+        }>({})
         const {t, i18n} = useI18nNamespaces(["mitm"])
         const {
             proxyConfig: {Endpoints = []},
@@ -2370,7 +2374,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         })
 
         const onCancelAudit = () => {
-            apiCancelDebugPlugin(tokenRef.current).then(() => {
+            apiCancelDebugPlugin(tokenRef.current)
+            apiCancelDebugPlugin(tokenCompileRef.current).then(() => {
                 setIsExpand(true)
                 setExecuteStatus("finished")
             })
@@ -2505,11 +2510,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         // CreateSSAProject 创建项目管理数据
                         projectIdCacheRef.current = verifyStart?.BaseInfo?.project_id
                         jsonCacheRef.current = startLog?.data || ""
-
-                        if (verifyStart?.project_exists === false) {
-                            await onCreateSSAProject(startLog?.data || "")
-                        }
-
                         switch (kind) {
                             // 链接错误
                             case "connectFailException":
@@ -2577,6 +2577,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 ])
                                 break
                             default:
+                                if (verifyStart?.project_exists === false) {
+                                    await onCreateSSAProject(startLog?.data || "")
+                                }
                                 //  真正的启动
                                 isRealStartRef.current = true
                                 setIsExpand(false)
@@ -2624,6 +2627,17 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     return item
                 })
             }
+            const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+            if (result.jsonSchemaError.length > 0) {
+                failed(`jsonSchema校验失败`)
+                return
+            }
+            result.jsonSchemaSuccess.forEach((item) => {
+                requestParams.ExecParams.push({
+                    Key: item.key,
+                    Value: JSON.stringify(item.value)
+                })
+            })
             onStartAudit(requestParams)
         })
 
@@ -2731,14 +2745,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                             label='代理'
                                             extra={
                                                 <>
-                                                <div
-                                                    className={styles["agent-down-stream-proxy"]}
-                                                    onClick={onClickDownstreamProxy}
-                                                >
-                                                    {t("AgentConfigModal.proxy_configuration")}
-                                                </div>
-                                                    <Divider type="vertical" />
-                                                    <ProxyTest onEchoNode={(proxy)=>form.setFieldsValue({proxy})}/>
+                                                    <div
+                                                        className={styles["agent-down-stream-proxy"]}
+                                                        onClick={onClickDownstreamProxy}
+                                                    >
+                                                        {t("AgentConfigModal.proxy_configuration")}
+                                                    </div>
+                                                    <Divider type='vertical' />
+                                                    <ProxyTest onEchoNode={(proxy) => form.setFieldsValue({proxy})} />
                                                 </>
                                             }
                                             validateTrigger={["onChange", "onBlur"]}
@@ -2751,11 +2765,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                                         // 获取当前options中的所有值
                                                         const existingOptions = Endpoints.map(({Id}) => Id)
                                                         // 只校验新输入的值(不在options中的值)
-                                                        const newValues = value.filter((v) => !existingOptions.includes(v))
+                                                        const newValues = value.filter(
+                                                            (v) => !existingOptions.includes(v)
+                                                        )
                                                         // 校验代理地址格式: 协议://地址:端口
                                                         for (const v of newValues) {
                                                             if (!isValidUrlWithProtocol(v)) {
-                                                                return Promise.reject(t("ProxyConfig.valid_proxy_address_tip"))
+                                                                return Promise.reject(
+                                                                    t("ProxyConfig.valid_proxy_address_tip")
+                                                                )
                                                             }
                                                         }
                                                         return Promise.resolve()
@@ -2803,6 +2821,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                     pluginType={"yak"}
                                     isDefaultActiveKey={false}
                                     wrapperClassName={styles["extra-node-collapse"]}
+                                    jsonSchemaListRef={jsonSchemaListRef}
                                 />
                             </Col>
                         </Row>
