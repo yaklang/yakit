@@ -125,9 +125,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [questionList, setQuestionList] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
-
+    const customFolder = useCustomFolder()
     // 控制下拉菜单
-    const [openDrawer, setOpenDrawer] = useState<boolean>(false)
+    const [openDrawer, setOpenDrawer] = useState<boolean>(!customFolder.length)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
@@ -362,8 +362,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setCheckItems([])
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
-
-    const customFolder = useCustomFolder()
 
     const onOpenFileFolder = async (data: OpenFileDropdownItem) => {
         if (!data.path) return

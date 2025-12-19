@@ -1,18 +1,22 @@
 import { bindExternalStoreHook, createExternalStore } from "@/utils/createExternalStore"
 import { HistoryItem } from "../type"
+import { historyStore } from "./useHistoryFolder"
 
 const SESSION_KEY = "current-session-files"
 
-const getInitSession = (): HistoryItem[] => {
-    try {
-        const saved = sessionStorage.getItem(SESSION_KEY)
-        return saved ? JSON.parse(saved) : []
-    } catch {
-        return []
-    }
-}
+const {ipcRenderer} = window.require("electron")
 
-const store = createExternalStore<HistoryItem[]>(getInitSession())
+
+// const getInitSession = (): HistoryItem[] => {
+//     try {
+//         const saved = sessionStorage.getItem(SESSION_KEY)
+//         return saved ? JSON.parse(saved) : []
+//     } catch {
+//         return []
+//     }
+// }
+
+const store = createExternalStore<HistoryItem[]>([])
 
 export const customFolderStore = {
     subscribe: store.subscribe,
@@ -44,3 +48,26 @@ export const customFolderStore = {
 }
 
 export const useCustomFolder = bindExternalStoreHook(store)
+
+
+export const initSessionFromHistoryOrIPC = async () => {
+    const history = historyStore.getSnapshot()
+
+    if (history.length > 0) {
+        customFolderStore.addCustomFolderItem(history[history.length - 1])
+        return 
+    }
+    try {
+        const result = await ipcRenderer.invoke("fetch-code-path")
+        if (!result) return null
+        const item: HistoryItem = {
+            path: result.path ?? result,
+            isFolder: result.isFolder ?? true
+        }
+        historyStore.addHistoryItem(item)
+        return item
+    } catch (e) {
+        console.error("fetch-code-path failed", e)
+        return null
+    }
+}

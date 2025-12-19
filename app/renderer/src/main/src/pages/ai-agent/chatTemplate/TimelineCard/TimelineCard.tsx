@@ -17,7 +17,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {useSize} from "ahooks"
 
-const MAX_TIMELINE_COUNT = 70
+const MAX_TIMELINE_COUNT = 50
 
 const TYPE_COLOR_MAP: Record<string, "info" | "white" | "danger"> = {
     user_input: "info",
