@@ -19,7 +19,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
     const [show, setShow] = useControllableValue<boolean>(props, {
-        defaultValue: true,
+        defaultValue: false,
         valuePropName: "show",
         trigger: "setShow"
     })

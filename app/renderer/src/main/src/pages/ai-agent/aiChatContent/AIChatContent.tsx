@@ -41,7 +41,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.File_System)
+    const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
     const [tempRiskTotal, setTempRiskTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数,现在不显示具体数量了
     const [tempHTTPTotal, setTempHTTPTotal] = useState<number>(0) // HTTP流量表tab是否显示，大于0就显示
@@ -148,7 +148,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         setIsExpand(!isExpand)
     })
     const yakitTabs = useCreation(() => {
-        let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.File_System], AITabs[AITabsEnum.Task_Content]]
+        let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
         if (!!tempHTTPTotal) {
             tab.push(AITabs[AITabsEnum.HTTP])
         }

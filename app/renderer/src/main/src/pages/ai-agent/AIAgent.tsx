@@ -32,7 +32,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
-    const [show, setShow] = useState<boolean>(true)
+    const [show, setShow] = useState<boolean>(false)
 
     const sideHiddenModeRef = useRef<string>()
 
