@@ -59,8 +59,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     refreshAsync,
     binariesToInstallRefreshAsync
 }) => {
-    const [expand, setExpand] = useSafeState(true)
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
+    const [expand, setExpand] = useSafeState<boolean>(true)
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
@@ -121,10 +121,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             })
         }
     }, [installTokens])
-
-    const handleChangeExpand = useMemoizedFn(() => {
-        setExpand((old) => !old)
-    })
 
     const handleSetActive = useMemoizedFn((value: KnowledgeTabListEnum) => {
         setActive(value)
@@ -389,7 +385,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             activeKey={active}
             onActiveKey={(v) => handleSetActive(v as KnowledgeTabListEnum)}
             show={expand}
-            setShow={handleChangeExpand}
+            setShow={setExpand}
         >
             <div
                 className={classNames(styles["tab-content"], {

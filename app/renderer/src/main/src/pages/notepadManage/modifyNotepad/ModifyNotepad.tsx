@@ -1,6 +1,6 @@
 import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import styles from "./ModifyNotepad.module.scss"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
 import {
     CatalogueTreeNodeProps,
     MilkdownCatalogueProps,
@@ -41,6 +41,19 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     )
 })
 export default ModifyNotepad
+
+const ModifyNotepadContentTab: YakitTabsProps[] = [
+    {
+        icon: <OutlineListOneIcon />,
+        label: "目录",
+        value: "catalogue"
+    },
+    {
+        icon: <OutlineListTwoIcon />,
+        label: "列表",
+        value: "list"
+    }
+]
 
 export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.memo(
     forwardRef((props, ref) => {
@@ -95,34 +108,31 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
         //#endregion
         //#region 侧边栏
         const [activeKey, setActiveKey] = useState<string>("catalogue")
-        const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
-            {
-                icon: <OutlineListOneIcon />,
-                label: "目录",
-                value: "catalogue",
-                show: true
-            },
-            {
-                icon: <OutlineListTwoIcon />,
-                label: "列表",
-                value: "list",
-                show: true
-            }
-        ])
+        const [show, setShow] = useState<boolean>(true)
         useEffect(() => {
-            getRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey).then((res) => {
-                if (!!res) {
-                    setActiveKey(res)
+            getRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey).then((setting: string) => {
+                if (setting) {
+                    try {
+                        const tabs = JSON.parse(setting)
+                        setShow(tabs.contShow)
+                        onActiveKey(tabs.curTabKey)
+                    } catch (error) {}
                 }
             })
         }, [])
-        const show = useCreation(() => {
-            return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
-        }, [yakitTab, activeKey])
         const onActiveKey = useMemoizedFn((key) => {
             setActiveKey(key)
-            setRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey, key)
         })
+        useDebounceEffect(
+            () => {
+                setRemoteValue(
+                    NotepadRemoteGV.NotepadDetailsTabKey,
+                    JSON.stringify({contShow: show, curTabKey: activeKey})
+                )
+            },
+            [show, activeKey],
+            {wait: 300}
+        )
         //#endregion
         return (
             <div className={styles["modify-notepad"]}>
@@ -142,10 +152,11 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                             firstNode={
                                 <div className={styles["notepad-tab-body"]}>
                                     <YakitSideTab
-                                        yakitTabs={yakitTab}
-                                        setYakitTabs={setYakitTab}
+                                        yakitTabs={ModifyNotepadContentTab}
                                         activeKey={activeKey}
                                         onActiveKey={onActiveKey}
+                                        show={show}
+                                        setShow={setShow}
                                     />
                                     <div className={styles["notepad-tab-content"]}>
                                         {activeKey === "catalogue" && (

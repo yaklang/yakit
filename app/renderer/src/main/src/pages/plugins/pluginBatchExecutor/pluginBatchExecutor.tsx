@@ -1,5 +1,12 @@
 import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle, ReactElement} from "react"
-import {useMemoizedFn, useCreation, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
+import {
+    useMemoizedFn,
+    useCreation,
+    useUpdateEffect,
+    useInViewport,
+    useControllableValue,
+    useDebounceEffect
+} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {
@@ -52,21 +59,23 @@ import {
 import {defaultFilter, defaultSearch} from "../builtInData"
 import {getRouteByTaskSource} from "./HybridScanTaskListDrawer"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
-import { RemoteGV } from "@/yakitGV"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 const HybridScanTaskListDrawer = React.lazy(() => import("./HybridScanTaskListDrawer"))
 
+const PluginBatchExecutorTab: YakitTabsProps[] = [
+    {
+        label: "插件",
+        value: "plugin"
+    }
+]
+
 interface PluginBatchExecutorProps {
     id: string
-}
-
-type PluginTabKeys = "plugin"
-interface PluginTabsItem {
-    key: PluginTabKeys
-    label: ReactElement | string
-    contShow: boolean
 }
 
 export const isEmpty = (uint8Array: Uint8Array) => {
@@ -99,8 +108,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [selectList, setSelectList] = useState<string[]>([])
     const [allCheck, setAllCheck] = useState<boolean>(false)
 
-    // 隐藏插件列表
-    const [hidden, setHidden] = useState<boolean>(true)
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
@@ -224,80 +231,45 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         }
     }, [pageInfo])
 
-    const [curPluginTabKey, setCurPluginTabKey] = useState<PluginTabKeys>("plugin")
-    const [pluginTabs, setPluginTabs] = useState<Array<PluginTabsItem>>([
-        {
-            key: "plugin",
-            label: <>插件</>,
-            contShow: true // 初始为true
-        }
-    ])
-    const handleTabClick = (item: PluginTabsItem) => {
-        const contShow = !item.contShow
-        pluginTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = contShow
-            } else {
-                i.contShow = false
-            }
-        })
-        setRemoteValue(RemoteGV.PluginBatchExecTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
-        setPluginTabs([...pluginTabs])
-        setHidden(!pluginTabs.some((item) => item.contShow))
-        setCurPluginTabKey(item.key)
-    }
+    // #region 左侧tab
+    const [activeKey, setActiveKey] = useState<string>("plugin")
+    const [show, setShow] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteGV.PluginBatchExecTabs).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    pluginTabs.forEach((i) => {
-                        if (i.key === tabs.curTabKey) {
-                            i.contShow = tabs.contShow
-                        } else {
-                            i.contShow = false
-                        }
-                    })
-                    setPluginTabs([...pluginTabs])
-                    setCurPluginTabKey(tabs.curTabKey)
-                } catch (error) {
-                    pluginTabs.forEach((i) => {
-                        if (i.key === "plugin") {
-                            i.contShow = true
-                        } else {
-                            i.contShow = false
-                        }
-                    })
-                    setPluginTabs([...pluginTabs])
-                    setCurPluginTabKey("plugin")
-                }
+                    setShow(tabs.contShow)
+                    onActiveKey(tabs.curTabKey)
+                } catch (error) {}
             }
-            setHidden(!pluginTabs.some((item) => item.contShow))
         })
     }, [])
-    
+    const onActiveKey = useMemoizedFn((key) => {
+        setActiveKey(key)
+    })
+    useDebounceEffect(
+        () => {
+            setRemoteValue(RemoteGV.PluginBatchExecTabs, JSON.stringify({contShow: show, curTabKey: activeKey}))
+        },
+        [show, activeKey],
+        {wait: 300}
+    )
+    // #endregion
+
     return (
         <div className={styles["plugin-batch-wrapper"]}>
             <div className={styles["plugin-tab-wrap"]}>
-                <div className={styles["plugin-tab"]}>
-                    {pluginTabs.map((item) => (
-                        <div
-                            className={classNames(styles["plugin-tab-item"], {
-                                [styles["plugin-tab-item-active"]]: curPluginTabKey === item.key,
-                                [styles["plugin-tab-item-unshowCont"]]: curPluginTabKey === item.key && !item.contShow
-                            })}
-                            key={item.key}
-                            onClick={() => {
-                                handleTabClick(item)
-                            }}
-                        >
-                            {item.label}
-                        </div>
-                    ))}
-                </div>
+                <YakitSideTab
+                    yakitTabs={PluginBatchExecutorTab}
+                    activeKey={activeKey}
+                    onActiveKey={onActiveKey}
+                    show={show}
+                    setShow={setShow}
+                />
             </div>
             <PluginLocalListDetails
-                hidden={hidden}
+                hidden={!show}
                 selectList={selectList}
                 setSelectList={setSelectList}
                 search={search}

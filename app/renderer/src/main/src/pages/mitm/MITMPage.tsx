@@ -69,17 +69,13 @@ import {
 } from "./MITMHacker/utils"
 import {KVPair} from "@/models/kv"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { useProxy } from "@/hook/useProxy"
+import {useProxy} from "@/hook/useProxy"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
 
-type idleTabKeys = "plugin"
-interface IdleTabsItem {
-    key: idleTabKeys
-    label: ReactElement | string
-    contShow: boolean
-}
 export interface MITMPageProp {}
 
 export interface TraceInfo {
@@ -466,6 +462,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 }
 
 const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
+const MITMIdleTab: YakitTabsProps[] = [
+    {
+        label: "插件",
+        value: "plugin"
+    }
+]
 export interface ExtraMITMServerProps {
     /**@name 国密劫持*/
     enableGMTLS?: boolean
@@ -544,7 +546,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
 
-    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
     /**
      * @description 插件勾选
@@ -751,61 +753,40 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         })
     })
 
+    // #region 左侧tab
     const idleTabsRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(idleTabsRef)
-    const [curIdleTabKey, setCurIdleTabKey] = useState<idleTabKeys>("plugin")
-    const [idleTabs, setIdleTabs] = useState<Array<IdleTabsItem>>([
-        {
-            key: "plugin",
-            label: <>插件</>,
-            contShow: true // 初始为true
-        }
-    ])
-    const handleTabClick = (item: IdleTabsItem) => {
-        const contShow = !item.contShow
-        idleTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = contShow
-            } else {
-                i.contShow = false
-            }
-        })
-        setRemoteValue(RemoteGV.MitmIdleLeftTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
-        setIdleTabs([...idleTabs])
-        setOpenTabsFlag(idleTabs.some((item) => item.contShow))
-        setCurIdleTabKey(item.key)
-    }
+    const [activeKey, setActiveKey] = useState<string>("plugin")
     useEffect(() => {
         if (inViewport) {
             getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
                 if (setting) {
                     try {
                         const tabs = JSON.parse(setting)
-                        idleTabs.forEach((i) => {
-                            if (i.key === tabs.curTabKey) {
-                                i.contShow = tabs.contShow
-                            } else {
-                                i.contShow = false
-                            }
-                        })
-                        setIdleTabs([...idleTabs])
-                        setCurIdleTabKey(tabs.curTabKey)
-                    } catch (error) {
-                        idleTabs.forEach((i) => {
-                            if (i.key === "plugin") {
-                                i.contShow = true
-                            } else {
-                                i.contShow = false
-                            }
-                        })
-                        setIdleTabs([...idleTabs])
-                        setCurIdleTabKey("plugin")
-                    }
+                        setOpenTabsFlag(tabs.contShow)
+                        onActiveKey(tabs.curTabKey)
+                    } catch (error) {}
                 }
-                setOpenTabsFlag(idleTabs.some((item) => item.contShow))
             })
         }
+        
     }, [inViewport])
+    const onActiveKey = useMemoizedFn((key) => {
+        setActiveKey(key)
+    })
+    useDebounceEffect(
+        () => {
+            if (inViewport) {
+                setRemoteValue(
+                    RemoteGV.MitmIdleLeftTabs,
+                    JSON.stringify({contShow: openTabsFlag, curTabKey: activeKey})
+                )
+            }
+        },
+        [openTabsFlag, activeKey, inViewport],
+        {wait: 300}
+    )
+    // #endregion
 
     const setTotalFun = useMemoizedFn((t) => {
         setTotal(t)
@@ -820,23 +801,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <div className={style["mitm-idle-tab-wrap"]} ref={idleTabsRef}>
-                        <div className={style["mitm-idle-tab"]}>
-                            {idleTabs.map((item) => (
-                                <div
-                                    className={classNames(style["mitm-idle-tab-item"], {
-                                        [style["mitm-idle-tab-item-active"]]: curIdleTabKey === item.key,
-                                        [style["mitm-idle-tab-item-unshowCont"]]:
-                                            curIdleTabKey === item.key && !item.contShow
-                                    })}
-                                    key={item.key}
-                                    onClick={() => {
-                                        handleTabClick(item)
-                                    }}
-                                >
-                                    {item.label}
-                                </div>
-                            ))}
-                        </div>
+                        <YakitSideTab
+                            yakitTabs={MITMIdleTab}
+                            activeKey={activeKey}
+                            onActiveKey={onActiveKey}
+                            show={openTabsFlag}
+                            setShow={setOpenTabsFlag}
+                        />
                         <div
                             className={style["mitm-idle-tab-cont-item"]}
                             style={{
@@ -967,6 +938,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setTotal={setTotalFun}
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
+                        openTabsFlag={openTabsFlag}
                         onSetOpenTabsFlag={setOpenTabsFlag}
                         onSetLoadedPluginLen={setLoadedPluginLen}
                         showPluginHistoryList={showPluginHistoryList}

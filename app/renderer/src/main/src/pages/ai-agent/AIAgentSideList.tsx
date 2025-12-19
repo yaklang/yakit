@@ -1,6 +1,6 @@
-import React, {ReactNode, useEffect, useState} from "react"
-import {useMemoizedFn} from "ahooks"
-import {AIAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {AiAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
 
@@ -17,18 +17,21 @@ const AIMCP = React.lazy(() => import("./aiMCP/AIMCP"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
-
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
     const [show, setShow] = useState<boolean>(true)
-
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
         setActive(value)
     })
 
+    const switchAIAgentTab = useMemoizedFn((value: AIAgentTabListEnum) => {
+        setShow(true)
+        handleSetActive(value)
+    })
+
     useEffect(() => {
-        emiter.on("switchAIAgentTab", handleSetActive)
+        emiter.on("switchAIAgentTab", switchAIAgentTab)
         return () => {
-            emiter.off("switchAIAgentTab", handleSetActive)
+            emiter.off("switchAIAgentTab", switchAIAgentTab)
         }
     }, [])
 
@@ -103,7 +106,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         <div className={styles["ai-agent-side-list"]}>
             <YakitSideTab
                 type='vertical'
-                yakitTabs={AIAgentTabList}
+                yakitTabs={AiAgentTabList}
                 activeKey={active}
                 onActiveKey={(v) => handleSetActive(v as AIAgentTabListEnum)}
                 className={styles["tab-wrap"]}

@@ -12,13 +12,14 @@ import {YakitPluginOnlineDetail} from "../plugins/online/PluginsOnlineType"
 import {ExportYakScriptStreamRequest} from "../plugins/local/PluginsLocalType"
 import {defaultFilter, defaultSearch} from "../plugins/builtInData"
 import {convertLocalPluginsRequestParams} from "../plugins/utils"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
-export const HubSideBarList: {key: PluginSourceType; title: string; icon: ReactNode; hint: string}[] = [
-    {key: "online", title: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: "插件商店"},
-    {key: "own", title: "我的", icon: <OutlineOwnPluginIcon />, hint: "我的插件"},
-    {key: "local", title: "本地", icon: <OutlineLocalPluginIcon />, hint: "本地插件"},
-    {key: "setting", title: "配置", icon: <OutlineAdjustmentsIcon />, hint: "配置"},
-    {key: "recycle", title: "回收站", icon: <OutlineTrashSecondIcon />, hint: "回收站"}
+export const HubSideBarList: YakitTabsProps[] = [
+    {value: "online", label: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: () => "插件商店"},
+    {value: "own", label: "我的", icon: <OutlineOwnPluginIcon />, hint: () => "我的插件"},
+    {value: "local", label: "本地", icon: <OutlineLocalPluginIcon />, hint: () => "本地插件"},
+    {value: "setting", label: "配置", icon: <OutlineAdjustmentsIcon />, hint: () => "配置"},
+    {value: "recycle", label: "回收站", icon: <OutlineTrashSecondIcon />, hint: () => "回收站"}
 ]
 
 /** @name 插件导出-默认参数 */

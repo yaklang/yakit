@@ -1,6 +1,6 @@
 import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab} from "../local/PluginsLocalDetail"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -22,6 +22,8 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import classNames from "classnames"
 import styles from "./SinglePluginExecution.module.scss"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 type PluginTabKeys = "plugin"
 interface PluginTabsItem {
@@ -47,6 +49,12 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?:
     }
     return linkPluginConfig
 }
+const SinglePluginExecutionTab: YakitTabsProps[] = [
+    {
+        label: "插件",
+        value: "plugin"
+    }
+]
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const [yakScriptId, setYakScriptId] = useState<number>(props.yakScriptId)
@@ -178,85 +186,48 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         return allPluginTypes.filter((type) => !typeArr.includes(type))
     }, [filters])
 
-    const [openTab, setOpenTab] = useState<boolean>(false)
-    const [curPluginTabKey, setCurPluginTabKey] = useState<PluginTabKeys>("plugin")
-    const [pluginTabs, setPluginTabs] = useState<Array<PluginTabsItem>>([
-        {
-            key: "plugin",
-            label: <>插件</>,
-            contShow: true // 初始为true
-        }
-    ])
-    const handleTabClick = (item: PluginTabsItem) => {
-        const contShow = !item.contShow
-        pluginTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = contShow
-            } else {
-                i.contShow = false
-            }
-        })
-        setRemoteValue(RemoteGV.SinglePluginExecTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
-        setPluginTabs([...pluginTabs])
-        setOpenTab(pluginTabs.some((item) => item.contShow))
-        setCurPluginTabKey(item.key)
-    }
+    // #region 左侧tab
+    const [activeKey, setActiveKey] = useState<string>("plugin")
+    const [show, setShow] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(RemoteGV.SinglePluginExecTabs).then((setting: string) => {
             if (setting) {
                 try {
                     const tabs = JSON.parse(setting)
-                    pluginTabs.forEach((i) => {
-                        if (i.key === tabs.curTabKey) {
-                            i.contShow = tabs.contShow
-                        } else {
-                            i.contShow = false
-                        }
-                    })
-                    setPluginTabs([...pluginTabs])
-                    setCurPluginTabKey(tabs.curTabKey)
-                } catch (error) {
-                    pluginTabs.forEach((i) => {
-                        if (i.key === "plugin") {
-                            i.contShow = true
-                        } else {
-                            i.contShow = false
-                        }
-                    })
-                    setPluginTabs([...pluginTabs])
-                    setCurPluginTabKey("plugin")
-                }
+                    setShow(tabs.contShow)
+                    onActiveKey(tabs.curTabKey)
+                } catch (error) {}
             }
-            setOpenTab(pluginTabs.some((item) => item.contShow))
         })
     }, [])
+    const onActiveKey = useMemoizedFn((key) => {
+        setActiveKey(key)
+    })
+    useDebounceEffect(
+        () => {
+            setRemoteValue(RemoteGV.SinglePluginExecTabs, JSON.stringify({contShow: show, curTabKey: activeKey}))
+        },
+        [show, activeKey],
+        {wait: 300}
+    )
+    // #endregion
 
     if (!plugin) return null
     return (
         <div ref={singlePluginExecutionRef} className={styles["single-plugin-wrapper"]}>
             {!hidden && (
                 <div className={styles["plugin-tab-wrap"]}>
-                    <div className={styles["plugin-tab"]}>
-                        {pluginTabs.map((item) => (
-                            <div
-                                className={classNames(styles["plugin-tab-item"], {
-                                    [styles["plugin-tab-item-active"]]: curPluginTabKey === item.key,
-                                    [styles["plugin-tab-item-unshowCont"]]:
-                                        curPluginTabKey === item.key && !item.contShow
-                                })}
-                                key={item.key}
-                                onClick={() => {
-                                    handleTabClick(item)
-                                }}
-                            >
-                                {item.label}
-                            </div>
-                        ))}
-                    </div>
+                    <YakitSideTab
+                        yakitTabs={SinglePluginExecutionTab}
+                        activeKey={activeKey}
+                        onActiveKey={onActiveKey}
+                        show={show}
+                        setShow={setShow}
+                    />
                 </div>
             )}
             <PluginLocalListDetails
-                hidden={hidden ? true : !openTab}
+                hidden={hidden ? true : !show}
                 selectList={selectList}
                 setSelectList={setSelectList}
                 search={search}

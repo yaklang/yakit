@@ -8,7 +8,7 @@ import {
     OutlineTemplateIcon,
     OutlineWrenchIcon
 } from "@/assets/icon/outline"
-import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTabProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {
@@ -47,7 +47,7 @@ export enum AIAgentTabListEnum {
     MCP = "mcp",
     KnowledgeBase = "knowledgeBase"
 }
-export const AIAgentTabList: YakitSideTabProps["yakitTabs"] = [
+export const AiAgentTabList: YakitTabsProps[] = [
     {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
     {value: AIAgentTabListEnum.Setting, label: "配置", icon: <OutlineCogIcon />},
     {value: AIAgentTabListEnum.Forge_Name, label: "模板", icon: <OutlineTemplateIcon />},

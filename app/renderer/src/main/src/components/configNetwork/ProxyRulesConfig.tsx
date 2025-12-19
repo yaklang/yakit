@@ -403,8 +403,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                 renderContent()
             ) : (
                 <YakitSideTab
-                    show={true}
-                    setShow={() => {}}
+                    activeShow={true}
                     yakitTabs={tab}
                     activeKey={activeKey}
                     onActiveKey={setActiveKey}

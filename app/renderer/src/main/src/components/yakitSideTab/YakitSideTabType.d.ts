@@ -1,5 +1,5 @@
 import {ReactNode} from "react"
-export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRender"> {
+export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRender" | "barHint" | "t"> {
     yakitTabs: YakitTabsProps[]
     setYakitTabs?: (v: YakitTabsProps[]) => void
 
@@ -7,6 +7,9 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
     cacheKey?: string
     activeKey?: string
     onActiveKey: (s: string) => void
+
+    /** 只切换 不做显示隐藏 */
+    activeShow?: boolean
 
     setShow?: (s: boolean) => void
     /** type 为vertical-right ，show不生效*/
@@ -25,9 +28,10 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, "onTabPaneRe
 
 export interface YakitTabsProps {
     icon?: ReactNode
-    label: ReactNode
+    /** lable需要翻译，需要传t函数。若不做翻译，就不传t。也可以传自定义函数处理label */
+    label: string | (() => ReactNode)
     value: string
-    show?: boolean
+    hint?: () => string
 }
 
 export interface YakitTabsItemProps {
@@ -36,4 +40,6 @@ export interface YakitTabsItemProps {
     onChange: (v: YakitTabsProps) => void
     onTabPaneRender?: (item: YakitTabsProps, node: ReactNode[]) => ReactNode
     rotate?: "left" | "right"
+    barHint?: (k: string) => string
+    t?: (keys: KeyOrKeys, vars?: Vars, defaultValue?: string) => string
 }

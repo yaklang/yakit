@@ -1,5 +1,13 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
@@ -57,6 +65,7 @@ import {getStorageYakRunnerShortcutKeyEvents} from "@/utils/globalShortcutKey/ev
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {WatchFolderID} from "./FileTreeMap/watchFolderID"
 import {randomString} from "@/utils/randomUtil"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -72,6 +81,17 @@ const {ipcRenderer} = window.require("electron")
  * }
  * ]
 */
+
+export const YakRunnerTab: YakitTabsProps[] = [
+    {
+        label: "资源管理器",
+        value: "file-tree"
+    },
+    {
+        label: "帮助文档",
+        value: "help-doc"
+    }
+]
 
 export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const {initCode} = props
@@ -468,7 +488,11 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
 
-    const [isUnShow, setUnShow] = useState<boolean>(true)
+    const [active, setActive, getActive] = useGetState<LeftSideType>("file-tree")
+    const [isUnShow, setIsUnShow] = useState<boolean>(true)
+    const onActiveKey = useMemoizedFn((key) => {
+        setActive(key)
+    })
 
     // 根据历史读取上次打开的文件夹
     const onGetYakRunnerLastFolderExpanded = useMemoizedFn(async () => {
@@ -476,7 +500,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             const historyData = await getYakRunnerLastFolderExpanded()
             if (historyData?.folderPath) {
                 onOpenFileTreeFun(historyData.folderPath)
-                setUnShow(false)
+                setIsUnShow(false)
             }
             emiter.emit("onDefaultExpanded", JSON.stringify(historyData?.expandedKeys || []))
         } catch (error) {}
@@ -489,7 +513,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             if (historyData?.activeFile && historyData.areaInfo) {
                 setActiveFile(historyData.activeFile)
                 setAreaInfo(historyData.areaInfo)
-                setUnShow(false)
+                setIsUnShow(false)
             }
         } catch (error) {}
     })
@@ -524,7 +548,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     useUpdateEffect(() => {
         if (fileTree.length > 0) {
             onSaveYakRunnerLastFolder(fileTree[0].path)
-            setUnShow(false)
+            setIsUnShow(false)
         } else {
             setYakRunnerLastFolderExpanded({
                 folderPath: "",
@@ -609,7 +633,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         {wait: 300}
     ).run
 
-    const [active, setActive, getActive] = useGetState<LeftSideType>("file-tree")
     const [codePath, setCodePath] = useState<string>("")
     // 默认保存路径
     useEffect(() => {
@@ -1012,9 +1035,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             <LeftSideBar
                                 addFileTab={addFileTab}
                                 isUnShow={isUnShow}
-                                setUnShow={setUnShow}
+                                setIsUnShow={setIsUnShow}
                                 active={active}
-                                setActive={setActive}
+                                setActive={onActiveKey}
                             />
                         }
                         secondNodeStyle={

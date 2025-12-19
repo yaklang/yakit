@@ -54,9 +54,28 @@ import moment from "moment"
 import {apiQuerySSAPrograms} from "@/pages/yakRunnerScanHistory/utils"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {warn} from "@/utils/notification"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
-
+const RunnerFileTreeTab: YakitTabsProps[] = [
+    {
+        label: "全部",
+        value: "all"
+    },
+    {
+        label: "漏洞文件",
+        value: "file"
+    },
+    {
+        label: "规则汇总",
+        value: "rule"
+    },
+    {
+        label: "全局过滤函数",
+        value: "global-filtering-function"
+    }
+]
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
     const {fileTree, activeFile, projectName, pageInfo} = useStore()
@@ -320,17 +339,18 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     })
 
     const [active, setActive] = useState<ActiveProps>("all")
+
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<ActiveProps>>(new Set(["all"]))
-    const onSetActive = useMemoizedFn((type: ActiveProps) => {
-        if (!rendered.current.has(type)) {
-            rendered.current.add(type)
+    const onSetActive = useMemoizedFn((type: string) => {
+        if (!rendered.current.has(type as ActiveProps)) {
+            rendered.current.add(type as ActiveProps)
         }
-        setActive(type)
+        setActive(type as ActiveProps)
     })
     useEffect(() => {
         const activeKey = pageInfo?.leftTabActive || "all"
-        onSetActive(activeKey as ActiveProps)
+        onSetActive(activeKey)
     }, [pageInfo?.leftTabActive])
 
     const getActiveName = useMemoizedFn((type: ActiveProps) => {
@@ -438,49 +458,12 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     return (
         <div className={styles["runner-file-tree"]}>
             {/* 左侧边栏 */}
-            <div className={styles["left-side-bar-list"]}>
-                <div
-                    className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "all"
-                    })}
-                    onClick={() => {
-                        onSetActive("all")
-                    }}
-                >
-                    <span className={styles["item-text"]}>全部</span>
-                </div>
-                <div
-                    className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "file"
-                    })}
-                    onClick={() => {
-                        onSetActive("file")
-                    }}
-                >
-                    <span className={styles["item-text"]}>漏洞文件</span>
-                </div>
-                <div
-                    className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "rule"
-                    })}
-                    onClick={() => {
-                        onSetActive("rule")
-                    }}
-                >
-                    <span className={styles["item-text"]}>规则汇总</span>
-                </div>
-                <div
-                    className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "global-filtering-function"
-                    })}
-                    onClick={() => {
-                        onSetActive("global-filtering-function")
-                    }}
-                >
-                    <span className={styles["item-text"]}>全局过滤函数</span>
-                </div>
-            </div>
-
+            <YakitSideTab
+                yakitTabs={RunnerFileTreeTab}
+                activeKey={active}
+                onActiveKey={onSetActive}
+                activeShow={true}
+            />
             <div className={styles["container"]}>
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>

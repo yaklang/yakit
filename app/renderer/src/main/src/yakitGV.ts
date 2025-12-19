@@ -107,7 +107,7 @@ export enum RemoteGV {
     /**@name 插件并发进程 */
     MITMPluginConcurrency = "mitm_Plugin_Concurrent_Process",
     /**@name 漏洞管理页面中,高级查询内容的显/隐 */
-    AuditHoleShow = "audit-hole-show",
+    AuditHoleShow = "new-audit-hole-show",
     /**@name 专项漏洞左侧tabs */
     YakPocTabs = "yakpoc-tabs",
     /**@name mitm中启用插件,需要缓存noParamsCheckList的插件数据 */
