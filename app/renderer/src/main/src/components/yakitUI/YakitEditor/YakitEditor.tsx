@@ -1253,13 +1253,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }),
         {wait: 500, leading: true, trailing: false}
     )
+
+    const AnalyzeSessionIDRef = useRef<string>(uuidv4())
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakStaticAnalyze = useDebounceFn(
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
             if (language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec) {
                 const allContent = model.getValue()
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type, SessionID: AnalyzeSessionIDRef.current})
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)

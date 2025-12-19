@@ -330,13 +330,14 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         {wait: 500}
     )
 
+    const AnalyzeSessionIDRef = useRef<string>(uuidv4())
     const yakStaticAnalyze = useDebounceFn(
         useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
             const allContent = model.getValue()
             const type = props.type || ""
             if (language === "yak") {
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type,SessionID: AnalyzeSessionIDRef.current})
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
