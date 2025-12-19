@@ -14,16 +14,16 @@
         font-weight: 600;
         line-height: 16px;
     }
-    .ai-memory-list-wrapper {
+    .ai-memory-list-body-wrapper {
         display: flex;
         flex-direction: column;
         flex: 1;
         max-height: 300px;
     }
     .ai-memory-list {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
+        // display: flex;
+        // flex-direction: column;
+        // flex: 1;
         padding: 4px 12px;
     }
     .ai-memory-list-row {
