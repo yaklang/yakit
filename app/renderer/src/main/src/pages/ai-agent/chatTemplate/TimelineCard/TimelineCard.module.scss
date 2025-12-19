@@ -8,16 +8,20 @@
     gap: 8px;
     // margin: 12px 0;
     position: relative;
+    .virtuoso-item-list {
+        position: relative;
+        padding: 8px 0;
 
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 12px;
-        width: 2px;
-        height: 100%;
-        background-color: var(--Colors-Use-Neutral-Disable);
-        z-index: 0;
+        &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 12px;
+            width: 2px;
+            background-color: var(--Colors-Use-Neutral-Disable);
+            z-index: 0;
+        }
     }
 
     .timeline-card {
@@ -107,7 +111,7 @@
             width: 2px;
             height: 10px;
             background-color: var(--Colors-Use-Neutral-Disable);
-            top: 0;
+            top: -6px;
         }
         &::before {
             transform: rotate(-45deg);
@@ -120,7 +124,12 @@
     }
 
     .item-inner {
-        margin: 8px 0;
+        padding: 4px 0;
+        z-index: 1;
+        position: relative;
+    }
+    .virtuoso-item-list > div:last-child .item-inner {
+        padding-bottom: 8px;
     }
 }
 

@@ -26,7 +26,7 @@ import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {setClipboardText} from "@/utils/clipboard"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {tagColors} from "../defaultConstant"
+import {ReActChatEventEnum, tagColors} from "../defaultConstant"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {yakitNotify} from "@/utils/notification"
 import {AIToolEditorPageInfoProps} from "@/store/pageInfo"
@@ -138,7 +138,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
         emiter.emit(
             "onReActChatEvent",
             JSON.stringify({
-                type: "use-ai-tool",
+                type: ReActChatEventEnum.USE_AI_TOOL,
                 params: {value: record}
             })
         )

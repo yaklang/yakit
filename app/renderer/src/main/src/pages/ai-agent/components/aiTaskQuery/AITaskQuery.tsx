@@ -14,7 +14,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
-import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
     const {chatIPCData} = useChatIPCStore()

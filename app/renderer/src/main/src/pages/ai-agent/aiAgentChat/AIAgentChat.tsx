@@ -44,7 +44,7 @@ import {AITool} from "../type/aiTool"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 import {AIChatContent} from "../aiChatContent/AIChatContent"
-import {AITabsEnum} from "../defaultConstant"
+import {AITabsEnum, ReActChatEventEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
@@ -67,9 +67,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
 
-    const handleStartTriageChat = useMemoizedFn((qs: string) => {
+    const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
         setMode("re-act")
-        handleStart({qs})
+        handleStart(data)
     })
 
     useEffect(() => {
@@ -95,7 +95,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onSetReAct = useMemoizedFn(() => {
         setMode("re-act")
         setTimeout(() => {
-            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
+            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.Task_Content}))
         }, 100)
     })
 
@@ -300,9 +300,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             try {
                 const data = JSON.parse(res) as AIAgentTriggerEventInfo
                 if (!data.type) return
-                switch (data.type) {
+                switch (data.type as ReActChatEventEnum) {
                     // 新开聊天对话窗
-                    case "new-chat":
+                    case ReActChatEventEnum.NEW_CHAT:
                         onStop()
                         handleSaveChatInfo()
                         events.onReset()
@@ -312,12 +312,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         }, 100)
                         break
                     // 替换当前使用的 forge 模板
-                    case "open-forge-form":
+                    case ReActChatEventEnum.OPEN_FORGE_FORM:
                         const {value: forgeValue} = data.params || {}
                         handleClearActiveTool()
                         handleTriggerExecForge(forgeValue)
                         break
-                    case "use-ai-tool":
+                    // 替换当前使用的 ai tool
+                    case ReActChatEventEnum.USE_AI_TOOL:
                         const {value: toolValue} = data.params || {}
                         handleClearActiveForge()
                         handleAITool(toolValue)

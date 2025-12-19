@@ -1,7 +1,7 @@
-import React, {FC, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
-import {Col, Divider, Form, Modal, Row, Slider, Space, Upload} from "antd"
+import {Divider, Form, Modal, Slider, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {yakitInfo, warn, failed, success, yakitNotify} from "@/utils/notification"
@@ -14,7 +14,7 @@ import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {InputCertificateForm} from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {CloseIcon, RectangleFailIcon, RectangleSucceeIcon, UnionIcon} from "./icon"
+import {RectangleFailIcon, RectangleSucceeIcon, UnionIcon} from "./icon"
 import {SolidCheckCircleIcon, SolidLockClosedIcon} from "@/assets/icon/colors"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import classNames from "classnames"
@@ -36,7 +36,7 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/ut
 import {LocalGVS} from "@/enums/localGlobal"
 import {RemoteGV} from "@/yakitGV"
 import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/dnd"
-import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} from "./NewThirdPartyApplicationConfig"
+import NewThirdPartyApplicationConfig from "./NewThirdPartyApplicationConfig"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import emiter from "@/utils/eventBus/eventBus"
@@ -45,7 +45,8 @@ import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT} from "@/defaultConstants/HoldGRPCStream"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
-import { useProxy } from "@/hook/useProxy"
+import {useProxy} from "@/hook/useProxy"
+import {handleAIConfig} from "@/pages/spaceEngine/utils"
 
 export interface ConfigNetworkPageProp {}
 
@@ -56,7 +57,10 @@ export interface AuthInfo {
     Host: string
     Forbidden: boolean
 }
-
+export interface HandleAIConfigProps {
+    AppConfigs: GlobalNetworkConfig["AppConfigs"]
+    AiApiPriority: GlobalNetworkConfig["AiApiPriority"]
+}
 export interface GlobalNetworkConfig {
     DisableSystemDNS: boolean
     CustomDNSServers: string[]
@@ -184,7 +188,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
     const {t, i18n} = useI18nNamespaces(["mitm"])
     const { proxyConfig: { Routes = [], Endpoints = [] }} = useProxy()
-
+    const originGlobalConfigRef = useRef<GlobalNetworkConfig>(cloneDeep(defaultParams))
     /** ---------- 是否删除私密插件逻辑 Start ---------- */
     const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
     useEffect(() => {
@@ -232,12 +236,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 setCertificateParams([])
                 currentIndex.current = 0
             }
-            setParams((v) => ({
-                ...v,
+            const value: GlobalNetworkConfig = {
+                ...params,
                 ...rsp,
                 DisallowDomain: rsp.DisallowDomain.filter((item) => item),
                 MaxContentLength: +rsp.MaxContentLength / (1024 * 1024) || 10
-            }))
+            }
+            originGlobalConfigRef.current = {...value}
+            setParams({...value})
             setLoading(false)
         })
     })
@@ -855,6 +861,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                 }}
                                                                 disabledType={true}
                                                                 onAdd={(data) => {
+                                                                    // 不影响ai优先级排序
                                                                     setParams({
                                                                         ...params,
                                                                         AppConfigs: (params.AppConfigs || []).map(
@@ -875,12 +882,17 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                     })
                                                 }}
                                                 closable
-                                                onClose={() => {
+                                                onClose={async () => {
+                                                    const newAppConfigs = (params.AppConfigs || []).filter(
+                                                        (e) => i.Type !== e.Type
+                                                    )
+                                                    const newAiApiPriority = params.AiApiPriority.filter(
+                                                        (ele) => ele !== i.Type
+                                                    )
                                                     setParams({
                                                         ...params,
-                                                        AppConfigs: (params.AppConfigs || []).filter(
-                                                            (e) => i.Type !== e.Type
-                                                        )
+                                                        AppConfigs: newAppConfigs,
+                                                        AiApiPriority: newAiApiPriority
                                                     })
                                                     setTimeout(() => submit(), 100)
                                                 }}
@@ -901,18 +913,19 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 content: (
                                                     <NewThirdPartyApplicationConfig
                                                         onAdd={(data) => {
-                                                            let existed = false
-                                                            const existedResult = (params.AppConfigs || []).map((i) => {
-                                                                if (i.Type === data.Type) {
-                                                                    existed = true
-                                                                    return {...i, ...data}
-                                                                }
-                                                                return {...i}
-                                                            })
-                                                            if (!existed) {
-                                                                existedResult.push(data)
+                                                            // 新增，有影响ai优化级
+                                                            const newValue = handleAIConfig(
+                                                                {
+                                                                    AppConfigs: params.AppConfigs,
+                                                                    AiApiPriority: params.AiApiPriority
+                                                                },
+                                                                data
+                                                            )
+                                                            if (!newValue) {
+                                                                yakitNotify("error", "ConfigNetworkPage 参数错误")
+                                                                return
                                                             }
-                                                            setParams({...params, AppConfigs: existedResult})
+                                                            setParams((perv) => ({...perv, ...newValue})) // submit后会拿最新得全局配置
                                                             setTimeout(() => submit(), 100)
                                                             m.destroy()
                                                         }}
@@ -927,12 +940,30 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item>
                                 <Form.Item label={"AI使用优先级"}>
                                     <div className={styles["ai-sort-box"]}>
-                                        <AISortContent
-                                            AiApiPriority={params.AiApiPriority}
-                                            onUpdate={(AiApiPriority) => {
-                                                setParams({...params, AiApiPriority})
-                                            }}
-                                        />
+                                        {!!params.AppConfigs.length ? (
+                                            <AISortContent
+                                                appConfigs={params.AppConfigs}
+                                                AiApiPriority={params.AiApiPriority}
+                                                onUpdate={(aiTypes) => {
+                                                    setParams((perv) => {
+                                                        const noAiConfig: ThirdPartyApplicationConfig[] =
+                                                            perv.AppConfigs.filter(
+                                                                (ele) => !aiTypes.some((i) => i.Type === ele.Type)
+                                                            )
+
+                                                        const newConfig = [...aiTypes, ...noAiConfig]
+                                                        return {
+                                                            ...perv,
+                                                            AiApiPriority: aiTypes.map((ele) => ele.Type),
+                                                            AppConfigs: newConfig
+                                                        }
+                                                    })
+                                                    setTimeout(() => submit(), 100)
+                                                }}
+                                            />
+                                        ) : (
+                                            <>请先配置ai</>
+                                        )}
                                     </div>
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
@@ -1669,8 +1700,9 @@ interface SortDataProps {
     value: string
 }
 interface AISortContentProps {
-    onUpdate: (v: string[]) => void
+    onUpdate: (v: GlobalNetworkConfig["AppConfigs"]) => void
     AiApiPriority: string[]
+    appConfigs: GlobalNetworkConfig["AppConfigs"]
 }
 
 const getItemStyle = (isDragging, draggableStyle) => {
@@ -1694,34 +1726,22 @@ const getItemStyle = (isDragging, draggableStyle) => {
 }
 
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
-    const {onUpdate, AiApiPriority} = props
-    const [sortData, setSortData] = useState<SortDataProps[]>([])
+    const {onUpdate, AiApiPriority, appConfigs} = props
+    const [sortData, setSortData] = useState<GlobalNetworkConfig["AppConfigs"]>([])
 
     useEffect(() => {
-        ipcRenderer.invoke("GetThirdPartyAppConfigTemplate").then((res: GetThirdPartyAppConfigTemplateResponse) => {
-            const templates = res.Templates || []
-            let aiOptions = templates
-                .filter((item) => item.Type === "ai")
-                .map((item) => ({label: item.Verbose, value: item.Name}))
-            if (AiApiPriority.length > 0) {
-                const sortedData = aiOptions.sort((a, b) => {
-                    return AiApiPriority.indexOf(a.value) - AiApiPriority.indexOf(b.value)
-                })
-                setSortData(sortedData)
-            } else {
-                setSortData(aiOptions)
-            }
-        })
-    }, [AiApiPriority])
+        const aiPriority = appConfigs.filter((item) => AiApiPriority.includes(item.Type))
+        setSortData(aiPriority)
+    }, [appConfigs, AiApiPriority])
 
     const onDragEnd = useMemoizedFn((result: DropResult) => {
         const {source, destination, draggableId} = result
         if (destination) {
-            const newItems: SortDataProps[] = JSON.parse(JSON.stringify(sortData))
+            const newItems: GlobalNetworkConfig["AppConfigs"] = cloneDeep(sortData)
             const [removed] = newItems.splice(source.index, 1)
             newItems.splice(destination.index, 0, removed)
             setSortData([...newItems])
-            onUpdate(newItems.map((item) => item.value))
+            onUpdate(newItems)
         }
     })
 
@@ -1735,7 +1755,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
                             <div ref={provided.innerRef} {...provided.droppableProps}>
                                 {sortData.map((item, index) => {
                                     return (
-                                        <Draggable key={item.value} draggableId={item.value} index={index}>
+                                        <Draggable key={item.Type} draggableId={item.Type} index={index}>
                                             {(provided, snapshot) => (
                                                 <div
                                                     ref={provided.innerRef}
@@ -1755,7 +1775,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
                                                     >
                                                         <div className={styles["menu-list-item-info"]}>
                                                             <DragSortIcon className={styles["drag-sort-icon"]} />
-                                                            <div className={styles["title"]}>{item.label}</div>
+                                                            <div className={styles["title"]}>{item.Type}</div>
                                                         </div>
                                                     </div>
 

@@ -6,13 +6,16 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatInfo} from "./type/aiChat"
-import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
-import {AIAgentSettingDefault, YakitAIAgentPageID} from "./defaultConstant"
+import {useDebounceFn, useMemoizedFn, useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
 import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
+import {loadRemoteHistory} from "./components/aiFileSystemList/store/useHistoryFolder"
+import {initSessionFromHistoryOrIPC} from "./components/aiFileSystemList/store/useCustomFolder"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20250808"
@@ -28,6 +31,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
+
+    const [show, setShow] = useState<boolean>(false)
+
+    const sideHiddenModeRef = useRef<string>()
 
     // 缓存全局配置数据
     useUpdateEffect(() => {
@@ -96,6 +103,13 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             })
             .catch(() => {})
 
+        // 加载历史文件数据
+        const bootstrap = async () => {
+            await loadRemoteHistory()
+            await initSessionFromHistoryOrIPC()
+        }
+        bootstrap().catch(() => {})
+
         return () => {}
     }, [])
     // #endregion
@@ -112,15 +126,53 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         [wrapperSize],
         {wait: 100, trailing: false}
     )
+    useEffect(() => {
+        initSideHiddenMode()
+        emiter.on("switchSideHiddenMode", switchSideHiddenMode)
+        return () => {
+            emiter.off("switchSideHiddenMode", switchSideHiddenMode)
+        }
+    }, [])
+    const switchSideHiddenMode = useMemoizedFn((data) => {
+        sideHiddenModeRef.current = data
+    })
+    const initSideHiddenMode = useMemoizedFn(() => {
+        getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
+            .then((data) => {
+                sideHiddenModeRef.current = data
+            })
+            .catch(() => {})
+    })
+
+    const onSendSwitchAIAgentTab = useDebounceFn(
+        useMemoizedFn(() => {
+            if (!show) return
+            if (sideHiddenModeRef.current !== "false") {
+                emiter.emit(
+                    "switchAIAgentTab",
+                    JSON.stringify({
+                        type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW,
+                        params: {
+                            show: false
+                        }
+                    })
+                )
+            }
+        }),
+        {wait: 200, leading: true}
+    ).run
 
     return (
         <AIAgentContext.Provider value={{store, dispatcher}}>
             <div id={YakitAIAgentPageID} className={styles["ai-agent"]}>
                 <div className={classNames(styles["ai-side-list"], {[styles["ai-side-list-mini"]]: isMini})}>
-                    <AIAgentSideList />
+                    <AIAgentSideList show={show} setShow={setShow} />
                 </div>
 
-                <div className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}>
+                <div
+                    className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}
+                    onClick={onSendSwitchAIAgentTab}
+                >
                     <AIAgentChat />
                 </div>
             </div>

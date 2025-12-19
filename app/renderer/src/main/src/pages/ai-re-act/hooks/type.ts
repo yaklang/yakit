@@ -165,6 +165,8 @@ export interface UseChatIPCState {
     casualStatus: CasualLoadingStatus
     /** 实时时间线 */
     reActTimelines: AIAgentGrpcApi.TimelineItem[]
+    /** 记忆列表 */
+    memoryList: AIAgentGrpcApi.MemoryEntryList
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -194,7 +196,7 @@ export interface UseChatIPCEvents {
     /** 开始执行接口流 */
     onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
-    onSend: (AIChatSendParams) => void
+    onSend: (params:AIChatSendParams) => void
     /** 主动结束正在执行中的接口流 */
     onClose: (
         token: string,

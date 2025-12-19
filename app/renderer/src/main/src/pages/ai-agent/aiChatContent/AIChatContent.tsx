@@ -24,7 +24,7 @@ import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEchart
 import {formatTime} from "@/utils/timeUtil"
 import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon} from "@/assets/icon/outline"
+import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon, OutlinePlussmIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -32,12 +32,16 @@ import {grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TabKey} from "../components/aiFileSystemList/type"
+import {onNewChat} from "../historyChat/HistoryChat"
+import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
+import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
+import {Divider} from "antd"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.File_System)
+    const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
     const [tempRiskTotal, setTempRiskTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数,现在不显示具体数量了
     const [tempHTTPTotal, setTempHTTPTotal] = useState<number>(0) // HTTP流量表tab是否显示，大于0就显示
@@ -45,7 +49,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const [intervalHTTP, setIntervalHTTP] = useState<number | undefined>(undefined)
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
-
+    const [timeLine, setTimeLine] = useState<boolean>(true)
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
     const [fileSystemKey, setFileSystemKey] = useState<TabKey>()
@@ -144,11 +148,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         setIsExpand(!isExpand)
     })
     const yakitTabs = useCreation(() => {
-        let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.File_System]]
-
-        if (!!taskChat?.streams?.length) {
-            tab.push(AITabs[AITabsEnum.Task_Content])
-        }
+        let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
         if (!!tempHTTPTotal) {
             tab.push(AITabs[AITabsEnum.HTTP])
         }
@@ -171,7 +171,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
         switch (key) {
             case AITabsEnum.Task_Content:
-                return <AIReActTaskChat setShowFreeChat={setShowFreeChat} />
+                return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
             case AITabsEnum.File_System:
                 return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} />
             case AITabsEnum.Risk:
@@ -264,7 +264,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         e.stopPropagation()
         onOpenLogWindow()
     })
-
     const resizeBoxProps: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = useCreation(() => {
         if (!activeKey) {
             return {
@@ -274,18 +273,41 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 secondNodeStyle: {width: "100%", padding: 0}
             }
         }
-        const isFileSystemKey = activeKey === AITabsEnum.File_System
+
         let secondRatio
+        let firstRatio
+
+        const isFileSystemKey = activeKey === AITabsEnum.File_System
+        // 选中任务内容
+        const isTaskContentKey = activeKey === AITabsEnum.Task_Content
+        // 获取任务内容是否为空
+        const isTaskStreamsEmpty = (taskChat.streams.length ?? 0) <= 0
         if (showFreeChat) {
             if (isFileSystemKey) {
+                // 文件系统，自由对话默认显示60%
                 secondRatio = "60%"
+            } else if (isTaskContentKey && isTaskStreamsEmpty) {
+                // 任务内容，自由对话默认显示80%
+                secondRatio = "80%"
             } else {
                 secondRatio = "432px"
             }
         }
+
+        // firstRatio 逻辑
+        if (isTaskContentKey && isTaskStreamsEmpty) {
+            if (timeLine) {
+                // 时间线展开
+                firstRatio = "30%"
+            } else {
+                firstRatio = 30
+            }
+            firstRatio = undefined
+        }
         return {
             freeze: showFreeChat,
-            firstMinSize: 500,
+            firstRatio,
+            firstMinSize: !showFreeChat ? 400 : 30,
             secondMinSize: showFreeChat ? 400 : 30,
             secondRatio,
             secondNodeStyle: {
@@ -293,18 +315,26 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 ...(!showFreeChat && {
                     minWidth: 30,
                     maxWidth: 30
-                })
+                }),
+                ...(!timeLine &&
+                    isTaskStreamsEmpty && {
+                        width: "calc(100% - 30px)"
+                    })
             },
             firstNodeStyle: {
                 padding: 0,
                 ...(!showFreeChat && {
                     width: "100%"
-                })
+                }),
+                  ...(!timeLine &&
+                    isTaskStreamsEmpty && {
+                        width: 30
+                    })
             },
             lineDirection: "left",
             lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
         }
-    }, [activeKey, showFreeChat])
+    }, [activeKey, showFreeChat, timeLine, taskChat.streams.length])
 
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
@@ -323,8 +353,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 <div className={styles["expand-retract-content"]}>
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>
-                            <SolidChatalt2Icon />
-                            新会话
+                            <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
+                            <span>新会话</span>
+                            <Divider type='vertical' />
+                            <SideSettingButton />
                         </div>
                         <div className={styles["extra"]}>
                             {currentPressuresEcharts?.data?.length > 0 && (
@@ -362,7 +394,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                 </div>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-
+                            <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
+                                新建会话
+                            </YakitButton>
                             <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                 日志
                             </YakitButton>
@@ -407,6 +441,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                     chatContainerHeaderClassName={classNames({
                                         [styles["re-act-chat-container-header"]]: !activeKey
                                     })}
+                                    storeKey={FileListStoreKey.FileList}
                                     mode={!!activeKey ? "task" : "welcome"}
                                     showFreeChat={showFreeChat}
                                     setShowFreeChat={setShowFreeChat}

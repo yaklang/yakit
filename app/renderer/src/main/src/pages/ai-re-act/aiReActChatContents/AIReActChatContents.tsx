@@ -47,9 +47,10 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const modalInfo: ModalInfoProps = useCreation(() => {
         return {
             time: stream.Timestamp,
-            title: stream.AIService
+            title: stream.AIModelName,
+            icon: stream.AIService
         }
-    }, [stream.Timestamp, stream.AIService])
+    }, [stream.Timestamp, stream.AIModelName, stream.AIService])
     const referenceNode = useCreation(() => {
         const className = getAIReferenceNodeByType(ContentType)
         return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>

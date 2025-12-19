@@ -12,7 +12,7 @@ import {AITaskInfoProps} from "@/pages/ai-re-act/hooks/aiRender"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
-import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
 
 // 起始节点层级
 const START_LEVEL = 1

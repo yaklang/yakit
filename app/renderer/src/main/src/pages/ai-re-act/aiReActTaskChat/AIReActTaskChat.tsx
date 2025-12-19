@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {AIReActTaskChatContentProps, AIReActTaskChatLeftSideProps, AIReActTaskChatProps} from "./AIReActTaskChatType"
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
@@ -16,14 +16,14 @@ import {
 } from "@/assets/icon/outline"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import emiter from "@/utils/eventBus/eventBus"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
-import {AIInputEventSyncTypeEnum} from "../hooks/defaultConstant"
 import {AIReviewType} from "../hooks/aiRender"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
-    const {setShowFreeChat} = props
+    const {setShowFreeChat, setTimeLine} = props
+    const {taskChat} = useAIChatUIData()
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
 
@@ -33,25 +33,31 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
         setExpand((v) => !v)
     })
 
+    useEffect(() => {
+        setTimeLine(leftExpand)
+    }, [leftExpand])
+
     return (
         <div className={styles["ai-re-act-task-chat"]}>
             <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
-            <div className={styles["chat-content-wrapper"]}>
-                <div className={styles["header"]}>
-                    <div className={styles["title"]}>
-                        <ColorsBrainCircuitIcon />
-                        深度规划
+            {!!taskChat?.streams?.length && (
+                <div className={styles["chat-content-wrapper"]}>
+                    <div className={styles["header"]}>
+                        <div className={styles["title"]}>
+                            <ColorsBrainCircuitIcon />
+                            深度规划
+                        </div>
+                        <div className={styles["extra"]}>
+                            <YakitButton
+                                type='text2'
+                                icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                                onClick={onIsExpand}
+                            />
+                        </div>
                     </div>
-                    <div className={styles["extra"]}>
-                        <YakitButton
-                            type='text2'
-                            icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                            onClick={onIsExpand}
-                        />
-                    </div>
+                    <AIReActTaskChatContent />
                 </div>
-                <AIReActTaskChatContent />
-            </div>
+            )}
         </div>
     )
 })
@@ -141,11 +147,16 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         valuePropName: "leftExpand",
         trigger: "setLeftExpand"
     })
+    const hasStreams = useMemo(() => {
+        return (taskChat?.streams?.length ?? 0) > 0
+    }, [taskChat?.streams?.length])
+
     return (
         <div
             className={classNames(styles["content-left-side"], {
                 [styles["content-left-side-hidden"]]: !leftExpand
             })}
+            style={hasStreams ? undefined : {width: "100%"}}
         >
             <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} tasks={taskChat.plan} />
             <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>

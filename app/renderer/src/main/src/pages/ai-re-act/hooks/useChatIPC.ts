@@ -18,10 +18,10 @@ import {
     UseChatIPCParams,
     UseChatIPCState
 } from "./type"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
 import cloneDeep from "lodash/cloneDeep"
-import {AIInputEventSyncTypeEnum, DeafultAIQuestionQueues} from "./defaultConstant"
+import {DeafultAIQuestionQueues, DefaultMemoryList} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -42,8 +42,8 @@ const UseCasualAndTaskTypes = [
     "ai_review_countdown",
     "ai_review_end",
     // 文件系统操作相关
-    "filesystem_pin_directory",
-    "filesystem_pin_filename",
+    // "filesystem_pin_directory",
+    // "filesystem_pin_filename",
     // 决策总结
     "tool_call_decision",
     // 任务规划崩溃的错误信息
@@ -114,16 +114,31 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
     const [questionQueue, setQuestionQueue] = useState<AIQuestionQueues>(cloneDeep(DeafultAIQuestionQueues))
-    // 开始定时循环获取问题队列
+    // 实时记忆列表
+    const reactMemorys = useRef<AIAgentGrpcApi.MemoryEntryList>(cloneDeep(DefaultMemoryList))
+    const taskMemorys = useRef<AIAgentGrpcApi.MemoryEntryList>(cloneDeep(DefaultMemoryList))
+    const [memoryList, setMemoryList] = useState<AIAgentGrpcApi.MemoryEntryList>(cloneDeep(DefaultMemoryList))
+
+    const handleResetMemoryList = useMemoizedFn(() => {
+        reactMemorys.current = cloneDeep(DefaultMemoryList)
+        taskMemorys.current = cloneDeep(DefaultMemoryList)
+        setMemoryList(cloneDeep(DefaultMemoryList))
+    })
+
+    // 开始时，获取一次(问题队列|记忆列表)
     const handleStartQuestionQueue = useMemoizedFn(() => {
         setTimeout(() => {
             sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT})
         }, 50)
     })
 
     useInterval(
         () => {
+            // 获取最新问题队列数据
             sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+            // 获取最新记忆列表数据
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT})
         },
         execute ? 5000 : undefined
     )
@@ -241,6 +256,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetGrpcStatus()
         setRunTimeIDs([])
         setGrpcFolders([])
+        handleResetMemoryList()
         // handleResetQuestionQueueTimer()
         setQuestionQueue(cloneDeep(DeafultAIQuestionQueues))
         // logEvents.clearLogs()
@@ -277,7 +293,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 下面注释的代码为 触发UI分裂的回调
-                        // onTaskStart && onTaskStart(startInfo.coordinator_id)
+                        onTaskStart && onTaskStart()
                         planCoordinatorId.current = startInfo.coordinator_id
                     }
                     return
@@ -297,6 +313,60 @@ function useChatIPC(params?: UseChatIPCParams) {
                     const reactTaskInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskToAsync
                     reactTaskToAsync.current = reactTaskInfo.task_id
                     if (casualChatID.current === reactTaskToAsync.current) handleResetCasualChatID()
+                    return
+                }
+
+                if (res.Type === "memory_context") {
+                    // 实时记忆列表
+                    const lists = JSON.parse(ipcContent) as AIAgentGrpcApi.MemoryEntryList
+                    if (planCoordinatorId.current === res.CoordinatorId) {
+                        taskMemorys.current = lists
+                    } else {
+                        reactMemorys.current = lists
+                    }
+                    try {
+                        const newMemoryEntryList: AIAgentGrpcApi.MemoryEntryList = {
+                            memories: [
+                                ...(taskMemorys.current.memories || []),
+                                ...(reactMemorys.current.memories || [])
+                            ],
+                            memory_pool_limit:
+                                Number(taskMemorys.current.memory_pool_limit) +
+                                Number(reactMemorys.current.memory_pool_limit),
+                            memory_session_id: reactMemorys.current.memory_session_id,
+                            total_memories:
+                                Number(taskMemorys.current.total_memories) +
+                                Number(reactMemorys.current.total_memories),
+                            total_size:
+                                Number(taskMemorys.current.total_size) + Number(reactMemorys.current.total_size),
+                            score_overview: {
+                                A_total:
+                                    Number(taskMemorys.current.score_overview.A_total) +
+                                    Number(reactMemorys.current.score_overview.A_total),
+                                C_total:
+                                    Number(taskMemorys.current.score_overview.C_total) +
+                                    Number(reactMemorys.current.score_overview.C_total),
+                                E_total:
+                                    Number(taskMemorys.current.score_overview.E_total) +
+                                    Number(reactMemorys.current.score_overview.E_total),
+
+                                O_total:
+                                    Number(taskMemorys.current.score_overview.O_total) +
+                                    Number(reactMemorys.current.score_overview.O_total),
+                                P_total:
+                                    Number(taskMemorys.current.score_overview.P_total) +
+                                    Number(reactMemorys.current.score_overview.P_total),
+                                R_total:
+                                    Number(taskMemorys.current.score_overview.R_total) +
+                                    Number(reactMemorys.current.score_overview.R_total),
+                                T_total:
+                                    Number(taskMemorys.current.score_overview.T_total) +
+                                    Number(reactMemorys.current.score_overview.T_total)
+                            }
+                        }
+                        setMemoryList(newMemoryEntryList)
+                    } catch (error) {}
+
                     return
                 }
 
@@ -453,7 +523,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         // 初次用户对话的问题，属于自由对话中的问题
         casualChatEvent.handleSend({
-            request: {IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""},
+            request: {...params, IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""},
             extraValue
         })
 
@@ -492,7 +562,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             grpcFolders,
             questionQueue,
             casualStatus,
-            reActTimelines
+            reActTimelines,
+            memoryList
         },
         {
             fetchToken,

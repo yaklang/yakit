@@ -23,6 +23,8 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import {AIChatMention} from "../components/aiChatMention/AIChatMention"
 import {AIMentionTabsEnum} from "../defaultConstant"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -80,14 +82,17 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     } = textareaProps || {}
 
     const textareaRef = useRef<TextAreaRef>(null)
+    const textareaBodyRef = useRef<HTMLDivElement>(null)
+
     const textRectRef = useRef<DOMRect | null>(null)
     const mentionRef = useRef<{
         destroy: () => void
     }>()
     const wrapperWidth = useListenWidth(document.body)
+    const textareaBodyWidth = useListenWidth(textareaBodyRef)
     useEffect(() => {
-        if (wrapperWidth) getTextRect()
-    }, [wrapperWidth])
+        if (wrapperWidth && textareaBodyWidth) getTextRect()
+    }, [wrapperWidth, textareaBodyWidth])
     const getTextRect = useMemoizedFn(() => {
         onResetMention()
         if (textareaRef.current) {
@@ -179,7 +184,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
 
     return (
         <div className={classNames(styles["ai-chat-textarea"], className)} onClick={handleSetTextareaFocus}>
-            <div className={styles["textarea-body"]}>
+            <div className={styles["textarea-body"]} ref={textareaBodyRef}>
                 <div className={styles["textarea-icon"]}>
                     {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
                     <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>

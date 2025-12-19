@@ -6,25 +6,35 @@
     flex-direction: column;
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
-    .side-header {
-        padding: 8px 12px 4px 12px;
+    .list-wrapper {
         display: flex;
-        align-items: center;
-        border-bottom: 0;
-        gap: 4px;
-        .header-title {
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+        .side-header {
+            padding: 8px 12px 4px 12px;
             display: flex;
             align-items: center;
+            border-bottom: 0;
             gap: 4px;
-            white-space: nowrap;
-            color: var(--Colors-Use-Neutral-Text-2-Primary);
-            font-size: 12px;
-            font-weight: 500;
+            .header-title {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                white-space: nowrap;
+                color: var(--Colors-Use-Neutral-Text-2-Primary);
+                font-size: 12px;
+                font-weight: 500;
+            }
+            .side-header-btn {
+                border-radius: 50%;
+                background: var(--Colors-Use-Basic-Background);
+            }
         }
-        .side-header-btn {
-            border-radius: 50%;
-            background: var(--Colors-Use-Basic-Background);
-        }
+    }
+    .memory-wrapper {
+        display: flex;
+        flex-direction: column;
     }
     .task-list {
         flex: 1;

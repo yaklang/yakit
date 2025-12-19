@@ -17,7 +17,8 @@ import {
     apiGetGlobalNetworkConfig,
     apiGetSpaceEngineAccountStatus,
     apiGetSpaceEngineStatus,
-    apiSetGlobalNetworkConfig
+    apiSetGlobalNetworkConfig,
+    handleAIConfig
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {
@@ -292,23 +293,25 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                         }}
                         disabledType={true}
                         onAdd={(e) => {
-                            let existed = false
-                            const existedResult = (globalNetworkConfig.AppConfigs || []).map((i) => {
-                                if (i.Type === e.Type) {
-                                    existed = true
-                                    return {...i, ...e}
-                                }
-                                return {...i}
-                            })
-                            if (!existed) {
-                                existedResult.push(e)
-                            }
-                            const editItem = existedResult.find((ele) => ele.Type === e.Type)
+                            // 不影响ai优先级
+                            const updatedValue = handleAIConfig(
+                                {
+                                    AppConfigs: globalNetworkConfig.AppConfigs,
+                                    AiApiPriority: globalNetworkConfig.AiApiPriority
+                                },
+                                e
+                            )
+                            if (!updatedValue) return
+                            const editItem = updatedValue?.AppConfigs.find((ele) => ele.Type === e.Type)
                             if (editItem) {
                                 apiGetSpaceEngineAccountStatus(editItem).then((value) => {
                                     switch (value.Status) {
                                         case "normal":
-                                            const params = {...globalNetworkConfig, AppConfigs: existedResult}
+                                            const params = {
+                                                ...globalNetworkConfig,
+                                                AppConfigs: updatedValue?.AppConfigs,
+                                                AiApiPriority: updatedValue?.AiApiPriority
+                                            }
                                             apiSetGlobalNetworkConfig(params).then(() => {
                                                 onGetGlobalNetworkConfig()
                                                 m.destroy()

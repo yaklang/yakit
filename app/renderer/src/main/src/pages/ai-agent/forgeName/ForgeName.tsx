@@ -23,7 +23,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
-import {AIForgeListDefaultPagination} from "../defaultConstant"
+import {AIForgeListDefaultPagination, ReActChatEventEnum} from "../defaultConstant"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/forge"
 
@@ -89,7 +89,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         emiter.emit(
             "onReActChatEvent",
             JSON.stringify({
-                type: "open-forge-form",
+                type: ReActChatEventEnum.OPEN_FORGE_FORM,
                 params: {value: info}
             })
         )

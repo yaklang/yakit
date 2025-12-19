@@ -1,3 +1,4 @@
+import type {AIInputEvent} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatIPCStartParams} from "@/pages/ai-re-act/hooks/type"
 import {ReactNode} from "react"
 

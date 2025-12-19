@@ -13,6 +13,8 @@ import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
+import AIFileChatContent from "../aIFileChatContent/AIFileChatContent"
+import classNames from "classnames"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -44,12 +46,18 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         const {id, type, Timestamp, data, extraValue} = item
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
+                const hasFreeDialogFileList =
+                    Array.isArray(extraValue?.freeDialogFileList) && (extraValue?.freeDialogFileList?.length ?? 0) > 0
+
                 return (
                     <AITriageChatContent
                         isAnswer={false}
-                        content={data}
+                        content={<AIFileChatContent {...data} extraValue={extraValue} />}
                         extraValue={extraValue}
                         {...chatContentExtraProps}
+                        contentClassName={classNames({
+                            [styles["file-content-wrapper"]]: hasFreeDialogFileList
+                        })}
                     />
                 )
             case AIChatQSDataTypeEnum.STREAM:
@@ -73,7 +81,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         modalInfo={{
                             time: Timestamp,
                             callToolId: data.callToolId,
-                            title: item.AIService
+                            title: item.AIModelName,
+                            icon: item.AIService
                         }}
                         execError={data.execError}
                     />

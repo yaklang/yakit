@@ -14,6 +14,7 @@
     .expand-retract-wrapper {
         width: 100%;
         border-bottom: 0;
+        z-index: 8;
         .expand-retract-content {
             @extend %display-column-center;
             width: 100%;
@@ -45,10 +46,12 @@
             font-size: 14px;
             font-weight: 500;
             line-height: 20px;
-            svg {
-                width: 16px;
-                height: 16px;
-                color: var(--Colors-Use-Neutral-Disable);
+            .chat-alt-icon {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--Colors-Use-Neutral-Disable);
+                }
             }
         }
         .extra {

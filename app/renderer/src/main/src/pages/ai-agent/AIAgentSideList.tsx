@@ -1,6 +1,6 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {useCreation, useMemoizedFn} from "ahooks"
-import {AiAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
+import React, {ReactNode, useEffect, useState} from "react"
+import {useControllableValue, useMemoizedFn} from "ahooks"
+import {AiAgentTabList, AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
 
@@ -18,47 +18,49 @@ const AIMCP = React.lazy(() => import("./aiMCP/AIMCP"))
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
-    const [show, setShow] = useState<boolean>(true)
+    const [show, setShow] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "show",
+        trigger: "setShow"
+    })
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
         setActive(value)
     })
 
-    const switchAIAgentTab = useMemoizedFn((value: AIAgentTabListEnum) => {
-        setShow(true)
-        handleSetActive(value)
-    })
-
     useEffect(() => {
-        emiter.on("switchAIAgentTab", switchAIAgentTab)
+        emiter.on("switchAIAgentTab", onSwitchAIAgentTab)
         return () => {
-            emiter.off("switchAIAgentTab", switchAIAgentTab)
+            emiter.off("switchAIAgentTab", onSwitchAIAgentTab)
         }
     }, [])
 
-    /** 向对话框组件进行事件触发的通信 */
-    const onEmiter = useMemoizedFn((key: string) => {
-        const info: AIAgentTriggerEventInfo = {type: ""}
-        switch (key) {
-            case "new-chat":
-                info.type = "new-chat"
-
-                break
-            default:
-                break
-        }
-        if (info.type) emiter.emit("onReActChatEvent", JSON.stringify(info))
+    const onSwitchAIAgentTab = useMemoizedFn((data: string) => {
+        try {
+            const info: Omit<AIAgentTriggerEventInfo, "type"> & {type: `${SwitchAIAgentTabEventEnum}`} =
+                JSON.parse(data)
+            const {type, params} = info
+            if (!params) return
+            switch (type) {
+                case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
+                    setActive(params.active as AIAgentTabListEnum)
+                    setShow(params.show !== false)
+                    break
+                case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
+                    setShow(params.show !== false)
+                    break
+                default:
+                    break
+            }
+        } catch (error) {}
     })
+
     const renderTabContent = useMemoizedFn((key: AIAgentTabListEnum) => {
         let content: ReactNode = <></>
         switch (key) {
             case AIAgentTabListEnum.History:
                 content = (
                     <React.Suspense>
-                        <HistoryChat
-                            onNewChat={() => {
-                                onEmiter("new-chat")
-                            }}
-                        />
+                        <HistoryChat />
                     </React.Suspense>
                 )
                 break

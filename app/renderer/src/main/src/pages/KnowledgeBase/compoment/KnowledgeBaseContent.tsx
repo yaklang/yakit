@@ -64,6 +64,7 @@ import {ImportModal} from "./ImportModal"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -705,6 +706,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                 showFreeChat={showFreeChat}
                                 setShowFreeChat={setShowFreeChat}
                                 title='AI 召回'
+                                storeKey={FileListStoreKey.Konwledge}
                             />
                         </div>
                     ) : null}

@@ -56,7 +56,7 @@ import {yakitNotify} from "@/utils/notification"
 import {grpcCreateAIForge, grpcGetAIForge, grpcUpdateAIForge} from "@/pages/ai-agent/grpc"
 import emiter from "@/utils/eventBus/eventBus"
 import {useSubscribeClose} from "@/store/tabSubscribe"
-import {AIForgeListDefaultPagination} from "@/pages/ai-agent/defaultConstant"
+import {AIForgeListDefaultPagination, ReActChatEventEnum} from "@/pages/ai-agent/defaultConstant"
 import {grpcGetAIToolList} from "@/pages/ai-agent/aiToolList/utils"
 import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {TextAreaRef} from "antd/lib/input/TextArea"
@@ -257,7 +257,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     emiter.emit(
                         "onReActChatEvent",
                         JSON.stringify({
-                            type: "open-forge-form",
+                            type: ReActChatEventEnum.OPEN_FORGE_FORM,
                             params: {value: forgeData.current}
                         })
                     )

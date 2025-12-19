@@ -4,16 +4,23 @@ import {
     AIMaterialsData,
     AIRecommendItemProps,
     AIRecommendProps,
-    RandomAIMaterialsDataProps
+    RandomAIMaterialsDataProps,
+    SideSettingButtonProps
 } from "./type"
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
-import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {AIChatTextareaProps} from "../template/type"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowrightIcon, OutlineInformationcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowrightIcon,
+    OutlineInformationcircleIcon,
+    OutlinePinIcon,
+    OutlinePinOffIcon,
+    OutlineRefreshIcon
+} from "@/assets/icon/outline"
 import {
     AIDownAngleLeftIcon,
     AIDownAngleRightIcon,
@@ -27,10 +34,10 @@ import {
     HoverAIToolIcon
 } from "./icon"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Tooltip} from "antd"
+import {Divider, Tooltip} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import emiter from "@/utils/eventBus/eventBus"
-import {AIAgentTabListEnum, AITabsEnum} from "../defaultConstant"
+import {AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
 import {YakitRoute} from "@/enums/yakitRoute"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
@@ -42,12 +49,18 @@ import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
-import {handleOpenFileSystemDialog, OpenDialogOptions} from "@/utils/fileSystemDialog"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {historyStore, loadRemoteHistory} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import FileTreeList from "./FileTreeList/FileTreeList"
+import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
+import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
+import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -67,6 +80,7 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
 }
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["aiAgent"])
     const {onTriageSubmit, onSetReAct} = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -111,11 +125,14 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [questionList, setQuestionList] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
+    const customFolder = useCustomFolder()
+    // 控制下拉菜单
+    const [openDrawer, setOpenDrawer] = useState<boolean>(true)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
-
+    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
     const [inViewPort = true] = useInViewport(welcomeRef)
 
     const tokenRef = useRef<string>(randomString(40))
@@ -238,7 +255,16 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
 
     const handleTriageSubmit = useMemoizedFn((qs: string) => {
-        onTriageSubmit(qs)
+        const fileToQuestionPath = fileToQuestion.map((item) => item.path)
+        onTriageSubmit({
+            qs,
+            fileToQuestion: fileToQuestionPath,
+            extraValue: {
+                // 自由对话文件列表
+                freeDialogFileList: fileToQuestion
+            }
+        })
+        fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })
     const onMore = useMemoizedFn((item: string) => {
@@ -257,13 +283,31 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         }
     })
     const onForgeMore = useMemoizedFn(() => {
-        emiter.emit("switchAIAgentTab", AIAgentTabListEnum.Forge_Name)
+        emiter.emit(
+            "switchAIAgentTab",
+            JSON.stringify({
+                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                params: {
+                    active: AIAgentTabListEnum.Forge_Name,
+                    show: true
+                }
+            })
+        )
     })
     const onKnowledgeBaseMore = useMemoizedFn(() => {
         emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
     })
     const onToolMore = useMemoizedFn(() => {
-        emiter.emit("switchAIAgentTab", AIAgentTabListEnum.Tool)
+        emiter.emit(
+            "switchAIAgentTab",
+            JSON.stringify({
+                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                params: {
+                    active: AIAgentTabListEnum.Tool,
+                    show: true
+                }
+            })
+        )
     })
 
     const onCheckItem = useMemoizedFn((item: AIRecommendItemProps["item"]) => {
@@ -319,71 +363,45 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
 
-    const dropdownMenu = useMemo(() => {
-        return {
-            data: [
-                {
-                    label: "打开文件",
-                    key: "open-file"
-                },
-                {
-                    label: "打开文件夹",
-                    key: "open-folder"
-                }
-            ],
-            onClick: ({key}) => {
-                switch (key) {
-                    case "open-file":
-                        onOpenFileFolder(["openFile"])
-                        break
-                    case "open-folder":
-                    default:
-                        onOpenFileFolder(["openDirectory"])
-                        break
-                }
-            }
-        }
-    }, [])
-
-    const onOpenFileFolder = async (properties: OpenDialogOptions["properties"]) => {
-        try {
-            const {filePaths} = await handleOpenFileSystemDialog({
-                title: "请选择文件夹",
-                properties
-            })
-            if (!filePaths.length) return
-            const absolutePath: string = filePaths[0].replace(/\\/g, "\\")
-            loadRemoteHistory().then(() => {
-                historyStore.addHistoryItem({
-                    path: absolutePath,
-                    isFolder: properties?.includes("openDirectory") ?? true
-                })
-                onSetReAct?.()
-            })
-        } catch {}
+    const onOpenFileFolder = async (data: OpenFileDropdownItem) => {
+        if (!data.path) return
+        historyStore.addHistoryItem(data)
+        setOpenDrawer(true)
     }
 
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
-            <YakitDropdownMenu
-                menu={dropdownMenu}
-                dropdown={{
-                    trigger: ["click"],
-                    placement: "bottomLeft"
-                }}
+            <div className={styles["open-file-tree-button"]}>
+                {!customFolder.length ? (
+                    <OpenFileDropdown cb={onOpenFileFolder}>
+                        <YakitButton type='outline1'>打开文件夹管理</YakitButton>
+                    </OpenFileDropdown>
+                ) : (
+                    <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
+                        {openDrawer ? "收起" : "展开"}
+                    </YakitButton>
+                )}
+                <Divider type='vertical' />
+                <SideSettingButton />
+            </div>
+            <div
+                className={`${styles["file-tree-list"]} ${
+                    customFolder.length && openDrawer ? styles["open"] : styles["close"]
+                }`}
             >
-                <YakitButton className={styles["open-folder-button"]} type='outline1'>
-                    打开文件夹管理
-                </YakitButton>
-            </YakitDropdownMenu>
+                <div className={styles["file-tree-list-inner"]}>
+                    <FileTreeList />
+                </div>
+            </div>
             <div className={styles["content"]}>
                 <div className={styles["content-absolute"]}>
                     <div className={styles["input-wrapper"]}>
                         <div className={styles["input-heard"]}>
-                            <div className={styles["title"]}>AI-Agent 安全助手</div>
-                            <div className={styles["subtitle"]}>专注于安全编码与漏洞分析的智能助手</div>
+                            <div className={styles["title"]}>Memfit AI Agent</div>
+                            <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
                         <div className={styles["input-body-wrapper"]}>
+                            <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return
@@ -415,6 +433,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                 <div className={styles["line"]} ref={lineStartRef} />
                             </AIChatTextarea>
                         </div>
+
                         {checkItems.length > 0 ? (
                             <div className={styles["suggestion-tips-wrapper"]}>
                                 <div className={styles["suggestion-tips-title"]}>
@@ -499,6 +518,46 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 })
 
 export default AIChatWelcome
+
+export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
+    const [isAutoHidden, setIsAutoHidden] = useState<boolean>(true)
+    useEffect(() => {
+        onGetSideSetting()
+    }, [])
+    const onGetSideSetting = useMemoizedFn(() => {
+        getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
+            .then((res) => {
+                setIsAutoHidden(res !== "false")
+            })
+            .catch(() => {})
+    })
+    const onSideSetting = useDebounceFn(
+        useMemoizedFn((e) => {
+            e.stopPropagation()
+            const checked = !isAutoHidden
+            setIsAutoHidden(checked)
+            setRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode, `${checked}`)
+            emiter.emit("switchSideHiddenMode", `${checked}`)
+        }),
+        {wait: 200, leading: true}
+    ).run
+    return (
+        <Tooltip
+            title={
+                isAutoHidden
+                    ? "已开启固定菜单栏，点击icon则可关闭"
+                    : "点击icon高亮后则开启固定菜单栏，菜单栏不会在失焦后自动关闭"
+            }
+        >
+            <YakitButton
+                type={isAutoHidden ? "text2" : "outline1"}
+                icon={isAutoHidden ? <OutlinePinOffIcon /> : <OutlinePinIcon />}
+                onClick={onSideSetting}
+                {...props}
+            />
+        </Tooltip>
+    )
+})
 
 const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
     const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem, checkItems} = props

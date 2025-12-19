@@ -69,15 +69,16 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
             subTitle={userAction.btnText}
             tip={userAction.userInput}
             modalInfo={{
-                title: info.AIService,
-                time: timestamp
+                title: info.AIModelName,
+                time: timestamp,
+                icon: info.AIService
             }}
         />
     )
 })
 
 export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.memo((props) => {
-    const {title, subTitle, tip, titleIcon, modalInfo,...reset} = props
+    const {title, subTitle, tip, titleIcon, modalInfo, ...reset} = props
     return (
         <ChatCard
             footer={modalInfo && <ModalInfo {...modalInfo} />}

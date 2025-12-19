@@ -3,7 +3,7 @@ import {AIModelItemProps, AIModelSelectProps} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
-import {isForcedSetAIModal, getAIModelList} from "../utils"
+import {isForcedSetAIModal} from "../utils"
 import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
 import {GetAIModelListResponse} from "../../type/aiModel"
@@ -13,16 +13,16 @@ import useAIAgentStore from "../../useContext/useStore"
 import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
-import {OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon, OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
-import {AIInputEventHotPatchTypeEnum} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {isEqual} from "lodash"
-import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIInputEventHotPatchTypeEnum, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {AIAgentSetting} from "../../aiAgentType"
+import {Tooltip} from "antd"
 
 export const onOpenConfigModal = () => {
     const m = YakitModalConfirm({
@@ -158,7 +158,10 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         <YakitSelect.OptGroup key='线上' label='线上'>
                             {aiModelOptions.onlineModels.map((nodeItem) => (
                                 <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
-                                    <AIModelItem value={nodeItem.Type} />
+                                    <AIModelItem
+                                        value={nodeItem.Type}
+                                        model={nodeItem.ExtraParams?.find((ele) => ele.Key === "model")?.Value}
+                                    />
                                 </YakitSelect.Option>
                             ))}
                         </YakitSelect.OptGroup>
@@ -181,7 +184,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
-    const {value} = props
+    const {value, model} = props
     const icon = useCreation(() => {
         return (
             AIOnlineModelIconMap[value] || (
@@ -200,10 +203,16 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             })
         })
     })
+
     return (
         <div className={classNames(styles["select-option-wrapper"])}>
             {icon}
             <div className={styles["option-text"]}>{value}</div>
+            {model && (
+                <Tooltip title={model}>
+                    <OutlineInformationcircleIcon className={styles["icon-info"]} />
+                </Tooltip>
+            )}
             <OutlinePencilaltIcon className={styles["icon-pencilalt"]} onClick={onEdit} />
         </div>
     )
