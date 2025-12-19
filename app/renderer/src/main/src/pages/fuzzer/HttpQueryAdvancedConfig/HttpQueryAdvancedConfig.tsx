@@ -15,7 +15,8 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useDeepCompareEffect, useInViewport, useMemoizedFn} from "ahooks"
+import { FuzzerRemoteGV } from "@/enums/fuzzer"
 import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
@@ -158,7 +159,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [inViewport = true] = useInViewport(queryRef)
 
     const [batchTargetModalVisible, setBatchTargetModalVisible] = useState<boolean>(false)
-    const { proxyRouteOptions } = useProxy();
+    const { proxyRouteOptions,  proxyConfig: { Endpoints = [] } } = useProxy();
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -173,6 +174,25 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
     }, [defaultHttpResponse])
+
+    //把新增的代理节点替换成Id
+    const changeProxy = useMemoizedFn(() => {
+        const proxy = form.getFieldValue("proxy")
+        if (proxy.every((item) => item.startsWith("ep") || item.startsWith("route"))) return
+        const newProxy = proxy.map((item) => {
+            return Endpoints.find(({Url}) => Url === item)?.Id || item
+        })
+        form.setFieldsValue({proxy: newProxy})
+        onSetValue({
+            ...form.getFieldsValue(),
+            proxy: newProxy
+        })
+        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${newProxy}`)
+    })
+
+    useDeepCompareEffect(() => {
+        changeProxy()
+    }, [Endpoints])
 
     useEffect(() => {
         if (!inViewport) setVisibleDrawer(false)
@@ -1454,14 +1474,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             />
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
-                onClose={() => {
-                    setAgentConfigModalVisible(false)
-                    const proxy = form.getFieldValue('proxy') || []
-                    const filterProxy = proxy.filter(item => proxyRouteOptions.some(({ value }) => value === item))
-                    form.setFieldsValue({ proxy: filterProxy })
-                    const v = form.getFieldsValue()
-                    onSetValue({ ...v, proxy: filterProxy })
-                }}
+                onClose={() => setAgentConfigModalVisible(false)}
             />
             <BatchTargetModal
                 batchTargetModalVisible={batchTargetModalVisible}

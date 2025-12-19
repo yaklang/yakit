@@ -135,6 +135,8 @@
     "operation": "Operation",
     "add_rule": "Add Proxy Rule",
     "edit_rule": "Edit Proxy Rule",
+    "add_point": "Add Proxy Point",
+    "edit_point": "Edit Proxy Point",
     "rule_group_name_label": "Rule Group Name",
     "please_enter_rule_group_name": "Please Enter Rule Group Name",
     "proxy_address_label": "Proxy Address",
@@ -169,6 +171,8 @@
     "customDetectionTarget": "Custom Detection Target",
     "customDetectionTargetPlaceholder": "Please enter the detection target",
     "disable_point_title": "Disable Points",
-    "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?"
+    "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?",
+    "downstream_agent": "Downstream Agent",
+    "select_disabled_tip":"The selected proxy has been disabled. We recommend using a different, available proxy."
   }
 }

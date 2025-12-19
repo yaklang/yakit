@@ -105,6 +105,7 @@
         "sass-resources-loader": "^2.2.5",
         "typescript": "^5.1.6",
         "uuid": "^9.0.0",
+        "validator": "^13.15.23",
         "video-react": "^0.16.0",
         "web-vitals": "^1.0.1",
         "xlsx": "^0.18.5",

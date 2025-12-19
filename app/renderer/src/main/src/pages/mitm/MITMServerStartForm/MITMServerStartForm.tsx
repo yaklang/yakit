@@ -278,6 +278,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             hosts: params.etcHosts,
             filterWebsocket: params.filterWebsocket,
             disableCACertPage: params.disableCACertPage,
+            DisableSystemProxy: params.DisableSystemProxy,
             DisableWebsocketCompression: params.DisableWebsocketCompression,
             PluginConcurrency: params.PluginConcurrency
         }
@@ -582,12 +583,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 {/* 代理劫持弹窗 */}
                 <ProxyRulesConfig 
                     visible={agentConfigModalVisible} 
-                    onClose={() => {
-                        setAgentConfigModalVisible(false)
-                        const proxy = form.getFieldValue('downstreamProxy') || []
-                        const filterProxy = proxy.filter(item => proxyRouteOptions.some(({ value }) => value === item))
-                        form.setFieldsValue({ downstreamProxy: filterProxy })
-                    }}
+                    onClose={() => setAgentConfigModalVisible(false)}
                 />
                 <React.Suspense fallback={<div>loading...</div>}>
                     <MITMFormAdvancedConfiguration

@@ -554,6 +554,10 @@
     cursor: pointer;
 }
 
+.proxy-test-title-disabled{
+    color: var(--Colors-Use-Neutral-Disable);
+}
+
 .proxy-test-modal-content {
     display: flex;
     height: 400px;

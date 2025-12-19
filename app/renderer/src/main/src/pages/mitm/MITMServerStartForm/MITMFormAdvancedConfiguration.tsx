@@ -23,6 +23,7 @@ import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -48,6 +49,7 @@ export interface AdvancedConfigurationFromValue {
     etcHosts: any[]
     filterWebsocket: boolean
     disableCACertPage: boolean
+    DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
 }
@@ -68,6 +70,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [etcHosts, setEtcHosts] = useState<any[]>([])
         const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
         const [disableCACertPageDef, setDisableCACertPageDef] = useState<boolean>(false)
+        const [disableSystemProxyDef, setDisableSystemProxyDef] = useState<boolean>(false)
         const [disableWebsocketCompressionDef, setDisableWebsocketCompressionDef] = useState<boolean>(false)
         const [pluginConcurrencyDef, setPluginConcurrencyDef] = useState<number>(20)
 
@@ -77,47 +80,37 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
+        const {t, i18n} = useI18nNamespaces(["webFuzzer"])
+
+        const getValue = useMemoizedFn(() => {
+            const v = form.getFieldsValue()
+            if (Object.keys(v).length > 0) {
+                return {...v, etcHosts}
+            } else {
+                return {
+                    certs: certsDef,
+                    etcHosts: etcHostsDef,
+                    preferGMTLS: preferGMTLSDef,
+                    onlyEnableGMTLS: onlyEnableGMTLSDef,
+                    enableProxyAuth: enableProxyAuthDef,
+                    dnsServers: dnsServersDef,
+                    proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
+                    proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
+                    filterWebsocket: filterWebsocketDef,
+                    disableCACertPage: disableCACertPageDef,
+                    DisableSystemProxy: disableSystemProxyDef,
+                    DisableWebsocketCompression: disableWebsocketCompressionDef,
+                    PluginConcurrency: pluginConcurrencyDef
+                }
+            }
+        })
 
         useImperativeHandle(
             ref,
             () => ({
-                getValue: () => {
-                    const v = form.getFieldsValue()
-                    if (Object.keys(v).length > 0) {
-                        return {...v, etcHosts}
-                    } else {
-                        return {
-                            certs: certsDef,
-                            etcHosts: etcHostsDef,
-                            preferGMTLS: preferGMTLSDef,
-                            onlyEnableGMTLS: onlyEnableGMTLSDef,
-                            enableProxyAuth: enableProxyAuthDef,
-                            dnsServers: dnsServersDef,
-                            proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
-                            proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
-                            filterWebsocket: filterWebsocketDef,
-                            disableCACertPage: disableCACertPageDef,
-                            DisableWebsocketCompression: disableWebsocketCompressionDef,
-                            PluginConcurrency: pluginConcurrencyDef
-                        }
-                    }
-                }
+                getValue
             }),
-            [
-                certsDef,
-                preferGMTLSDef,
-                onlyEnableGMTLSDef,
-                enableProxyAuthDef,
-                proxyUsernameDef,
-                proxyPasswordDef,
-                dnsServersDef,
-                filterWebsocketDef,
-                disableCACertPageDef,
-                disableWebsocketCompressionDef,
-                pluginConcurrencyDef,
-                visible,
-                form
-            ]
+            [getValue]
         )
 
         useEffect(() => {
@@ -190,6 +183,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 const v = e === "true" ? true : false
                 setDisableCACertPageDef(v)
                 form.setFieldsValue({disableCACertPage: v})
+            })
+            // 禁用系统代理
+            getRemoteValue(RemoteGV.MITMDisableSystemProxy).then((e) => {
+                const v = e === "true" ? true : false
+                setDisableSystemProxyDef(v)
+                form.setFieldsValue({DisableSystemProxy: v})
             })
             // 启用webSocket压缩
             getRemoteValue(RemoteGV.MITMDisableWebsocketCompression).then((e) => {
@@ -293,6 +292,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts))
                 setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
                 setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
+                setRemoteValue(RemoteGV.MITMDisableSystemProxy, params.DisableSystemProxy ? "true" : "")
                 setRemoteValue(RemoteGV.MITMDisableWebsocketCompression, params.DisableWebsocketCompression + "")
                 setRemoteValue(RemoteGV.MITMPluginConcurrency, params.PluginConcurrency + "")
                 onSave(params)
@@ -307,6 +307,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 enableProxyAuth: enableProxyAuthDef,
                 filterWebsocket: filterWebsocketDef,
                 disableCACertPage: disableCACertPageDef,
+                DisableSystemProxy: disableSystemProxyDef,
                 DisableWebsocketCompression: disableWebsocketCompressionDef,
                 PluginConcurrency: pluginConcurrencyDef,
                 proxyUsername: proxyUsernameDef,
@@ -431,6 +432,13 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 </YakitTag>
                             ))}
                         </Space>
+                    </Form.Item>
+                    <Form.Item
+                        label={t("HttpQueryAdvancedConfig.disable_system_proxy")}
+                        name='DisableSystemProxy'
+                        valuePropName='checked'
+                    >
+                        <YakitSwitch size='large' />
                     </Form.Item>
                     {enableGMTLS && (
                         <>

@@ -20,6 +20,8 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
+import {RemoteGV} from "@/yakitGV"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {
     MITMEnablePluginModeRequest,
     MITMFilterWebsocketRequest,
@@ -29,6 +31,7 @@ import {
     grpcMITMFilterWebsocket,
     grpcMITMHotPort,
     grpcMITMSetDownstreamProxy,
+    grpcMITMSetDisableSystemProxy,
     grpcMITMStopCall
 } from "../MITMHacker/utils"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -130,7 +133,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
-    const {proxyRouteOptions, comparePointUrl} = useProxy()
+    const [disableSystemProxy, setDisableSystemProxy] = useState<boolean>(false)
+    const {t, i18n} = useI18nNamespaces(["webFuzzer",'mitm'])
 
     const mitmContent = useContext(MITMContext)
 
@@ -235,6 +239,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             const v = e === "true" ? true : false
             setFilterWebsocket(v)
         })
+        // 获取禁用系统代理状态
+        getRemoteValue(RemoteGV.MITMDisableSystemProxy).then((e) => {
+            const v = e === "true" ? true : false
+            setDisableSystemProxy(v)
+        })
     }, [])
 
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
@@ -307,9 +316,40 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             </label>
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setDownStreamAgentModalVisible(true)}>
-                            下游代理
-                        </div>
+                        <YakitPopover
+                            trigger={"click"}
+                            placement='bottom'
+                            title={
+                                <div
+                                    className={style["proxy_configuration_top"]}
+                                    onClick={() => setDownStreamAgentModalVisible(true)}
+                                >
+                                    {t("ProxyConfig.downstream_agent")}
+                                </div>
+                            }
+                            content={
+                                <div
+                                    className={style["proxy_configuration_bottom"]}
+                                >
+                                    <span>{t("HttpQueryAdvancedConfig.disable_system_proxy")}</span>
+                                    <YakitSwitch
+                                        size='large'
+                                        checked={disableSystemProxy}
+                                        onChange={(checked) => {
+                                            setDisableSystemProxy(checked)
+                                            setRemoteValue(RemoteGV.MITMDisableSystemProxy, checked ? "true" : "")
+                                            // 调用grpc设置禁用系统代理
+                                            grpcMITMSetDisableSystemProxy({
+                                                version: mitmVersion,
+                                                setDisableSystemProxy: checked
+                                            })
+                                        }}
+                                    />
+                                </div>
+                            }
+                        >
+                            <div className={style["link-item"]}>{t("AgentConfigModal.proxy_configuration")}</div>
+                        </YakitPopover>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setVisible(true)}>
                             规则配置
@@ -346,17 +386,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             </div>
             <DownStreamAgentModal
                 downStreamAgentModalVisible={downStreamAgentModalVisible}
-                onCloseModal={() => {
-                    setDownStreamAgentModalVisible(false)
-                    //如果代理被禁用了 这里要清除代理
-                    if (downstreamProxyStr) {
-                        const isProxyValid = downstreamProxyStr.startsWith('ep') || downstreamProxyStr.startsWith('route')
-                            ? proxyRouteOptions.some(({value}) => value === downstreamProxyStr)
-                            : proxyRouteOptions.some(({value}) => comparePointUrl(value) === downstreamProxyStr)
-                        
-                        !isProxyValid && downStreamTagClose()
-                    }
-                }}
+                onCloseModal={() => setDownStreamAgentModalVisible(false)}
                 downstreamProxyStr={downstreamProxyStr}
                 setDownstreamProxyStr={setDownstreamProxyStr}
                 tip={tip}
@@ -423,9 +453,13 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         const tipArr = tip.split("|")
 
         const downstreamProxy = form.getFieldsValue().downstreamProxy || []
+        if(downstreamProxy.some(item => proxyRouteOptions.find(({ value })=> value === item)?.disabled )){
+            yakitNotify("warning", t('ProxyConfig.select_disabled_tip'))
+        }
         //如果有新增的代理配置 则存配置项
         checkProxyEndpoints(downstreamProxy)
         const {proxyEndpoints, ProxyRuleIds} = getProxyValue(downstreamProxy)
+        setRemoteValue(MITMConsts.MITMDownStreamProxy, downstreamProxy.join(','))
 
         const proxyValue: MITMSetDownstreamProxyRequest = {
             downstreamProxy: proxyEndpoints,
@@ -434,9 +468,16 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         }
         grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy.length) {
-            const downstreamProxyName = downstreamProxy.map(
-                (item) => proxyRouteOptions.find(({value}) => value === item)?.label || item
-            )
+            const downstreamProxyName = downstreamProxy.map((item) => {
+                if (item.startsWith("route") || item.startsWith("ep")) {
+                    const option = proxyRouteOptions.find(({value}) => value === item)
+                    if (item.startsWith("ep")) {
+                        return `${comparePointUrl(item)}${option?.disabled ? ` (${t("ProxyConfig.disabled")})` : ""}`
+                    }
+                    return proxyRouteOptions.find(({value}) => value === item)?.label
+                }
+                return item
+            })
             if (tip.indexOf("下游代理") === -1) {
                 onSetTip(
                     `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}` +
@@ -591,12 +632,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
             </YakitModal>
             <ProxyRulesConfig
                 visible={agentConfigModalVisible}
-                onClose={() => {
-                    setAgentConfigModalVisible(false)
-                    const proxy = form.getFieldValue("downstreamProxy") || []
-                    const filterProxy = proxy.filter((item) => proxyRouteOptions.some(({value}) => value === item))
-                    form.setFieldsValue({downstreamProxy: filterProxy})
-                }}
+                onClose={() => setAgentConfigModalVisible(false)}
             />
         </>
     )

@@ -193,6 +193,13 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // 设置禁用系统代理
+    ipcMain.handle("mitmV2-set-disable-system-proxy", (e, SetDisableSystemProxy) => {
+        if (stream) {
+            sendMessage({SetDisableSystemProxy})
+        }
+    })
+
     // host port
     ipcMain.handle("mitmV2-host-port", (e, params) => {
         if (stream) {

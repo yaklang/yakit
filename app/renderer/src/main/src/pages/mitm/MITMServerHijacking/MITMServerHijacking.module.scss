@@ -588,3 +588,21 @@
         }
     }
 }
+
+.proxy_configuration_top {
+    text-align: center;
+    height: 33px;
+    line-height: 33px;
+    cursor: pointer;
+    border-radius: 4px;
+    
+    &:hover {
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+}
+
+.proxy_configuration_bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}

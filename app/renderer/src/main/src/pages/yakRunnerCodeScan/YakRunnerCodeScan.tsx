@@ -2274,6 +2274,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const {t, i18n} = useI18nNamespaces(["mitm"])
         const {
             proxyConfig: {Endpoints = []},
+            proxyPointsOptions,
             checkProxyEndpoints
         } = useProxy()
 
@@ -2796,7 +2797,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                         >
                                             <YakitSelect
                                                 allowClear
-                                                options={Endpoints.map(({Url}) => ({label: Url, value: Url}))}
+                                                options={proxyPointsOptions}
                                                 mode='tags'
                                                 placeholder={t("ProxyConfig.example_proxy_address")}
                                             />
@@ -2864,12 +2865,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 <ProxyRulesConfig
                     hideRules
                     visible={agentConfigModalVisible}
-                    onClose={() => {
-                        setAgentConfigModalVisible(false)
-                        const proxy = form.getFieldValue("proxy") || []
-                        const filterProxy = proxy.filter((item) => Endpoints.some(({Id}) => Id === item))
-                        form.setFieldsValue({proxy: filterProxy})
-                    }}
+                    onClose={() => setAgentConfigModalVisible(false)}
                 />
             </div>
         )

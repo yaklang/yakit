@@ -93,6 +93,7 @@ import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import cloneDeep from "lodash/cloneDeep"
 import {setClipboardText} from "@/utils/clipboard"
 import {RemoteHistoryGV} from "@/enums/history"
+import {RemoteGV} from "@/yakitGV"
 import {YakitCombinationSearch} from "../YakitCombinationSearch/YakitCombinationSearch"
 import {v4 as uuidv4} from "uuid"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -4969,6 +4970,8 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
                 Object.assign(params, {randomJA3: true})
             }
         }
+        const disableSystemProxy = await getRemoteValue(RemoteGV.MITMDisableSystemProxy)
+        Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
     } catch (e) {
         console.error(e)
     }

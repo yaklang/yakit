@@ -448,6 +448,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     })
 
     const onClickClear = useMemoizedFn(() => {
+        setSelectCurDns(undefined)
         const currentTimestamp = Math.floor(Date.now() / 1000)
         clearTimestamp.current = currentTimestamp
         setRecords((pre) => pre.filter(({Timestamp}) => +Timestamp > currentTimestamp))
