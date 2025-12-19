@@ -138,7 +138,7 @@ jobs:
                   name: yak-engine
                   path: bins
 
-            - run: echo ${{ github.ref_name }}
+            - run: echo "v1.2.1-1215-irify"
             - run: cp buildutil/zip /usr/local/bin/zip
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
@@ -154,7 +154,7 @@ jobs:
 
             - name: Echo IRify Package Version To Env
               run: |
-                  ENV_TAG=${{ github.ref_name }}
+                  ENV_TAG="v1.2.1-1215-irify"
                   ENV_TAG=${ENV_TAG#v}
                   ENV_TAG=${ENV_TAG%-irify}
                   echo "ENV_TAG=$ENV_TAG" >> $GITHUB_ENV
