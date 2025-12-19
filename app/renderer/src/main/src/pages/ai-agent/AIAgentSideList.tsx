@@ -24,7 +24,6 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         trigger: "setShow"
     })
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
-        setShow(true)
         setActive(value)
     })
 
