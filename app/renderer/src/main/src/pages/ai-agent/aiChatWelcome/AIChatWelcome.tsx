@@ -127,7 +127,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
     const customFolder = useCustomFolder()
     // 控制下拉菜单
-    const [openDrawer, setOpenDrawer] = useState<boolean>(!customFolder.length)
+    const [openDrawer, setOpenDrawer] = useState<boolean>(true)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)

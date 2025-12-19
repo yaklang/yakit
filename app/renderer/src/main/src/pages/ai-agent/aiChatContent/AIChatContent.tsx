@@ -286,7 +286,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             if (isFileSystemKey) {
                 // 文件系统，自由对话默认显示60%
                 secondRatio = "60%"
-            } else if (isTaskContentKey && isTaskStreamsEmpty && !timeLine) {
+            } else if (isTaskContentKey && isTaskStreamsEmpty) {
                 // 任务内容，自由对话默认显示80%
                 secondRatio = "80%"
             } else {
@@ -325,12 +325,17 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 padding: 0,
                 ...(!showFreeChat && {
                     width: "100%"
-                })
+                }),
+                  ...(!timeLine &&
+                    isTaskStreamsEmpty && {
+                        width: 30
+                    })
             },
             lineDirection: "left",
             lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
         }
     }, [activeKey, showFreeChat, timeLine, taskChat.streams.length])
+
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
