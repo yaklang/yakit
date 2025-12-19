@@ -524,11 +524,9 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                 updateTableDate()
             })
             ipcRenderer.on(`${token}-error`, (e, error) => {
-                setTimeout(() => {}, 200)
                 yakitNotify("error", `[WatchProcessConnection] error:  ${error}`, true)
             })
             ipcRenderer.on(`${token}-end`, (e, data) => {
-                setTimeout(() => {}, 200)
                 info("[WatchProcessConnection] finished")
             })
             return () => {
