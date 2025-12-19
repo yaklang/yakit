@@ -27,7 +27,7 @@ interface TDeleteConfirmProps extends Required<Pick<TKnowledgeBaseProps, "refres
     onVisible: (v: boolean) => void
 }
 
-interface CreateKnowledgeBaseData extends Entity, KnowledgeBaseEntry {
+interface CreateKnowledgeBaseData extends Omit<Entity, "ID">, Omit<KnowledgeBaseEntry, "ID"> {
     KnowledgeBaseFile: KnowledgeBaseFile[]
     KnowledgeBaseName: string
     KnowledgeBaseType: string
@@ -62,8 +62,8 @@ interface TListThirdPartyBinaryResponse {
     }[]
 }
 
-interface KnowledgeBaseContentProps {
-    KnowledgeBases?: (CreateKnowledgeBaseData & {ID: string})[]
+interface KnowledgeBaseContentProps<T = string> {
+    KnowledgeBases?: (CreateKnowledgeBaseData & {ID: T})[]
 }
 
 type TExistsKnowledgeBaseAsync = {
@@ -71,7 +71,7 @@ type TExistsKnowledgeBaseAsync = {
 }
 
 interface SearchKnowledgeBaseEntryFilter {
-    KnowledgeBaseId: number
+    KnowledgeBaseId: string
     Keyword: string
     RelatedEntityUUIDS?: string[]
     HiddenIndex: string[]

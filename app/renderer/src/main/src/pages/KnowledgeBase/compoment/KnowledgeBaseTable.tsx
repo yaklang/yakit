@@ -25,7 +25,7 @@ interface KnowledgeBaseTableProps {
     api?: APIType
     onEditVisible?: (visible: boolean) => void
     onDeleteVisible?: (visible: boolean) => void
-    onExportKnowledgeBase?: (KnowledgeBaseId: number) => Promise<void>
+    onExportKnowledgeBase?: (KnowledgeBaseId: string) => Promise<void>
     setOpenQA?: Dispatch<SetStateAction<boolean>>
 }
 

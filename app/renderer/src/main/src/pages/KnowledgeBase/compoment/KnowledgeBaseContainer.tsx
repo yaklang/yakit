@@ -92,7 +92,7 @@ const KnowledgeBaseContainer: FC<
     }
 
     const [exportToken, setExportToken] = useSafeState("")
-    const onExportKnowledgeBase = async (KnowledgeBaseId: number) => {
+    const onExportKnowledgeBase = async (KnowledgeBaseId: string) => {
         const defaultName = findKnowledgeBaseItems.KnowledgeBaseName
             ? `export-${findKnowledgeBaseItems.KnowledgeBaseName}`
             : "default-knowledge"

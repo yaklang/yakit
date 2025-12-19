@@ -46,7 +46,7 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     }, [menuOpen])
 
     const [exportToken, setExportToken] = useSafeState("")
-    const exportFile = async (KnowledgeBaseId: number) => {
+    const exportFile = async (KnowledgeBaseId: string) => {
         const defaultName = items.KnowledgeBaseName ? `export-${items.KnowledgeBaseName}` : "default-knowledge"
         try {
             const file = await handleSaveFileSystemDialog({
