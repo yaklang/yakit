@@ -264,7 +264,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         e.stopPropagation()
         onOpenLogWindow()
     })
-    console.log('timeline:', timeLine);
     const resizeBoxProps: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = useCreation(() => {
         if (!activeKey) {
             return {
@@ -293,10 +292,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
         // firstRatio 逻辑
         if (isTaskContentKey && isTaskStreamsEmpty) {
-            if(timeLine){
-                firstRatio = '30%'
-
-            }else{
+            if (timeLine) {
+                firstRatio = "30%"
+            } else {
                 firstRatio = 30
                 // secondRatio ='calc(100% - 30px)'
             }
@@ -314,7 +312,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 ...(!showFreeChat && {
                     minWidth: 30,
                     maxWidth: 30
-                })
+                }),
+                ...(!timeLine &&
+                    isTaskStreamsEmpty && {
+                        width: "calc(100% - 30px)"
+                    })
             },
             firstNodeStyle: {
                 padding: 0,
@@ -326,7 +328,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
         }
     }, [activeKey, showFreeChat, timeLine, taskChat.streams.length])
-    console.log('resizeBoxProps:', resizeBoxProps);
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
