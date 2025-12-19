@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, { useEffect, useState} from "react"
 import {AIReActTaskChatContentProps, AIReActTaskChatLeftSideProps, AIReActTaskChatProps} from "./AIReActTaskChatType"
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
@@ -22,7 +22,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
-    const {setShowFreeChat} = props
+    const {setShowFreeChat, setTimeLine} = props
     const {taskChat} = useAIChatUIData()
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
@@ -33,9 +33,13 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
         setExpand((v) => !v)
     })
 
+    useEffect(() => {
+      setTimeLine(leftExpand)
+    },[leftExpand])
+
     return (
         <div className={styles["ai-re-act-task-chat"]}>
-            <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
+            <AIReActTaskChatLeftSide  leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
             {!!taskChat?.streams?.length && (
                 <div className={styles["chat-content-wrapper"]}>
                     <div className={styles["header"]}>

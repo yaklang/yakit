@@ -49,7 +49,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const [intervalHTTP, setIntervalHTTP] = useState<number | undefined>(undefined)
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
-
+    const [timeLine, setTimeLine] = useState<boolean>(true)
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
     const [fileSystemKey, setFileSystemKey] = useState<TabKey>()
@@ -171,7 +171,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
         switch (key) {
             case AITabsEnum.Task_Content:
-                return <AIReActTaskChat setShowFreeChat={setShowFreeChat} />
+                return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
             case AITabsEnum.File_System:
                 return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} />
             case AITabsEnum.Risk:
@@ -264,7 +264,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         e.stopPropagation()
         onOpenLogWindow()
     })
-
+    console.log('timeline:', timeLine);
     const resizeBoxProps: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = useCreation(() => {
         if (!activeKey) {
             return {
@@ -274,18 +274,39 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 secondNodeStyle: {width: "100%", padding: 0}
             }
         }
-        const isFileSystemKey = activeKey === AITabsEnum.File_System|| taskChat.streams.length <= 0
+
         let secondRatio
+        let firstRatio
+
+        const isFileSystemKey = activeKey === AITabsEnum.File_System
+        const isTaskContentKey = activeKey === AITabsEnum.Task_Content
+        const isTaskStreamsEmpty = (taskChat.streams.length ?? 0) <= 0
         if (showFreeChat) {
             if (isFileSystemKey) {
                 secondRatio = "60%"
+            } else if (isTaskContentKey && isTaskStreamsEmpty && !timeLine) {
+                secondRatio = "80%"
             } else {
                 secondRatio = "432px"
             }
         }
+
+        // firstRatio 逻辑
+        if (isTaskContentKey && isTaskStreamsEmpty) {
+            if(timeLine){
+                firstRatio = '30%'
+
+            }else{
+                firstRatio = 30
+                // secondRatio ='calc(100% - 30px)'
+            }
+        } else {
+            firstRatio = undefined
+        }
         return {
             freeze: showFreeChat,
-            firstMinSize: 500,
+            firstRatio,
+            firstMinSize: !showFreeChat ? 400 : 30,
             secondMinSize: showFreeChat ? 400 : 30,
             secondRatio,
             secondNodeStyle: {
@@ -304,7 +325,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             lineDirection: "left",
             lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
         }
-    }, [activeKey, showFreeChat])
+    }, [activeKey, showFreeChat, timeLine, taskChat.streams.length])
+    console.log('resizeBoxProps:', resizeBoxProps);
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
