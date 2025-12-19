@@ -1,4 +1,4 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {ForwardedRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import classNames from "classnames"
 import styles from "./MITMServerStartForm.module.scss"
 import {ClientCertificate} from "./MITMServerStartForm"
@@ -31,8 +31,12 @@ const MITMCertificateDownloadModal = React.lazy(() => import("./MITMCertificateD
 
 const {ipcRenderer} = window.require("electron")
 
+export interface MITMFormAdvancedConfigurationRef {
+    getValue: () => AdvancedConfigurationFromValue
+}
+
 interface MITMFormAdvancedConfigurationProps {
-    ref?: any
+    ref?: ForwardedRef<MITMFormAdvancedConfigurationRef>
     visible: boolean
     setVisible: (b: boolean) => void
     onSave: (v: AdvancedConfigurationFromValue) => void

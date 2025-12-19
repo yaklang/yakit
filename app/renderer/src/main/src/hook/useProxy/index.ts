@@ -4,19 +4,73 @@ import { randomString } from "@/utils/randomUtil"
 import { GlobalProxyRulesConfig, grpcGetGlobalProxyRulesConfig, grpcSetGlobalProxyRulesConfig } from "@/apiUtils/grpc"
 import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
+/** @name 代理下拉选项类型 */
+export interface ProxyOption {
+  /** 显示标签 */
+  label: string
+  /** 选项值（规则组ID或代理节点ID/URL） */
+  value: string
+  /** 是否禁用 */
+  disabled?: boolean
+}
+
+/** @name 解析URL返回结果类型 */
+interface ParsedUrlResult {
+  /** 解析后的URL */
+  Url: string
+  /** 用户名 */
+  UserName: string
+  /** 密码 */
+  Password: string
+}
+
+/** @name 代理配置值类型 */
+export interface ProxyValue {
+  /** 代理节点URL列表（逗号分隔） */
+  proxyEndpoints: string
+  /** 代理规则ID列表（逗号分隔） */
+  ProxyRuleIds: string
+}
+
+/** @name useProxy Hook 返回值类型 */
+export interface UseProxyReturn {
+  /** 代理路由下拉选项（包含规则组和代理节点） */
+  proxyRouteOptions: ProxyOption[]
+  /** 根据选择获取代理配置值 */
+  getProxyValue: (selection: string[]) => ProxyValue
+  /** 当前代理配置 */
+  proxyConfig: GlobalProxyRulesConfig
+  /** 比较并返回节点URL */
+  comparePointUrl: (findKey: string) => string
+  /** 保存代理配置 */
+  saveProxyConfig: (config: GlobalProxyRulesConfig, cb?: () => void) => Promise<void>
+  /** 检查并添加新的代理节点 */
+  checkProxyEndpoints: (proxy?: string[]) => void
+  /** 代理节点下拉选项（仅代理节点） */
+  proxyPointsOptions: ProxyOption[]
+}
+
 // 全局配置缓存
 let globalProxyConfig: GlobalProxyRulesConfig = { Endpoints: [], Routes: [] }
 // 订阅回调列表
 const subscribers: Set<() => void> = new Set()
 
-// 更新全局配置并通知所有订阅者
-const updateGlobalConfig = (config: GlobalProxyRulesConfig) => {
+/**
+ * @name 更新全局配置并通知所有订阅者
+ * @param config 新的代理配置
+ */
+const updateGlobalConfig = (config: GlobalProxyRulesConfig): void => {
   globalProxyConfig = config
   subscribers.forEach(cb => cb())
 }
 
-// 使用 URL 对象解析Url
-const parseUrl = (url: string) => {
+/**
+ * @name 使用 URL 对象解析URL
+ * @description 解析代理URL，提取协议、用户名、密码等信息
+ * @param url 待解析的URL字符串
+ * @returns 包含解析后的URL、用户名和密码的对象
+ */
+const parseUrl = (url: string): ParsedUrlResult => {
   try {
     const { username = '', password = '', protocol = '', host = '', pathname = '', search = '', hash = '' } = new URL(url)
     const path = pathname === '/' ? '' : pathname, 
@@ -30,10 +84,11 @@ const parseUrl = (url: string) => {
 }
 
 /**
- * 获取代理配置的hook
- * 返回 proxyRouteOptions proxyConfig saveProxyConfig checkProxyEndpoints使用
+ * @name 代理配置管理Hook
+ * @description 用于管理全局代理配置，包括代理节点和规则组的增删改查
+ * @returns {UseProxyReturn} 包含代理配置相关的状态和方法
  */
-export const useProxy = () => {
+export const useProxy = (): UseProxyReturn => {
   const [proxyConfig, setProxyConfig] = useState<GlobalProxyRulesConfig>(globalProxyConfig)
   const { t, i18n } = useI18nNamespaces(["mitm"])
 
@@ -49,11 +104,12 @@ export const useProxy = () => {
   }, [])
 
   /**
-   * 查找节点返回对应的Url 有些可能是新增Url就是他的Id
-   * @param findKey pointId
-   * @returns string 
+   * @name 查找节点返回对应的URL
+   * @description 根据节点ID查找对应的代理URL，如果包含认证信息则拼接用户名密码
+   * @param findKey 节点ID或URL
+   * @returns {string} 完整的代理URL（可能包含认证信息）
    */
-  const comparePointUrl = useMemoizedFn((findKey) => {
+  const comparePointUrl = useMemoizedFn((findKey: string): string => {
     const findPoint = proxyConfig.Endpoints.find(({ Id }) => Id === findKey)
     if (!!findPoint) {
       const { Url, UserName, Password } = findPoint
@@ -72,11 +128,12 @@ export const useProxy = () => {
   })
 
   /**
-   * 找出对应的节点（节点已经从id转成url）和规则
-   * @param selection  string[]
-   * @returns { proxyEndpoints:string  ProxyRuleIds: string }
+   * @name 获取代理配置值
+   * @description 根据选择的ID列表，找出对应的启用节点URL和规则组ID
+   * @param selection 选中的ID数组（可能包含节点ID/URL和规则组ID）
+   * @returns {ProxyValue} 包含代理节点URL列表和规则组ID列表
    */
-  const getProxyValue = useMemoizedFn((selection) => {
+  const getProxyValue = useMemoizedFn((selection: string[]): ProxyValue => {
     const normalizedSelection = selection.map((item) => `${item}`.trim()).filter((item) => item.length > 0)
     const proxyEndpoints = normalizedSelection.filter((item) => !item.startsWith('route') && !proxyConfig.Endpoints.find(({ Id }) => Id === item)?.Disabled)
       .map((id) => comparePointUrl(id)).join(',')
@@ -91,10 +148,11 @@ export const useProxy = () => {
   })
 
   /**
-   * 代理下拉框 区分规则组和代理节点
-   * @returns Array<{ label, value, disabled }>: 
+   * @name 代理路由和节点下拉选项
+   * @description 生成包含规则组和代理节点的下拉选项，区分显示并标注禁用状态
+   * @returns {ProxyOption[]} 代理下拉选项数组
    */
-  const proxyRouteOptions = useMemo(() => {
+  const proxyRouteOptions = useMemo((): ProxyOption[] => {
     const { Routes = [], Endpoints = [] } = proxyConfig
     return [
       ...Routes.map(({ Name, Id, Disabled }) => ({
@@ -111,10 +169,11 @@ export const useProxy = () => {
   }, [proxyConfig, t])
 
   /**
-   * 代理节点下拉框
-   * @returns Array<{ label, value, disabled }>: 
+   * @name 代理节点下拉选项
+   * @description 生成仅包含代理节点的下拉选项（不包含规则组）
+   * @returns {ProxyOption[]} 代理节点下拉选项数组
    */
-  const proxyPointsOptions = useMemo(() => {
+  const proxyPointsOptions = useMemo((): ProxyOption[] => {
     const { Endpoints = [] } = proxyConfig
     return Endpoints.map(({ Url, Disabled }) => ({
       label: Disabled ? `${Url} (${t("ProxyConfig.disabled")})` : Url,
@@ -126,9 +185,11 @@ export const useProxy = () => {
 
 
   /**
-   * 获取代理配置
+   * @name 获取代理配置
+   * @description 从后端获取全局代理配置并更新本地状态
+   * @returns {Promise<void>}
    */
-  const fetchProxyConfig = useMemoizedFn(async () => {
+  const fetchProxyConfig = useMemoizedFn(async (): Promise<void> => {
     const config = await grpcGetGlobalProxyRulesConfig()
     if (config) {
       updateGlobalConfig(config)
@@ -136,21 +197,25 @@ export const useProxy = () => {
   })
 
   /**
-   * 修改代理配置
-   * @param config 代理配置
-   * @param cb 完成回调(可选)
+   * @name 保存代理配置
+   * @description 保存代理配置到后端，保存成功后重新获取配置并执行回调
+   * @param config 新的代理配置对象
+   * @param cb 保存成功后的回调函数（可选）
+   * @returns {Promise<void>}
    */
-  const saveProxyConfig = useMemoizedFn(async (config: GlobalProxyRulesConfig, cb?: () => void) => {
+  const saveProxyConfig = useMemoizedFn(async (config: GlobalProxyRulesConfig, cb?: () => void): Promise<void> => {
     await grpcSetGlobalProxyRulesConfig(config)
     fetchProxyConfig()
     cb?.()
   })
 
   /**
-   * 检查是否有新增代理节点 如果有新增的代理配置 则存配置项
-   * @param proxy 代理配置数组
+   * @name 检查并添加新代理节点
+   * @description 检查传入的代理URL是否为新节点，如果是则自动添加到配置中
+   * @param proxy 代理URL数组（可选）
+   * @returns {void}
    */
-  const checkProxyEndpoints = useMemoizedFn((proxy?: string[]) => {
+  const checkProxyEndpoints = useMemoizedFn((proxy?: string[]): void => {
     if (!proxy?.length) return
     const newEndpoints = proxy.filter((item) => !item.startsWith('route') && proxyConfig.Endpoints.every(({ Id, Url }) => ![Id, Url].includes(item)))
     if (newEndpoints.length) {
