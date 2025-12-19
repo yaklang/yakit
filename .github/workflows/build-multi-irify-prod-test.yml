@@ -8,7 +8,12 @@ on:
 jobs:
     prepare_engine:
         runs-on: macos-15
-
+        env:
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD
         outputs:
             engine_version: ${{ steps.engine_ver.outputs.version }}
         steps:
@@ -90,13 +95,6 @@ jobs:
                   fi
 
             - name: Signature Mac Engine
-              env: 
-                  CI: ""
-                  APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-                  TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-                  APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-                  CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-                  CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
               run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
 
             - name: Fetch macOS sha256
@@ -126,6 +124,13 @@ jobs:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
             ENGINE_VERSION: ${{ needs.prepare_engine.outputs.engine_version }}
+            # 下面的环境变量丢到这
+            GH_TOKEN: ${{ secrets.GH_TOKEN }}
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
         steps:
             - uses: actions/checkout@v4
@@ -154,13 +159,6 @@ jobs:
               shell: bash
 
             - name: Signature Mac Engine
-              env: 
-                  CI: ""
-                  APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-                  TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-                  APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-                  CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-                  CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
               run: chmod +x ./packageScript/script/signature-test.sh && ./packageScript/script/signature-test.sh
 
             - name: Echo IRify Package Version To Env
@@ -180,14 +178,6 @@ jobs:
               shell: bash
 
             - name: Build ${{ matrix.artifact_name }} Normal And Legacy (MultiPlatform)
-              env:
-                  CI: ""
-                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
-                  APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-                  TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-                  APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-                  CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-                  CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
               working-directory: ./
               run: ./packageScript/script/electron-irify-builder.sh ${{ matrix.version }} || { exit 1; }
               shell: bash
