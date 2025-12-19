@@ -308,7 +308,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
             runAsync: existsKnowledgeBaseAsync
         } = useRequest(
             async (Keyword?: string) => {
-                const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
+                const result: KnowledgeBaseContentProps<number> = await ipcRenderer.invoke("GetKnowledgeBase", {
                     Keyword,
                     Pagination: {Limit: 9999, Page: 1}
                 })
@@ -325,7 +325,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
                 onSuccess: (value) => {
                     const FirstknowledgeBaseID = value?.find((item) => item.IsImported === false)?.ID
                     if (FirstknowledgeBaseID) {
-                        !knowledgeBaseID && setKnowledgeBaseID(FirstknowledgeBaseID)
+                        !knowledgeBaseID && setKnowledgeBaseID(`${FirstknowledgeBaseID}`)
                     }
                 }
             }

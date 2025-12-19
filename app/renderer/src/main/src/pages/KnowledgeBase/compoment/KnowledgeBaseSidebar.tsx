@@ -1,18 +1,19 @@
-import React, {Dispatch, ReactNode, SetStateAction, useEffect, type FC} from "react"
+import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, type FC} from "react"
 import {useMemoizedFn, useSafeState} from "ahooks"
 
-import {
-    OutlineAiChatIcon,
-    OutlineExclamationcircleIcon,
-    OutlineFolderopenIcon,
-    OutlineLoadingIcon,
-    OutlineRefreshIcon
-} from "@/assets/icon/outline"
+import {OutlineAiChatIcon, OutlineFolderopenIcon, OutlineLoadingIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
-import {KnowledgeTabList, KnowledgeTabListEnum, prioritizeProcessingItems, targetIcon} from "../utils"
+import {
+    ClearAllKnowledgeBase,
+    insertModaOptions,
+    KnowledgeTabList,
+    KnowledgeTabListEnum,
+    prioritizeProcessingItems,
+    targetIcon
+} from "../utils"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
 import {SolidLightningBoltIcon, SolidOutlineSearchIcon} from "@/assets/icon/solid"
@@ -27,14 +28,18 @@ import {Tooltip} from "antd"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
-import {CreateKnowledgeBaseData} from "../TKnowledgeBase"
+import {CreateKnowledgeBaseData, TClearKnowledgeResponse} from "../TKnowledgeBase"
 
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {installWithEvents} from "./AllInstallPlugins"
 import {failed, success} from "@/utils/notification"
 import AIModelList from "@/pages/ai-agent/aiModelList/AIModelList"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import {randomString} from "@/utils/randomUtil"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,10 +48,18 @@ export interface TKnowledgeBaseSidebarProps {
     knowledgeBaseID: string
     setKnowledgeBaseID: (id: string) => void
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
+    streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
     setOpenQA: Dispatch<SetStateAction<boolean>>
     binariesToInstall?: BinaryInfo[]
     refreshAsync?: () => Promise<CreateKnowledgeBaseData[] | undefined>
     binariesToInstallRefreshAsync?: () => Promise<any[]>
+    addMode: string[]
+    setAddMode: Dispatch<SetStateAction<string[]>>
+    handleValidateAIModelUsable: () => Promise<void>
+    isAIModelAvailable: boolean
+    setIsAIModelAvailable: Dispatch<SetStateAction<boolean>>
+    aIModelAvailableTokens: string
+    progress: number
 }
 
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
@@ -54,19 +67,34 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     knowledgeBaseID,
     setKnowledgeBaseID,
     api,
+    streams,
     setOpenQA,
     binariesToInstall,
     refreshAsync,
-    binariesToInstallRefreshAsync
+    binariesToInstallRefreshAsync,
+    addMode,
+    setAddMode,
+    handleValidateAIModelUsable,
+    isAIModelAvailable,
+    setIsAIModelAvailable,
+    aIModelAvailableTokens,
+    progress
 }) => {
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
     const [expand, setExpand] = useSafeState<boolean>(true)
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
-    const [checked, setChecked] = useSafeState(false)
     const [eachProgress, setEachProgress] = useSafeState<Record<string, number>>({})
     const [installTokens, setInstallTokens] = useSafeState<string[]>([])
+
+    const [clearAllVisible, setClearAllVisible] = useSafeState(false)
+    const [clearAllContent, setClearAllContent] = useSafeState({
+        loading: false,
+        help: "",
+        scriptName: "",
+        clearAllStreamToken: ""
+    })
 
     const downloadSingle = async (binary: {Name: string; installToken: string}) => {
         try {
@@ -127,12 +155,77 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     useEffect(() => {
-        setKnowledgeBase(() => {
-            const externalImportKnowledgeBase = checked ? knowledgeBases : knowledgeBases.filter((it) => !it.IsImported)
-            return prioritizeProcessingItems(externalImportKnowledgeBase)
-        })
+        const allowImported = addMode.includes("external") ? [true] : []
+        const allowManual = addMode.includes("manual") ? [false] : []
+        const allowIsImported = [...allowImported, ...allowManual]
+
+        const result = knowledgeBases.filter((it) => allowIsImported.includes(it.IsImported))
+
+        const processed = prioritizeProcessingItems(result)
+        setKnowledgeBase(processed)
+        setKnowledgeBaseID(processed?.[0]?.ID ?? "")
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [knowledgeBases, checked])
+    }, [knowledgeBases, addMode])
+
+    const clearAllExecutorRef = useRef<((token: string) => Promise<void>) | null>(null)
+    const handleCancelAll = useMemoizedFn(async () => {
+        setClearAllContent((pre) => ({
+            ...pre,
+            loading: true
+        }))
+
+        try {
+            const plugin: TClearKnowledgeResponse = await grpcFetchLocalPluginDetail({Name: "重置知识库"}, true)
+
+            clearAllExecutorRef.current = ClearAllKnowledgeBase(plugin)
+
+            setClearAllContent({
+                loading: false,
+                help: plugin.Help,
+                scriptName: plugin.ScriptName,
+                clearAllStreamToken: randomString(50)
+            })
+
+            setClearAllVisible(true)
+        } catch (error) {
+            failed(error + "")
+        } finally {
+            setClearAllContent((pre) => ({
+                ...pre,
+                loading: false
+            }))
+        }
+    })
+
+    const handleCancelAllClose = useMemoizedFn(() => {
+        clearAllExecutorRef.current = null
+        setClearAllVisible(false)
+    })
+
+    const handleCancelAllOk = useMemoizedFn(async () => {
+        try {
+            if (!clearAllExecutorRef.current) {
+                return
+            }
+            await clearAllExecutorRef.current(clearAllContent.clearAllStreamToken)
+            api?.createStream(clearAllContent.clearAllStreamToken, {
+                taskName: "debug-plugin",
+                apiKey: "DebugPlugin",
+                token: clearAllContent.clearAllStreamToken,
+                onEnd: async () => {
+                    await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
+                    api.clearAllStreams()
+                    await refreshAsync?.()
+                    setClearAllVisible(false)
+                },
+                onError: (e) => {
+                    api.removeStream && api.removeStream(clearAllContent.clearAllStreamToken)
+                }
+            })
+        } catch (error) {
+            failed(error + "")
+        }
+    })
 
     const renderTabContent = useMemoizedFn((key: KnowledgeTabListEnum) => {
         let content: ReactNode = <></>
@@ -144,7 +237,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                             <div className={styles["knowledge-base-info-header"]}>
                                 <div className={styles["knowledge-base-info-header-button"]}>
                                     <div className={styles["header-title"]}>知识库管理</div>
-                                    <div className={styles["knowledge-size"]}>{knowledgeBase.length ?? 0}</div>
+                                    <div className={styles["knowledge-size"]}>{knowledgeBases.length ?? 0}</div>
                                     <Tooltip title='刷新知识库列表'>
                                         <YakitButton
                                             type='text'
@@ -174,10 +267,20 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                         <OutlineAiChatIcon />
                                         AI 问答
                                     </div>
+
                                     <AddKnowledgenBaseDropdownMenu
                                         setKnowledgeBaseID={setKnowledgeBaseID}
-                                        setChecked={setChecked}
+                                        setAddMode={setAddMode}
                                     />
+                                    <YakitButton
+                                        loading={clearAllContent.loading}
+                                        type='text'
+                                        colors='danger'
+                                        style={{height: 27}}
+                                        onClick={handleCancelAll}
+                                    >
+                                        清空
+                                    </YakitButton>
                                 </div>
                             </div>
                             <div className={styles["repository-manage-search"]}>
@@ -201,13 +304,39 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 />
                             </div>
 
-                            <div className={styles["repository-manage-checked"]}>
-                                <YakitCheckbox checked={checked} onChange={(e) => setChecked(e.target.checked)}>
-                                    外部导入{" "}
-                                    <Tooltip title='勾选以后可以查看外部导入的知识库'>
-                                        <OutlineExclamationcircleIcon />
-                                    </Tooltip>
-                                </YakitCheckbox>
+                            <div className={styles["repository-manage-options"]}>
+                                <div>
+                                    {insertModaOptions.map((tag) => (
+                                        <YakitCheckableTag
+                                            key={tag.value}
+                                            checked={addMode.includes(tag.value)}
+                                            onChange={(checked) => {
+                                                checked
+                                                    ? setAddMode((it) => it.concat(tag.value))
+                                                    : setAddMode((it) => it.filter((tar) => tar !== tag.value))
+                                            }}
+                                        >
+                                            {tag.label}
+                                        </YakitCheckableTag>
+                                    ))}
+                                </div>
+
+                                {progress !== 100 ? (
+                                    <div className={styles["tag"]} onClick={() => setIsAIModelAvailable(true)}>
+                                        <OutlineLoadingIcon className={styles["loading-icon"]} />
+                                        知识库可用诊断中
+                                    </div>
+                                ) : (
+                                    <YakitButton
+                                        type='outline2'
+                                        onClick={() => {
+                                            setIsAIModelAvailable(true)
+                                            handleValidateAIModelUsable()
+                                        }}
+                                    >
+                                        知识库可用诊断
+                                    </YakitButton>
+                                )}
                             </div>
 
                             <div className={styles["knowledge-base-info-body"]}>
@@ -283,7 +412,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                     <div className={styles["description"]}>
                                                         {api?.tokens?.includes(items.streamToken) &&
                                                         items.streamstep === 1
-                                                            ? "知识库生成中，大概需要 3～5 秒，请耐心等待..."
+                                                            ? "知识库生成中，可以随时回来点击查看进度"
                                                             : items.KnowledgeBaseDescription?.trim() || "-"}
                                                     </div>
                                                 </div>
@@ -394,6 +523,13 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             >
                 {renderTabContent(active)}
             </div>
+            <YakitHint
+                visible={clearAllVisible}
+                title={clearAllContent.scriptName}
+                content={clearAllContent.help}
+                onOk={handleCancelAllOk}
+                onCancel={handleCancelAllClose}
+            />
         </YakitSideTab>
     )
 }

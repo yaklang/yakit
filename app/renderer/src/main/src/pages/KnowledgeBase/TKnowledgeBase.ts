@@ -27,7 +27,7 @@ interface TDeleteConfirmProps extends Required<Pick<TKnowledgeBaseProps, "refres
     onVisible: (v: boolean) => void
 }
 
-interface CreateKnowledgeBaseData extends Entity, KnowledgeBaseEntry {
+interface CreateKnowledgeBaseData extends Omit<Entity, "ID">, Omit<KnowledgeBaseEntry, "ID"> {
     KnowledgeBaseFile: KnowledgeBaseFile[]
     KnowledgeBaseName: string
     KnowledgeBaseType: string
@@ -62,8 +62,8 @@ interface TListThirdPartyBinaryResponse {
     }[]
 }
 
-interface KnowledgeBaseContentProps {
-    KnowledgeBases?: (CreateKnowledgeBaseData & {ID: string})[]
+interface KnowledgeBaseContentProps<T = string> {
+    KnowledgeBases?: (CreateKnowledgeBaseData & {ID: T})[]
 }
 
 type TExistsKnowledgeBaseAsync = {
@@ -71,7 +71,7 @@ type TExistsKnowledgeBaseAsync = {
 }
 
 interface SearchKnowledgeBaseEntryFilter {
-    KnowledgeBaseId: number
+    KnowledgeBaseId: string
     Keyword: string
     RelatedEntityUUIDS?: string[]
     HiddenIndex: string[]
@@ -161,6 +161,58 @@ interface Entity {
 }
 type QueryEntityResponse = QueryGeneralResponseProps<Entity, "Entities">
 
+interface TClearKnowledgeResponse {
+    Params: TClearKnowledgeResponseParam[]
+    CollaboratorInfo?: any[]
+    RiskInfo?: any[]
+    PluginEnvKey?: any[]
+    Id: number
+    Content: string
+    Type: string
+    CreatedAt: number
+    ScriptName: string
+    Help: string
+    Level: string
+    Author: string
+    Tags: string
+    IsHistory: boolean
+    IsIgnore?: boolean
+    IsGeneralModule?: boolean
+    GeneralModuleVerbose?: string
+    GeneralModuleKey?: string
+    FromGit?: string
+    EnablePluginSelector?: boolean
+    PluginSelectorTypes?: string
+    OnlineId?: number
+    UserId: number
+    OnlineScriptName: string
+    OnlineContributors: string
+    UUID: string
+    OnlineIsPrivate?: boolean
+    HeadImg?: string
+    OnlineBaseUrl?: string
+    BaseOnlineId?: number
+    OnlineOfficial?: boolean
+    OnlineGroup?: string
+    IsCorePlugin?: boolean
+    UpdatedAt?: number
+}
+
+interface TClearKnowledgeResponseParam {
+    Field: string
+    DefaultValue: string
+    TypeVerbose: string
+    FieldVerbose: string
+    Help: string
+    Required?: boolean
+    Group?: string
+    ExtraSetting?: string
+    MethodType?: string
+    JsonSchema?: string
+    SuggestionDataExpression?: string
+    UISchema?: string
+}
+
 export type {
     TKnowledgeBaseProps,
     TDeleteConfirmProps,
@@ -177,5 +229,6 @@ export type {
     VectorStoreEntry,
     QueryEntityRequest,
     QueryEntityResponse,
-    EntityFilter
+    EntityFilter,
+    TClearKnowledgeResponse
 }

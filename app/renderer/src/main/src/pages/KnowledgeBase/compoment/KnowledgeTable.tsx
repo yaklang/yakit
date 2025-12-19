@@ -111,7 +111,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
         // initResDataFun,
         defaultParams: {
             Filter: {
-                KnowledgeBaseId: Number(knowledgeBaseItems?.ID)
+                KnowledgeBaseId: knowledgeBaseItems?.ID
             },
             Pagination: {
                 ...genDefaultPagination(20)

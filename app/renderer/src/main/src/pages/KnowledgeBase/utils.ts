@@ -7,11 +7,12 @@ import {
     QueryEntityResponse,
     SearchKnowledgeBaseEntryRequest,
     SearchKnowledgeBaseEntryResponse,
+    TClearKnowledgeResponse,
     VectorStoreEntryResponse,
     type KnowledgeBaseFile
 } from "./TKnowledgeBase"
 import {KnowledgeBaseItem} from "./hooks/useKnowledgeBase"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 
 import {
     CrabIcon,
@@ -59,6 +60,17 @@ export const KnowledgeTabList: YakitSideTabProps["yakitTabs"] = [
     {value: KnowledgeTabListEnum.Knowledge, label: "知识库"},
     {value: KnowledgeTabListEnum.Plugin, label: "插件"},
     {value: KnowledgeTabListEnum.AI_Model, label: "AI模型"}
+]
+
+const insertModaOptions = [
+    {
+        value: "manual",
+        label: "手动添加"
+    },
+    {
+        value: "external",
+        label: "外部导入"
+    }
 ]
 
 const knowledgeTypeOptions = [
@@ -490,12 +502,45 @@ const BuildingKnowledgeBaseEntry = async (targetKnowledgeBase: any, depth?: numb
     })
 }
 
-const getNextSelectedID = (list: KnowledgeBaseItem[], deleteID: string): string | null => {
-    const len = list.length
-    const index = list.findIndex((i) => i.ID === deleteID)
+// 清空知识库插件调用所需参数
+const ClearAllKnowledgeBase = (params: TClearKnowledgeResponse) => async (streamToken: string) => {
+    const executeParams: DebugPluginRequest = {
+        Code: "",
+        PluginType: params.Type,
+        Input: "",
+        HTTPRequestTemplate: {...defPluginExecuteFormValue, IsHttpFlowId: false, HTTPFlowId: []},
+        PluginName: params.ScriptName,
+        ExecParams: [
+            {
+                Key: "confirm",
+                Value: "true"
+            }
+        ]
+    }
+    await apiDebugPlugin({
+        params: executeParams,
+        token: streamToken,
+        pluginCustomParams: params.Params,
+        isShowStartInfo: false
+    })
+}
 
-    // 逻辑合并为一行表达式，无 if
-    return (len <= 1 && null) || (index === 0 && list?.[1]?.ID) || list[0]?.ID || null
+// 知识库可用性诊断
+const checkAIModelAvailability = async (params, streamToken) => {
+    const executeParams: DebugPluginRequest = {
+        Code: "",
+        PluginType: params.Type,
+        Input: "",
+        HTTPRequestTemplate: {...defPluginExecuteFormValue, IsHttpFlowId: false, HTTPFlowId: []},
+        PluginName: params.ScriptName,
+        ExecParams: []
+    }
+    await apiDebugPlugin({
+        params: executeParams,
+        token: streamToken,
+        pluginCustomParams: params.Params,
+        isShowStartInfo: false
+    })
 }
 
 const documentType = [
@@ -736,7 +781,6 @@ export {
     compareKnowledgeBaseChange,
     BuildingKnowledgeBase,
     BuildingKnowledgeBaseEntry,
-    getNextSelectedID,
     tableHeaderGroupOptions,
     apiSearchKnowledgeBaseEntry,
     apiListVectorStoreEntries,
@@ -749,5 +793,8 @@ export {
     prioritizeProcessingItems,
     knowledgeTypeOptions,
     compareKnowledgeBaseChangeList,
-    extractFileName
+    extractFileName,
+    ClearAllKnowledgeBase,
+    insertModaOptions,
+    checkAIModelAvailability
 }

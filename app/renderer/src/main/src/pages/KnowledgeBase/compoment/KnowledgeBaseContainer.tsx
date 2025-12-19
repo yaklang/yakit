@@ -40,13 +40,18 @@ const reducer = (state: typeof initialValue, payload: typeof initialValue) => ({
     ...payload
 })
 
-const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
-    knowledgeBaseID,
-    streams,
-    api,
-    setKnowledgeBaseID,
-    setOpenQA
-}) => {
+const KnowledgeBaseContainer: FC<
+    Omit<
+        TKnowledgeBaseContainerProps,
+        | "setAddMode"
+        | "addMode"
+        | "handleValidateAIModelUsable"
+        | "isAIModelAvailable"
+        | "setIsAIModelAvailable"
+        | "aIModelAvailableTokens"
+        | "progress"
+    >
+> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [state, dispatch] = useReducer(reducer, initialValue)
 
@@ -87,7 +92,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({
     }
 
     const [exportToken, setExportToken] = useSafeState("")
-    const onExportKnowledgeBase = async (KnowledgeBaseId: number) => {
+    const onExportKnowledgeBase = async (KnowledgeBaseId: string) => {
         const defaultName = findKnowledgeBaseItems.KnowledgeBaseName
             ? `export-${findKnowledgeBaseItems.KnowledgeBaseName}`
             : "default-knowledge"

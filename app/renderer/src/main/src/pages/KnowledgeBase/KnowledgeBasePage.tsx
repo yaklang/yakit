@@ -1,16 +1,7 @@
 import {useEffect, useMemo, useRef, type FC} from "react"
 
 import {Form} from "antd"
-import {
-    useAsyncEffect,
-    useCreation,
-    useDebounceFn,
-    useInViewport,
-    useMemoizedFn,
-    useRequest,
-    useSafeState,
-    useUpdateEffect
-} from "ahooks"
+import {useAsyncEffect, useDebounceFn, useInViewport, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import AllInstallPlugins from "./compoment/AllInstallPlugins"
@@ -33,13 +24,14 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {getAIModelList, isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
+import {isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
 
 const {ipcRenderer} = window.require("electron")
 
 const KnowledgeBase: FC = () => {
     const [form] = Form.useForm()
     const apiRef = useRef<KnowledgeBaseTableHeaderProps["api"]>()
+    const streamsRef = useRef<KnowledgeBaseTableHeaderProps["streams"]>()
     const contentRef = useRef<any>(null)
     const [visible, setVisible] = useSafeState(false)
 
@@ -163,8 +155,11 @@ const KnowledgeBase: FC = () => {
             manual: true,
             onSuccess: (value) => {
                 const FirstknowledgeBaseID = value?.findLast((item) => item.IsImported === false)?.ID
-                if (FirstknowledgeBaseID) {
-                    !knowledgeBaseID && setKnowledgeBaseID(FirstknowledgeBaseID)
+                const selectedKnowledgeBaseId = FirstknowledgeBaseID ? FirstknowledgeBaseID : value?.[0]?.ID ?? ""
+                if (value?.length && value.length > 0) {
+                    !knowledgeBaseID && setKnowledgeBaseID(selectedKnowledgeBaseId ?? "")
+                } else {
+                    setKnowledgeBaseID("")
                 }
             }
         }
@@ -300,22 +295,26 @@ const KnowledgeBase: FC = () => {
                     </YakitSpin>
                 )
             // 无知识库时展示添加知识库页面
-            case !existsKnowledgeBase?.length:
-                return (
-                    <YakitSpin spinning={loading || existsKnowledgeLoading}>
-                        <div className={styles["create-knowledgBase"]}>
-                            <div className={styles["create-content"]}>
-                                <div className={styles["create-title"]}>创建知识库</div>
-                                <CreateKnowledgeBase form={form} type={"new"} />
-                                <div className={styles["create-button"]} onClick={handCreateKnowledgBase}>
-                                    <YakitButton icon={<SolidPlayIcon />} loading={createKnowledgLoading}>
-                                        开始创建
-                                    </YakitButton>
-                                </div>
-                            </div>
-                        </div>
-                    </YakitSpin>
-                )
+            // case !existsKnowledgeBase?.length:
+            //     return (
+            //         <YakitSpin spinning={loading || existsKnowledgeLoading}>
+            //             <div className={styles["create-knowledgBase"]}>
+            //                 <div className={styles["create-content"]}>
+            //                     <div className={styles["create-title"]}>创建知识库</div>
+            //                     <CreateKnowledgeBase form={form} type={"new"} />
+            //                     <div className={styles["create-button"]}>
+            //                         <YakitButton
+            //                             icon={<SolidPlayIcon />}
+            //                             loading={createKnowledgLoading}
+            //                             onClick={handCreateKnowledgBase}
+            //                         >
+            //                             开始创建
+            //                         </YakitButton>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </YakitSpin>
+            //     )
 
             // 正常进入知识库页面
             default:
@@ -333,6 +332,7 @@ const KnowledgeBase: FC = () => {
                         refreshAsync={refreshAsync}
                         binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
                         inViewport={inViewport}
+                        streamsRef={streamsRef}
                     />
                 )
         }

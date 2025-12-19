@@ -106,7 +106,7 @@ const KnowledgeBaseTableHeader: FC<
                 onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, "routine")}
             >
                 <OutlineLoadingIcon className={styles["loading-icon"]} />
-                构建知识条目中...
+                构建知识条目中，可点此查看进度
             </div>
         ) : null
     }, [knowledgeBaseItems?.streamToken, knowledgeBaseItems?.streamstep, streams])
@@ -149,7 +149,7 @@ const KnowledgeBaseTableHeader: FC<
                             onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, "routine")}
                         >
                             <OutlineLoadingIcon className={styles["loading-icon"]} />
-                            知识库生成中
+                            知识库生成中，可点此查看进度
                         </div>
                     ) : null}
                 </div>
