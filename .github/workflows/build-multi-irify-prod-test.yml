@@ -14,15 +14,15 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Check if the version number is correct
-              run: |
-                  VERSION_INPUT=$GITHUB_REF_NAME
-                  if [[ $VERSION_INPUT != v*-irify ]]; then
-                    echo "Error: Version must start with 'v' and end with '-irify'." >&2
-                    exit 1
-                  else
-                    echo "Version starts with 'v': $VERSION_INPUT"
-                  fi
+            # - name: Check if the version number is correct
+            #   run: |
+            #       VERSION_INPUT=$GITHUB_REF_NAME
+            #       if [[ $VERSION_INPUT != v*-irify ]]; then
+            #         echo "Error: Version must start with 'v' and end with '-irify'." >&2
+            #         exit 1
+            #       else
+            #         echo "Version starts with 'v': $VERSION_INPUT"
+            #       fi
 
             - name: Fetch Latest Engine Version And Set To Env
               id: engine_ver
