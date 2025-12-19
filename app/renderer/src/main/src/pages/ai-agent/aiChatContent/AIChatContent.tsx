@@ -278,12 +278,16 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         let firstRatio
 
         const isFileSystemKey = activeKey === AITabsEnum.File_System
+        // 选中任务内容
         const isTaskContentKey = activeKey === AITabsEnum.Task_Content
+        // 获取任务内容是否为空
         const isTaskStreamsEmpty = (taskChat.streams.length ?? 0) <= 0
         if (showFreeChat) {
             if (isFileSystemKey) {
+                // 文件系统，自由对话默认显示60%
                 secondRatio = "60%"
             } else if (isTaskContentKey && isTaskStreamsEmpty && !timeLine) {
+                // 任务内容，自由对话默认显示80%
                 secondRatio = "80%"
             } else {
                 secondRatio = "432px"
@@ -293,12 +297,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         // firstRatio 逻辑
         if (isTaskContentKey && isTaskStreamsEmpty) {
             if (timeLine) {
+                // 时间线展开
                 firstRatio = "30%"
             } else {
                 firstRatio = 30
-                // secondRatio ='calc(100% - 30px)'
             }
-        } else {
             firstRatio = undefined
         }
         return {
