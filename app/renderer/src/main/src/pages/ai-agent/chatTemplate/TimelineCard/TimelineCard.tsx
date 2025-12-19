@@ -17,6 +17,8 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {useSize} from "ahooks"
 
+const MAX_TIMELINE_COUNT = 70
+
 const TYPE_COLOR_MAP: Record<string, "info" | "white" | "danger"> = {
     user_input: "info",
     user_interaction: "info",
@@ -122,18 +124,22 @@ const TimelineCard: FC = () => {
     const containerRef = useRef<HTMLDivElement>(null)
     const size = useSize(containerRef)
 
-    const components = useMemo<
-        Components<AIAgentGrpcApi.TimelineItem>
-    >(
+    const displayTimelines = useMemo<AIAgentGrpcApi.TimelineItem[]>(() => {
+        if (!Array.isArray(reActTimelines)) return []
+        if (reActTimelines.length <= MAX_TIMELINE_COUNT) return reActTimelines
+        return reActTimelines.slice(-MAX_TIMELINE_COUNT)
+    }, [reActTimelines])
+
+    const components = useMemo<Components<AIAgentGrpcApi.TimelineItem>>(
         () => ({
             Item: VirtuosoItemContainer,
             List: VirtuosoListContainer,
             Footer: () =>
-                reActTimelines.length > 0 ? (
+                displayTimelines.length > 0 ? (
                     <div className={styles["arrow"]} />
                 ) : null
         }),
-        [reActTimelines.length]
+        [displayTimelines.length]
     )
 
     return (
@@ -143,7 +149,7 @@ const TimelineCard: FC = () => {
         >
             <Virtuoso
                 ref={virtuosoRef}
-                data={reActTimelines}
+                data={displayTimelines} 
                 components={components}
                 followOutput={followOutput}
                 atBottomStateChange={setIsAtBottomRef}
@@ -162,5 +168,4 @@ const TimelineCard: FC = () => {
         </div>
     )
 }
-
 export default TimelineCard
