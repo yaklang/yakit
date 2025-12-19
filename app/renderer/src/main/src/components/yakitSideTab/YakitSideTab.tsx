@@ -12,6 +12,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
         activeKey,
         onActiveKey,
         setYakitTabs,
+        activeShow = false,
         barHint,
         type = "vertical",
         children,
@@ -26,10 +27,12 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
         trigger: "setShow"
     })
     const onChange = useMemoizedFn((item) => {
-        if (item.value === activeKey) {
-            setShow((v) => !v)
-        } else {
-            setShow(true)
+        if (!activeShow) {
+            if (item.value === activeKey) {
+                setShow((v) => !v)
+            } else {
+                setShow(true)
+            }
         }
         onActiveKey(item.value)
     })
@@ -47,9 +50,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
                                     className={classNames(styles["yakit-side-tab-item"], btnItemClassName, {
                                         [styles["yakit-side-tab-item-active"]]: item.value === activeKey,
                                         [styles["yakit-side-tab-item-active-noHover"]]:
-                                            item.value === activeKey &&
-                                            props.show === true &&
-                                            props.setShow === undefined,
+                                            item.value === activeKey && activeShow,
                                         [styles["yakit-side-tab-item-show"]]: item.value === activeKey && !show
                                     })}
                                     onTabPaneRender={onTabPaneRender}

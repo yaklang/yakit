@@ -261,7 +261,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     treeExtraQueryparams={treeQueryparams}
                                     refreshTreeFlag={refreshFlag}
                                     onGetUrl={(searchURL, includeInUrl) => {
-                                        // setSearchURL(searchURL)
+                                        setSearchURL(searchURL)
                                         setIncludeInUrl(includeInUrl)
                                     }}
                                     resetTableAndEditorShow={(table, editor) => {
@@ -269,7 +269,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         setSecondNodeVisible(editor)
                                     }}
                                     multiple
-                                    onSelectKeys={(selectKeys) => setSelectedKeys(selectKeys.map((i) => i + ""))}
+                                    onSelectKeys={(selectKeys)=> setSelectedKeys(selectKeys.map(i => i +''))}
                                 ></WebTree>
                             </div>
                             <div
@@ -286,43 +286,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         setSecondNodeVisible(editor)
                                     }}
                                 ></HistoryProcess>
-                                <div
-                                    className={styles["webTree-wrapper"]}
-                                    style={{display: activeKey === "web-tree" ? "block" : "none"}}
-                                >
-                                    <WebTree
-                                        ref={webTreeRef}
-                                        height={treeWrapHeight - 30}
-                                        searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
-                                        treeExtraQueryparams={treeQueryparams}
-                                        refreshTreeFlag={refreshFlag}
-                                        onGetUrl={(searchURL, includeInUrl) => {
-                                            setSearchURL(searchURL)
-                                            setIncludeInUrl(includeInUrl)
-                                        }}
-                                        resetTableAndEditorShow={(table, editor) => {
-                                            setOnlyShowFirstNode(table)
-                                            setSecondNodeVisible(editor)
-                                        }}
-                                        multiple
-                                        onSelectKeys={(selectKeys)=> setSelectedKeys(selectKeys.map(i => i +''))}
-                                    ></WebTree>
-                                </div>
-                                <div
-                                    className={styles["process-wrapper"]}
-                                    style={{display: activeKey === "process" ? "block" : "none"}}
-                                >
-                                    <HistoryProcess
-                                        queryparamsStr={processQueryparams}
-                                        refreshProcessFlag={refreshFlag}
-                                        curProcess={curProcess}
-                                        onSetCurProcess={setCurProcess}
-                                        resetTableAndEditorShow={(table, editor) => {
-                                            setOnlyShowFirstNode(table)
-                                            setSecondNodeVisible(editor)
-                                        }}
-                                    ></HistoryProcess>
-                                </div>
                             </div>
                         </div>
                     </div>

@@ -7,15 +7,6 @@ import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgentSideList.module.scss"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {
-    OutlineChipIcon,
-    OutlineCogIcon,
-    OutlineMCPIcon,
-    OutlineSparklesIcon,
-    OutlineTemplateIcon,
-    OutlineWrenchIcon
-} from "@/assets/icon/outline"
-import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))

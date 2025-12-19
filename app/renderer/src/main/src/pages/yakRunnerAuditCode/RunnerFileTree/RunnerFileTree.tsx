@@ -462,7 +462,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 yakitTabs={RunnerFileTreeTab}
                 activeKey={active}
                 onActiveKey={onSetActive}
-                show={true}
+                activeShow={true}
             />
             <div className={styles["container"]}>
                 <div className={styles["file-tree"]}>
