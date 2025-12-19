@@ -210,7 +210,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             <div className={styles["option-text"]}>{value}</div>
             {model && (
                 <Tooltip title={model}>
-                    <OutlineInformationcircleIcon />
+                    <OutlineInformationcircleIcon className={styles["icon-info"]} />
                 </Tooltip>
             )}
             <OutlinePencilaltIcon className={styles["icon-pencilalt"]} onClick={onEdit} />
