@@ -599,6 +599,10 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 {
                     key: "html",
                     label: "HTML"
+                },
+                {
+                    key: "word",
+                    label: "Word"
                 }
             ]
         } else {
