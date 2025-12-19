@@ -59,6 +59,7 @@ export interface TKnowledgeBaseSidebarProps {
     isAIModelAvailable: boolean
     setIsAIModelAvailable: Dispatch<SetStateAction<boolean>>
     aIModelAvailableTokens: string
+    progress: number
 }
 
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
@@ -76,7 +77,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     handleValidateAIModelUsable,
     isAIModelAvailable,
     setIsAIModelAvailable,
-    aIModelAvailableTokens
+    aIModelAvailableTokens,
+    progress
 }) => {
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
     const [expand, setExpand] = useSafeState<boolean>(true)
@@ -319,13 +321,19 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                     ))}
                                 </div>
 
-                                {isAIModelAvailable || streams?.[aIModelAvailableTokens] ? (
+                                {progress !== 100 ? (
                                     <div className={styles["tag"]} onClick={() => setIsAIModelAvailable(true)}>
                                         <OutlineLoadingIcon className={styles["loading-icon"]} />
                                         知识库可用诊断中
                                     </div>
                                 ) : (
-                                    <YakitButton type='outline2' onClick={() => handleValidateAIModelUsable()}>
+                                    <YakitButton
+                                        type='outline2'
+                                        onClick={() => {
+                                            setIsAIModelAvailable(true)
+                                            handleValidateAIModelUsable()
+                                        }}
+                                    >
                                         知识库可用诊断
                                     </YakitButton>
                                 )}

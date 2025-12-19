@@ -49,6 +49,7 @@ const KnowledgeBaseContainer: FC<
         | "isAIModelAvailable"
         | "setIsAIModelAvailable"
         | "aIModelAvailableTokens"
+        | "progress"
     >
 > = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()

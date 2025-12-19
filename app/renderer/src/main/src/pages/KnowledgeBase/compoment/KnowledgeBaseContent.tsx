@@ -100,6 +100,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const [addMode, setAddMode] = useSafeState<string[]>(["manual"])
     const [isAIModelAvailable, setIsAIModelAvailable] = useSafeState(false)
     const [aIModelAvailableTokens, setAIModelAvailableTokens] = useSafeState("")
+    const [progress, setProgress] = useSafeState(0)
 
     const onOK = async () => {
         try {
@@ -119,7 +120,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             setAIModelAvailableTokens(streamToken)
             const plugin = await grpcFetchLocalPluginDetail({Name: "知识库可用性诊断"}, true)
             await checkAIModelAvailability(plugin, streamToken)
-            setIsAIModelAvailable(true)
 
             api?.createStream(streamToken, {
                 taskName: "debug-plugin",
@@ -127,16 +127,28 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 autoClear: false,
                 token: streamToken,
                 onEnd: async () => {
+                    setProgress(100)
                     success("知识库可用诊断完成")
                 },
                 onError: (e) => {
-                    failed(e + "")
+                    setProgress(100)
                 }
             })
         } catch (error) {
             failed(error + "")
         }
     })
+
+    useUpdateEffect(() => {
+        if (streams[aIModelAvailableTokens]?.progressState?.[0]?.progress) {
+            setProgress(Math.round(streams[aIModelAvailableTokens]?.progressState?.[0]?.progress * 100))
+        }
+    }, [streams[aIModelAvailableTokens]?.progressState?.[0]?.progress])
+    useUpdateEffect(() => {
+        if (progress === 100 && !isAIModelAvailable) {
+            api.removeStream && api.removeStream(aIModelAvailableTokens)
+        }
+    }, [progress])
 
     useEffect(() => {
         handleValidateAIModelUsable()
@@ -658,6 +670,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         isAIModelAvailable={isAIModelAvailable}
                         setIsAIModelAvailable={setIsAIModelAvailable}
                         aIModelAvailableTokens={aIModelAvailableTokens}
+                        progress={progress}
                     />
                     {knowledgeBaseID ? (
                         <KnowledgeBaseContainer
@@ -707,21 +720,34 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 <ImportModal visible={importVisible} onVisible={setImportVisible} setAddMode={setAddMode} />
                 {streams[aIModelAvailableTokens] ? (
                     <YakitModal
+                        getContainer={document.getElementById("repository-manage") || document.body}
+                        maskClosable={false}
                         visible={isAIModelAvailable}
                         title='知识库可用诊断'
-                        footer={null}
+                        footer={
+                            <div style={{display: "flex", justifyContent: "flex-end", width: "100%"}}>
+                                <YakitButton
+                                    type='outline2'
+                                    colors='danger'
+                                    onClick={() => {
+                                        setIsAIModelAvailable(false)
+                                        api.removeStream && api.removeStream(aIModelAvailableTokens)
+                                        setProgress(100)
+                                    }}
+                                >
+                                    停止
+                                </YakitButton>
+                            </div>
+                        }
                         width={"50%"}
                         onCloseX={() => {
-                            if (streams[aIModelAvailableTokens]?.progressState?.[0]?.progress === 1) {
+                            if (progress === 100) {
                                 api.removeStream && api.removeStream(aIModelAvailableTokens)
                             }
                             setIsAIModelAvailable(false)
                         }}
                     >
-                        <Progress
-                            style={{display: "flex", gap: 8, alignItems: "center"}}
-                            percent={Math.round(streams[aIModelAvailableTokens]?.progressState?.[0]?.progress * 100)}
-                        />
+                        <Progress style={{display: "flex", gap: 8, alignItems: "center"}} percent={progress} />
                         <div className={styles["validate-ai-model-container"]}>
                             <PluginExecuteResult
                                 streamInfo={streams[aIModelAvailableTokens]}
