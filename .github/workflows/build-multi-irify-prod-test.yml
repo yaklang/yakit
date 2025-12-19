@@ -91,6 +91,7 @@ jobs:
 
             - name: Signature Mac Engine
               env: 
+                  CI: ""
                   APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
                   TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
                   APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
@@ -152,6 +153,9 @@ jobs:
                   wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
               shell: bash
 
+            - name: Echo Engine Version
+              run: echo "$ENGINE_VERSION"
+              
             - name: Echo IRify Package Version To Env
               run: |
                   ENV_TAG="v1.2.1-1215-irify"
@@ -170,6 +174,7 @@ jobs:
 
             - name: Build ${{ matrix.artifact_name }} Normal And Legacy (MultiPlatform)
               env:
+                  CI: ""
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
                   APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
                   TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
