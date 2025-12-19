@@ -51,7 +51,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
                                         [styles["yakit-side-tab-item-active"]]: item.value === activeKey,
                                         [styles["yakit-side-tab-item-active-noHover"]]:
                                             item.value === activeKey && activeShow,
-                                        [styles["yakit-side-tab-item-show"]]: item.value === activeKey && !show
+                                        [styles["yakit-side-tab-item-show"]]: item.value === activeKey && !show && !activeShow
                                     })}
                                     onTabPaneRender={onTabPaneRender}
                                     rotate={"left"}
