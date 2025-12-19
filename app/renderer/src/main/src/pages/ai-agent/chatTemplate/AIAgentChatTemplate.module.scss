@@ -10,6 +10,7 @@
         display: flex;
         flex-direction: column;
         flex: 1;
+        overflow: hidden;
         .side-header {
             padding: 8px 12px 4px 12px;
             display: flex;
