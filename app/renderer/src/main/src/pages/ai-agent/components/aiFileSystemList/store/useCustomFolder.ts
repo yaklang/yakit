@@ -15,6 +15,21 @@ const {ipcRenderer} = window.require("electron")
 //         return []
 //     }
 // }
+export const defaultFolder = async (): Promise<HistoryItem | null> => {
+    try {
+        const result = await ipcRenderer.invoke("fetch-code-path")
+        if (!result) return null
+        const item: HistoryItem = {
+            path: result.path ?? result,
+            isFolder: result.isFolder ?? true
+        }
+
+        return item
+    } catch (e) {
+        return null
+    }
+}
+
 
 const store = createExternalStore<HistoryItem[]>([])
 
@@ -52,18 +67,13 @@ export const useCustomFolder = bindExternalStoreHook(store)
 
 export const initSessionFromHistoryOrIPC = async () => {
     const history = historyStore.getSnapshot()
-
     if (history.length > 0) {
         customFolderStore.addCustomFolderItem(history[history.length - 1])
         return 
     }
     try {
-        const result = await ipcRenderer.invoke("fetch-code-path")
-        if (!result) return null
-        const item: HistoryItem = {
-            path: result.path ?? result,
-            isFolder: result.isFolder ?? true
-        }
+        const item  = await defaultFolder()
+        if(!item) return
         historyStore.addHistoryItem(item)
         return item
     } catch (e) {

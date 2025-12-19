@@ -1,7 +1,7 @@
-import { bindExternalStoreHook, createExternalStore } from "@/utils/createExternalStore"
-import { HistoryItem } from "../type"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import {customFolderStore} from './useCustomFolder'
+import {bindExternalStoreHook, createExternalStore} from "@/utils/createExternalStore"
+import {HistoryItem} from "../type"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {customFolderStore, defaultFolder} from "./useCustomFolder"
 
 const REMOTE_KEY = "recent-history"
 const RECENT_COUNT = 5
@@ -26,10 +26,10 @@ export const historyStore = {
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,
 
-    addHistoryItem({ path, isFolder: isDir }: HistoryItem) {
+    addHistoryItem({path, isFolder: isDir}: HistoryItem) {
         store.setSnapshot((prevList) => {
             const filtered = prevList.filter((item) => item.path !== path)
-            const newItem: HistoryItem = { path, isFolder: isDir }
+            const newItem: HistoryItem = {path, isFolder: isDir}
             const nextList = [...filtered, newItem]
 
             const finalResult = nextList.length > RECENT_COUNT ? nextList.slice(-RECENT_COUNT) : nextList
@@ -40,7 +40,7 @@ export const historyStore = {
         })
     },
 
-    removeHistoryItem(path: string) {
+    async removeHistoryItem(path: string) {
         store.setSnapshot((prevList) => {
             const nextList = prevList.filter((item) => item.path !== path)
             if (nextList.length !== prevList.length) {
@@ -49,6 +49,17 @@ export const historyStore = {
             customFolderStore.removeCustomFolderItem(path)
             return nextList
         })
+        const currentList = store.getSnapshot()
+        if (currentList.length === 0) {
+            try {
+                const defaultItem = await defaultFolder()
+                if (defaultItem) {
+                    historyStore.addHistoryItem(defaultItem)
+                }
+            } catch (e) {
+                console.error("Failed to open default folder:", e)
+            }
+        }
     },
 
     clearHistory() {
