@@ -25,11 +25,11 @@ export interface ModalInfoProps {
 const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr}) => {
     const iconSvg = useCreation(() => {
         return (
-            AIOnlineModelIconMap[title || ""] || (
+            AIOnlineModelIconMap[icon || ""] || (
                 <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
             )
         )
-    }, [title])
+    }, [icon])
     const handleDetails = useMemoizedFn(() => {
         if (!callToolId) return
         const m = showYakitDrawer({
