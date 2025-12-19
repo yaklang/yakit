@@ -176,6 +176,7 @@
         "purple": "紫色",
         "cyan": "青色",
         "grey": "灰色",
+        "noColor": "无颜色",
         "filter": "筛选"
     },
     "YakitModal": {

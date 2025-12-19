@@ -657,5 +657,8 @@
   },
   "ConcurrencyAllRes": {
     "get_config_key_failed": "Failed to get activation key for concurrency config collapsible panel:"
+  },
+  "WebsocketFuzzer": {
+    "clear_send_data": "Clear Send Data"
   }
 }

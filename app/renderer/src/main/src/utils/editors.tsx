@@ -554,6 +554,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     fixContentTypeHoverMessage?: string
 
     keepSearchName?: string
+    noSendToComparer?: boolean
 }
 
 export type RenderTypeOptionVal = "beautify" | "render" | "hex"
@@ -1192,6 +1193,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             downbodyParams={props.downbodyParams}
                             onlyBasicMenu={props.onlyBasicMenu}
                             showDownBodyMenu={props.showDownBodyMenu}
+                            noSendToComparer={props.noSendToComparer}
                             onClickUrlMenu={props.onClickUrlMenu}
                             onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
                             onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}

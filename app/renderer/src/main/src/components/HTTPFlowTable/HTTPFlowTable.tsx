@@ -4549,10 +4549,25 @@ export const ColorSearch = React.memo((props: ColorSearchProps) => {
             setColor([...color])
         }
     })
+
+    const NoColor = useMemo(
+        () => ({
+            color: "NOCOLOR",
+            searchWord: "YAKIT_COLOR_NONE",
+            render: (t) => (
+                <div className={classNames(style["history-color-tag"])}>
+                    <OutlineBanIcon className={classNames(style["tag-color-display"])} />
+                    {t("YakitTable.noColor")}
+                </div>
+            )
+        }),
+        []
+    )
+
     return (
         <div onMouseLeave={onMouseLeave}>
             <div className={style["http-history-table-color-item-list"]}>
-                {availableColors.map((ele) => {
+                {[...availableColors, NoColor].map((ele) => {
                     const checked = color.findIndex((c) => c === ele.searchWord) !== -1
                     return (
                         <div

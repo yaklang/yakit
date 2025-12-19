@@ -176,6 +176,7 @@
         "purple": "Purple",
         "cyan": "Cyan",
         "grey": "Grey",
+        "noColor": "No Color",
         "filter": "filter"
     },
     "YakitModal": {

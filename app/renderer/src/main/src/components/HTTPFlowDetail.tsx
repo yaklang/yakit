@@ -254,6 +254,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 content: new Buffer(flow?.Response).toString("utf8"),
                                 language: "http"
                             })
+                            props.onClose?.()
                         }
                         return
                     }
@@ -269,6 +270,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 content: new Buffer(flow?.Request).toString("utf8"),
                                 language: "http"
                             })
+                            props.onClose?.()
                         }
                         return
                     }
@@ -445,6 +447,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 originValue={flow.RequestString}
                                                 defaultHttps={flow?.IsHTTPS}
                                                 // actions={[...actionFuzzer]}
+                                                noSendToComparer={true}
                                                 extraEditorProps={{
                                                     isShowSelectRangeMenu: true
                                                 }}
@@ -501,6 +504,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 defaultHttps={flow?.IsHTTPS}
                                                 // actions={[...actionFuzzer]}
                                                 webFuzzerValue={flow.RequestString || ""}
+                                                noSendToComparer={true}
                                                 extraEditorProps={{
                                                     isShowSelectRangeMenu: true
                                                 }}
@@ -1284,6 +1288,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 content: new Buffer(flow?.Response).toString("utf8"),
                                 language: "http"
                             })
+                            props.onClose?.()
                         }
                         return
                     }
@@ -1299,6 +1304,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 content: new Buffer(flow?.Request).toString("utf8"),
                                 language: "http"
                             })
+                            props.onClose?.()
                         }
                         return
                     }
@@ -1690,6 +1696,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         loading={flowRequestLoad}
                         defaultHttps={flow.IsHTTPS}
                         noMinimap={true}
+                        noSendToComparer={true}
                         contextMenu={{
                             ...sendCodeCompareMenuItem("request")
                         }}
@@ -1810,6 +1817,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 
                             return titleEle
                         })()}
+                        noSendToComparer={true}
                         contextMenu={{
                             ...sendCodeCompareMenuItem("response")
                         }}

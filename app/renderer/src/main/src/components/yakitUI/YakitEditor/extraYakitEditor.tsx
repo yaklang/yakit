@@ -31,6 +31,7 @@ import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {useHttpFlowStore} from "@/store/httpFlow"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -53,6 +54,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     downbodyParams?: HTTPFlowBodyByIdRequest
     onlyBasicMenu?: boolean // 是否只展示最基础菜单 默认不是
     showDownBodyMenu?: boolean
+    noSendToComparer?: boolean // 是否隐藏内置的发送到对比器菜单 默认false
     onClickUrlMenu?: () => void
     onClickOpenBrowserMenu?: () => void
     onClickOpenPacketNewWindowMenu?: () => void
@@ -78,13 +80,14 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         pageId,
         downbodyParams,
         showDownBodyMenu = true,
+        noSendToComparer = false,
         onClickUrlMenu,
         onClickOpenBrowserMenu,
         onClickOpenPacketNewWindowMenu,
         onlyBasicMenu = false,
         ...restProps
     } = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history"])
     const {goAddNotepad} = useGoEditNotepad()
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -95,6 +98,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     const {userInfo} = useStore()
     const [system, setSystem] = useState<YakitSystem>("Darwin")
     const [disableUnicodeDecode, setDisableUnicodeDecode] = useState<boolean>(false)
+    const {setCompareLeft, setCompareRight} = useHttpFlowStore()
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
@@ -558,6 +562,53 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }
         }
 
+        // 发送到对比器
+        if (!noSendToComparer) {
+            menuItems.sendToComparer = {
+                menu: [
+                    {
+                        key: "sendToComparer",
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
+                        children: [
+                            {
+                                key: "sendToComparerLeft",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
+                            },
+                            {
+                                key: "sendToComparerRight",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
+                            }
+                        ]
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    const text = editor.getModel()?.getValue() || ""
+                    if (!text) {
+                        info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
+                        return
+                    }
+
+                    switch (key) {
+                        case "sendToComparerLeft":
+                            setCompareLeft({
+                                content: text,
+                                language: "http"
+                            })
+                            break
+                        case "sendToComparerRight":
+                            setCompareRight({
+                                content: text,
+                                language: "http"
+                            })
+                            webFuzzerCallBack?.()
+                            break
+                        default:
+                            break
+                    }
+                }
+            }
+        }
+
         return menuItems
     }, [
         onlyBasicMenu,
@@ -578,7 +629,10 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         onClickOpenBrowserMenu,
         noOpenPacketNewWindow,
         userInfo.isLogin,
-        i18n.language
+        i18n.language,
+        setCompareLeft,
+        setCompareRight,
+        noSendToComparer,
     ])
 
     return (
