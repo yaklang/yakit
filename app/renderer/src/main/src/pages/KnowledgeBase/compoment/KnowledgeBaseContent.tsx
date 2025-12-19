@@ -148,7 +148,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         if (progress === 100 && !isAIModelAvailable) {
             api.removeStream && api.removeStream(aIModelAvailableTokens)
         }
-    }, [progress])
+    }, [progress, isAIModelAvailable])
 
     useEffect(() => {
         handleValidateAIModelUsable()
