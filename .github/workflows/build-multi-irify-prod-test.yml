@@ -1,7 +1,9 @@
-name: Build Multi-IRify-Platform Prod
+name: Build Multi-IRify-Platform-Test Prod
 
 on:
-    workflow_dispatch:
+    push:
+        branches:
+            - "yj/feat/ci-signature"
 
 jobs:
     prepare_engine:
