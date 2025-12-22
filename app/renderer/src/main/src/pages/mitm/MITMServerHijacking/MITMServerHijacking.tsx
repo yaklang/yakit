@@ -317,7 +317,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <YakitPopover
-                            trigger={"click"}
                             placement='bottom'
                             title={
                                 <div

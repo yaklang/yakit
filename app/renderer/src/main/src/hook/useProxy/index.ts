@@ -70,7 +70,7 @@ const updateGlobalConfig = (config: GlobalProxyRulesConfig): void => {
  * @param url 待解析的URL字符串
  * @returns 包含解析后的URL、用户名和密码的对象
  */
-const parseUrl = (url: string): ParsedUrlResult => {
+export const parseUrl = (url: string): ParsedUrlResult => {
   try {
     const { username = '', password = '', protocol = '', host = '', pathname = '', search = '', hash = '' } = new URL(url)
     const path = pathname === '/' ? '' : pathname, 

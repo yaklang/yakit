@@ -52,12 +52,12 @@ import {MessageCenterModal} from "@/components/MessageCenter/MessageCenter"
 import {LocalGVS} from "@/enums/localGlobal"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {grpcOpenRenderLogFolder} from "@/utils/logCollection"
-import { randomString } from "@/utils/randomUtil"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {randomString} from "@/utils/randomUtil"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
-import { grpcSetGlobalProxyRulesConfig } from "@/apiUtils/grpc"
-import { MITMConsts } from "./mitm/MITMConsts"
-import { checkProxyVersion } from "@/utils/proxyConfigUtil"
+import {grpcSetGlobalProxyRulesConfig} from "@/apiUtils/grpc"
+import {MITMConsts} from "./mitm/MITMConsts"
+import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 
 import "./main.scss"
 import "./GlobalClass.scss"
@@ -65,6 +65,7 @@ import {genDefaultPagination} from "./invoker/schema"
 import {apiQuerySSAPrograms} from "./yakRunnerScanHistory/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import { IRifyUpdateProjectManagerModal } from "./YakRunnerProjectManager/YakRunnerProjectManager"
+import {parseUrl} from "@/hook/useProxy"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -255,6 +256,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [showProxyModal, setShowProxyModal] = useState(false)
     const [ProxyModalLoading, setProxyModalLoading] = useState(false)
     const ProxyHistoryName = MITMConsts.MITMDefaultDownstreamProxyHistory
+    const ProxyWebFuzzerName = "web_fuzzer_proxy_list"
     const {t, i18n} = useI18nNamespaces(["mitm"])
 
     const remoteProxyHistory = useMemoizedFn(() => {
@@ -262,13 +264,25 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             options: [],
             defaultValue: ""
         }
-        setRemoteValue(ProxyHistoryName, JSON.stringify(cacheData)).then(() => setShowProxyModal(false))
+        // 清空两个来源的缓存数据
+        Promise.all([
+            setRemoteValue(ProxyHistoryName, JSON.stringify(cacheData)),
+            setRemoteValue(ProxyWebFuzzerName, JSON.stringify(cacheData))
+        ]).then(() => setShowProxyModal(false))
     })
 
-    const checkAndShowDataMigration = useMemoizedFn(() => {
-        onGetRemoteValuesBase(ProxyHistoryName).then(({options}) => {
-            if (options?.length) setShowProxyModal(true)
-        })
+    const checkAndShowDataMigration = useMemoizedFn(async () => {
+        try {
+            const {options: options1} = await onGetRemoteValuesBase(ProxyHistoryName)
+            const {options: options2} = await onGetRemoteValuesBase(ProxyWebFuzzerName)
+
+            // 如果任意一个有数据，就显示迁移弹窗
+            if (options1?.length || options2?.length) {
+                setShowProxyModal(true)
+            }
+        } catch (error) {
+            console.error(error)
+        }
     })
 
     // 首页加载时初始化
@@ -754,27 +768,41 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             setShowProxyModal(false)
                             return
                         }
-                        onGetRemoteValuesBase(ProxyHistoryName).then(({options}) => {
-                            if (!options?.length) return
-                            setProxyModalLoading(true)
-                            const generateEndpointId = () => `ep-${randomString(8)}`
-                            const config = {
-                                Routes: [],
-                                Endpoints: options.map(({label, value}) => ({
+                        const {options: options1} = await onGetRemoteValuesBase(ProxyHistoryName)
+                        const {options: options2} = await onGetRemoteValuesBase(ProxyWebFuzzerName)
+
+                        const allOptions = [...(options1 || []), ...(options2 || [])]
+
+                        const uniqueOptions = Array.from(new Map(allOptions.map((item) => [item.value, item])).values())
+
+                        if (!uniqueOptions?.length) {
+                            setShowProxyModal(false)
+                            return
+                        }
+                        setProxyModalLoading(true)
+                        const generateEndpointId = () => `ep-${randomString(8)}`
+                        const config = {
+                            Routes: [],
+                            Endpoints: uniqueOptions.map(({value}) => {
+                                const {Url, UserName, Password} = parseUrl(value)
+                                return {
                                     Id: generateEndpointId(),
-                                    Name: label + "",
-                                    Url: value,
-                                    UserName: '',
-                                    Password:''
-                                }))
-                            }
-                            grpcSetGlobalProxyRulesConfig(config).then(() => remoteProxyHistory()).finally(()=>setProxyModalLoading(false))
-                        })
+                                    Name: Url,
+                                    Url,
+                                    UserName,
+                                    Password
+                                }
+                            })
+                        }
+                        grpcSetGlobalProxyRulesConfig(config)
+                            .then(() => remoteProxyHistory())
+                            .finally(() => setProxyModalLoading(false))
                     } catch (error) {
                         console.error("error:", error)
+                        setProxyModalLoading(false)
                     }
                 }}
-                onCancel={() => remoteProxyHistory() } //不迁移则丢弃数据
+                onCancel={() => remoteProxyHistory()} //不迁移则丢弃数据
             />
         </>
     )
