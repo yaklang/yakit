@@ -812,16 +812,16 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                             <div className={styles["title"]}>审计结果</div>
                             <div className={styles["extra"]}>
                                 {viewMode === "dataflow" && (
-                                    <Tooltip title='一键收起'>
-                                        <YakitButton
-                                            type='text2'
-                                            icon={<OutlineCollectionIcon />}
-                                            disabled={(graphLine || []).length === 0}
-                                            onClick={() => {
-                                                setActiveKey(undefined)
-                                            }}
-                                        />
-                                    </Tooltip>
+                                <Tooltip title='一键收起'>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineCollectionIcon />}
+                                        disabled={(graphLine || []).length === 0}
+                                        onClick={() => {
+                                            setActiveKey(undefined)
+                                        }}
+                                    />
+                                </Tooltip>
                                 )}
                                 <YakitButton
                                     type='text2'
@@ -840,39 +840,39 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         onChange={(e) => setViewMode(e.target.value)}
                         options={[
                             {value: "dataflow", label: "数据流图"},
-                            {value: "graph", label: "变量流图"},
-                            {value: "steps", label: "分析步骤"}
+                            {value: "graph", label: "分析步骤"},
+                            {value: "steps", label: "调试信息"}
                         ]}
                         size='small'
                     />
                 </div>
                 <div className={styles["main"]}>
                     {viewMode === "dataflow" ? (
-                        <YakitResizeBox
-                            isVer={true}
-                            secondRatio={!isShowAuditDetail ? "0px" : undefined}
-                            lineDirection='bottom'
-                            firstRatio={"200px"}
-                            firstMinSize={140}
-                            firstNodeStyle={{padding: 0}}
-                            secondNodeStyle={{padding: 0}}
-                            secondMinSize={350}
-                            firstNode={
-                                <>
-                                    {auditRightParams && (
-                                        <AuditResultBox
-                                            activeKey={activeKey}
-                                            setActiveKey={setActiveKey}
-                                            graphLine={graphLine}
-                                            message={message}
-                                            nodeId={nodeId}
-                                            auditRightParams={auditRightParams}
-                                        />
-                                    )}
-                                </>
-                            }
-                            secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
-                        />
+                    <YakitResizeBox
+                        isVer={true}
+                        secondRatio={!isShowAuditDetail ? "0px" : undefined}
+                        lineDirection='bottom'
+                        firstRatio={"200px"}
+                        firstMinSize={140}
+                        firstNodeStyle={{padding: 0}}
+                        secondNodeStyle={{padding: 0}}
+                        secondMinSize={350}
+                        firstNode={
+                            <>
+                                {auditRightParams && (
+                                    <AuditResultBox
+                                        activeKey={activeKey}
+                                        setActiveKey={setActiveKey}
+                                        graphLine={graphLine}
+                                        message={message}
+                                        nodeId={nodeId}
+                                        auditRightParams={auditRightParams}
+                                    />
+                                )}
+                            </>
+                        }
+                        secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
+                    />
                     ) : viewMode === "graph" ? (
                         programId && resultId ? (
                             <VarFlowGraphViz
