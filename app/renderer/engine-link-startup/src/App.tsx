@@ -33,7 +33,7 @@ const App: React.FC = memo(() => {
 
         // 通知应用退出
         ipcRenderer.on("close-engineLinkWin-renderer", async (e, res: any) => {
-            ipcRenderer.invoke("app-exit", {showCloseMessageBox: true, isIRify: isIRify(), isEngineLinkWin: true})
+            ipcRenderer.invoke("app-exit", {showCloseMessageBox: true, isIRify: isIRify()})
         })
         return () => {
             ipcRenderer.removeAllListeners("close-engineLinkWin-renderer")
