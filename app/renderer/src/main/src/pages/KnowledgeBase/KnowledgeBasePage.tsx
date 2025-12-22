@@ -1,19 +1,15 @@
 import {useEffect, useMemo, useRef, type FC} from "react"
 
-import {Form} from "antd"
 import {useAsyncEffect, useDebounceFn, useInViewport, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import AllInstallPlugins from "./compoment/AllInstallPlugins"
-import {success, failed, info} from "@/utils/notification"
+import {failed, info} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 
 import KnowledgeBaseContent from "./compoment/KnowledgeBaseContent"
-import {SolidPlayIcon} from "@/assets/icon/solid"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {CreateKnowledgeBase} from "./compoment/CreateKnowledgeBase"
 
-import {compareKnowledgeBaseChangeList, getFileInfoList, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChangeList, targetInstallList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -29,7 +25,6 @@ import {isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
 const {ipcRenderer} = window.require("electron")
 
 const KnowledgeBase: FC = () => {
-    const [form] = Form.useForm()
     const apiRef = useRef<KnowledgeBaseTableHeaderProps["api"]>()
     const streamsRef = useRef<KnowledgeBaseTableHeaderProps["streams"]>()
     const contentRef = useRef<any>(null)
@@ -95,42 +90,6 @@ const KnowledgeBase: FC = () => {
         }
     )
 
-    // 创建知识库
-    const {runAsync: createKnowledgRunAsync, loading: createKnowledgLoading} = useRequest(
-        async (params) => {
-            const result = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
-                Name: params.KnowledgeBaseName,
-                Description: params.KnowledgeBaseDescription,
-                Type: params.KnowledgeBaseType
-            })
-            return result
-        },
-        {
-            manual: true,
-            onSuccess: async (value) => {
-                try {
-                    await refreshAsync()
-                    const KnowledgeBaseID = value?.KnowledgeBase?.ID
-                    setKnowledgeBaseID(KnowledgeBaseID)
-                    const addKnowledgeData = {
-                        ...createKnwledgeDataRef.current,
-                        ID: KnowledgeBaseID,
-                        addManuallyItem: false
-                    }
-                    addKnowledgeBase(addKnowledgeData as CreateKnowledgeBaseData & {ID: string})
-                    form.resetFields()
-                    createKnwledgeDataRef.current = undefined
-                    success("创建知识库成功")
-                } catch (error) {
-                    failed(`刷新知识库列表失败: ${error}`)
-                }
-            },
-            onError: (error) => {
-                failed(`创建知识库失败: ${error}`)
-            }
-        }
-    )
-
     // 获取数据库侧边栏是否存在数据
     const {
         data: existsKnowledgeBase,
@@ -141,6 +100,7 @@ const KnowledgeBase: FC = () => {
         async (Keyword?: string) => {
             const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
                 Keyword,
+                // OnlyCreatedFromUI: true,
                 Pagination: {Limit: 9999, Page: 1, OrderBy: "updated_at", Sort: "desc"}
             })
             const {KnowledgeBases} = result
@@ -149,6 +109,7 @@ const KnowledgeBase: FC = () => {
                 ...createKnwledgeDataRef.current,
                 ...it
             }))
+
             return resultData
         },
         {
@@ -211,34 +172,6 @@ const KnowledgeBase: FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    useUpdateEffect(() => {
-        try {
-            refreshAsync()
-        } catch (err) {
-            failed(err + "")
-        }
-    }, [knowledgeBases])
-
-    // 创建知识库回调事件
-    const handCreateKnowledgBase = async () => {
-        try {
-            const resultFormData = await form.validateFields()
-            const file = getFileInfoList(resultFormData.KnowledgeBaseFile)
-            const transformFormData = {
-                ...resultFormData,
-                KnowledgeBaseFile: file,
-                streamToken: randomString(50),
-                streamstep: 1,
-                addManuallyItem: false,
-                historyGenerateKnowledgeList: []
-            }
-            createKnwledgeDataRef.current = transformFormData
-            await createKnowledgRunAsync(transformFormData)
-        } catch (error) {
-            failed(error + "")
-        }
-    }
-
     const onCloseKnowledgeRepository = () => {
         if (apiRef?.current && apiRef.current.tokens.length > 0) {
             setVisible(true)
@@ -294,27 +227,6 @@ const KnowledgeBase: FC = () => {
                         />
                     </YakitSpin>
                 )
-            // 无知识库时展示添加知识库页面
-            // case !existsKnowledgeBase?.length:
-            //     return (
-            //         <YakitSpin spinning={loading || existsKnowledgeLoading}>
-            //             <div className={styles["create-knowledgBase"]}>
-            //                 <div className={styles["create-content"]}>
-            //                     <div className={styles["create-title"]}>创建知识库</div>
-            //                     <CreateKnowledgeBase form={form} type={"new"} />
-            //                     <div className={styles["create-button"]}>
-            //                         <YakitButton
-            //                             icon={<SolidPlayIcon />}
-            //                             loading={createKnowledgLoading}
-            //                             onClick={handCreateKnowledgBase}
-            //                         >
-            //                             开始创建
-            //                         </YakitButton>
-            //                     </div>
-            //                 </div>
-            //             </div>
-            //         </YakitSpin>
-            //     )
 
             // 正常进入知识库页面
             default:
@@ -343,7 +255,6 @@ const KnowledgeBase: FC = () => {
         existsKnowledgeLoading,
         binariesToInstall,
         existsKnowledgeBase?.length,
-        createKnowledgLoading,
         knowledgeBaseID,
         knowledgeBases,
         inViewport,

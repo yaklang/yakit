@@ -37,7 +37,6 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         setActiveKey(k as AIMentionTabsEnum)
     })
     const onSelectForge = useMemoizedFn((forgeItem: AIForge) => {
-        console.log("forgeItem", forgeItem)
         onSelect(AIMentionTabsEnum.Forge_Name, forgeItem.ForgeVerboseName || forgeItem.ForgeName)
     })
     const onSelectTool = useMemoizedFn((toolItem: AITool) => {
