@@ -5,7 +5,6 @@ import React, {
     memo,
     Ref,
     RefAttributes,
-    useEffect,
     useMemo,
     useRef
 } from "react"
@@ -22,9 +21,6 @@ import styles from "./template.module.scss"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {AIChatMention} from "../components/aiChatMention/AIChatMention"
 import {AIMentionTabsEnum} from "../defaultConstant"
-import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -82,25 +78,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     } = textareaProps || {}
 
     const textareaRef = useRef<TextAreaRef>(null)
-    const textareaBodyRef = useRef<HTMLDivElement>(null)
 
-    const textRectRef = useRef<DOMRect | null>(null)
     const mentionRef = useRef<{
         destroy: () => void
     }>()
-    const wrapperWidth = useListenWidth(document.body)
-    const textareaBodyWidth = useListenWidth(textareaBodyRef)
-    useEffect(() => {
-        if (wrapperWidth && textareaBodyWidth) getTextRect()
-    }, [wrapperWidth, textareaBodyWidth])
-    const getTextRect = useMemoizedFn(() => {
-        onResetMention()
-        if (textareaRef.current) {
-            // 目前只需要获取初始的位置即可
-            const rect = textareaRef.current.resizableTextArea?.textArea.getBoundingClientRect()
-            if (rect) textRectRef.current = rect
-        }
-    })
+
     const handleSetTextareaFocus = useMemoizedFn(() => {
         if (textareaRef && textareaRef.current) {
             textareaRef.current.focus()
@@ -137,10 +119,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     })
 
     const omMention = useMemoizedFn(() => {
-        if (!textRectRef.current || !!mentionRef.current) return
-        const x = textRectRef.current.x
-        const y = textRectRef.current.y + 20
-        mentionRef.current = showByRightContext(<AIChatMention onSelect={onSetMention} />, x, y)
+        if (!textareaRef.current || !!mentionRef.current) return
+        const rect = textareaRef.current.resizableTextArea?.textArea.getBoundingClientRect()
+        if (rect) {
+            const x = rect.x
+            const y = rect.y + 20
+            mentionRef.current = showByRightContext(<AIChatMention onSelect={onSetMention} />, x, y)
+        }
     })
 
     const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value: string) => {
@@ -184,7 +169,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
 
     return (
         <div className={classNames(styles["ai-chat-textarea"], className)} onClick={handleSetTextareaFocus}>
-            <div className={styles["textarea-body"]} ref={textareaBodyRef}>
+            <div className={styles["textarea-body"]}>
                 <div className={styles["textarea-icon"]}>
                     {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
                     <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>
