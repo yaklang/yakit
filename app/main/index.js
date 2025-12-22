@@ -100,7 +100,9 @@ function createEngineLinkWindow() {
     engineLinkWin.on("close", (e) => {
         e.preventDefault()
         state.saveState(engineLinkWin)
-        engineLinkWin.webContents.send("close-engineLinkWin-renderer")
+        if (engineLinkWin.isVisible()) {
+            engineLinkWin.webContents.send("close-engineLinkWin-renderer")
+        }
     })
 
     engineLinkWin.on("closed", () => {
@@ -165,7 +167,9 @@ function createWindow() {
     win.on("close", (e) => {
         e.preventDefault()
         state.saveState(win)
-        win.webContents.send("close-windows-renderer")
+        if (win.isVisible()) {
+            win.webContents.send("close-windows-renderer")
+        }
     })
 
     win.on("minimize", () => {
@@ -217,6 +221,28 @@ function winShow(targetWin) {
         targetWin.focus()
         targetWin.setSkipTaskbar(false)
     }
+}
+// 窗口关闭
+function winClose(targetWin, removeEvent) {
+    if (targetWin && !targetWin.isDestroyed()) {
+        removeEvent && targetWin.removeAllListeners("close")
+        targetWin.close()
+        targetWin = null
+    }
+}
+// 获取当前窗口
+function getActiveWindow() {
+    // 优先：当前聚焦窗口
+    const focused = BrowserWindow.getFocusedWindow()
+    if (focused && !focused.isDestroyed()) {
+        return focused
+    }
+
+    // 次优：可见窗口
+    if (engineLinkWin?.isVisible()) return engineLinkWin
+    if (win?.isVisible()) return win
+
+    return null
 }
 
 /**
@@ -278,38 +304,21 @@ function registerGlobalIPC() {
 
     // ------------------- 软件重启逻辑 -------------------
     ipcMain.handle("relaunch", () => {
-        // 优雅销毁窗口
-        if (engineLinkWin && !engineLinkWin.isDestroyed()) {
-            engineLinkWin.removeAllListeners("close")
-            engineLinkWin.destroy()
-            engineLinkWin = null
-        }
-
-        if (win && !win.isDestroyed()) {
-            win.removeAllListeners("close")
-            win.destroy()
-            win = null
-        }
-
-        // 重启应用
+        winClose(engineLinkWin, true)
+        winClose(win, true)
+        closeAllLogHandles()
         app.relaunch()
         app.exit(0)
     })
 
     // ------------------- 软件退出逻辑 -------------------
     ipcMain.handle("app-exit", async (e, params) => {
-        const {isEngineLinkWin, showCloseMessageBox, isIRify} = params
-        const parentWindow = isEngineLinkWin ? engineLinkWin : win
+        const {showCloseMessageBox, isIRify} = params
+        const parentWindow = getActiveWindow()
 
         const exitCleanupOperation = () => {
-            if (engineLinkWin) {
-                engineLinkWin.close()
-                engineLinkWin = null
-            }
-            if (win) {
-                win.close()
-                win = null
-            }
+            winClose(engineLinkWin, false)
+            winClose(win, false)
             closeAllLogHandles()
             app.exit()
         }
@@ -353,16 +362,16 @@ function registerGlobalIPC() {
 
     // ------------------- 窗口通信注册 -------------------
     try {
-        registerIPC(win)
-        console.log("[Main] registerIPC completed")
-    } catch (err) {
-        console.error("[Main] registerIPC error:", err)
-    }
-    try {
         registerNewIPC(engineLinkWin, "EngineLink:")
         console.log("[engineLinkWin] registerNewIPC completed")
     } catch (err) {
         console.error("[engineLinkWin] registerNewIPC error:", err)
+    }
+    try {
+        registerIPC(win)
+        console.log("[Main] registerIPC completed")
+    } catch (err) {
+        console.error("[Main] registerIPC error:", err)
     }
 }
 
