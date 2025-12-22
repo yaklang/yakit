@@ -12,7 +12,13 @@ on:
 jobs:
     prepare_engine:
         runs-on: macos-15
-
+        env:
+            CI: ""
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         outputs:
             engine_version: ${{ steps.engine_ver.outputs.version }}
         steps:
@@ -112,6 +118,7 @@ jobs:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
             ENGINE_VERSION: ${{ needs.prepare_engine.outputs.engine_version }}
+            GH_TOKEN: ${{ secrets.GH_TOKEN }}
             APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
             TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
             APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
@@ -143,6 +150,9 @@ jobs:
                   }
                   wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
               shell: bash
+
+            - name: Signature Mac Engine
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
 
             - name: "Download MakeSelf"
               run: brew install makeself
