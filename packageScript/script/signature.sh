@@ -1,5 +1,9 @@
+# 第一个参数，目前仅有 build
+MODE="$1"  
+
 # 解码 p12 文件
 echo "$CERT_BASE64" | base64 --decode >cert.p12
+echo "Run mode: ${MODE:-default}"
 
 # 创建一个临时钥匙串，并导入证书（这里不设置密码）
 security create-keychain -p "" build.keychain
@@ -16,6 +20,14 @@ security set-keychain-settings -t 3600 -u build.keychain
 # 从钥匙串中查找包含 TEAM_ID 的签名证书标识
 CERT_ID=$(security find-identity -v -p codesigning | grep "$TEAM_ID" | head -n1 | awk -F\" '{print $2}')
 echo "Using certificate: $CERT_ID"
+
+# ===============================
+# build 模式：到此结束
+# ===============================
+if [ "$MODE" = "build" ]; then
+  echo "build mode detected, skip codesign" 
+  exit 0
+fi
 
 # 对 yak 可执行文件进行签名（请替换为你的可执行文件路径）
 echo "signing mac amd64 engine"

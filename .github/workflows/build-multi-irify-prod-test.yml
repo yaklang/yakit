@@ -159,7 +159,7 @@ jobs:
               shell: bash
 
             - name: Signature Mac Engine
-              run: chmod +x ./packageScript/script/signature-test.sh && ./packageScript/script/signature-test.sh
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
 
             - name: Echo IRify Package Version To Env
               run: |
