@@ -25,6 +25,11 @@ export interface FileTreeSystemItemProps {
     isOpen?: boolean
     expanded?: boolean
     onResetTree?: () => void
+    /**是否显示右键菜单 */
+    isShowRightMenu?: boolean
+    checkable?: boolean
+    checked?: boolean
+    setChecked?: (checked: boolean) => void
 }
 
 export interface FileInfo {

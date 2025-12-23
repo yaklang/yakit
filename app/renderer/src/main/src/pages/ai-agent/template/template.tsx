@@ -141,6 +141,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                     selectKnowledgeBase={selectKnowledgeBases}
                     onSelect={onSetMention}
                     defaultActiveTab={mentionPerActiveRef.current}
+                    onClose={() => {
+                        onResetMention()
+                    }}
                 />,
                 x,
                 y
@@ -153,21 +156,21 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
             case AIMentionTabsEnum.Forge_Name:
                 setSelectForges((perv) => {
                     const index = perv.findIndex((item) => item.id === value.id)
-                    return index === -1 ? [...perv, value] : perv
+                    return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
                 })
                 break
 
             case AIMentionTabsEnum.Tool:
                 setSelectTools((perv) => {
                     const index = perv.findIndex((item) => item.id === value.id)
-                    return index === -1 ? [...perv, value] : perv
+                    return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
                 })
                 break
 
             case AIMentionTabsEnum.KnowledgeBase:
                 setSelectKnowledgeBases((perv) => {
                     const index = perv.findIndex((item) => item.id === value.id)
-                    return index === -1 ? [...perv, value] : perv
+                    return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
                 })
                 break
             default:

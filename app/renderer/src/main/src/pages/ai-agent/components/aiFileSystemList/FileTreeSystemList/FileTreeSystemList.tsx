@@ -12,6 +12,7 @@ import {useMemoizedFn} from "ahooks"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileListTileMenu, FileTreeSystemListWapperProps} from "../type"
+import {FileToChatQuestionList} from "@/pages/ai-re-act/aiReActChat/store"
 
 const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     path,
@@ -151,7 +152,8 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                     }}
                     dropdown={{
                         trigger: ["click"],
-                        placement: "bottomLeft"
+                        placement: "bottomLeft",
+                        overlayStyle: {zIndex: 10000}
                     }}
                 >
                     <YakitButton
@@ -167,16 +169,31 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
         </div>
     )
 }
-
+export default FileTreeSystemListWapper
 interface FileTreeSystemListProps {
     path: string
     isFolder?: boolean
     isOpen?: boolean
     selected?: FileTreeSystemListWapperProps["selected"]
     setSelected: FileTreeSystemListWapperProps["setSelected"]
+    checkedKeys?: FileToChatQuestionList[]
+    setCheckedKeys?: (v: boolean, nodeData: FileNodeProps) => void
+    isShowRightMenu?: boolean
+    checkable?: boolean
 }
-const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, isFolder = true, selected, setSelected}) => {
+export const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
+    path,
+    isOpen,
+    isFolder = true,
+    selected,
+    setSelected,
+    isShowRightMenu,
+    checkable,
+    checkedKeys,
+    setCheckedKeys
+}) => {
     const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+
     const [loadedKeys, setLoadedKeys] = useState<string[]>([])
     const [data, setData] = useState<FileNodeProps[]>([])
     const [_, startTransition] = useTransition()
@@ -230,6 +247,10 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, isFolder
             }}
             onSelect={(_, {node}) => {
                 setSelected(node)
+                if (node.isLeaf) {
+                    const checked = !!checkedKeys?.find((ele) => ele?.path === node.path)
+                    setCheckedKeys?.(!checked, node)
+                }
             }}
             loadedKeys={loadedKeys}
             loadData={loadData}
@@ -237,11 +258,14 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, isFolder
                 <FileTreeSystemItem
                     data={nodeData}
                     isOpen={isOpen}
+                    isShowRightMenu={isShowRightMenu}
                     onResetTree={onResetTreeList}
                     expanded={expandedKeys.includes(nodeData.path)}
+                    checkable={checkable}
+                    checked={!!checkedKeys?.find((ele) => ele?.path === nodeData.path)}
+                    setChecked={(c) => setCheckedKeys?.(c, nodeData)}
                 />
             )}
         />
     )
 }
-export default FileTreeSystemListWapper

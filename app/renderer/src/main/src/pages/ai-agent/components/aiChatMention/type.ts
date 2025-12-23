@@ -13,6 +13,7 @@ export interface AIChatMentionProps {
     selectKnowledgeBase: AIChatMentionSelectItem[]
     defaultActiveTab?: AIMentionTabsEnum
     onSelect: (type: AIMentionTabsEnum, value: AIChatMentionSelectItem) => void
+    onClose: () => void
 }
 interface AIChatMention {
     keyWord: string
@@ -40,5 +41,8 @@ export interface AIMentionSelectItemProps {
     isSelect: boolean
     isActive: boolean
     item: AIChatMentionSelectItem
+    onSelect: () => void
+}
+export interface FileSystemTreeOfMentionProps {
     onSelect: () => void
 }

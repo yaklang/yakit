@@ -62,12 +62,15 @@ export enum AIMentionTabsEnum {
     /**工具 */
     Tool = "tool",
     /**知识库 */
-    KnowledgeBase = "knowledgeBase"
+    KnowledgeBase = "knowledgeBase",
+    /**文件系统 */
+    File_System = "fileSystem"
 }
 export const AIMentionTabs: YakitSideTabProps["yakitTabs"] = [
     {value: AIMentionTabsEnum.Forge_Name, label: "模板"},
     {value: AIMentionTabsEnum.Tool, label: "工具"},
-    {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"}
+    {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"},
+    {value: AIMentionTabsEnum.File_System, label: "文件系统"}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
