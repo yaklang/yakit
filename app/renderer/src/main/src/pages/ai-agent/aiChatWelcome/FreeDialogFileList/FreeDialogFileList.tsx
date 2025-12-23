@@ -6,10 +6,44 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {FC, useEffect, useRef, useState} from "react"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {Key, useFileToQuestion, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import {AITagListProps} from "./type"
+import React from "react"
+import {
+    OutlineBookOpenTextIcon,
+    OutlineBotIcon,
+    OutlineDocumenttextIcon,
+    OutlineFolderopenIcon,
+    OutlineWrenchIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 
-const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
+const FreeDialogFileList: FC<{storeKey: Key}> = React.memo(({storeKey}) => {
     const fileToQuestion = useFileToQuestion(storeKey)
 
+    return (
+        <AITagList
+            title='文件列表'
+            list={fileToQuestion.map((item) => ({
+                type: item.isFolder ? "folder" : "file",
+                key: item.path,
+                value: item.path
+            }))}
+            onRemove={(item) => fileToChatQuestionStore.remove(storeKey, `${item.key}`)}
+            onClear={() => fileToChatQuestionStore.clear(storeKey)}
+        />
+    )
+})
+export default FreeDialogFileList
+
+const iconMap = {
+    file: <OutlineDocumenttextIcon />,
+    folder: <OutlineFolderopenIcon />,
+    forge: <OutlineBotIcon />,
+    tool: <OutlineWrenchIcon />,
+    knowledgeBase: <OutlineBookOpenTextIcon />
+}
+export const AITagList: React.FC<AITagListProps> = (props) => {
+    const {title, onRemove, onClear, list} = props
     const ref = useRef<HTMLDivElement>(null)
 
     const listRef = useRef<HTMLDivElement | null>(null)
@@ -22,23 +56,26 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
         // 是否发生横向溢出
         const isOverflow = el.scrollWidth > el.clientWidth
         setShowMore(isOverflow)
-    }, [fileToQuestion])
+    }, [list])
 
     return (
         <div className={styles["free-dialog-file-list"]} ref={ref}>
             <div ref={listRef} className={styles["file-item"]}>
-                {fileToQuestion.map(({path}) => (
+                {list.map((item) => (
                     <YakitButton
-                        key={path}
+                        key={item.key}
                         type='outline2'
-                        title={path}
+                        title={item.value}
                         radius={50}
                         size='middle'
                         className={styles["file-item-btn"]}
-                        onClick={() => fileToChatQuestionStore.remove(storeKey, path)}
-                        icon={<RemoveIcon />}
+                        onClick={() => onRemove(item)}
                     >
-                        {path}
+                        <div className={styles["file-item-content"]}>
+                            {iconMap[item.type]}
+                            <span className='content-ellipsis'>{item.value}</span>
+                            <OutlineXIcon />
+                        </div>
                     </YakitButton>
                 ))}
             </div>
@@ -52,9 +89,9 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
                         <div className={styles["popover-content"]}>
                             <div className={styles["popover-btn-title"]}>
                                 <div>
-                                    文件列表
+                                    {title}
                                     <YakitTag size='small' fullRadius>
-                                        {fileToQuestion.length}
+                                        {list.length}
                                     </YakitTag>
                                 </div>
                                 <YakitButton
@@ -62,21 +99,21 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
                                     size='small'
                                     className={styles["popover-btn-title-btn"]}
                                     color='danger'
-                                    onClick={() => fileToChatQuestionStore.clear(storeKey)}
+                                    onClick={() => onClear()}
                                 >
                                     清空
                                 </YakitButton>
                             </div>
 
                             <div className={styles["popover-btn-list"]}>
-                                {fileToQuestion.map(({path}) => (
-                                    <div key={path} title={path} className={styles["popover-btn-list-item"]}>
-                                        <p>{path}</p>
+                                {list.map((item) => (
+                                    <div key={item.key} title={item.value} className={styles["popover-btn-list-item"]}>
+                                        <p>{item.value}</p>
                                         <YakitButton
                                             type='text2'
                                             size='small'
-                                            icon={<RemoveIcon />}
-                                            onClick={() => fileToChatQuestionStore.remove(storeKey, path)}
+                                            icon={<OutlineXIcon />}
+                                            onClick={() => onRemove(item)}
                                         />
                                     </div>
                                 ))}
@@ -92,5 +129,3 @@ const FreeDialogFileList: FC<{storeKey: Key}> = ({storeKey}) => {
         </div>
     )
 }
-
-export default FreeDialogFileList

@@ -21,14 +21,22 @@
     .row-item {
         width: 100%;
         padding: 4px 6px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
         overflow: hidden;
-        word-break: break-all;
         border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     .row-item-active {
         background-color: var(--Colors-Use-Main-Bg-Hover);
+    }
+    .row-item-select {
+        color: var(--Colors-Use-Main-Primary);
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Main-Primary);
+        }
     }
 }
 .ai-chat-mention {

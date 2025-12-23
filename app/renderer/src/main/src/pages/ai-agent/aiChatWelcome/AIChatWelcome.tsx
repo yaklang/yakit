@@ -56,7 +56,6 @@ import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
 import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
-import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
 import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
@@ -401,7 +400,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
                         <div className={styles["input-body-wrapper"]}>
-                            <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return

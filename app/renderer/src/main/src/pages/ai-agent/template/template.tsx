@@ -6,13 +6,14 @@ import React, {
     Ref,
     RefAttributes,
     useMemo,
-    useRef
+    useRef,
+    useState
 } from "react"
 import {AIChatTextareaProps, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useControllableValue, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {v4 as uuidv4} from "uuid"
 
@@ -21,6 +22,10 @@ import styles from "./template.module.scss"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {AIChatMention} from "../components/aiChatMention/AIChatMention"
 import {AIMentionTabsEnum} from "../defaultConstant"
+import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
+import {FreeDialogTagList} from "../aiChatWelcome/FreeDialogList/FreeDialogList"
+import FreeDialogFileList from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
+import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -58,6 +63,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         valuePropName: "question",
         trigger: "setQuestion"
     })
+    const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
+    const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
+    const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
+
     const isQuestion = useMemo(() => {
         return !!(question && question.trim())
     }, [question])
@@ -82,6 +91,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const mentionRef = useRef<{
         destroy: () => void
     }>()
+    const mentionPerActiveRef = useRef<AIMentionTabsEnum>() // 提及上一次激活的tab
 
     const handleSetTextareaFocus = useMemoizedFn(() => {
         if (textareaRef && textareaRef.current) {
@@ -124,28 +134,49 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         if (rect) {
             const x = rect.x
             const y = rect.y + 20
-            mentionRef.current = showByRightContext(<AIChatMention onSelect={onSetMention} />, x, y)
+            mentionRef.current = showByRightContext(
+                <AIChatMention
+                    selectForge={selectForges}
+                    selectTool={selectTools}
+                    selectKnowledgeBase={selectKnowledgeBases}
+                    onSelect={onSetMention}
+                    defaultActiveTab={mentionPerActiveRef.current}
+                />,
+                x,
+                y
+            )
         }
     })
 
-    const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value: string) => {
-        let typeString: string = ""
+    const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value: AIChatMentionSelectItem) => {
         switch (type) {
             case AIMentionTabsEnum.Forge_Name:
-                typeString = "智能体"
+                setSelectForges((perv) => {
+                    const index = perv.findIndex((item) => item.id === value.id)
+                    return index === -1 ? [...perv, value] : perv
+                })
                 break
 
             case AIMentionTabsEnum.Tool:
-                typeString = "工具"
+                setSelectTools((perv) => {
+                    const index = perv.findIndex((item) => item.id === value.id)
+                    return index === -1 ? [...perv, value] : perv
+                })
                 break
 
             case AIMentionTabsEnum.KnowledgeBase:
-                typeString = "知识库"
+                setSelectKnowledgeBases((perv) => {
+                    const index = perv.findIndex((item) => item.id === value.id)
+                    return index === -1 ? [...perv, value] : perv
+                })
                 break
             default:
                 break
         }
-        setQuestion(`请使用${typeString}${value}回答 `)
+        if (question === "@") {
+            setQuestion("")
+        }
+        mentionPerActiveRef.current = type
         onResetMention()
         handleSetTextareaFocus()
     })
@@ -166,9 +197,46 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         onTextareaKeyDown && onTextareaKeyDown(e)
     })
     // #endregion
-
+    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
+    const isShowSelectList = useCreation(() => {
+        return (
+            selectForges.length > 0 ||
+            selectTools.length > 0 ||
+            selectKnowledgeBases.length > 0 ||
+            fileToQuestion.length > 0
+        )
+    }, [selectForges, selectTools, selectKnowledgeBases, fileToQuestion])
     return (
         <div className={classNames(styles["ai-chat-textarea"], className)} onClick={handleSetTextareaFocus}>
+            {isShowSelectList && (
+                <div>
+                    <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
+                    {selectForges.length > 0 && (
+                        <FreeDialogTagList
+                            type='forge'
+                            title='智能体列表'
+                            select={selectForges}
+                            setSelect={setSelectForges}
+                        />
+                    )}
+                    {selectTools.length > 0 && (
+                        <FreeDialogTagList
+                            type='tool'
+                            title='工具列表'
+                            select={selectTools}
+                            setSelect={setSelectTools}
+                        />
+                    )}
+                    {selectKnowledgeBases.length > 0 && (
+                        <FreeDialogTagList
+                            type='knowledgeBase'
+                            title='知识库列表'
+                            select={selectKnowledgeBases}
+                            setSelect={setSelectKnowledgeBases}
+                        />
+                    )}
+                </div>
+            )}
             <div className={styles["textarea-body"]}>
                 <div className={styles["textarea-icon"]}>
                     {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}

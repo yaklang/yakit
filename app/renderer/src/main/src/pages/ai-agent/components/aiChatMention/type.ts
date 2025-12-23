@@ -3,12 +3,20 @@ import {AITool} from "../../type/aiTool"
 import {AIForge} from "../../type/forge"
 import {AIMentionTabsEnum} from "../../defaultConstant"
 
-export interface AIChatMentionProps {
-    defaultActiveTab?: AIMentionTabsEnum
-    onSelect: (type: AIMentionTabsEnum, value: string) => void
+export interface AIChatMentionSelectItem {
+    id: number
+    name: string
 }
-interface AIChatMentionQuery {
+export interface AIChatMentionProps {
+    selectForge: AIChatMentionSelectItem[]
+    selectTool: AIChatMentionSelectItem[]
+    selectKnowledgeBase: AIChatMentionSelectItem[]
+    defaultActiveTab?: AIMentionTabsEnum
+    onSelect: (type: AIMentionTabsEnum, value: AIChatMentionSelectItem) => void
+}
+interface AIChatMention {
     keyWord: string
+    selectList: AIChatMentionSelectItem[]
 }
 export interface AIChatMentionListRefProps {
     onRefresh: () => void
@@ -16,14 +24,21 @@ export interface AIChatMentionListRefProps {
 interface AIChatMentionRef {
     ref?: React.ForwardedRef<AIChatMentionListRefProps>
 }
-export interface ForgeNameListOfMentionProps extends AIChatMentionQuery, AIChatMentionRef {
+export interface ForgeNameListOfMentionProps extends AIChatMention, AIChatMentionRef {
     onSelect: (f: AIForge) => void
 }
 
-export interface ToolListOfMentionProps extends AIChatMentionQuery, AIChatMentionRef {
+export interface ToolListOfMentionProps extends AIChatMention, AIChatMentionRef {
     onSelect: (f: AITool) => void
 }
 
-export interface KnowledgeBaseListOfMentionProps extends AIChatMentionQuery, AIChatMentionRef {
+export interface KnowledgeBaseListOfMentionProps extends AIChatMention, AIChatMentionRef {
     onSelect: (f: KnowledgeBase) => void
+}
+
+export interface AIMentionSelectItemProps {
+    isSelect: boolean
+    isActive: boolean
+    item: AIChatMentionSelectItem
+    onSelect: () => void
 }
