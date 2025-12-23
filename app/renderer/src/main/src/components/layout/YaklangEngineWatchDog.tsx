@@ -5,7 +5,7 @@ import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
-import {useStore, yakitDynamicStatus} from "@/store"
+import {yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
 import {fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
@@ -46,7 +46,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         // 是否正在重启引擎进程
         const startingUp = useRef<boolean>(false)
         const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
-        const {userInfo} = useStore()
 
         /** 引擎信息认证 */
         const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
@@ -83,7 +82,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     if (isDynamicControl) {
                         // 远程控制生效
                         setDynamicStatus({...dynamicStatus, isDynamicStatus: true})
-                        remoteOperation(true, dynamicStatus, userInfo)
+                        remoteOperation(true, dynamicStatus)
                         if (dynamicStatus.baseUrl && dynamicStatus.baseUrl.length > 0) {
                             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: dynamicStatus.baseUrl}))
                         }
