@@ -9,7 +9,7 @@ import {
 } from "./type"
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
-import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useSafeState} from "ahooks"
 import {AIChatTextareaProps, AIChatTextareaSubmit} from "../template/type"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
@@ -60,9 +60,19 @@ import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pa
 import {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {HandleStartParams} from "../aiAgentChat/type"
 import useAIChatDrop from "./hooks/useAIChatDrop"
-import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+
+const sideberRadioOptions = [
+    {
+        value: "fileTree",
+        label: "文件树"
+    },
+    {
+        value: "knoledge",
+        label: "知识库"
+    }
+]
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -135,6 +145,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
     const [inViewPort = true] = useInViewport(welcomeRef)
+
+    const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
 
     const tokenRef = useRef<string>(randomString(40))
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
@@ -363,6 +375,17 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     // 拖拽
     const {isHovering, dropRef} = useAIChatDrop(FileListStoreKey.FileList)
+    const targetSidebarSelected = useMemo(() => {
+        if (sidebarSelected === "fileTree") {
+            return (
+                <div className={styles["file-tree-list-inner"]}>
+                    <FileTreeList />
+                </div>
+            )
+        } else {
+            return <div className={styles["knowledge-base-list-inner"]}>知识库列表待开发</div>
+        }
+    }, [sidebarSelected])
 
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
@@ -373,14 +396,15 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                 <Divider type='vertical' />
                 <SideSettingButton />
             </div>
-            <div
-                className={`${styles["file-tree-list"]} ${
-                  openDrawer ? styles["open"] : styles["close"]
-                }`}
-            >
-                <div className={styles["file-tree-list-inner"]}>
-                    <FileTreeList />
-                </div>
+            <div className={`${styles["file-tree-list"]} ${openDrawer ? styles["open"] : styles["close"]}`}>
+                <YakitRadioButtons
+                    value={sidebarSelected}
+                    onChange={(e) => setSidebarSelected(e.target.value)}
+                    buttonStyle='solid'
+                    options={sideberRadioOptions}
+                    className={styles["sidebar-radio"]}
+                />
+                {targetSidebarSelected}
             </div>
             <div className={styles["content"]}>
                 <div className={styles["content-absolute"]}>
