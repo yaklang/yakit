@@ -61,6 +61,8 @@ import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFil
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {HandleStartParams} from "../aiAgentChat/type"
+import useAIChatDrop from "./hooks/useAIChatDrop"
+import FreeDialogFileList from "./FreeDialogFileList/FreeDialogFileList"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -373,6 +375,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setOpenDrawer(true)
     }
 
+    // 拖拽
+    const {isHovering, dropRef} = useAIChatDrop(FileListStoreKey.FileList)
+
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
             <div className={styles["open-file-tree-button"]}>
@@ -404,7 +409,15 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <div className={styles["title"]}>Memfit AI Agent</div>
                             <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
-                        <div className={styles["input-body-wrapper"]}>
+                        <div
+                            ref={dropRef}
+                            className={classNames(styles["input-body-wrapper"], {
+                                [styles.draggingFromTree]: isHovering
+                            })}
+                        >
+                            {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
+
+                            <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return

@@ -10,7 +10,7 @@ module.exports = {
                 try {
                     const stats = FS.statSync(path)
                     resolve(stats)
-                } catch (error) {
+                } catch (error) {   
                     reject(error)
                 }
             })
@@ -68,6 +68,17 @@ module.exports = {
             }
             return fileInfo
         })
+
+        // 获取通过文件路径判断是否是文件夹
+        ipcMain.handle("fetch-file-is-dir-by-path", (e, path) => {
+            try {
+                if (!path || typeof path !== "string") return false
+                return FS.statSync(path).isDirectory()
+            } catch (error) {
+                return false
+            }
+        })
+
     },
     registerNewIPC: (win, getClient, ipcEventPre) => {}
 }

@@ -39,3 +39,5 @@ export interface RandomAIMaterialsDataProps {
 }
 
 export interface SideSettingButtonProps extends YakitButtonProp {}
+
+export type DragSource = "desktopToAItree" | "AIRreeToChat" | null

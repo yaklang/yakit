@@ -26,10 +26,10 @@ export const historyStore = {
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,
 
-    addHistoryItem({path, isFolder: isDir}: HistoryItem) {
+    addHistoryItem({path, isFolder}: HistoryItem) {
         store.setSnapshot((prevList) => {
-            const filtered = prevList.filter((item) => item.path !== path)
-            const newItem: HistoryItem = {path, isFolder: isDir}
+            const filtered = prevList.filter((item) => item.path !== path.trim())
+            const newItem: HistoryItem = {path, isFolder}
             const nextList = [...filtered, newItem]
 
             const finalResult = nextList.length > RECENT_COUNT ? nextList.slice(-RECENT_COUNT) : nextList
@@ -49,17 +49,6 @@ export const historyStore = {
             customFolderStore.removeCustomFolderItem(path)
             return nextList
         })
-        const currentList = store.getSnapshot()
-        if (currentList.length === 0) {
-            try {
-                const defaultItem = await defaultFolder()
-                if (defaultItem) {
-                    historyStore.addHistoryItem(defaultItem)
-                }
-            } catch (e) {
-                console.error("Failed to open default folder:", e)
-            }
-        }
     },
 
     clearHistory() {
