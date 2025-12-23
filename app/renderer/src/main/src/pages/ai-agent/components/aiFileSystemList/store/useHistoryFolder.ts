@@ -1,7 +1,7 @@
 import {bindExternalStoreHook, createExternalStore} from "@/utils/createExternalStore"
 import {HistoryItem} from "../type"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {customFolderStore, defaultFolder} from "./useCustomFolder"
+import {customFolderStore} from "./useCustomFolder"
 
 const REMOTE_KEY = "recent-history"
 const RECENT_COUNT = 5
@@ -14,7 +14,7 @@ export const loadRemoteHistory = async () => {
         if (saved) {
             const parsed = JSON.parse(saved)
             if (Array.isArray(parsed)) {
-                store.setSnapshot(() => parsed.slice(-RECENT_COUNT))
+                store.setSnapshot(() => parsed.filter(item => item.path).slice(-RECENT_COUNT))
             }
         }
     } catch (e) {
