@@ -26,7 +26,7 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {$view} from "@milkdown/kit/utils"
 import {CustomFile} from "../CustomFile/CustomFile"
 import {getBase64} from "../MilkdownEditor"
-import {httpUploadImgBase64} from "@/apiUtils/http"
+import {httpSplitUploadImgBase64} from "@/apiUtils/http"
 import {Node} from "@milkdown/kit/prose/model"
 import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
 import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
@@ -450,7 +450,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
         }
         try {
             const base64 = await getBase64(image)
-            const src = await httpUploadImgBase64({
+            const src = await httpSplitUploadImgBase64({
                 base64,
                 imgInfo: {
                     filename: image.name || "image.png",

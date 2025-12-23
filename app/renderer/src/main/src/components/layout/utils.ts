@@ -106,7 +106,11 @@ export interface SplitUploadRequest {
     type: "Project"
 }
 
-export const apiSplitUpload: APIFunc<SplitUploadRequest, ProjectsResponse> = (params, hiddenError) => {
+export interface SplitUploadResponse {
+    TaskStatus: boolean
+}
+
+export const apiSplitUpload: APIFunc<SplitUploadRequest, SplitUploadResponse> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("split-upload", params)

@@ -21,7 +21,7 @@ import {
     useUpdateEffect
 } from "ahooks"
 
-import {httpDeleteOSSResource} from "@/apiUtils/http"
+import {httpDeleteNotepadFile, httpDeleteOSSResource} from "@/apiUtils/http"
 import {deletedFileUrlsCtx} from "./utils/trackDeletePlugin"
 import moment from "moment"
 import {useStore} from "@/store"
@@ -187,7 +187,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     /**删除文档中被删除的所有文件 */
     const onDeleteAllFiles = useMemoizedFn(() => {
         if (deletedFiles.length > 0) {
-            httpDeleteOSSResource({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
+            httpDeleteNotepadFile({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
         }
     })
     /**删除在文档中被删除30s的文件 */
