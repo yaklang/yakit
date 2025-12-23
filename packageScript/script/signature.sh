@@ -1,3 +1,4 @@
+# PS: 这个脚本会向系统中导入证书，且用于在 yak 文件中进行代码签名，此处很重要！！！
 # 第一个参数，目前仅有 build
 MODE="$1"  
 
@@ -25,7 +26,7 @@ echo "Using certificate: $CERT_ID"
 # build 模式：到此结束
 # ===============================
 if [ "$MODE" = "build" ]; then
-  echo "build mode detected, skip codesign" 
+  echo "build mode detected, skip codesign engine" 
   exit 0
 fi
 

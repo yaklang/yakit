@@ -36,58 +36,54 @@ jobs:
 
             - name: Restore Yak Engine Cache
               uses: actions/cache@v4
+              id: cache
               with:
                   path: bins
-                  key: macos-yak-engine-${{ steps.engine_ver.outputs.version }}
+                  key: yak-engine-${{ runner.os }}-${{ steps.engine_ver.outputs.version }}
 
         # ---------- Linux ----------
             - name: Download Yak Engine (Linux)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
-                  if [ ! -f bins/yak_linux_amd64.zip ]; then
                     wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_amd64
                     zip bins/yak_linux_amd64.zip bins/yak_linux_amd64
                     rm bins/yak_linux_amd64
-                  fi
 
             - name: Download Yak Engine (Linux-arm64)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
-                  if [ ! -f bins/yak_linux_arm64.zip ]; then
-                    wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_arm64
-                    zip bins/yak_linux_arm64.zip bins/yak_linux_arm64
-                    rm bins/yak_linux_arm64
-                  fi
+                  wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_arm64
+                  zip bins/yak_linux_arm64.zip bins/yak_linux_arm64
+                  rm bins/yak_linux_arm64
 
         # ---------- Windows ----------
             - name: Download Yak Engine (Windows)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
-                  if [ ! -f bins/yak_windows_normal_amd64.zip ]; then
-                    wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe
-                    zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
-                    rm bins/yak_windows_amd64.exe
-                  fi
+                  wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe
+                  zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
+                  rm bins/yak_windows_amd64.exe
 
             - name: Download Yak Legacy Engine (Windows)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
-                  if [ ! -f bins/yak_windows_legacy_amd64.zip ]; then
-                    wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe
-                    zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
-                    rm bins/yak_windows_amd64.exe
-                  fi
+                  wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe
+                  zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
+                  rm bins/yak_windows_amd64.exe
 
         # ---------- MacOS ----------
             - name: Download Yak Engine (macOS)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
-                  if [ ! -f bins/yak_darwin_amd64 ]; then
-                    wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
-                  fi
+                  wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
 
             - name: Download Yak Engine (macOS-arm64)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
-                  if [ ! -f bins/yak_darwin_arm64 ]; then
-                    wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
-                  fi
+                  wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
 
             - name: Signature Mac Engine
+              if: steps.cache.outputs.cache-hit != 'true'
               run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
               shell: bash
 
@@ -171,8 +167,6 @@ jobs:
               shell: bash
 
             - name: Build ${{ matrix.artifact_name }} Normal And Legacy (MultiPlatform)
-              env:
-                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: ./packageScript/script/electron-builder.sh ${{ matrix.version }} || { exit 1; }
               shell: bash
