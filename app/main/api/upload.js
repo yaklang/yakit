@@ -35,16 +35,32 @@ module.exports = (win, getClient) => {
         return fileData.toString("base64")
     })
 
-    const postProject = ({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, type, token}) => {
+    const postProject = ({
+        url,
+        chunkStream,
+        chunkIndex,
+        totalChunks,
+        fileName,
+        type,
+        fileHash,
+        base64,
+        imgInfo,
+        token
+    }) => {
         return new Promise((resolve, reject) => {
             const percent = (chunkIndex + 1) / totalChunks
             const formData = new FormData()
-            formData.append("file", chunkStream)
+            if (base64 && imgInfo) {
+                let readable = getBase64ImgToFormData(base64)
+                formData.append("file", readable, {...imgInfo})
+            } else {
+                formData.append("file", chunkStream)
+            }
             formData.append("index", chunkIndex)
             formData.append("totalChunks", totalChunks)
-            formData.append("hash", fileHash)
             formData.append("fileName", fileName)
             formData.append("type", type)
+            fileHash && formData.append("fileHash", fileHash)
             // console.log("参数---", fileName, fileHash)
             httpApi({
                 method: "post",
@@ -76,7 +92,7 @@ module.exports = (win, getClient) => {
                         reject(data)
                         return
                     }
-                    resolve()
+                    resolve(res)
                 })
                 .catch((err) => {
                     reject(`重传三次失败：${err}`)
@@ -85,6 +101,7 @@ module.exports = (win, getClient) => {
     }
 
     const postProjectFail = ({fileName, hash, fileIndex, type}) => {
+        // 此接口中的hash等待后端移除
         service({
             url: "import/project/fail",
             method: "post",
@@ -99,6 +116,19 @@ module.exports = (win, getClient) => {
         })
     }
 
+    // 将base64图片信息转换为FormData
+    const getBase64ImgToFormData = (base64) => {
+        // 去掉 Base64 字符串前缀
+        const data = base64.replace(/^data:image\/\w+;base64,/, "")
+        // 将 Base64 转换为二进制 Buffer
+        const binaryData = Buffer.from(data, "base64")
+        const readable = new Readable()
+        readable._read = () => {}
+        readable.push(binaryData)
+        readable.push(null)
+        return readable
+    }
+
     // 上传状态
     let TaskStatus = true
     // 分片上传
@@ -106,9 +136,30 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             // console.log("params---",params);
             // path为文件路径 token为切片进度回调 url为接口
-            const {url, path, token, type = ""} = params
+            const {url, path, token, type = "", filedHash, base64, imgInfo} = params
             if (!type) {
                 reject("type必传")
+                return
+            }
+            // base64上传时不用分片
+            if (base64 && imgInfo) {
+                try {
+                    const res = await postProject({
+                        url,
+                        chunkIndex: 0,
+                        totalChunks: 1,
+                        fileName: "",
+                        type,
+                        fileHash: filedHash,
+                        base64,
+                        imgInfo,
+                        token
+                    })
+                    resolve({TaskStatus: true, resArr: [res]})
+                } catch (error) {
+                    reject(error)
+                }
+
                 return
             }
             // 获取文件名
@@ -129,26 +180,26 @@ module.exports = (win, getClient) => {
             const fileHash = await hashChunk({path})
             const fileHashTime = `${fileHash}-${Date.now()}`
             TaskStatus = true
+            let resArr = []
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 if (TaskStatus) {
                     try {
-                        const hash = await hashChunk({path, size, chunkSize, chunkIndex})
                         let add = chunkIndex === 0 ? 0 : 1
                         const start = chunkIndex * chunkSize + add
                         const end = Math.min((chunkIndex + 1) * chunkSize, size)
                         // 创建当前分片的读取流
                         const chunkStream = fs.createReadStream(path, {start, end})
-                        await postProject({
+                        const res = await postProject({
                             url,
                             chunkStream,
                             chunkIndex,
                             totalChunks,
                             fileName,
-                            hash,
-                            fileHash: fileHashTime,
                             type,
+                            fileHash: filedHash,
                             token
                         })
+                        resArr.push(res)
                     } catch (error) {
                         postProjectFail({
                             fileName,
@@ -161,7 +212,7 @@ module.exports = (win, getClient) => {
                     }
                 }
             }
-            resolve(TaskStatus)
+            resolve({TaskStatus, resArr})
         })
     })
     ipcMain.handle("cancle-split-upload", (event, params) => {
@@ -180,7 +231,7 @@ module.exports = (win, getClient) => {
         const formData = new FormData()
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
-                if (key !== "path") {
+                if (key !== "path" && key !== "url") {
                     formData.append(key, value || undefined)
                 }
             })
@@ -197,7 +248,7 @@ module.exports = (win, getClient) => {
     })
     // http-上传图片-通过base64上传
     ipcMain.handle("http-upload-img-base64", async (event, params) => {
-        const {base64, imgInfo, type} = params
+        const {base64, imgInfo} = params
 
         // 去掉 Base64 字符串前缀
         const data = base64.replace(/^data:image\/\w+;base64,/, "")
