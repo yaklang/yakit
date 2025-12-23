@@ -5,6 +5,7 @@ import React, {
     memo,
     Ref,
     RefAttributes,
+    useEffect,
     useMemo,
     useRef,
     useState
@@ -13,7 +14,7 @@ import {AIChatTextareaProps, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {v4 as uuidv4} from "uuid"
 
@@ -26,6 +27,8 @@ import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import {FreeDialogTagList} from "../aiChatWelcome/FreeDialogList/FreeDialogList"
 import FreeDialogFileList from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import emiter from "@/utils/eventBus/eventBus"
+import {AIAgentTriggerEventInfo} from "../aiAgentType"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -66,7 +69,15 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
     const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
     const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
-
+    const aiChatTextareaRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(aiChatTextareaRef)
+    useEffect(() => {
+        if (!inViewport) return
+        emiter.on("settingInputCard", onSettingInputCard)
+        return () => {
+            emiter.off("settingInputCard", onSettingInputCard)
+        }
+    }, [inViewport])
     const isQuestion = useMemo(() => {
         return !!(question && question.trim())
     }, [question])
@@ -74,6 +85,26 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const handleSubmit = useMemoizedFn(() => {
         if (!isQuestion) return
         onSubmit && onSubmit(question.trim())
+    })
+    const onSettingInputCard = useMemoizedFn((res) => {
+        if (!inViewport) return
+        try {
+            const data: AIAgentTriggerEventInfo = JSON.parse(res)
+            const {type, params} = data
+            switch (type as AIMentionTabsEnum) {
+                case AIMentionTabsEnum.KnowledgeBase:
+                    if (!!params) {
+                        setSelectKnowledgeBases((prev) => {
+                            const index = prev.findIndex((item) => item.id === params.id)
+                            return index === -1 ? [...prev, {id: params.id!, name: params.name!}] : prev
+                        })
+                    }
+                    break
+
+                default:
+                    break
+            }
+        } catch (error) {}
     })
     // #endregion
 
@@ -210,7 +241,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         )
     }, [selectForges, selectTools, selectKnowledgeBases, fileToQuestion])
     return (
-        <div className={classNames(styles["ai-chat-textarea"], className)} onClick={handleSetTextareaFocus}>
+        <div
+            className={classNames(styles["ai-chat-textarea"], className)}
+            onClick={handleSetTextareaFocus}
+            ref={aiChatTextareaRef}
+        >
             {isShowSelectList && (
                 <div>
                     <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
