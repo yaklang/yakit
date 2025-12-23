@@ -53,7 +53,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 token: uploadToken,
                 type: "Project"
             })
-            .then((TaskStatus) => {
+            .then(({TaskStatus}) => {
                 if (isCancle.current) return
                 if (TaskStatus) {
                     setPercent(1)
