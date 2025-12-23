@@ -808,6 +808,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         {wait: 500}
     )
 
+    const rafIdRef = useRef<number | null>(null) // RAF ID
     const deltaDecorationsRef = useRef<() => any>()
     const highLightTextFun = useMemoizedFn(() => highLightText)
     const highLightFindFun = useMemoizedFn(() => highLightFind)
@@ -914,7 +915,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     } catch (e) {}
                 })()
             }
-            const needDecode = props.type && ["html", "http", 'json'].includes(props.type)
+            const needDecode = props.type && ["html", "http", "json"].includes(props.type)
             if (needDecode && !disableUnicodeDecodeRef.current) {
                 ;(() => {
                     // http html json
@@ -1102,8 +1103,23 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             return dec
         }
 
+        const scheduleDecorations = () => {
+            // 取消之前排队的 rAF
+            if (rafIdRef.current !== null) {
+                cancelAnimationFrame(rafIdRef.current)
+            }
+
+            // 只保留最新一次触发
+            rafIdRef.current = requestAnimationFrame(() => {
+                rafIdRef.current = null
+                try {
+                    current = model.deltaDecorations(current, generateDecorations())
+                } catch (e) {}
+            })
+        }
+
         deltaDecorationsRef.current = () => {
-            current = model.deltaDecorations(current, generateDecorations())
+            scheduleDecorations()
         }
 
         let lastValue = model.getValue()
@@ -1113,9 +1129,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 return
             }
             lastValue = newValue
-            current = model.deltaDecorations(current, generateDecorations())
+            try {
+                current = model.deltaDecorations(current, generateDecorations())
+            } catch (e) {}
         })
-        current = model.deltaDecorations(current, generateDecorations())
+        scheduleDecorations()
 
         // 监听查找面板变化
         const findController = editor.getContribution<IFindController>("editor.contrib.findController")
