@@ -14,7 +14,7 @@ import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTex
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {VirtualTable} from "./VirtualTable"
 import {VirtualColumns} from "./VirtualTable"
-import {DynamicStatusProps, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
+import {DynamicStatusProps, useStore, yakitDynamicStatus} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {getReleaseEditionName, getRemoteHttpSettingGV} from "@/utils/envfile"
@@ -31,14 +31,13 @@ export interface ControlOperationProps {
 // 控制中 - 禁止操作
 export const ControlOperation: React.FC<ControlOperationProps> = (props) => {
     const {controlName} = props
-    const {userInfo} = useStore()
     const {dynamicStatus} = yakitDynamicStatus()
     // 关闭远程控制
     const closeControl = () => {
         ipcRenderer.invoke("kill-dynamic-control")
         // 立即退出界面
         ipcRenderer.invoke("lougin-out-dynamic-control-page")
-        remoteOperation(false, dynamicStatus, userInfo)
+        remoteOperation(false, dynamicStatus)
     }
     return (
         <div className={styles["control-operation"]}>

@@ -1739,7 +1739,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         setCheckLog(["远程控制异常退出, 无法连接"])
                         failed("远程控制异常退出, 无法连接。")
                         setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
-                        remoteOperation(false, dynamicStatus, userInfo)
+                        remoteOperation(false, dynamicStatus)
                         setYakitStatus("control-remote-timeout")
                         onDisconnect()
                     }
@@ -1788,7 +1788,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         setNewCheckLog(["远程控制异常退出, 无法连接"])
                         failed("远程控制异常退出, 无法连接。")
                         setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
-                        remoteOperation(false, dynamicStatus, userInfo)
+                        remoteOperation(false, dynamicStatus)
                         setYakitStatus("control-remote-timeout")
                         onDisconnect()
                     }
