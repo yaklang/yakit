@@ -41,7 +41,8 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
                 Description: params.KnowledgeBaseDescription,
                 Type: params.KnowledgeBaseType,
                 Tags: params.Tags,
-                CreatedFromUI: params.CreatedFromUI
+                CreatedFromUI: params.CreatedFromUI,
+                IsDefault: params.IsDefault ?? false
             })
             const KnowledgeBaseID = result?.KnowledgeBase?.ID
             addKnowledgeBase({

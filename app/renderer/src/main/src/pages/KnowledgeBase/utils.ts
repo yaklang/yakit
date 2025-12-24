@@ -83,144 +83,144 @@ const knowledgeTypeOptions = [
         label: "漏洞情报"
     },
     {
-        value: " 攻击技术",
-        label: " 攻击技术"
+        value: "攻击技术",
+        label: "攻击技术"
     },
     {
-        value: " 恶意软件",
-        label: " 恶意软件"
+        value: "恶意软件",
+        label: "恶意软件"
     },
     {
-        value: " 渗透测试",
-        label: " 渗透测试"
+        value: "渗透测试",
+        label: "渗透测试"
     },
     {
-        value: " 红蓝对抗",
-        label: " 红蓝对抗"
+        value: "红蓝对抗",
+        label: "红蓝对抗"
     },
     {
-        value: " 威胁情报",
-        label: " 威胁情报"
+        value: "威胁情报",
+        label: "威胁情报"
     },
     {
-        value: " 应急响应",
-        label: " 应急响应"
+        value: "应急响应",
+        label: "应急响应"
     },
     {
-        value: " 代码审计",
-        label: " 代码审计"
+        value: "代码审计",
+        label: "代码审计"
     },
     {
-        value: " 逆向工程",
-        label: " 逆向工程"
+        value: "逆向工程",
+        label: "逆向工程"
     },
     {
-        value: " Web安全",
-        label: " Web安全"
+        value: "Web安全",
+        label: "Web安全"
     },
     {
-        value: " 内网渗透",
-        label: " 内网渗透"
+        value: "内网渗透",
+        label: "内网渗透"
     },
     {
-        value: " 云原生安全",
-        label: " 云原生安全"
+        value: "云原生安全",
+        label: "云原生安全"
     },
     {
-        value: " 移动安全",
-        label: " 移动安全"
+        value: "移动安全",
+        label: "移动安全"
     },
     {
-        value: " IoT安全",
-        label: " IoT安全"
+        value: "IoT安全",
+        label: "IoT安全"
     },
     {
-        value: " 密码学",
-        label: " 密码学"
+        value: "密码学",
+        label: "密码学"
     },
     {
-        value: " 协议分析",
-        label: " 协议分析"
+        value: "协议分析",
+        label: "协议分析"
     },
     {
-        value: " 供应链安全",
-        label: " 供应链安全"
+        value: "供应链安全",
+        label: "供应链安全"
     },
     {
-        value: " 安全工具",
-        label: " 安全工具"
+        value: "安全工具",
+        label: "安全工具"
     },
     {
-        value: " 武器库",
-        label: " 武器库"
+        value: "武器库",
+        label: "武器库"
     },
     {
-        value: " 靶场环境",
-        label: " 靶场环境"
+        value: "靶场环境",
+        label: "靶场环境"
     },
     {
-        value: " 字典规则",
-        label: " 字典规则"
+        value: "字典规则",
+        label: "字典规则"
     },
     {
-        value: " 等保合规",
-        label: " 等保合规"
+        value: "等保合规",
+        label: "等保合规"
     },
     {
-        value: " 安全标准",
-        label: " 安全标准"
+        value: "安全标准",
+        label: "安全标准"
     },
     {
-        value: " 法律法规",
-        label: " 法律法规"
+        value: "法律法规",
+        label: "法律法规"
     },
     {
-        value: " 安全基线",
-        label: " 安全基线"
+        value: "安全基线",
+        label: "安全基线"
     },
     {
-        value: " 编程语言",
-        label: " 编程语言"
+        value: "编程语言",
+        label: "编程语言"
     },
     {
-        value: " 开发框架",
-        label: " 开发框架"
+        value: "开发框架",
+        label: "开发框架"
     },
     {
-        value: " 数据库",
-        label: " 数据库"
+        value: "数据库",
+        label: "数据库"
     },
     {
-        value: " DevOps",
-        label: " DevOps"
+        value: "DevOps",
+        label: "DevOps"
     },
     {
-        value: " 系统运维",
-        label: " 系统运维"
+        value: "系统运维",
+        label: "系统运维"
     },
     {
-        value: " 行业报告",
-        label: " 行业报告"
+        value: "行业报告",
+        label: "行业报告"
     },
     {
-        value: " 技术博客",
-        label: " 技术博客"
+        value: "技术博客",
+        label: "技术博客"
     },
     {
-        value: " 培训教程",
-        label: " 培训教程"
+        value: "培训教程",
+        label: "培训教程"
     },
     {
-        value: " 产品文档",
-        label: " 产品文档"
+        value: "产品文档",
+        label: "产品文档"
     },
     {
-        value: " 项目管理",
-        label: " 项目管理"
+        value: "项目管理",
+        label: "项目管理"
     },
     {
-        value: " AI与安全",
-        label: " AI与安全"
+        value: "AI与安全",
+        label: "AI与安全"
     }
 ]
 
@@ -250,6 +250,10 @@ const manageMenuList = [
     {
         key: "delete",
         label: "删除"
+    },
+    {
+        key: "default",
+        label: "设为默认"
     }
 ]
 
@@ -775,6 +779,29 @@ const extractFileName = (filePath: string) => {
     return fullName.replace(/\.[^/.]+$/, "")
 }
 
+type KnowledgeBase = Record<string, any>
+
+const DEFAULT_EXTRA = {
+    streamstep: "success" as 1 | 2 | "success",
+    addManuallyItem: false,
+    historyGenerateKnowledgeList: []
+}
+
+const mergeKnowledgeBaseList = (list1: KnowledgeBaseItem[], list2: KnowledgeBaseItem[]): KnowledgeBaseItem[] => {
+    // 用 ID 构建 map，方便 O(1) 查找
+    const map2 = new Map<string, KnowledgeBase>(list2.map((item) => [item.ID, item]))
+
+    return list1.map((item1) => {
+        const item2 = map2.get(item1.ID) || {}
+
+        return {
+            ...DEFAULT_EXTRA,
+            ...item2,
+            ...item1
+        }
+    })
+}
+
 export {
     targetInstallList,
     getFileInfoList,
@@ -800,5 +827,6 @@ export {
     extractFileName,
     ClearAllKnowledgeBase,
     insertModaOptions,
-    checkAIModelAvailability
+    checkAIModelAvailability,
+    mergeKnowledgeBaseList
 }

@@ -1245,7 +1245,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 新建|编辑 tool 的关闭后跳转回 ai-agent 页面
                 removeMenuPage({route: route, menuName: ""}, {route: YakitRoute.AI_Agent, menuName: ""})
                 break
-            
+
             case YakitRoute.MITMHacker:
                 removeMenuPage({route: route, menuName: ""})
                 keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
@@ -1404,13 +1404,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     return val
                 })
             }
-            if(res.enableGMTLS) {
+            if (res.enableGMTLS) {
                 newAdvancedConfigValue.isGmTLS = true
             }
-            if(res.randomJA3) {
+            if (res.randomJA3) {
                 newAdvancedConfigValue.randomJA3 = true
             }
-            newAdvancedConfigValue.noSystemProxy = !!res.noSystemProxy 
+            newAdvancedConfigValue.noSystemProxy = !!res.noSystemProxy
 
             // 获取全局热加载缓存信息
             const hotPatchCode = await getHotPatchCodeInfo()
@@ -2096,6 +2096,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.AI_REPOSITORY:
                 emiter.emit("onCloseKnowledgeRepository")
+                break
+
+            case YakitRoute.AI_Agent:
+                emiter.emit("onClosePageRepository")
                 break
 
             case YakitRoute.MITMHacker:
@@ -3665,7 +3669,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (selectSubMenu.id !== "0") {
                 if (selectSubMenu.groupId === "0") {
                     if (currentTabKey === YakitRoute.HTTPFuzzer) setType("config")
-                    if(currentTabKey === pageItem.route) removeCurrentSelectGroupId(currentTabKey)
+                    if (currentTabKey === pageItem.route) removeCurrentSelectGroupId(currentTabKey)
                 } else {
                     if (currentTabKey === YakitRoute.HTTPFuzzer) {
                         addFuzzerSequenceList({

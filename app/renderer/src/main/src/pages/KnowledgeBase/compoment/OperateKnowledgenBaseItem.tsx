@@ -20,10 +20,12 @@ import {TKnowledgeBaseSidebarProps} from "./KnowledgeBaseSidebar"
 import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
+import console from "console"
 
 const {ipcRenderer} = window.require("electron")
 
-interface TOperateKnowledgenBaseItemProps extends Pick<TKnowledgeBaseSidebarProps, "setKnowledgeBaseID"> {
+interface TOperateKnowledgenBaseItemProps {
+    setKnowledgeBaseID?: (id: string) => void
     items: KnowledgeBaseItem
     setMenuSelectedId: (menuOpenProps?: string) => void
     knowledgeBase: KnowledgeBaseItem[]
@@ -39,6 +41,7 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     api,
     addMode
 }) => {
+    const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [menuOpen, setMenuOpen] = useSafeState(false)
     const [deleteVisible, setDeleteVisible] = useSafeState(false)
     const [editVisible, setEditVisible] = useSafeState(false)
@@ -93,6 +96,40 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
         }
     }, [exportToken])
 
+    const {run} = useRequest(
+        async (parmas) => {
+            await ipcRenderer.invoke("UpdateKnowledgeBase", {
+                KnowledgeBaseId: parmas?.ID,
+                KnowledgeBaseName: parmas?.KnowledgeBaseName,
+                KnowledgeBaseDescription: parmas?.KnowledgeBaseDescription,
+                KnowledgeBaseType: parmas?.KnowledgeBaseType,
+                Tags: parmas?.Tags ?? [],
+                CreatedFromUI: parmas?.CreatedFromUI ?? true,
+                IsDefault: parmas?.IsDefault
+            })
+        },
+        {
+            manual: true,
+            onSuccess: () => {
+                const prevDefault = knowledgeBases.find((it) => it.IsDefault === true)
+                if (prevDefault && prevDefault.ID !== items.ID) {
+                    editKnowledgeBase(prevDefault.ID, {
+                        ...prevDefault,
+                        IsDefault: false
+                    })
+                }
+                editKnowledgeBase(items.ID, {
+                    ...items,
+                    IsDefault: true
+                })
+                success("设置成功")
+            },
+            onError: (error) => {
+                failed(`设置失败: ${error}`)
+            }
+        }
+    )
+
     return (
         <div>
             <YakitDropdownMenu
@@ -110,6 +147,12 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
                                 break
                             case "export":
                                 exportFile(items.ID)
+                                break
+                            case "default":
+                                run({
+                                    ...items,
+                                    IsDefault: true
+                                })
                                 break
 
                             default:
@@ -244,7 +287,9 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
                 KnowledgeBaseName: parmas?.KnowledgeBaseName,
                 KnowledgeBaseDescription: parmas?.KnowledgeBaseDescription,
                 KnowledgeBaseType: parmas?.KnowledgeBaseType,
-                Tags: parmas?.Tags ?? []
+                Tags: parmas?.Tags ?? [],
+                CreatedFromUI: parmas?.CreatedFromUI ?? true,
+                IsDefault: parmas?.IsDefault ?? false
             })
         },
         {
@@ -280,6 +325,7 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
                 ...items,
                 ...result
             }
+            console.log(items, result, "items")
             await editKnowledgRunAsync(transformData)
             editKnowledgeBase(items.ID, transformData)
         } catch (error) {}

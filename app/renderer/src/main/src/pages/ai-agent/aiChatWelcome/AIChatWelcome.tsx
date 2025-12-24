@@ -62,6 +62,8 @@ import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import useAIChatDrop from "./hooks/useAIChatDrop"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {KnowledgeSidebarList} from "./KnowledgeSidebarList/KnowledgeSidebarList"
+import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 
 const sideberRadioOptions = [
     {
@@ -93,7 +95,7 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const {t, i18n} = useI18nNamespaces(["aiAgent"])
-    const {onTriageSubmit, onSetReAct} = props
+    const {onTriageSubmit, onSetReAct, streams, api} = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -404,7 +406,15 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                     options={sideberRadioOptions}
                     className={styles["sidebar-radio"]}
                 />
-                {targetSidebarSelected}
+                {sidebarSelected === "fileTree" ? (
+                    <div className={styles["file-tree-list-inner"]}>
+                        <FileTreeList />
+                    </div>
+                ) : (
+                    <div className={styles["knowledge-base-list-inner"]}>
+                        <KnowledgeSidebarList api={api} streams={streams} />
+                    </div>
+                )}
             </div>
             <div className={styles["content"]}>
                 <div className={styles["content-absolute"]}>
