@@ -524,6 +524,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     // 引擎日志 全局监听
     useEngineConsole({})
 
+    const onCloseControlMyselfModal = useMemoizedFn(() => {
+        setControlMyselfModal(false)
+    })
+    useEffect(() => {
+        emiter.on("onCloseControlMyselfModal", onCloseControlMyselfModal)
+        return () => {
+            emiter.off("onCloseControlMyselfModal", onCloseControlMyselfModal)
+        }
+    }, [])
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>

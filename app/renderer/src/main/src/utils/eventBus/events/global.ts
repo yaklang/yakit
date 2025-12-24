@@ -39,4 +39,6 @@ export type GlobalEventProps = {
     onUpdateSecondaryTabsNum: number
     /**日志数量限制 */
     onUpdateLimitLogNum: number
+    /** 远程控制受控端密钥弹窗自动关闭 */
+    onCloseControlMyselfModal?: string
 }
