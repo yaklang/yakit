@@ -485,6 +485,8 @@ export interface ExtraMITMServerProps {
     hosts: KVPair[]
     /**@name 过滤WebSocket */
     filterWebsocket: boolean
+    /**@name 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤） */
+    allowChunkStaticJS: boolean
     /**禁用初始页 */
     disableCACertPage: boolean
     /**禁用系统代理 */

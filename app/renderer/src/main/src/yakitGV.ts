@@ -94,6 +94,8 @@ export enum RemoteGV {
     MITMDisableCACertPage = "mitm_disable_CACertPage",
     /**@name mitm禁用系统代理 */
     MITMDisableSystemProxy = "mitm_disable_SystemProxy",
+    /**@name mitm是否允许抓取 chunk/static JS */
+    MITMAllowChunkStaticJS = "mitm_allow_chunk_static_js",
     /**@name 缓存一级菜单选择的tab的key值 */
     SelectFirstMenuTabKey = "select-first-menu-tab-key",
     /**@name 缓存谷歌免配置更多参数 */

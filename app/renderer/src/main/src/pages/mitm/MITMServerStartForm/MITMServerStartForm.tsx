@@ -22,7 +22,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
-import {CacheDropDownGV} from "@/yakitGV"
+import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -260,7 +260,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
         execStartMITM(values)
     })
-    const execStartMITM = useMemoizedFn((values) => {
+    const execStartMITM = useMemoizedFn(async (values) => {
         // 获取高级配置的默认值
         const advancedFormValue = advancedFormRef.current?.getValue()
         let params = {
@@ -268,6 +268,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             ...advancedFormValue,
             ...advancedValue
         }
+        let allowChunkStaticJS = false
+        try {
+            allowChunkStaticJS = (await getRemoteValue(RemoteGV.MITMAllowChunkStaticJS)) === "true"
+        } catch {}
         const extra: ExtraMITMServerProps = {
             onlyEnableGMTLS: params.onlyEnableGMTLS,
             preferGMTLS: params.preferGMTLS,
@@ -277,6 +281,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             dnsServers: params.dnsServers,
             hosts: params.etcHosts,
             filterWebsocket: params.filterWebsocket,
+            allowChunkStaticJS,
             disableCACertPage: params.disableCACertPage,
             DisableSystemProxy: params.DisableSystemProxy,
             DisableWebsocketCompression: params.DisableWebsocketCompression,

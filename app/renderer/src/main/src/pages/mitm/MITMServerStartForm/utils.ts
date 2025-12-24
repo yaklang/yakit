@@ -32,6 +32,8 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
     let data: MITMFilterData =cloneDeep(defaultMITMFilterData)
     /**baseFilter */
     Object.entries(baseFilter).forEach(([key, value]) => {
+        if (key === "allowChunkStaticJS") return
+
         const field: keyof MITMFilterData = getMITMField(key)
         let matcherType: FilterMatcherType = "word"
         switch (field) {
@@ -47,7 +49,7 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
                 break
         }
 
-        if (!!value.length) {
+        if (Array.isArray(value) && !!value.length) {
             const item: FilterDataItem = {
                 MatcherType: matcherType,
                 Group: value
@@ -105,7 +107,8 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
             includeUri: [],
             excludeUri: [],
             excludeMethod: [],
-            excludeContentTypes: []
+            excludeContentTypes: [],
+            allowChunkStaticJS: false
         },
         advancedFilters: []
     }

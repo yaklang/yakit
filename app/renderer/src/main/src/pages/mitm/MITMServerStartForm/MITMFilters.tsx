@@ -18,6 +18,7 @@ import {defaultMITMBaseFilter, defaultMITMAdvancedFilter} from "@/defaultConstan
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -28,6 +29,7 @@ export interface MITMFiltersProp {
     onClosed?: () => any
     ref?: any
     visible?: boolean
+    showAllowChunkStaticJS?: boolean
 }
 
 export interface MITMFilterSchema {
@@ -39,6 +41,8 @@ export interface MITMFilterSchema {
     excludeContentTypes?: string[]
     excludeUri?: string[]
     includeUri?: string[]
+    /**是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤） */
+    allowChunkStaticJS?: boolean
     FilterData?: MITMFilterData
 }
 
@@ -133,6 +137,20 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
+                {props.showAllowChunkStaticJS && (
+                    <Form.Item
+                        label={"过滤 JS"}
+                        help={"开启后过滤 chunk/static JS；关闭后允许抓取 chunk/static JS"}
+                    >
+                        <YakitSwitch
+                            size='middle'
+                            checked={!params?.allowChunkStaticJS}
+                            onChange={(checked) => {
+                                setParams({...params, allowChunkStaticJS: !checked})
+                            }}
+                        />
+                    </Form.Item>
+                )}
                 <Form.Item label={"排除 HTTP 方法"}>
                     <YakitSelect
                         mode='tags'

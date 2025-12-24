@@ -164,6 +164,8 @@ interface ExtraMITMServerV2 {
     HostsMapping: KVPair[]
     /**@name 过滤WebSocket */
     FilterWebsocket: boolean
+    /**@name 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤） */
+    AllowChunkStaticJS: boolean
     /**禁用初始页 */
     DisableCACertPage: boolean
     /**禁用系统代理 */
@@ -199,6 +201,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   DnsServers: value.extra.dnsServers,
                   HostsMapping: value.extra.hosts,
                   FilterWebsocket: value.extra.filterWebsocket,
+                  AllowChunkStaticJS: value.extra.allowChunkStaticJS,
                   DisableCACertPage: value.extra.disableCACertPage,
                   DisableSystemProxy: value.extra.DisableSystemProxy,
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
@@ -697,6 +700,24 @@ export const grpcMITMFilterWebsocket: APIFunc<MITMFilterWebsocketRequest, null> 
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMFilterWebsocket 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface MITMAllowChunkStaticJSRequest extends MITMBaseData {
+    allowChunkStaticJS: boolean
+}
+/**是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS） */
+export const grpcMITMAllowChunkStaticJS: APIFunc<MITMAllowChunkStaticJSRequest, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const {version} = params
+        const url = `mitm${version}-allow-chunk-static-js`
+        ipcRenderer
+            .invoke(url, params.allowChunkStaticJS)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "grpcMITMAllowChunkStaticJS 失败:" + e)
                 reject(e)
             })
     })

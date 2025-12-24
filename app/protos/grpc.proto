@@ -6637,6 +6637,9 @@ message MITMRequest {
   // disable websocket compression
   bool DisableWebsocketCompression = 64;
 
+  // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
+  bool AllowChunkStaticJS = 68;
+
   // hijack filter
   MITMFilterData HijackFilterData = 65;
   bool updateHijackFilter = 66;
@@ -8298,6 +8301,9 @@ message MITMV2Request{
   bool DisableSystemProxy = 49;
   // runtime change system proxy enable/disable
   bool SetDisableSystemProxy = 50;
+
+  // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
+  bool AllowChunkStaticJS = 51;
 }
 
 message MITMV2Response {
