@@ -6,7 +6,15 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatInfo} from "./type/aiChat"
-import {useDebounceFn, useMemoizedFn, useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {
+    useDebounceFn,
+    useInViewport,
+    useMemoizedFn,
+    useRequest,
+    useSize,
+    useThrottleEffect,
+    useUpdateEffect
+} from "ahooks"
 import {AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
 import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
@@ -16,9 +24,15 @@ import styles from "./AIAgent.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {loadRemoteHistory} from "./components/aiFileSystemList/store/useHistoryFolder"
 import {initCustomFolderStore} from "./components/aiFileSystemList/store/useCustomFolder"
+import {KnowledgeBaseContentProps} from "../KnowledgeBase/TKnowledgeBase"
+import {useKnowledgeBase} from "../KnowledgeBase/hooks/useKnowledgeBase"
+import {failed} from "@/utils/notification"
+import {mergeKnowledgeBaseList} from "../KnowledgeBase/utils"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20250808"
+
+const {ipcRenderer} = window.require("electron")
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
@@ -35,6 +49,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [show, setShow] = useState<boolean>(false)
 
     const sideHiddenModeRef = useRef<string>()
+
+    const {initialize, knowledgeBases} = useKnowledgeBase()
+    const welcomeRef = useRef<HTMLDivElement>(null)
+    const [inViewPort = true] = useInViewport(welcomeRef)
 
     // 缓存全局配置数据
     useUpdateEffect(() => {
@@ -162,9 +180,36 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         {wait: 200, leading: true}
     ).run
 
+    // 获取数据库 列表数据
+    const {run} = useRequest(
+        async (Keyword?: string) => {
+            const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
+                Keyword,
+                Pagination: {Limit: 9999, Page: 1, OrderBy: "updated_at", Sort: "desc"}
+            })
+            const {KnowledgeBases} = result
+            return KnowledgeBases
+        },
+        {
+            onError: (error) => {
+                failed("获取知识库列表失败:" + error)
+            },
+            onSuccess: (value) => {
+                if (value) {
+                    const initKnowledgeBase = mergeKnowledgeBaseList(value, knowledgeBases)
+                    initialize(initKnowledgeBase)
+                }
+            }
+        }
+    )
+
+    useEffect(() => {
+        run()
+    }, [inViewPort])
+
     return (
         <AIAgentContext.Provider value={{store, dispatcher}}>
-            <div id={YakitAIAgentPageID} className={styles["ai-agent"]}>
+            <div id={YakitAIAgentPageID} className={styles["ai-agent"]} ref={welcomeRef}>
                 <div className={classNames(styles["ai-side-list"], {[styles["ai-side-list-mini"]]: isMini})}>
                     <AIAgentSideList show={show} setShow={setShow} />
                 </div>

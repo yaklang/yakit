@@ -24,4 +24,6 @@ export type AIAgentEventProps = {
     settingInputCard: string
     /**类型同 settingInputCard */
     updateOfInputCard: string
+    // 一级页面关闭事件
+    onClosePageRepository?: string
 }

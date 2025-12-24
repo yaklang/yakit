@@ -380,6 +380,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                                 />
                                                                 生成中
                                                             </div>
+                                                        ) : items.IsDefault ? (
+                                                            <div className={styles["default-tag"]}>默认知识库</div>
                                                         ) : (
                                                             <div className={styles["type-tag"]}>
                                                                 {items.CreatedFromUI

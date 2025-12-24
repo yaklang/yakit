@@ -50,6 +50,10 @@
     .file-tree-list.open .file-tree-list-inner {
         overflow: overlay;
     }
+    .file-tree-list.open .knowledge-base-list-inner {
+        overflow: overlay;
+        height: 100%;
+    }
     .file-tree-list.close {
         height: 0;
         &-inner {

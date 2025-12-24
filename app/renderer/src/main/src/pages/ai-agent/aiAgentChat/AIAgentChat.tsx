@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams} from "./type"
-import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceFn, useMap, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
 import {AIChatInfo} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
@@ -32,7 +32,7 @@ import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {AIForgeForm, AIToolForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {grpcGetAIForge} from "../grpc"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
@@ -51,6 +51,10 @@ import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
+import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -67,6 +71,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {getLabelByParams} = useAINodeLabel()
     const {activeChat, setting} = useAIAgentStore()
     const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
+
+    // 插件并发构建流 hooks
+    const [streams, api] = useMultipleHoldGRPCStream()
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
     const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
@@ -626,13 +633,53 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
     }, [events])
 
+    const [visible, setVisible] = useSafeState(false)
+    const {clearAll} = useKnowledgeBase()
+
+    const onClosePageRepository = () => {
+        if (api.tokens.length > 0) {
+            setVisible(true)
+            return
+        } else {
+            clearAll()
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_Agent}))
+        }
+    }
+
+    useEffect(() => {
+        emiter.on("onClosePageRepository", onClosePageRepository)
+        return () => {
+            emiter.off("onClosePageRepository", onClosePageRepository)
+        }
+    }, [api, clearAll])
+
+    const onOK = async () => {
+        try {
+            await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
+            api.clearAllStreams()
+            clearAll()
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_Agent}))
+        } catch (e) {
+            failed(`关闭知识库页面失败: ${e + ""}`)
+        }
+    }
+
+    const onCancel = () => {
+        setVisible(false)
+    }
+
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
             <ChatIPCContent.Provider value={{store, dispatcher}}>
                 <div className={styles["chat-wrapper"]}>
                     {mode === "welcome" ? (
                         <React.Suspense fallback={<div>loading...</div>}>
-                            <AIChatWelcome onTriageSubmit={handleStartTriageChat} onSetReAct={onSetReAct} />
+                            <AIChatWelcome
+                                onTriageSubmit={handleStartTriageChat}
+                                onSetReAct={onSetReAct}
+                                api={api}
+                                streams={streams}
+                            />
                         </React.Suspense>
                     ) : (
                         <AIChatContent />
@@ -692,6 +739,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 onOk={handleReplaceToolOK}
                 cancelButtonText='取消'
                 onCancel={handleReplaceToolCancel}
+            />
+            <YakitHint
+                visible={visible}
+                // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
+                title={"知识库未构建完成"}
+                content={"知识未构建完成，是否确定关闭页面？"}
+                okButtonText='立即关闭'
+                onOk={() => onOK?.()}
+                cancelButtonText='稍后再说'
+                onCancel={onCancel}
             />
         </div>
     )

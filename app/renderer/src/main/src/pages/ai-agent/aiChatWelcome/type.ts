@@ -1,10 +1,13 @@
 import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ReactNode} from "react"
 import type {HandleStartParams} from "../aiAgentChat/type"
+import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 
 export interface AIChatWelcomeProps {
     onTriageSubmit: (data: HandleStartParams) => void
     onSetReAct: () => void
+    api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
+    streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
 }
 interface AIRecommendItem {
     type: string

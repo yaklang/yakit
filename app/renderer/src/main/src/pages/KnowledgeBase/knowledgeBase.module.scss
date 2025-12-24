@@ -12,6 +12,8 @@
     font-size: 11px;
     color: var(--Colors-Use-Warning-Primary);
     cursor: pointer;
+    white-space: nowrap;
+
     .loading-icon {
         width: 18px;
         display: flex;
@@ -736,6 +738,9 @@
                         .type-tag{
                             display: none;
                         }
+                        .default-tag{
+                            display: none;
+                        }
                         .operate{
                             display: flex;
                             .lightning-bolt-icon{
@@ -800,6 +805,9 @@
                         font-size: 11px;
                         white-space: nowrap;
                     }
+                    .default-tag{
+                        @extend %building-knowledge-items;
+                    }
                     .operate{
                         display: none;
                     }
@@ -811,6 +819,9 @@
                     justify-content: space-between;
                     gap: 4px;
                     .type-tag{
+                        display: none;
+                    }
+                    .default-tag{
                         display: none;
                     }
                     .operate{
@@ -911,7 +922,7 @@
             background: var(--Colors-Use-Main-Bg);
         }
 
-    }        
+    }
     .building-knowledge-base{
         color: var(--Colors-Use-Neutral-Text-1-Title);
         display: flex;
