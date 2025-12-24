@@ -268,7 +268,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitInput />
                     </Form.Item>
                     <Form.Item label={t("MITMRuleFromModal.hit_color")} name='Color'>
-                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}}>
+                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}} allowClear>
                             {colorSelectNode(t)}
                         </YakitSelect>
                     </Form.Item>

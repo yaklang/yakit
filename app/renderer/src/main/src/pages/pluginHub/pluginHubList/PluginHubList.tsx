@@ -174,11 +174,11 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         }
     })
 
-    /** 跳转到本地页面并根据搜索条件展示结果 */
-    const [localSearchParams, setLocalSearchParams] = useState<PluginSearchParams | undefined>(undefined)
-    const onChangeLocal = useMemoizedFn((searchParams?: PluginSearchParams) => {
-        setLocalSearchParams(searchParams)
-        onSetActive("local", true)
+    /** 跳转页面根据搜索条件展示结果 */
+    const [searchParams, setSearchParams] = useState<PluginSearchParams | undefined>(undefined)
+    const onChangeActive = useMemoizedFn((type: PluginSourceType, searchParams?: PluginSearchParams) => {
+        setSearchParams(searchParams)
+        onSetActive(type, true)
     })
 
     useEffect(() => {
@@ -212,7 +212,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                 <YakitSideTab
                     yakitTabs={HubSideBarList}
                     activeKey={active}
-                    onActiveKey={(v) => onSetActive(v as PluginSourceType)}
+                    onActiveKey={(v) => {
+                        setSearchParams(undefined)
+                        onSetActive(v as PluginSourceType)
+                    }}
                     show={show}
                     setShow={setShow}
                     barHint={barHint}
@@ -231,7 +234,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                             isDetailList={isDetail}
                             hiddenDetailList={hiddenDetail}
                             onPluginDetail={onClickPlugin}
-                            onChangeLocal={onChangeLocal}
+                            externalSearchParams={searchParams}
+                            onChangeLocal={(searchParams) => onChangeActive("local", searchParams)}
                         />
                     </div>
                 )}
@@ -265,7 +269,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                             onPluginDetail={onClickPlugin}
                             openGroupDrawer={openGroupDrawer}
                             onSetOpenGroupDrawer={setOpenGroupDrawer}
-                            externalSearchParams={localSearchParams}
+                            externalSearchParams={searchParams}
+                            onChangeOnline={(searchParams) => onChangeActive("online", searchParams)}
                         />
                     </div>
                 )}

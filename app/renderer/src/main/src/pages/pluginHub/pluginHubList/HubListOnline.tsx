@@ -1,5 +1,5 @@
 import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "react"
-import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useRequest} from "ahooks"
 import {OutlineRefreshIcon, OutlineClouddownloadIcon, OutlineClouduploadIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -15,12 +15,14 @@ import {pluginOnlineReducer, initialOnlineState} from "@/pages/plugins/pluginRed
 import {
     PluginsQueryProps,
     convertPluginsRequestParams,
+    convertLocalPluginsRequestParams,
     DownloadOnlinePluginsRequest,
     convertDownloadOnlinePluginBatchRequestParams,
     apiDownloadPluginOnline,
     apiFetchOnlineList,
     apiFetchGroupStatisticsOnline,
-    excludeNoExistfilter
+    excludeNoExistfilter,
+    apiQueryYakScript
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
@@ -65,13 +67,15 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface HubListOnlineProps extends HubListBaseProps {
     onChangeLocal?: (searchParams?: PluginSearchParams) => void
+    externalSearchParams?: PluginSearchParams // 外部传入的搜索参数
 }
 /** @name 插件商店 */
 export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
-    const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail, onChangeLocal} = props
+    const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail, onChangeLocal, externalSearchParams} = props
 
     useShortcutKeyTrigger("newPlugin", () => {
         onNewPlugin()
@@ -106,6 +110,42 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>({plugin_type: [], tags: []})
 
     const [pluginSource, setPluginSource, getPluginSource] = useGetSetState<PluginSource>("all")
+
+    // 获取官方插件和本地插件的总数
+    const [getTotalLoading, setGetTotalLoading] = useState(false)
+    const {data: tabTotal = {online: 0, official: 0, local: 0}, run: runTabTotal} = useRequest(
+        async () => {
+            setGetTotalLoading(true)
+            const queryFilter = getFilters()
+            const querySearch = getSearch()
+            const params: PluginListPageMeta = {page: 1, limit: 1, order_by: "updated_at"}
+            const query: PluginsQueryProps = convertPluginsRequestParams(queryFilter, querySearch, params)
+            const localQuery = convertLocalPluginsRequestParams({
+                filter: queryFilter,
+                search: querySearch,
+                pageParams: params
+            })
+
+            const [onlineRes, officialRes, localRes] = await Promise.all([
+                apiFetchOnlineList(query, true),
+                apiFetchOnlineList({...query, official: [true]}, true),
+                apiQueryYakScript(localQuery, true)
+            ])
+            setGetTotalLoading(false)
+            return {
+                online: Number(onlineRes.pagemeta.total) || 0,
+                official: Number(officialRes.pagemeta.total) || 0,
+                local: Number(localRes.Total) || 0
+            }
+        }
+    )
+
+    const {t, i18n} = useI18nNamespaces(["plugin"])
+
+    // 监听外部传入的搜索参数
+    useUpdateEffect(() => {
+        externalSearchParams && onSearch(externalSearchParams)
+    }, [externalSearchParams])
 
     const showIndex = useRef<number>(0)
     const setShowIndex = useMemoizedFn((index: number) => {
@@ -253,6 +293,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             onCheck(false)
             setSearch(val)
             fetchList(true)
+            runTabTotal()
         }),
         {wait: 300, leading: true}
     ).run
@@ -633,9 +674,12 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                 filters={filters as Record<string, API.PluginsSearchData[]>}
                                 setFilters={setFilters}
                                 listTabs={[
-                                    {tab: "在线插件", key: "all"},
-                                    {tab: "官方插件", key: "official"},
-                                    {tab: "本地插件", key: "local"}
+                                    {tab: `${t("PluginTabName.allPlugin")}（${getTotalLoading ? "..." : tabTotal.online}）`, key: "all"},
+                                    {
+                                        tab: `${t("PluginTabName.officialPlugin")}（${getTotalLoading ? "..." : tabTotal.official}）`,
+                                        key: "official"
+                                    },
+                                    {tab: `${t("PluginTabName.localPlugin")}（${getTotalLoading ? "..." : tabTotal.local}）`, key: "local"}
                                 ]}
                                 listTabActive={pluginSource}
                                 onListTabActiveChange={onPluginSourceChange}
