@@ -31,6 +31,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import TimelineCard from "./TimelineCard/TimelineCard"
 import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+import Loading from "@/components/Loading/Loading"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -70,15 +71,24 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         }
     })
 
-    const options = useMemo(() => {
+    const button = useMemo(() => {
         const hasStreams = (taskChat?.streams?.length ?? 0) > 0
+        if (hasStreams)
+            return (
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    size='middle'
+                    defaultValue={AIChatLeft.TaskTree}
+                    options={[
+                        {label: "任务树", value: AIChatLeft.TaskTree},
+                        {label: "时间线", value: AIChatLeft.Timeline}
+                    ]}
+                    value={activeTab}
+                    onChange={({target}) => setActiveTab(target.value)}
+                />
+            )
 
-        return hasStreams
-            ? [
-                  {label: "任务树", value: AIChatLeft.TaskTree},
-                  {label: "时间线", value: AIChatLeft.Timeline}
-              ]
-            : [{label: "时间线", value: AIChatLeft.Timeline}]
+        return <YakitButton size='middle'>时间线</YakitButton>
     }, [taskChat?.streams?.length])
 
     const hasTaskTree = (taskChat?.streams?.length ?? 0) > 0
@@ -100,16 +110,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         onClick={handleCancelExpand}
                         size='small'
                     />
-                    <div className={styles["header-title"]}>
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            size='middle'
-                            defaultValue={AIChatLeft.TaskTree}
-                            options={options}
-                            value={activeTab}
-                            onChange={({target}) => setActiveTab(target.value)}
-                        />
-                    </div>
+                    <div className={styles["header-title"]}>{button}</div>
                 </div>
 
                 <div className={styles["task-list"]}>{renderDom()}</div>
@@ -152,7 +153,16 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         () => (
             <div style={{height: "80px"}}>
                 {loading && (
-                    <YakitSpin wrapperClassName={styles["spin"]} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>
+                    <Loading
+                        size={14}
+                        style={{
+                            marginTop: 8
+                        }}
+                    >
+                        <div style={{fontWeight: 400, display: "flex", alignItems: "center"}}>
+                            {`${t("YakitSpin.loading")}...`}
+                        </div>
+                    </Loading>
                 )}
             </div>
         ),
