@@ -326,7 +326,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 ...(!showFreeChat && {
                     width: "100%"
                 }),
-                  ...(!timeLine &&
+                ...(!timeLine &&
                     isTaskStreamsEmpty && {
                         width: 30
                     })
@@ -356,6 +356,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                             <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
                             <span>新会话</span>
                             <Divider type='vertical' />
+                            <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
+                                新建会话
+                            </YakitButton>
                             <SideSettingButton />
                         </div>
                         <div className={styles["extra"]}>
@@ -394,9 +397,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                 </div>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-                            <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                                新建会话
-                            </YakitButton>
                             <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                 日志
                             </YakitButton>
