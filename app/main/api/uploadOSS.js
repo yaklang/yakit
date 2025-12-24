@@ -109,7 +109,7 @@ module.exports = (win, getClient) => {
             formData.append("index", chunkIndex)
             formData.append("totalChunks", totalChunks)
             formData.append("hash", fileHashTime)
-            formData.append("filedHash", filedHash)
+            formData.append("fileHash", filedHash)
             formData.append("type", type)
             httpApi({
                 url,
