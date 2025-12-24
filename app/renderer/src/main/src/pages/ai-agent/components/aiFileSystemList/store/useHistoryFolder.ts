@@ -14,7 +14,7 @@ export const loadRemoteHistory = async () => {
         if (saved) {
             const parsed = JSON.parse(saved)
             if (Array.isArray(parsed)) {
-                store.setSnapshot(() => parsed.filter(item => item.path).slice(-RECENT_COUNT))
+                store.setSnapshot(() => parsed.filter((item) => item.path).slice(-RECENT_COUNT))
             }
         }
     } catch (e) {
@@ -28,7 +28,8 @@ export const historyStore = {
 
     addHistoryItem({path, isFolder}: HistoryItem) {
         store.setSnapshot((prevList) => {
-            const filtered = prevList.filter((item) => item.path !== path.trim())
+            const trimmedPath = path.trim()
+            const filtered = prevList.filter((item) => item.path.trim() !== "" && item.path !== trimmedPath)
             const newItem: HistoryItem = {path, isFolder}
             const nextList = [...filtered, newItem]
 

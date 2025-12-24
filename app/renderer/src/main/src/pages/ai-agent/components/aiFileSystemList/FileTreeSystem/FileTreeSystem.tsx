@@ -58,7 +58,7 @@ const FileTreeSystem = () => {
                         )}
                         <FileTreeSystemListWapper
                             key='aiFolder'
-                            path={grpcFolders.map((item) => ({path: item, isFolder: true}))}
+                            path={grpcFolders}
                             selected={selected}
                             setSelected={setSelected}
                             title='AI Artifacts'

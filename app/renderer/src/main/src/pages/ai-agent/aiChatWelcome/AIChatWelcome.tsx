@@ -49,7 +49,7 @@ import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
-import {historyStore, loadRemoteHistory} from "../components/aiFileSystemList/store/useHistoryFolder"
+import {historyStore} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -57,7 +57,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
 import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
 import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
-import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
+import {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {HandleStartParams} from "../aiAgentChat/type"
@@ -381,21 +381,15 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
             <div className={styles["open-file-tree-button"]}>
-                {!customFolder.length ? (
-                    <OpenFileDropdown cb={onOpenFileFolder}>
-                        <YakitButton type='outline1'>打开文件夹管理</YakitButton>
-                    </OpenFileDropdown>
-                ) : (
-                    <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
-                        {openDrawer ? "收起" : "展开"}
-                    </YakitButton>
-                )}
+                <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
+                    {openDrawer ? "收起" : "展开"}
+                </YakitButton>
                 <Divider type='vertical' />
                 <SideSettingButton />
             </div>
             <div
                 className={`${styles["file-tree-list"]} ${
-                    customFolder.length && openDrawer ? styles["open"] : styles["close"]
+                  openDrawer ? styles["open"] : styles["close"]
                 }`}
             >
                 <div className={styles["file-tree-list-inner"]}>

@@ -8,6 +8,7 @@ import styles from "./FileTreeSystemListWapper.module.scss"
 import FileTreeSystemList from "../FileTreeSystemList/FileTreeSystemList"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {OutlinePluscircleIcon} from "@/assets/icon/outline"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     path,
@@ -30,46 +31,20 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             setOpenFolder?.(absolutePath, flag)
         } catch {}
     }
-    const dropdownMenu = useMemo(() => {
-        return {
-            data: [
-                {
-                    label: "打开文件",
-                    key: "open-file"
-                },
-                {
-                    label: "打开文件夹",
-                    key: "open-folder"
-                }
-            ],
-            onClick: ({key}) => {
-                switch (key) {
-                    case "open-file":
-                        onOpenFileFolder(false)
-                        break
-                    case "open-folder":
-                    default:
-                        onOpenFileFolder(true)
-                        break
-                }
-            }
-        }
-    }, [])
     const renderContent = useMemoizedFn(() => {
         if (isOpen && path.length === 0) {
             return (
-                <YakitDropdownMenu
-                    menu={dropdownMenu}
-                    dropdown={{
-                        trigger: ["click"],
-                        placement: "bottomLeft",
-                        overlayClassName: styles["dropdown-menu"]
-                    }}
-                >
-                    <YakitButton style={{width: "100%"}} type='outline2'>
-                        打开文件夹管理
-                    </YakitButton>
-                </YakitDropdownMenu>
+                <div>
+                    <YakitEmpty />
+                    <div className={styles["file-tree-system-title-btn"]}>
+                        <YakitButton hidden={!isOpen} onClick={() => onOpenFileFolder(true)}>
+                            打开文件夹
+                        </YakitButton>
+                        <YakitButton hidden={!isOpen} type='outline1' onClick={() => onOpenFileFolder(false)}>
+                            打开文件
+                        </YakitButton>
+                    </div>
+                </div>
             )
         }
         return path.map((item) => (
@@ -85,7 +60,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             />
         ))
     })
-
+    console.log("renderContent:", renderContent)
     // 菜单选择
     const menuData = useMemo(() => {
         if (!isOpen) return []

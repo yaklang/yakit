@@ -12,6 +12,13 @@
         align-items: center;
         color: var(--Colors-Use-Neutral-Text-1-Title);
         line-height: 16px;
+        &-btn { 
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: center;
+        }
         &-icon svg {
             width: 16px;
             height: 16px;
