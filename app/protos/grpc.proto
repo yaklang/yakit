@@ -1003,6 +1003,7 @@ message CreateKnowledgeBaseV2Request {
   string Type = 3;
   repeated string Tags = 4;
   bool CreatedFromUI = 5;
+  bool IsDefault = 5;
 }
 
 message CreateKnowledgeBaseV2Response {
@@ -1389,6 +1390,7 @@ message KnowledgeBaseInfo {
   repeated string Tags = 5;
   bool IsImported = 6;
   bool CreatedFromUI = 7;
+  bool IsDefault = 7;
 }
 
 message GetKnowledgeBaseResponse {
@@ -1408,6 +1410,7 @@ message UpdateKnowledgeBaseRequest {
   string KnowledgeBaseDescription = 3;
   string KnowledgeBaseType = 4;
   repeated string Tags = 5;
+  bool IsDefault = 6;
 }
 
 message DeleteKnowledgeBaseEntryRequest {
