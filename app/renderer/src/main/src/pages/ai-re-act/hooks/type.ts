@@ -174,7 +174,7 @@ export interface AIChatIPCStartParams {
     token: string
     params: AIInputEvent
     /** 供前端处理逻辑和UI的额外参数 */
-    extraValue?: CustomPluginExecuteFormValue
+    extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
 }
 
 /** 执行流途中发送消息的参数 */
@@ -196,7 +196,7 @@ export interface UseChatIPCEvents {
     /** 开始执行接口流 */
     onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
-    onSend: (params:AIChatSendParams) => void
+    onSend: (params: AIChatSendParams) => void
     /** 主动结束正在执行中的接口流 */
     onClose: (
         token: string,

@@ -1,21 +1,14 @@
 // import {fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import styles from "./FreeDialogFileList.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {RemoveIcon} from "@/assets/newIcon"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {FC, useEffect, useRef, useState} from "react"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {Key, useFileToQuestion, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
 import {AITagListProps} from "./type"
 import React from "react"
-import {
-    OutlineBookOpenTextIcon,
-    OutlineBotIcon,
-    OutlineDocumenttextIcon,
-    OutlineFolderopenIcon,
-    OutlineWrenchIcon,
-    OutlineXIcon
-} from "@/assets/icon/outline"
+import {OutlineXIcon} from "@/assets/icon/outline"
+import {iconMap} from "../../defaultConstant"
 
 const FreeDialogFileList: FC<{storeKey: Key}> = React.memo(({storeKey}) => {
     const fileToQuestion = useFileToQuestion(storeKey)
@@ -35,13 +28,6 @@ const FreeDialogFileList: FC<{storeKey: Key}> = React.memo(({storeKey}) => {
 })
 export default FreeDialogFileList
 
-const iconMap = {
-    file: <OutlineDocumenttextIcon />,
-    folder: <OutlineFolderopenIcon />,
-    forge: <OutlineBotIcon />,
-    tool: <OutlineWrenchIcon />,
-    knowledgeBase: <OutlineBookOpenTextIcon />
-}
 export const AITagList: React.FC<AITagListProps> = (props) => {
     const {title, onRemove, onClear, list} = props
     const ref = useRef<HTMLDivElement>(null)
@@ -74,7 +60,7 @@ export const AITagList: React.FC<AITagListProps> = (props) => {
                         <div className={styles["file-item-content"]}>
                             {iconMap[item.type]}
                             <span className='content-ellipsis'>{item.value}</span>
-                            <OutlineXIcon />
+                            <OutlineXIcon className={styles['x-icon']}/>
                         </div>
                     </YakitButton>
                 ))}

@@ -10,7 +10,7 @@ import {
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
 import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {AIChatTextareaProps} from "../template/type"
+import {AIChatTextareaProps, AIChatTextareaSubmit} from "../template/type"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -60,6 +60,7 @@ import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pa
 import OpenFileDropdown, {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {HandleStartParams} from "../aiAgentChat/type"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -131,7 +132,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
-    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
     const [inViewPort = true] = useInViewport(welcomeRef)
 
     const tokenRef = useRef<string>(randomString(40))
@@ -252,17 +252,22 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         const lineStartRect = lineStartRef.current.getBoundingClientRect()
         setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
     })
-
-    const handleTriageSubmit = useMemoizedFn((qs: string) => {
-        const fileToQuestionPath = fileToQuestion.map((item) => item.path)
-        onTriageSubmit({
+    const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
+        const {qs, selectForges, selectTools, selectKnowledgeBases, fileToQuestion} = value
+        const params: HandleStartParams = {
             qs,
-            fileToQuestion: fileToQuestionPath,
             extraValue: {
                 // 自由对话文件列表
-                freeDialogFileList: fileToQuestion
+                freeDialogFileList: fileToQuestion?.map((item) => ({...item})) || [],
+                /**智能体列表 */
+                selectForges: selectForges?.map((ele) => ({...ele})) || [],
+                /**工具列表 */
+                selectTools: selectTools?.map((ele) => ({...ele})) || [],
+                /**知识库列表 */
+                selectKnowledgeBases: selectKnowledgeBases?.map((ele) => ({...ele})) || []
             }
-        })
+        }
+        onTriageSubmit(params)
         fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })

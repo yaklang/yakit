@@ -47,6 +47,12 @@
                         height: 14px;
                     }
                 }
+                .content-item-left{
+                    cursor: default;
+                    &:hover p{
+                        color: var(--Colors-Use-Neutral-Text-2-Primary);
+                    }
+                }
             }
         }
     }

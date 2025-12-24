@@ -3,8 +3,9 @@ import {AITool} from "../../type/aiTool"
 import {AIForge} from "../../type/forge"
 import {AIMentionTabsEnum} from "../../defaultConstant"
 
+export type AIMentionTabsItem = "forge" | "tool" | "knowledgeBase" | "file" | "folder"
 export interface AIChatMentionSelectItem {
-    id: number
+    id: string
     name: string
 }
 export interface AIChatMentionProps {
@@ -12,8 +13,7 @@ export interface AIChatMentionProps {
     selectTool: AIChatMentionSelectItem[]
     selectKnowledgeBase: AIChatMentionSelectItem[]
     defaultActiveTab?: AIMentionTabsEnum
-    onSelect: (type: AIMentionTabsEnum, value: AIChatMentionSelectItem) => void
-    onClose: () => void
+    onSelect: (type: AIMentionTabsEnum, value?: AIChatMentionSelectItem) => void
 }
 interface AIChatMention {
     keyWord: string

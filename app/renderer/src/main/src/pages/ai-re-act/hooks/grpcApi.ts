@@ -159,10 +159,18 @@ export interface AIInputEvent {
     IsFreeInput?: boolean
     FreeInput?: string // 自由输入的文本
 
-    /** 问题关联的文件路径 */
+    /**
+     * 问题关联的文件路径
+     * @deprecated 改为 AttachedResourceInfo
+     * */
     AttachedFilePath?: string[]
+    /** 附加资源信息 */
+    AttachedResourceInfo?: AttachedResourceInfo[]
 }
-
+export interface AttachedResourceInfo {
+    Key: string
+    Type: string // file、knowledge_base、aitool、aiforge
+}
 export interface AIOutputI18n {
     Zh: string
     En: string

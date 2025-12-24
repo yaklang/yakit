@@ -10,11 +10,11 @@ import React, {
     useRef,
     useState
 } from "react"
-import {AIChatTextareaProps, QSInputTextareaProps} from "./type"
+import {AIChatTextareaProps, AIChatTextareaSubmit, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {v4 as uuidv4} from "uuid"
 
@@ -23,12 +23,13 @@ import styles from "./template.module.scss"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {AIChatMention} from "../components/aiChatMention/AIChatMention"
 import {AIMentionTabsEnum} from "../defaultConstant"
-import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import {FreeDialogTagList} from "../aiChatWelcome/FreeDialogList/FreeDialogList"
 import FreeDialogFileList from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
-import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
+import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
+import {isArray} from "lodash"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -59,7 +60,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
 
     // icon的唯一id生成
     const iconId = useRef(uuidv4())
-
+    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
     // #region question-相关逻辑
     const [question, setQuestion] = useControllableValue<string>(props, {
         defaultValue: "",
@@ -78,13 +79,35 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
             emiter.off("settingInputCard", onSettingInputCard)
         }
     }, [inViewport])
+    useDebounceEffect(
+        () => {
+            const value: AIAgentTriggerEventInfo = {
+                type: AIMentionTabsEnum.KnowledgeBase,
+                params: selectKnowledgeBases
+            }
+            emiter.emit("updateOfInputCard", JSON.stringify(value))
+        },
+        [selectKnowledgeBases],
+        {wait: 200, leading: true}
+    )
     const isQuestion = useMemo(() => {
         return !!(question && question.trim())
     }, [question])
 
     const handleSubmit = useMemoizedFn(() => {
         if (!isQuestion) return
-        onSubmit && onSubmit(question.trim())
+        const value: AIChatTextareaSubmit = {
+            qs: question.trim(),
+            selectForges,
+            selectTools,
+            selectKnowledgeBases,
+            fileToQuestion
+        }
+        onSubmit && onSubmit(value)
+        setSelectForges([])
+        setSelectTools([])
+        setSelectKnowledgeBases([])
+        fileToChatQuestionStore.clear(FileListStoreKey.FileList)
     })
     const onSettingInputCard = useMemoizedFn((res) => {
         if (!inViewport) return
@@ -93,11 +116,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
             const {type, params} = data
             switch (type as AIMentionTabsEnum) {
                 case AIMentionTabsEnum.KnowledgeBase:
-                    if (!!params) {
-                        setSelectKnowledgeBases((prev) => {
-                            const index = prev.findIndex((item) => item.id === params.id)
-                            return index === -1 ? [...prev, {id: params.id!, name: params.name!}] : prev
-                        })
+                    if (isArray(params)) {
+                        setSelectKnowledgeBases(params)
                     }
                     break
 
@@ -172,9 +192,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                     selectKnowledgeBase={selectKnowledgeBases}
                     onSelect={onSetMention}
                     defaultActiveTab={mentionPerActiveRef.current}
-                    onClose={() => {
-                        onResetMention()
-                    }}
                 />,
                 x,
                 y
@@ -182,27 +199,32 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         }
     })
 
-    const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value: AIChatMentionSelectItem) => {
+    const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value?: AIChatMentionSelectItem) => {
         switch (type) {
             case AIMentionTabsEnum.Forge_Name:
-                setSelectForges((perv) => {
-                    const index = perv.findIndex((item) => item.id === value.id)
-                    return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                })
+                if (value)
+                    setSelectForges((perv) => {
+                        const index = perv.findIndex((item) => item.id === value.id)
+                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
+                    })
                 break
 
             case AIMentionTabsEnum.Tool:
-                setSelectTools((perv) => {
-                    const index = perv.findIndex((item) => item.id === value.id)
-                    return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                })
+                if (value)
+                    setSelectTools((perv) => {
+                        const index = perv.findIndex((item) => item.id === value.id)
+                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
+                    })
                 break
 
             case AIMentionTabsEnum.KnowledgeBase:
-                setSelectKnowledgeBases((perv) => {
-                    const index = perv.findIndex((item) => item.id === value.id)
-                    return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                })
+                if (value)
+                    setSelectKnowledgeBases((perv) => {
+                        const index = perv.findIndex((item) => item.id === value.id)
+                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
+                    })
+                break
+            case AIMentionTabsEnum.File_System:
                 break
             default:
                 break
@@ -231,7 +253,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         onTextareaKeyDown && onTextareaKeyDown(e)
     })
     // #endregion
-    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
+
     const isShowSelectList = useCreation(() => {
         return (
             selectForges.length > 0 ||

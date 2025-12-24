@@ -4,7 +4,7 @@ import styles from "./AIReActChat.module.scss"
 import {AIReActChatProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
-import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
+import {AIChatTextareaProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
 import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -22,12 +22,12 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {fileToChatQuestionStore, useFileToQuestion} from "./store"
+import {fileToChatQuestionStore} from "./store"
 import {PageNodeItemProps} from "@/store/pageInfo"
 import emiter from "@/utils/eventBus/eventBus"
-import FreeDialogFileList from "@/pages/ai-agent/aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
+import {getAIReActRequestParams} from "@/pages/ai-agent/utils"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -51,8 +51,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {activeChat, setting} = useAIAgentStore()
 
-    const fileToQuestion = useFileToQuestion(storeKey)
-
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
     const [question, setQuestion] = useState<string>("")
@@ -65,37 +63,35 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     // #region 问题相关逻辑
     // 初始化 AI ReAct
-    const handleSubmit = useMemoizedFn((qs: string) => {
+    const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
         if (!setting) {
             yakitNotify("error", "请先配置 AI ReAct 参数")
             return
         }
-        const fileToQuestionPath = fileToQuestion.map((item) => item.path)
-        const params = {qs, fileToQuestion: fileToQuestionPath, extraValue: {freeDialogFileList: fileToQuestion}}
         if (execute) {
-            handleSend(params)
+            handleSend(value)
         } else {
-            handleStart(params)
+            handleStart(value)
         }
         setQuestion("")
-        fileToChatQuestionStore.clear(storeKey)
     })
 
     /**自由对话 */
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
         if (!activeChat?.id) return
         try {
+            const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
                 FreeInput: data.qs,
-                AttachedFilePath: data.fileToQuestion
+                AttachedResourceInfo: attachedResourceInfo
             }
             // 发送到服务端
             chatIPCEvents.onSend({
                 token: activeChat.id,
                 type: "casual",
                 params: chatMessage,
-                extraValue: data.extraValue
+                extraValue: extra
             })
         } catch (error) {}
     })
@@ -175,7 +171,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
                                 {execute && questionQueue?.total > 0 && <AITaskQuery />}
-                                <FreeDialogFileList storeKey={storeKey} />
                                 <AIChatTextarea
                                     loading={false}
                                     question={question}

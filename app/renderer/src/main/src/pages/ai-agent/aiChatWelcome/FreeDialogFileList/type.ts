@@ -1,7 +1,8 @@
 import {ReactNode} from "react"
+import {AIMentionTabsItem} from "../../components/aiChatMention/type"
 
 export interface AITagListItem {
-    type: "forge" | "tool" | "knowledgeBase" | "file" | "folder"
+    type: AIMentionTabsItem
     key: string | number
     value: string
 }

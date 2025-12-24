@@ -1,6 +1,7 @@
 @mixin ai-chat-mention-body($type) {
     .ai-#{$type}-list {
         padding: 0 2px;
+        height: 300px;
         max-height: 300px;
         overflow-y: auto;
     }
@@ -71,7 +72,8 @@
 }
 .file-system-tree-of-mention {
     padding: 0 2px;
-    max-height: 300px;
+    height: 340px;
+    max-height: 340px;
     overflow-y: auto;
     :global {
         .ant-tree-treenode {

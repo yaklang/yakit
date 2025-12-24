@@ -6,7 +6,11 @@ import {
     OutlineMCPIcon,
     OutlineSparklesIcon,
     OutlineTemplateIcon,
-    OutlineWrenchIcon
+    OutlineWrenchIcon,
+    OutlineBookOpenTextIcon,
+    OutlineBotIcon,
+    OutlineDocumenttextIcon,
+    OutlineFolderopenIcon
 } from "@/assets/icon/outline"
 import {YakitSideTabProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
@@ -276,4 +280,12 @@ export enum ReActChatEventEnum {
     OPEN_FORGE_FORM = "open-forge-form",
     /** 使用工具 */
     USE_AI_TOOL = "use-ai-tool"
+}
+
+export const iconMap = {
+    file: <OutlineDocumenttextIcon />,
+    folder: <OutlineFolderopenIcon />,
+    forge: <OutlineBotIcon />,
+    tool: <OutlineWrenchIcon />,
+    knowledgeBase: <OutlineBookOpenTextIcon />
 }

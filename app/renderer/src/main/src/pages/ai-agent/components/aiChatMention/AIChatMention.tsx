@@ -51,7 +51,7 @@ const defaultRef: AIChatMentionListRefProps = {
     onRefresh: () => {}
 }
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
-    const {selectForge, selectTool, selectKnowledgeBase, onSelect, defaultActiveTab, onClose} = props
+    const {selectForge, selectTool, selectKnowledgeBase, onSelect, defaultActiveTab} = props
     const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
         defaultActiveTab || AIMentionTabsEnum.Forge_Name
     )
@@ -121,21 +121,24 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     })
     const onSelectForge = useMemoizedFn((forgeItem: AIForge) => {
         onSelect(AIMentionTabsEnum.Forge_Name, {
-            id: forgeItem.Id,
+            id: `${forgeItem.Id}`,
             name: forgeItem.ForgeVerboseName || forgeItem.ForgeName
         })
     })
     const onSelectTool = useMemoizedFn((toolItem: AITool) => {
         onSelect(AIMentionTabsEnum.Tool, {
-            id: toolItem.ID,
+            id: `${toolItem.ID}`,
             name: toolItem.VerboseName || toolItem.Name
         })
     })
     const onSelectKnowledgeBase = useMemoizedFn((knowledgeBaseItem: KnowledgeBase) => {
         onSelect(AIMentionTabsEnum.KnowledgeBase, {
-            id: knowledgeBaseItem.ID,
+            id: `${knowledgeBaseItem.ID}`,
             name: knowledgeBaseItem.KnowledgeBaseName
         })
+    })
+    const onSelectFile = useMemoizedFn(() => {
+        onSelect(AIMentionTabsEnum.KnowledgeBase)
     })
     const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
         switch (key) {
@@ -167,7 +170,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                     />
                 )
             case AIMentionTabsEnum.File_System:
-                return <FileSystemTreeOfMention onSelect={onClose} />
+                return <FileSystemTreeOfMention onSelect={onSelectFile} />
             default:
                 return null
         }
@@ -332,11 +335,11 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
                         data={response.Data}
                         loadMoreData={loadMoreData}
                         renderRow={(rowData: AIForge, index: number) => {
-                            const isSelect = !!selectList.find((it) => it.id === rowData.Id)
+                            const isSelect = !!selectList.find((it) => it.id === `${rowData.Id}`)
                             return (
                                 <AIMentionSelectItem
                                     item={{
-                                        id: rowData.Id,
+                                        id: `${rowData.Id}`,
                                         name: rowData.ForgeVerboseName || rowData.ForgeName
                                     }}
                                     onSelect={() => onSelect(rowData)}
@@ -454,11 +457,11 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
                         data={response.Tools}
                         loadMoreData={loadMoreData}
                         renderRow={(rowData: AITool, index: number) => {
-                            const isSelect = !!selectList.find((it) => it.id === rowData.ID)
+                            const isSelect = !!selectList.find((it) => it.id === `${rowData.ID}`)
                             return (
                                 <AIMentionSelectItem
                                     item={{
-                                        id: rowData.ID,
+                                        id: `${rowData.ID}`,
                                         name: rowData.VerboseName || rowData.Name
                                     }}
                                     onSelect={() => onSelect(rowData)}
@@ -563,11 +566,11 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
                         data={existsKnowledgeBase || []}
                         loadMoreData={() => {}}
                         renderRow={(rowData: KnowledgeBase, index: number) => {
-                            const isSelect = !!selectList.find((it) => it.id === rowData.ID)
+                            const isSelect = !!selectList.find((it) => it.id === `${rowData.ID}`)
                             return (
                                 <AIMentionSelectItem
                                     item={{
-                                        id: rowData.ID,
+                                        id: `${rowData.ID}`,
                                         name: rowData.KnowledgeBaseName
                                     }}
                                     onSelect={() => onSelect(rowData)}

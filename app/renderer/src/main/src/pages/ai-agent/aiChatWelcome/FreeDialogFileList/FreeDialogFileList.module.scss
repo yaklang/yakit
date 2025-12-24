@@ -19,14 +19,21 @@
             justify-content: space-between;
             gap: 4px;
             flex-shrink: 1;
+            &:hover {
+                svg {
+                    color: var(--Colors-Use-Main-Primary);
+                }
+            }
             & > span:last-of-type {
                 @include mixin.text-ellipsis;
             }
-            svg {
-                cursor: pointer;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                &:hover {
-                    color: var(--Colors-Use-Main-Hover);
+            .x-icon {
+                svg {
+                    cursor: pointer;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                    &:hover {
+                        color: var(--Colors-Use-Main-Hover);
+                    }
                 }
             }
         }

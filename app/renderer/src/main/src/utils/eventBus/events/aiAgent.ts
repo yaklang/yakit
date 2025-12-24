@@ -19,7 +19,9 @@ export type AIAgentEventProps = {
     /**
      * 设置输入款里面选择得卡片数据 {AIAgentTriggerEventInfo}
      * @name type {AIMentionTabsEnum}
-     * @name params {AIChatMentionSelectItem} 传递的值
+     * @name params {AIChatMentionSelectItem[]} 传递的值
      * */
     settingInputCard: string
+    /**类型同 settingInputCard */
+    updateOfInputCard: string
 }
