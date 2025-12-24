@@ -6,7 +6,6 @@
     padding-left: 4px;
     flex: 1;
     .re-act-contents-list {
-        max-width: 784px;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -17,6 +16,8 @@
         width: 100%;
         box-sizing: border-box;
         padding-right: 12px;
+        max-width: 784px;
+        margin: 0 auto;
         .item-inner {
             padding: 2px 0;
         }
