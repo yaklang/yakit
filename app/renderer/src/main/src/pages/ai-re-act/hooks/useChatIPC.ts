@@ -11,6 +11,7 @@ import {handleGrpcDataPushLog} from "./utils"
 import {
     AIChatIPCStartParams,
     AIChatSendParams,
+    AIFileSystemPin,
     AIQuestionQueues,
     CasualLoadingStatus,
     UseCasualChatEvents,
@@ -42,8 +43,8 @@ const UseCasualAndTaskTypes = [
     "ai_review_countdown",
     "ai_review_end",
     // 文件系统操作相关
-    // "filesystem_pin_directory",
-    // "filesystem_pin_filename",
+    "filesystem_pin_directory",
+    "filesystem_pin_filename",
     // 决策总结
     "tool_call_decision",
     // 任务规划崩溃的错误信息
@@ -102,13 +103,14 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>([])
 
     // 接口流里的文件树路径集合
-    const [grpcFolders, setGrpcFolders] = useState<string[]>([])
-    const handleSetGrpcFolders = useMemoizedFn((path: string) => {
+    const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
+    const handleSetGrpcFolders = useMemoizedFn((info: AIFileSystemPin) => {
         setGrpcFolders((old) => {
-            if (old.includes(path)) {
+            const isExist = old.find((item) => item.path === info.path)
+            if (!!isExist) {
                 return old
             }
-            return [...old, path]
+            return [...old, info]
         })
     })
 
