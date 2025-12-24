@@ -77,7 +77,7 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
                             content={
                                 <div className={styles["memory-popover-content"]}>
                                     <div className={styles["memory-popover-score-wrapper"]}>
-                                        <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（归一化直方图）</div>
+                                        <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（记忆特征）</div>
                                         <div className={styles["score-list"]}>
                                             {getScoreList(item).map((score, index) => (
                                                 <div
