@@ -1,6 +1,6 @@
 import {AIAgentSetting} from "./aiAgentType"
 import isNil from "lodash/isNil"
-import {AIAgentSettingDefault} from "./defaultConstant"
+import {AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "./defaultConstant"
 import {AIAgentGrpcApi, AIInputEvent} from "../ai-re-act/hooks/grpcApi"
 import {HandleStartParams} from "./aiAgentChat/type"
 
@@ -131,7 +131,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: HandleStartParams) => {
-    const {selectForges, selectTools, selectKnowledgeBases, fileToQuestion, extraValue} = value
+    const {selectForges, extraValue, selectTools, selectKnowledgeBases, fileToQuestion} = value
     let extra: HandleStartParams["extraValue"] = {}
     let attachedResourceInfo: AIInputEvent["AttachedResourceInfo"] = []
     if (!!fileToQuestion?.length) {
@@ -139,7 +139,11 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
         extra.freeDialogFileList = fileToQuestion.map((item) => ({...item}))
         attachedResourceInfo = [
             ...attachedResourceInfo,
-            ...fileToQuestion.map((ele) => ({Type: "file", Key: ele.path}))
+            ...fileToQuestion.map((ele) => ({
+                Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+                Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+                Value: ele.path
+            }))
         ]
     }
     if (!!selectForges?.length) {
@@ -147,24 +151,38 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
         extra.selectForges = selectForges.map((item) => ({...item}))
         attachedResourceInfo = [
             ...attachedResourceInfo,
-            ...selectForges.map((ele) => ({Type: "aiforge", Key: ele.name}))
+            ...selectForges.map((ele) => ({
+                Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AIFORGE,
+                Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
+                Value: ele.name
+            }))
         ]
     }
     if (!!selectTools?.length) {
         /**工具列表 */
         extra.selectTools = selectTools.map((item) => ({...item}))
-        attachedResourceInfo = [...attachedResourceInfo, ...selectTools.map((ele) => ({Type: "aitool", Key: ele.name}))]
+        attachedResourceInfo = [
+            ...attachedResourceInfo,
+            ...selectTools.map((ele) => ({
+                Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AITOOL,
+                Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
+                Value: ele.name
+            }))
+        ]
     }
     if (!!selectKnowledgeBases?.length) {
         /**知识库列表 */
         extra.selectKnowledgeBases = selectKnowledgeBases.map((item) => ({...item}))
         attachedResourceInfo = [
             ...attachedResourceInfo,
-            ...selectKnowledgeBases.map((ele) => ({Type: "knowledge_base", Key: ele.name}))
+            ...selectKnowledgeBases.map((ele) => ({
+                Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
+                Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
+                Value: ele.name
+            }))
         ]
     }
     extra = Object.assign(extraValue || {}, extra)
-
     return {
         extra,
         attachedResourceInfo

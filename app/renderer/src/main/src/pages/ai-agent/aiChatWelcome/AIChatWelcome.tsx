@@ -188,7 +188,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                 case "工具":
                     toolNames.push(item.name)
                     break
-                case "智能体":
+                case "技能":
                     forgeNames.push(item.name)
                     break
                 case "知识库":
@@ -253,27 +253,13 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
     })
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
-        const {qs, selectForges, selectTools, selectKnowledgeBases, fileToQuestion} = value
-        const params: HandleStartParams = {
-            qs,
-            extraValue: {
-                // 自由对话文件列表
-                freeDialogFileList: fileToQuestion?.map((item) => ({...item})) || [],
-                /**智能体列表 */
-                selectForges: selectForges?.map((ele) => ({...ele})) || [],
-                /**工具列表 */
-                selectTools: selectTools?.map((ele) => ({...ele})) || [],
-                /**知识库列表 */
-                selectKnowledgeBases: selectKnowledgeBases?.map((ele) => ({...ele})) || []
-            }
-        }
-        onTriageSubmit(params)
+        onTriageSubmit(value)
         fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })
     const onMore = useMemoizedFn((item: string) => {
         switch (item) {
-            case "智能体":
+            case "技能":
                 onForgeMore()
                 break
             case "知识库":
@@ -334,9 +320,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             hoverIcon: <HoverAIToolIcon />
         }
         const forges: AIMaterialsData = {
-            type: "智能体",
+            type: "技能",
             data: (randomAIMaterials?.AIForges || []).map((forge) => ({
-                type: "智能体",
+                type: "技能",
                 name: forge.ForgeVerboseName || forge.ForgeName,
                 description: forge.Description || ""
             })),

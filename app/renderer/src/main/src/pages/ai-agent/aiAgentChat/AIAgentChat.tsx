@@ -49,7 +49,8 @@ import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
+import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -68,6 +69,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
+    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
 
     const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
         setMode("re-act")
@@ -211,8 +213,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
         onSetReAct()
-
-        const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
+        const {extra, attachedResourceInfo} = getAIReActRequestParams({
+            ...value,
+            selectForges,
+            selectTools,
+            selectKnowledgeBases,
+            fileToQuestion
+        })
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -221,6 +228,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             },
             AttachedResourceInfo: attachedResourceInfo
         }
+
         events.onStart({token: newChat.id, params: startParams, extraValue: extra})
     })
 
@@ -576,10 +584,30 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setReplaceToolShow(false)
     })
     // #endregion
-
+    const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
+    const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
+    const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
     const store: ChatIPCContextStore = useCreation(() => {
-        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage}
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
+        return {
+            chatIPCData,
+            planReviewTreeKeywordsMap,
+            reviewInfo,
+            reviewExpand,
+            timelineMessage,
+            selectForges,
+            selectTools,
+            selectKnowledgeBases
+        }
+    }, [
+        chatIPCData,
+        planReviewTreeKeywordsMap,
+        reviewInfo,
+        reviewExpand,
+        timelineMessage,
+        selectForges,
+        selectTools,
+        selectKnowledgeBases
+    ])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -591,7 +619,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSend,
             setTimelineMessage,
             handleSendSyncMessage,
-            handleSendConfigHotpatch
+            handleSendConfigHotpatch,
+            setSelectForges,
+            setSelectTools,
+            setSelectKnowledgeBases
         }
     }, [events])
 
@@ -630,7 +661,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceShow}
                 title='警告'
-                content={"是否要替换当前使用的forge模板?"}
+                content={"是否要替换当前使用的技能模板?"}
                 footerExtra={
                     <YakitCheckbox
                         checked={replaceForgeNoPrompt}

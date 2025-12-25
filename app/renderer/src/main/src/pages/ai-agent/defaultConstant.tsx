@@ -55,7 +55,7 @@ export enum AIAgentTabListEnum {
 export const AiAgentTabList: YakitTabsProps[] = [
     {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
     {value: AIAgentTabListEnum.Setting, label: "配置", icon: <OutlineCogIcon />},
-    {value: AIAgentTabListEnum.Forge_Name, label: "模板", icon: <OutlineTemplateIcon />},
+    {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
     {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
     {value: AIAgentTabListEnum.AI_Model, label: "AI模型", icon: <OutlineChipIcon />},
     {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
@@ -71,7 +71,7 @@ export enum AIMentionTabsEnum {
     File_System = "fileSystem"
 }
 export const AIMentionTabs: YakitSideTabProps["yakitTabs"] = [
-    {value: AIMentionTabsEnum.Forge_Name, label: "模板"},
+    {value: AIMentionTabsEnum.Forge_Name, label: "技能"},
     {value: AIMentionTabsEnum.Tool, label: "工具"},
     {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"},
     {value: AIMentionTabsEnum.File_System, label: "文件系统"}
@@ -288,4 +288,17 @@ export const iconMap = {
     forge: <OutlineBotIcon />,
     tool: <OutlineWrenchIcon />,
     knowledgeBase: <OutlineBookOpenTextIcon />
+}
+
+export enum AttachedResourceTypeEnum {
+    CONTEXT_PROVIDER_TYPE_FILE = "file",
+    CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE = "knowledge_base",
+    CONTEXT_PROVIDER_TYPE_AITOOL = "aitool",
+    CONTEXT_PROVIDER_TYPE_AIFORGE = "aiforge"
+}
+
+export enum AttachedResourceKeyEnum {
+    CONTEXT_PROVIDER_KEY_FILE_PATH = "file_path",
+    CONTEXT_PROVIDER_KEY_FILE_CONTENT = "file_content",
+    CONTEXT_PROVIDER_KEY_NAME = "name"
 }

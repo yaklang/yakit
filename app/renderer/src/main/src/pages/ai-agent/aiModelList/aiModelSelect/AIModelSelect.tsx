@@ -68,13 +68,15 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const selectAIServiceRef = useRef<AIStartParams["AIService"]>(modelValue)
     const refRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(refRef)
-    const lastAIService = useRef<string>(setting?.AIService || "")
 
     useEffect(() => {
         if (!inViewport) return
         getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
             .then((res) => {
-                if (!res) return
+                if (!res) {
+                    getAIModelListOption(true)
+                    return
+                }
                 try {
                     const cache = JSON.parse(res) as AIAgentSetting
                     if (typeof cache !== "object") return

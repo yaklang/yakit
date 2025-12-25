@@ -65,6 +65,7 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
+import {AIChatMentionSelectItem} from "@/pages/ai-agent/components/aiChatMention/type"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -372,7 +373,9 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     >(new Map())
     const [reviewExpand, setReviewExpand] = useSafeState<boolean>(true)
     const [timelineMessage, setTimelineMessage] = useSafeState<string>()
-
+    const [selectForges, setSelectForges] = useSafeState<AIChatMentionSelectItem[]>([])
+    const [selectTools, setSelectTools] = useSafeState<AIChatMentionSelectItem[]>([])
+    const [selectKnowledgeBases, setSelectKnowledgeBases] = useSafeState<AIChatMentionSelectItem[]>([])
     const [mode, setMode] = useSafeState<AIAgentChatMode>("welcome")
 
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
@@ -602,8 +605,27 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     })
 
     const store: ChatIPCContextStore = useCreation(() => {
-        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage}
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
+        return {
+            chatIPCData,
+            planReviewTreeKeywordsMap,
+            reviewInfo,
+            reviewExpand,
+            timelineMessage,
+            selectForges,
+            selectTools,
+            selectKnowledgeBases
+        }
+    }, [
+        chatIPCData,
+        planReviewTreeKeywordsMap,
+        reviewInfo,
+        reviewExpand,
+        timelineMessage,
+        selectForges,
+        selectTools,
+        selectKnowledgeBases,
+        mode
+    ])
 
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
@@ -616,7 +638,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             handleSend,
             setTimelineMessage,
             handleSendSyncMessage,
-            handleSendConfigHotpatch
+            handleSendConfigHotpatch,
+            setSelectForges,
+            setSelectTools,
+            setSelectKnowledgeBases
         }
     }, [events])
 

@@ -257,7 +257,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             <div className={styles["header-wrapper"]}>
                 <div className={styles["haeder-first"]}>
                     <div className={styles["first-title"]}>
-                        模板库
+                        技能库
                         <YakitRoundCornerTag>{total}</YakitRoundCornerTag>
                     </div>
                     <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
