@@ -8,8 +8,18 @@ import {FileTreeSystemItemProps} from "../type"
 import {historyStore} from "../store/useHistoryFolder"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileListStoreKey, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import {YakitProtoCheckbox} from "@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox"
 
-const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded, onResetTree}) => {
+const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
+    data,
+    isOpen,
+    expanded,
+    onResetTree,
+    isShowRightMenu,
+    checkable,
+    checked,
+    setChecked
+}) => {
     // 文件图标
     const iconImage = useMemo(() => {
         if (!data.isFolder) return KeyToIcon[data.icon].iconPath
@@ -91,10 +101,24 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({data, isOpen, expanded
             dropdown={{
                 trigger: ["contextMenu"],
                 placement: "bottomRight",
-                getPopupContainer: () => document.body
+                getPopupContainer: () => document.body,
+                visible: isShowRightMenu
             }}
         >
             <div className={styles["file-tree-system-item"]}>
+                {checkable && (
+                    <YakitProtoCheckbox
+                        wrapperStyle={{marginBottom: 2}}
+                        checked={checked}
+                        onChange={(e) => {
+                            e.stopPropagation()
+                            setChecked?.(e.target.checked)
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    />
+                )}
                 <img src={iconImage} alt='' />
                 <span>{data.name}</span>
             </div>

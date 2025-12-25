@@ -1,6 +1,7 @@
 @mixin ai-chat-mention-body($type) {
     .ai-#{$type}-list {
         padding: 0 2px;
+        height: 300px;
         max-height: 300px;
         overflow-y: auto;
     }
@@ -21,14 +22,27 @@
     .row-item {
         width: 100%;
         padding: 4px 6px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
         overflow: hidden;
-        word-break: break-all;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .row-item-active {
+        background-color: var(--Colors-Use-Main-Bg-Hover);
+    }
+    .row-item-select {
+        color: var(--Colors-Use-Main-Primary);
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Main-Primary);
+        }
     }
 }
 .ai-chat-mention {
     width: 300px;
+    outline: none;
     .mention-search {
         margin: 0 6px;
     }
@@ -45,11 +59,75 @@
 }
 .forge-name-list-of-mention {
     @include ai-chat-mention-body("forge");
+    outline: none;
 }
 .tool-list-of-mention {
     @include ai-chat-mention-body("tool");
+    outline: none;
 }
 
 .knowledge-base-list-of-mention {
     @include ai-chat-mention-body("knowledge-base");
+    outline: none;
+}
+.file-system-tree-of-mention {
+    padding: 0 2px;
+    height: 340px;
+    max-height: 340px;
+    overflow-y: auto;
+    :global {
+        .ant-tree-treenode {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+        .ant-tree-node-content-wrapper {
+            padding: 0;
+        }
+        .ant-tree-switcher {
+            width: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
+        }
+        .ant-tree.ant-tree-directory .ant-tree-treenode:hover::before {
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+        .ant-tree {
+            background-color: transparent;
+        }
+        .ant-tree.ant-tree-directory .ant-tree-treenode-selected:hover::before,
+        .ant-tree.ant-tree-directory .ant-tree-treenode-selected::before {
+            border: 1px solid var(--Colors-Use-Main-Primary);
+            background-color: rgba(242, 139, 68, 0.06);
+            border-radius: 4px;
+        }
+        .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
+            flex: 1;
+            width: 0;
+        }
+        .ant-tree-checkbox {
+            top: -2px;
+            margin: 0 2px;
+
+            .ant-tree-checkbox-inner {
+                border-color: var(--Colors-Use-Neutral-Border);
+                border-radius: 4px;
+            }
+            .ant-tree-checkbox-checked {
+                background-color: var(--Colors-Use-Main-Primary);
+                &::after {
+                    border-color: var(--Colors-Use-Main-Border);
+                }
+            }
+            &:hover {
+                .ant-tree-checkbox-inner {
+                    border-color: var(--Colors-Use-Main-Border);
+                }
+            }
+        }
+    }
 }

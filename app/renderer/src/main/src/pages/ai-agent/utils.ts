@@ -1,7 +1,8 @@
 import {AIAgentSetting} from "./aiAgentType"
 import isNil from "lodash/isNil"
 import {AIAgentSettingDefault} from "./defaultConstant"
-import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIInputEvent} from "../ai-re-act/hooks/grpcApi"
+import {HandleStartParams} from "./aiAgentChat/type"
 
 /**
  * @name 将一维tree转换成树结构
@@ -126,5 +127,47 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     } catch (error) {}
 
     return {...data}
+}
+
+/** @name 将前端的结构转化为符合定义的结构 */
+export const getAIReActRequestParams = (value: HandleStartParams) => {
+    const {selectForges, selectTools, selectKnowledgeBases, fileToQuestion, extraValue} = value
+    let extra: HandleStartParams["extraValue"] = {}
+    let attachedResourceInfo: AIInputEvent["AttachedResourceInfo"] = []
+    if (!!fileToQuestion?.length) {
+        /**自由对话文件列表 */
+        extra.freeDialogFileList = fileToQuestion.map((item) => ({...item}))
+        attachedResourceInfo = [
+            ...attachedResourceInfo,
+            ...fileToQuestion.map((ele) => ({Type: "file", Key: ele.path}))
+        ]
+    }
+    if (!!selectForges?.length) {
+        /**智能体列表 */
+        extra.selectForges = selectForges.map((item) => ({...item}))
+        attachedResourceInfo = [
+            ...attachedResourceInfo,
+            ...selectForges.map((ele) => ({Type: "aiforge", Key: ele.name}))
+        ]
+    }
+    if (!!selectTools?.length) {
+        /**工具列表 */
+        extra.selectTools = selectTools.map((item) => ({...item}))
+        attachedResourceInfo = [...attachedResourceInfo, ...selectTools.map((ele) => ({Type: "aitool", Key: ele.name}))]
+    }
+    if (!!selectKnowledgeBases?.length) {
+        /**知识库列表 */
+        extra.selectKnowledgeBases = selectKnowledgeBases.map((item) => ({...item}))
+        attachedResourceInfo = [
+            ...attachedResourceInfo,
+            ...selectKnowledgeBases.map((ele) => ({Type: "knowledge_base", Key: ele.name}))
+        ]
+    }
+    extra = Object.assign(extraValue || {}, extra)
+
+    return {
+        extra,
+        attachedResourceInfo
+    }
 }
 // #endregion

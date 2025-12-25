@@ -11,7 +11,7 @@ import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
 import cloneDeep from "lodash/cloneDeep"
 import {randomString} from "@/utils/randomUtil"
-import {formatAIAgentSetting} from "../utils"
+import {formatAIAgentSetting, getAIReActRequestParams} from "../utils"
 import ChatIPCContent, {
     AIChatIPCSendParams,
     AISendConfigHotpatchParams,
@@ -44,11 +44,12 @@ import {AITool} from "../type/aiTool"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 import {AIChatContent} from "../aiChatContent/AIChatContent"
-import {AITabsEnum, ReActChatEventEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
+import {AITabsEnum, ReActChatEventEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -59,6 +60,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
     const isHaveStreams = !!taskChat.streams.length
     return isHavePlan || isHaveStreams
 }
+
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
     const {getLabelByParams} = useAINodeLabel()
@@ -189,7 +191,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 })
         }
     })
-    const handleStart = useMemoizedFn(({qs, fileToQuestion, extraValue}: HandleStartParams) => {
+    const handleStart = useMemoizedFn((value: HandleStartParams) => {
+        const {qs} = value
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
@@ -204,19 +207,23 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             time: new Date().getTime(),
             request
         }
+
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
         onSetReAct()
+
+        const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
             Params: {
                 ...request
             },
-            AttachedFilePath: fileToQuestion
+            AttachedResourceInfo: attachedResourceInfo
         }
-        events.onStart({token: newChat.id, params: startParams, extraValue})
+        events.onStart({token: newChat.id, params: startParams, extraValue: extra})
     })
+
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
         handleSendInteractiveMessage(params, "casual")
     })
@@ -454,10 +461,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams["extraValue"]) => {
         setMode("re-act")
+        const userQuery = formValue?.UserQuery || ""
         const qs = `我要使用 ${request.ForgeName}forge执行任务${
             !!request.ForgeParams
                 ? `,参数:${JSON.stringify(request.ForgeParams)}`
-                : `${!!formValue?.UserQuery ? `,输入${formValue?.UserQuery!}` : ""}`
+                : `${!!userQuery ? `,输入${userQuery!}` : ""}`
         }`
         handleStart({
             qs,

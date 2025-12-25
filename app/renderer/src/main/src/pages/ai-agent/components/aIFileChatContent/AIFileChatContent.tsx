@@ -1,18 +1,30 @@
 import type {AIInputEvent} from "@/pages/ai-re-act/hooks/grpcApi"
-import {FC, useMemo} from "react"
+import {FC} from "react"
 import styles from "./AIFileChatContent.module.scss"
-import type {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {FileToChatQuestionList} from "@/pages/ai-re-act/aiReActChat/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
+import {HandleStartParams} from "../../aiAgentChat/type"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {
+    isHaveFreeDialogFileList,
+    isHaveSelectForges,
+    isHaveSelectKnowledgeBases,
+    isHaveSelectTools
+} from "../aiChatListItem/AIChatListItem"
+import {AIChatMentionSelectItem, AIMentionTabsItem} from "../aiChatMention/type"
+import {iconMap} from "../../defaultConstant"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
+import classNames from "classnames"
 
 interface AIFileChatContentProps {
     qs: string
     setting: AIInputEvent
-    extraValue?: CustomPluginExecuteFormValue
+    extraValue?: HandleStartParams["extraValue"]
 }
 
 function getFileExt(path: string): string {
@@ -25,59 +37,121 @@ const getFileIcon = (data: FileToChatQuestionList) => {
     return renderFileTypeIcon({type: getFileExt(data.path)})
 }
 
-function isFileToChatQuestionListArray(value: unknown): value is FileToChatQuestionList[] {
-    return (
-        Array.isArray(value) &&
-        value.every(
-            (item) =>
-                typeof item === "object" &&
-                item !== null &&
-                "path" in item &&
-                typeof (item as {path: unknown}).path === "string" &&
-                "isFolder" in item &&
-                typeof (item as {isFolder: unknown}).isFolder === "boolean"
-        )
-    )
-}
-
 const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}) => {
-    const freeDialogFileList = useMemo<FileToChatQuestionList[]>(() => {
-        const raw = extraValue?.freeDialogFileList
-        return isFileToChatQuestionListArray(raw) ? raw : []
-    }, [extraValue?.freeDialogFileList])
+    const attachedFilePathList: FileToChatQuestionList[] = useCreation(() => {
+        return isHaveFreeDialogFileList(extraValue)
+    }, [extraValue?.["freeDialogFileList"]])
 
-    const fileMap = useMemo<Map<string, FileToChatQuestionList>>(() => {
-        return new Map(freeDialogFileList.map((item) => [item.path, item]))
-    }, [freeDialogFileList])
+    const selectForges: AIChatMentionSelectItem[] = useCreation(() => {
+        return isHaveSelectForges(extraValue)
+    }, [extraValue?.["selectForges"]])
 
-    const attachedFilePathList = setting?.AttachedFilePath
+    const selectTools: AIChatMentionSelectItem[] = useCreation(() => {
+        return isHaveSelectTools(extraValue)
+    }, [extraValue?.["selectTools"]])
+    const selectKnowledgeBases: AIChatMentionSelectItem[] = useCreation(() => {
+        return isHaveSelectKnowledgeBases(extraValue)
+    }, [extraValue?.["selectKnowledgeBases"]])
 
+    const onOpenKnowledgeBases = useMemoizedFn(() => {
+        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+    })
+    const isPadding = useCreation(() => {
+        return (
+            !!attachedFilePathList.length ||
+            !!selectForges.length ||
+            !!selectTools.length ||
+            !!selectKnowledgeBases.length
+        )
+    }, [attachedFilePathList.length, selectForges.length, selectTools.length, selectKnowledgeBases.length])
+    const renderList = useMemoizedFn(
+        (params: {title: string; list: AIChatMentionSelectItem[]; type: AIMentionTabsItem}) => {
+            const {title, list, type} = params
+            return (
+                <div className={styles.file}>
+                    <div>{title}</div>
+
+                    <div className={styles["file-content"]}>
+                        {list.map((file) => {
+                            return (
+                                <div key={file.id} className={styles["file-content-item"]}>
+                                    <div
+                                        className={classNames(
+                                            styles["file-content-item-left"],
+                                            styles["content-item-left"]
+                                        )}
+                                    >
+                                        {iconMap[type]}
+                                        <p>{file.name}</p>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )
+        }
+    )
     return (
         <div className={styles.wrapper}>
-            <div className={styles.qs} style={{padding: !attachedFilePathList?.length ? 0 : "8px"}}>
+            <div className={styles.qs} style={{padding: isPadding ? "8px" : 0}}>
                 {qs}
             </div>
-
             {!!attachedFilePathList?.length && (
                 <div className={styles.file}>
                     <div>相关操作文件</div>
-
                     <div className={styles["file-content"]}>
-                        {attachedFilePathList.map((filePath) => {
-                            const file = fileMap.get(filePath)
-                            if (!file) return null
-
+                        {attachedFilePathList.map((file) => {
                             return (
                                 <div
-                                    key={filePath}
+                                    key={file.path}
                                     className={styles["file-content-item"]}
                                     role='button'
                                     tabIndex={0}
-                                    onClick={() => onOpenLocalFileByPath(filePath)}
+                                    onClick={() => onOpenLocalFileByPath(file.path)}
                                 >
                                     <div className={styles["file-content-item-left"]}>
                                         {getFileIcon(file)}
-                                        <p>{filePath}</p>
+                                        <p>{file.path}</p>
+                                    </div>
+
+                                    <YakitButton type='text2' icon={<OutlineChevronrightIcon />} />
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
+            {!!selectForges?.length &&
+                renderList({
+                    title: "相关智能体",
+                    list: selectForges,
+                    type: "forge"
+                })}
+
+            {!!selectTools?.length &&
+                renderList({
+                    title: "相关工具",
+                    list: selectTools,
+                    type: "tool"
+                })}
+            {!!selectKnowledgeBases?.length && (
+                <div className={styles.file}>
+                    <div>相关知识库</div>
+
+                    <div className={styles["file-content"]}>
+                        {selectKnowledgeBases.map((item) => {
+                            return (
+                                <div
+                                    key={item.id}
+                                    className={styles["file-content-item"]}
+                                    role='button'
+                                    tabIndex={0}
+                                    onClick={onOpenKnowledgeBases}
+                                >
+                                    <div className={styles["file-content-item-left"]}>
+                                        {iconMap["knowledgeBase"]}
+                                        <p>{item.name}</p>
                                     </div>
 
                                     <YakitButton type='text2' icon={<OutlineChevronrightIcon />} />

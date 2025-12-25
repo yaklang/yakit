@@ -6,7 +6,11 @@ import {
     OutlineMCPIcon,
     OutlineSparklesIcon,
     OutlineTemplateIcon,
-    OutlineWrenchIcon
+    OutlineWrenchIcon,
+    OutlineBookOpenTextIcon,
+    OutlineBotIcon,
+    OutlineDocumenttextIcon,
+    OutlineFolderopenIcon
 } from "@/assets/icon/outline"
 import {YakitSideTabProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
@@ -62,12 +66,15 @@ export enum AIMentionTabsEnum {
     /**工具 */
     Tool = "tool",
     /**知识库 */
-    KnowledgeBase = "knowledgeBase"
+    KnowledgeBase = "knowledgeBase",
+    /**文件系统 */
+    File_System = "fileSystem"
 }
 export const AIMentionTabs: YakitSideTabProps["yakitTabs"] = [
     {value: AIMentionTabsEnum.Forge_Name, label: "模板"},
     {value: AIMentionTabsEnum.Tool, label: "工具"},
-    {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"}
+    {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"},
+    {value: AIMentionTabsEnum.File_System, label: "文件系统"}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -273,4 +280,12 @@ export enum ReActChatEventEnum {
     OPEN_FORGE_FORM = "open-forge-form",
     /** 使用工具 */
     USE_AI_TOOL = "use-ai-tool"
+}
+
+export const iconMap = {
+    file: <OutlineDocumenttextIcon />,
+    folder: <OutlineFolderopenIcon />,
+    forge: <OutlineBotIcon />,
+    tool: <OutlineWrenchIcon />,
+    knowledgeBase: <OutlineBookOpenTextIcon />
 }

@@ -15,10 +15,50 @@ import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
 import AIFileChatContent from "../aIFileChatContent/AIFileChatContent"
 import classNames from "classnames"
+import {has, isArray} from "lodash"
+import {HandleStartParams} from "../../aiAgentChat/type"
+import {FileToChatQuestionList} from "@/pages/ai-re-act/aiReActChat/store"
+import {AIChatMentionSelectItem} from "../aiChatMention/type"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
+}
+/**@description 额外参数中获取文件列表数据 */
+export const isHaveFreeDialogFileList = (extraValue: HandleStartParams["extraValue"]): FileToChatQuestionList[] => {
+    if (has(extraValue, "freeDialogFileList") && isArray(extraValue.freeDialogFileList)) {
+        return extraValue.freeDialogFileList
+    }
+    return []
+}
+/**@description 额外参数中获取选中的forge */
+export const isHaveSelectForges = (extraValue: HandleStartParams["extraValue"]): AIChatMentionSelectItem[] => {
+    if (has(extraValue, "selectForges") && isArray(extraValue.selectForges)) {
+        return extraValue.selectForges
+    }
+    return []
+}
+/**@description 额外参数中获取选中的 tool */
+export const isHaveSelectTools = (extraValue: HandleStartParams["extraValue"]): AIChatMentionSelectItem[] => {
+    if (has(extraValue, "selectTools") && isArray(extraValue.selectTools)) {
+        return extraValue.selectTools
+    }
+    return []
+}
+/**@description 额外参数中获取选中的 KnowledgeBases */
+export const isHaveSelectKnowledgeBases = (extraValue: HandleStartParams["extraValue"]): AIChatMentionSelectItem[] => {
+    if (has(extraValue, "selectKnowledgeBases") && isArray(extraValue.selectKnowledgeBases)) {
+        return extraValue.selectKnowledgeBases
+    }
+    return []
+}
+const isExtraShow = (extraValue: HandleStartParams["extraValue"]) => {
+    return (
+        isHaveFreeDialogFileList(extraValue).length > 0 ||
+        isHaveSelectForges(extraValue).length > 0 ||
+        isHaveSelectTools(extraValue).length > 0 ||
+        isHaveSelectKnowledgeBases(extraValue).length > 0
+    )
 }
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
     const {item, type} = props
@@ -46,9 +86,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         const {id, type, Timestamp, data, extraValue} = item
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
-                const hasFreeDialogFileList =
-                    Array.isArray(extraValue?.freeDialogFileList) && (extraValue?.freeDialogFileList?.length ?? 0) > 0
-
                 return (
                     <AITriageChatContent
                         isAnswer={false}
@@ -56,7 +93,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         extraValue={extraValue}
                         {...chatContentExtraProps}
                         contentClassName={classNames({
-                            [styles["file-content-wrapper"]]: hasFreeDialogFileList
+                            [styles["file-content-wrapper"]]: isExtraShow(extraValue)
                         })}
                     />
                 )
