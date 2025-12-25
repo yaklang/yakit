@@ -3,12 +3,8 @@ import {useRef, useState} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {DragSource} from "@/pages/ai-agent/aiChatWelcome/type"
+import { fetchIsFolderByPath } from "../utils"
 
-const {ipcRenderer} = window.require("electron")
-
-const fetchIsFolderByPath = (path: string): Promise<boolean> => {
-    return ipcRenderer.invoke("fetch-file-is-dir-by-path", path)
-}
 
 export interface UseFileTreeDropOptions {
     onAddPath: (path: string, isFolder: boolean) => void

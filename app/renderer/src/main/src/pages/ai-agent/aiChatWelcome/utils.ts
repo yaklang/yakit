@@ -18,11 +18,10 @@ const guessIsFolderByPath = (path: string): boolean => {
     return false
 }
 
-const fetchIsFolderByPath =async (path: string): Promise<boolean> => {
+export const fetchIsFolderByPath =async (path: string): Promise<boolean> => {
     try {
         return await ipcRenderer.invoke("fetch-file-is-dir-by-path", path)
     } catch (err) {
-        console.error("IPC failed, fallback to path guess:", err)
         return guessIsFolderByPath(path)
     }
 }
