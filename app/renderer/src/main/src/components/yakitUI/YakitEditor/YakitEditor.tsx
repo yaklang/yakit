@@ -1112,6 +1112,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             // 只保留最新一次触发
             rafIdRef.current = requestAnimationFrame(() => {
                 rafIdRef.current = null
+                if (!model || model.isDisposed()) return
                 try {
                     current = model.deltaDecorations(current, generateDecorations())
                 } catch (e) {}
