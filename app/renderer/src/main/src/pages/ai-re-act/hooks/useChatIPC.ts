@@ -14,6 +14,7 @@ import {
     AIFileSystemPin,
     AIQuestionQueues,
     CasualLoadingStatus,
+    PlanLoadingStatus,
     UseCasualChatEvents,
     UseChatIPCEvents,
     UseChatIPCParams,
@@ -170,7 +171,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
 
     /** 自由对话-loading状态相关逻辑 */
-    const casualChatID = useRef<string>("")
+    const casualChatID = useRef("")
     const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>({
         loading: false,
         title: "thinking..."
@@ -178,6 +179,16 @@ function useChatIPC(params?: UseChatIPCParams) {
     const handleResetCasualChatID = useMemoizedFn(() => {
         casualChatID.current = ""
         setCasualStatus({loading: false, title: "thinking..."})
+    })
+
+    /** 任务规划-loading状态相关逻辑 */
+    const [taskStatus, setTaskStatus] = useState<PlanLoadingStatus>({
+        loading: false,
+        plan: "加载中...",
+        task: "加载中..."
+    })
+    const handleResetTaskChatID = useMemoizedFn(() => {
+        setTaskStatus({loading: false, plan: "加载中...", task: "加载中..."})
     })
 
     // 设置任务规划的标识ID
@@ -212,6 +223,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setExecute(false)
         reactTaskToAsync.current = ""
         handleResetCasualChatID()
+        handleResetTaskChatID()
     })
 
     // #region review事件相关方法
@@ -296,6 +308,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 下面注释的代码为 触发UI分裂的回调
                         onTaskStart && onTaskStart()
+                        setTaskStatus(() => ({loading: true, plan: "加载中...", task: "加载中..."}))
                         planCoordinatorId.current = startInfo.coordinator_id
                     }
                     return
@@ -306,6 +319,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     clearReactTaskToAsync()
                     if (startInfo.coordinator_id && planCoordinatorId.current === startInfo.coordinator_id) {
                         taskChatEvent.handlePlanExecEnd(res)
+                        setTaskStatus(() => ({loading: false, plan: "加载中...", task: "加载中..."}))
                     }
                     return
                 }
@@ -418,6 +432,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                         })
                         return
                     } else if (res.NodeId === "react_task_status_changed") {
+                        // 只负责获取自由对话的任务状态
                         if (planCoordinatorId.current === res.CoordinatorId) return
                         /* 问题的状态变化 */
                         const {react_task_id, react_task_now_status} = JSON.parse(
@@ -441,14 +456,33 @@ function useChatIPC(params?: UseChatIPCParams) {
                     } else if (res.NodeId === "status") {
                         const data = JSON.parse(ipcContent) as {key: string; value: string}
                         if (data.key === "re-act-loading-status-key") {
-                            if (planCoordinatorId.current === res.CoordinatorId) return
-                            // 自由对话-loading展示标题
-                            setCasualStatus((old) => {
-                                if (old.loading) {
-                                    return {...old, title: data.value || "thinking..."}
-                                }
-                                return old
-                            })
+                            if (planCoordinatorId.current === res.CoordinatorId) {
+                                // 任务规划-loading展示标题
+                                setTaskStatus((old) => {
+                                    if (old.loading) {
+                                        return {...old, task: data.value || "加载中..."}
+                                    }
+                                    return old
+                                })
+                            } else {
+                                // 自由对话-loading展示标题
+                                setCasualStatus((old) => {
+                                    if (old.loading) {
+                                        return {...old, title: data.value || "thinking..."}
+                                    }
+                                    return old
+                                })
+                            }
+                        } else if (data.key === "plan-executing-loading-status-key") {
+                            if (planCoordinatorId.current === res.CoordinatorId) {
+                                // 任务规划-loading展示标题
+                                setTaskStatus((old) => {
+                                    if (old.loading) {
+                                        return {...old, plan: data.value || "加载中..."}
+                                    }
+                                    return old
+                                })
+                            }
                         } else {
                             // 执行状态卡片处理
                             yakExecResultEvent.handleSetData(res)
@@ -565,7 +599,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             questionQueue,
             casualStatus,
             reActTimelines,
-            memoryList
+            memoryList,
+            taskStatus
         },
         {
             fetchToken,

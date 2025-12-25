@@ -150,6 +150,13 @@ export interface CasualLoadingStatus {
     title: string
 }
 
+/** 任务规划-loading状态信息 */
+export interface PlanLoadingStatus {
+    loading: boolean
+    plan: string
+    task: string
+}
+
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
@@ -173,6 +180,8 @@ export interface UseChatIPCState {
     reActTimelines: AIAgentGrpcApi.TimelineItem[]
     /** 记忆列表 */
     memoryList: AIAgentGrpcApi.MemoryEntryList
+    /** 任务规划的loading状态信息 */
+    taskStatus: PlanLoadingStatus
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
