@@ -21,7 +21,7 @@ import {
     useUpdateEffect
 } from "ahooks"
 
-import {httpDeleteNotepadFile, httpDeleteOSSResource} from "@/apiUtils/http"
+import {httpDeleteNotepadFile} from "@/apiUtils/http"
 import {deletedFileUrlsCtx} from "./utils/trackDeletePlugin"
 import moment from "moment"
 import {useStore} from "@/store"
@@ -205,7 +205,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         }
         if (fileName.length > 0) {
             setInterval(undefined)
-            httpDeleteOSSResource({file_name: fileName}, true).finally(() => {
+            httpDeleteNotepadFile({file_name: fileName}, true).finally(() => {
                 // 暂不考虑删除失败的情况
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
             })

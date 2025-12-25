@@ -35,7 +35,7 @@ import useUploadOSSHooks, {UploadFileTypeProps, UploadOSSStartProps} from "@/hoo
 import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
 import {setClipboardText} from "@/utils/clipboard"
 import {getFileNameByUrl} from "../utils/trackDeletePlugin"
-import {httpDeleteOSSResource} from "@/apiUtils/http"
+import {httpDeleteNotepadFile} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {LogNodeStatusFileIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
@@ -497,7 +497,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
     const onDeleteOSSFile = useMemoizedFn(() => {
         const fileName = getFileNameByUrl(url)
         if (fileName) {
-            httpDeleteOSSResource({file_name: [fileName]}, false)
+            httpDeleteNotepadFile({file_name: [fileName]}, false)
         }
     })
     return (
