@@ -13,7 +13,6 @@ export interface AIReActTaskChatReviewProps {
 }
 
 export interface HandleStartParams extends AIChatTextareaSubmit {
-    qs: string
     attachedResourceInfo?: AIInputEvent["AttachedResourceInfo"]
     extraValue?: AIChatIPCStartParams["extraValue"]
 }

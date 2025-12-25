@@ -253,21 +253,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
     })
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
-        const {qs, selectForges, selectTools, selectKnowledgeBases, fileToQuestion} = value
-        const params: HandleStartParams = {
-            qs,
-            extraValue: {
-                // 自由对话文件列表
-                freeDialogFileList: fileToQuestion?.map((item) => ({...item})) || [],
-                /**智能体列表 */
-                selectForges: selectForges?.map((ele) => ({...ele})) || [],
-                /**工具列表 */
-                selectTools: selectTools?.map((ele) => ({...ele})) || [],
-                /**知识库列表 */
-                selectKnowledgeBases: selectKnowledgeBases?.map((ele) => ({...ele})) || []
-            }
-        }
-        onTriageSubmit(params)
+        onTriageSubmit(value)
         fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })

@@ -50,6 +50,7 @@ import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
+import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -68,6 +69,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
+    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
 
     const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
         setMode("re-act")
@@ -211,8 +213,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
         onSetReAct()
-
-        const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
+        const {extra, attachedResourceInfo} = getAIReActRequestParams({
+            ...value,
+            selectForges,
+            selectTools,
+            selectKnowledgeBases,
+            fileToQuestion
+        })
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -221,6 +228,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             },
             AttachedResourceInfo: attachedResourceInfo
         }
+
         events.onStart({token: newChat.id, params: startParams, extraValue: extra})
     })
 

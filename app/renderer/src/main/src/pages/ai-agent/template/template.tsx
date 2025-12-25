@@ -98,11 +98,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const handleSubmit = useMemoizedFn(() => {
         if (!isQuestion) return
         const value: AIChatTextareaSubmit = {
-            qs: question.trim(),
-            selectForges,
-            selectTools,
-            selectKnowledgeBases,
-            fileToQuestion
+            qs: question.trim()
         }
         onSubmit && onSubmit(value)
         setSelectForges([])

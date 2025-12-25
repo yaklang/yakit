@@ -5,6 +5,7 @@ import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
+import {AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "@/pages/ai-agent/defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -168,8 +169,9 @@ export interface AIInputEvent {
     AttachedResourceInfo?: AttachedResourceInfo[]
 }
 export interface AttachedResourceInfo {
-    Key: string
-    Type: string // file、knowledge_base、aitool、aiforge
+    Key: AttachedResourceKeyEnum
+    Type: AttachedResourceTypeEnum
+    Value: string
 }
 export interface AIOutputI18n {
     Zh: string
