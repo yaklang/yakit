@@ -1755,6 +1755,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
+                        downstreamProxyStr={props.downstreamProxyStr}
                         keepSearchName={`${pageType}-response`}
                         language={flow?.DisableRenderStyles ? "text" : undefined}
                         typeOptionVal={resTypeOptionVal}

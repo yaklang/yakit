@@ -656,13 +656,31 @@ export interface FuzzerCacheDataProps {
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
     return new Promise(async (resolve, rejects) => {
         try {
-            const proxy = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY)
-            const dnsServers = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config)
-            const etcHosts = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config)
-            const advancedConfigShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
-            const resNumlimit = await getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit)
-            const noSystemProxy = await getRemoteValue(FuzzerRemoteGV.FuzzerNoSystemProxy)
-            const disableUseConnPool = await getRemoteValue(FuzzerRemoteGV.FuzzerDisableUseConnPool)
+            const [
+                proxyResult,
+                dnsServersResult,
+                etcHostsResult,
+                advancedConfigShowResult,
+                resNumlimitResult,
+                noSystemProxyResult,
+                disableUseConnPoolResult
+            ] = await Promise.allSettled([
+                getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY),
+                getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config),
+                getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config),
+                getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow),
+                getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit),
+                getRemoteValue(FuzzerRemoteGV.FuzzerNoSystemProxy),
+                getRemoteValue(FuzzerRemoteGV.FuzzerDisableUseConnPool)
+            ])
+
+            const proxy = proxyResult.status === 'fulfilled' ? proxyResult.value : ''
+            const dnsServers = dnsServersResult.status === 'fulfilled' ? dnsServersResult.value : ''
+            const etcHosts = etcHostsResult.status === 'fulfilled' ? etcHostsResult.value : ''
+            const advancedConfigShow = advancedConfigShowResult.status === 'fulfilled' ? advancedConfigShowResult.value : ''
+            const resNumlimit = resNumlimitResult.status === 'fulfilled' ? resNumlimitResult.value : ''
+            const noSystemProxy = noSystemProxyResult.status === 'fulfilled' ? noSystemProxyResult.value : ''
+            const disableUseConnPool = disableUseConnPoolResult.status === 'fulfilled' ? disableUseConnPoolResult.value : ''
 
             const value: FuzzerCacheDataProps = {
                 proxy: !!proxy ? proxy.split(",") : [],
@@ -2071,21 +2089,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const jumpHTTPHistoryAnalysis = useMemoizedFn(() => {
         setTrafficAnalysisVisible(true)
-        // 原来的逻辑是跳转的流量分析器 现在改为httpHistoryAnalysis组件覆盖
-        // const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-        // emiter.emit(
-        //     "openPage",
-        //     JSON.stringify({
-        //         route: YakitRoute.DB_HTTPHistoryAnalysis,
-        //         params: {
-        //             webFuzzer: true,
-        //             runtimeId: runtimeIdRef.current.split(","),
-        //             sourceType: "scan",
-        //             verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("HTTPFuzzerPage.allTraffic")}` : "",
-        //             pageId: currentItem?.pageId || ""
-        //         }
-        //     })
-        // )
     })
 
     const getContainerSize = useSize(fuzzerRef || document.body)
@@ -3055,6 +3058,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 {+(secondNodeSize?.width || 0) >= 700 && searchNode}
                 {+(secondNodeSize?.width || 0) < 700 && (
                     <YakitPopover
+                        trigger={"click"}
                         content={searchNode}
                         onVisibleChange={(b) => {
                             if (!b) {

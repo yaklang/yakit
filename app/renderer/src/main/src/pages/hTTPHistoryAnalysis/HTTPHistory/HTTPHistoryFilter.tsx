@@ -110,7 +110,6 @@ interface HTTPHistoryFilterProps {
     refreshHttpTable?: boolean
     isResetSelect?: boolean
     onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
-    downstreamProxy: string
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
@@ -127,7 +126,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         refreshHttpTable,
         isResetSelect,
         onSetIsResetSelect,
-        downstreamProxy,
         toWebFuzzer,
         runtimeId,
         sourceType,
@@ -289,7 +287,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             refresh={refreshHttpTable}
                             isResetSelect={isResetSelect}
                             onSetIsResetSelect={onSetIsResetSelect}
-                            downstreamProxy={downstreamProxy}
                             inMouseEnterTable={true}
                             toWebFuzzer={toWebFuzzer}
                             runtimeId={runtimeId}
@@ -338,7 +335,6 @@ interface HTTPFlowTableProps {
     refresh?: boolean
     isResetSelect?: boolean
     onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
-    downstreamProxy?: string
     inMouseEnterTable?: boolean
     toWebFuzzer?: boolean
     runtimeId?: string[]
@@ -358,7 +354,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         refresh,
         isResetSelect = true,
         onSetIsResetSelect,
-        downstreamProxy = "",
         inMouseEnterTable = false,
         toWebFuzzer = false,
         runtimeId = [],
@@ -561,7 +556,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     id: r?.Id || 0,
                     sendToWebFuzzer: true,
                     selectedFlow: getHTTPFlowReqAndResToString(r),
-                    downstreamProxyStr: downstreamProxy,
                     showEditTag: false,
                     showJumpTree: false
                 } as HTTPFlowDetailProp
@@ -1204,7 +1198,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     e.stopPropagation()
                                     let m = showYakitDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxy, t),
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), '', t),
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
@@ -1274,7 +1268,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         beforeBodyLength,
         bodyLengthUnit,
         contentType,
-        downstreamProxy,
         i18n.language
     ])
     // #endregion
@@ -1561,10 +1554,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
                     switch (key) {
                         case "sendAndJumpToWebFuzzer":
-                            onSendToTab(rowData, true, downstreamProxy)
+                            onSendToTab(rowData, true)
                             break
                         case "sendToWebFuzzer":
-                            onSendToTab(rowData, false, downstreamProxy)
+                            onSendToTab(rowData, false)
                             break
                         case "sendAndJumpToWS":
                             newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
@@ -1623,7 +1616,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
                 if (!currentItemJumpToFuzzer) return
                 onBatch(
-                    (el) => onSendToTab(el, true, downstreamProxy),
+                    (el) => onSendToTab(el, true),
                     currentItemJumpToFuzzer?.number || 0,
                     selectedRowKeys.length === total
                 )
@@ -1632,7 +1625,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
                 if (!currentItemToFuzzer) return
                 onBatch(
-                    (el) => onSendToTab(el, false, downstreamProxy),
+                    (el) => onSendToTab(el, false),
                     currentItemToFuzzer?.number || 0,
                     selectedRowKeys.length === total
                 )
@@ -1698,7 +1691,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request)
-                    : onSendToTab(clickRow, true, downstreamProxy)
+                    : onSendToTab(clickRow, true)
             }
         }
     })
@@ -1709,7 +1702,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request, false)
-                    : onSendToTab(clickRow, false, downstreamProxy)
+                    : onSendToTab(clickRow, false)
             }
         }
     })

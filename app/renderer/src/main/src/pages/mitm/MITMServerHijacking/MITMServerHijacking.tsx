@@ -175,7 +175,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         grpcMITMHotPort(value)
                     }
                 })
-                onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
                     emiter.emit(
                         "onChangeAddrAndEnableInitialPlugin",
                         JSON.stringify({
@@ -183,10 +182,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             host: info.host,
                             port: info.port,
                             enableInitialPlugin: info.enableInitialPlugin,
-                            downstreamProxy: res.defaultValue
                         })
                     )
-                })
             }
         },
         [initPageInfo()?.immediatelyLaunchedInfo, initV2PageInfo()?.immediatelyLaunchedInfo, status, mitmVersion],
@@ -255,14 +252,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             .join("|")
         onSetTip(tipStr)
         setDownstreamProxyStr("")
-        // 更新下拉缓存数据
-        onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-            const cacheData = {
-                options: res.options || [],
-                defaultValue: ""
-            }
-            setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory, JSON.stringify(cacheData))
-        })
 
         const proxyValue: MITMSetDownstreamProxyRequest = {
             downstreamProxy: "",
