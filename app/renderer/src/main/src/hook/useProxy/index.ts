@@ -54,6 +54,10 @@ export interface UseProxyReturn {
 let globalProxyConfig: GlobalProxyRulesConfig = { Endpoints: [], Routes: [] }
 // 订阅回调列表
 const subscribers: Set<() => void> = new Set()
+// 请求缓存：防止重复请求
+let fetchPromise: Promise<void> | null = null
+// 是否已初始化
+let isInitialized = false
 
 /**
  * @name 更新全局配置并通知所有订阅者
@@ -61,6 +65,7 @@ const subscribers: Set<() => void> = new Set()
  */
 const updateGlobalConfig = (config: GlobalProxyRulesConfig): void => {
   globalProxyConfig = config
+  isInitialized = true
   subscribers.forEach(cb => cb())
 }
 
@@ -186,14 +191,29 @@ export const useProxy = (): UseProxyReturn => {
 
   /**
    * @name 获取代理配置
-   * @description 从后端获取全局代理配置并更新本地状态
+   * @description 从后端获取全局代理配置并更新本地状态，带请求去重机制
    * @returns {Promise<void>}
    */
   const fetchProxyConfig = useMemoizedFn(async (): Promise<void> => {
-    const config = await grpcGetGlobalProxyRulesConfig()
-    if (config) {
-      updateGlobalConfig(config)
+    // 如果已有请求在进行中，复用该 Promise
+    if (fetchPromise) {
+      return fetchPromise
     }
+
+    // 创建新的请求 Promise
+    fetchPromise = (async () => {
+      try {
+        const config = await grpcGetGlobalProxyRulesConfig()
+        if (config) {
+          updateGlobalConfig(config)
+        }
+      } finally {
+        // 请求完成后清除缓存，允许后续的主动刷新
+        fetchPromise = null
+      }
+    })()
+
+    return fetchPromise
   })
 
   /**
@@ -234,7 +254,7 @@ export const useProxy = (): UseProxyReturn => {
   })
 
   useEffect(() => {
-    fetchProxyConfig()
+    !isInitialized && fetchProxyConfig()
   }, [])
 
   return {
