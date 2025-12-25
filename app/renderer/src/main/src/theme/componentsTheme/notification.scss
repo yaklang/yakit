@@ -2,7 +2,7 @@
 .yakit-notification-failed,
 .yakit-notification-error {
     background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow, rgba(23, 23, 23, 0.08));
     padding: 0;
 
     .ant-notification-notice-content {
@@ -43,7 +43,7 @@
 
 .yakit-notification-success {
     background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow, rgba(23, 23, 23, 0.08));
     padding: 0;
 
     .ant-notification-notice-content {
@@ -84,7 +84,7 @@
 
 .yakit-notification-warning {
     background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow, rgba(23, 23, 23, 0.08));
     padding: 0;
 
     .ant-notification-notice-content {
@@ -125,7 +125,7 @@
 
 .yakit-notification-info {
     background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
+    box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow, rgba(23, 23, 23, 0.08));
     padding: 0;
 
     .ant-notification-notice-content {
