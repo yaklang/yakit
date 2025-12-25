@@ -179,3 +179,17 @@
 .tab-wrap {
     width: 100%;
 }
+
+.file-system-label {
+    position: relative;
+    span {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        position: absolute;
+        right: -5px;
+        top: 0px;
+        background-color: red;
+        border-radius: 50%;
+    }
+}

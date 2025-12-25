@@ -60,7 +60,6 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             />
         ))
     })
-    console.log("renderContent:", renderContent)
     // 菜单选择
     const menuData = useMemo(() => {
         if (!isOpen) return []

@@ -639,9 +639,9 @@ function useCasualChat(params?: UseCasualChatParams) {
             //         Content: path
             //     })
 
-            if (Type === "filesystem_pin_directory") {
-                onGrpcFolder && onGrpcFolder({path, isFolder: Type === "filesystem_pin_directory"})
-            }
+            // if (Type === "filesystem_pin_directory") {
+            onGrpcFolder && onGrpcFolder({path, isFolder: Type === "filesystem_pin_directory"})
+            // }
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,

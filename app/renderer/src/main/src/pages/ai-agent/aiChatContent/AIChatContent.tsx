@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
@@ -36,10 +36,12 @@ import {onNewChat} from "../historyChat/HistoryChat"
 import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
 import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
+import useAIAgentStore from "../useContext/useStore"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
-    const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat} = useAIChatUIData()
+    const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
+    const {activeChat} = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
@@ -158,11 +160,48 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         return tab
     }, [tempRiskTotal, tempHTTPTotal, taskChat?.streams?.length])
 
+    const [showHot, setShowHot] = useState(false)
+    const prevRef = useRef<{
+        chatId?: string
+        foldersLen: number
+    }>({
+        chatId: activeChat?.id,
+        foldersLen: grpcFolders.length
+    })
+
+    useEffect(() => {
+        const prev = prevRef.current
+        const currentChatId = activeChat?.id
+        const currentLen = grpcFolders.length
+        let nextShowHot = false
+
+        if (activeKey === AITabsEnum.File_System) {
+            nextShowHot = false
+        }
+        else if (prev.chatId === currentChatId && currentLen > prev.foldersLen) {
+            nextShowHot = true
+        }
+        setShowHot(nextShowHot)
+        prevRef.current = {
+            chatId: currentChatId,
+            foldersLen: currentLen
+        }
+    }, [grpcFolders.length, activeChat?.id, activeKey])
+
     const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
         const [label] = node
         const finalLabel = label ?? (typeof tab.label === "function" ? tab.label() : tab.label)
         if (tab.value === AITabsEnum.Risk) {
             return <>{finalLabel}</>
+        }
+        if (tab.value === AITabsEnum.File_System) {
+            const isShow = activeKey !== AITabsEnum.File_System && showHot
+            return (
+                <div className={styles["file-system-label"]}>
+                    文件系统
+                    <span hidden={!isShow} />
+                </div>
+            )
         }
 
         return finalLabel
@@ -326,7 +365,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 ...(!showFreeChat && {
                     width: "100%"
                 }),
-                  ...(!timeLine &&
+                ...(!timeLine &&
                     isTaskStreamsEmpty && {
                         width: 30
                     })
