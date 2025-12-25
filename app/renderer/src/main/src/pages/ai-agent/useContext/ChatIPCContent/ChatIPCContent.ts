@@ -4,7 +4,8 @@ import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
-import { HandleStartParams } from "../../aiAgentChat/type"
+import {HandleStartParams} from "../../aiAgentChat/type"
+import {AIChatMentionSelectItem} from "../../components/aiChatMention/type"
 
 export interface ChatIPCContextStore {
     chatIPCData: UseChatIPCState
@@ -12,6 +13,9 @@ export interface ChatIPCContextStore {
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
     timelineMessage?: string
+    selectForges: AIChatMentionSelectItem[]
+    selectTools: AIChatMentionSelectItem[]
+    selectKnowledgeBases: AIChatMentionSelectItem[]
 }
 
 export interface AIChatIPCSendParams {
@@ -35,12 +39,15 @@ export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
     handleSendCasual: (params: AIChatIPCSendParams) => void
     handleSendTask: (params: AIChatIPCSendParams) => void
-    handleStart: (data:HandleStartParams) => void
+    handleStart: (data: HandleStartParams) => void
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void
     setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
     handleSendSyncMessage: (params: AISendSyncMessageParams) => void
     handleSendConfigHotpatch: (params: AISendConfigHotpatchParams) => void
+    setSelectForges: React.Dispatch<React.SetStateAction<AIChatMentionSelectItem[]>>
+    setSelectTools: React.Dispatch<React.SetStateAction<AIChatMentionSelectItem[]>>
+    setSelectKnowledgeBases: React.Dispatch<React.SetStateAction<AIChatMentionSelectItem[]>>
 }
 
 export interface ChatIPCContextValue {
@@ -54,7 +61,10 @@ export default createContext<ChatIPCContextValue>({
         reviewInfo: undefined,
         planReviewTreeKeywordsMap: new Map(),
         reviewExpand: false,
-        timelineMessage: undefined
+        timelineMessage: undefined,
+        selectForges: [],
+        selectTools: [],
+        selectKnowledgeBases: []
     },
     dispatcher: {
         chatIPCEvents: {
@@ -74,6 +84,9 @@ export default createContext<ChatIPCContextValue>({
         handleStop: () => {},
         setTimelineMessage: () => {},
         handleSendSyncMessage: () => {},
-        handleSendConfigHotpatch: () => {}
+        handleSendConfigHotpatch: () => {},
+        setSelectForges: () => {},
+        setSelectTools: () => {},
+        setSelectKnowledgeBases: () => {}
     }
 })

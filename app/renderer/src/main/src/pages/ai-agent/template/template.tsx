@@ -30,6 +30,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import {isArray} from "lodash"
+import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -67,9 +69,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         valuePropName: "question",
         trigger: "setQuestion"
     })
-    const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
-    const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
-    const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
+    const {selectForges, selectTools, selectKnowledgeBases} = useChatIPCStore()
+    const {setSelectForges, setSelectTools, setSelectKnowledgeBases} = useChatIPCDispatcher()
     const aiChatTextareaRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(aiChatTextareaRef)
     useEffect(() => {

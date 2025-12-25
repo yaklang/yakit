@@ -49,6 +49,7 @@ import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -575,10 +576,30 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setReplaceToolShow(false)
     })
     // #endregion
-
+    const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
+    const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
+    const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
     const store: ChatIPCContextStore = useCreation(() => {
-        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage}
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
+        return {
+            chatIPCData,
+            planReviewTreeKeywordsMap,
+            reviewInfo,
+            reviewExpand,
+            timelineMessage,
+            selectForges,
+            selectTools,
+            selectKnowledgeBases
+        }
+    }, [
+        chatIPCData,
+        planReviewTreeKeywordsMap,
+        reviewInfo,
+        reviewExpand,
+        timelineMessage,
+        selectForges,
+        selectTools,
+        selectKnowledgeBases
+    ])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -590,7 +611,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSend,
             setTimelineMessage,
             handleSendSyncMessage,
-            handleSendConfigHotpatch
+            handleSendConfigHotpatch,
+            setSelectForges,
+            setSelectTools,
+            setSelectKnowledgeBases
         }
     }, [events])
 
