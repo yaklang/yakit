@@ -26,6 +26,7 @@ const getVersionEnvVarName = () => {
     irify: 'IRIFY_HOME',
     irifyee: 'IRIFYENPRITRACE_HOME',
     memfit: 'MEMFITAI_HOME',
+    yaoguang: 'YAOGUANG_HOME',
   }
   const envVar = envVarMap[appName] || 'YAKIT_HOME'
   return envVar

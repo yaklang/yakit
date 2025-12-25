@@ -2106,6 +2106,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const [messageList, setMessageList] = useState<API.MessageLogDetail[]>([])
   const isUpdate = useMemo(() => {
     const unRead = messageList.filter((item) => !item.isRead).length > 0
+    return unRead
     return (
       (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
       lowerYaklangLastVersion ||
