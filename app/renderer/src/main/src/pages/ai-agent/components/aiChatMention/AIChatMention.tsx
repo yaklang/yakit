@@ -37,7 +37,7 @@ import classNames from "classnames"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {OutlineCheckIcon} from "@/assets/icon/outline"
 import {useCustomFolder} from "../aiFileSystemList/store/useCustomFolder"
-import {FileTreeSystemList} from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
+import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {
     FileListStoreKey,

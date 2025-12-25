@@ -39,52 +39,50 @@ const FileTreeSystem = () => {
     }, [selected])
 
     return (
-        <div
-            className={classNames(styles["file-tree-system"], {
-                [styles.dragging]: dragging && dragSource !== "AIRreeToChat"
-            })}
-            ref={dropRef}
-        >
-            <YakitResizeBox
-                firstRatio='50%'
-                firstNodeStyle={{padding: "4px", overflowY: "auto"}}
-                lineDirection='right'
-                firstMinSize={200}
-                lineStyle={{width: 4}}
-                firstNode={
-                    <div className={styles["file-tree-system-left"]}>
-                        {dragging && dragSource !== "AIRreeToChat" && (
-                            <div className={styles.dragHint}>松开以添加文件 / 文件夹</div>
-                        )}
-                        <FileTreeSystemListWapper
-                            key='aiFolder'
-                            path={grpcFolders}
-                            selected={selected}
-                            setSelected={setSelected}
-                            title='AI Artifacts'
-                            isOpen={false}
-                        />
-                        <FileTreeSystemListWapper
-                            isOpen
-                            key='customFolder'
-                            title='已打开文件/文件夹'
-                            selected={selected}
-                            historyFolder={historyFolder}
-                            path={customFolder}
-                            setOpenFolder={onSetFolder}
-                            setSelected={setSelected}
-                            onTreeDragStart={() => {
-                                setDragSource("AIRreeToChat")
-                            }}
-                            onTreeDragEnd={() => {
-                                setDragSource(null)
-                            }}
-                        />
-                    </div>
-                }
-                secondNode={<FilePreview data={filePreviewData} />}
-            />
-        </div>
+        <YakitResizeBox
+            firstRatio='50%'
+            firstNodeStyle={{padding: "4px", overflowY: "auto"}}
+            lineDirection='right'
+            firstMinSize={200}
+            lineStyle={{width: 4}}
+            firstNode={
+                <div
+                    ref={dropRef}
+                    className={classNames(styles["file-tree-system-left"], {
+                        [styles.dragging]: dragging && dragSource !== "AIRreeToChat"
+                    })}
+                >
+                    {dragging && dragSource !== "AIRreeToChat" && (
+                        <div className={styles.dragHint}>松开以添加文件 / 文件夹</div>
+                    )}
+                    <FileTreeSystemListWapper
+                        key='aiFolder'
+                        path={grpcFolders}
+                        selected={selected}
+                        setSelected={setSelected}
+                        title='AI Artifacts'
+                        isOpen={false}
+                    />
+                    <FileTreeSystemListWapper
+                        isOpen
+                        key='customFolder'
+                        title='已打开文件/文件夹'
+                        selected={selected}
+                        historyFolder={historyFolder}
+                        path={customFolder}
+                        setOpenFolder={onSetFolder}
+                        setSelected={setSelected}
+                        onTreeDragStart={() => {
+                            setDragSource("AIRreeToChat")
+                        }}
+                        onTreeDragEnd={() => {
+                            setDragSource(null)
+                        }}
+                    />
+                </div>
+            }
+            secondNode={<FilePreview data={filePreviewData} />}
+        />
     )
 }
 

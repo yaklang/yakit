@@ -410,8 +410,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             })}
                         >
                             {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
-
-                            <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return

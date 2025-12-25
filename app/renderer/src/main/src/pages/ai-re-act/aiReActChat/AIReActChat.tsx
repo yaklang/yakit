@@ -29,7 +29,6 @@ import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/Op
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {getAIReActRequestParams} from "@/pages/ai-agent/utils"
 import useAIChatDrop from "@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop"
-import FreeDialogFileList from "@/pages/ai-agent/aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -182,7 +181,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     })}
                                 >
                                     {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
-                                    <FreeDialogFileList storeKey={storeKey} />
                                     <AIChatTextarea
                                         loading={false}
                                         question={question}

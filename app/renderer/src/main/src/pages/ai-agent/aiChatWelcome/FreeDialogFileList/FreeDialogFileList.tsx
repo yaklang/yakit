@@ -2,17 +2,30 @@
 import styles from "./FreeDialogFileList.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {FC, useEffect, useRef, useState} from "react"
+import {FC, useEffect, useMemo, useRef, useState} from "react"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {Key, useFileToQuestion, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import {Key, useFileToQuestion, fileToChatQuestionStore, FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
 import {AITagListProps} from "./type"
 import React from "react"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {iconMap} from "../../defaultConstant"
+import { YakitRoute } from "@/enums/yakitRoute"
+import { usePageInfo } from "@/store/pageInfo"
+import shallow from "zustand/shallow"
+
+export const routeKey = {
+    [YakitRoute.AI_Agent] :FileListStoreKey.FileList,
+    [YakitRoute.AI_REPOSITORY] :FileListStoreKey.Konwledge
+}
+
+export const useGetStoreKey = () => {
+    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+    const storeKey = useMemo(() => routeKey[currentRouteKey],[currentRouteKey])
+    return storeKey
+}
 
 const FreeDialogFileList: FC<{storeKey: Key}> = React.memo(({storeKey}) => {
     const fileToQuestion = useFileToQuestion(storeKey)
-
     return (
         <AITagList
             title='文件列表'
