@@ -18,4 +18,5 @@ export interface PluginDebugBodyProps {
     plugin?: PluginDataProps
     newCode: string
     setNewCode: (value: string) => any
+    isShowMockHTTPResponse?: boolean
 }

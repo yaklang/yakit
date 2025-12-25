@@ -867,10 +867,11 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
-    const {form, disabled, type = "single", rawHTTPRequest = "", inputType, setInputType} = props
+    const {form, disabled, type = "single", rawHTTPRequest = "", MockHTTPResponse = "", inputType, setInputType, isShowMockHTTPResponse} = props
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
 
     const requestType: RequestType = Form.useWatch("requestType", form)
+    const isShowResponse: boolean = Form.useWatch("simulationResponse", form)
     const rawItem = useMemo(() => {
         const codeItem: YakParamProps = {
             Field: "rawHTTPRequest",
@@ -882,6 +883,19 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
         }
         return codeItem
     }, [rawHTTPRequest, i18n.language])
+
+    const mockItem = useMemo(() => {
+        const codeItem: YakParamProps = {
+            Field: "mockHTTPResponse",
+            FieldVerbose: t("PluginFixFormParams.data_packet"),
+            Required: true,
+            TypeVerbose: "http-packet",
+            DefaultValue: MockHTTPResponse,
+            Help: ""
+        }
+        return codeItem
+    }, [MockHTTPResponse, i18n.language])
+
     const requestTypeOptions = useCreation(() => {
         if (type === "single") {
             return [
@@ -918,7 +932,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
             <Form.Item label={t("PluginFixFormParams.request_type")} name='requestType' initialValue='input'>
                 <YakitRadioButtons buttonStyle='solid' options={requestTypeOptions} disabled={disabled} />
             </Form.Item>
-            {requestType === "original" && <OutputFormComponentsByType item={rawItem} />}
+            {requestType === "original" && <OutputFormComponentsByType item={rawItem} disabled={disabled} />}
             {requestType === "input" && (
                 <>
                     {inputType && setInputType ? (
@@ -982,6 +996,17 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                     />
                 </Form.Item>
             )}
+            {isShowMockHTTPResponse && <Form.Item label={t("PluginFixFormParams.simulation_response")} name='simulationResponse' valuePropName='checked' initialValue={false}>
+                <YakitSwitch size='large' disabled={disabled} />
+            </Form.Item>}
+            {
+                isShowResponse && (
+                <OutputFormComponentsByType
+                    item={mockItem}
+                    disabled={disabled}
+                />
+            )
+            }
         </>
     )
 })

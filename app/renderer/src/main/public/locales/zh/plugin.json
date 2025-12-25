@@ -22,7 +22,8 @@
     "request_type": "请求类型",
     "scan_target": "扫描目标",
     "please_enter_scan_target": "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
-    "enter_request_id_comma_separated": "请输入请求ID,多个请求Id用“英文逗号”分隔"
+    "enter_request_id_comma_separated": "请输入请求ID,多个请求Id用“英文逗号”分隔",
+    "simulation_response": "模拟响应"
   },
   "FixExtraParamsNode": {
     "http_method": "HTTP方法",

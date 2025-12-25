@@ -161,7 +161,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
 })
 
 export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
-    const {plugin, newCode, setNewCode} = props
+    const {plugin, newCode, setNewCode, isShowMockHTTPResponse} = props
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
 
     /** 插件类型 */
@@ -313,12 +313,12 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                 isExecuting={isExecuting}
                             />
                         ) : null}
-                        <PluginFixFormParams form={form} disabled={isExecuting} />
+                        <PluginFixFormParams form={form} disabled={isExecuting} isShowMockHTTPResponse={isShowMockHTTPResponse} />
                     </>
                 )
             case "port-scan":
             case "nuclei":
-                return <PluginFixFormParams form={form} disabled={isExecuting} />
+                return <PluginFixFormParams form={form} disabled={isExecuting} isShowMockHTTPResponse={isShowMockHTTPResponse} />
             default:
                 return null
         }
@@ -463,7 +463,10 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                 IsRawHTTPRequest: value.requestType === "original",
                                 RawHTTPRequest: value.rawHTTPRequest
                                     ? Buffer.from(value.rawHTTPRequest, "utf8")
-                                    : Buffer.from("", "utf8")
+                                    : Buffer.from("", "utf8"),
+                                MockHTTPResponse: value.mockHTTPResponse
+                                    ? Buffer.from(value.mockHTTPResponse, "utf8")
+                                    : Buffer.from("", "utf8"),
                             }
                             break
                         case "port-scan":
@@ -473,7 +476,10 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                 IsRawHTTPRequest: value.requestType === "original",
                                 RawHTTPRequest: value.rawHTTPRequest
                                     ? Buffer.from(value.rawHTTPRequest, "utf8")
-                                    : Buffer.from("", "utf8")
+                                    : Buffer.from("", "utf8"),
+                                MockHTTPResponse: value.mockHTTPResponse
+                                    ? Buffer.from(value.mockHTTPResponse, "utf8")
+                                    : Buffer.from("", "utf8"),
                             }
                             break
                         default:

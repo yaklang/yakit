@@ -99,7 +99,7 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
             }
             onClose={onClose}
         >
-            <PluginDebugBody plugin={plugin} newCode={code} setNewCode={setCode} />
+            <PluginDebugBody plugin={plugin} newCode={code} setNewCode={setCode} isShowMockHTTPResponse={true} />
         </YakitDrawer>
     )
 })
