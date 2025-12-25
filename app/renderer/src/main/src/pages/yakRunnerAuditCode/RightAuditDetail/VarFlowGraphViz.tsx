@@ -253,6 +253,15 @@ export const VarFlowGraphViz: React.FC<VarFlowGraphVizProps> = (props) => {
 
         const {nodes, edges, steps} = varFlowGraph
 
+        // DOT 语言转义函数 - 处理标签中的特殊字符（保留 \n 作为换行符）
+        const escapeDotLabel = (str: string): string => {
+            if (!str) return ""
+            // 只转义双引号，不转义反斜杠（因为 \n 需要保持作为换行符）
+            return str
+                .replace(/"/g, '\\"')    // 转义双引号
+                .replace(/\r/g, '')      // 移除回车符
+        }
+
         const getNodeType = (node: VarFlowGraphNode): string => {
             if (node.node_type) return node.node_type
             if (node.value_ids && node.value_ids.length === 0) return "empty"
@@ -362,7 +371,9 @@ export const VarFlowGraphViz: React.FC<VarFlowGraphVizProps> = (props) => {
             const valueCount = node.value_count || node.value_ids?.length || 0
             // 添加 $ 符号，只在有值的时候显示数量
             const varName = node.var_name.startsWith("$") ? node.var_name : `$${node.var_name}`
-            let label = valueCount > 0 ? `${varName}\\n(${valueCount})` : varName
+            // 先转义 varName 中的特殊字符
+            const escapedVarName = escapeDotLabel(varName)
+            let label = valueCount > 0 ? `${escapedVarName}\\n(${valueCount})` : escapedVarName
             
             // 如果是告警节点，添加风险等级标识
             if (node.is_alert && node.severity) {
@@ -373,6 +384,7 @@ export const VarFlowGraphViz: React.FC<VarFlowGraphVizProps> = (props) => {
                     low: "🟢 低危",
                     info: "ℹ️ 信息"
                 }
+                // 风险等级标签不需要转义（都是安全字符）
                 label = `${severityLabel[node.severity] || "⚠️ 告警"}\\n${label}`
             }
             
@@ -472,8 +484,11 @@ export const VarFlowGraphViz: React.FC<VarFlowGraphVizProps> = (props) => {
                 const colors = getStepColor(step.type)
                 const style = getEdgeStyle(step.type)
                 
+                // 图标是安全的，只需转义 typeCN
+                const escapedTypeCN = escapeDotLabel(typeCN)
+                
                 dot += `  ${fromId} -> ${toId} [`
-                dot += `label="${icon} ${typeCN}", `
+                dot += `label="${icon} ${escapedTypeCN}", `
                 dot += `penwidth=2.5, `
                 dot += `color="${colors.edgeColor}", `
                 dot += `style=${style}, `
@@ -515,9 +530,12 @@ export const VarFlowGraphViz: React.FC<VarFlowGraphVizProps> = (props) => {
                         dot += `  ${currentTo} [label="", shape=point, width=0.01, height=0.01, style=invis];\n`
                     }
                     
+                    // 图标是安全的，只需转义 typeCN
+                    const escapedTypeCN = escapeDotLabel(typeCN)
+                    
                     // 创建边
                     dot += `  ${currentFrom} -> ${currentTo} [`
-                    dot += `label="${icon} ${typeCN}", `
+                    dot += `label="${icon} ${escapedTypeCN}", `
                     dot += `penwidth=2.5, `
                     dot += `color="${colors.edgeColor}", `
                     dot += `style=${style}, `

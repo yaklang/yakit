@@ -650,6 +650,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     // 新增：分析步骤图相关状态
     const [viewMode, setViewMode] = useState<"dataflow" | "steps" | "graph">("dataflow")
     const [varFlowGraph, setVarFlowGraph] = useState<VarFlowGraph | null>(null)
+    const [varFlowGraphLoading, setVarFlowGraphLoading] = useState(false)
     const [resultId, setResultId] = useState<string>()
     const [programId, setProgramId] = useState<string>()
     
@@ -728,19 +729,22 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             return
         }
         try {
-            setLoading(true)
+            setVarFlowGraphLoading(true)
             const data = await fetchVarFlowGraph(programId, resultId)
-            setVarFlowGraph(data)
-            setLoading(false)
+            // 只有成功获取数据后才更新，避免显示空状态
+            if (data) {
+                setVarFlowGraph(data)
+            }
+            setVarFlowGraphLoading(false)
         } catch (error) {
             console.error("Failed to load VarFlowGraph:", error)
-            setLoading(false)
+            setVarFlowGraphLoading(false)
         }
     })
     
-    // 当切换到分析步骤图视图时加载数据
+    // 当切换到分析步骤图视图时加载数据，或者当 resultId/programId 变化时重新加载
     useEffect(() => {
-        if ((viewMode === "steps" || viewMode === "graph") && !varFlowGraph && programId && resultId) {
+        if ((viewMode === "steps" || viewMode === "graph") && programId && resultId) {
             loadVarFlowGraph()
         }
     }, [viewMode, programId, resultId])
@@ -804,7 +808,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     })
 
     return (
-        <YakitSpin spinning={loading}>
+        <YakitSpin spinning={loading || varFlowGraphLoading}>
             <div className={classNames(styles["right-audit-detail"])}>
                 <div className={styles["header"]}>
                     <div className={styles["relative-box"]}>
