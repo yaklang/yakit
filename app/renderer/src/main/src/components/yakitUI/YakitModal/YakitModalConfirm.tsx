@@ -9,6 +9,7 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {createRoot} from "react-dom/client"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {useUpdateEffect} from "ahooks"
 
 interface YakitBaseModalProp extends Omit<YakitModalProp, "okType">, React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
@@ -133,6 +134,10 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             props.onVisibleSetter(setVisible)
         }
     }, [visible])
+
+    useUpdateEffect(() => {
+        setVisible(false)
+    }, [i18n.language])
 
     return (
         <YakitModal
