@@ -1002,6 +1002,7 @@ message CreateKnowledgeBaseV2Request {
   string Description = 2;
   string Type = 3;
   repeated string Tags = 4;
+  bool CreatedFromUI = 5;
 }
 
 message CreateKnowledgeBaseV2Response {
@@ -1377,6 +1378,7 @@ message GetKnowledgeBaseRequest {
   int64 KnowledgeBaseId = 1;
   string Keyword = 2;
   Paging Pagination = 3;
+  bool OnlyCreatedFromUI = 4;
 }
 
 message KnowledgeBaseInfo {
@@ -1386,6 +1388,7 @@ message KnowledgeBaseInfo {
   string KnowledgeBaseType = 4;
   repeated string Tags = 5;
   bool IsImported = 6;
+  bool CreatedFromUI = 7;
 }
 
 message GetKnowledgeBaseResponse {

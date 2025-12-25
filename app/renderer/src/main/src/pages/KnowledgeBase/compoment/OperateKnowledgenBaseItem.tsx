@@ -28,6 +28,7 @@ interface TOperateKnowledgenBaseItemProps extends Pick<TKnowledgeBaseSidebarProp
     setMenuSelectedId: (menuOpenProps?: string) => void
     knowledgeBase: KnowledgeBaseItem[]
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
+    addMode: string[]
 }
 
 const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
@@ -35,7 +36,8 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     setMenuSelectedId,
     setKnowledgeBaseID,
     knowledgeBase,
-    api
+    api,
+    addMode
 }) => {
     const [menuOpen, setMenuOpen] = useSafeState(false)
     const [deleteVisible, setDeleteVisible] = useSafeState(false)
@@ -139,6 +141,7 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
                 setKnowledgeBaseID={setKnowledgeBaseID}
                 knowledgeBase={knowledgeBase}
                 api={api}
+                addMode={addMode}
             />
             <EditKnowledgenBaseModal visible={editVisible} setVisible={setEditVisible} items={items} />
         </div>
@@ -154,9 +157,10 @@ interface DeleteConfirmProps extends Partial<Pick<TKnowledgeBaseSidebarProps, "s
 const DeleteConfirm: FC<
     DeleteConfirmProps & {
         api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
+        addMode: string[]
     }
 > = (props) => {
-    const {visible, setVisible, KnowledgeBaseId, setKnowledgeBaseID, knowledgeBase, api} = props
+    const {visible, setVisible, KnowledgeBaseId, setKnowledgeBaseID, knowledgeBase, api, addMode} = props
     const {deleteKnowledgeBase} = useKnowledgeBase()
 
     const {runAsync, loading} = useRequest(
@@ -170,7 +174,21 @@ const DeleteConfirm: FC<
             onSuccess: async () => {
                 try {
                     const nextKnowledgeBase = knowledgeBase?.filter((it) => it.ID !== KnowledgeBaseId) ?? []
-                    const selectedID = nextKnowledgeBase[0]?.ID ?? ""
+
+                    const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
+
+                    const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
+
+                    const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
+
+                    const resultKnowledgeBase = nextKnowledgeBase?.filter((it) => {
+                        if (addMode?.includes("external") && isExternal(it)) return true
+                        if (addMode?.includes("manual") && isManual(it)) return true
+                        if (addMode?.includes("other") && isOther(it)) return true
+                        return false
+                    })
+                    const selectedID = resultKnowledgeBase?.[0]?.ID ?? ""
+
                     setKnowledgeBaseID?.(selectedID)
                     deleteKnowledgeBase(KnowledgeBaseId)
                     const streamToken = knowledgeBase?.find((it) => it.ID === KnowledgeBaseId)?.streamToken

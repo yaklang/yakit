@@ -196,7 +196,7 @@ const KnowledgeBaseTableHeader: FC<
                             trigger='click'
                             placement='bottomRight'
                         >
-                            <YakitButton icon={<OutlineTimeIcon />} type='text2' className={styles["history-button"]}>
+                            <YakitButton icon={<OutlineTimeIcon />} type='text2'>
                                 历史
                                 <ChevronDownIcon />
                             </YakitButton>
@@ -210,7 +210,6 @@ const KnowledgeBaseTableHeader: FC<
                         disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success"}
                         icon={<PlusIcon />}
                         type='secondary2'
-                        className={styles["plus-icon"]}
                         onClick={() => onOpenAddKnowledgeBaseModal()}
                     >
                         添加

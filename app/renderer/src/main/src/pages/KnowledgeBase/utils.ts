@@ -70,6 +70,10 @@ const insertModaOptions = [
     {
         value: "external",
         label: "外部导入"
+    },
+    {
+        value: "other",
+        label: "其他"
     }
 ]
 
@@ -748,7 +752,7 @@ const answerOptions = [
     }
 ]
 
-const prioritizeProcessingItems = (items: KnowledgeBaseItem[]) => {
+const prioritizeProcessingItems = (items: Array<KnowledgeBaseItem & {CreatedFromUI?: boolean}>) => {
     return [...items].sort((a, b) => {
         const aIsProcessing = a.streamstep === 1 || a.streamstep === 2
         const bIsProcessing = b.streamstep === 1 || b.streamstep === 2

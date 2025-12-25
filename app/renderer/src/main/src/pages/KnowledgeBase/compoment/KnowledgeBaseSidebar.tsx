@@ -44,7 +44,7 @@ import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 const {ipcRenderer} = window.require("electron")
 
 export interface TKnowledgeBaseSidebarProps {
-    knowledgeBases: KnowledgeBaseItem[]
+    knowledgeBases: Array<KnowledgeBaseItem & {CreatedFromUI?: boolean}>
     knowledgeBaseID: string
     setKnowledgeBaseID: (id: string) => void
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
@@ -67,7 +67,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     knowledgeBaseID,
     setKnowledgeBaseID,
     api,
-    streams,
     setOpenQA,
     binariesToInstall,
     refreshAsync,
@@ -75,14 +74,12 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     addMode,
     setAddMode,
     handleValidateAIModelUsable,
-    isAIModelAvailable,
     setIsAIModelAvailable,
-    aIModelAvailableTokens,
     progress
 }) => {
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
     const [expand, setExpand] = useSafeState<boolean>(true)
-    const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
+    const [knowledgeBase, setKnowledgeBase] = useSafeState<Array<KnowledgeBaseItem & {CreatedFromUI?: boolean}>>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
     const [eachProgress, setEachProgress] = useSafeState<Record<string, number>>({})
@@ -155,11 +152,18 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     useEffect(() => {
-        const allowImported = addMode.includes("external") ? [true] : []
-        const allowManual = addMode.includes("manual") ? [false] : []
-        const allowIsImported = [...allowImported, ...allowManual]
+        const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
 
-        const result = knowledgeBases.filter((it) => allowIsImported.includes(it.IsImported))
+        const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
+
+        const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
+
+        const result = knowledgeBases.filter((it) => {
+            if (addMode.includes("external") && isExternal(it)) return true
+            if (addMode.includes("manual") && isManual(it)) return true
+            if (addMode.includes("other") && isOther(it)) return true
+            return false
+        })
 
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)
@@ -378,7 +382,11 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                             </div>
                                                         ) : (
                                                             <div className={styles["type-tag"]}>
-                                                                {items.IsImported ? "外部导入" : "手动创建"}
+                                                                {items.CreatedFromUI
+                                                                    ? "手动创建"
+                                                                    : items.IsImported
+                                                                    ? "外部导入"
+                                                                    : "其他"}
                                                             </div>
                                                         )}
 
@@ -405,6 +413,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                                 setKnowledgeBaseID={setKnowledgeBaseID}
                                                                 knowledgeBase={knowledgeBase}
                                                                 api={api}
+                                                                addMode={addMode}
                                                             />
                                                         </div>
                                                     </div>

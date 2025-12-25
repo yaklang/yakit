@@ -40,7 +40,8 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
                 Name: params.KnowledgeBaseName,
                 Description: params.KnowledgeBaseDescription,
                 Type: params.KnowledgeBaseType,
-                Tags: params.Tags
+                Tags: params.Tags,
+                CreatedFromUI: params.CreatedFromUI
             })
             const KnowledgeBaseID = result?.KnowledgeBase?.ID
             addKnowledgeBase({
@@ -66,6 +67,7 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
         const streamToken = randomString(50)
         const transformFormData = {
             ...resultFormData,
+            CreatedFromUI: true,
             KnowledgeBaseFile: file,
             streamToken,
             streamstep: 1,

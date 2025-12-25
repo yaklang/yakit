@@ -5,11 +5,10 @@ import classNames from "classnames"
 import styles from "../knowledgeBase.module.scss"
 import {Descriptions} from "antd"
 import {useRequest} from "ahooks"
-import {info} from "console"
 import {useTheme} from "@/hook/useTheme"
 import MDEditor from "@uiw/react-md-editor"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {info} from "@/utils/notification"
 const {Markdown} = MDEditor
 
 const {ipcRenderer} = window.require("electron")
@@ -44,7 +43,7 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
         },
         {
             manual: true,
-            onError: (error) => info(error)
+            onError: (error) => info(error + "")
         }
     )
 

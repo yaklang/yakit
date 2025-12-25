@@ -17,8 +17,8 @@ import classNames from "classnames"
 import {
     OutlineClouddownloadIcon,
     OutlineFolderopenIcon,
-    OutlineRefreshIcon,
-    SolidPuzzleIcon
+    OutlinePuzzleIcon,
+    OutlineRefreshIcon
 } from "@/assets/icon/outline"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
@@ -214,7 +214,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
             >
                 <div className={styles["header"]}>
                     <div className={styles["left"]}>
-                        <SolidPuzzleIcon />
+                        <OutlinePuzzleIcon />
                         <div>插件下载</div>
                         <Tooltip title='刷新插件列表'>
                             <YakitButton

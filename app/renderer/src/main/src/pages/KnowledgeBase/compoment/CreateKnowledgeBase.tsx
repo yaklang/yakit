@@ -69,6 +69,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
             >
                 <YakitInput placeholder='请输入知识库名' />
             </Form.Item>
+
             <YakitFormDragger
                 formItemProps={{
                     name: "KnowledgeBaseFile",
