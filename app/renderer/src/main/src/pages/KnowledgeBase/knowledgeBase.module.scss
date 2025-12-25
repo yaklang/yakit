@@ -301,9 +301,6 @@
                             width: 16px;
                             height: 16px;
                             color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                            path{
-                                stroke-width: 1.5;
-                            }
                         }
                     }
                 }
@@ -323,9 +320,6 @@
                                 width: 16px;
                                 height: 16px;
                                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                                path{
-                                    stroke-width: 1;
-                                }
                             }
                         }
                     }
@@ -1073,15 +1067,6 @@
                     align-items: center;
                     justify-content: center;
                     gap: 8px;
-                    .history-button{
-                        span{
-                            svg{
-                                path{
-                                    stroke-width: 1;
-                                } 
-                            }
-                        }
-                    }
                     .ai-button{
                         white-space: nowrap;
                         font-weight: 500;
@@ -1099,13 +1084,7 @@
                             var(--Colors-Use-Blue-Bg) 100%
                         ));
                     }
-                    .plus-icon{
-                        svg{
-                            path{
-                                stroke-width: 1;
-                            }
-                        }
-                    }
+
                     .delete{
                         span{
                             svg{

@@ -23,6 +23,9 @@ import {failed, success} from "@/utils/notification"
 import {useSafeState} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
+// 需要命中 构建知识库插件 中 的实体/关系(Entity/Relationship) ID
+const targetCardStateRelationshipID = "实体/关系(Entity/Relationship)"
+
 type TKnowledgeBaseContainerProps = TKnowledgeBaseSidebarProps & {
     streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
@@ -44,14 +47,13 @@ const KnowledgeBaseContainer: FC<
     Omit<
         TKnowledgeBaseContainerProps,
         | "setAddMode"
-        | "addMode"
         | "handleValidateAIModelUsable"
         | "isAIModelAvailable"
         | "setIsAIModelAvailable"
         | "aIModelAvailableTokens"
         | "progress"
     >
-> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA}) => {
+> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA, addMode}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [state, dispatch] = useReducer(reducer, initialValue)
 
@@ -62,6 +64,27 @@ const KnowledgeBaseContainer: FC<
         const Icon = targetIcon(targetIndex)
         return {...result, icon: Icon}
     }, [knowledgeBaseID, knowledgeBases])
+
+    const hasBuildData = useMemo(() => {
+        if (findKnowledgeBaseItems.streamstep === 1 && findKnowledgeBaseItems.streamToken) {
+            if (streams) {
+                const findCardStateRelationshipItem = streams?.[findKnowledgeBaseItems.streamToken]?.cardState?.find(
+                    (it) => {
+                        return it.tag === targetCardStateRelationshipID
+                    }
+                )
+                const targetDataNumList = findCardStateRelationshipItem?.info
+                    .find((it) => it.Id === targetCardStateRelationshipID)
+                    ?.Data?.split("/")
+                const result = targetDataNumList ? !targetDataNumList?.includes("0") : false
+                return result
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
+    }, [streams, findKnowledgeBaseItems])
 
     const onStop = async () => {
         try {
@@ -143,9 +166,10 @@ const KnowledgeBaseContainer: FC<
     const resultContainer = useMemo(() => {
         if (
             findKnowledgeBaseItems.streamstep === 1 &&
-            findKnowledgeBaseItems.streamToken &&
+            findKnowledgeBaseItems.addManuallyItem === false &&
+            // findKnowledgeBaseItems.streamToken &&
             streams?.[findKnowledgeBaseItems.streamToken] &&
-            findKnowledgeBaseItems.addManuallyItem === false
+            !hasBuildData
         ) {
             return (
                 <div className={styles["building-knowledge-base"]}>
@@ -204,8 +228,7 @@ const KnowledgeBaseContainer: FC<
                 />
             )
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [streams, findKnowledgeBaseItems])
+    }, [api, findKnowledgeBaseItems, hasBuildData, streams])
 
     const targetEditKnowledgeBase = useMemo(() => {
         const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
@@ -222,6 +245,7 @@ const KnowledgeBaseContainer: FC<
                 setVisible={onDeleteVisible}
                 KnowledgeBaseId={knowledgeBaseID}
                 setKnowledgeBaseID={setKnowledgeBaseID}
+                addMode={addMode}
             />
 
             <EditKnowledgenBaseModal

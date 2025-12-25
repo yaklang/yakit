@@ -681,6 +681,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             streams={streams}
                             api={api}
                             setOpenQA={setShowFreeChat}
+                            addMode={addMode}
                         />
                     ) : (
                         <div className={styles["knowledge-base-container-empty"]}>
