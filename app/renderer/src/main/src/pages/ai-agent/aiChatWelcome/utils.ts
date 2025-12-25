@@ -3,8 +3,28 @@ import type {HistoryItem} from "../components/aiFileSystemList/type"
 
 const {ipcRenderer} = window.require("electron")
 
-const fetchIsFolderByPath = (path: string): Promise<boolean> => {
-    return ipcRenderer.invoke("fetch-file-is-dir-by-path", path)
+const guessIsFolderByPath = (path: string): boolean => {
+    const normalized = path.replace(/\\/g, "/")
+
+    // 1. 以 / 结尾
+    if (normalized.endsWith("/")) return true
+
+    const lastSegment = normalized.split("/").pop()
+    if (!lastSegment) return false
+
+    // 2. 没有扩展名（没有 .）
+    if (!lastSegment.includes(".")) return true
+
+    return false
+}
+
+const fetchIsFolderByPath =async (path: string): Promise<boolean> => {
+    try {
+        return await ipcRenderer.invoke("fetch-file-is-dir-by-path", path)
+    } catch (err) {
+        console.error("IPC failed, fallback to path guess:", err)
+        return guessIsFolderByPath(path)
+    }
 }
 
 export const handleOnFiles = async (files: File[]): Promise<HistoryItem[]> => {
