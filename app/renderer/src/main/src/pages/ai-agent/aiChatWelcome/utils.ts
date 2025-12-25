@@ -18,8 +18,10 @@ const guessIsFolderByPath = (path: string): boolean => {
     return false
 }
 
-export const fetchIsFolderByPath =async (path: string): Promise<boolean> => {
+export const fetchIsFolderByPath = async (path: string): Promise<boolean | null> => {
     try {
+        const isExists = await ipcRenderer.invoke("is-file-exists", path)
+        if (!isExists) return null
         return await ipcRenderer.invoke("fetch-file-is-dir-by-path", path)
     } catch (err) {
         return guessIsFolderByPath(path)
@@ -27,7 +29,7 @@ export const fetchIsFolderByPath =async (path: string): Promise<boolean> => {
 }
 
 export const handleOnFiles = async (files: File[]): Promise<HistoryItem[]> => {
-   if (files.length === 0) return []
+    if (files.length === 0) return []
     if (files.length > 10) {
         yakitNotify("error", "文件数量不能超过10个")
         return []
@@ -41,12 +43,13 @@ export const handleOnFiles = async (files: File[]): Promise<HistoryItem[]> => {
         const fileWithPath = file as File & {path: string}
         const fullPath: string = fileWithPath.path
 
-        const isFolder: boolean = await fetchIsFolderByPath(fullPath)
-
-        results.push({
-            path: fullPath,
-            isFolder
-        })
+        const isFolder = await fetchIsFolderByPath(fullPath)
+        if (isFolder !== null) {
+            results.push({
+                path: fullPath,
+                isFolder
+            })
+        }
     }
 
     return results

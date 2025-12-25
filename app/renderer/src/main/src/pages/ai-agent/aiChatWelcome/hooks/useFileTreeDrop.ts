@@ -3,8 +3,7 @@ import {useRef, useState} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {DragSource} from "@/pages/ai-agent/aiChatWelcome/type"
-import { fetchIsFolderByPath } from "../utils"
-
+import {fetchIsFolderByPath} from "../utils"
 
 export interface UseFileTreeDropOptions {
     onAddPath: (path: string, isFolder: boolean) => void
@@ -42,7 +41,9 @@ export const useFileTreeDrop = (options: UseFileTreeDropOptions) => {
                     const fullPath = fileWithPath.path
 
                     const isFolder = await fetchIsFolderByPath(fullPath)
-                    onAddPath(fullPath, isFolder)
+                    if (isFolder !== null) {
+                        onAddPath(fullPath, isFolder)
+                    }
                 }
             } catch {
                 yakitNotify("error", t("YakitDraggerContent.file_read_error"))

@@ -26,7 +26,7 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
     }, [theme])
     return (
         <Empty
-            image={<img src={emptyImageTarget} alt='' />}
+            image={<img style={{userSelect: "none"}}  draggable={false} src={emptyImageTarget} alt='' />}
             imageStyle={
                 props.imageStyle
                     ? props.imageStyle
@@ -41,7 +41,7 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
                 props.descriptionReactNode ? (
                     props.descriptionReactNode
                 ) : (
-                    <div className={styles["yakit-empty"]}>
+                    <div className={styles["yakit-empty"]} style={{userSelect: "none"}} >
                         <div className={classNames(styles["yakit-empty-title"], titleClassName)}>
                             {title || t("YakitEmpty.noData")}
                         </div>
