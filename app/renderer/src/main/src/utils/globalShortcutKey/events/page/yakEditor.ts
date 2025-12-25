@@ -235,7 +235,13 @@ export enum YakEditorOptionShortcutKey {
     /** 切换为自动劫持模式 */
     TriggerAutoHijacked = "trigger-auto-hijacked",
     /** 放行该 HTTP Response */
-    ForwardResponse = "forward-response"
+    ForwardResponse = "forward-response",
+    /** 劫持响应 */
+    HijackResponseMitm = "hijackResponse*common",
+    /** 丢弃 */
+    DropDataMitm = "dropData*common",
+    /** 放行 */
+    SubmitDataMitm = "submitData*common"
 }
 
 type EventsType = Record<`${YakEditorBaseShortcutKey | YakEditorOptionShortcutKey}`, ShortcutKeyEventInfo>
@@ -260,6 +266,18 @@ const YakEditorShortcutKeyEvents: EventsType = {
     "forward-response": {
         name: "放行该 HTTP Response",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_F]
+    },
+    "hijackResponse*common": {
+        name: "劫持响应",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_A]
+    },
+    "dropData*common": {
+        name: "丢弃",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_B]
+    },
+    "submitData*common": {
+        name: "放行",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C]
     }
 }
 

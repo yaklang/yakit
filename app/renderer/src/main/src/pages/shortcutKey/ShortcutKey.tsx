@@ -16,6 +16,7 @@ import {Spin} from "antd"
 import {GetReleaseEdition} from "@/utils/envfile"
 import {GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {failed} from "@/utils/notification"
 
 const getShortcutPageName = (page) => {
     if (page === "global") {
@@ -40,12 +41,18 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
     const [data, setData] = useState<Record<string, ShortcutKeyEventInfo>>(pageEventMaps["global"].getEvents())
 
     const getData = useMemoizedFn((key) => {
-        setLoading(true)
-        pageEventMaps[key].getStorage()
-        setTimeout(() => {
-            setData(pageEventMaps[key].getEvents())
+        try {
+            setLoading(true)
+            pageEventMaps[key].getStorage()
+            setTimeout(() => {
+                setData(pageEventMaps[key].getEvents())
+                setLoading(false)
+            }, 200)
+        } catch (error) {
+            failed("获取快捷键失败")
+            setData({})
             setLoading(false)
-        }, 200)
+        }
     })
 
     useEffect(() => {
