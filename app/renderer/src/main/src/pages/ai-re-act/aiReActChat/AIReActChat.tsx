@@ -122,23 +122,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const handleSwitchShowFreeChat = useMemoizedFn((v) => {
         setShowFreeChat(v)
     })
-    const onViewContext = useDebounceFn(
-        useMemoizedFn(() => {
-            setTimelineVisible(true)
+    // const onViewContext = useDebounceFn(
+    //     useMemoizedFn(() => {
+    //         setTimelineVisible(true)
 
-            if (!execute) return
-            if (!activeChat?.id) return
-            if (!timelineVisibleLoading) {
-                setTimelineVisibleLoading(true)
-            }
-            const info: AISendSyncMessageParams = {
-                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
-                params: {}
-            }
-            handleSendSyncMessage(info)
-        }),
-        {wait: 300, leading: true}
-    ).run
+    //         if (!execute) return
+    //         if (!activeChat?.id) return
+    //         if (!timelineVisibleLoading) {
+    //             setTimelineVisibleLoading(true)
+    //         }
+    //         const info: AISendSyncMessageParams = {
+    //             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+    //             params: {}
+    //         }
+    //         handleSendSyncMessage(info)
+    //     }),
+    //     {wait: 300, leading: true}
+    // ).run
     const onClose = useMemoizedFn(() => {
         setTimelineVisible(false)
     })
@@ -207,9 +207,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                                 <React.Suspense fallback={<div>loading...</div>}>
                                                     <AIReviewRuleSelect />
                                                 </React.Suspense>
-                                                <YakitButton type='text' onClick={onViewContext}>
+                                                {/* <YakitButton type='text' onClick={onViewContext}>
                                                     查看上下文
-                                                </YakitButton>
+                                                </YakitButton> */}
                                             </>
                                         }
                                     />
