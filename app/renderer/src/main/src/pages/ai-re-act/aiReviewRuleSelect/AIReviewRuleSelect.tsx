@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {AIChatSelectProps, AIReviewRuleSelectProps, ReviewRuleSelectProps} from "./type"
 import styles from "./AIReviewRuleSelect.module.scss"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
@@ -150,13 +150,8 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
  * TODO 目前这个组件只需要在ai-agent展示，待优化；优化层级高
  */
 const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props) => {
-    const {getCurrentPageTabRouteKey} = usePageInfo(
-        (s) => ({
-            getCurrentPageTabRouteKey: s.getCurrentPageTabRouteKey
-        }),
-        shallow
-    )
-    return getCurrentPageTabRouteKey() !== YakitRoute.AI_Agent ? <></> : <ReviewRuleSelect {...props} />
+    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+    return currentRouteKey !== YakitRoute.AI_Agent ? <></> : <ReviewRuleSelect {...props} />
 })
 export default AIReviewRuleSelect
 
