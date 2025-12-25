@@ -1056,7 +1056,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                         type='outline1'
                                                         onClick={onOpenMatcherAndExtractionDrawer}
                                                         icon={<OutlinePlusIcon />}
-                                                        disabled={httpFlowLoading || httpFlowRequest === ""}
                                                     >
                                                         {t("YakitButton.add_new")}
                                                     </YakitButton>
