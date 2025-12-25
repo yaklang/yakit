@@ -188,7 +188,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                 case "工具":
                     toolNames.push(item.name)
                     break
-                case "智能体":
+                case "技能":
                     forgeNames.push(item.name)
                     break
                 case "知识库":
@@ -273,7 +273,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
     const onMore = useMemoizedFn((item: string) => {
         switch (item) {
-            case "智能体":
+            case "技能":
                 onForgeMore()
                 break
             case "知识库":
@@ -334,9 +334,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
             hoverIcon: <HoverAIToolIcon />
         }
         const forges: AIMaterialsData = {
-            type: "智能体",
+            type: "技能",
             data: (randomAIMaterials?.AIForges || []).map((forge) => ({
-                type: "智能体",
+                type: "技能",
                 name: forge.ForgeVerboseName || forge.ForgeName,
                 description: forge.Description || ""
             })),

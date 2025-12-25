@@ -49,7 +49,6 @@ import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -630,7 +629,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceShow}
                 title='警告'
-                content={"是否要替换当前使用的forge模板?"}
+                content={"是否要替换当前使用的技能模板?"}
                 footerExtra={
                     <YakitCheckbox
                         checked={replaceForgeNoPrompt}
