@@ -309,6 +309,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
     useUpdateEffect(() => {
         fetchList(true)
+        getTotalLoading && runTabTotal() 
     }, [pluginSource])
     /** ---------- 列表相关方法 End ---------- */
 
