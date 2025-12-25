@@ -55,7 +55,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     setLog((arr) => arr.concat(["检查通过，已支持随机密码模式"]))
                     setYakitStatus("")
                     allowSecretLocalJson.current = res.json
-                    handlePreCheckForLinkEngine(checkVersion)
+                    handlePreCheckForLinkEngine(false)
                     return
                 }
                 allowSecretLocalJson.current = null

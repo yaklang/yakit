@@ -275,7 +275,7 @@ function NewApp() {
     }, [])
 
     const destroyMainWinAntdUi = useMemoizedFn(() => {
-        const selectors = [".ant-message", ".ant-notification", ".ant-modal-root", ".ant-drawer", ".ant-drawer-mask"]
+        const selectors = [".ant-notification-notice", ".ant-modal-root", ".ant-drawer", ".ant-drawer-mask"]
         selectors.forEach((sel) => {
             document.querySelectorAll(sel).forEach((el) => el.remove())
         })

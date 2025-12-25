@@ -17,7 +17,7 @@ const App: React.FC = memo(() => {
     useEffect(() => {
         getLocalValue(LocalGVS.UserProtocolAgreed)
             .then((value: any) => {
-                setAgreed(!!value)
+                setAgreed(true)
             })
             .catch(() => {})
 
