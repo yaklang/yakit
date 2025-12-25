@@ -325,8 +325,23 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 `规则组：${Routes.find(({Id})=> Id === downstreamProxyRuleId)?.Name}` : 
                 `${maskProxyPassword(downstreamProxy)}`
                     tip += `下游代理：${proxyStr}`
+                if (downstreamProxyRuleId) {
+                    setDownstreamProxyStr(downstreamProxyRuleId)
+                } else {
+                    const proxyStr = downstreamProxy
+                        .split(",")
+                        .filter((i) => !!i)
+                        .map((val) => {
+                            if (!val.startsWith("route") && !val.startsWith("ep")) {
+                                return proxyRouteOptions.find(({value}) => comparePointUrl(value) === val)?.value || val
+                            }
+                            return val
+                        })
+                        .join(",")
+                    setDownstreamProxyStr(proxyStr)
+                }
             }
-            setDownstreamProxyStr(downstreamProxyRuleId || downstreamProxy || "")
+            
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
                     tip += "|仅国密 TLS"

@@ -175,6 +175,7 @@ import {
 import {keepSearchNameMapStore} from "@/store/keepSearchName"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { useProxy } from "@/hook/useProxy"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -1335,6 +1336,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     })
+    
+    const { proxyRouteOptions, comparePointUrl } = useProxy();
+
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn(async (res: any) => {
@@ -1392,7 +1396,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
             if (downstreamProxyStr) {
-                newAdvancedConfigValue.proxy = downstreamProxyStr.split(",")
+                const list = downstreamProxyStr.split(",").filter(i=>!!i)
+                newAdvancedConfigValue.proxy = list.map(val => {
+                    if (!val.startsWith("route") && !val.startsWith("ep")) {
+                        return proxyRouteOptions.find(({ value }) => comparePointUrl(value) === val)?.value || val
+                    }
+                    return val
+                })
             }
             if(res.enableGMTLS) {
                 newAdvancedConfigValue.isGmTLS = true

@@ -169,6 +169,8 @@ import { ExportDataType } from "@/utils/exporter"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import { PublicHTTPHistoryIcon } from "@/routes/publicIcon"
 import { useProxy } from "@/hook/useProxy"
+import { MITMConsts } from "../mitm/MITMConsts"
+import { RemoteGV } from "@/yakitGV"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -580,13 +582,34 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     return fuzzerRequests
 }
 
-export const newWebFuzzerTab = (params: {
+export const newWebFuzzerTab = async (params: {
     isHttps?: boolean
     request?: string
     downstreamProxyStr?: string
     shareContent?: string
     openFlag: boolean
 }) => {
+    try {
+        const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
+            getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
+            getRemoteValue(RemoteGV.MITMDisableSystemProxy)
+        ])
+        const stateSecretHijacking =
+            stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
+        const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
+
+        if (stateSecretHijacking) {
+            if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
+                Object.assign(params, {enableGMTLS: true})
+            } else if (stateSecretHijacking === "randomJA3") {
+                Object.assign(params, {randomJA3: true})
+            }
+        }
+        Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
+    } catch (e) {
+        console.error(e)
+    }
+
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
