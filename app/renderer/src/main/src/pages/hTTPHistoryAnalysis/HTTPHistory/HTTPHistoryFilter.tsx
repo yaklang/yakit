@@ -1631,7 +1631,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 )
                 break
             case "sendAndJumpToWS":
-                const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到WS Fuzzer")
+                const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到 WS Fuzzer")
                 if (!currentItemJumpToWS) return
                 onBatch(
                     (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
@@ -1641,7 +1641,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
                 break
             case "sendToWS":
-                const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到WS Fuzzer")
+                const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到 WS Fuzzer")
                 if (!currentItemToWS) return
                 onBatch(
                     (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
