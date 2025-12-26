@@ -1,11 +1,11 @@
 import {useState, useRef, useEffect} from "react"
-import {failed, info, yakitFailed} from "../../utils/notification"
+import {info, yakitFailed} from "../../utils/notification"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "./useHoldGRPCStreamType"
 import {DefaultTabs} from "./constant"
 import {DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME} from "@/defaultConstants/HoldGRPCStream"
 import {v4 as uuidv4} from "uuid"
-import { getRemoteValue } from "@/utils/kv"
+import {getRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
@@ -371,7 +371,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         // card
         const cacheCard: HoldGRPCStreamProps.InfoCards[] = convertCardInfo(cardKVPair.current)
         // tabs
-        const tabs: HoldGRPCStreamProps.InfoTab[] = topTabs.current.concat(defaultTabs || DefaultTabs()).concat(endTabs.current)
+        const tabs: HoldGRPCStreamProps.InfoTab[] = topTabs.current
+            .concat(defaultTabs || DefaultTabs())
+            .concat(endTabs.current)
         // tabsInfo
         const tabsInfo: HoldGRPCStreamInfo["tabsInfoState"] = {}
         if (tabWebsite.current) {

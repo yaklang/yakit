@@ -204,7 +204,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     )
 
     useEffect(() => {
-        run()
+        if (inViewPort) {
+            run()
+        }
     }, [inViewPort])
 
     return (

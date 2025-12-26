@@ -1,4 +1,4 @@
-import {useEffect, useState, type FC} from "react"
+import React, {useEffect, useRef, useState, type FC} from "react"
 
 import {
     useAsyncEffect,
@@ -17,7 +17,8 @@ import {
     compareKnowledgeBaseChange,
     insertModaOptions,
     prioritizeProcessingItems,
-    targetIcon
+    targetIcon,
+    targetInstallList
 } from "@/pages/KnowledgeBase/utils"
 import {OutlineLoadingIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -30,12 +31,13 @@ import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag
 import {PropertyIcon} from "@/pages/payloadManager/icon"
 import Dragger from "antd/lib/upload/Dragger"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {failed, success} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteDetailDrawer} from "@/pages/KnowledgeBase/compoment/PluginExecuteDetailDrawer"
 import {KnowledgeBaseTableHeaderProps} from "@/pages/KnowledgeBase/compoment/KnowledgeBaseTableHeader"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
+import AllInstallPlugins from "@/pages/KnowledgeBase/compoment/AllInstallPlugins"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,6 +47,8 @@ interface KnowledgeSidebarListProps {
 }
 
 const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => {
+    const [installPlug, setInstallPlug] = useSafeState(false)
+
     const {knowledgeBases, previousKnowledgeBases, addKnowledgeBase, editKnowledgeBase} = useKnowledgeBase()
     const {selectKnowledgeBases} = useChatIPCStore()
     const {setSelectKnowledgeBases} = useChatIPCDispatcher()
@@ -65,6 +69,47 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         streamToken: "",
         type: ""
     })
+
+    // 拉取还没安装的 binaries
+    const {data: binariesToInstall, refreshAsync: binariesToInstallRefreshAsync} = useRequest(
+        async () => {
+            const result = await ipcRenderer.invoke("ListThirdPartyBinary", {
+                Pagination: {
+                    Limit: 999
+                }
+            })
+            const binariesList =
+                result?.Binaries?.map((it) => ({
+                    Name: it?.Name,
+                    InstallPath: it?.InstallPath,
+                    installToken: randomString(50),
+                    Description: it.Description
+                })) ?? []
+            const resultList = targetInstallList
+                .map((name) => binariesList.find((it) => it.Name === name))
+                .filter((v) => v !== undefined)
+            return resultList
+        },
+        {
+            onSuccess: (result) => {
+                const resultList = targetInstallList
+                    .map((name) => result.find((it) => it.Name === name && !it.InstallPath))
+                    .filter((v) => v !== undefined)
+                const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
+
+                const filteredInstall = resultList.filter((item) => !exclude.includes(item.Name))
+                if (filteredInstall.length !== 0) {
+                    info(`使用知识库缺少第三方依赖，需安装${filteredInstall.length}个`)
+                    setInstallPlug(true)
+                } else {
+                    setInstallPlug(false)
+                }
+            },
+            onError: (err) => {
+                failed(`获取插件失败: ${err}`)
+            }
+        }
+    )
 
     const {runAsync, loading} = useRequest(
         async (params) => {
@@ -125,87 +170,93 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                     name
                 })
             })
-            const findDefaultKnowledgeBase = knowledgeBase.find((it) => it.IsDefault)
+            const findDefaultKnowledgeBase = knowledgeBases.find((it) => it.IsDefault)
 
-            await runAsync({
-                ...findDefaultKnowledgeBase,
-                streamstep: 1,
-                streamToken: randomString(50),
-                KnowledgeBaseFile: arr.map((it) => {
-                    const fileName = it.path.split(/[\\/]/).pop() || ""
-                    const ext = fileName.includes(".")
-                        ? fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase()
-                        : ""
+            try {
+                await runAsync({
+                    ...findDefaultKnowledgeBase,
+                    streamstep: 1,
+                    streamToken: randomString(50),
+                    KnowledgeBaseFile: arr.map((it) => {
+                        const fileName = it.path.split(/[\\/]/).pop() || ""
+                        const ext = fileName.includes(".")
+                            ? fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase()
+                            : ""
 
-                    return {
-                        fileType: ext,
-                        path: it.path
-                    }
-                }),
-                KnowledgeBaseName: findDefaultKnowledgeBase?.KnowledgeBaseName ?? "default",
-                KnowledgeBaseDescription:
-                    findDefaultKnowledgeBase?.KnowledgeBaseDescription ??
-                    "系统默认知识库，存储常用知识内容，为AI对话提供上下文增强。",
-                Tags: findDefaultKnowledgeBase?.Tags ?? [],
-                IsDefault: findDefaultKnowledgeBase?.IsDefault ?? true,
-                CreatedFromUI: findDefaultKnowledgeBase?.CreatedFromUI ?? true
-            })
+                        return {
+                            fileType: ext,
+                            path: it.path
+                        }
+                    }),
+                    KnowledgeBaseName: findDefaultKnowledgeBase?.KnowledgeBaseName ?? "default",
+                    KnowledgeBaseDescription:
+                        findDefaultKnowledgeBase?.KnowledgeBaseDescription ??
+                        "系统默认知识库，存储常用知识内容，为AI对话提供上下文增强。",
+                    Tags: findDefaultKnowledgeBase?.Tags ?? [],
+                    IsDefault: findDefaultKnowledgeBase?.IsDefault ?? true,
+                    CreatedFromUI: findDefaultKnowledgeBase?.CreatedFromUI ?? true
+                })
+            } catch (error) {
+                failed(`知识库创建失败:` + error)
+            }
         },
         {
             wait: 200
         }
     ).run
 
+    const buildingRef = useRef<Set<string>>(new Set())
+
     useAsyncEffect(async () => {
-        // 对比知识库变化，有新增则启动构建
-        const findUpdateKnowledge = knowledgeBases.find((it) => it.streamstep !== "success")
-        // 新增 知识库
-        if (findUpdateKnowledge?.streamstep === 1) {
-            const kb = findUpdateKnowledge
-            try {
-                await BuildingKnowledgeBase(kb)
-                if (api && typeof api.createStream === "function") {
-                    api.createStream(kb.streamToken, {
+        for (const kb of knowledgeBases) {
+            // 知识库构建
+            if (kb.streamstep === 1) {
+                const key = `kb:${kb.ID}`
+                if (buildingRef.current.has(key)) continue
+                buildingRef.current.add(key)
+
+                try {
+                    setAddMode([])
+                    await BuildingKnowledgeBase(kb)
+
+                    api?.createStream?.(kb.streamToken, {
                         taskName: "debug-plugin",
                         apiKey: "DebugPlugin",
                         token: kb.streamToken,
-                        onEnd: async (info) => {
-                            api.removeStream && api.removeStream(kb.streamToken)
-                            const targetItems = knowledgeBases.find(
-                                (item) => item.streamToken && item.streamToken === info?.requestToken
-                            )
-                            if (targetItems) {
-                                const newStreams = randomString(50)
-                                const updateItems: KnowledgeBaseItem = {
-                                    ...targetItems,
-                                    streamstep: 2,
-                                    streamToken: newStreams
-                                }
-                                editKnowledgeBase(targetItems.ID, updateItems)
-                            }
-                        },
-                        onError: (err) => {
+                        onEnd: (info) => {
+                            api.removeStream?.(kb.streamToken)
+                            buildingRef.current.delete(key)
+
                             editKnowledgeBase(kb.ID, {
                                 ...kb,
-                                streamstep: "success"
+                                streamstep: 2,
+                                streamToken: randomString(50)
                             })
-                            try {
-                                api.removeStream && api.removeStream(kb.streamToken)
-                            } catch {
-                                failed(`知识库构建流失败: ${err}`)
-                            }
+                        },
+                        onError: (e) => {
+                            buildingRef.current.delete(key)
+                            api.removeStream?.(kb.streamToken)
+                            editKnowledgeBase(kb.ID, {...kb, streamstep: "success"})
                         }
                     })
+                } catch (e) {
+                    buildingRef.current.delete(key)
+                    failed(`启动知识库构建失败: ${e + ""}`)
                 }
-            } catch (e) {
-                failed(`启动知识库构建失败: ${e}`)
             }
-            return
-        } else {
-            try {
-                findUpdateKnowledge && (await starKnowledgeeBaseEntry(findUpdateKnowledge))
-            } catch (error) {
-                failed(error + "")
+
+            // 条目构建
+            if (kb.streamstep === 2 && kb.streamToken) {
+                const key = `entry:${kb.streamToken}`
+                if (buildingRef.current.has(key)) continue
+                buildingRef.current.add(key)
+
+                try {
+                    await starKnowledgeeBaseEntry(kb)
+                } catch (e) {
+                    buildingRef.current.delete(key)
+                    failed(String(e))
+                }
             }
         }
     }, [knowledgeBases])
@@ -245,18 +296,18 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
 
     useEffect(() => {
         const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
-
         const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
-
         const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
 
-        const result = knowledgeBases.filter((it) => {
-            if (addMode.includes("external") && isExternal(it)) return true
-            if (addMode.includes("manual") && isManual(it)) return true
-            if (addMode.includes("other") && isOther(it)) return true
-            return false
-        })
-
+        const result =
+            addMode.length === 0
+                ? knowledgeBases
+                : knowledgeBases.filter((it) => {
+                      if (addMode.includes("external") && isExternal(it)) return true
+                      if (addMode.includes("manual") && isManual(it)) return true
+                      if (addMode.includes("other") && isOther(it)) return true
+                      return false
+                  })
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -274,148 +325,162 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
     })
 
     return (
-        <div className={styles["knowledge-base-info-body"]}>
-            <div className={styles["knowledge-base-filter-tags"]}>
-                {insertModaOptions.map((tag) => (
-                    <YakitCheckableTag
-                        key={tag.value}
-                        checked={addMode.includes(tag.value)}
-                        onChange={(checked) => {
-                            checked
-                                ? setAddMode((it) => it.concat(tag.value))
-                                : setAddMode((it) => it.filter((tar) => tar !== tag.value))
-                        }}
-                    >
-                        {tag.label}
-                    </YakitCheckableTag>
-                ))}
-            </div>
-            <div className={styles["knowledge-base-info-list"]}>
-                {knowledgeBase.length > 0 ? (
-                    knowledgeBase.map((items, index) => {
-                        const Icon = targetIcon(index)
-                        return (
-                            <div
-                                className={classNames(styles["knowledge-base-info-card"], {
-                                    [styles["base-info-card-selected"]]: selectKnowledgeBases?.some(
-                                        (it) => it.id === items.ID
-                                    )
-                                })}
-                                key={items.ID}
-                                onClick={() => {
-                                    const targetKnowledgeBase = selectKnowledgeBases?.some((it) => it.id === items.ID)
-                                        ? selectKnowledgeBases?.filter((it) => it.id !== items.ID)
-                                        : selectKnowledgeBases?.concat({
-                                              id: items.ID,
-                                              name: items.KnowledgeBaseName
-                                          })
-                                    setSelectKnowledgeBases(targetKnowledgeBase)
+        <React.Fragment>
+            {installPlug ? (
+                <AllInstallPlugins
+                    onInstallPlug={setInstallPlug}
+                    binariesToInstall={binariesToInstall}
+                    binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
+                    isShow={false}
+                />
+            ) : (
+                <div className={styles["knowledge-base-info-body"]}>
+                    <div className={styles["knowledge-base-filter-tags"]}>
+                        {insertModaOptions.map((tag) => (
+                            <YakitCheckableTag
+                                key={tag.value}
+                                checked={addMode.includes(tag.value)}
+                                onChange={(checked) => {
+                                    checked
+                                        ? setAddMode((it) => it.concat(tag.value))
+                                        : setAddMode((it) => it.filter((tar) => tar !== tag.value))
                                 }}
                             >
-                                <div
-                                    className={classNames({
-                                        [styles["initial"]]: items.streamstep !== "success",
-                                        [styles["content"]]: items.streamstep === "success"
-                                    })}
-                                >
+                                {tag.label}
+                            </YakitCheckableTag>
+                        ))}
+                    </div>
+                    <div className={styles["knowledge-base-info-list"]}>
+                        {knowledgeBase.length > 0 ? (
+                            knowledgeBase.map((items, index) => {
+                                const Icon = targetIcon(index)
+                                return (
                                     <div
-                                        className={classNames([styles["header"]], {
-                                            [styles["operate-dropdown-menu-open"]]: menuSelectedId === items.ID
+                                        className={classNames(styles["knowledge-base-info-card"], {
+                                            [styles["base-info-card-selected"]]: selectKnowledgeBases?.some(
+                                                (it) => it.id === items.ID
+                                            )
                                         })}
+                                        key={items.ID}
+                                        onClick={() => {
+                                            const targetKnowledgeBase = selectKnowledgeBases?.some(
+                                                (it) => it.id === items.ID
+                                            )
+                                                ? selectKnowledgeBases?.filter((it) => it.id !== items.ID)
+                                                : selectKnowledgeBases?.concat({
+                                                      id: items.ID,
+                                                      name: items.KnowledgeBaseName
+                                                  })
+                                            setSelectKnowledgeBases(targetKnowledgeBase)
+                                        }}
                                     >
-                                        <Icon className={styles["icon"]} />
-                                        <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
-                                        {api?.tokens?.includes(items.streamToken) && items.streamstep !== "success" ? (
-                                            <div
-                                                className={styles["tag"]}
-                                                onClick={(e) => {
-                                                    setSelectedKnowledgeBaseItems(
-                                                        items as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
-                                                    )
-                                                    onViewBuildProcess(e, items.streamToken, "routine")
-                                                }}
-                                            >
-                                                <OutlineLoadingIcon className={styles["loading-icon"]} />
-                                                生成中,点击查看进度
-                                            </div>
-                                        ) : items.IsDefault ? (
-                                            <div className={styles["default-tag"]}>默认知识库</div>
-                                        ) : (
-                                            <div className={styles["type-tag"]}>
-                                                {items.CreatedFromUI
-                                                    ? "手动创建"
-                                                    : items.IsImported
-                                                    ? "外部导入"
-                                                    : "其他"}
-                                            </div>
-                                        )}
-
                                         <div
-                                            className={classNames([styles["operate"]])}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
+                                            className={classNames({
+                                                [styles["initial"]]: items.streamstep !== "success",
+                                                [styles["content"]]: items.streamstep === "success"
+                                            })}
                                         >
-                                            <OperateKnowledgenBaseItem
-                                                items={items}
-                                                setMenuSelectedId={setMenuSelectedId}
-                                                knowledgeBase={knowledgeBase}
-                                                api={api}
-                                                addMode={addMode}
-                                            />
+                                            <div
+                                                className={classNames([styles["header"]], {
+                                                    [styles["operate-dropdown-menu-open"]]: menuSelectedId === items.ID
+                                                })}
+                                            >
+                                                <Icon className={styles["icon"]} />
+                                                <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
+                                                {api?.tokens?.includes(items.streamToken) &&
+                                                items.streamstep !== "success" ? (
+                                                    <div
+                                                        className={styles["tag"]}
+                                                        onClick={(e) => {
+                                                            setSelectedKnowledgeBaseItems(
+                                                                items as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
+                                                            )
+                                                            onViewBuildProcess(e, items.streamToken, "routine")
+                                                        }}
+                                                    >
+                                                        <OutlineLoadingIcon className={styles["loading-icon"]} />
+                                                        生成中,点击查看进度
+                                                    </div>
+                                                ) : items.IsDefault ? (
+                                                    <div className={styles["default-tag"]}>默认知识库</div>
+                                                ) : (
+                                                    <div className={styles["type-tag"]}>
+                                                        {items.CreatedFromUI
+                                                            ? "手动创建"
+                                                            : items.IsImported
+                                                            ? "外部导入"
+                                                            : "其他"}
+                                                    </div>
+                                                )}
+
+                                                <div
+                                                    className={classNames([styles["operate"]])}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <OperateKnowledgenBaseItem
+                                                        items={items}
+                                                        setMenuSelectedId={setMenuSelectedId}
+                                                        knowledgeBase={knowledgeBase}
+                                                        api={api}
+                                                        addMode={addMode}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className={styles["description"]}>
+                                                {items.KnowledgeBaseDescription?.trim() || "-"}
+                                            </div>
                                         </div>
                                     </div>
+                                )
+                            })
+                        ) : (
+                            <YakitEmpty style={{width: "100%", margin: 0}} />
+                        )}
+                    </div>
 
-                                    <div className={styles["description"]}>
-                                        {items.KnowledgeBaseDescription?.trim() || "-"}
+                    <div className={styles["upload-dragger-box"]}>
+                        <YakitSpin spinning={loading}>
+                            <Dragger
+                                className={styles["upload-dragger"]}
+                                multiple={true}
+                                showUploadList={false}
+                                beforeUpload={(_, fileList: any) => {
+                                    beforeUploadFun(fileList)
+                                    return false
+                                }}
+                            >
+                                <div className={styles["upload-info"]}>
+                                    <div className={styles["add-file-icon"]}>
+                                        <PropertyIcon />
+                                    </div>
+                                    <div className={styles["content"]}>
+                                        <div className={styles["title"]}>
+                                            可将文件拖入框内，或
+                                            <span className={styles["hight-light"]}>点击此处导入</span>
+                                            即可开始创建知识库
+                                        </div>
+                                        <div className={styles["sub-title"]}>数据会存到默认库，可选择多个文件</div>
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    })
-                ) : (
-                    <YakitEmpty style={{width: "100%", margin: 0}} />
-                )}
-            </div>
-
-            <div className={styles["upload-dragger-box"]}>
-                <YakitSpin spinning={loading}>
-                    <Dragger
-                        className={styles["upload-dragger"]}
-                        multiple={true}
-                        showUploadList={false}
-                        beforeUpload={(_, fileList: any) => {
-                            beforeUploadFun(fileList)
-                            return false
-                        }}
-                    >
-                        <div className={styles["upload-info"]}>
-                            <div className={styles["add-file-icon"]}>
-                                <PropertyIcon />
-                            </div>
-                            <div className={styles["content"]}>
-                                <div className={styles["title"]}>
-                                    可将文件拖入框内，或
-                                    <span className={styles["hight-light"]}>点击此处导入</span>
-                                    即可开始创建知识库
-                                </div>
-                                <div className={styles["sub-title"]}>数据会存到默认库，可选择多个文件</div>
-                            </div>
-                        </div>
-                    </Dragger>
-                </YakitSpin>
-            </div>
-            {buildingDrawer.visible ? (
-                <PluginExecuteDetailDrawer
-                    buildingDrawer={buildingDrawer}
-                    onCloseViewBuildProcess={onCloseViewBuildProcess}
-                    streams={streams}
-                    api={api}
-                    title={"知识条目构建详情"}
-                    knowledgeBaseItems={selectedKnowledgeBaseItems}
-                />
-            ) : null}
-        </div>
+                            </Dragger>
+                        </YakitSpin>
+                    </div>
+                    {buildingDrawer.visible ? (
+                        <PluginExecuteDetailDrawer
+                            buildingDrawer={buildingDrawer}
+                            onCloseViewBuildProcess={onCloseViewBuildProcess}
+                            streams={streams}
+                            api={api}
+                            title={"知识条目构建详情"}
+                            knowledgeBaseItems={selectedKnowledgeBaseItems}
+                        />
+                    ) : null}
+                </div>
+            )}
+        </React.Fragment>
     )
 }
 

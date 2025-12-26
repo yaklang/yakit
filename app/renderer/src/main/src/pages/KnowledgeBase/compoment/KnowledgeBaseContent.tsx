@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect} from "react"
+import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect, useRef} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 
@@ -161,163 +161,131 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         apiRef.current = api
     }, [api])
 
+    //  构建任务防重复
+    const buildingSetRef = useRef<Set<string>>(new Set())
+
+    // 知识库构建
+    const buildKnowledgeBase = useMemoizedFn(async (kb: KnowledgeBaseItem) => {
+        const key = `kb:${kb.ID}`
+        if (buildingSetRef.current.has(key)) return
+        buildingSetRef.current.add(key)
+
+        try {
+            await BuildingKnowledgeBase(kb)
+
+            if (!api?.createStream || !kb.streamToken) return
+
+            api.createStream(kb.streamToken, {
+                taskName: "debug-plugin",
+                apiKey: "DebugPlugin",
+                token: kb.streamToken,
+                onEnd: (info) => {
+                    api.removeStream?.(kb.streamToken)
+                    buildingSetRef.current.delete(key)
+
+                    const target = knowledgeBases.find((it) => it.streamToken === info?.requestToken)
+                    if (!target) return
+
+                    editKnowledgeBase(target.ID, {
+                        ...target,
+                        streamstep: 2,
+                        streamToken: randomString(50)
+                    })
+                },
+                onError: (e) => {
+                    buildingSetRef.current.delete(key)
+                    api.removeStream?.(kb.streamToken)
+                    editKnowledgeBase(kb.ID, {...kb, streamstep: "success"})
+                }
+            })
+        } catch (e) {
+            buildingSetRef.current.delete(key)
+            failed(`启动知识库构建失败: ${e}`)
+        }
+    })
+
+    // 知识库条目构建
+    const buildKnowledgeEntry = useMemoizedFn(async (kb: KnowledgeBaseItem, history: any) => {
+        const key = `entry:${history.token}`
+        if (buildingSetRef.current.has(key)) return
+        buildingSetRef.current.add(key)
+
+        try {
+            await BuildingKnowledgeBaseEntry({
+                ...kb,
+                ...history,
+                streamToken: history.token
+            })
+
+            if (!api?.createStream) return
+
+            api.createStream(history.token, {
+                taskName: "debug-plugin",
+                apiKey: "DebugPlugin",
+                token: history.token,
+                onEnd: () => {
+                    api.removeStream?.(history.token)
+                    buildingSetRef.current.delete(key)
+                    success(history.name + "构建完成")
+
+                    editKnowledgeBase(kb.ID, {
+                        ...kb,
+                        historyGenerateKnowledgeList: kb.historyGenerateKnowledgeList.filter(
+                            (it) => it.token !== history.token
+                        )
+                    })
+                },
+                onError: (e) => {
+                    buildingSetRef.current.delete(key)
+                    api.removeStream?.(history.token)
+                    failed(`知识库条目构建流失败: ${e + ""}`)
+                }
+            })
+        } catch (e) {
+            buildingSetRef.current.delete(key)
+            failed(`启动知识库条目构建失败: ${e + ""}`)
+        }
+    })
+
+    //  新增 / 手动新增知识库
     useAsyncEffect(async () => {
-        const addManuallyItem = findChangedObjects(previousKnowledgeBases, knowledgeBases)
-        // 对比知识库变化，有新增则启动构建
+        if (!previousKnowledgeBases) return
+
         const diff = compareKnowledgeBaseChange(previousKnowledgeBases, knowledgeBases)
+        const manualAdd = findChangedObjects(previousKnowledgeBases, knowledgeBases)
 
-        const targetKnowledgeBases = knowledgeBases.find((it) => it.ID === knowledgeBaseID) ?? {
-            historyGenerateKnowledgeList: []
+        const kb = diff && typeof diff === "object" && "increase" in diff && diff.increase ? diff.increase : manualAdd
+        if (!kb) return
+
+        if (!kb.streamToken || !kb.KnowledgeBaseFile?.length) {
+            editKnowledgeBase(kb.ID, {...kb, streamstep: "success"})
+            return
         }
 
-        const targetPreviousKnowledgeBases = previousKnowledgeBases?.find((it) => it.ID === knowledgeBaseID) ?? {
-            historyGenerateKnowledgeList: []
-        }
-        const addedHistory = targetPreviousKnowledgeBases
-            ? extractAddedHistory(targetKnowledgeBases, targetPreviousKnowledgeBases)
-            : null
-        if (!previousKnowledgeBases?.length && knowledgeBases.length !== 1) return
-        // 新增 知识库
-        if (typeof diff === "object" && diff.increase) {
-            const kb = diff.increase
-            if (!kb.streamToken || !kb.KnowledgeBaseFile.length) {
-                editKnowledgeBase(kb.ID, {
-                    ...kb,
-                    streamstep: "success"
-                })
-                return
-            }
-            try {
-                await BuildingKnowledgeBase(kb)
-                if (api && typeof api.createStream === "function") {
-                    api.createStream(kb.streamToken, {
-                        taskName: "debug-plugin",
-                        apiKey: "DebugPlugin",
-                        token: kb.streamToken,
-                        onEnd: async (info) => {
-                            api.removeStream && api.removeStream(kb.streamToken)
-                            const targetItems = knowledgeBases.find(
-                                (item) => item.streamToken && item.streamToken === info?.requestToken
-                            )
-                            if (targetItems) {
-                                const newStreams = randomString(50)
-                                const updateItems: KnowledgeBaseItem = {
-                                    ...targetItems,
-                                    streamstep: 2,
-                                    streamToken: newStreams
-                                }
-                                editKnowledgeBase(targetItems.ID, updateItems)
-                            }
-                        },
-                        onError: (err) => {
-                            editKnowledgeBase(kb.ID, {
-                                ...kb,
-                                streamstep: "success"
-                            })
-                            try {
-                                api.removeStream && api.removeStream(kb.streamToken)
-                            } catch {
-                                failed(`知识库构建流失败: ${err}`)
-                            }
-                        }
-                    })
-                }
-            } catch (e) {
-                failed(`启动知识库构建失败: ${e}`)
-            }
-            return
-        } else if (addManuallyItem) {
-            const kb = addManuallyItem
-            try {
-                await BuildingKnowledgeBase(kb)
-                if (api && typeof api.createStream === "function") {
-                    api.createStream(kb.streamToken, {
-                        taskName: "debug-plugin",
-                        apiKey: "DebugPlugin",
-                        token: kb.streamToken,
-                        onEnd: async (info) => {
-                            api.removeStream && api.removeStream(kb.streamToken)
-                            const targetItems = knowledgeBases.find(
-                                (item) => item.streamToken && item.streamToken === info?.requestToken
-                            )
-                            if (targetItems) {
-                                const newStreams = randomString(50)
-                                const updateItems: KnowledgeBaseItem = {
-                                    ...targetItems,
-                                    streamstep: 2,
-                                    streamToken: newStreams
-                                }
-                                editKnowledgeBase(targetItems.ID, updateItems)
-                            }
-                        },
-                        onError: (err) => {
-                            editKnowledgeBase(kb.ID, {
-                                ...kb,
-                                streamstep: "success"
-                            })
-                            try {
-                                api.removeStream && api.removeStream(kb.streamToken)
-                            } catch {
-                                failed(`知识库构建流失败: ${err}`)
-                            }
-                        }
-                    })
-                }
-            } catch (e) {
-                failed(`启动知识库构建失败: ${e}`)
-            }
-            return
-        } else if (addedHistory) {
-            const generateKnowledge = {...targetKnowledgeBases, ...addedHistory}
-            await BuildingKnowledgeBaseEntry({...generateKnowledge, streamToken: addedHistory.token})
-            try {
-                if (api && typeof api.createStream === "function") {
-                    api.createStream(generateKnowledge.token, {
-                        taskName: "debug-plugin",
-                        apiKey: "DebugPlugin",
-                        token: generateKnowledge.token,
-                        onEnd: () => {
-                            api.removeStream && api.removeStream(generateKnowledge.token)
-                            success(generateKnowledge.name + "构建完成")
-                            editKnowledgeBase(generateKnowledge.ID, {
-                                ...targetKnowledgeBases,
-                                historyGenerateKnowledgeList: targetKnowledgeBases.historyGenerateKnowledgeList.filter(
-                                    (it) => it.token !== generateKnowledge.token
-                                )
-                            })
-                        },
-                        onError: (e) => {
-                            try {
-                                editKnowledgeBase(generateKnowledge.ID, {
-                                    ...targetKnowledgeBases,
-                                    historyGenerateKnowledgeList:
-                                        targetKnowledgeBases.historyGenerateKnowledgeList.filter(
-                                            (it) => it.token !== generateKnowledge.token
-                                        )
-                                })
-                                api.removeStream && api.removeStream(generateKnowledge.token)
-                            } catch {
-                                failed(`知识库条目构建流失败: ${e}`)
-                            }
-                        }
-                    })
-                }
-            } catch (e) {
-                failed(`知识库条目构建流失败: ${e}`)
-            }
-            return
-        } else {
-            try {
-                for (const updateItems of knowledgeBases) {
-                    if (updateItems.streamstep === 2 && updateItems.streamToken) {
-                        await starKnowledgeeBaseEntry(updateItems)
-                    }
-                }
-            } catch (error) {
-                failed(error + "")
+        await buildKnowledgeBase(kb)
+    }, [knowledgeBases, previousKnowledgeBases])
+
+    useAsyncEffect(async () => {
+        if (!previousKnowledgeBases) return
+
+        for (const kb of knowledgeBases) {
+            const prev = previousKnowledgeBases.find((it) => it.ID === kb.ID)
+            if (!prev) continue
+
+            const added = extractAddedHistory(kb, prev)
+            if (added) {
+                await buildKnowledgeEntry(kb, added)
             }
         }
     }, [knowledgeBases, previousKnowledgeBases])
+
+    useAsyncEffect(async () => {
+        for (const kb of knowledgeBases) {
+            if (kb.streamstep === 2 && kb.streamToken) {
+                await starKnowledgeeBaseEntry(kb)
+            }
+        }
+    }, [knowledgeBases])
 
     const starKnowledgeeBaseEntry = useMemoizedFn(async (updateItems: KnowledgeBaseItem) => {
         try {
@@ -342,13 +310,13 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             })
                             api.removeStream && api.removeStream(updateItems.streamToken)
                         } catch {
-                            failed(`知识库条目构建流失败: ${e}`)
+                            failed(`知识库条目构建流失败: ${e + ""}`)
                         }
                     }
                 })
             }
         } catch (e) {
-            failed(`知识库条目构建流失败: ${e}`)
+            failed(`知识库条目构建流失败: ${e + ""}`)
         }
     })
 

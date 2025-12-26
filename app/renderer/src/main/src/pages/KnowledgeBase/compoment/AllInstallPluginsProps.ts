@@ -15,6 +15,7 @@ interface AllInstallPluginsProps {
     onInstallPlug: (installPlug: boolean) => void
     binariesToInstall: BinaryInfo[] | undefined
     binariesToInstallRefreshAsync: () => Promise<any[]>
+    isShow?: boolean
 }
 
 export type {ExecResult, BinaryInfo, AllInstallPluginsProps}

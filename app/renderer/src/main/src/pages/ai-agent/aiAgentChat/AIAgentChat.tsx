@@ -660,7 +660,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             clearAll()
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_Agent}))
         } catch (e) {
-            failed(`关闭知识库页面失败: ${e + ""}`)
+            failed(`取消构建知识插件失败: ${e + ""}`)
         }
     }
 

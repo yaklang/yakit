@@ -62,7 +62,8 @@ const onCloseKnowledgeRepository = () => {
 const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
     onInstallPlug,
     binariesToInstall,
-    binariesToInstallRefreshAsync
+    binariesToInstallRefreshAsync,
+    isShow = true
 }) => {
     const [installTokens, setInstallTokens] = useState<string[]>([])
     const [overallProgress, setOverallProgress] = useState(0)
@@ -202,78 +203,89 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                     >
                         一键下载
                     </YakitButton>
-                    <YakitButton type='text' onClick={() => showDetail()}>
-                        查看详情
-                    </YakitButton>
+                    {isShow ? (
+                        <YakitButton type='text' onClick={() => showDetail()}>
+                            查看详情
+                        </YakitButton>
+                    ) : null}
                 </div>
             </div>
-            <div
-                className={classNames(styles["show-detail-box"], {
-                    [styles["hidden"]]: !showDetailStatus
-                })}
-            >
-                <div className={styles["header"]}>
-                    <div className={styles["left"]}>
-                        <OutlinePuzzleIcon />
-                        <div>插件下载</div>
-                        <Tooltip title='刷新插件列表'>
-                            <YakitButton
-                                type='text'
-                                icon={<OutlineRefreshIcon />}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    binariesToInstallRefreshAsync?.()
-                                }}
-                            />
-                        </Tooltip>
-                    </div>
-                    <div className={styles["right"]}>
-                        <YakitButton
-                            icon={<OutlineClouddownloadIcon />}
-                            type='text2'
-                            onClick={() => runInstallAll()}
-                            loading={loading}
-                        />
-                        <YakitButton icon={<RemoveIcon />} type='text2' onClick={() => setShowDetailStatus(false)} />
-                    </div>
-                </div>
-                {installTokens.length > 0 ? <Progress percent={overallProgress} showInfo={false} /> : null}
-                <div className={styles["content"]}>
-                    {binariesToInstall?.map((it, key) => {
-                        return (
-                            <div className={styles["install-content-box"]} key={it.InstallPath + key}>
-                                <div className={styles["first-box"]}>
-                                    <YakitLogoSvgIcon />
-                                    <YakitSpinLogoSvgIcon className={styles["yakit-svg"]} />
-                                </div>
-                                <div className={styles["middle-box"]}>
-                                    <div className={styles["title"]}>{it.Name}</div>
-                                    <div className={styles["describe"]}>{it.Description}</div>
-                                </div>
-                                <div className={styles["last-box"]}>
-                                    {!it.InstallPath && !eachProgress?.[it.installToken] ? (
-                                        <YakitButton icon={<CloudDownloadIcon />} onClick={() => downloadSingle(it)}>
-                                            下载
-                                        </YakitButton>
-                                    ) : eachProgress?.[it.installToken] < 100 ? (
-                                        <div className={styles["downloading"]}>
-                                            正在下载.. （{eachProgress?.[it.installToken]}.0%）
-                                        </div>
-                                    ) : (
-                                        <YakitButton
-                                            type='text'
-                                            icon={<OutlineFolderopenIcon />}
-                                            onClick={() => onOpenLocalFileByPath(it.InstallPath)}
-                                        >
-                                            打开
-                                        </YakitButton>
-                                    )}
-                                </div>
-                            </div>
-                        )
+            {isShow ? (
+                <div
+                    className={classNames(styles["show-detail-box"], {
+                        [styles["hidden"]]: !showDetailStatus
                     })}
+                >
+                    <div className={styles["header"]}>
+                        <div className={styles["left"]}>
+                            <OutlinePuzzleIcon />
+                            <div>插件下载</div>
+                            <Tooltip title='刷新插件列表'>
+                                <YakitButton
+                                    type='text'
+                                    icon={<OutlineRefreshIcon />}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        binariesToInstallRefreshAsync?.()
+                                    }}
+                                />
+                            </Tooltip>
+                        </div>
+                        <div className={styles["right"]}>
+                            <YakitButton
+                                icon={<OutlineClouddownloadIcon />}
+                                type='text2'
+                                onClick={() => runInstallAll()}
+                                loading={loading}
+                            />
+                            <YakitButton
+                                icon={<RemoveIcon />}
+                                type='text2'
+                                onClick={() => setShowDetailStatus(false)}
+                            />
+                        </div>
+                    </div>
+                    {installTokens.length > 0 ? <Progress percent={overallProgress} showInfo={false} /> : null}
+                    <div className={styles["content"]}>
+                        {binariesToInstall?.map((it, key) => {
+                            return (
+                                <div className={styles["install-content-box"]} key={it.InstallPath + key}>
+                                    <div className={styles["first-box"]}>
+                                        <YakitLogoSvgIcon />
+                                        <YakitSpinLogoSvgIcon className={styles["yakit-svg"]} />
+                                    </div>
+                                    <div className={styles["middle-box"]}>
+                                        <div className={styles["title"]}>{it.Name}</div>
+                                        <div className={styles["describe"]}>{it.Description}</div>
+                                    </div>
+                                    <div className={styles["last-box"]}>
+                                        {!it.InstallPath && !eachProgress?.[it.installToken] ? (
+                                            <YakitButton
+                                                icon={<CloudDownloadIcon />}
+                                                onClick={() => downloadSingle(it)}
+                                            >
+                                                下载
+                                            </YakitButton>
+                                        ) : eachProgress?.[it.installToken] < 100 ? (
+                                            <div className={styles["downloading"]}>
+                                                正在下载.. （{eachProgress?.[it.installToken]}.0%）
+                                            </div>
+                                        ) : (
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlineFolderopenIcon />}
+                                                onClick={() => onOpenLocalFileByPath(it.InstallPath)}
+                                            >
+                                                打开
+                                            </YakitButton>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
-            </div>
+            ) : null}
         </div>
     )
 }
