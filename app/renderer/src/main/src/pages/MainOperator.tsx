@@ -1,7 +1,7 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {Avatar, Layout, Modal, Upload} from "antd"
 import {CameraOutlined} from "@ant-design/icons"
-import {failed, success} from "../utils/notification"
+import {failed, success, yakitFailed} from "../utils/notification"
 import {
     CompletionTotal,
     MethodSuggestion,
@@ -268,7 +268,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         Promise.all([
             setRemoteValue(ProxyHistoryName, JSON.stringify(cacheData)),
             setRemoteValue(ProxyWebFuzzerName, JSON.stringify(cacheData))
-        ]).then(() => setShowProxyModal(false))
+        ])
+            .catch((err) => yakitFailed(err + ""))
+            .finally(() => setShowProxyModal(false))
     })
 
     const checkAndShowDataMigration = useMemoizedFn(async () => {
@@ -280,9 +282,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (options1?.length || options2?.length) {
                 setShowProxyModal(true)
             }
-        } catch (error) {
-            console.error(error)
-        }
+        } catch (error) {}
     })
 
     // 首页加载时初始化
@@ -798,7 +798,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             .then(() => remoteProxyHistory())
                             .finally(() => setProxyModalLoading(false))
                     } catch (error) {
-                        console.error("error:", error)
                         setProxyModalLoading(false)
                     }
                 }}

@@ -606,9 +606,7 @@ export const newWebFuzzerTab = async (params: {
             }
         }
         Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
-    } catch (e) {
-        console.error(e)
-    }
+    } catch (e) {}
 
     return ipcRenderer
         .invoke("send-to-tab", {
@@ -717,6 +715,7 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
             resolve(value)
         } catch (error) {
             rejects(error)
+            yakitFailed(error + "")
         }
     })
 }
