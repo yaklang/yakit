@@ -6638,7 +6638,8 @@ message MITMRequest {
   bool DisableWebsocketCompression = 64;
 
   // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
-  bool AllowChunkStaticJS = 68;
+  // 使用 optional 以区分“未设置”和“显式设置为 false”，便于运行时更新开关且不误伤其他控制消息。
+  optional bool AllowChunkStaticJS = 68;
 
   // hijack filter
   MITMFilterData HijackFilterData = 65;
@@ -6825,7 +6826,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake 
+// handshake
 message HandshakeRequest {
   string Name = 1;
 }
@@ -7484,7 +7485,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory 
+  // compile data only in memory
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -7571,11 +7572,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index 
+  // index
   string RuleName = 3;
-  string ProgramName = 4; 
-  // progress 
-  double Progress = 5; 
+  string ProgramName = 4;
+  // progress
+  double Progress = 5;
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -7635,7 +7636,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"  
+  string SaveKind = 14; // "memory" | "database"
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -7787,9 +7788,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  repeated SSARisk Data = 1; // new ssa-risk unread data
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count 
+  int64 Total = 3; // total ssa-risk count
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -8303,7 +8304,8 @@ message MITMV2Request{
   bool SetDisableSystemProxy = 50;
 
   // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
-  bool AllowChunkStaticJS = 51;
+  // 使用 optional 以区分“未设置”和“显式设置为 false”，便于运行时更新开关且不误伤其他控制消息。
+  optional bool AllowChunkStaticJS = 51;
 }
 
 message MITMV2Response {
