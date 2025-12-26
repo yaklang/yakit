@@ -124,15 +124,15 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 
     const Footer = useCallback(
         () =>
-            loading ? ( 
-                <div style={{height: "40px",maxWidth:'784px', margin: "0 auto"}}>
+            loading ? (
+                <div style={{height: "40px", maxWidth: "784px", margin: "0 auto"}}>
                     <Loading
                         size={14}
                         style={{
                             marginTop: 8
                         }}
                     >
-                        <div style={{fontWeight: 400, display: "flex", alignItems: "center"}}>嘻嘻嘻{title}</div>
+                        <div style={{fontWeight: 400, display: "flex", alignItems: "center"}}>{title}</div>
                     </Loading>
                 </div>
             ) : null,
