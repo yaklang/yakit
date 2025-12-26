@@ -1,0 +1,20 @@
+@use "../../../../styles/mixin.scss" as mixin;
+
+.task-loading {
+    height: 80px;
+    .plan-text {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        @include mixin.text-ellipsis;
+    }
+    .task-text {
+        width: 100%;
+        font-size: 12px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding-left: 16px;
+        @include mixin.text-ellipsis;
+    }
+}
