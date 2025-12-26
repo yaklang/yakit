@@ -22,7 +22,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {fileToChatQuestionStore} from "./store"
+import {fileToChatQuestionStore, useFileToQuestion} from "./store"
 import {PageNodeItemProps} from "@/store/pageInfo"
 import emiter from "@/utils/eventBus/eventBus"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
@@ -50,6 +50,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
 
     const {activeChat, setting} = useAIAgentStore()
+    const {selectForges, selectTools, selectKnowledgeBases} = useChatIPCStore()
+    const fileToQuestion = useFileToQuestion(storeKey)
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
@@ -80,7 +82,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
         if (!activeChat?.id) return
         try {
-            const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
+            const {extra, attachedResourceInfo} = getAIReActRequestParams({
+                ...data,
+                selectForges,
+                selectTools,
+                selectKnowledgeBases,
+                fileToQuestion
+            })
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
                 FreeInput: data.qs,
