@@ -139,23 +139,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
 
     const hTTPHistoryAnalysisRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hTTPHistoryAnalysisRef)
-    const [downstreamProxy, setDownstreamProxy] = useState<string>("")
-    useEffect(() => {
-        if (inViewport) {
-            getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-                if (res) {
-                    try {
-                        const obj = JSON.parse(res) || {}
-                        setDownstreamProxy(obj.defaultValue || "")
-                    } catch (error) {
-                        setDownstreamProxy("")
-                    }
-                } else {
-                    setDownstreamProxy("")
-                }
-            })
-        }
-    }, [inViewport])
 
     const [openBottomTabsFlag, setOpenBottomTabsFlag] = useState<boolean>(false)
     const [curBottomTab, setCurBottomTab] = useState<TabKeys>()
@@ -238,7 +221,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             refreshHttpTable={refreshHttpTable}
                             isResetSelect={isResetSelect}
                             onSetIsResetSelect={setIsResetSelect}
-                            downstreamProxy={downstreamProxy}
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
@@ -262,7 +244,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                                 httpFlowIds={httpFlowIds}
                                 clickHttpFlow={memoClickedHttpFlow}
                                 firstHttpFlow={memoFirstHttpFlow}
-                                downstreamProxy={downstreamProxy}
                                 initialMatchers={pageInfo.matchers}
                             />
                         )}
@@ -325,7 +306,6 @@ interface AnalysisMainProps {
     httpFlowIds: number[]
     clickHttpFlow?: HTTPFlow
     firstHttpFlow?: HTTPFlow
-    downstreamProxy: string
     initialMatchers?: HTTPResponseMatcher[]
 }
 const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
@@ -340,7 +320,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         httpFlowIds,
         clickHttpFlow,
         firstHttpFlow,
-        downstreamProxy,
         initialMatchers
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "HTTPHistoryAnalysis", "webFuzzer"])
@@ -1077,7 +1056,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                         type='outline1'
                                                         onClick={onOpenMatcherAndExtractionDrawer}
                                                         icon={<OutlinePlusIcon />}
-                                                        disabled={httpFlowLoading || httpFlowRequest === ""}
                                                     >
                                                         {t("YakitButton.add_new")}
                                                     </YakitButton>
@@ -1288,7 +1266,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                     onSetCurrentSelectItem={setCurrentSelectItem}
                                                     isRefreshTable={isRefreshTable}
                                                     executeStatus={executeStatus}
-                                                    downstreamProxy={downstreamProxy}
                                                 />
                                             </div>
                                         </div>
@@ -1388,10 +1365,9 @@ interface HttpRuleProps {
     onSetCurrentSelectItem: (c?: HTTPFlowRuleData) => void
     isRefreshTable: boolean
     executeStatus: ExpandAndRetractExcessiveState
-    downstreamProxy: string
 }
 const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
-    const {tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable, executeStatus, downstreamProxy} = props
+    const {tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable, executeStatus} = props
     const [scrollToIndex, setScrollToIndex] = useState<string>()
 
     // #region 规则数据包打开新窗口
@@ -1401,7 +1377,6 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
             id: v?.HTTPFlowId || 0,
             analyzedIds: v?.Id ? [v.Id] : undefined,
             sendToWebFuzzer: true,
-            downstreamProxyStr: downstreamProxy,
             scrollID: v?.Id,
             showEditTag: false,
             showJumpTree: false

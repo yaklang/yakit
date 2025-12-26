@@ -4977,7 +4977,13 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string) => {
     let params = {}
     try {
-        const stateSecretHijacking = await getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS)
+        const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
+            getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
+            getRemoteValue(RemoteGV.MITMDisableSystemProxy)
+        ])
+        const stateSecretHijacking = stateSecretHijackingResult.status === 'fulfilled' ? stateSecretHijackingResult.value : ''
+        const disableSystemProxy = disableSystemProxyResult.status === 'fulfilled' ? disableSystemProxyResult.value : ''
+        
         if (stateSecretHijacking) {
             if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
                 Object.assign(params, {enableGMTLS: true})
@@ -4985,7 +4991,6 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
                 Object.assign(params, {randomJA3: true})
             }
         }
-        const disableSystemProxy = await getRemoteValue(RemoteGV.MITMDisableSystemProxy)
         Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
     } catch (e) {
         console.error(e)

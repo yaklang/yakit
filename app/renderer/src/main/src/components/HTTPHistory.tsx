@@ -401,14 +401,6 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         () => {
             if (inViewport) {
                 setDownstreamProxy(downstreamProxyStr || "")
-                getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-                    if (!(pageType === "MITM") && res) {
-                        try {
-                            const obj = JSON.parse(res) || {}
-                            setDownstreamProxy(obj.defaultValue || "")
-                        } catch (error) {}
-                    }
-                })
             }
         },
         [downstreamProxyStr, inViewport, pageType],

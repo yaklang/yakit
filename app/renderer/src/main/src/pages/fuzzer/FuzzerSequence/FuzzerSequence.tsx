@@ -1698,53 +1698,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const onShowAllHeader = useMemoizedFn(() => {
         setTrafficAnalysisType("all") // 设置为查看全部
         setTrafficAnalysisVisible(true)
-        // if (judgeMoreFuzzerTableMaxData()) {
-        //     // let currentItem: PageNodeItemProps | undefined = undefined
-        //     // if (currentSelectRequest?.pageId) {
-        //     //     currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
-        //     // }
-        //     // emiter.emit(
-        //     //     "openPage",
-        //     //     JSON.stringify({
-        //     //         route: YakitRoute.DB_HTTPHistoryAnalysis,
-        //     //         params: {
-        //     //             webFuzzer: true,
-        //     //             runtimeId: allRuntimeIds(),
-        //     //             sourceType: "scan",
-        //     //             verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("FuzzerSequence.allTraffic")}` : "",
-        //     //             pageId: currentItem?.pageId || ""
-        //     //         }
-        //     //     })
-        //     // )
-        // } else {
-        //     setShowAllResponse(true)
-        // }
     })
 
     const onShowAll = useMemoizedFn(() => {
         if (!currentSequenceItem) return
         setTrafficAnalysisType("single") // 设置为查看单个序列
         setTrafficAnalysisVisible(true)
-        // let currentItem: PageNodeItemProps | undefined = undefined
-        // if (currentSelectRequest?.pageId) {
-        //     currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
-        // }
-
-        // emiter.emit(
-        //     "openPage",
-        //     JSON.stringify({
-        //         route: YakitRoute.DB_HTTPHistoryAnalysis,
-        //         params: {
-        //             webFuzzer: true,
-        //             runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
-        //             sourceType: "scan",
-        //             verbose: currentItem?.pageName
-        //                 ? `${currentItem?.pageName}-${currentSequenceItem.name}-${t("FuzzerSequence.allTraffic")}`
-        //                 : "",
-        //             pageId: currentItem?.pageId || ""
-        //         }
-        //     })
-        // )
     })
 
     const onDebugSequenceResponse = useMemoizedFn((payload: HTTPFuzzerPageTableDebugPayload) => {
