@@ -249,20 +249,25 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     //  新增 / 手动新增知识库
     useAsyncEffect(async () => {
-        if (!previousKnowledgeBases) return
+        try {
+            if (!previousKnowledgeBases) return
 
-        const diff = compareKnowledgeBaseChange(previousKnowledgeBases, knowledgeBases)
-        const manualAdd = findChangedObjects(previousKnowledgeBases, knowledgeBases)
+            const diff = compareKnowledgeBaseChange(previousKnowledgeBases, knowledgeBases)
+            const manualAdd = findChangedObjects(previousKnowledgeBases, knowledgeBases)
 
-        const kb = diff && typeof diff === "object" && "increase" in diff && diff.increase ? diff.increase : manualAdd
-        if (!kb) return
+            const kb =
+                diff && typeof diff === "object" && "increase" in diff && diff.increase ? diff.increase : manualAdd
+            if (!kb) return
 
-        if (!kb.streamToken || !kb.KnowledgeBaseFile?.length) {
-            editKnowledgeBase(kb.ID, {...kb, streamstep: "success"})
-            return
+            if (!kb.streamToken || !kb.KnowledgeBaseFile?.length) {
+                editKnowledgeBase(kb.ID, {...kb, streamstep: "success"})
+                return
+            }
+
+            await buildKnowledgeBase(kb)
+        } catch (error) {
+            failed(error + "")
         }
-
-        await buildKnowledgeBase(kb)
     }, [knowledgeBases, previousKnowledgeBases])
 
     useAsyncEffect(async () => {
@@ -280,10 +285,14 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     }, [knowledgeBases, previousKnowledgeBases])
 
     useAsyncEffect(async () => {
-        for (const kb of knowledgeBases) {
-            if (kb.streamstep === 2 && kb.streamToken) {
-                await starKnowledgeeBaseEntry(kb)
+        try {
+            for (const kb of knowledgeBases) {
+                if (kb.streamstep === 2 && kb.streamToken) {
+                    await starKnowledgeeBaseEntry(kb)
+                }
             }
+        } catch (error) {
+            failed(error + "")
         }
     }, [knowledgeBases])
 
