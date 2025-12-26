@@ -153,17 +153,18 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     useEffect(() => {
         const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
-
         const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
-
         const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
 
-        const result = knowledgeBases.filter((it) => {
-            if (addMode.includes("external") && isExternal(it)) return true
-            if (addMode.includes("manual") && isManual(it)) return true
-            if (addMode.includes("other") && isOther(it)) return true
-            return false
-        })
+        const result =
+            addMode.length === 0
+                ? knowledgeBases
+                : knowledgeBases.filter((it) => {
+                      if (addMode.includes("external") && isExternal(it)) return true
+                      if (addMode.includes("manual") && isManual(it)) return true
+                      if (addMode.includes("other") && isOther(it)) return true
+                      return false
+                  })
 
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)

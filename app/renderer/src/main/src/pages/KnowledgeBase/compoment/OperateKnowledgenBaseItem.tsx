@@ -15,12 +15,10 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Form} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {TKnowledgeBaseSidebarProps} from "./KnowledgeBaseSidebar"
 import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
-import console from "console"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -325,7 +323,6 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
                 ...items,
                 ...result
             }
-            console.log(items, result, "items")
             await editKnowledgRunAsync(transformData)
             editKnowledgeBase(items.ID, transformData)
         } catch (error) {}
