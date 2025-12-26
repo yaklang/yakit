@@ -24,7 +24,7 @@ import {
     excludeNoExistfilter,
     apiQueryYakScript
 } from "@/pages/plugins/utils"
-import {yakitNotify} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
@@ -126,16 +126,26 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                 pageParams: params
             })
 
-            const [onlineRes, officialRes, localRes] = await Promise.all([
-                apiFetchOnlineList(query, true),
-                apiFetchOnlineList({...query, official: [true]}, true),
-                apiQueryYakScript(localQuery, true)
-            ])
-            setGetTotalLoading(false)
-            return {
-                online: Number(onlineRes.pagemeta.total) || 0,
-                official: Number(officialRes.pagemeta.total) || 0,
-                local: Number(localRes.Total) || 0
+            try {
+                const [onlineRes, officialRes, localRes] = await Promise.all([
+                    apiFetchOnlineList(query, true),
+                    apiFetchOnlineList({...query, official: [true]}, true),
+                    apiQueryYakScript(localQuery, true)
+                ])
+                return {
+                    online: Number(onlineRes.pagemeta.total) || 0,
+                    official: Number(officialRes.pagemeta.total) || 0,
+                    local: Number(localRes.Total) || 0
+                }
+            } catch (err) {
+                yakitFailed(err + '')
+                return {
+                    online: 0,
+                    official: 0,
+                    local: 0
+                }
+            } finally {
+                setGetTotalLoading(false)
             }
         }
     )

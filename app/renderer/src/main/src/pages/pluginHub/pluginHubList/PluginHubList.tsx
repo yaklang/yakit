@@ -175,7 +175,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     })
 
     /** 跳转页面根据搜索条件展示结果 */
-    const [searchParams, setSearchParams] = useState<PluginSearchParams | undefined>(undefined)
+    const [searchParams, setSearchParams] = useState<PluginSearchParams>()
     const onChangeActive = useMemoizedFn((type: PluginSourceType, searchParams?: PluginSearchParams) => {
         setSearchParams(searchParams)
         onSetActive(type, true)

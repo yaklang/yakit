@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 import { HTTP_PACKET_EDITOR_FONT_SIZE } from "@/utils/editors"
+import { yakitFailed } from "@/utils/notification"
 
 
 interface EditorFontSizeStore {
@@ -30,7 +31,7 @@ export const useEditorFontSize = create<EditorFontSizeStore>((set, get) => ({
                 }
             }
         } catch (error) {
-            console.error(error)
+            yakitFailed(error + '')
         }
     }
 }))
