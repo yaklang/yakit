@@ -11,5 +11,17 @@ export enum LocalGVS {
     /** @name 本地安装软件版本号 */
     LocalAppVersion = "local_app_version",
     /** @name 是否yak版本检测 */
-    NoYakVersionCheck = "no-yak-version-check"
+    NoYakVersionCheck = "no-yak-version-check",
+    /** @name yakit端口号信息 */
+    YakitPort = "yakit-port",
+    /** @name ee端口号信息 */
+    YakitEEPort = "yakitee-port",
+    /** @name se端口号信息 */
+    SEPort = "se-port",
+    /** @name irify端口号信息 */
+    IrifyPort = "irify-port",
+    /** @name irifyEE端口号信息 */
+    IrifyEEPort = "irifyee-port",
+    /** @name Memfit端口号信息 */
+    MemfitPort = "Memfit-port",
 }
