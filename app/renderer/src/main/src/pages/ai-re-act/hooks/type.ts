@@ -1,8 +1,16 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
+import {
+    AIChatQSData,
+    AIStreamOutput,
+    AITaskInfoProps,
+    AITokenConsumption,
+    AIYakExecFileRecord,
+    ReActChatElement
+} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {Dispatch, SetStateAction} from "react"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -49,12 +57,6 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
-    /** 接口里返回文件夹路径时的回调事件 */
-    onGrpcFolder?: (path: AIFileSystemPin) => void
-    /** 向接口发送消息 */
-    sendRequest?: (request: AIInputEvent) => void
-    /** 通知消息回调 */
-    onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
 }
 
 export interface UseCasualChatState {
@@ -77,10 +79,6 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onReviewRelease?: (id: string) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
-    /** 接口里返回文件夹路径时的回调事件 */
-    onGrpcFolder?: (path: AIFileSystemPin) => void
-    /** 通知消息回调 */
-    onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
     onTaskStart: UseChatIPCParams["onTaskStart"]
 }
 
@@ -250,4 +248,20 @@ export interface UseAIChatLogEvents {
     /** 关闭展示日志的页面窗口 */
     cancelLogsWin: () => void
 }
+// #endregion
+
+// #region useChatContent相关定义
+export interface UseChatContentParams {
+    getContentMap: (token: string) => AIChatQSData | undefined
+    setContentMap: (token: string, content: AIChatQSData) => void
+    deleteContentMap: (token: string) => void
+    getElements: () => ReActChatElement[]
+    setElements: Dispatch<SetStateAction<ReActChatElement[]>>
+    /** 获取当前执行接口流的唯一标识符 */
+    pushLog: (log: AIChatLogData) => string
+    /** 未识别的类型数据, 由外界自主识别处理 */
+    handleUnkData: (res: AIOutputEvent) => void
+}
+
+export interface UseChatContentEvents extends UseHookBaseEvents {}
 // #endregion

@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from "react"
 import {yakitNotify} from "@/utils/notification"
-import {useInterval, useMemoizedFn} from "ahooks"
+import {useInterval, useMemoizedFn, useThrottleFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
@@ -43,9 +43,6 @@ const UseCasualAndTaskTypes = [
     "ai_review_start",
     "ai_review_countdown",
     "ai_review_end",
-    // 文件系统操作相关
-    "filesystem_pin_directory",
-    "filesystem_pin_filename",
     // 决策总结
     "tool_call_decision",
     // 任务规划崩溃的错误信息
@@ -198,10 +195,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [casualChat, casualChatEvent] = useCasualChat({
         pushLog: logEvents.pushLog,
         getRequest: fetchRequestParams,
-        onReviewRelease: handleCasualReviewRelease,
-        onGrpcFolder: handleSetGrpcFolders,
-        sendRequest: sendRequest,
-        onNotifyMessage
+        onReviewRelease: handleCasualReviewRelease
     })
 
     // 任务规划相关数据和逻辑
@@ -212,8 +206,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
         sendRequest: sendRequest,
-        onGrpcFolder: handleSetGrpcFolders,
-        onNotifyMessage,
         onTaskStart
     })
     // #endregion
@@ -225,6 +217,84 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetCasualChatID()
         handleResetTaskChatID()
     })
+
+    // #region 公共类型的处理逻辑
+    /** 文件系统操作处理数据 */
+    const handleFileSystemPin = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
+            const ipcContent = Uint8ArrayToString(Content) || ""
+            const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
+
+            // onNotifyMessage &&
+            //     onNotifyMessage({
+            //         Type,
+            //         NodeId,
+            //         NodeIdVerbose,
+            //         Timestamp,
+            //         Content: path
+            //     })
+
+            handleSetGrpcFolders({path, isFolder: Type === "filesystem_pin_directory"})
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: logEvents.pushLog
+            })
+        }
+    })
+
+    // 获取最新的问题队列信息
+    const handleTriggerQuestionQueueRequest = useThrottleFn(
+        () => {
+            sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+        },
+        {wait: 50, leading: false}
+    ).run
+    // 状态变化处理
+    const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
+            const ipcContent = Uint8ArrayToString(Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+            onNotifyMessage &&
+                onNotifyMessage({
+                    Type,
+                    NodeId,
+                    NodeIdVerbose,
+                    Timestamp,
+                    Content: data.react_task_input
+                })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: logEvents.pushLog
+            })
+        } finally {
+            handleTriggerQuestionQueueRequest()
+        }
+    })
+
+    // 问题队列清空处理
+    const handleReActTaskCleared = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {Type, NodeId, NodeIdVerbose, Timestamp} = res
+            onNotifyMessage &&
+                onNotifyMessage({
+                    Type,
+                    NodeId,
+                    NodeIdVerbose,
+                    Timestamp,
+                    Content: "已清空所有任务队列数据"
+                })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: logEvents.pushLog
+            })
+        }
+    })
+    // #endregion
 
     // #region review事件相关方法
     /** review 界面选项触发事件 */
@@ -386,6 +456,23 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
+                // 会话在本地缓存数据的(文件夹/文件)路径通知
+                if (["filesystem_pin_directory", "filesystem_pin_filename"].includes(res.Type)) {
+                    handleFileSystemPin(res)
+                    return
+                }
+                // 自由对话相关, 问题入队/问题出队通知
+                if (["react_task_enqueue", "react_task_dequeue"].includes(res.NodeId)) {
+                    // 问题(入|出)队列状态变化
+                    handleQuestionQueueStatusChange(res)
+                    return
+                }
+                // 自由对话相关, 问题队列清空通知
+                if (res.NodeId === "react_task_cleared") {
+                    handleReActTaskCleared(res)
+                    return
+                }
+
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
                     aiPerfDataEvent.handleSetData(res)
@@ -505,6 +592,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                     }
                     return
                 }
+
+                // if(res.Type)
 
                 if (UseCasualChatTypes.includes(res.Type)) {
                     // 专属自由对话类型的流数据

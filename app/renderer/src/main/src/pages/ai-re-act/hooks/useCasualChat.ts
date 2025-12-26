@@ -15,9 +15,9 @@ import {v4 as uuidv4} from "uuid"
 import {AIChatLogData, handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
 import {
     AIReviewJudgeLevelMap,
-    CasualDefaultToolResultSummary,
     convertNodeIdToVerbose,
-    DefaultAIToolResult
+    DefaultAIToolResult,
+    DefaultToolResultSummary
 } from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
@@ -27,6 +27,7 @@ import {
     AIReviewType,
     AIStreamOutput,
     AIToolResult,
+    ReActChatElement,
     ToolStreamSelectors
 } from "./aiRender"
 
@@ -44,11 +45,14 @@ export const UseCasualChatTypes = [
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease, onGrpcFolder, sendRequest, onNotifyMessage} = params || {}
+    const {pushLog, getRequest, onReviewRelease} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
     })
+
+    const [elements, setElements] = useState<ReActChatElement[]>([])
+    const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
 
     const review = useRef<AIChatQSData>()
 
@@ -393,7 +397,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     throw new Error("tool_result data is invalid")
                 }
                 toolResult.status = status
-                toolResult.summary = CasualDefaultToolResultSummary[status]?.label || ""
+                toolResult.summary = DefaultToolResultSummary[status]?.wait || ""
 
                 setContents((old) => {
                     let newArr = [...old]
@@ -623,31 +627,6 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
     // #endregion
 
-    /** 文件系统操作处理数据 */
-    const handleFileSystemPin = useMemoizedFn((res: AIOutputEvent) => {
-        try {
-            const {Type} = res
-            const ipcContent = Uint8ArrayToString(res.Content) || ""
-            const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
-
-            // onNotifyMessage &&
-            //     onNotifyMessage({
-            //         Type,
-            //         NodeId,
-            //         NodeIdVerbose,
-            //         Timestamp,
-            //         Content: path
-            //     })
-
-            onGrpcFolder && onGrpcFolder({path, isFolder: Type === "filesystem_pin_directory"})
-        } catch (error) {
-            handleGrpcDataPushLog({
-                info: res,
-                pushLog: handlePushLog
-            })
-        }
-    })
-
     /** 工具决策数据处理 */
     const handleToolCallDecision = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -693,8 +672,8 @@ function useCasualChat(params?: UseCasualChatParams) {
                     return false
                 })
                 if (!!itemInfo && itemInfo.type === "stream") {
-                    if (!itemInfo.data.reference) itemInfo.data.reference = []
-                    itemInfo.data.reference.push(data)
+                    if (!itemInfo.reference) itemInfo.reference = []
+                    itemInfo.reference.push(data)
                 }
 
                 return newArr
@@ -707,75 +686,46 @@ function useCasualChat(params?: UseCasualChatParams) {
         }
     })
 
-    // #region 问题队列状态变化相关逻辑处理
-    const handleTriggerQuestionQueueRequest = useThrottleFn(
-        () => {
-            // 更新任务树数据
-            sendRequest && sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
-        },
-        {wait: 50, leading: false}
-    ).run
-    // 状态变化处理
-    const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
-        try {
-            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
-            const ipcContent = Uint8ArrayToString(Content) || ""
-            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-            onNotifyMessage &&
-                onNotifyMessage({
-                    Type,
-                    NodeId,
-                    NodeIdVerbose,
-                    Timestamp,
-                    Content: data.react_task_input
-                })
-        } catch (error) {
-            handleGrpcDataPushLog({
-                info: res,
-                pushLog: handlePushLog
-            })
-        } finally {
-            handleTriggerQuestionQueueRequest()
-        }
-    })
-
-    // 问题队列清空处理
-    const handleClearQuestionQueue = useMemoizedFn((res: AIOutputEvent) => {
-        try {
-            const {Type, NodeId, NodeIdVerbose, Timestamp} = res
-            onNotifyMessage &&
-                onNotifyMessage({
-                    Type,
-                    NodeId,
-                    NodeIdVerbose,
-                    Timestamp,
-                    Content: "已清空所有任务队列数据"
-                })
-        } catch (error) {
-            handleGrpcDataPushLog({
-                info: res,
-                pushLog: handlePushLog
-            })
-        }
-    })
-    // #endregion
-
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
 
-            if (res.Type === "stream") {
-                handleStreams(res)
+            // 问题的思考
+            if (res.Type === "thought") {
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIChatThought
+
+                const chatData: AIChatQSData = {
+                    ...genBaseAIChatData(res),
+                    type: AIChatQSDataTypeEnum.THOUGHT,
+                    data: data.thought
+                }
+                contentMap.current.set(chatData.id, chatData)
+                setElements((old) => {
+                    return old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}])
+                })
                 return
             }
 
-            if (res.Type === "thought") {
-                handleThought(res)
+            // 问题一次性的结果输出
+            if (res.Type === "result") {
+                const {result, after_stream} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIChatResult
+                if (!!after_stream) return
+
+                const chatData: AIChatQSData = {
+                    ...genBaseAIChatData(res),
+                    type: AIChatQSDataTypeEnum.THOUGHT,
+                    data: result
+                }
+                contentMap.current.set(chatData.id, chatData)
+                setElements((old) => {
+                    return old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}])
+                })
                 return
             }
-            if (res.Type === "result") {
-                handleResult(res)
+
+            if (res.Type === "stream") {
+                handleStreams(res)
                 return
             }
 
@@ -787,17 +737,6 @@ function useCasualChat(params?: UseCasualChatParams) {
                         throw new Error("stream-finished data is invalid")
                     }
                     handleUpdateStreamStatus(event_writer_id)
-                    return
-                }
-
-                if (["react_task_enqueue", "react_task_dequeue"].includes(res.NodeId)) {
-                    // 问题(入|出)队列状态变化
-                    handleQuestionQueueStatusChange(res)
-                    return
-                }
-
-                if (res.NodeId === "react_task_cleared") {
-                    handleClearQuestionQueue(res)
                     return
                 }
 
@@ -861,12 +800,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
             if (res.Type === "tool_call_error") {
                 handleToolResultStatus(res, "failed")
-                return
-            }
-
-            if (["filesystem_pin_directory", "filesystem_pin_filename"].includes(res.Type)) {
-                // 文件系统操作
-                handleFileSystemPin(res)
                 return
             }
 
