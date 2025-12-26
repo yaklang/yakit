@@ -6,6 +6,7 @@ import {
     OutlinePluscircleIcon,
     OutlinePlusIcon,
     OutlineRefreshIcon,
+    OutlineReplyIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -79,11 +80,13 @@ import {getRemoteHttpSettingGV} from "@/utils/envfile"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
     onSetOpenGroupDrawer: (openGroupDrawer: boolean) => void
     externalSearchParams?: PluginSearchParams // 外部传入的搜索参数
+    onChangeOnline?: (searchParams?: PluginSearchParams) => void
 }
 /** @name 本地插件 */
 export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
@@ -95,7 +98,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         onPluginDetail,
         openGroupDrawer,
         onSetOpenGroupDrawer,
-        externalSearchParams
+        externalSearchParams,
+        onChangeOnline
     } = props
 
     const divRef = useRef<HTMLDivElement>(null)
@@ -143,6 +147,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         cloneDeep({...defaultSearch, ...externalSearchParams})
     )
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>(cloneDeep(defaultFilter))
+
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "plugin"])
 
     const showIndex = useRef<number>(0)
     const setShowIndex = useMemoizedFn((index: number) => {
@@ -1114,7 +1120,22 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
                     <div className={styles["list-body"]}>
                         <HubOuterList
-                            title='本地插件'
+                            title={
+                                <>
+                                    {t("PluginTabName.localPlugin")} 
+                                     {!!externalSearchParams && (
+                                        <YakitButton
+                                            onClick={() => onChangeOnline?.(getSearch())}
+                                            type='primary'
+                                            size='small'
+                                            icon={<OutlineReplyIcon />}
+                                            style={{marginLeft: 8}}
+                                        >
+                                            {t("YakitButton.back")}
+                                        </YakitButton>
+                                    )}
+                                </>
+                            }
                             headerExtra={
                                 <div className={styles["hub-list-header-extra"]}>
                                     <FuncFilterPopover

@@ -17,7 +17,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {DragDropContext, Droppable, Draggable, DraggingStyle} from "@hello-pangea/dnd"
-import {AutoDecodeResult} from "@/utils/encodec"
+import {AutoDecodeResult, execAutoDecode} from "@/utils/encodec"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
@@ -1170,7 +1170,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
         >
             <div className={styles["http-fuzzer-read-editor-simple"]}>
                 <div className={styles["show-box"]}>
-                    <div className={styles["decode-box"]} onClick={() => setSegmentedType("decode")}>
+                    <div className={styles["decode-box"]} onClick={() => execAutoDecode(rangeValue)}>
                         <IconSolidSparklesIcon className={styles[""]} />
                         <div className={styles["content"]}>{t("HTTPFuzzerRangeReadOnlyEditorMenu.decode")}</div>
                     </div>

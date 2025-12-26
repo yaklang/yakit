@@ -60,5 +60,10 @@
   },
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "Risks and Vulnerabilities"
+  },
+  "PluginTabName": {
+    "allPlugin": "Online Plugin",
+    "officialPlugin": "Official Plugin",
+    "localPlugin": "local Plugin"
   }
 }

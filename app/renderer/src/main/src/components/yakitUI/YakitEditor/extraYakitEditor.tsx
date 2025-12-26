@@ -318,7 +318,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     } catch (e) {
                         failed("editor exec auto-decode failed")
                     }
-                }
+                },
+                order: 6
             },
             disableUnicodeDecode: {
                 menu: [
@@ -605,7 +606,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         default:
                             break
                     }
-                }
+                },
+                order: 15
             }
         }
 

@@ -60,5 +60,10 @@
   },
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "风险与漏洞"
+  },
+  "PluginTabName": {
+    "allPlugin": "在线插件",
+    "officialPlugin": "官方插件",
+    "localPlugin": "本地插件"
   }
 }

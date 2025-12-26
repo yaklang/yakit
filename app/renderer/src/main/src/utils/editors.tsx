@@ -51,6 +51,8 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {Theme, useTheme} from "@/hook/useTheme"
 import {applyYakitMonacoTheme} from "./monacoSpec/theme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {fontSizeOptions, useEditorFontSize} from "@/store/editorFontSize"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -101,6 +103,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     const [loading, setLoading] = useState(true)
 
     const {theme: themeGlobal} = useTheme()
+    const {fontSize: globalFontSize} = useEditorFontSize()
 
     useLayoutEffect(() => {
         applyYakitMonacoTheme(props?.propsTheme ?? themeGlobal)
@@ -419,7 +422,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     readOnly: props.readOnly,
                                     scrollBeyondLastLine: false,
                                     fontWeight: "500",
-                                    fontSize: props.fontSize || 12,
+                                    fontSize: globalFontSize,
                                     showFoldingControls: "always",
                                     showUnused: true,
                                     wordWrap: props.noWordWrap ? "off" : "on",
@@ -591,7 +594,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [strValue, setStrValue] = useState(originValue)
     const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array()) // 只有切换到hex时才会用这个值，目前切换得时候会把最新得编辑器中得值赋值到该变量里面
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
-    const [fontSize, setFontSize] = useState<undefined | number>(12)
+    const {fontSize, setFontSize, initFontSize} = useEditorFontSize()
     const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
     const [noWordwrap, setNoWordwrap] = useState(false)
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
@@ -615,6 +618,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     // 编辑器Id 用于区分每个编辑器
     const [editorId, setEditorId] = useState<string>(uuidv4())
+
+
+    useEffect(()=>{
+        initFontSize()
+    },[])
 
     // 读取上次选择的字体大小/换行符
     const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
@@ -640,9 +648,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 try {
                     if (!data) return
                     let obj: OperationRecordRes = JSON.parse(data)
-                    if (obj?.fontSize) {
-                        setFontSize(obj?.fontSize)
-                    }
                     if (typeof obj?.showBreak === "boolean") {
                         setShowLineBreaks(obj?.showBreak)
                     }
@@ -1070,20 +1075,21 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                         labelCol={{span: 8}}
                                                     >
                                                         {(fontSize || 0) > 0 && (
-                                                            <SelectOne
-                                                                formItemStyle={{marginBottom: 4}}
-                                                                label={t("NewHTTPPacketEditor.fontSize")}
-                                                                data={[
-                                                                    {text: t("YakitEditor.small"), value: 12},
-                                                                    {text: t("YakitEditor.medium"), value: 16},
-                                                                    {text: t("YakitEditor.large"), value: 20}
-                                                                ]}
-                                                                oldTheme={false}
-                                                                value={fontSize}
-                                                                setValue={(size) => {
-                                                                    setFontSize(size)
-                                                                }}
-                                                            />
+                                                             <Form.Item label={t("NewHTTPPacketEditor.fontSize")}>
+                                                                <div style={{display: "flex", width: 120, gap: 4}}>
+                                                                    <YakitSelect
+                                                                        options={fontSizeOptions.map((val) => ({
+                                                                            label: val,
+                                                                            value: val
+                                                                        }))}
+                                                                        value={fontSize}
+                                                                        onChange={(size) => {
+                                                                            setFontSize(size)
+                                                                        }}
+                                                                    />
+                                                                    px
+                                                                </div>
+                                                            </Form.Item>
                                                         )}
                                                         <Form.Item
                                                             label={t("NewHTTPPacketEditor.fullScreen")}
@@ -1117,23 +1123,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                                 }}
                                                             />
                                                         </Form.Item>
-                                                        {(props.language === "http" || !isResponse) && (
-                                                            <Form.Item
-                                                                label={t("NewHTTPPacketEditor.showLineBreaks")}
-                                                                style={{marginBottom: 4, lineHeight: "16px"}}
-                                                            >
-                                                                <YakitSwitch
-                                                                    checked={showLineBreaks}
-                                                                    onChange={(checked) => {
-                                                                        setRemoteValue(
-                                                                            HTTP_PACKET_EDITOR_Line_Breaks,
-                                                                            `${checked}`
-                                                                        )
-                                                                        setShowLineBreaks(checked)
-                                                                    }}
-                                                                />
-                                                            </Form.Item>
-                                                        )}
                                                     </Form>
                                                 </>
                                             }

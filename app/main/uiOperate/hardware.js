@@ -126,6 +126,20 @@ module.exports = (win, getClient) => {
         return shell.openPath(yakitInstallDir)
     })
 
+    /** 检查 yakit 安装文件是否存在 */
+    ipcMain.handle("check-yakit-install-file", async (e, filename) => {
+        try {
+            if (!filename) return false
+            // 读取目录下的所有文件
+            const files = fs.readdirSync(yakitInstallDir)
+            
+            // 判断是否有包含文件名的文件
+            return files.some(file => file.includes(filename))
+        } catch (error) {
+            return false
+        }
+    })
+
     /**
      * 处理 DMG 文件并安装
      * @param {string} dmgPath - dmg 文件路径

@@ -90,6 +90,7 @@ import {useTheme} from "@/hook/useTheme"
 import {keepSearchNameMapStore, useKeepSearchNameMap} from "@/store/keepSearchName"
 import type {IEvent} from "monaco-editor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {fontSizeOptions, useEditorFontSize} from "@/store/editorFontSize"
 
 export interface CodecTypeProps {
     key?: string
@@ -138,11 +139,7 @@ const DefaultMenuTop: (t: (text: string) => string) => EditorMenuItemType[] = (t
         {
             key: "font-size",
             label: t("YakitEditor.fontSize"),
-            children: [
-                {key: "font-size-small", label: t("YakitEditor.small")},
-                {key: "font-size-middle", label: t("YakitEditor.medium")},
-                {key: "font-size-large", label: t("YakitEditor.large")}
-            ]
+            children: fontSizeOptions.map((val)=> ({ key: val+'', label: val+'' }))
         }
     ]
 }
@@ -253,7 +250,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const keyToOnRunRef = useRef<Record<string, string[]>>({})
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
-    const [nowFontsize, setNowFontsize] = useState<number>(fontSize)
+    const {fontSize: nowFontsize, setFontSize: setNowFontsize} = useEditorFontSize()
     const {theme: themeGlobal} = useTheme()
 
     const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
@@ -575,9 +572,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 try {
                     if (!data) return
                     let obj: OperationRecordRes = JSON.parse(data)
-                    if (obj?.fontSize) {
-                        setNowFontsize(obj?.fontSize)
-                    }
                     if (typeof obj?.showBreak === "boolean") {
                         setShowBreak(obj?.showBreak)
                     }
@@ -611,25 +605,26 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         /** 获取 ITextModel 实例 */
         const model = editor?.getModel()
 
-        switch (key) {
-            case "font-size-small":
-            case "font-size-middle":
-            case "font-size-large":
-                if (editor?.updateOptions) {
-                    onOperationRecord("fontSize", keyToFontSize[key] || 12)
-                    if (editorId) {
-                        emiter.emit(
-                            "refreshEditorOperationRecord",
-                            JSON.stringify({
-                                editorId,
-                                fontSize: keyToFontSize[key] || 12
-                            })
-                        )
-                    } else {
-                        setNowFontsize(keyToFontSize[key] || 12)
-                    }
+        const fontSize = parseInt(key)
+        if (!isNaN(fontSize) && fontSizeOptions.includes(fontSize)) {
+            if (editor?.updateOptions) {
+                onOperationRecord("fontSize", fontSize)
+                if (editorId) {
+                    emiter.emit(
+                        "refreshEditorOperationRecord",
+                        JSON.stringify({
+                            editorId,
+                            fontSize: fontSize
+                        })
+                    )
+                } else {
+                    setNowFontsize(fontSize)
                 }
-                return
+            }
+            return
+        }
+
+        switch (key) {
             case "http-show-break":
                 onOperationRecord("showBreak", getShowBreak())
                 if (editorId) {

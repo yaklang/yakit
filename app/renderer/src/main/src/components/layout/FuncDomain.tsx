@@ -1407,6 +1407,7 @@ interface UIOpUpdateProps {
 
     /** yakit属性 */
     isUpdateWait?: boolean // 是否已下载未安装
+    onResetUpdateWait?: () => void
 
     /** yaklang属性 */
     localVersion?: string // 本地引擎文件版本
@@ -1429,7 +1430,8 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         role,
         updateContent = "",
         onUpdateEdit,
-        intranet
+        intranet,
+        onResetUpdateWait
     } = props
 
     // 是否可编辑
@@ -1457,6 +1459,23 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         }
     })
 
+    const handleOpenPath = useMemoizedFn(async () => {
+        const EditionName = getReleaseEditionName()
+        const Version = lastVersion || version
+        const cleanVersion = Version.startsWith("v") ? Version.substring(1) : Version
+        const filename = `${EditionName}-${cleanVersion}`
+        try {
+            const fileExists = await ipcRenderer.invoke("check-yakit-install-file", filename)
+            if (fileExists) {
+                ipcRenderer.invoke("open-yakit-path")
+            } else {
+                onResetUpdateWait?.()
+            }
+        } catch (error) {
+            yakitFailed(`${error}`)
+        }
+    })
+
     return (
         <div
             className={classNames(styles["version-update-wrapper"], {
@@ -1478,7 +1497,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
                 <div className={styles["header-btn"]}>
                     {isUpdateWait ? (
-                        <YakitButton onClick={() => ipcRenderer.invoke("open-yakit-path")}>{`安装 `}</YakitButton>
+                        <YakitButton onClick={handleOpenPath}>{`安装 `}</YakitButton> 
                     ) : lastVersion === "" ? (
                         "获取失败"
                     ) : isUpdate ? (
@@ -2331,6 +2350,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         role={userInfo.role}
                                         isUpdate={isUpdateYakitIntranet}
                                         intranet={true}
+                                        onResetUpdateWait={() => setIsIntranetYakitUpdateWait(false)}
                                     />
                                 )}
 
@@ -2343,6 +2363,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     updateContent={communityYakit}
                                     onUpdateEdit={UpdateContentEdit}
                                     isUpdate={isUpdateYakit}
+                                    onResetUpdateWait={() => setIsYakitUpdateWait(false)}
                                 />
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}

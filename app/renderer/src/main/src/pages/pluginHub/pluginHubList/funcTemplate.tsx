@@ -184,7 +184,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
 
 interface HubOuterListProps {
     /** 列表标题 */
-    title: string
+    title: string | ReactNode
     /** 头部拓展元素 */
     headerExtra?: ReactNode
     /**列表头部右侧拓展元素 */

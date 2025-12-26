@@ -11,6 +11,8 @@ import { useHttpFlowStore } from "@/store/httpFlow"
 import { useTheme } from "@/hook/useTheme"
 import { applyYakitMonacoTheme } from "@/utils/monacoSpec/theme"
 import { randomString } from "@/utils/randomUtil"
+import { useEditorFontSize } from "@/store/editorFontSize"
+import { useUpdateEffect } from "ahooks"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -114,7 +116,8 @@ interface CodeComparisonProps {
 }
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
-    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly,fontSize } = props;
+    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly } = props;
+    const { fontSize } = useEditorFontSize()
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
@@ -242,6 +245,9 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                 })
     }, [])
 
+    useUpdateEffect(() => {
+        diffEditorRef.current?.updateOptions({ fontSize })
+    }, [fontSize])
 
     return <div ref={diffDivRef} style={{ width: "100%", height: "100%" }}></div>
 })
