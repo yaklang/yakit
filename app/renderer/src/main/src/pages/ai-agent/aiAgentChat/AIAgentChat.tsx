@@ -636,7 +636,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [visible, setVisible] = useSafeState(false)
     const {clearAll} = useKnowledgeBase()
 
-    const onClosePageRepository = () => {
+    const onClosePageRepository = useMemoizedFn(() => {
         if (api.tokens.length > 0) {
             setVisible(true)
             return
@@ -644,14 +644,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             clearAll()
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_Agent}))
         }
-    }
+    })
 
     useEffect(() => {
         emiter.on("onClosePageRepository", onClosePageRepository)
         return () => {
             emiter.off("onClosePageRepository", onClosePageRepository)
         }
-    }, [api, clearAll])
+    }, [])
 
     const onOK = async () => {
         try {
