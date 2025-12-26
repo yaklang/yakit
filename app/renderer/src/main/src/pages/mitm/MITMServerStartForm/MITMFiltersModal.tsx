@@ -27,6 +27,7 @@ import {MITMFilterUIProps, convertLocalMITMFilterRequest, convertMITMFilterUI} f
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {RemoteMitmGV} from "@/enums/mitm"
+import {RemoteGV} from "@/yakitGV"
 import {
     MITMHijackSetFilterRequest,
     MITMSetFilterRequest,
@@ -36,6 +37,7 @@ import {
     grpcMITMHijackSetFilter,
     grpcMITMResetFilter,
     grpcMITMSetFilter,
+    grpcMITMAllowChunkStaticJS,
     grpcResetMITMFilter
 } from "../MITMHacker/utils"
 import MITMContext from "../Context/MITMContext"
@@ -65,7 +67,7 @@ export const getAdvancedFlag = (advancedFilters: MITMAdvancedFilter[]): boolean 
 // 是否配置过条件劫持
 export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilters: MITMAdvancedFilter[]): boolean => {
     return (
-        !!Object.keys(baseFilter).filter((key) => baseFilter[key].length > 0).length ||
+        !!Object.keys(baseFilter).filter((key) => Array.isArray(baseFilter[key]) && baseFilter[key].length > 0).length ||
         !!advancedFilters.filter((ele) =>
             ["ExcludeHostnames", "IncludeHostnames", "ExcludeUri", "IncludeUri", "ExcludeMethods"].includes(
                 ele.Field || ""
@@ -79,6 +81,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const [type, setType] = useState<FilterSettingType>("base-setting")
     // filter 过滤器
     const [_mitmFilter, setMITMFilter] = useState<MITMFilterSchema>()
+    const [allowChunkStaticJS, setAllowChunkStaticJS] = useState<boolean>(false)
+    const allowChunkStaticJSRef = useRef<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [filterData, setFilterData] = useState<MITMAdvancedFilter[]>([cloneDeep(defaultMITMAdvancedFilter)])
@@ -108,9 +112,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     useEffect(() => {
         grpcClientMITMfilter(mitmVersion).on((filter) => {
             const value = convertMITMFilterUI(filter)
-            setMITMFilter({
-                ...value.baseFilter
-            })
+            setMITMFilter({...value.baseFilter, allowChunkStaticJS: allowChunkStaticJSRef.current})
             setFilterData([...value.advancedFilters])
         })
         return () => {
@@ -124,6 +126,21 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             setEditFilterName("")
         }
     }, [visible])
+
+    const getAllowChunkStaticJS = useMemoizedFn(async (): Promise<boolean> => {
+        try {
+            const v = (await getRemoteValue(RemoteGV.MITMAllowChunkStaticJS)) === "true"
+            setAllowChunkStaticJS(v)
+            return v
+        } catch {
+            setAllowChunkStaticJS(false)
+            return false
+        }
+    })
+
+    useEffect(() => {
+        allowChunkStaticJSRef.current = allowChunkStaticJS
+    }, [allowChunkStaticJS])
 
     const onSetFilter = useMemoizedFn(() => {
         const params = getMITMFilterData()
@@ -156,6 +173,13 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
         const filter = convertLocalMITMFilterRequest({...params})
         if (filterType === "filter") {
+            const nextAllowChunkStaticJS = !!baseFilter.allowChunkStaticJS
+            setRemoteValue(RemoteGV.MITMAllowChunkStaticJS, nextAllowChunkStaticJS ? "true" : "")
+            grpcMITMAllowChunkStaticJS({allowChunkStaticJS: nextAllowChunkStaticJS, version: mitmVersion}).catch(
+                (err) => {
+                    yakitFailed("更新过滤 JS 开关失败：" + err)
+                }
+            )
             const value: MITMSetFilterRequest = {
                 FilterData: filter,
                 version: mitmVersion
@@ -188,27 +212,19 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 })
         }
     })
-    const getMITMFilter = useMemoizedFn(() => {
-        if (filterType === "filter") {
-            grpcMITMGetFilter()
-                .then((val: MITMFilterSchema) => {
-                    const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
-                    setMITMFilter(newValue.baseFilter)
-                    setFilterData(newValue.advancedFilters)
-                })
-                .catch((err) => {
-                    yakitFailed("获取 MITM 过滤器失败：" + err)
-                })
-        } else {
-            grpcMITMHijackGetFilter()
-                .then((val: MITMFilterSchema) => {
-                    const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
-                    setMITMFilter(newValue.baseFilter)
-                    setFilterData(newValue.advancedFilters)
-                })
-                .catch((err) => {
-                    yakitFailed("获取 劫持 过滤器失败：" + err)
-                })
+    const getMITMFilter = useMemoizedFn(async () => {
+        const nextAllowChunkStaticJS = await getAllowChunkStaticJS()
+        try {
+            const val: MITMFilterSchema =
+                filterType === "filter" ? await grpcMITMGetFilter() : await grpcMITMHijackGetFilter()
+            const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
+            setMITMFilter({
+                ...newValue.baseFilter,
+                allowChunkStaticJS: filterType === "filter" ? nextAllowChunkStaticJS : newValue.baseFilter.allowChunkStaticJS
+            })
+            setFilterData(newValue.advancedFilters)
+        } catch (err) {
+            yakitFailed(`获取 ${filterType === "filter" ? "MITM" : "劫持"} 过滤器失败：` + err)
         }
     })
     const onClearFilters = () => {
@@ -473,6 +489,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 filter={_mitmFilter}
                 onFinished={() => onSetFilter()}
                 ref={filtersRef}
+                showAllowChunkStaticJS={filterType === "filter"}
             />
             <React.Suspense>
                 <MITMAdvancedFilters

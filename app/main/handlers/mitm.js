@@ -203,6 +203,15 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
+    ipcMain.handle("mitm-allow-chunk-static-js", (e, allowChunkStaticJS) => {
+        if (stream) {
+            stream.write({
+                AllowChunkStaticJS: allowChunkStaticJS
+            })
+        }
+    })
+
     // 下游代理
     ipcMain.handle("mitm-set-downstream-proxy", (e, downstreamProxy) => {
         if (stream) {
@@ -320,7 +329,8 @@ module.exports = (win, getClient) => {
                 certificates,
                 ...extra,
                 DisableCACertPage: extra.disableCACertPage,
-                DisableWebsocketCompression: !extra.DisableWebsocketCompression
+                DisableWebsocketCompression: !extra.DisableWebsocketCompression,
+                AllowChunkStaticJS: extra.allowChunkStaticJS
             }
             stream.write(value)
         }
