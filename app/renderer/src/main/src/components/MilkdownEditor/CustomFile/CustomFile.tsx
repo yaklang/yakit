@@ -29,7 +29,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import React from "react"
 import {SolidCloudDownloadIcon} from "@/assets/newIcon"
 import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
-import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
+import {apiDownloadStorageType, onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
 import useUploadOSSHooks, {UploadFileTypeProps, UploadOSSStartProps} from "@/hook/useUploadOSS/useUploadOSS"
 import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
@@ -225,9 +225,11 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
         e.stopPropagation()
         e.preventDefault()
         const {fileId} = attrs
-        saveDialogAndGetLocalFileInfo(fileId).then((v) => {
-            setDownFileInfo(v)
-            setFileInfo({...fileInfo, path: v.path})
+        apiDownloadStorageType(fileId).then((filePath) => {
+            saveDialogAndGetLocalFileInfo(filePath).then((v) => {
+                setDownFileInfo(v)
+                setFileInfo({...fileInfo, path: v.path})
+            })
         })
     }
     const onCopyLink = useMemoizedFn((e) => {
