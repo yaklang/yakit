@@ -528,6 +528,83 @@
         cursor: pointer;
     }
 
+    // 亮暗色适配
+    :global {
+        .ant-table {
+            background: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .ant-table-thead > tr > th {
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+
+        .ant-table-tbody > tr > td {
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .ant-table-tbody > tr:hover > td {
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+
+        .ant-table-bordered .ant-table-container {
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+
+        .ant-table-bordered .ant-table-thead > tr > th,
+        .ant-table-bordered .ant-table-tbody > tr > td {
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+
+        .ant-pagination-item {
+            background: var(--Colors-Use-Basic-Background);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+
+            a {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+
+        .ant-pagination-item-active {
+            border-color: var(--Colors-Use-Main-Primary);
+
+            a {
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+
+        .ant-pagination-prev button,
+        .ant-pagination-next button {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background: var(--Colors-Use-Basic-Background);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+
+        .ant-pagination-disabled button {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+
+        .ant-select-selector {
+            background: var(--Colors-Use-Basic-Background) !important;
+            border-color: var(--Colors-Use-Neutral-Border) !important;
+            color: var(--Colors-Use-Neutral-Text-1-Title) !important;
+        }
+
+        .ant-pagination-options-quick-jumper input {
+            background: var(--Colors-Use-Basic-Background);
+            border-color: var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .ant-pagination-total-text {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+
     :global {
         .ant-drawer-header-title {
             flex-direction: row-reverse;
