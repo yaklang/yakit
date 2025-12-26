@@ -72,6 +72,9 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { getStorageMitmShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/mitm"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
@@ -384,6 +387,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [visible, setVisible] = useState<boolean>(false)
     const mitmPageRef = useRef<any>()
     const [inViewport] = useInViewport(mitmPageRef)
+
+    useEffect(() => {
+            if (inViewport) {
+                registerShortcutKeyHandle(ShortcutKeyPage.Mitm)
+                getStorageMitmShortcutKeyEvents()
+                return () => {
+                    unregisterShortcutKeyHandle(ShortcutKeyPage.Mitm)
+                }
+            }
+        }, [inViewport])
 
     const onRenderMITM = useMemoizedFn(() => {
         switch (status) {

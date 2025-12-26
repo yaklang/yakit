@@ -84,6 +84,7 @@ import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag
 import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {getMitmShortcutKeyEvents, MitmShortcutKey} from "@/utils/globalShortcutKey/events/page/mitm"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -327,11 +328,29 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             let menu = [
                 {
                     key: "submit-data",
-                    label: `放行${getStatusStr()}`
+                    label: (
+                        <div className={styles["context-menu-keybind-wrapper"]}>
+                            <div className={styles["content-style"]}>放行{getStatusStr()}</div>
+                            <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                {convertKeyboardToUIKey(
+                                    getMitmShortcutKeyEvents()[MitmShortcutKey.SubmitDataMitm].keys
+                                )}
+                            </div>
+                        </div>
+                    )
                 },
                 {
                     key: "hijacking-response",
-                    label: "劫持响应"
+                    label: (
+                        <div className={styles["context-menu-keybind-wrapper"]}>
+                            <div className={styles["content-style"]}>劫持响应</div>
+                            <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                {convertKeyboardToUIKey(
+                                    getMitmShortcutKeyEvents()[MitmShortcutKey.HijackResponseMitm].keys
+                                )}
+                            </div>
+                        </div>
+                    )
                 },
                 {
                     key: "copy-url",
@@ -339,7 +358,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 },
                 {
                     key: "discard-data",
-                    label: `丢弃${getStatusStr()}`
+                    label: (
+                        <div className={styles["context-menu-keybind-wrapper"]}>
+                            <div className={styles["content-style"]}>丢弃{getStatusStr()}</div>
+                            <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.DropDataMitm].keys)}
+                            </div>
+                        </div>
+                    )
                 },
                 {
                     key: "send-webFuzzer",
@@ -413,6 +439,18 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             if (inViewport && !item) {
                 onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
             }
+        })
+
+        useShortcutKeyTrigger(MitmShortcutKey.HijackResponseMitm, () => {
+            currentSelectItem && manualHijackInfoRef.current.onHijackingResponse(currentSelectItem)
+        })
+
+        useShortcutKeyTrigger(MitmShortcutKey.DropDataMitm, () => {
+            currentSelectItem && onDiscardData(currentSelectItem)
+        })
+
+        useShortcutKeyTrigger(MitmShortcutKey.SubmitDataMitm, () => {
+            currentSelectItem && manualHijackInfoRef.current.onSubmitData(currentSelectItem)
         })
 
         const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
@@ -1187,17 +1225,20 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             },
             {
                 key: "submit-data",
-                label: "放行数据"
+                label: "放行数据",
+                keybindings: YakEditorOptionShortcutKey.SubmitDataMitm
             },
             {
                 key: "drop-data",
-                label: "丢弃数据"
+                label: "丢弃数据",
+                keybindings: YakEditorOptionShortcutKey.DropDataMitm
             }
         ]
         if (!forResponse) {
             menu.push({
                 key: "hijack-current-response",
-                label: "劫持该响应"
+                label: "劫持该响应",
+                keybindings: YakEditorOptionShortcutKey.HijackResponseMitm
             })
         }
         return {

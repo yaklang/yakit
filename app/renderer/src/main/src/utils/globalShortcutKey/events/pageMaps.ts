@@ -42,7 +42,18 @@ import {
     setStorageChatCSShortcutKeyEvents
 } from "./page/chatCS"
 import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
-import { getStorageYakEditorShortcutKeyEvents, getYakEditorShortcutKeyEvents, resetYakEditorShortcutKeyEvents, setStorageYakEditorShortcutKeyEvents } from "./page/yakEditor"
+import {
+    getStorageYakEditorShortcutKeyEvents,
+    getYakEditorShortcutKeyEvents,
+    resetYakEditorShortcutKeyEvents,
+    setStorageYakEditorShortcutKeyEvents
+} from "./page/yakEditor"
+import {
+    getMitmShortcutKeyEvents,
+    getStorageMitmShortcutKeyEvents,
+    resetMitmShortcutKeyEvents,
+    setStorageMitmShortcutKeyEvents
+} from "./page/mitm"
 
 export interface ShortcutKeyEventInfo {
     name: string
@@ -79,6 +90,8 @@ export enum ShortcutKeyPage {
     YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code,
     // YakRunner
     YakRunner = YakitRoute.YakScript,
+    // MITM
+    Mitm = YakitRoute.MITMHacker,
     // ChatCS
     ChatCS = "chat-cs",
     // 编辑器
@@ -125,6 +138,12 @@ export const pageEventMaps: Record<`${ShortcutKeyPage}`, PageToEventInfo> = {
         getStorage: getStorageYakRunnerShortcutKeyEvents,
         setStorage: setStorageYakRunnerShortcutKeyEvents
         // scopeShow: [IRify]
+    },
+    "mitm-hijack": {
+        getEvents: getMitmShortcutKeyEvents,
+        resetEvents: resetMitmShortcutKeyEvents,
+        getStorage: getStorageMitmShortcutKeyEvents,
+        setStorage: setStorageMitmShortcutKeyEvents
     },
     "chat-cs": {
         getEvents: getChatCSShortcutKeyEvents,
