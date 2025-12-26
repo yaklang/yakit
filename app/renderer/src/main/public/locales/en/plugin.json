@@ -22,7 +22,8 @@
     "request_type": "Request Type",
     "scan_target": "Scan Target",
     "please_enter_scan_target": "Please enter scan targets, separate multiple targets with an 'English comma' or a new line",
-    "enter_request_id_comma_separated": "Please enter Request IDs, separate multiple Request Ids with an 'English comma'"
+    "enter_request_id_comma_separated": "Please enter Request IDs, separate multiple Request Ids with an 'English comma'",
+    "simulation_response": "Simulation Response"
   },
   "FixExtraParamsNode": {
     "http_method": "HTTP Method",

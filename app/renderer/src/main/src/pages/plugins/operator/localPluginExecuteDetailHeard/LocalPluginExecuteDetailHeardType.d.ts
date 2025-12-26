@@ -90,8 +90,11 @@ export interface PluginFixFormParamsProps {
     disabled: boolean
     /**原始请求中的数据包数据 */
     rawHTTPRequest?: string
+    /**模拟响应中的数据包数据 */
+    MockHTTPResponse?: string
     inputType?: "content" | "path"
     setInputType?: (v: "content" | "path") => void
+    isShowMockHTTPResponse?: boolean
 }
 
 export type RequestType = "original" | "input" | "httpFlowId"

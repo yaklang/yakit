@@ -1736,7 +1736,7 @@ message AIInputEvent {
   bool IsFreeInput = 11;
   string FreeInput = 12;
   repeated string AttachedFilePath = 14;
-
+  
   // 附加资源信息
   repeated AttachedResourceInfo AttachedResourceInfo = 15;
 }
@@ -2686,6 +2686,9 @@ message HTTPRequestBuilderParams {
 
   bool IsHttpFlowId = 14;
   repeated int64 HTTPFlowId = 15;
+
+  // 模拟 HTTP 响应包
+  bytes MockHTTPResponse = 16;
 }
 
 message ScreenRecorder {
@@ -3485,6 +3488,7 @@ message YaklangGetCliCodeFromDatabaseRequest {
 message StaticAnalyzeErrorRequest {
   bytes Code = 1;
   string PluginType = 2; // "yak" "mitm" "port-scan" "codec" "syntaxflow"
+  string SessionID = 3;
 }
 
 message YaklangCompileAndFormatRequest {
