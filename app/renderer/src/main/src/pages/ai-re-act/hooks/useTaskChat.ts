@@ -659,22 +659,20 @@ function useTaskChat(params?: UseTaskChatParams) {
     /** 文件系统操作处理数据 */
     const handleFileSystemPin = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const {Type, NodeId, NodeIdVerbose, Timestamp, Content} = res
-            const ipcContent = Uint8ArrayToString(Content) || ""
+            const {Type} = res
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
             const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
 
-            onNotifyMessage &&
-                onNotifyMessage({
-                    Type,
-                    NodeId,
-                    NodeIdVerbose,
-                    Timestamp,
-                    Content: path
-                })
+            // onNotifyMessage &&
+            //     onNotifyMessage({
+            //         Type,
+            //         NodeId,
+            //         NodeIdVerbose,
+            //         Timestamp,
+            //         Content: path
+            //     })
 
-            if (Type === "filesystem_pin_directory") {
-                onGrpcFolder && onGrpcFolder(path)
-            }
+            onGrpcFolder && onGrpcFolder({path, isFolder: Type === "filesystem_pin_directory"})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,

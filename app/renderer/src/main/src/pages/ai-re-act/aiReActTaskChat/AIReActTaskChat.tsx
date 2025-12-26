@@ -95,7 +95,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     return (
         <>
             <div className={styles["tab-content"]}>
-                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} execute={chatIPCData.execute} />
+                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} taskStatus={chatIPCData.taskStatus} />
             </div>
             {!!reviewInfo ? (
                 <AIReActTaskChatReview

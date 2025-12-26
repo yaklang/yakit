@@ -102,6 +102,29 @@
         }
         .input-body-wrapper {
             width: 100%;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .draggingFromTree {
+            outline: 2px dashed var(--Colors-Use-Main-Primary);
+            background: rgba(64, 158, 255, 0.06);
+        }
+
+        .dragHint {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            pointer-events: none;
+
+            font-size: 14px;
+            color: var(--Colors-Use-Main-Primary);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(2px);
         }
         .input-body {
             position: relative;

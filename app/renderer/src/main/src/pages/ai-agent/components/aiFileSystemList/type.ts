@@ -17,9 +17,24 @@ export interface FileTreeSystemListWapperProps {
     selected?: FileNodeProps
     historyFolder?: HistoryItem[]
     setSelected: (v?: FileNodeProps) => void
-    setOpenFolder?: (v: string,isFolder:boolean) => void
+    setOpenFolder?: (v: string, isFolder: boolean) => void
+    onTreeDragStart?: () => void
+    onTreeDragEnd?: () => void
 }
 
+export interface FileTreeSystemListProps {
+    path: string
+    isFolder?: boolean
+    isOpen?: boolean
+    selected?: FileTreeSystemListWapperProps["selected"]
+    setSelected: FileTreeSystemListWapperProps["setSelected"]
+    onTreeDragStart?: FileTreeSystemListWapperProps["onTreeDragStart"]
+    onTreeDragEnd?: FileTreeSystemListWapperProps["onTreeDragEnd"]
+    checkedKeys?: HistoryItem[]
+    setCheckedKeys?: (v: boolean, nodeData: FileNodeProps) => void
+    isShowRightMenu?: boolean
+    checkable?: boolean
+}
 export interface FileTreeSystemItemProps {
     data: FileNodeProps
     isOpen?: boolean
@@ -43,10 +58,10 @@ export interface FileInfo {
 export enum FileListTileMenu {
     OpenFile = "openFile",
     OpenFolder = "openFolder",
-    History = "history",
+    History = "history"
 }
 
 export interface HistoryItem {
-    path: string;
-    isFolder: boolean;  
+    path: string
+    isFolder: boolean
 }

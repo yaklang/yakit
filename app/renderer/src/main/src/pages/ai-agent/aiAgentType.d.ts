@@ -5,7 +5,7 @@ import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHol
 import {AITabsEnum} from "./defaultConstant"
 import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIStreamOutput, AITaskInfoProps} from "../ai-re-act/hooks/aiRender"
-import {UseYakExecResultState} from "../ai-re-act/hooks/type"
+import {UseYakExecResultState, PlanLoadingStatus} from "../ai-re-act/hooks/type"
 
 export interface AIAgentProps {
     pageId: string
@@ -71,7 +71,7 @@ export interface AIAgentChatStreamProps {
     streams: AIChatQSData[]
     defaultExpand?: boolean
     scrollToBottom: boolean
-    execute?: boolean
+    taskStatus: PlanLoadingStatus
 }
 
 // #endregion

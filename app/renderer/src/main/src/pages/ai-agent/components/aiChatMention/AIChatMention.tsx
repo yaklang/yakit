@@ -37,14 +37,14 @@ import classNames from "classnames"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {OutlineCheckIcon} from "@/assets/icon/outline"
 import {useCustomFolder} from "../aiFileSystemList/store/useCustomFolder"
-import {FileTreeSystemList} from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
+import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {
-    FileListStoreKey,
     FileToChatQuestionList,
     fileToChatQuestionStore,
     useFileToQuestion
 } from "@/pages/ai-re-act/aiReActChat/store"
+import {useGetStoreKey} from "../../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 
 const {ipcRenderer} = window.require("electron")
 const defaultRef: AIChatMentionListRefProps = {
@@ -612,7 +612,8 @@ const AIMentionSelectItem: React.FC<AIMentionSelectItemProps> = React.memo((prop
 
 const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.memo((props) => {
     const {onSelect} = props
-    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
+    const storeKey = useGetStoreKey()
+    const fileToQuestion = useFileToQuestion(storeKey)
     const [selected, setSelected] = useState<FileNodeProps>()
     const [checkedKeys, setCheckedKeys] = useState<FileToChatQuestionList[]>(fileToQuestion)
     // 用户文件夹
@@ -626,13 +627,13 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
                 path: nodeData.path,
                 isFolder: nodeData.isFolder
             })
-            fileToChatQuestionStore.add(FileListStoreKey.FileList, {
+            fileToChatQuestionStore.add(storeKey, {
                 path: nodeData.path,
                 isFolder: nodeData.isFolder
             })
         } else {
             newCheckedKeys = newCheckedKeys.filter((key) => key?.path !== nodeData.path)
-            fileToChatQuestionStore.remove(FileListStoreKey.FileList, nodeData.path)
+            fileToChatQuestionStore.remove(storeKey, nodeData.path)
         }
         setCheckedKeys(newCheckedKeys)
         onSelect()

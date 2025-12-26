@@ -1,7 +1,7 @@
 import {bindExternalStoreHook, createExternalStore} from "@/utils/createExternalStore"
 import {HistoryItem} from "../type"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {customFolderStore, defaultFolder} from "./useCustomFolder"
+import {customFolderStore} from "./useCustomFolder"
 
 const REMOTE_KEY = "recent-history"
 const RECENT_COUNT = 5
@@ -14,7 +14,7 @@ export const loadRemoteHistory = async () => {
         if (saved) {
             const parsed = JSON.parse(saved)
             if (Array.isArray(parsed)) {
-                store.setSnapshot(() => parsed.slice(-RECENT_COUNT))
+                store.setSnapshot(() => parsed.filter((item) => item.path).slice(-RECENT_COUNT))
             }
         }
     } catch (e) {
@@ -26,10 +26,11 @@ export const historyStore = {
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,
 
-    addHistoryItem({path, isFolder: isDir}: HistoryItem) {
+    addHistoryItem({path, isFolder}: HistoryItem) {
         store.setSnapshot((prevList) => {
-            const filtered = prevList.filter((item) => item.path !== path)
-            const newItem: HistoryItem = {path, isFolder: isDir}
+            const trimmedPath = path.trim()
+            const filtered = prevList.filter((item) => item.path.trim() !== "" && item.path !== trimmedPath)
+            const newItem: HistoryItem = {path, isFolder}
             const nextList = [...filtered, newItem]
 
             const finalResult = nextList.length > RECENT_COUNT ? nextList.slice(-RECENT_COUNT) : nextList
@@ -49,17 +50,6 @@ export const historyStore = {
             customFolderStore.removeCustomFolderItem(path)
             return nextList
         })
-        const currentList = store.getSnapshot()
-        if (currentList.length === 0) {
-            try {
-                const defaultItem = await defaultFolder()
-                if (defaultItem) {
-                    historyStore.addHistoryItem(defaultItem)
-                }
-            } catch (e) {
-                console.error("Failed to open default folder:", e)
-            }
-        }
     },
 
     clearHistory() {

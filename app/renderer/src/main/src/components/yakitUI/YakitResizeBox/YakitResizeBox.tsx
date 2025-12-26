@@ -1,8 +1,8 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useMemoizedFn, useClickAway, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
-import { OutlineChevrondoubledownIcon } from "@/assets/icon/outline"
+import {OutlineChevrondoubledownIcon} from "@/assets/icon/outline"
 import styles from "./YakitResizeBox.module.scss"
 
 // 将像素与number都返回为number
@@ -64,127 +64,121 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
         dragMoveSize
     } = props
 
-    let min, max
-    // 判断最小值和最大值是什么类型的值，只支持纯数字和像素
-    if (minSize) {
-        min = +minSize.toString().split(/px/g)[0] ? +minSize.toString().split(/px/g)[0] : 100
-    } else {
-        min = 100
-    }
-    if (maxSize) {
-        max = +maxSize.toString().split(/px/g)[0] ? +maxSize.toString().split(/px/g)[0] : 100
-    } else {
-        max = 100
-    }
+    const min = minSize ? Number.parseInt(minSize.toString()) || 100 : 100
+    const max = maxSize ? Number.parseInt(maxSize.toString()) || 100 : 100
 
     const lineRef = useRef<HTMLDivElement>(null)
 
-    const start = useRef<any>(null)
-    const first = useRef<any>(null)
+    const start = useRef<number>(0)
+    const first = useRef<number>(0)
     const isMove = useRef<boolean>(false)
-    const moveLen = useRef<any>(null)
+    const activePointerId = useRef<number | null>(null)
+    const moveLen = useRef<number>(0)
 
     // 解决闭包问题 实时更新状态
     const getIsVer = useMemoizedFn(() => isVer)
     const getDragResize = useMemoizedFn(() => dragResize)
-    const mouseDown = (event: any) => {
-        if (!lineRef || !lineRef.current) return
-        let isVer = getIsVer()
+    const onPointerDown = (event: any) => {
+        if (!lineRef.current || !resizeRef.current) return
+        if (event.button !== 0) return // 只响应左键
+        const isVer = getIsVer()
         const line = lineRef.current
-        // willChange性能优化
-        line.style.willChange = "transform"
+        const resize = resizeRef.current
+
+        resize.setPointerCapture(event.pointerId)
+        activePointerId.current = event.pointerId
         if (onStart) onStart()
         isMove.current = true
         start.current = isVer ? event.layerY : event.layerX
         first.current = isVer ? event.clientY : event.clientX
 
+        line.style.willChange = "transform"
+        line.style.display = "inline-block"
+
         // 生成移动分割线的初始坐标
         if (isVer) line.style.transform = `translateY(${start.current}px)`
         else line.style.transform = `translateX(${start.current}px)`
+    }
+
+    const onPointerMove = (event: PointerEvent) => {
+        if (!isMove.current) return
+        if (event.pointerId !== activePointerId.current) return
+
+        const body = bodyRef.current
+        const line = lineRef.current
+        if (!body || !line) return
+
+        const isVer = getIsVer()
+        const dragResize = getDragResize()
+        const bodyRect = body.getBoundingClientRect()
+        const distance = [
+            isVer ? event.clientY - bodyRect.top : event.clientX - bodyRect.left,
+            isVer ? body.clientHeight - event.clientY + bodyRect.top : body.clientWidth - event.clientX + bodyRect.left
+        ]
+
+        if (distance[0] <= min || distance[1] <= max) {
+            if (dragResize) line.style.display = "none"
+            return
+        }
+
         line.style.display = "inline-block"
-    }
 
-    const mouseMove = (event) => {
-        if (isMove.current) {
-            const body = bodyRef.current
-            const line = lineRef.current as unknown as HTMLDivElement
-            let isVer = getIsVer()
-            let dragResize = getDragResize()
-            const bodyRect = body.getBoundingClientRect()
-            // 计算分割线距离body开始边框和结束边框的距离
-            const distance = [
-                isVer ? event.clientY - bodyRect.top : event.clientX - bodyRect.left,
-                isVer
-                    ? body.clientHeight - event.clientY + bodyRect.top
-                    : body.clientWidth - event.clientX + bodyRect.left
-            ]
-            if (distance[0] <= min || distance[1] <= max) {
-                if (dragResize) {
-                    line.style.display = "none"
-                }
-            } else {
-                line.style.display = "inline-block"
-                const second = isVer ? event.clientY : event.clientX
-                moveLen.current = start.current + second - first.current
-                if (isVer) line.style.transform = `translateY(${start.current + second - first.current}px)`
-                else line.style.transform = `translateX(${start.current + second - first.current}px)`
-                dragResize && dragResizeBox()
-            }
+        const second = isVer ? event.clientY : event.clientX
+        moveLen.current = start.current + second - first.current
+
+        if (isVer) {
+            line.style.transform = `translateY(${moveLen.current}px)`
+        } else {
+            line.style.transform = `translateX(${moveLen.current}px)`
+        }
+
+        if (dragResize) {
+            const delta = moveLen.current - start.current
+            if (delta !== 0) dragMoveSize(delta)
         }
     }
 
-    // 拖拽时重新绘制比例（非常消耗性能）
-    const dragResizeBox = () => {
-        if (isMove.current) {
-            const end = moveLen.current || start.current
-            if (end - start.current !== 0) dragMoveSize(end - start.current)
-        }
-    }
+    /** 统一结束 */
+    const endPointer = () => {
+        if (!isMove.current) return
 
-    // 拖拽完成重新绘制比例
-    const resetBox = () => {
-        if (isMove.current) {
-            let dragResize = getDragResize()
-            const line = lineRef.current as unknown as HTMLDivElement
-            if (onEnd) onEnd()
+        const dragResize = getDragResize()
+        const line = lineRef.current
+
+        onEnd?.()
+
+        if (!dragResize) {
+            const delta = moveLen.current - start.current
+            if (delta !== 0) onMouseUp(delta)
+        }
+
+        if (line) {
             line.style.display = "none"
-            const end = moveLen.current || start.current
-            if (end - start.current !== 0 && !dragResize) onMouseUp(end - start.current)
-            isMove.current = false
-            moveLen.current = null
             line.style.willChange = "auto"
         }
-    }
 
-    const mouseUp = () => {
-        resetBox()
+        isMove.current = false
+        activePointerId.current = null
+        moveLen.current = 0
     }
-
-    // 监听目标元素外的点击事件（元素外的鼠标松开）
-    useClickAway(() => {
-        resetBox()
-    }, bodyRef)
 
     useEffect(() => {
-        if (!bodyRef || !bodyRef.current) return
-        if (!resizeRef || !resizeRef.current) return
         const body = bodyRef.current
         const resize = resizeRef.current
+        if (!body || !resize) return
 
-        resize.addEventListener("mousedown", mouseDown)
-        body.addEventListener("mousemove", mouseMove)
-        body.addEventListener("mouseup", mouseUp)
-        // 解决有些时候,在鼠标松开的时候,元素仍然可以拖动;
-        body.addEventListener("dragstart", (e) => e.preventDefault())
-        body.addEventListener("dragend", (e) => e.preventDefault())
+        resize.addEventListener("pointerdown", onPointerDown)
+        body.addEventListener("pointermove", onPointerMove)
+        body.addEventListener("pointerup", endPointer)
+        body.addEventListener("pointercancel", endPointer)
+        body.addEventListener("lostpointercapture", endPointer)
+
         return () => {
-            if (resize) {
-                resize.removeEventListener("click", mouseDown)
-            }
-            if (body) {
-                body.removeEventListener("mousemove", mouseMove)
-                body.removeEventListener("mouseup", mouseUp)
-            }
+            resize.removeEventListener("pointerdown", onPointerDown)
+            body.removeEventListener("pointermove", onPointerMove)
+            body.removeEventListener("pointerup", endPointer)
+            body.removeEventListener("pointercancel", endPointer)
+            body.removeEventListener("lostpointercapture", endPointer)
         }
     }, [min, max])
 
@@ -195,8 +189,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
                 [styles["resize-line-ver"]]: isVer,
                 [styles["resize-line-hor"]]: !isVer
             })}
-            draggable
-        ></div>
+        />
     )
 }
 
@@ -503,7 +496,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                     })}
                 >
                     {isVer && !!onClickHiddenBox &&
-                        <div 
+                        <div
                             className={classNames(styles["resize-split-handle"], 
                                 lineDirection === "bottom" ? styles["resize-split-handle-bottom"] : styles["resize-split-handle-top"])}
                             ref={handleRef}

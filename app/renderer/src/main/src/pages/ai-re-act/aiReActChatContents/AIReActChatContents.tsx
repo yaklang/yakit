@@ -22,6 +22,7 @@ import classNames from "classnames"
 import {PreWrapper} from "@/pages/ai-agent/components/ToolInvokerCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
+import Loading from "@/components/Loading/Loading"
 
 const getAIReferenceNodeByType = (contentType?: string) => {
     switch (contentType) {
@@ -125,7 +126,16 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         () =>
             loading ? (
                 <div style={{height: "40px"}}>
-                    {<YakitSpin wrapperClassName={styles["spin"]} tip={title}></YakitSpin>}
+                    <Loading
+                        size={14}
+                        style={{
+                            marginTop: 8
+                        }}
+                    >
+                      <div style={{fontWeight:400,display:'flex', alignItems:'center'}}>
+                          {title}
+                      </div>
+                    </Loading>
                 </div>
             ) : null,
         [loading, title]

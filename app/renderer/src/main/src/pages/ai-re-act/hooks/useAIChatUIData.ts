@@ -4,7 +4,7 @@ import {defaultChatIPCData} from "@/pages/ai-agent/defaultConstant"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {isEmpty} from "lodash"
 import {AIYakExecFileRecord} from "./aiRender"
-import {UseAIPerfDataState, UseCasualChatState, UseTaskChatState, UseYakExecResultState} from "./type"
+import {AIFileSystemPin, UseAIPerfDataState, UseCasualChatState, UseTaskChatState, UseYakExecResultState} from "./type"
 
 function useAIChatUIData() {
     const {activeChat} = useAIAgentStore()
@@ -17,9 +17,20 @@ function useAIChatUIData() {
         return chatIPCData.runTimeIDs || defaultChatIPCData.runTimeIDs
     }, [activeChat, chatIPCData.runTimeIDs])
 
-    const grpcFolders: string[] = useCreation(() => {
+    const grpcFolders: AIFileSystemPin[] = useCreation(() => {
         if (activeChat && activeChat.answer && activeChat.answer.grpcFolders) {
-            return activeChat.answer.grpcFolders
+            // 临时将缓存的路径字符串数组处理成新的定义结构
+            try {
+                return activeChat.answer.grpcFolders.filter(Boolean).map((item) => {
+                    if (typeof item === "string") {
+                        return {path: item, isFolder: true} as AIFileSystemPin
+                    } else {
+                        return item
+                    }
+                })
+            } catch (error) {
+                return []
+            }
         }
         return chatIPCData.grpcFolders || defaultChatIPCData.grpcFolders
     }, [activeChat, chatIPCData.grpcFolders])

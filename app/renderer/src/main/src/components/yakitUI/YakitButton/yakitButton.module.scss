@@ -36,7 +36,7 @@
     &[disabled] {
         background: var(--Colors-Use-Main-Border);
         color: var(--Colors-Use-Basic-Background);
-        border: var(--Colors-Use-Main-Border);
+        border-color: var(--Colors-Use-Main-Border);
     }
     &[disabled]:hover {
         background: var(--Colors-Use-Main-Border);

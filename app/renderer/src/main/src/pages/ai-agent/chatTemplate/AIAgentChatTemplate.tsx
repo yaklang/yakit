@@ -24,13 +24,14 @@ import {genBaseAIChatData, isToolExecStream} from "@/pages/ai-re-act/hooks/utils
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import emiter from "@/utils/eventBus/eventBus"
 import {PreWrapper} from "../components/ToolInvokerCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import TimelineCard from "./TimelineCard/TimelineCard"
 import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+import Loading from "@/components/Loading/Loading"
+import TaskLoading from "./TaskLoading/TaskLoading"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -70,15 +71,24 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         }
     })
 
-    const options = useMemo(() => {
+    const button = useMemo(() => {
         const hasStreams = (taskChat?.streams?.length ?? 0) > 0
+        if (hasStreams)
+            return (
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    size='middle'
+                    defaultValue={AIChatLeft.TaskTree}
+                    options={[
+                        {label: "任务树", value: AIChatLeft.TaskTree},
+                        {label: "时间线", value: AIChatLeft.Timeline}
+                    ]}
+                    value={activeTab}
+                    onChange={({target}) => setActiveTab(target.value)}
+                />
+            )
 
-        return hasStreams
-            ? [
-                  {label: "任务树", value: AIChatLeft.TaskTree},
-                  {label: "时间线", value: AIChatLeft.Timeline}
-              ]
-            : [{label: "时间线", value: AIChatLeft.Timeline}]
+        return <YakitButton size='middle'>时间线</YakitButton>
     }, [taskChat?.streams?.length])
 
     const hasTaskTree = (taskChat?.streams?.length ?? 0) > 0
@@ -100,16 +110,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         onClick={handleCancelExpand}
                         size='small'
                     />
-                    <div className={styles["header-title"]}>
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            size='middle'
-                            defaultValue={AIChatLeft.TaskTree}
-                            options={options}
-                            value={activeTab}
-                            onChange={({target}) => setActiveTab(target.value)}
-                        />
-                    </div>
+                    <div className={styles["header-title"]}>{button}</div>
                 </div>
 
                 <div className={styles["task-list"]}>{renderDom()}</div>
@@ -125,19 +126,18 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {streams, scrollToBottom, execute} = props
+    const {streams, scrollToBottom, taskStatus} = props
     const {virtuosoRef, setIsAtBottomRef, scrollToIndex, followOutput} = useVirtuosoAutoScroll()
-    const {t} = useI18nNamespaces(["yakitUi"])
     useUpdateEffect(() => {
         scrollToIndex("LAST")
     }, [scrollToBottom])
     const renderItem = (stream: AIChatQSData) => {
         return <AIChatListItem item={stream} type='task-agent' />
     }
-    const loading = useMemo(() => {
-        if (!execute || !streams.length) return false
-        return streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
-    }, [streams.length, execute])
+    // const loading = useMemo(() => {
+    //     if (!execute || !streams.length) return false
+    //     return streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
+    // }, [streams.length, execute])
 
     const Item = useCallback(
         ({children, style, "data-index": dataIndex}) => (
@@ -148,16 +148,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         []
     )
 
-    const Footer = useCallback(
-        () => (
-            <div style={{height: "80px"}}>
-                {loading && (
-                    <YakitSpin wrapperClassName={styles["spin"]} tip={`${t("YakitSpin.loading")}...`}></YakitSpin>
-                )}
-            </div>
-        ),
-        [loading, t]
-    )
+    const Footer = useCallback(() => <TaskLoading taskStatus={taskStatus} />, [taskStatus])
 
     const components = useMemo(
         () => ({

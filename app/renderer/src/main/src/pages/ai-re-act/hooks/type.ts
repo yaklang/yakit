@@ -50,7 +50,7 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
     /** 接口里返回文件夹路径时的回调事件 */
-    onGrpcFolder?: (path: string) => void
+    onGrpcFolder?: (path: AIFileSystemPin) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
     /** 通知消息回调 */
@@ -78,7 +78,7 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
     /** 接口里返回文件夹路径时的回调事件 */
-    onGrpcFolder?: (path: string) => void
+    onGrpcFolder?: (path: AIFileSystemPin) => void
     /** 通知消息回调 */
     onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
     onTaskStart: UseChatIPCParams["onTaskStart"]
@@ -132,6 +132,12 @@ export interface UseChatIPCParams {
     onNotifyMessage?: (message: AIChatIPCNotifyMessage) => void
 }
 
+/** 会话文件系统-pin */
+export interface AIFileSystemPin {
+    path: string
+    isFolder: boolean
+}
+
 /** 自由对话-实时问题队列 */
 export interface AIQuestionQueues {
     total: number
@@ -142,6 +148,13 @@ export interface AIQuestionQueues {
 export interface CasualLoadingStatus {
     loading: boolean
     title: string
+}
+
+/** 任务规划-loading状态信息 */
+export interface PlanLoadingStatus {
+    loading: boolean
+    plan: string
+    task: string
 }
 
 export interface UseChatIPCState {
@@ -158,7 +171,7 @@ export interface UseChatIPCState {
     /** 任务规划相关数据 */
     taskChat: UseTaskChatState
     /** 接口运行过程中的数据文件夹合集 */
-    grpcFolders: string[]
+    grpcFolders: AIFileSystemPin[]
     /** 问题队列信息 */
     questionQueue: AIQuestionQueues
     /** 自由对话的loading状态信息 */
@@ -167,6 +180,8 @@ export interface UseChatIPCState {
     reActTimelines: AIAgentGrpcApi.TimelineItem[]
     /** 记忆列表 */
     memoryList: AIAgentGrpcApi.MemoryEntryList
+    /** 任务规划的loading状态信息 */
+    taskStatus: PlanLoadingStatus
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */

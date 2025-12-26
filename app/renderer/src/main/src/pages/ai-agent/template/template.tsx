@@ -24,8 +24,8 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import {AIChatMention} from "../components/aiChatMention/AIChatMention"
 import {AIMentionTabsEnum} from "../defaultConstant"
 import {FreeDialogTagList} from "../aiChatWelcome/FreeDialogList/FreeDialogList"
-import FreeDialogFileList from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
-import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import FreeDialogFileList, { useGetStoreKey } from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
+import {fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
@@ -60,9 +60,10 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
 export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const {loading, extraFooterLeft, extraFooterRight, onSubmit, textareaProps, className, children} = props
 
+    const storeKey = useGetStoreKey()
     // icon的唯一id生成
     const iconId = useRef(uuidv4())
-    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
+    const fileToQuestion = useFileToQuestion(storeKey)
     // #region question-相关逻辑
     const [question, setQuestion] = useControllableValue<string>(props, {
         defaultValue: "",
@@ -73,6 +74,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const {setSelectForges, setSelectTools, setSelectKnowledgeBases} = useChatIPCDispatcher()
     const aiChatTextareaRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(aiChatTextareaRef)
+
+
     useEffect(() => {
         if (!inViewport) return
         emiter.on("settingInputCard", onSettingInputCard)
@@ -104,7 +107,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         setSelectForges([])
         setSelectTools([])
         setSelectKnowledgeBases([])
-        fileToChatQuestionStore.clear(FileListStoreKey.FileList)
+        fileToChatQuestionStore.clear(storeKey)
     })
     const onSettingInputCard = useMemoizedFn((res) => {
         if (!inViewport) return
@@ -267,7 +270,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         >
             {isShowSelectList && (
                 <div>
-                    <FreeDialogFileList storeKey={FileListStoreKey.FileList} />
+                    <FreeDialogFileList storeKey={storeKey} />
                     {selectForges.length > 0 && (
                         <FreeDialogTagList
                             type='forge'

@@ -1,0 +1,36 @@
+.codeLoader {
+    width: 100%;
+    font-weight: bold;
+    opacity: 0.8;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    span {
+        display: inline-block;
+        animation: pulse 0.4s alternate infinite ease-in-out;
+    }
+    .text{
+        flex: 1;
+        width: 0;
+    }
+    span:nth-child(odd) {
+        animation-delay: 0.4s;
+    }
+}
+
+.paused {
+    span {
+        animation-play-state: paused;
+    }
+}
+
+@keyframes pulse {
+    to {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+}

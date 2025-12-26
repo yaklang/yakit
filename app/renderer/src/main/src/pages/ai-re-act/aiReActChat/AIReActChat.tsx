@@ -28,6 +28,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {getAIReActRequestParams} from "@/pages/ai-agent/utils"
+import useAIChatDrop from "@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -120,26 +121,28 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const handleSwitchShowFreeChat = useMemoizedFn((v) => {
         setShowFreeChat(v)
     })
-    const onViewContext = useDebounceFn(
-        useMemoizedFn(() => {
-            setTimelineVisible(true)
+    // const onViewContext = useDebounceFn(
+    //     useMemoizedFn(() => {
+    //         setTimelineVisible(true)
 
-            if (!execute) return
-            if (!activeChat?.id) return
-            if (!timelineVisibleLoading) {
-                setTimelineVisibleLoading(true)
-            }
-            const info: AISendSyncMessageParams = {
-                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
-                params: {}
-            }
-            handleSendSyncMessage(info)
-        }),
-        {wait: 300, leading: true}
-    ).run
+    //         if (!execute) return
+    //         if (!activeChat?.id) return
+    //         if (!timelineVisibleLoading) {
+    //             setTimelineVisibleLoading(true)
+    //         }
+    //         const info: AISendSyncMessageParams = {
+    //             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+    //             params: {}
+    //         }
+    //         handleSendSyncMessage(info)
+    //     }),
+    //     {wait: 300, leading: true}
+    // ).run
     const onClose = useMemoizedFn(() => {
         setTimelineVisible(false)
     })
+
+    const {isHovering, dropRef} = useAIChatDrop(storeKey)
 
     return (
         <>
@@ -171,36 +174,44 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
                                 {execute && questionQueue?.total > 0 && <AITaskQuery />}
-                                <AIChatTextarea
-                                    loading={false}
-                                    question={question}
-                                    setQuestion={setQuestion}
-                                    textareaProps={textareaProps}
-                                    onSubmit={handleSubmit}
-                                    extraFooterRight={
-                                        <div className={styles["extra-footer-right"]}>
-                                            <OpenFileDropdown
-                                                cb={(data) => fileToChatQuestionStore.add(storeKey, data)}
-                                            >
-                                                <UploadFileButton title='打开文件夹' />
-                                            </OpenFileDropdown>
+                                <div
+                                    ref={dropRef}
+                                    className={classNames(styles["footer-inputs-file-list"], {
+                                        [styles.draggingFromTree]: isHovering
+                                    })}
+                                >
+                                    {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
+                                    <AIChatTextarea
+                                        loading={false}
+                                        question={question}
+                                        setQuestion={setQuestion}
+                                        textareaProps={textareaProps}
+                                        onSubmit={handleSubmit}
+                                        extraFooterRight={
+                                            <div className={styles["extra-footer-right"]}>
+                                                <OpenFileDropdown
+                                                    cb={(data) => fileToChatQuestionStore.add(storeKey, data)}
+                                                >
+                                                    <UploadFileButton title='打开文件夹' />
+                                                </OpenFileDropdown>
 
-                                            <div className={styles["extra-footer-right-divider"]} />
-                                            {execute && <RoundedStopButton onClick={handleStop} />}
-                                        </div>
-                                    }
-                                    extraFooterLeft={
-                                        <>
-                                            <AIModelSelect />
-                                            <React.Suspense fallback={<div>loading...</div>}>
-                                                <AIReviewRuleSelect />
-                                            </React.Suspense>
-                                            <YakitButton type='text' onClick={onViewContext}>
-                                                查看上下文
-                                            </YakitButton>
-                                        </>
-                                    }
-                                />
+                                                <div className={styles["extra-footer-right-divider"]} />
+                                                {execute && <RoundedStopButton onClick={handleStop} />}
+                                            </div>
+                                        }
+                                        extraFooterLeft={
+                                            <>
+                                                <AIModelSelect />
+                                                <React.Suspense fallback={<div>loading...</div>}>
+                                                    <AIReviewRuleSelect />
+                                                </React.Suspense>
+                                                {/* <YakitButton type='text' onClick={onViewContext}>
+                                                    查看上下文
+                                                </YakitButton> */}
+                                            </>
+                                        }
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

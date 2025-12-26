@@ -15,7 +15,7 @@ import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {loadRemoteHistory} from "./components/aiFileSystemList/store/useHistoryFolder"
-import {initSessionFromHistoryOrIPC} from "./components/aiFileSystemList/store/useCustomFolder"
+import {initCustomFolderStore} from "./components/aiFileSystemList/store/useCustomFolder"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20250808"
@@ -106,7 +106,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         // 加载历史文件数据
         const bootstrap = async () => {
             await loadRemoteHistory()
-            await initSessionFromHistoryOrIPC()
+            await initCustomFolderStore()
         }
         bootstrap().catch(() => {})
 

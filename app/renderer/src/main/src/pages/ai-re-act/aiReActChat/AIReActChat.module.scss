@@ -183,6 +183,31 @@
     }
 
     .footer-inputs {
+        .footer-inputs-file-list {
+            display: flex;
+            flex-direction: column;
+        }
+        .draggingFromTree {
+            outline: 2px dashed var(--Colors-Use-Main-Primary);
+            background: rgba(64, 158, 255, 0.06);
+        }
+
+        .dragHint {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            pointer-events: none;
+
+            font-size: 14px;
+            color: var(--Colors-Use-Main-Primary);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(2px);
+        }
         .extra-footer-right {
             display: flex;
             align-items: center;
