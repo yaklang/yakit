@@ -17,15 +17,15 @@ type EventsType = Record<`${MitmShortcutKey}`, ShortcutKeyEventInfo>
 const MitmShortcutKeyEvents: EventsType = {
     "hijackResponse*mitm": {
         name: "劫持响应",
-        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_A]
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.UpArrow]
     },
     "dropData*mitm": {
         name: "丢弃",
-        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_B]
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.DownArrow]
     },
     "submitData*mitm": {
         name: "放行",
-        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C]
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.RightArrow]
     }
 }
 
