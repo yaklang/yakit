@@ -6,8 +6,10 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {PluginListPageMeta, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import { getRemoteHttpSettingGV } from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
-import {yakitNotify} from "@/utils/notification"
+import { getRemoteValue } from "@/utils/kv"
+import {failed, yakitNotify} from "@/utils/notification"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import cloneDeep from "lodash/cloneDeep"
@@ -168,11 +170,51 @@ export const onBaseNotepadDown: APIFunc<API.NotepadDownloadRequest, SaveDialogRe
         }
         apiDownloadNotepad(params)
             .then((res) => {
-                saveDialogAndGetLocalFileInfo((res as string) || "")
-                    .then(resolve)
-                    .catch(reject)
+                apiDownloadStorageType(res).then((filePath) => {
+                    saveDialogAndGetLocalFileInfo((filePath) || "")
+                        .then(resolve)
+                        .catch(reject)
+                })
             })
             .catch(reject)
+    })
+}
+
+export const apiDownloadStorageType: APIFunc<string, string> = (filePath) => {
+    return new Promise((resolve, reject) => {
+        NetWorkApi<API.NotepadDownloadRequest, string>({
+            method: "get",
+            url: "storage",
+        })
+            .then((type)=>{
+                console.log("apiDownloadStorageType type", type);
+
+                if (["oss", "s3"].includes(type)) {
+                    resolve(filePath)
+                }else{
+                    const match = filePath.match(/yakit-projects(\/[^]+)$/)
+                    if(match){
+                         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
+                            if(!setting){
+                                reject()
+                                return
+                            }
+                            resolve(`http://192.168.3.88:8080/install_package${match[1]}`)
+                            // resolve(`${setting}/install_package${match[1]}`)
+                         }).catch(() => {
+                            reject()
+                         })
+                    }
+                    else{
+                        failed("当前链接存在问题，无法正常解析")
+                        reject()
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error("apiDownloadStorageType error:", err)
+                resolve(filePath)
+            })
     })
 }
 
