@@ -1453,6 +1453,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                         onClick={onHijackCurrentResponse}
                                     >
                                         劫持响应
+                                        {convertKeyboardToUIKey(
+                                            getMitmShortcutKeyEvents()[MitmShortcutKey.HijackResponseMitm].keys
+                                         )}
                                     </YakitButton>
                                 )}
                                 <YakitButton
@@ -1462,6 +1465,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                     onClick={() => onDiscardData && onDiscardData(info)}
                                 >
                                     丢弃
+                                    {convertKeyboardToUIKey(
+                                        getMitmShortcutKeyEvents()[MitmShortcutKey.DropDataMitm].keys
+                                    )}
                                 </YakitButton>
                                 <YakitButton
                                     disabled={btnDisable}
@@ -1470,6 +1476,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                     onClick={() => onSubmitData && onSubmitData(info)}
                                 >
                                     放行
+                                    {convertKeyboardToUIKey(
+                                        getMitmShortcutKeyEvents()[MitmShortcutKey.SubmitDataMitm].keys
+                                    )}
                                 </YakitButton>
                             </>
                         )}
