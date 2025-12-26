@@ -11,7 +11,7 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {iconMap} from "../../defaultConstant"
 import { YakitRoute } from "@/enums/yakitRoute"
 import { usePageInfo } from "@/store/pageInfo"
-import shallow from "zustand/shallow"
+import {shallow} from "zustand/shallow"
 
 export const routeKey = {
     [YakitRoute.AI_Agent] :FileListStoreKey.FileList,
