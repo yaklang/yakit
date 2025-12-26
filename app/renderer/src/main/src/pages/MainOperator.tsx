@@ -334,6 +334,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 }
                             }).then((res) => {
                                 if (res.status) {
+                                    emiter.emit("onCloseControlMyselfModal")
                                     setDynamicStatus({...dynamicStatus, isDynamicSelfStatus: true})
                                     setControlShow(true)
                                     setControlName(res.user_name || "")

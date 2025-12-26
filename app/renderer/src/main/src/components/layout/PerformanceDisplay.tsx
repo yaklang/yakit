@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, yakitNotify} from "@/utils/notification"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
 import {useInViewport, useMemoizedFn} from "ahooks"
@@ -17,6 +17,8 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import classNames from "classnames"
 import styles from "./performanceDisplay.module.scss"
+import {yakitDynamicStatus} from "@/store"
+import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -205,6 +207,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     }, [engineMode])
 
     const {delTemporaryProject} = useTemporaryProjectStore()
+    const {dynamicStatus} = yakitDynamicStatus()
 
     return (
         <YakitPopover
@@ -219,6 +222,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             <YakitPopconfirm
                                 title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
                                 onConfirm={async () => {
+                                    if (dynamicStatus.isDynamicStatus) {
+                                        yakitNotify("warning", "远程控制关闭中...")
+                                        await remoteOperation(false, dynamicStatus)
+                                    }
                                     await delTemporaryProject()
                                     process.map((i) => {
                                         ipcRenderer.invoke(`kill-yak-grpc`, i.pid)

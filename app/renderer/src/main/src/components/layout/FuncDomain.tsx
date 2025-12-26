@@ -190,9 +190,9 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     accountAdmin: {key: "account-admin", label: "用户管理"},
     setPassword: {key: "set-password", label: "修改密码"},
     uploadData: {key: "upload-data", label: "上传数据"},
-    // controlAdmin: {key: "control-admin", label: "远程管理"},
-    // dynamicControl: {key: "dynamic-control", label: "发起远程"},
-    // closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
+    controlAdmin: {key: "control-admin", label: "远程管理"},
+    dynamicControl: {key: "dynamic-control", label: "发起远程"},
+    closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
     holeCollect: {key: "hole-collect", label: "漏洞汇总"},
     systemConfig: {key: "system-config", label: "系统配置"}
 }
@@ -346,9 +346,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     let cacheMenus: YakitMenuItemType[] = [
                         ...userAvatar,
                         UserMenusMap["uploadData"],
-                        // UserMenusMap["dynamicControl"],
-                        // UserMenusMap["controlAdmin"],
-                        // UserMenusMap["closeDynamicControl"],
+                        UserMenusMap["dynamicControl"],
+                        UserMenusMap["controlAdmin"],
+                        UserMenusMap["closeDynamicControl"],
                         UserMenusMap["roleAdmin"],
                         UserMenusMap["accountAdmin"],
                         UserMenusMap["setPassword"],
@@ -381,8 +381,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 let cacheMenus: YakitMenuItemType[] = [
                     ...userAvatar,
                     UserMenusMap["uploadData"],
-                    // UserMenusMap["dynamicControl"],
-                    // UserMenusMap["closeDynamicControl"],
+                    UserMenusMap["dynamicControl"],
+                    UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
                     UserMenusMap["pluginAudit"],
                     UserMenusMap["misstatement"],
@@ -524,6 +524,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     // 引擎日志 全局监听
     useEngineConsole({})
 
+    const onCloseControlMyselfModal = useMemoizedFn(() => {
+        setControlMyselfModal(false)
+    })
+    useEffect(() => {
+        emiter.on("onCloseControlMyselfModal", onCloseControlMyselfModal)
+        return () => {
+            emiter.off("onCloseControlMyselfModal", onCloseControlMyselfModal)
+        }
+    }, [])
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
@@ -625,7 +635,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                                     )
                                                                 }
                                                             },
-                                                            onCancel() {}
+                                                            onCancel() {},
+                                                            cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                                                            okButtonProps: {size: "small", className: "modal-ok-button"}
                                                         })
                                                     } else {
                                                         setStoreUserInfo(defaultUserInfo)
