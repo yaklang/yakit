@@ -33,8 +33,8 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
             const {progress, res} = resData
             const p = Math.trunc(progress)
             onUploadData(p)
-            if (res?.code === 200 && typeof res?.data === "string") {
-                const url = res?.data || ""
+            if (res?.code === 200 && typeof res?.data?.from === "string") {
+                const url = res?.data?.from || ""
                 setUrl(url)
             }
         })
@@ -70,7 +70,7 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
         }
         if (enable) {
             const params = {
-                url: "upload/bigfile",
+                url: "fragment/upload",
                 path: filePath,
                 filedHash,
                 type,
