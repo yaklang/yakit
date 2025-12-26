@@ -377,18 +377,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
 
     // 拖拽
     const {isHovering, dropRef} = useAIChatDrop(FileListStoreKey.FileList)
-    const targetSidebarSelected = useMemo(() => {
-        if (sidebarSelected === "fileTree") {
-            return (
-                <div className={styles["file-tree-list-inner"]}>
-                    <FileTreeList />
-                </div>
-            )
-        } else {
-            return <div className={styles["knowledge-base-list-inner"]}>知识库列表待开发</div>
-        }
-    }, [sidebarSelected])
-
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
             <div className={styles["open-file-tree-button"]}>
