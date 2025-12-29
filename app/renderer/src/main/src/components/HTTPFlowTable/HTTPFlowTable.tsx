@@ -27,6 +27,7 @@ import {execPacketScan, execPacketScanWithNewTab} from "@/pages/packetScanner/Pa
 import {GetPacketScanByCursorMenuItem, packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {FooterBottom, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {
     CheckCircleIcon,
     RemoveIcon,
@@ -694,6 +695,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const isOneceLoading = useRef<boolean>(true)
 
     const [total, setTotal] = useState<number>(0)
+    // MITM 可选是否统计总数（默认不统计以提升性能，其他页面保持统计）
+    const [calcTotal, setCalcTotal] = useState<boolean>(pageType !== "MITM")
     const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
 
@@ -1225,7 +1228,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
         if (pageType === "MITM") {
-            realQuery.SkipTotalCount = true
+            realQuery.SkipTotalCount = !calcTotal
             if (type === "bottom") {
                 const offsetId = ["desc", "none"].includes(tableOrder) ? minIdRef.current : maxIdRef.current
                 realQuery.OffsetId = offsetId || undefined
@@ -1254,16 +1257,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         const nextData = [...reverseData, ...data]
                         setData(nextData)
                         if (pageType === "MITM") {
-                            setTotal(nextData.length)
+                            setTotal(calcTotal ? rsp.Total : nextData.length)
                         }
                         maxIdRef.current = reverseData[0].Id
                     } else {
-                        // 升序
-                        if (rsp.Pagination.Limit - data.length >= 0) {
-                            const nextData = [...data, ...newData]
-                            setData(nextData)
+                    // 升序
+                    if (rsp.Pagination.Limit - data.length >= 0) {
+                        const nextData = [...data, ...newData]
+                        setData(nextData)
                             if (pageType === "MITM") {
-                                setTotal(nextData.length)
+                                setTotal(calcTotal ? rsp.Total : nextData.length)
                             }
                             maxIdRef.current = newData[newData.length - 1].Id
                         }
@@ -1277,7 +1280,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     const arr = [...data, ...newData]
                     setData(arr)
                     if (pageType === "MITM") {
-                        setTotal(arr.length)
+                        setTotal(calcTotal ? rsp.Total : arr.length)
                     }
                     if (["desc", "none"].includes(tableOrder)) {
                         minIdRef.current = newData[newData.length - 1].Id
@@ -1315,7 +1318,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         minIdRef.current = newData.length > 0 ? newData[0].Id : 0
                     }
                     if (pageType === "MITM") {
-                        setTotal(newData.length)
+                        setTotal(calcTotal ? rsp.Total : newData.length)
                     } else {
                         setTotal(rsp.Total)
                     }
@@ -1323,7 +1326,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (extraTimerRef.current) {
                         clearInterval(extraTimerRef.current)
                     }
-                    if (pageType !== "MITM") {
+                    if (pageType !== "MITM" && calcTotal) {
                         extraTimerRef.current = setInterval(() => getAddDataByGrpc(realQuery), 1000)
                     }
                 }
@@ -1344,7 +1347,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
         if (!isLoop) return
-        if (pageType === "MITM") return
+        if (pageType === "MITM" && !calcTotal) return
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         // 解决页面未显示时 此接口轮询导致接口锁死
         if (clientHeight === 0) return
@@ -4111,7 +4114,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     Total
                                                 </span>
                                                 <span className={style["http-history-table-total-item-number"]}>
-                                                    {total}
+                                                    {pageType === "MITM" && !calcTotal ? "-" : total}
                                                 </span>
                                             </div>
                                             <Divider type='vertical' />
@@ -4120,9 +4123,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     Selected
                                                 </span>
                                                 <span className={style["http-history-table-total-item-number"]}>
-                                                    {isAllSelect ? total : selectedRowKeys?.length}
+                                                    {isAllSelect
+                                                        ? pageType === "MITM" && !calcTotal
+                                                            ? data.length
+                                                            : total
+                                                        : selectedRowKeys?.length}
                                                 </span>
                                             </div>
+                                            {pageType === "MITM" && (
+                                                <div className={style["http-history-table-total-item"]} style={{gap: 4}}>
+                                                    <YakitSwitch
+                                                        size='small'
+                                                        checked={calcTotal}
+                                                        onChange={(checked) => {
+                                                            setCalcTotal(checked)
+                                                            // 关闭统计时清理定时器，打开统计时重新拉数据以刷新 total
+                                                            if (!checked && extraTimerRef.current) {
+                                                                clearInterval(extraTimerRef.current)
+                                                            }
+                                                            updateData()
+                                                        }}
+                                                        checkedChildren='统计'
+                                                        unCheckedChildren='跳过'
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                         {filterTagDom}
                                     </div>
