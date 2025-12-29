@@ -3,9 +3,13 @@
     height: 100%;
     border: 2px dashed transparent;
     border-radius: 6px;
+    overflow: hidden;
     transition:
         border-color 0.2s ease,
         background-color 0.2s ease;
+    &:hover{
+        overflow: overlay;
+    }
 }
 
 .dragging {

@@ -46,19 +46,19 @@
 
     .file-tree-list.open {
         height: 70vh;
+        display: flex;
+        flex-direction: column;
     }
     .file-tree-list.open .file-tree-list-inner {
         overflow: overlay;
+        flex: 1;
+        height: 0;
     }
     .file-tree-list.open .knowledge-base-list-inner {
-        overflow: overlay;
         height: 100%;
     }
     .file-tree-list.close {
         height: 0;
-        &-inner {
-            overflow: hidden;
-        }
     }
 
     .content {
