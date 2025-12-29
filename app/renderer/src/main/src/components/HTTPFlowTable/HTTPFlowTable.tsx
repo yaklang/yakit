@@ -651,12 +651,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         onSetTableSelectNum,
         onSetHasNewData
     } = props
-    const initialIsMITM =
-        pageType === "MITM" ||
-        ((props.params?.SourceType || "")
-            .toLowerCase()
-            .split(",")
-            .includes("mitm"))
+    // 仅在页面类型为 MITM 时视为 MITM 场景（避免 History 等复用时误判）
+    const initialIsMITM = pageType === "MITM"
     const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history"])
 
     // 导出字段映射配置
@@ -683,10 +679,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         Full: false,
         Tags: []
     })
-    const isMITMPage = useMemo(() => {
-        const sourceType = (params.SourceType || "").toLowerCase().split(",")
-        return pageType === "MITM" || sourceType.includes("mitm")
-    }, [pageType, params.SourceType])
+    const isMITMPage = useMemo(() => pageType === "MITM", [pageType])
     useEffect(() => {
         setParams((pre) => ({
             ...pre,
