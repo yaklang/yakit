@@ -65,13 +65,14 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
         const resultFormData = await form.validateFields()
         const file = getFileInfoList(resultFormData.KnowledgeBaseFile)
 
+        const targetStreamstep = file.length > 0 ? 1 : "success"
         const streamToken = randomString(50)
         const transformFormData = {
             ...resultFormData,
             CreatedFromUI: true,
             KnowledgeBaseFile: file,
             streamToken,
-            streamstep: 1,
+            streamstep: targetStreamstep,
             addManuallyItem: false,
             historyGenerateKnowledgeList: [],
             IsImported: false

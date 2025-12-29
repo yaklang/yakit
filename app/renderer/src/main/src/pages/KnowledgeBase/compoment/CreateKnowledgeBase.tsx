@@ -47,12 +47,9 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                 label='知识库名：'
                 name='KnowledgeBaseName'
                 rules={[
-                    {required: true, message: "请输入知识库名"},
+                    {required: true, message: "请输入知识库名", whitespace: true},
                     {
                         validator: (_, value) => {
-                            if (typeof value === "string" && value.trim() === "") {
-                                return Promise.reject(new Error("知识库名不能为空字符串"))
-                            }
                             if (type !== "new") {
                                 const findKnowledgeIdx = knowledgeBases.findIndex(
                                     (it) => it.KnowledgeBaseName === value

@@ -263,6 +263,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 editKnowledgeBase(kb.ID, {...kb, streamstep: "success"})
                 return
             }
+            console.log(kb, manualAdd, diff, "ss")
 
             await buildKnowledgeBase(kb)
         } catch (error) {
@@ -288,6 +289,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         try {
             for (const kb of knowledgeBases) {
                 if (kb.streamstep === 2 && kb.streamToken) {
+                    console.log(kb, knowledgeBases, previousKnowledgeBases, "kb")
+
                     await starKnowledgeeBaseEntry(kb)
                 }
             }

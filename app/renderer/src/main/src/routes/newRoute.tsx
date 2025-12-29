@@ -615,6 +615,12 @@ export interface ComponentParams {
 
     // TODO  后续补充
     AIRepository?: {inputString: string}
+    AIAgent?: {
+        selectedKnowledge: {
+            type: string[]
+            id: string
+        }
+    }
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {

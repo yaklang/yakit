@@ -1,9 +1,9 @@
-import {FC, useEffect} from "react"
+import {FC, useEffect, useMemo} from "react"
 
 import {SolidDotsverticalIcon} from "@/assets/icon/solid"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {knowledgeTypeOptions, manageMenuList} from "../utils"
-import {useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import styles from "../knowledgeBase.module.scss"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
@@ -19,6 +19,8 @@ import {TKnowledgeBaseSidebarProps} from "./KnowledgeBaseSidebar"
 import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
+import {YakitRoute} from "@/enums/yakitRoute"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,6 +31,7 @@ interface TOperateKnowledgenBaseItemProps {
     knowledgeBase: KnowledgeBaseItem[]
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
     addMode: string[]
+    currentPage: "ai-agent" | "knowledge"
 }
 
 const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
@@ -37,7 +40,8 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     setKnowledgeBaseID,
     knowledgeBase,
     api,
-    addMode
+    addMode,
+    currentPage
 }) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [menuOpen, setMenuOpen] = useSafeState(false)
@@ -128,11 +132,38 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
         }
     )
 
+    const tragetManageMenuList = useMemo(() => {
+        switch (currentPage) {
+            case "ai-agent":
+                return manageMenuList
+            case "knowledge":
+                return manageMenuList.filter((it) => it.key !== "link-to-knowledge")
+            default:
+                break
+        }
+    }, [currentPage])
+
+    // 前往知识库
+    const handleLinkKnowledge = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.AI_REPOSITORY,
+                params: {
+                    selectedKnowledge: {
+                        type: addMode,
+                        id: items.ID
+                    }
+                }
+            })
+        )
+    })
+
     return (
         <div>
             <YakitDropdownMenu
                 menu={{
-                    data: manageMenuList,
+                    data: tragetManageMenuList,
                     onClick: ({key}) => {
                         setMenuOpen(false)
                         setMenuSelectedId("")
@@ -152,7 +183,9 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
                                     IsDefault: true
                                 })
                                 break
-
+                            case "link-to-knowledge":
+                                handleLinkKnowledge()
+                                break
                             default:
                                 break
                         }

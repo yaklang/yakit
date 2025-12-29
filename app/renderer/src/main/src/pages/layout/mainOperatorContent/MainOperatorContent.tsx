@@ -175,7 +175,8 @@ import {
 import {keepSearchNameMapStore} from "@/store/keepSearchName"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { useProxy } from "@/hook/useProxy"
+import {useProxy} from "@/hook/useProxy"
+import {AIAgent} from "@/pages/ai-agent/AIAgent"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -755,6 +756,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 dbReport()
                 break
             case YakitRoute.AI_Agent:
+                addAIAGENT(params)
+                break
+            case YakitRoute.AI_REPOSITORY:
                 addAIREPOSITORY(params)
                 break
             default:
@@ -1039,7 +1043,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addAIREPOSITORY = useMemoizedFn((data) => {
+    const addAIAGENT = useMemoizedFn((data) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AI_Agent).length
         if (isExist) {
             emiter.emit("konwledgeInputString", JSON.stringify(data))
@@ -1049,6 +1053,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {
                 pageParams: {
                     AIRepository: {...data}
+                }
+            }
+        )
+    })
+
+    const addAIREPOSITORY = useMemoizedFn((data) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.AI_REPOSITORY).length
+        if (isExist) {
+            emiter.emit("selectedKnowledge", JSON.stringify(data))
+        }
+        openMenuPage(
+            {route: YakitRoute.AI_REPOSITORY},
+            {
+                pageParams: {
+                    AIAgent: {...data}
                 }
             }
         )
@@ -1336,8 +1355,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     })
-    
-    const { proxyRouteOptions, comparePointUrl } = useProxy();
+
+    const {proxyRouteOptions, comparePointUrl} = useProxy()
 
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
@@ -1396,10 +1415,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
             if (downstreamProxyStr) {
-                const list = downstreamProxyStr.split(",").filter(i=>!!i)
-                newAdvancedConfigValue.proxy = list.map(val => {
+                const list = downstreamProxyStr.split(",").filter((i) => !!i)
+                newAdvancedConfigValue.proxy = list.map((val) => {
                     if (!val.startsWith("route") && !val.startsWith("ep")) {
-                        return proxyRouteOptions.find(({ value }) => comparePointUrl(value) === val)?.value || val
+                        return proxyRouteOptions.find(({value}) => comparePointUrl(value) === val)?.value || val
                     }
                     return val
                 })
@@ -1797,6 +1816,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.AI_Agent:
                 onSetYakAIAgent(singleUpdateNode, 1)
                 break
+            case YakitRoute.AI_REPOSITORY:
+                onSetYakAIRepository(singleUpdateNode, 1)
+                break
             default:
                 break
         }
@@ -1958,6 +1980,30 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             routeKey: YakitRoute.AI_Agent
         }
         setPagesData(YakitRoute.AI_Agent, pageNodeInfo)
+    })
+
+    const onSetYakAIRepository = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.AI_REPOSITORY,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                AIAgent: node.pageParams?.AIAgent
+                    ? {
+                          ...node.pageParams.AIAgent
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.AI_REPOSITORY
+        }
+        setPagesData(YakitRoute.AI_REPOSITORY, pageNodeInfo)
     })
 
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {

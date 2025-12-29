@@ -90,6 +90,8 @@ interface PageParamsInfoProps {
     auditHoleInfo?: AuditHoleInfoProps
     /** 知识库页面 */
     AIRepository?: AIRepositoryProps
+    /** AI Agent 页面 */
+    AIAgent?: AIAgentProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -121,6 +123,13 @@ export interface SimpleDetectPageInfoProps {
 
 export interface AIRepositoryProps {
     inputString: string
+}
+
+export interface AIAgentProps {
+    selectedKnowledge: {
+        type: string[]
+        id: string
+    }
 }
 
 export interface WebsocketFuzzerPageInfoProps {

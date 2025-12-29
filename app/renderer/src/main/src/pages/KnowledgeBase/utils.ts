@@ -254,6 +254,10 @@ const manageMenuList = [
     {
         key: "default",
         label: "设为默认"
+    },
+    {
+        key: "link-to-knowledge",
+        label: "查看详情"
     }
 ]
 

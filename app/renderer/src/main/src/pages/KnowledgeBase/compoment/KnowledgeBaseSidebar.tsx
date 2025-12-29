@@ -40,6 +40,8 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {randomString} from "@/utils/randomUtil"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -168,7 +170,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)
-        setKnowledgeBaseID(processed?.[0]?.ID ?? "")
+        const selectedId = initKnowledgeSelectedID()
+        setKnowledgeBaseID(selectedId ? selectedId : processed?.[0]?.ID ?? "")
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases, addMode])
 
@@ -231,6 +234,39 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             failed(error + "")
         }
     })
+
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById,
+            removePagesDataCacheById: s.removePagesDataCacheById
+        }),
+        shallow
+    )
+
+    const initKnowledgeSelectedID = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.AI_REPOSITORY,
+            YakitRoute.AI_REPOSITORY
+        )
+        return currentItem?.pageParamsInfo.AIAgent?.selectedKnowledge.id ?? ""
+    })
+
+    useEffect(() => {
+        const selectedKnowledgeFn = (params: string) => {
+            try {
+                const data: PageNodeItemProps["pageParamsInfo"]["AIAgent"] = JSON.parse(params)
+                removePagesDataCacheById(YakitRoute.AI_REPOSITORY, YakitRoute.AI_REPOSITORY)
+                if (data?.selectedKnowledge) {
+                    setAddMode(data.selectedKnowledge.type)
+                }
+            } catch (error) {}
+        }
+        emiter.on("selectedKnowledge", selectedKnowledgeFn)
+        return () => {
+            emiter.off("selectedKnowledge", selectedKnowledgeFn)
+        }
+    }, [])
 
     const renderTabContent = useMemoizedFn((key: KnowledgeTabListEnum) => {
         let content: ReactNode = <></>
@@ -417,6 +453,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                                 knowledgeBase={knowledgeBase}
                                                                 api={api}
                                                                 addMode={addMode}
+                                                                currentPage='knowledge'
                                                             />
                                                         </div>
                                                     </div>

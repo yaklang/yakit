@@ -425,6 +425,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                                                         knowledgeBase={knowledgeBase}
                                                         api={api}
                                                         addMode={addMode}
+                                                        currentPage={"ai-agent"}
                                                     />
                                                 </div>
                                             </div>
