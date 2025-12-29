@@ -416,6 +416,7 @@ export const defaultMITMBaseFilter: MITMFilterSchema = {
     excludeHostname: [],
     includeSuffix: [],
     excludeSuffix: [],
+    allowChunkStaticJS: false,
     excludeMethod: [],
     excludeContentTypes: [],
     excludeUri: [],
@@ -430,7 +431,8 @@ export const defaultMITMFilterData: MITMFilterData = {
     IncludeUri: [],
     ExcludeUri: [],
     ExcludeMethods: [],
-    ExcludeMIME: []
+    ExcludeMIME: [],
+    AllowChunkStaticJS: false
 }
 
 export const MITMHotPatchTempDefault = [

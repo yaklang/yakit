@@ -106,15 +106,17 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         }
     })
     useEffect(() => {
-        grpcClientMITMfilter(mitmVersion).on((filter) => {
-            const value = convertMITMFilterUI(filter)
-            setMITMFilter({
-                ...value.baseFilter
+        if (filterType === "filter") {
+            grpcClientMITMfilter(mitmVersion).on((filter) => {
+                const value = convertMITMFilterUI(filter)
+                setMITMFilter({
+                    ...value.baseFilter
+                })
+                setFilterData([...value.advancedFilters])
             })
-            setFilterData([...value.advancedFilters])
-        })
-        return () => {
-            grpcClientMITMfilter(mitmVersion).remove()
+            return () => {
+                grpcClientMITMfilter(mitmVersion).remove()
+            }
         }
     }, [])
     useEffect(() => {
@@ -678,7 +680,7 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
             onOk={() => onOk(value)}
         >
             <div className={styles["import-editor"]} onDragOver={handleDragOver} onDrop={handleDrop}>
-                <YakitEditor value={value} setValue={setValue} type="json"></YakitEditor>
+                <YakitEditor value={value} setValue={setValue} type='json'></YakitEditor>
             </div>
         </YakitModal>
     )
