@@ -153,6 +153,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [sourceType, setSourceType] = useState<string>("mitm")
     const [tableTotal, setTableTotal] = useState<number>(0)
     const [tableSelectNum, setTableSelectNum] = useState<number>(0)
+    // MITM 自动放行日志：是否统计 total（默认跳过以提升性能）
+    const [calcTotal, setCalcTotal] = useState<boolean>(false)
     const [manualTableTotal, setManualTableTotal] = useState<number>(0)
     const [manualTableSelectNumber, setManualTableSelectNumber] = useState<number>(0)
     const [mitmV2PopoverVisible, setMITMV2PopoverVisible] = useState<boolean>(false)
@@ -991,11 +993,40 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
                 {/* 自动放行 */}
                 <div style={{display: autoForward === "log" ? "block" : "none", height: `calc(100% - ${height}px)`}}>
+                    <div className={styles["mitm-hijacked-log-toolbar"]} style={{padding: "4px 8px", display: "flex", alignItems: "center", gap: 12}}>
+                        <div className={styles["http-history-table-total"]} style={{display: "flex", alignItems: "center", gap: 8}}>
+                            <div className={styles["http-history-table-total-item"]}>
+                                <span className={styles["http-history-table-total-item-text"]}>Total</span>
+                                <span className={styles["http-history-table-total-item-number"]}>
+                                    {calcTotal ? tableTotal : "-"}
+                                </span>
+                            </div>
+                            <Divider type='vertical' style={{margin: "0 6px"}} />
+                            <div className={styles["http-history-table-total-item"]}>
+                                <span className={styles["http-history-table-total-item-text"]}>Selected</span>
+                                <span className={styles["http-history-table-total-item-number"]}>
+                                    {calcTotal ? tableSelectNum : tableSelectNum}
+                                </span>
+                            </div>
+                        </div>
+                        <div style={{display: "flex", alignItems: "center", gap: 6}}>
+                            <span style={{fontSize: 12, color: "#888"}}>统计总数</span>
+                            <YakitSwitch
+                                size='small'
+                                checked={calcTotal}
+                                onChange={(checked) => {
+                                    setCalcTotal(checked)
+                                }}
+                                checkedChildren='开'
+                                unCheckedChildren='关'
+                            />
+                        </div>
+                    </div>
                     <HTTPFlowRealTimeTableAndEditor
                         pageType='MITM'
                         noTableTitle={true}
                         downstreamProxyStr={downstreamProxyStr}
-                        params={{SourceType: sourceType}}
+                        params={{SourceType: sourceType, SkipTotalCount: !calcTotal}}
                         onSetTableTotal={setTableTotal}
                         onSetTableSelectNum={setTableSelectNum}
                         onSetHasNewData={setHasNewData}

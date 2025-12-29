@@ -22,7 +22,6 @@ import {
 import classNames from "classnames"
 import {RemoteHistoryGV} from "@/enums/history"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {
     AdvancedSet,
     availableColors,
@@ -396,15 +395,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         Order: "desc",
         OrderBy: "Id"
     })
-    // MITM tab支持可选跳过总数统计（默认跳过提升性能）
-    const isMITMPage = useMemo(
-        () => (query.SourceType || "").toLowerCase().split(",").includes("mitm"),
-        [query.SourceType]
-    )
-    const [calcTotal, setCalcTotal] = useState<boolean>(!isMITMPage)
-    useEffect(() => {
-        setCalcTotal(!isMITMPage)
-    }, [isMITMPage])
 
     // #region 网站树、进程
     const campareProcessName = useCampare(ProcessName)
