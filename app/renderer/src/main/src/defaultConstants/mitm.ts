@@ -419,7 +419,8 @@ export const defaultMITMBaseFilter: MITMFilterSchema = {
     excludeMethod: [],
     excludeContentTypes: [],
     excludeUri: [],
-    includeUri: []
+    includeUri: [],
+    allowChunkStaticJS: false
 }
 
 export const defaultMITMFilterData: MITMFilterData = {
