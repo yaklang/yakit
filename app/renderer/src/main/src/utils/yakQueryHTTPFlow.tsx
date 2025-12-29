@@ -30,6 +30,9 @@ export interface YakQueryHTTPFlowRequest {
     HaveParamsTotal?: string
     BeforeUpdatedAt?: number
     AfterUpdatedAt?: number
+    AfterId?: number
+    BeforeId?: number
+    OffsetId?: number
     AfterBodyLength?: number
     BeforeBodyLength?: number
     Color?: string[]
@@ -42,6 +45,7 @@ export interface YakQueryHTTPFlowRequest {
     ProcessName?: string[]
     ExcludeKeywords?: string[]
     AnalyzedIds?: number[]
+    SkipTotalCount?: boolean
 }
 
 export interface Paging {

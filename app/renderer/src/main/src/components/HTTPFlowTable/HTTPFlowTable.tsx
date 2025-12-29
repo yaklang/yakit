@@ -1224,6 +1224,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 realQuery.Pagination.Order = "asc"
             }
         }
+        if (pageType === "MITM") {
+            realQuery.SkipTotalCount = true
+            if (type === "bottom") {
+                const offsetId = ["desc", "none"].includes(tableOrder) ? minIdRef.current : maxIdRef.current
+                realQuery.OffsetId = offsetId || undefined
+                realQuery.BeforeId = undefined
+                realQuery.AfterId = undefined
+                if (realQuery.Pagination) {
+                    realQuery.Pagination.Page = 1
+                }
+            }
+        }
         updateQueryParams(realQuery)
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
@@ -1239,12 +1251,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     if (["desc", "none"].includes(tableOrder)) {
                         const reverseData = copyData.reverse()
-                        setData([...reverseData, ...data])
+                        const nextData = [...reverseData, ...data]
+                        setData(nextData)
+                        if (pageType === "MITM") {
+                            setTotal(nextData.length)
+                        }
                         maxIdRef.current = reverseData[0].Id
                     } else {
                         // 升序
                         if (rsp.Pagination.Limit - data.length >= 0) {
-                            setData([...data, ...newData])
+                            const nextData = [...data, ...newData]
+                            setData(nextData)
+                            if (pageType === "MITM") {
+                                setTotal(nextData.length)
+                            }
                             maxIdRef.current = newData[newData.length - 1].Id
                         }
                     }
@@ -1256,6 +1276,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     const arr = [...data, ...newData]
                     setData(arr)
+                    if (pageType === "MITM") {
+                        setTotal(arr.length)
+                    }
                     if (["desc", "none"].includes(tableOrder)) {
                         minIdRef.current = newData[newData.length - 1].Id
                     } else {
@@ -1291,12 +1314,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         maxIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
                         minIdRef.current = newData.length > 0 ? newData[0].Id : 0
                     }
-                    setTotal(rsp.Total)
+                    if (pageType === "MITM") {
+                        setTotal(newData.length)
+                    } else {
+                        setTotal(rsp.Total)
+                    }
                     // 开启定时器 用于算total和拿最新的最大id
                     if (extraTimerRef.current) {
                         clearInterval(extraTimerRef.current)
                     }
-                    extraTimerRef.current = setInterval(() => getAddDataByGrpc(realQuery), 1000)
+                    if (pageType !== "MITM") {
+                        extraTimerRef.current = setInterval(() => getAddDataByGrpc(realQuery), 1000)
+                    }
                 }
             })
             .catch((e: any) => {
@@ -1315,6 +1344,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
         if (!isLoop) return
+        if (pageType === "MITM") return
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         // 解决页面未显示时 此接口轮询导致接口锁死
         if (clientHeight === 0) return
