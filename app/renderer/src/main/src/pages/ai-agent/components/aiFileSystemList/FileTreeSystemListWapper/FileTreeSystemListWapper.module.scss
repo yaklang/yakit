@@ -1,9 +1,8 @@
 .file-tree-system {
-    overflow-y: auto;
-    height: fit-content;
+    height: 100%;
     width: 100%;
-    overflow-x: hidden;
-
+    display: flex;
+    flex-direction: column;
     &-title {
         padding: 4px 0;
         display: flex;
@@ -24,6 +23,11 @@
             height: 16px;
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
+    }
+    &-list {
+        flex: 1;
+        height: 0;
+        overflow: hidden auto;
     }
     :global {
         .ant-tree-treenode {

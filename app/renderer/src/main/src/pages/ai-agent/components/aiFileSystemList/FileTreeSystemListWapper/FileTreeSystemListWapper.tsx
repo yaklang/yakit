@@ -194,7 +194,9 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                     />
                 </YakitDropdownMenu>
             </div>
-            {renderContent()}
+          <div className={styles["file-tree-system-list"]}>
+              {renderContent()}
+          </div>
         </div>
     )
 }
