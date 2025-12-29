@@ -22,6 +22,8 @@ import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
 import classNames from "classnames"
 import {SolidCheckIcon} from "@/assets/icon/solid"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import totalStyles from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber.module.scss"
 import MITMContext from "../Context/MITMContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {Badge} from "antd"
@@ -38,6 +40,8 @@ interface MITMLogHeardExtraProps {
     tableTotal: number
     tableSelectNum: number
     hasNewData: boolean
+    calcTotal: boolean
+    onToggleCalcTotal: (v: boolean) => void
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
     const {
@@ -47,7 +51,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         setTempShowPluginHistory,
         tableTotal,
         tableSelectNum,
-        hasNewData
+        hasNewData,
+        calcTotal,
+        onToggleCalcTotal
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
     const mitmContent = useContext(MITMContext)
@@ -277,7 +283,27 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         </YakitCheckableTag>
                     ))}
                 </div>
-                <TableTotalAndSelectNumber total={tableTotal} selectNum={tableSelectNum} />
+                <div className={totalStyles["table-total-select"]}>
+                    <div className={totalStyles["table-total-select-item"]}>
+                        <span className={totalStyles["table-total-select-text"]}>Total</span>
+                        <span className={totalStyles["table-total-select-number"]}>
+                            {calcTotal ? tableTotal : "-"}
+                        </span>
+                    </div>
+                    <Divider type='vertical' />
+                    <div className={totalStyles["table-total-select-item"]}>
+                        <span className={totalStyles["table-total-select-text"]}>Selected</span>
+                        <span className={totalStyles["table-total-select-number"]}>{tableSelectNum}</span>
+                    </div>
+                    <div style={{display: "flex", alignItems: "center", gap: 6, marginLeft: 8}}>
+                        <span style={{fontSize: 12, color: "#888"}}>统计总数</span>
+                        <YakitSwitch
+                            size='small'
+                            checked={calcTotal}
+                            onChange={(checked) => onToggleCalcTotal(checked)}
+                        />
+                    </div>
+                </div>
             </div>
             <div className={styles["mitm-log-heard-right"]}>
                 <div className={styles["advancedSearch"]}>

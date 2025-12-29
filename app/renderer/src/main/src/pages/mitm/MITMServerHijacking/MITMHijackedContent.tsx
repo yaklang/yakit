@@ -2,6 +2,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCounter, useCreation, useInterval, useMemoizedFn} from "ahooks"
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
+import {Divider, Tooltip} from "antd"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
@@ -16,6 +17,7 @@ import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {
     OutlineConfiguredIcon,
     OutlineInformationcircleIcon,
@@ -29,7 +31,6 @@ import {convertLocalMITMFilterRequest, convertMITMFilterUI} from "../MITMServerS
 import cloneDeep from "lodash/cloneDeep"
 import {defaultMITMFilterData} from "@/defaultConstants/mitm"
 import MITMFiltersModal, {getAdvancedFlag, getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
-import {Tooltip} from "antd"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     ClientMITMHijackedResponse,
@@ -928,6 +929,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         tableTotal={tableTotal}
                         tableSelectNum={tableSelectNum}
                         hasNewData={hasNewData}
+                        calcTotal={calcTotal}
+                        onToggleCalcTotal={setCalcTotal}
                     />
                 </div>
             </>
@@ -993,35 +996,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
                 {/* 自动放行 */}
                 <div style={{display: autoForward === "log" ? "block" : "none", height: `calc(100% - ${height}px)`}}>
-                    <div className={styles["mitm-hijacked-log-toolbar"]} style={{padding: "4px 8px", display: "flex", alignItems: "center", gap: 12}}>
-                        <div className={styles["http-history-table-total"]} style={{display: "flex", alignItems: "center", gap: 8}}>
-                            <div className={styles["http-history-table-total-item"]}>
-                                <span className={styles["http-history-table-total-item-text"]}>Total</span>
-                                <span className={styles["http-history-table-total-item-number"]}>
-                                    {calcTotal ? tableTotal : "-"}
-                                </span>
-                            </div>
-                            <Divider type='vertical' style={{margin: "0 6px"}} />
-                            <div className={styles["http-history-table-total-item"]}>
-                                <span className={styles["http-history-table-total-item-text"]}>Selected</span>
-                                <span className={styles["http-history-table-total-item-number"]}>
-                                    {calcTotal ? tableSelectNum : tableSelectNum}
-                                </span>
-                            </div>
-                        </div>
-                        <div style={{display: "flex", alignItems: "center", gap: 6}}>
-                            <span style={{fontSize: 12, color: "#888"}}>统计总数</span>
-                            <YakitSwitch
-                                size='small'
-                                checked={calcTotal}
-                                onChange={(checked) => {
-                                    setCalcTotal(checked)
-                                }}
-                                checkedChildren='开'
-                                unCheckedChildren='关'
-                            />
-                        </div>
-                    </div>
                     <HTTPFlowRealTimeTableAndEditor
                         pageType='MITM'
                         noTableTitle={true}
