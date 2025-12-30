@@ -147,38 +147,110 @@ export const StartupPage: React.FC = () => {
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
         debugToPrintLog(`------ 获取系统基础信息 ------`)
-        try {
-            if (SystemInfo.isDev === undefined) await handleFetchIsDev()
-        } catch (error) {}
-        try {
-            await handleFetchSystem((value) => {
+        const tasks: Array<() => Promise<any>> = []
+        // 是否开发环境
+        if (SystemInfo.isDev === undefined) {
+            tasks.push(() => handleFetchIsDev())
+        }
+        // 系统类型
+        tasks.push(() =>
+            handleFetchSystem((value) => {
                 setSystem(value || "Windows_NT")
             })
-        } catch (error) {}
+        )
+        // 架构
+        if (SystemInfo.architecture === undefined) {
+            tasks.push(() => handleFetchArchitecture())
+        }
+        // 引擎 是否安装
+        tasks.push(() =>
+            grpcFetchYakInstallResult(true).then((isInstalled) => {
+                isEngineInstalled.current = isInstalled
+            })
+        )
+        // 内置引擎版本
+        tasks.push(() =>
+            grpcFetchBuildInYakVersion(true).then((version) => {
+                setBuildInEngineVersion(version)
+            })
+        )
+        // 新安装 Yakit ，引擎需检查更新
+        tasks.push(() =>
+            grpcFetchLocalYakitVersion(true).then((appVersion) => {
+                return getLocalValue(LocalGVS.LocalAppVersion)
+                    .then((res) => {
+                        if (res !== appVersion) {
+                            setLocalValue(LocalGVS.NoYakVersionCheck, false)
+                            setLocalValue(LocalGVS.LocalAppVersion, appVersion)
+                        }
+                    })
+                    .catch(() => {})
+            })
+        )
+        // 获取本地缓存端口号
+        tasks.push(() =>
+            getCachedLocalModePort().then((port) => {
+                if (typeof port === "number") {
+                    setCustomPort(port)
+                }
+            })
+        )
         try {
-            if (SystemInfo.architecture === undefined) await handleFetchArchitecture()
+            await Promise.allSettled(tasks.map((run) => run()))
         } catch (error) {}
-        try {
-            const isInstalled = await grpcFetchYakInstallResult(true)
-            isEngineInstalled.current = isInstalled
-        } catch (error) {}
-        try {
-            const version = await grpcFetchBuildInYakVersion(true)
-            setBuildInEngineVersion(version)
-        } catch (error) {}
-        try {
-            const appVersion = await grpcFetchLocalYakitVersion(true)
-            getLocalValue(LocalGVS.LocalAppVersion)
-                .then((res) => {
-                    if (res !== appVersion) {
-                        setLocalValue(LocalGVS.NoYakVersionCheck, false)
-                        setLocalValue(LocalGVS.LocalAppVersion, appVersion)
-                    }
-                })
-                .catch(() => {})
-        } catch (error) {}
-        if (nextFunc) nextFunc()
+        nextFunc?.()
     })
+
+    const cacheLocalModePort = useMemoizedFn((port: number) => {
+        if (getEngineMode() !== "local") return
+        if (isCommunityEdition()) {
+            // ce
+            if (isCommunityIRify()) {
+                setLocalValue(LocalGVS.IrifyPort, port)
+            } else if (isCommunityMemfit()) {
+                setLocalValue(LocalGVS.MemfitPort, port)
+            } else {
+                setLocalValue(LocalGVS.YakitPort, port)
+            }
+        } else if (isEnpriTrace()) {
+            // ee
+            if (isEnpriTraceIRify()) {
+                setLocalValue(LocalGVS.IrifyEEPort, port)
+            } else if (isMemfit()) {
+                // 暂时没有ai企业版
+            } else {
+                setLocalValue(LocalGVS.YakitEEPort, port)
+            }
+        } else if (isEnpriTraceAgent()) {
+            // se
+            setLocalValue(LocalGVS.SEPort, port)
+        }
+    })
+
+    const getCachedLocalModePort = async (): Promise<number | undefined> => {
+        if (isCommunityEdition()) {
+            // CE
+            if (isCommunityIRify()) {
+                return getLocalValue(LocalGVS.IrifyPort)
+            } else if (isCommunityMemfit()) {
+                return getLocalValue(LocalGVS.MemfitPort)
+            } else {
+                return getLocalValue(LocalGVS.YakitPort)
+            }
+        } else if (isEnpriTrace()) {
+            // EE
+            if (isEnpriTraceIRify()) {
+                return getLocalValue(LocalGVS.IrifyEEPort)
+            } else if (isMemfit()) {
+                return undefined
+            } else {
+                return getLocalValue(LocalGVS.YakitEEPort)
+            }
+        } else if (isEnpriTraceAgent()) {
+            // SE
+            return getLocalValue(LocalGVS.SEPort)
+        }
+    }
 
     /** 获取上次连接引擎的模式 */
     const handleLinkEngineMode = useMemoizedFn(() => {
@@ -600,6 +672,7 @@ export const StartupPage: React.FC = () => {
     useEffect(() => {
         if (engineLink && getYakitStatus() === "link" && getCredential().Port && !isStopSend.current) {
             ipcRenderer.invoke("engineLinkWin-done", {useOldLink: false, credential: getCredential()})
+            cacheLocalModePort(getCredential().Port)
         }
     }, [engineLink])
     useEffect(() => {
@@ -689,8 +762,6 @@ export const StartupPage: React.FC = () => {
             }
         }
     })
-
-    const onWatchDogCallback = useMemoizedFn((type: EngineWatchDogCallbackType) => {})
 
     useEffect(() => {
         ipcRenderer.on("from-win", (e, data) => {
@@ -826,7 +897,6 @@ export const StartupPage: React.FC = () => {
                     onKeepaliveShouldChange={setKeepalive}
                     onReady={onReady}
                     onFailed={onFailed}
-                    failedCallback={onWatchDogCallback}
                     setYakitStatus={setYakitStatus}
                     setCheckLog={setCheckLog}
                 />
