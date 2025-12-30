@@ -1722,7 +1722,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
     const setHotPatchCode = useMemoizedFn((v: string) => {
         setHotPatchCodeRef(v)
-        setRefreshTrigger(!refreshTrigger)
+        setTimeout(() => {
+            setRefreshTrigger(!refreshTrigger)
+        }, 400);
         sendFuzzerSettingInfo()
     })
     const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
