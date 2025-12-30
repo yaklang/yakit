@@ -72,24 +72,26 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         }
     })
 
-    const button = useMemo(() => {
-        if (hasTaskTree)
-            return (
-                <YakitRadioButtons
-                    buttonStyle='solid'
-                    size='middle'
-                    defaultValue={AIChatLeft.TaskTree}
-                    options={[
-                        {label: "任务树", value: AIChatLeft.TaskTree},
-                        {label: "时间线", value: AIChatLeft.Timeline}
-                    ]}
-                    value={activeTab}
-                    onChange={({target}) => setActiveTab(target.value)}
-                />
-            )
+    const handleTabChange = useMemoizedFn((value: AIChatLeft) => {
+        setActiveTab(value)
+    })
 
-        return <YakitButton size='middle'>时间线</YakitButton>
-    }, [activeTab, hasTaskTree])
+    const button = useMemo(() => {
+        if (!hasTaskTree) return <YakitButton size='middle'>时间线</YakitButton>
+        return (
+            <YakitRadioButtons
+                buttonStyle='solid'
+                size='middle'
+                defaultValue={AIChatLeft.TaskTree}
+                options={[
+                    {label: "任务树", value: AIChatLeft.TaskTree},
+                    {label: "时间线", value: AIChatLeft.Timeline}
+                ]}
+                value={activeTab}
+                onChange={({target}) => handleTabChange(target.value)}
+            />
+        )
+    }, [activeTab, handleTabChange, hasTaskTree])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
