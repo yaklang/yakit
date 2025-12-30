@@ -104,15 +104,28 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>([])
 
     // 接口流里的文件树路径集合
-    const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
-    const handleSetGrpcFolders = useMemoizedFn((info: AIFileSystemPin) => {
-        setGrpcFolders((old) => {
-            const isExist = old.find((item) => item.path === info.path)
-            if (!!isExist) {
-                return old
-            }
-            return [...old, info]
-        })
+    const [grpcFolders, setGrpcFolders, getGrpcFolders] = useGetSetState<AIFileSystemPin[]>([])
+    const handleSetGrpcFolders = useMemoizedFn(async (info: AIFileSystemPin) => {
+        const oldFolders = [...getGrpcFolders()]
+        // 已存在则不重复添加
+        const isExist = oldFolders.find((item) => item.path === info.path)
+        if (!!isExist) return
+
+        let isContain = false
+        let deleteIndex = -1
+        for (let index in oldFolders) {
+            const result = await ipcRenderer.invoke("fetch-path-contains-relation", {
+                pathA: oldFolders[index].path,
+                pathB: info.path
+            })
+            isContain = [0, 1].includes(result)
+            if (result === 2) deleteIndex = Number(index)
+            if (isContain) break
+        }
+
+        if (!isContain) oldFolders.push(info)
+        if (deleteIndex > -1) oldFolders.splice(deleteIndex, 1)
+        setGrpcFolders([...oldFolders])
     })
 
     // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
