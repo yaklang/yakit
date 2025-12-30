@@ -224,15 +224,16 @@ export interface AuditHoleInfoProps {
 }
 
 interface ImmediatelyLaunchedInfo {
-    host: string
-    port: string
-    enableInitialPlugin: boolean
+    host?: string
+    port?: string
+    enableInitialPlugin?: boolean
 }
 export interface HTTPHackerPageInfoProps {
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
 export interface MITMHackerPageInfoProps {
+    // 传空对象直接启动mitm 不传表示打开mitm 
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 

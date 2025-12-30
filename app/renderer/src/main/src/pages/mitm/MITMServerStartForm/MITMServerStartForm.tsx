@@ -32,11 +32,11 @@ import {toMITMHacker} from "@/pages/hacker/httpHacker"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import { debugToPrintLogs } from "@/utils/logCollection"
+import emiter from "@/utils/eventBus/eventBus"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -171,7 +171,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         )
         form.setFieldsValue({downstreamProxy: filterDownstreamProxy})
     })
-
 
     useEffect(() => {
         if (props.status !== "idle") return
@@ -309,7 +308,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         hostRef.current.onSetRemoteValues(params.host)
         //如果有新增的代理配置 则存配置项
         checkProxyEndpoints(downstreamProxy)
-        setRemoteValue(MITMConsts.MITMDownStreamProxy, downstreamProxy.join(','))
+        setRemoteValue(MITMConsts.MITMDownStreamProxy, downstreamProxy.join(","))
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.stateSecretHijacking}`)
@@ -320,11 +319,13 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
 
-    useDebounceEffect(
-        () => {
+    const onStartMitm = useMemoizedFn((infoStr = "") => {
+        try {
             const info =
                 mitmVersion === MITMVersion.V2
-                    ? initV2PageInfo()?.immediatelyLaunchedInfo
+                    ? infoStr
+                        ? JSON.parse(infoStr)
+                        : initV2PageInfo()?.immediatelyLaunchedInfo
                     : initPageInfo()?.immediatelyLaunchedInfo
             if (info && props.status === "idle") {
                 if (mitmVersion === MITMVersion.V2) {
@@ -332,13 +333,28 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 } else {
                     removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
                 }
-                form.setFieldsValue({host: info.host, port: info.port, enableInitialPlugin: info.enableInitialPlugin})
+                if (info.host && info.port) {
+                    form.setFieldsValue({
+                        host: info?.host,
+                        port: info?.port,
+                        enableInitialPlugin: info.enableInitialPlugin
+                    })
+                }
                 execStartMITM(form.getFieldsValue())
             }
-        },
-        [initPageInfo()?.immediatelyLaunchedInfo, initV2PageInfo()?.immediatelyLaunchedInfo, props.status, mitmVersion],
-        {wait: 100}
-    )
+        } catch (error) {}
+    })
+    useEffect(() => {
+        setTimeout(() => {
+            onStartMitm()
+        }, 200)
+    }, [props.status, mitmVersion])
+    useEffect(() => {
+        emiter.on("onStartMitm", onStartMitm)
+        return () => {
+            emiter.off("onStartMitm", onStartMitm)
+        }
+    }, [])
 
     const [width, setWidth] = useState<number>(0)
 

@@ -25,9 +25,9 @@ import {
     SingletonPageRoute,
     NoPaddingRoute,
     ComponentParams,
-    defaultFixedTabs,
+    getDefaultFixedTabs,
     LogOutCloseRoutes,
-    defaultFixedTabsNoSinglPageRoute
+    getDefaultFixedTabsNoSinglPageRoute
 } from "@/routes/newRoute"
 import {
     isEnpriTraceAgent,
@@ -36,7 +36,10 @@ import {
     isEnterpriseEdition,
     isIRify,
     isMemfit,
-    isWFCacheEdition
+    isWFCacheEdition,
+    isYakit,
+    isCommunityYakit,
+    isEnpriTrace
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -87,7 +90,6 @@ import {
     OutlineChevrondoubleleftIcon,
     OutlineChevrondoublerightIcon,
     OutlinePlusIcon,
-    OutlineRefreshIcon,
     OutlineSortascendingIcon,
     OutlineSortdescendingIcon,
     OutlineStoreIcon
@@ -97,11 +99,7 @@ import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
-import {
-    FuzzerSequenceCacheDataProps,
-    getFuzzerSequenceProcessedCacheData,
-    useFuzzerSequence
-} from "@/store/fuzzerSequence"
+import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
@@ -160,7 +158,6 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
-import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
@@ -177,6 +174,8 @@ import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useProxy } from "@/hook/useProxy"
 import { JSONParseLog } from "@/utils/tool"
+import {SoftMode, useSoftMode, YakitModeEnum} from "@/store/softMode"
+import {RemoteSoftModeGV} from "@/enums/softMode"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -375,24 +374,7 @@ const getColor = (subPage) => {
     return colorList[randNum] || "purple"
 }
 // 软件初始化时的默认打开页面数据
-export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCache[] = (routeKeyToLabel) => {
-    if (isEnpriTraceAgent()) {
-        return []
-    }
-
-    if (isBreachTrace()) {
-        return [
-            {
-                routeKey: routeConvertKey(YakitRoute.DB_ChaosMaker, ""),
-                verbose: "入侵模拟",
-                menuName: YakitRouteToPageInfo[YakitRoute.DB_ChaosMaker].label,
-                route: YakitRoute.DB_ChaosMaker,
-                singleNode: true,
-                multipleNode: []
-            }
-        ]
-    }
-
+export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) => {
     if (isIRify()) {
         return [
             {
@@ -426,48 +408,139 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
             }
         ]
     }
-    return [
-        {
-            routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-            verbose: "首页",
-            menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
-            route: YakitRoute.NewHome,
-            singleNode: true,
-            multipleNode: []
-        },
-        {
-            routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
-            verbose: "History",
-            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
-            route: YakitRoute.DB_HTTPHistory,
-            singleNode: true,
-            multipleNode: []
+
+    if (isYakit()) {
+        if (isEnpriTraceAgent()) {
+            return []
         }
-    ]
+        if (isEnpriTrace()) {
+            return [
+                {
+                    routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+                    verbose: "首页",
+                    menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                    route: YakitRoute.NewHome,
+                    singleNode: true,
+                    multipleNode: []
+                },
+                {
+                    routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+                    verbose: "History",
+                    menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                    route: YakitRoute.DB_HTTPHistory,
+                    singleNode: true,
+                    multipleNode: []
+                }
+            ]
+        }
+        if (isCommunityYakit()) {
+            if (softMode === YakitModeEnum.Scan) {
+                return [
+                    {
+                        routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+                        verbose: "首页",
+                        menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                        route: YakitRoute.NewHome,
+                        singleNode: true,
+                        multipleNode: []
+                    },
+                    {
+                        routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+                        verbose: "History",
+                        menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                        route: YakitRoute.DB_HTTPHistory,
+                        singleNode: true,
+                        multipleNode: []
+                    }
+                ]
+            }
+            if (softMode === YakitModeEnum.SecurityExpert) {
+                return [
+                    {
+                        routeKey: routeConvertKey(YakitRoute.MITMHacker, ""),
+                        verbose: "MITM 交互式劫持",
+                        menuName: YakitRouteToPageInfo[YakitRoute.MITMHacker].label,
+                        route: YakitRoute.MITMHacker,
+                        singleNode: true,
+                        multipleNode: []
+                    },
+                    {
+                        routeKey: routeConvertKey(YakitRoute.HTTPFuzzer, ""),
+                        verbose: "Web Fuzzer",
+                        menuName: YakitRouteToPageInfo[YakitRoute.HTTPFuzzer].label,
+                        route: YakitRoute.HTTPFuzzer,
+                        singleNode: false,
+                        multipleLength: 0,
+                        multipleNode: []
+                    },
+                    {
+                        routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+                        verbose: "History",
+                        menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                        route: YakitRoute.DB_HTTPHistory,
+                        singleNode: true,
+                        multipleNode: []
+                    }
+                ]
+            }
+            if (softMode === YakitModeEnum.Classic) {
+                return [
+                    {
+                        routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+                        verbose: "首页",
+                        menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                        route: YakitRoute.NewHome,
+                        singleNode: true,
+                        multipleNode: []
+                    },
+                    {
+                        routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+                        verbose: "History",
+                        menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                        route: YakitRoute.DB_HTTPHistory,
+                        singleNode: true,
+                        multipleNode: []
+                    }
+                ]
+            }
+            return []
+        }
+    }
+    return []
 }
 
-// 固定页面需要icon图标的
-const InitPageHasRouteIcon = [
-    {
-        route: YakitRoute.DB_HTTPHistoryAnalysis,
-        routeIcon: <PublicHTTPHistoryIcon />
-    }
-]
-
 // 软件初始化时的默认当前打开页面的key
-export const getInitActiveTabKey = () => {
-    if (isEnpriTraceAgent()) {
-        return ""
-    }
-    if (isBreachTrace()) {
-        return YakitRoute.DB_ChaosMaker
-    }
-
+const getInitActiveTabKey = (softMode: SoftMode) => {
     if (isMemfit()) {
         return YakitRoute.AI_Agent
     }
 
-    return YakitRoute.NewHome
+    if (isIRify()) {
+        return YakitRoute.NewHome
+    }
+
+    if (isYakit()) {
+        if (isEnpriTraceAgent()) {
+            return ""
+        }
+        if (isEnpriTrace()) {
+            return YakitRoute.NewHome
+        }
+        if (isCommunityYakit()) {
+            if (softMode === YakitModeEnum.SecurityExpert) {
+                return YakitRoute.MITMHacker
+            }
+            if (softMode === YakitModeEnum.Classic) {
+                return YakitRoute.NewHome
+            }
+            if (softMode === YakitModeEnum.Scan) {
+                return YakitRoute.NewHome
+            }
+            return ""
+        }
+        return ""
+    }
+    return ""
 }
 
 /**@description 拖拽样式 */
@@ -551,20 +624,33 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
 
+    const {softMode} = useSoftMode()
+    const isSecurityExpert = useMemo(() => {
+        return isCommunityYakit() && softMode === YakitModeEnum.SecurityExpert
+    }, [softMode])
+    useEffect(() => {
+        if (softMode === YakitModeEnum.SecurityExpert) {
+            getRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey)
+                .then((cacheTabKey) => {
+                    if (cacheTabKey) {
+                        setCurrentTabKey(cacheTabKey)
+                    } else {
+                        setCurrentTabKey(YakitRoute.MITMHacker)
+                    }
+                })
+                .catch(() => {
+                    setCurrentTabKey(YakitRoute.MITMHacker)
+                })
+        }
+    }, [softMode])
+
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
-        _.cloneDeepWith(getInitPageCache(routeKeyToLabel)) || []
+        _.cloneDeepWith(getInitPageCache(softMode)) || []
     )
-    const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
+    const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
     useEffect(() => {
         setCurrentPageTabRouteKey(currentTabKey)
-        // 固定页面多开，如果从未打开，则默认新增一个标签页
-        if (defaultFixedTabsNoSinglPageRoute.includes(currentTabKey as YakitRoute)) {
-            const item = getPageCache().find((i) => i.routeKey === currentTabKey)
-            if (!item?.multipleNode.length) {
-                openMenuPage({route: currentTabKey as YakitRoute})
-            }
-        }
     }, [currentTabKey])
 
     // 发送到专项漏洞检测modal-show变量
@@ -940,6 +1026,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** HTTPHackerPage v2 */
     const addMITMHacker = useMemoizedFn((data: MITMHackerPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.MITMHacker).length
         const pageNodeInfo: PageProps = {
             ...cloneDeep(defPage),
             pageList: [
@@ -969,6 +1056,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
         )
+        if (isExist) {
+            // "onStartMitm" 位置不要调整 页面内部涉及到移除缓存
+            if (data.immediatelyLaunchedInfo) {
+                emiter.emit("onStartMitm", JSON.stringify(data.immediatelyLaunchedInfo))
+            }
+        }
     })
     const addRiskPage = useMemoizedFn((data: RiskPageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.DB_Risk).length
@@ -1314,8 +1407,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     })
-    
-    const { proxyRouteOptions, comparePointUrl } = useProxy();
+
+    const {proxyRouteOptions, comparePointUrl} = useProxy()
 
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
@@ -1325,13 +1418,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             request,
             advancedConfigValue,
             openFlag = true,
+            selectSubItem = undefined,
             isCache = true,
             downstreamProxyStr = ""
         } = res || {}
         try {
             const isExistWF = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
             if (!isExistWF) {
-                await onInitFuzzer()
+                await onInitFuzzer(false)
             }
             const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
                 proxy: [],
@@ -1374,10 +1468,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
             if (downstreamProxyStr) {
-                const list = downstreamProxyStr.split(",").filter(i=>!!i)
-                newAdvancedConfigValue.proxy = list.map(val => {
+                const list = downstreamProxyStr.split(",").filter((i) => !!i)
+                newAdvancedConfigValue.proxy = list.map((val) => {
                     if (!val.startsWith("route") && !val.startsWith("ep")) {
-                        return proxyRouteOptions.find(({ value }) => comparePointUrl(value) === val)?.value || val
+                        return proxyRouteOptions.find(({value}) => comparePointUrl(value) === val)?.value || val
                     }
                     return val
                 })
@@ -1397,6 +1491,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 {route: YakitRoute.HTTPFuzzer},
                 {
                     openFlag,
+                    selectSubItem,
                     pageParams: {
                         request: newRequest,
                         system: system,
@@ -1539,20 +1634,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 end ---------- */
 
     /** ---------- 远程关闭一级页面 end ---------- */
-    // 没看过逻辑
     useEffect(() => {
         ipcRenderer.on("fetch-close-tab", (e, res: any) => {
             const {router, name} = res
             removeMenuPage({route: router, menuName: name || ""})
         })
-        ipcRenderer.on("fetch-close-all-tab", () => {
-            // delFuzzerList(1)
-            setPageCache(getInitPageCache(routeKeyToLabel))
-            setCurrentTabKey(getInitActiveTabKey())
-        })
         return () => {
             ipcRenderer.removeAllListeners("fetch-close-tab")
-            ipcRenderer.removeAllListeners("fetch-close-all-tab")
         }
     }, [])
     /** ---------- 远程关闭一级页面 end ---------- */
@@ -1570,7 +1658,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         // 此处如若在webfuuzer monaco中执行关闭时不会走 onKeyDown关闭 逻辑 而是走此处关闭逻辑
         if (!isModalVisibleRef.current) {
-            if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
+            if (pageCache.length === 0 || getDefaultFixedTabs(softMode).includes(currentTabKey as YakitRoute)) return
             const data = KeyConvertRoute(currentTabKey)
             if (data) {
                 const info: OnlyPageCache = {
@@ -1604,6 +1692,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             routeInfo: RouteToPageProps,
             nodeParams?: {
                 openFlag?: boolean
+                selectSubItem?: boolean
                 verbose?: string
                 hideAdd?: boolean
                 pageParams?: ComponentParams
@@ -1615,6 +1704,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (nodeParams?.openFlag !== undefined) {
                 openFlag = nodeParams?.openFlag
             }
+            let selectSubItem = openFlag ? true : nodeParams?.selectSubItem
             // 菜单在代码内的名字
             const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""
             if (!menuName) return
@@ -1724,6 +1814,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             eleItem.multipleLength = (eleItem.multipleLength || 0) + 1
                             order = eleItem.multipleNode.length
                             eleItem.openFlag = openFlag
+                            eleItem.selectSubItem = selectSubItem
                         }
                         pages.push({...eleItem})
                     })
@@ -2242,7 +2333,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // )
     // fuzzer-tab页数据订阅事件
     const unFuzzerCacheData = useRef<any>(null)
-    // web-fuzzer多开页面缓存数据
+    // web-fuzzer多开页面缓存数据、
     useEffect(() => {
         if (isEnterpriseEdition()) {
             // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
@@ -2252,17 +2343,28 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             // 社区版需要清除:非wf和FuzzerSequence数据
             clearOtherDataByRoute(YakitRoute.HTTPFuzzer)
         }
-        getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
-            .then((cacheTabKey) => {
-                /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
-                if (!cacheTabKey || cacheTabKey === YakitRoute.HTTPFuzzer) {
-                    onInitFuzzer()
-                }
-            })
-            .catch((error) => {
-                yakitNotify("error", `SelectFirstMenuTabKey获取数据失败:${error}`)
-            })
 
+        setPageCache(getInitPageCache(softMode))
+        // yakit 安全专家模式选中上次默认选中key
+        if (softMode === YakitModeEnum.SecurityExpert) {
+            setTimeout(() => {
+                onInitFuzzer(true)
+            }, 500)
+        } else {
+            setCurrentTabKey(getInitActiveTabKey(softMode))
+            getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
+                .then((cacheTabKey) => {
+                    /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
+                    if (!cacheTabKey || cacheTabKey === YakitRoute.HTTPFuzzer) {
+                        setTimeout(() => {
+                            onInitFuzzer(false)
+                        }, 500)
+                    }
+                })
+                .catch((error) => {
+                    yakitNotify("error", `SelectFirstMenuTabKey获取数据失败:${error}`)
+                })
+        }
         // 开启fuzzer-tab页内数据的订阅事件
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
@@ -2284,11 +2386,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 unFuzzerCacheData.current = null
             }
         }
-    }, [])
-    const onInitFuzzer = useMemoizedFn(async () => {
+    }, [softMode])
+    const onInitFuzzer = useMemoizedFn(async (newOpen: boolean) => {
         if (isWFCacheEdition()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
-            if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
+            const index = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
+            if (index === -1 || newOpen) {
                 // 触发获取web-fuzzer的缓存
                 try {
                     setLoading(true)
@@ -2296,12 +2399,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const cache = JSONParseLog(res || "[]", {page: "MainOperatorContent", fun: "onInitFuzzer"})
                     await fetchFuzzerList(cache)
                     await getFuzzerSequenceCache()
-                    setTimeout(() => setLoading(false), 200)
                 } catch (error) {
                     setLoading(false)
                     yakitNotify("error", `onInitFuzzer初始化WF数据失败:${error}`)
                     //进入webfuzzer页面,出现初始化数据失败报错时,弹窗【恢复标签页】,支持用户手动恢复
                     onRestoreHistory(YakitRoute.HTTPFuzzer)
+                } finally {
+                    setTimeout(() => {
+                        const i = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
+                        const len = getPageCache()[i].multipleNode.length
+                        if (isSecurityExpert && newOpen && len === 0) {
+                            addFuzzer({openFlag: false, selectSubItem: true})
+                        }
+                        setLoading(false)
+                    }, 300)
                 }
             }
         }
@@ -2452,7 +2563,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
             setPageCache(oldPageCache)
-            setCurrentTabKey(key)
+            if (!isSecurityExpert) {
+                setCurrentTabKey(key)
+            }
             const lastPage = multipleNodeList[multipleNodeList.length - 1]
             if (lastPage && lastPage.id.includes("group")) {
                 // 最后一个是组的时候，需要设置当前选中组
@@ -2861,6 +2974,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         <Content>
             <YakitSpin spinning={loading}>
                 <TabContent
+                    softMode={softMode}
                     pageCache={pageCache}
                     setPageCache={setPageCache}
                     currentTabKey={currentTabKey}
@@ -2937,6 +3051,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     const {
+        softMode,
         currentTabKey,
         setCurrentTabKey,
         onRemove,
@@ -3000,6 +3115,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                 refreshRate={50}
             />
             <TabList
+                softMode={softMode}
                 pageCache={pageCache}
                 setPageCache={setPageCache}
                 currentTabKey={currentTabKey}
@@ -3008,6 +3124,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                 onDragEnd={onDragEnd}
             />
             <TabChildren
+                softMode={softMode}
                 pageCache={pageCache}
                 currentTabKey={currentTabKey}
                 openMultipleMenuPage={openMultipleMenuPage}
@@ -3020,7 +3137,8 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
 })
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
-    const {pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory, onSaveHistory} = props
+    const {softMode, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory, onSaveHistory} =
+        props
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -3044,6 +3162,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                             </React.Suspense>
                         ) : (
                             <SubTabList
+                                softMode={softMode}
                                 pageCache={pageCache}
                                 currentTabKey={currentTabKey}
                                 openMultipleMenuPage={openMultipleMenuPage}
@@ -3062,7 +3181,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
 })
 
 const TabList: React.FC<TabListProps> = React.memo((props) => {
-    const {pageCache, setPageCache, currentTabKey, setCurrentTabKey, onDragEnd, onRemove} = props
+    const {softMode, pageCache, setPageCache, currentTabKey, setCurrentTabKey, onDragEnd, onRemove} = props
     const {clearFuzzerSequence} = useFuzzerSequence(
         (s) => ({
             clearFuzzerSequence: s.clearFuzzerSequence
@@ -3130,7 +3249,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             onOkText: "关闭所有",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
+                const fixedTabs = pageCache.filter((ele) => getDefaultFixedTabs(softMode).includes(ele.route))
                 if (fixedTabs.length > 0) {
                     const key = fixedTabs[fixedTabs.length - 1].routeKey
                     setPageCache([...fixedTabs])
@@ -3159,7 +3278,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 if (pageCache.length <= 0) return
-                const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
+                const fixedTabs = pageCache.filter((ele) => getDefaultFixedTabs(softMode).includes(ele.route))
                 const newPage: PageCache[] = [...fixedTabs, item]
                 setPageCache(newPage)
                 setCurrentTabKey(item.routeKey)
@@ -3190,6 +3309,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                                 return (
                                     <React.Fragment key={item.routeKey}>
                                         <TabItem
+                                            softMode={softMode}
                                             item={item}
                                             index={index}
                                             currentTabKey={currentTabKey}
@@ -3213,15 +3333,11 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     )
 })
 const TabItem: React.FC<TabItemProps> = React.memo((props) => {
-    const {index, item, currentTabKey, onSelect, onRemove, onContextMenu} = props
-
-    const showInitPageIcon = (item: PageCache) => {
-        return InitPageHasRouteIcon.find((i) => i.route === item.route)?.routeIcon
-    }
+    const {softMode, index, item, currentTabKey, onSelect, onRemove, onContextMenu} = props
 
     return (
         <>
-            {defaultFixedTabs.includes(item.route) ? (
+            {getDefaultFixedTabs(softMode).includes(item.route) ? (
                 <div
                     className={classNames(styles["tab-menu-first-item"], styles["tab-menu-item-fixed"], {
                         [styles["tab-menu-first-item-active"]]: item.routeKey === currentTabKey
@@ -3231,13 +3347,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                         onSelect(item, item.routeKey)
                     }}
                 >
-                    {item.routeKey === currentTabKey || !showInitPageIcon(item) ? (
-                        <span className='content-ellipsis'>{item.verbose || ""}</span>
-                    ) : (
-                        <span className={styles["route-icon"]} title={item.verbose || ""}>
-                            {showInitPageIcon(item)}
-                        </span>
-                    )}
+                    <span className='content-ellipsis'>{item.verbose || ""}</span>
                 </div>
             ) : (
                 <Draggable key={item.routeKey} draggableId={item.routeKey} index={index}>
@@ -3284,6 +3394,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
 
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const {
+        softMode,
         pageItem,
         index,
         pageCache,
@@ -3347,7 +3458,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if ((currentNode?.groupChildren?.length || 0) > 0) {
                 currentNode = currentNode.groupChildren[0]
             }
-            if (pageItem.openFlag !== false) {
+            if (pageItem.openFlag !== false || pageItem.selectSubItem) {
                 setSelectSubMenu({...currentNode})
             }
         }
@@ -3363,6 +3474,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSetSelectFirstMenuTabKey = useDebounceFn(
         (tabKey: YakitRoute | string) => {
             setRemoteValue(RemoteGV.SelectFirstMenuTabKey, tabKey)
+            // yakit 社区版 安全专家模式
+            if (isCommunityYakit() && softMode === YakitModeEnum.SecurityExpert) {
+                const index = getDefaultFixedTabs(softMode).findIndex((route) => route === tabKey)
+                if (index !== -1) {
+                    setRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey, tabKey)
+                } else {
+                    setRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey, "")
+                }
+            }
         },
         {wait: 200, leading: true}
     ).run
@@ -3469,6 +3589,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             tabIndex={0}
         >
             <SubTabs
+                softMode={softMode}
                 currentTabKey={currentTabKey}
                 ref={subTabsRef}
                 onFocusPage={onFocusPage}
@@ -3499,6 +3620,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 const SubTabs: React.FC<SubTabsProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {
+            softMode,
             currentTabKey,
             pageItem,
             onFocusPage,
@@ -4229,9 +4351,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
         /** 关闭当前标签页 */
         const onRemoveSubPageFun = useMemoizedFn((removeItem: MultipleNodeInfo) => {
-            // 固定tab的多开页面，最后一个页面不能删除
-            if (defaultFixedTabsNoSinglPageRoute.includes(pageItem.route) && subPage.length === 1) return
-
             //  先更改当前选择item,在删除
             if (removeItem.id === selectSubMenu.id) onUpdateSelectSubPage(removeItem)
             const {index, subIndex} = getPageItemById(subPage, removeItem.id)
@@ -4329,10 +4448,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 })
             }
 
-            // 固定页面支持多开页面第一个标签页需要移除关闭标签选项
-            if (defaultFixedTabsNoSinglPageRoute.includes(currentTabKey) && index === 0) {
-                // @ts-ignore
-                menuData = menuData.filter((item) => item.key !== "remove")
+            // 固定页面支持多开页面需要移除关闭标签选项
+            if (getDefaultFixedTabsNoSinglPageRoute(softMode).includes(currentTabKey) && subPage.length === 1) {
+                if (groupList.length === 0 && index === 0) {
+                    // @ts-ignore
+                    menuData = menuData.filter((item) => item.key !== "remove")
+                } else if (groupList.length === 1) {
+                    const len = groupList[0].groupChildren?.length || 0
+                    if (len === 1) {
+                        // @ts-ignore
+                        menuData = menuData.filter((item) => item.key !== "remove")
+                    }
+                }
             }
 
             showByRightContext(
@@ -5277,6 +5404,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <SubTabGroupItem
+                                                        subPageLen={subPage.length}
+                                                        groupChildrenLen={item.groupChildren.length}
+                                                        softMode={softMode}
                                                         subPage={subPage}
                                                         subItem={item}
                                                         index={indexSub}
@@ -5299,6 +5429,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         return (
                                             <React.Fragment key={item.id}>
                                                 <SubTabItem
+                                                    subPageLen={subPage.length}
+                                                    groupChildrenLen={0}
+                                                    softMode={softMode}
                                                     subItem={item}
                                                     index={indexSub}
                                                     selectSubMenu={selectSubMenu}
@@ -5378,6 +5511,9 @@ export interface SimpleTabInterface {
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {
+        subPageLen,
+        groupChildrenLen,
+        softMode,
         subItem,
         isDragDisabled,
         index,
@@ -5404,6 +5540,23 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
             setTabStatus(obj.status)
         }
     })
+
+    const unShowRemove = useMemo(() => {
+        if (getDefaultFixedTabsNoSinglPageRoute(softMode).includes(currentTabKey)) {
+            if (subPageLen === 1) {
+                if (groupChildrenLen === 0) {
+                    return index === 0
+                } else {
+                    return groupChildrenLen === 1
+                }
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
+    }, [subPageLen, softMode, currentTabKey, index, groupChildrenLen])
+
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index} isDragDisabled={isDragDisabled}>
             {(provided, snapshot) => {
@@ -5446,7 +5599,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                 <div className={styles["tab-menu-item-verbose"]}>
                                     <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                                 </div>
-                                {!(defaultFixedTabsNoSinglPageRoute.includes(currentTabKey) && index === 0) && (
+                                {!unShowRemove && (
                                     <RemoveIcon
                                         className={classNames(styles["remove-icon"], {
                                             [styles["remove-show-icon"]]: isActive
@@ -5491,6 +5644,9 @@ const cloneItemStyle = (draggableStyle) => {
 }
 const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const {
+        subPageLen,
+        groupChildrenLen,
+        softMode,
         subPage,
         subItem,
         index,
@@ -5616,6 +5772,9 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                         {groupChildrenList.map((groupItem, index) => (
                                             <React.Fragment key={groupItem.id}>
                                                 <SubTabItem
+                                                    subPageLen={subPageLen}
+                                                    groupChildrenLen={groupChildrenLen}
+                                                    softMode={softMode}
                                                     subItem={groupItem}
                                                     index={index}
                                                     selectSubMenu={selectSubMenu}

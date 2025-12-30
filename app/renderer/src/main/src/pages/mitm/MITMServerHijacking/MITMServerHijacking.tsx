@@ -154,42 +154,55 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
 
-    useDebounceEffect(
-        () => {
+    const onStartMitmChangeInfo = useMemoizedFn((infoStr = "") => {
+        try {
             const info =
                 mitmVersion === MITMVersion.V2
-                    ? initV2PageInfo()?.immediatelyLaunchedInfo
+                    ? infoStr
+                        ? JSON.parse(infoStr)
+                        : initV2PageInfo()?.immediatelyLaunchedInfo
                     : initPageInfo()?.immediatelyLaunchedInfo
             if (info && status !== "idle") {
-                if (mitmVersion === MITMVersion.V2) {
-                    removePagesDataCacheById(YakitRoute.MITMHacker, YakitRoute.MITMHacker)
-                } else {
-                    removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
-                }
-                ipcRenderer.invoke("IsChromeLaunched").then((e) => {
-                    if (e) {
-                        const value: MITMHotPortRequest = {
-                            host: info.host,
-                            port: +info.port,
-                            version: mitmVersion
+                if (info.host && info.port) {
+                    ipcRenderer.invoke("IsChromeLaunched").then((e) => {
+                        if (e) {
+                            const value: MITMHotPortRequest = {
+                                host: info?.host!,
+                                port: +info?.port!,
+                                version: mitmVersion
+                            }
+                            grpcMITMHotPort(value)
                         }
-                        grpcMITMHotPort(value)
-                    }
-                })
+                    })
                     emiter.emit(
                         "onChangeAddrAndEnableInitialPlugin",
                         JSON.stringify({
                             version: mitmVersion,
                             host: info.host,
                             port: info.port,
-                            enableInitialPlugin: info.enableInitialPlugin,
+                            enableInitialPlugin: info.enableInitialPlugin
                         })
                     )
+                }
+
+                // 前面所有步骤操作完成后移除缓存
+                if (mitmVersion === MITMVersion.V2) {
+                    removePagesDataCacheById(YakitRoute.MITMHacker, YakitRoute.MITMHacker)
+                } else {
+                    removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
+                }
             }
-        },
-        [initPageInfo()?.immediatelyLaunchedInfo, initV2PageInfo()?.immediatelyLaunchedInfo, status, mitmVersion],
-        {wait: 100}
-    )
+        } catch (error) {}
+    })
+    useEffect(() => {
+        onStartMitmChangeInfo()
+    }, [status, mitmVersion])
+    useEffect(() => {
+        emiter.on("onStartMitm", onStartMitmChangeInfo)
+        return () => {
+            emiter.off("onStartMitm", onStartMitmChangeInfo)
+        }
+    }, [])
     const stopFun = useMemoizedFn(() => {
         // setLoading(true)
         return new Promise((resolve, reject) => {

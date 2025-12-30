@@ -293,7 +293,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const showManualInstallGuide = useMemoizedFn(() => {
         setShow(false)
         const m = showYakitModal({
-            title: t("home.cert.manualInstallTitle"),
+            title: t("Home.cert.manualInstallTitle"),
             width: "600px",
             centered: true,
             content: (
@@ -303,22 +303,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         color: "var(--Colors-Use-Neutral-Text-1-Title)"
                     }}
                 >
-                    {t("home.cert.manualInstallSteps")}
+                    {t("Home.cert.manualInstallSteps")}
                     <br />
                     <br />
-                    1. {t("home.cert.manualInstallStep1")}
+                    1. {t("Home.cert.manualInstallStep1")}
                     <br />
-                    2. {t("home.cert.manualInstallStep2")}
+                    2. {t("Home.cert.manualInstallStep2")}
                     <br />
-                    3. {t("home.cert.manualInstallStep3")}
-                    <br />
-                    <br />
-                    {t("home.cert.manualInstallSafeHint")}
-                    <br />
-                    {t("home.cert.manualInstallReadyHint", {name: t("YakitRoute.MITM")})}
+                    3. {t("Home.cert.manualInstallStep3")}
                     <br />
                     <br />
-                    {t("Home.contactForHelp")}
+                    {t("Home.cert.manualInstallSafeHint")}
+                    <br />
+                    {t("Home.cert.manualInstallReadyHint", {name: t("YakitRoute.MITM")})}
+                    <br />
+                    <br />
+                    {t("Home.cert.contactForHelp")}
                 </div>
             ),
             onOk: () => {
@@ -328,7 +328,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         if (p) {
                             openABSFileLocated(p)
                         } else {
-                            failed(t("YakitNotification.generationFailed"))
+                            failed(t("YakitNotification.generationFailed", {colon: false}))
                         }
                     })
                     .catch(() => {})
@@ -344,7 +344,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             return (
                 <>
                     <br />
-                    {t("home.cert.autoInstallPkexecHint")}
+                    {t("Home.cert.autoInstallPkexecHint")}
                 </>
             )
         }
@@ -352,7 +352,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             return (
                 <>
                     <br />
-                    {t("home.cert.autoInstallAuthAgentHint")}
+                    {t("Home.cert.autoInstallAuthAgentHint")}
                 </>
             )
         }
@@ -362,11 +362,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
         setShow(false)
         const modal = showYakitModal({
-            title: t("home.cert.autoInstallFailedTitle"),
+            title: t("Home.cert.autoInstallFailedTitle"),
             width: "520px",
             centered: true,
-            okText: t("home.cert.autoInstallFailedManualBtn"),
-            cancelText: t("common.cancel"),
+            okText: t("Home.cert.autoInstallFailedManualBtn"),
+            cancelText: t("YakitButton.cancel"),
             content: (
                 <div
                     style={{
@@ -374,12 +374,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         color: "var(--Colors-Use-Neutral-Text-1-Title)"
                     }}
                 >
-                    <div style={{marginBottom: 10}}>{t("home.cert.autoInstallFailedDesc")}</div>
+                    <div style={{marginBottom: 10}}>{t("Home.cert.autoInstallFailedDesc")}</div>
                     <div style={{color: "var(--Colors-Use-Danger-Text)"}}>
-                        {reason || t("home.cert.autoInstallUnknownError")}
+                        {reason || t("YakitNotification.unknown_error")}
                     </div>
                     {renderAutoInstallSuggestion(reason)}
-                    <div style={{marginTop: 16}}>{t("home.cert.autoInstallGuideHint")}</div>
+                    <div style={{marginTop: 16}}>{t("Home.cert.autoInstallGuideHint")}</div>
                 </div>
             ),
             onOk: () => {
@@ -391,22 +391,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     const handleAutoInstallMITMCertificate = useMemoizedFn(() => {
         setShow(false)
-        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求")
+        yakitNotify("info", t("Home.cert.mitmCertInstallPermissionNotice"))
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
                 if (res?.Ok) {
-                    yakitNotify("success", "MITM 证书安装成功")
+                    yakitNotify("success", t("Home.cert.mitmCertInstallSuccess"))
                     updateMITMCert()
                 } else {
-                    const reason = res?.Reason || "未知错误"
-                    yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                    const reason = res?.Reason || t("YakitNotification.unknown_error")
+                    yakitNotify("error", `${t("Home.cert.mitmCertInstallFailed")}${reason}`)
                     showAutoInstallFailure(reason)
                 }
             })
             .catch((e) => {
                 const reason = `${e}`
-                yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                yakitNotify("error", `${t("Home.cert.mitmCertInstallFailed")}${reason}`)
                 showAutoInstallFailure(reason)
             })
     })
@@ -536,13 +536,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (isIRify()) {
             settledArr = [onRuleUpdate]
         } else {
-            settledArr = [
-                updateSystemProxy,
-                updateGlobalReverse,
-                updatePcap,
-                updateChromePath,
-                updateMITMCert
-            ]
+            settledArr = [updateSystemProxy, updateGlobalReverse, updatePcap, updateChromePath, updateMITMCert]
         }
         if (serverPushStatus) {
             settledArr.push(updatePluginTotal)
@@ -805,14 +799,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         className={styles["btn-style"]}
                                         onClick={handleAutoInstallMITMCertificate}
                                     >
-                                        {t("home.cert.autoInstallButton")}
+                                        {t("Home.cert.autoInstallButton")}
                                     </YakitButton>
                                     <YakitButton
                                         type='text'
                                         className={styles["btn-style"]}
                                         onClick={() => showManualInstallGuide()}
                                     >
-                                        {t("home.cert.manualInstallButton")}
+                                        {t("Home.cert.manualInstallButton")}
                                     </YakitButton>
                                 </div>
                             </div>
