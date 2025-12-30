@@ -195,8 +195,9 @@ export const StartupPage: React.FC = () => {
                 }
             })
         )
-
-        await Promise.allSettled(tasks.map((run) => run()))
+        try {
+            await Promise.allSettled(tasks.map((run) => run()))
+        } catch (error) {}
         nextFunc?.()
     })
 
