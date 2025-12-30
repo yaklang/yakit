@@ -11,7 +11,7 @@ import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
 import {ResizerIcon} from "@/assets/newIcon"
 import {TextAreaRef} from "antd/lib/input/TextArea"
-import {SolidCloseCircleIcon} from "@/assets/colors"
+import {ColorsCloseCircleIcon} from "@/assets/colors"
 
 /**
  * @description: 输入
@@ -35,7 +35,7 @@ const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> =
             >
                 <Input
                     allowClear={
-                        !!allowClear ? {clearIcon: <SolidCloseCircleIcon style={{display: "flex"}} />} : undefined
+                        !!allowClear ? {clearIcon: <ColorsCloseCircleIcon style={{display: "flex"}} />} : undefined
                     }
                     spellCheck={false}
                     {...restProps}
@@ -86,7 +86,7 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
             >
                 <Input.Search
                     allowClear={
-                        !!allowClear ? {clearIcon: <SolidCloseCircleIcon style={{display: "flex"}} />} : undefined
+                        !!allowClear ? {clearIcon: <ColorsCloseCircleIcon style={{display: "flex"}} />} : undefined
                     }
                     enterButton
                     spellCheck={false}
@@ -148,7 +148,7 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttr
             >
                 <Input.Password
                     allowClear={
-                        !!allowClear ? {clearIcon: <SolidCloseCircleIcon style={{display: "flex"}} />} : undefined
+                        !!allowClear ? {clearIcon: <ColorsCloseCircleIcon style={{display: "flex"}} />} : undefined
                     }
                     spellCheck={false}
                     {...restProps}

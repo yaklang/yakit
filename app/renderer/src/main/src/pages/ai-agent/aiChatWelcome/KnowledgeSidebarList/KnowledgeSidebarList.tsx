@@ -4,6 +4,7 @@ import {
     useAsyncEffect,
     useCreation,
     useDebounceFn,
+    useDeepCompareEffect,
     useMemoizedFn,
     useRequest,
     useSafeState,
@@ -144,7 +145,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         setBuildingDrawer({visible: false, streamToken: "", type: ""})
     })
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         setKnowledgeBase(knowledgeBases)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases])
@@ -155,7 +156,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         if (typeof diff === "object" && diff.delete) {
             setSelectKnowledgeBases((preList) => preList?.filter((it) => it.id !== diff.delete?.ID))
         }
-    }, [knowledgeBases])
+    }, [knowledgeBase])
 
     const beforeUploadFun = useDebounceFn(
         async (fileList: Array<File & {path: string}>) => {
@@ -216,7 +217,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                 buildingRef.current.add(key)
 
                 try {
-                    setAddMode([])
+                    setAddMode(["manual"])
                     await BuildingKnowledgeBase(kb)
 
                     api?.createStream?.(kb.streamToken, {
@@ -259,7 +260,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                 }
             }
         }
-    }, [knowledgeBases])
+    }, [knowledgeBase])
 
     const starKnowledgeeBaseEntry = useMemoizedFn(async (updateItems: KnowledgeBaseItem) => {
         try {
@@ -294,7 +295,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         }
     })
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
         const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
         const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
@@ -311,7 +312,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [knowledgeBases, addMode])
+    }, [knowledgeBase, addMode])
 
     const onViewBuildProcess = useMemoizedFn((e, streamToken, type) => {
         e.stopPropagation()

@@ -336,7 +336,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                         setKnowledgeBase(() =>
                                             knowledgeBases.filter(
                                                 (it) =>
-                                                    it?.KnowledgeBaseName?.toLowerCase().startsWith(
+                                                    it?.KnowledgeBaseName?.toLowerCase().includes(
                                                         sidebarSearchValue.toLowerCase()
                                                     )
                                             )
