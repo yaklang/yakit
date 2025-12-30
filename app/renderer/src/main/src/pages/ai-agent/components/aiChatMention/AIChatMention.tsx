@@ -22,7 +22,7 @@ import {
     useSafeState
 } from "ahooks"
 import {AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs} from "../../defaultConstant"
-import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {RollingLoadList, RollingLoadListRef} from "@/components/RollingLoadList/RollingLoadList"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../../type/forge"
 import {grpcQueryAIForge} from "../../grpc"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -39,11 +39,7 @@ import {OutlineCheckIcon} from "@/assets/icon/outline"
 import {useCustomFolder} from "../aiFileSystemList/store/useCustomFolder"
 import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
-import {
-    FileToChatQuestionList,
-    fileToChatQuestionStore,
-    useFileToQuestion
-} from "@/pages/ai-re-act/aiReActChat/store"
+import {FileToChatQuestionList, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import {useGetStoreKey} from "../../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 
 const {ipcRenderer} = window.require("electron")
@@ -97,7 +93,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             }
             setActiveKey(newValue)
         },
-        {wait: 200, leading: true}
+        {wait: 100, leading: true}
     ).run
 
     const onRightArrow = useDebounceFn(
@@ -110,7 +106,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             }
             setActiveKey(newValue)
         },
-        {wait: 200, leading: true}
+        {wait: 100, leading: true}
     ).run
     const getActiveIndex = useMemoizedFn(() => {
         return AIMentionTabs.findIndex((ele) => ele.value === getActiveKey())
@@ -251,10 +247,15 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
             Total: 0
         })
         const [selected, setSelected] = useState<AIForge>()
-        const [scrollToNumber, setScrollToNumber] = useState<number>(0)
 
         const forgeListRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(forgeListRef)
+
+        const listRef = useRef<RollingLoadListRef>({
+            containerRef: null,
+            scrollTo: () => {}
+        })
+
         useImperativeHandle(
             ref,
             () => ({
@@ -268,21 +269,22 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
             // 获取模板列表
             getList()
         }, [])
-
-        useSwitchSelectByKeyboard<AIForge>(forgeListRef, {
+        const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
+            if (value >= 0 && value < response.Data.length) {
+                setSelected(response.Data[value])
+                if (isScroll) {
+                    listRef.current.scrollTo(value)
+                }
+            }
+        })
+        useSwitchSelectByKeyboard<AIForge>(listRef.current.containerRef, {
             data: response.Data,
             selected,
-            rowKey: "Id",
-            onSelectNumber: (v) => onKeyboardSelect(v),
+            rowKey: (item) => `AIMentionSelectItem-${item.Id}`,
+            onSelectNumber: onKeyboardSelect,
             onEnter: () => onEnter()
         })
 
-        const onKeyboardSelect = useMemoizedFn((value: number) => {
-            if (value >= 0 && value < response.Data.length) {
-                setSelected(response.Data[value])
-                setScrollToNumber(value)
-            }
-        })
         const onEnter = useMemoizedFn(() => {
             if (selected && inViewport) onSelect(selected)
         })
@@ -332,6 +334,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
             <div className={styles["forge-name-list-of-mention"]} ref={forgeListRef} tabIndex={0}>
                 <YakitSpin spinning={spinning}>
                     <RollingLoadList<AIForge>
+                        ref={listRef}
                         data={response.Data}
                         loadMoreData={loadMoreData}
                         renderRow={(rowData: AIForge, index: number) => {
@@ -354,9 +357,8 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
                         hasMore={hasMore}
                         loading={loading}
                         defItemHeight={24}
-                        rowKey='ID'
+                        rowKey='Id'
                         isRef={isRef}
-                        numberRoll={scrollToNumber}
                     />
                 </YakitSpin>
             </div>
@@ -377,9 +379,14 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
             Total: 0
         })
         const [selected, setSelected] = useState<AITool>()
-        const [scrollToNumber, setScrollToNumber] = useState<number>(0)
         const toolListRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(toolListRef)
+
+        const listRef = useRef<RollingLoadListRef>({
+            containerRef: null,
+            scrollTo: () => {}
+        })
+
         useImperativeHandle(
             ref,
             () => ({
@@ -392,20 +399,22 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
         useEffect(() => {
             getList()
         }, [])
-        useSwitchSelectByKeyboard<AITool>(toolListRef, {
+        const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
+            if (value >= 0 && value < response.Tools.length) {
+                setSelected(response.Tools[value])
+                if (isScroll) {
+                    listRef.current.scrollTo(value)
+                }
+            }
+        })
+        useSwitchSelectByKeyboard<AITool>(listRef.current.containerRef, {
             data: response.Tools,
             selected,
-            rowKey: "ID",
-            onSelectNumber: (v) => onKeyboardSelect(v),
+            rowKey: (item) => `AIMentionSelectItem-${item.ID}`,
+            onSelectNumber: onKeyboardSelect,
             onEnter: () => onEnter()
         })
 
-        const onKeyboardSelect = useMemoizedFn((value: number) => {
-            if (value >= 0 && value < response.Tools.length) {
-                setSelected(response.Tools[value])
-                setScrollToNumber(value)
-            }
-        })
         const onEnter = useMemoizedFn(() => {
             if (selected && inViewport) onSelect(selected)
         })
@@ -454,6 +463,7 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
             <div className={styles["tool-list-of-mention"]} ref={toolListRef}>
                 <YakitSpin spinning={spinning}>
                     <RollingLoadList<AITool>
+                        ref={listRef}
                         data={response.Tools}
                         loadMoreData={loadMoreData}
                         renderRow={(rowData: AITool, index: number) => {
@@ -478,7 +488,6 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
                         defItemHeight={24}
                         rowKey='ID'
                         isRef={isRef}
-                        numberRoll={scrollToNumber}
                     />
                 </YakitSpin>
             </div>
@@ -492,9 +501,14 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
         const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
         const [selected, setSelected] = useState<KnowledgeBase>()
-        const [scrollToNumber, setScrollToNumber] = useState<number>(0)
         const toolListRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(toolListRef)
+
+        const listRef = useRef<RollingLoadListRef>({
+            containerRef: null,
+            scrollTo: () => {}
+        })
+
         const {
             loading,
             data: existsKnowledgeBase,
@@ -535,20 +549,22 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         useEffect(() => {
             getList()
         }, [])
-        useSwitchSelectByKeyboard<KnowledgeBase>(toolListRef, {
+        const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
+            if (value >= 0 && value < (existsKnowledgeBase || []).length) {
+                setSelected(existsKnowledgeBase?.[value])
+                if (isScroll) {
+                    listRef.current.scrollTo(value)
+                }
+            }
+        })
+        useSwitchSelectByKeyboard<KnowledgeBase>(listRef.current.containerRef, {
             data: existsKnowledgeBase || [],
             selected,
-            rowKey: "ID",
-            onSelectNumber: (v) => onKeyboardSelect(v),
+            rowKey: (item) => `AIMentionSelectItem-${item.ID}`,
+            onSelectNumber: onKeyboardSelect,
             onEnter: () => onEnter()
         })
 
-        const onKeyboardSelect = useMemoizedFn((value: number) => {
-            if (value >= 0 && value < (existsKnowledgeBase || []).length) {
-                setSelected(existsKnowledgeBase?.[value])
-                setScrollToNumber(value)
-            }
-        })
         const onEnter = useMemoizedFn(() => {
             if (selected && inViewport) onSelect(selected)
         })
@@ -563,6 +579,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
             <div className={styles["knowledge-base-list-of-mention"]}>
                 <YakitSpin spinning={loading}>
                     <RollingLoadList<KnowledgeBase>
+                        ref={listRef}
                         data={existsKnowledgeBase || []}
                         loadMoreData={() => {}}
                         renderRow={(rowData: KnowledgeBase, index: number) => {
@@ -586,7 +603,6 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
                         loading={loading}
                         defItemHeight={24}
                         rowKey='ID'
-                        numberRoll={scrollToNumber}
                     />
                 </YakitSpin>
             </div>
@@ -603,6 +619,7 @@ const AIMentionSelectItem: React.FC<AIMentionSelectItemProps> = React.memo((prop
                 [styles["row-item-select"]]: isSelect
             })}
             onClick={onSelect}
+            id={`AIMentionSelectItem-${item.id}`}
         >
             <span className='content-ellipsis'>{item.name}</span>
             {isSelect && <OutlineCheckIcon />}
