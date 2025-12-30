@@ -215,9 +215,9 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                 const key = `kb:${kb.ID}`
                 if (buildingRef.current.has(key)) continue
                 buildingRef.current.add(key)
-
+                const findIsDefualtKnowledge = knowledgeBase.find((it) => it.IsDefault)?.CreatedFromUI
                 try {
-                    setAddMode(["manual"])
+                    setAddMode(findIsDefualtKnowledge ? ["manual"] : [])
                     await BuildingKnowledgeBase(kb)
 
                     api?.createStream?.(kb.streamToken, {
