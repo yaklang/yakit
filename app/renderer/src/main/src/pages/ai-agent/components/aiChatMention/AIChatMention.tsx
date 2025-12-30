@@ -18,7 +18,6 @@ import {
     useInViewport,
     useKeyPress,
     useMemoizedFn,
-    useRequest,
     useSafeState
 } from "ahooks"
 import {AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs} from "../../defaultConstant"
@@ -29,8 +28,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AITool, GetAIToolListRequest, GetAIToolListResponse} from "../../type/aiTool"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {grpcGetAIToolList} from "../../aiToolList/utils"
-import {CreateKnowledgeBaseData, KnowledgeBaseContentProps} from "@/pages/KnowledgeBase/TKnowledgeBase"
-import {KnowledgeBase} from "@/components/playground/knowlegeBase/types"
 import {failed} from "@/utils/notification"
 import useSwitchSelectByKeyboard from "./useSwitchSelectByKeyboard"
 import classNames from "classnames"
@@ -41,8 +38,8 @@ import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeS
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {FileToChatQuestionList, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import {useGetStoreKey} from "../../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
+import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 
-const {ipcRenderer} = window.require("electron")
 const defaultRef: AIChatMentionListRefProps = {
     onRefresh: () => {}
 }
@@ -127,7 +124,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             name: toolItem.VerboseName || toolItem.Name
         })
     })
-    const onSelectKnowledgeBase = useMemoizedFn((knowledgeBaseItem: KnowledgeBase) => {
+    const onSelectKnowledgeBase = useMemoizedFn((knowledgeBaseItem: KnowledgeBaseItem) => {
         onSelect(AIMentionTabsEnum.KnowledgeBase, {
             id: `${knowledgeBaseItem.ID}`,
             name: knowledgeBaseItem.KnowledgeBaseName
@@ -187,9 +184,9 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 return null
         }
     })
-    const onPressEnter = useMemoizedFn((e) => {
-        onSearch(e.target.value)
-    })
+    // const onPressEnter = useMemoizedFn((e) => {
+    //     onSearch(e.target.value)
+    // })
     const onMentionClick = useMemoizedFn((e) => {
         e.stopPropagation()
         e.preventDefault()
@@ -224,8 +221,16 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                         value={keyWord}
                         onChange={(e) => setKeyWord(e.target.value)}
                         onSearch={onSearch}
-                        onPressEnter={onPressEnter}
+                        // onPressEnter={onPressEnter}//与select选中enter快捷键冲突，暂时屏蔽搜索的enter快捷键
                         allowClear={true}
+                        onFocus={(e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                        }}
                     />
                 )}
                 <div className={styles["list-body"]}>{renderTabContent(activeKey)}</div>
@@ -497,10 +502,10 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
 
 const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = React.memo(
     forwardRef((props, ref) => {
+        const {knowledgeBases} = useKnowledgeBase()
+
         const {selectList, keyWord, onSelect} = props
-        const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
-        const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
-        const [selected, setSelected] = useState<KnowledgeBase>()
+        const [selected, setSelected] = useState<KnowledgeBaseItem>()
         const toolListRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(toolListRef)
 
@@ -509,34 +514,8 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
             scrollTo: () => {}
         })
 
-        const {
-            loading,
-            data: existsKnowledgeBase,
-            runAsync: existsKnowledgeBaseAsync
-        } = useRequest(
-            async (Keyword?: string) => {
-                const result: KnowledgeBaseContentProps<number> = await ipcRenderer.invoke("GetKnowledgeBase", {
-                    Keyword,
-                    Pagination: {Limit: 9999, Page: 1}
-                })
-                const {KnowledgeBases} = result
+        const [knowledgeBaseList, setKnowledgeBaseList] = useSafeState<KnowledgeBaseItem[]>([])
 
-                const resultData = KnowledgeBases?.map((it) => ({
-                    ...createKnwledgeDataRef.current,
-                    ...it
-                }))
-                return resultData
-            },
-            {
-                manual: true,
-                onSuccess: (value) => {
-                    const FirstknowledgeBaseID = value?.find((item) => item.IsImported === false)?.ID
-                    if (FirstknowledgeBaseID) {
-                        !knowledgeBaseID && setKnowledgeBaseID(`${FirstknowledgeBaseID}`)
-                    }
-                }
-            }
-        )
         useImperativeHandle(
             ref,
             () => ({
@@ -547,18 +526,19 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
             []
         )
         useEffect(() => {
-            getList()
-        }, [])
+            setKnowledgeBaseList(knowledgeBases)
+        }, [knowledgeBases])
+
         const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
-            if (value >= 0 && value < (existsKnowledgeBase || []).length) {
-                setSelected(existsKnowledgeBase?.[value])
+            if (value >= 0 && value < (knowledgeBaseList || []).length) {
+                setSelected(knowledgeBaseList?.[value])
                 if (isScroll) {
                     listRef.current.scrollTo(value)
                 }
             }
         })
-        useSwitchSelectByKeyboard<KnowledgeBase>(listRef.current.containerRef, {
-            data: existsKnowledgeBase || [],
+        useSwitchSelectByKeyboard<KnowledgeBaseItem>(listRef.current.containerRef, {
+            data: knowledgeBaseList || [],
             selected,
             rowKey: (item) => `AIMentionSelectItem-${item.ID}`,
             onSelectNumber: onKeyboardSelect,
@@ -570,41 +550,41 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         })
         const getList = useMemoizedFn(async () => {
             try {
-                await existsKnowledgeBaseAsync(keyWord)
+                setKnowledgeBaseList(
+                    knowledgeBases.filter((it) => it?.KnowledgeBaseName?.toLowerCase().includes(keyWord.toLowerCase()))
+                )
             } catch (error) {
                 failed(error + "")
             }
         })
         return (
             <div className={styles["knowledge-base-list-of-mention"]}>
-                <YakitSpin spinning={loading}>
-                    <RollingLoadList<KnowledgeBase>
-                        ref={listRef}
-                        data={existsKnowledgeBase || []}
-                        loadMoreData={() => {}}
-                        renderRow={(rowData: KnowledgeBase, index: number) => {
-                            const isSelect = !!selectList.find((it) => it.id === `${rowData.ID}`)
-                            return (
-                                <AIMentionSelectItem
-                                    item={{
-                                        id: `${rowData.ID}`,
-                                        name: rowData.KnowledgeBaseName
-                                    }}
-                                    onSelect={() => onSelect(rowData)}
-                                    isActive={selected?.ID === rowData.ID}
-                                    isSelect={isSelect}
-                                />
-                            )
-                        }}
-                        classNameRow={styles["ai-knowledge-base-list-row"]}
-                        classNameList={styles["ai-knowledge-base-list"]}
-                        page={1}
-                        hasMore={false}
-                        loading={loading}
-                        defItemHeight={24}
-                        rowKey='ID'
-                    />
-                </YakitSpin>
+                <RollingLoadList<KnowledgeBaseItem>
+                    ref={listRef}
+                    data={knowledgeBaseList || []}
+                    loadMoreData={() => {}}
+                    renderRow={(rowData: KnowledgeBaseItem, index: number) => {
+                        const isSelect = !!selectList.find((it) => it.id === `${rowData.ID}`)
+                        return (
+                            <AIMentionSelectItem
+                                item={{
+                                    id: `${rowData.ID}`,
+                                    name: rowData.KnowledgeBaseName
+                                }}
+                                onSelect={() => onSelect(rowData)}
+                                isActive={selected?.ID === rowData.ID}
+                                isSelect={isSelect}
+                            />
+                        )
+                    }}
+                    classNameRow={styles["ai-knowledge-base-list-row"]}
+                    classNameList={styles["ai-knowledge-base-list"]}
+                    page={1}
+                    hasMore={false}
+                    loading={false}
+                    defItemHeight={24}
+                    rowKey='ID'
+                />
             </div>
         )
     })
