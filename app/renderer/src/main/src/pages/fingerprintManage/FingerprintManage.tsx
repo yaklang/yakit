@@ -1195,6 +1195,9 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                         },
                         size: "small"
                     }}
+                    locale={{
+                        emptyText: <YakitEmpty />
+                    }}
                 />
             </div>
 
