@@ -33,6 +33,7 @@ import {
     getRemoteHttpSettingGV,
     getRemoteI18nGV,
     isCommunityEdition,
+    isCommunityYakit,
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnpriTraceIRify,
@@ -124,6 +125,7 @@ import {useTheme} from "@/hook/useTheme"
 import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
 import {useDownloadYakit} from "./update/DownloadYakit"
 import i18n from "@/i18n/i18n"
+import {useMenuMode} from "@/store/menuMode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -636,7 +638,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                                 }
                                                             },
                                                             onCancel() {},
-                                                            cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                                                            cancelButtonProps: {
+                                                                size: "small",
+                                                                className: "modal-cancel-button"
+                                                            },
                                                             okButtonProps: {size: "small", className: "modal-ok-button"}
                                                         })
                                                     } else {
@@ -922,6 +927,31 @@ interface UIOpSettingProp {
     mcp: mcpStreamHooks
 }
 
+/** @name 菜单模式切换 目前只有Yakit 社区版有 */
+const ModeSwitch = () => {
+    if (isCommunityYakit()) {
+        return {
+            key: "modeSwitching",
+            label: "模式切换",
+            children: [
+                {
+                    key: "classic",
+                    label: "经典模式"
+                },
+                {
+                    key: "securityExpert",
+                    label: "安全专家模式"
+                },
+                {
+                    key: "scan",
+                    label: "扫描模式"
+                }
+            ]
+        }
+    }
+
+    return null
+}
 const GetUIOpSettingMenu = () => {
     // 便携版
     if (isEnpriTraceAgent()) {
@@ -1028,9 +1058,10 @@ const GetUIOpSettingMenu = () => {
                 {key: "ssa-compile-history", label: "SSA项目编译历史"}
             ]
         },
+        ModeSwitch(),
         {
-            key: "modeSwitching",
-            label: "模式切换",
+            key: "themeSwitching",
+            label: "主题切换",
             children: [
                 {
                     key: "light",
@@ -1111,7 +1142,7 @@ const GetUIOpSettingMenu = () => {
                 {label: "引擎日志", key: "engineLog"}
             ]
         }
-    ]
+    ].filter((item) => item)
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
@@ -1127,6 +1158,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
     /** 当前主题 */
     const {setTheme} = useTheme()
+    const {menuMode, setMenuMode} = useMenuMode()
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1280,6 +1312,22 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "ssa-compile-history":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.SSA_Compile_History}))
+                return
+            case "classic":
+            case "securityExpert":
+            case "scan":
+                if (isCommunityYakit()) {
+                    if (menuMode === type) {
+                        yakitNotify("info", "当前模式已设置")
+                    } else {
+                        ipcRenderer.invoke("switch-conn-refresh", true)
+                        setMenuMode(type)
+                        setTimeout(() => {
+                            ipcRenderer.invoke("switch-conn-refresh", false)
+                        }, 300)
+                    }
+                }
+
                 return
             case "light":
                 setTheme("light")
@@ -1509,7 +1557,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
                 <div className={styles["header-btn"]}>
                     {isUpdateWait ? (
-                        <YakitButton onClick={handleOpenPath}>{`安装 `}</YakitButton> 
+                        <YakitButton onClick={handleOpenPath}>{`安装 `}</YakitButton>
                     ) : lastVersion === "" ? (
                         "获取失败"
                     ) : isUpdate ? (

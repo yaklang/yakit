@@ -120,6 +120,7 @@
     "manageAllDiscoveredDomainAssets": "管理扫描出的所有域名资产",
     "ai": "AI",
     "ai-repository": "知识库",
-    "ssaCompileHistory": "SSA项目编译历史"
+    "ssaCompileHistory": "SSA项目编译历史",
+    "penetrationRecordDescription": "可记录渗透过程中的任何内容，便于记录查看"
   }
 }

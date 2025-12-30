@@ -84,6 +84,19 @@ export const isMemfit = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
 }
 
+/** CE Yakit  */
+export const isCommunityYakit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
+}
+
+export const isYakit = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTraceAgent
+    )
+}
+
 export const GetReleaseEdition = () => {
     switch (__PLATFORM__) {
         case "enterprise":

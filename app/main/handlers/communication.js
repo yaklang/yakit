@@ -53,7 +53,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("open-customize-menu", (e, params) => {
         win.webContents.send("fetch-open-customize-menu", params)
     })
-    /** 风车切换引擎 */
+    /** 风车切换引擎&菜单模式切换 */
     ipcMain.handle("switch-conn-refresh", (e, params) => {
         if (!params) {
             // 关闭所有菜单

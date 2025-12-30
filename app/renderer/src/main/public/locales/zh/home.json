@@ -6,14 +6,6 @@
         "hostListen": "监听主机",
         "portListen": "监听端口",
         "pluginEnable": "启用插件",
-        "generateAutoInstallScript": "生成自动安装脚本",
-        "pleaseFollowSteps": "请按照以下步骤进行操作：",
-        "openScriptDir": "点击确定后将会打开脚本存放的目录。",
-        "runAutoInstallScript": "双击打开 \"auto-install-cert.bat/auto-install-cert.sh\" 的文件执行安装。",
-        "installSuccessMessage": "如果安装成功，您将看到“Certificate successfully installed.”的提示。",
-        "closeAppsBeforeRun": "请确保在运行脚本之前关闭任何可能会阻止安装的应用程序。",
-        "mitmReadyAfterInstall": "装完成后，您将能够顺利使用 {name}。",
-        "contactForHelp": "如有任何疑问或需要进一步帮助，请随时联系我们。",
         "exampleBruteforce": "爆破示例",
         "bruteforceId": "爆破 ID",
         "bruteforcePassword": "爆破密码",
@@ -53,7 +45,36 @@
         "screenshot": "截屏",
         "captureScreenIntoImage": "截取屏幕信息形成图片",
         "pcapSupportInfoFailed": "无法获取 PCAP 支持信息",
-        "temporary": "临时项目"
+        "temporary": "临时项目",
+        "pluginCoverageDescription": "插件包括Yak插件、MITM插件、Codec插件、端口扫描插件，覆盖漏洞扫描、信息收集、验证码识别、爆破弱口令、加解密等多种场景,也支持创建自己的的插件用于满足更多场景的使用。",
+        "pluginStore": "插件商店",
+        "pluginsMine": "我的插件",
+        "pluginLocal": "本地插件",
+        "codecDesc": "数据加解密工具，支持多种加解密方式，且可以自定义加解密流",
+        "payloadDesc": "对字典进行增删改查，方便统一管理",
+        "informationGathering": "信息收集",
+        "assetReconDescription": "可通过多种工具收集资产信息,包括指纹、路径、子域名等,便于做进一步渗透测试",
+        "cert": {
+            "manualInstallTitle": "生成自动安装脚本",
+            "manualInstallSteps": "请按照以下步骤进行操作：",
+            "manualInstallStep1": "点击确定后将会打开脚本存放的目录。",
+            "manualInstallStep2": "双击打开 \"auto-install-cert.bat/auto-install-cert.sh\" 文件执行安装。",
+            "manualInstallStep3": "如果安装成功，您将看到“Certificate successfully installed.”的提示。",
+            "manualInstallSafeHint": "请在运行脚本之前关闭任何可能会阻止安装的应用程序。",
+            "manualInstallReadyHint": "安装完成后，您将能够顺利使用 {name}。",
+            "contactForHelp": "如有任何疑问或需要进一步帮助，请随时联系我们。",
+            "autoInstallPkexecHint": "提示：检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。",
+            "autoInstallAuthAgentHint": "提示：请确保系统存在并已启动认证代理（如 polkit-gnome-authentication-agent-1），否则可改为手动安装。",
+            "autoInstallFailedTitle": "自动安装失败",
+            "autoInstallFailedManualBtn": "查看手动安装步骤",
+            "autoInstallFailedDesc": "自动安装过程中出现错误：",
+            "autoInstallGuideHint": "您可以查看手动安装步骤继续完成配置。",
+            "autoInstallButton": "自动安装",
+            "manualInstallButton": "手动安装",
+            "mitmCertInstallPermissionNotice": "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求",
+            "mitmCertInstallSuccess": "MITM 证书安装成功",
+            "mitmCertInstallFailed": "MITM 证书安装失败："
+        }
     },
     "IRifyHome": {
         "securityFirst": "代码千万行 安全第一行",
@@ -64,25 +85,5 @@
         "projectDatabase": "项目数据库",
         "databaseTooLarge": "数据库过大，为避免影响使用，建议创建新项目。",
         "vulnerabilityData": "漏洞数据"
-    },
-    "home": {
-        "cert": {
-            "manualInstallTitle": "生成自动安装脚本",
-            "manualInstallSteps": "请按照以下步骤进行操作：",
-            "manualInstallStep1": "点击确定后将会打开脚本存放的目录。",
-            "manualInstallStep2": "双击打开 \"auto-install-cert.bat/auto-install-cert.sh\" 文件执行安装。",
-            "manualInstallStep3": "如果安装成功，您将看到“Certificate successfully installed.”的提示。",
-            "manualInstallSafeHint": "请在运行脚本之前关闭任何可能会阻止安装的应用程序。",
-            "manualInstallReadyHint": "安装完成后，您将能够顺利使用 {name}。",
-            "autoInstallPkexecHint": "提示：检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。",
-            "autoInstallAuthAgentHint": "提示：请确保系统存在并已启动认证代理（如 polkit-gnome-authentication-agent-1），否则可改为手动安装。",
-            "autoInstallFailedTitle": "自动安装失败",
-            "autoInstallFailedManualBtn": "查看手动安装步骤",
-            "autoInstallFailedDesc": "自动安装过程中出现错误：",
-            "autoInstallUnknownError": "未知错误",
-            "autoInstallGuideHint": "您可以查看手动安装步骤继续完成配置。",
-            "autoInstallButton": "自动安装",
-            "manualInstallButton": "手动安装"
-        }
     }
 }

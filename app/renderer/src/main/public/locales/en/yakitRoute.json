@@ -120,6 +120,7 @@
     "manageAllDiscoveredDomainAssets": "Manage All Discovered Domain Assets",
     "ai": "AI",
     "ai-repository": "Knowledge base",
-    "ssaCompileHistory": "SSACompileHistory"
+    "ssaCompileHistory": "SSACompileHistory",
+    "penetrationRecordDescription": "Records any content generated during the penetration testing process, making it easy to review and track."
   }
 }

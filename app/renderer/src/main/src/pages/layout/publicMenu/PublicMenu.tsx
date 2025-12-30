@@ -5,12 +5,13 @@ import {
     InvalidFirstMenuItem,
     InvalidPageMenuItem,
     PublicCommonPlugins,
-    PublicRouteMenu,
     PublicRouteMenuProps,
     ResidentPluginName,
-    databaseConvertData
+    databaseConvertData,
+    getPublicRouteMenu,
+    getSecurityExpertLeftMenu
 } from "@/routes/newRoute"
-import {ExtraMenu} from "./ExtraMenu"
+import {ExtraMenu, OrdinaryMenu} from "./ExtraMenu"
 import {SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
 import {MenuCodec} from "./MenuCodec"
 import {MenuDNSLog} from "./MenuDNSLog"
@@ -44,7 +45,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {usePluginToId} from "@/store/publicMenu"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {isMemfit} from "@/utils/envfile"
+import {isCommunityYakit, isMemfit} from "@/utils/envfile"
+import {useMenuMode} from "@/store/menuMode"
+import {toMITMHacker} from "@/pages/hacker/httpHacker"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -70,15 +73,17 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const {t, i18n} = useI18nNamespaces(["layout", "yakitRoute", "yakitUi"])
     // 登录用户状态信息
     const {userInfo} = useStore()
+    // 菜单模式
+    const {menuMode} = useMenuMode()
     // 本地菜单数据
-    const defaultMenu = useMemo(() => publicExchangeProps(PublicRouteMenu), [])
+    const defaultMenu = useMemo(() => publicExchangeProps(getPublicRouteMenu(menuMode)), [menuMode])
     // 本地常用插件数据
     const defaultPluginMenu = useMemo(() => publicExchangeProps(PublicCommonPlugins), [])
 
     // 组件初始化的标志位
     const isInitRef = useRef<boolean>(true)
 
-    // 基础工具内4个插件的对应插件id
+    // 安全工具内4个插件的对应插件id
     const [pluginToId, setPluginToId] = useState<Record<ResidentPluginName, number>>({
         [ResidentPluginName.SubDomainCollection]: 0,
         [ResidentPluginName.BasicCrawler]: 0,
@@ -489,6 +494,28 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         )
     }, [defaultMenu, pluginMenu, noExpandMenu, i18n.language])
 
+    // 右侧额外菜单点击
+    const onClickExtraMenu = useMemoizedFn((route: RouteToPageProps) => {
+        if (route.route === YakitRoute.Plugin_OP) {
+            const obj = {...route}
+            obj.pluginId = pluginToId[obj?.pluginName || ""]
+            onCheckPlugin(obj, "plugin")
+        } else {
+            onMenuSelect({route: route.route})
+        }
+    })
+
+    // yakit 安全专家模式 左侧菜单点击
+    const onClickSecurityExpertMenu = useMemoizedFn((route: RouteToPageProps) => {
+        if (route.route === YakitRoute.MITMHacker) {
+            toMITMHacker({
+                immediatelyLaunchedInfo: {}
+            })
+        } else {
+            onMenuSelect({route: route.route})
+        }
+    })
+
     return (
         <div
             className={classNames(styles["public-menu-wrapper"], {
@@ -496,28 +523,36 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             })}
         >
             <div className={styles["first-menu-wrapper"]}>
-                {isExpand && (
-                    <div className={styles["first-menu-body"]}>
-                        {defaultMenu.map((item, index) => {
-                            return (
-                                <div
-                                    key={`${item.menuName}-${index}`}
-                                    className={classNames(styles["menu-opt"], {
-                                        [styles["active-menu-opt"]]: activeMenu === index
-                                    })}
-                                    onClick={() => {
-                                        if (activeMenu !== index) setActiveMenu(index)
-                                    }}
-                                >
-                                    {item.labelUi ? t(item.labelUi) : item.label}
-                                </div>
-                            )
-                        })}
+                {isCommunityYakit() && menuMode === "securityExpert" ? (
+                    <div className={styles["menu-wrapper-left"]}>
+                        <OrdinaryMenu menuList={getSecurityExpertLeftMenu()} onMenuSelect={onClickSecurityExpertMenu} />
                     </div>
+                ) : (
+                    <>
+                        {isExpand && (
+                            <div className={styles["first-menu-body"]}>
+                                {defaultMenu.map((item, index) => {
+                                    return (
+                                        <div
+                                            key={`${item.menuName}-${index}`}
+                                            className={classNames(styles["menu-opt"], {
+                                                [styles["active-menu-opt"]]: activeMenu === index
+                                            })}
+                                            onClick={() => {
+                                                if (activeMenu !== index) setActiveMenu(index)
+                                            }}
+                                        >
+                                            {item.labelUi ? t(item.labelUi) : item.label}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                        {!isExpand && <div className={styles["first-menu-body"]}>{noExpand}</div>}
+                    </>
                 )}
-                {!isExpand && <div className={styles["first-menu-body"]}>{noExpand}</div>}
                 <div className={styles["first-menu-extra-wrapper"]}>
-                    <ExtraMenu onMenuSelect={onMenuSelect} />
+                    <ExtraMenu onMenuSelect={onClickExtraMenu} />
                     {!isMemfit() && !isExpand && (
                         <div className={styles["no-expand-wrapper"]} onClick={(e) => onSetIsExpand(true)}>
                             <SortDescendingIcon />
@@ -531,7 +566,14 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     [styles["second-menu-hidden-wrapper"]]: !isExpand
                 })}
             >
-                <div className={styles["second-menu-body"]} style={{flex: 1, overflow: "hidden"}}>
+                <div
+                    className={styles["second-menu-body"]}
+                    style={{
+                        flex: 1,
+                        overflow: "hidden",
+                        gap: isCommunityYakit() && menuMode === "securityExpert" ? 0 : 8
+                    }}
+                >
                     {!!defaultMenu[activeMenu] && (
                         <MenuMode
                             mode={defaultMenu[activeMenu]?.label}
@@ -542,11 +584,13 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
                     {!isMemfit() && (
                         <>
-                            {defaultMenu[activeMenu]?.label !== "插件" ? (
-                                <div className={styles["divider-style"]}></div>
-                            ) : (
-                                <div></div>
-                            )}
+                            <>
+                                {menuMode !== "securityExpert" && defaultMenu[activeMenu]?.label !== "插件" ? (
+                                    <div className={styles["divider-style"]}></div>
+                                ) : (
+                                    <div></div>
+                                )}
+                            </>
                             <div className={styles["tool-wrapper"]}>
                                 {defaultMenu[activeMenu]?.label === "插件" && (
                                     <MenuPlugin

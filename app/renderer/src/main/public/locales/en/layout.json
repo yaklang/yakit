@@ -52,10 +52,6 @@
       "importSharedData": "Import Shared Data",
       "importHARHistoryData": "Import HAR History Data"
     },
-    "NotepadMenu": {
-      "list": "{name} Manage",
-      "add": "New {name}"
-    },
     "HeardMenu": {
       "editMenu": "Edit Menu",
       "importJsonConfig": "Import JSON Configuration",

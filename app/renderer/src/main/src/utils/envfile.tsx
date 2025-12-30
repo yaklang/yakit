@@ -101,6 +101,11 @@ export const isMemfit = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
 }
 
+/** CE Yakit  */
+export const isCommunityYakit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
+}
+
 export const isYakit = () => {
     return (
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||

@@ -29,4 +29,6 @@ export type MitmEventProps = {
     onCloseTunHijackCallback: "mitm" | "page"
     /**关闭MITM时先行校验其是否启动Tun劫持服务如若没有启动则正常关闭，否则需先关闭服务及列表清空 */
     onCloseTunHijackByPage?: string
+
+    onStartMitm?: string
 }
