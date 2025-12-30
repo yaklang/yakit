@@ -401,6 +401,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <YakitInputNumber
                             wrapperClassName={styles["form-input-number"]}
                             style={{width: "100%", maxWidth: "none"}}
+                            min={1}
+                            max={65535}
                         />
                     </Item>
                     <Item

@@ -142,17 +142,17 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
                 <YakitCheckbox disabled={passwordsDict.length === 0 && !passwords}>同时使用默认密码字典</YakitCheckbox>
             </Form.Item>
             <Form.Item label='目标并发' name='Concurrent' help='同时爆破 n 个目标'>
-                <YakitInputNumber min={0} type='horizontal' />
+                <YakitInputNumber min={1} type='horizontal' />
             </Form.Item>
             <Form.Item label='目标内并发' name='TargetTaskConcurrent' help='每个目标同时执行多少爆破任务'>
-                <YakitInputNumber min={0} type='horizontal' />
+                <YakitInputNumber min={1} type='horizontal' />
             </Form.Item>
             <Form.Item label='自动停止' name='OkToStop' help='遇到第一个爆破结果时终止任务' valuePropName='checked'>
                 <YakitSwitch />
             </Form.Item>
 
             <Form.Item label='最小延迟' name='DelayMin'>
-                <YakitInputNumber min={0} max={delayMax} type='horizontal' />
+                <YakitInputNumber min={1} max={delayMax} type='horizontal' />
             </Form.Item>
             <Form.Item label='最大延迟' name='DelayMax'>
                 <YakitInputNumber min={delayMin} type='horizontal' />

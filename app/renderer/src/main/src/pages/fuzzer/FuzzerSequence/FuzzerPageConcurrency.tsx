@@ -142,7 +142,7 @@ const AdvancedSet: React.FC<AdvancedSetProps> = memo((props) => {
                         <YakitInputNumber type='horizontal' size='small' min={0} />
                     </Form.Item>
                     <Form.Item label={t("HttpQueryAdvancedConfig.concurrent_threads")} name='concurrent'>
-                        <YakitInputNumber type='horizontal' size='small' min={0} />
+                        <YakitInputNumber type='horizontal' size='small' min={1} />
                     </Form.Item>
 
                     <Form.Item label={t("HttpQueryAdvancedConfig.random_delay2")} style={{marginBottom: 0}}>
@@ -242,7 +242,7 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
                             <YakitInputNumber type='horizontal' size='small' min={0} />
                         </Form.Item>
                         <Form.Item label={t("HttpQueryAdvancedConfig.concurrent_threads")} name='concurrent'>
-                            <YakitInputNumber type='horizontal' size='small' min={0} />
+                            <YakitInputNumber type='horizontal' size='small' min={1} />
                         </Form.Item>
 
                         <Form.Item label={t("HttpQueryAdvancedConfig.random_delay2")}>

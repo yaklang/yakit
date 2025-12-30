@@ -715,7 +715,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         case "float":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInputNumber step={0.1} disabled={disabled} />
+                    <YakitInputNumber step={0.1} disabled={disabled} min={0} />
                 </Form.Item>
             )
         case "boolean":

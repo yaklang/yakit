@@ -537,6 +537,8 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
                 <YakitInputNumber
                     value={params.Port}
                     onChange={(value) => setParams({...params, Port: Number(value) || 0})}
+                    min={1}
+                    max={65535}
                 />
             </Form.Item>
 

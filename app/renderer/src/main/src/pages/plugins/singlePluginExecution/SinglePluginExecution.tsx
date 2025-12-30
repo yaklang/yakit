@@ -51,7 +51,7 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?:
 }
 const SinglePluginExecutionTab: YakitTabsProps[] = [
     {
-        label: "插件",
+        label: "插件1",
         value: "plugin"
     }
 ]

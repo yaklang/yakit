@@ -364,13 +364,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             }
         })
 
-        const handlePluginConcurrencyBlur = () => {
-            const value = form.getFieldValue("PluginConcurrency")
-            if (value === null || value === undefined || isNaN(value) || value < 1) {
-                form.setFieldsValue({PluginConcurrency: 20})
-            }
-        }
-
         return (
             <YakitDrawer
                 className={styles["advanced-configuration-drawer"]}
@@ -397,7 +390,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 }
                 maskClosable={false}
             >
-                <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+                <Form
+                    labelCol={{span: 6}}
+                    wrapperCol={{span: 18}}
+                    form={form}
+                >
                     <Form.Item
                         label='DNS服务器'
                         name='dnsServers'
@@ -510,8 +507,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         <YakitInputNumber
                             type='horizontal'
                             size='small'
+                            min={1}
                             defaultValue={20}
-                            onBlur={handlePluginConcurrencyBlur}
                         />
                     </Form.Item>
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
