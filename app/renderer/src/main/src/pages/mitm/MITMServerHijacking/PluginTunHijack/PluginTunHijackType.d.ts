@@ -17,6 +17,7 @@ export interface pluginTunHijackActionsProps {
 
 export interface PluginTunHijackProps {
     ref?: React.ForwardedRef<PluginTunHijackRefProps>
+    hidden?: boolean
     pluginTunHijackData: PluginTunHijackStateProps
     pluginTunHijackActions: pluginTunHijackActionsProps
     pluginTunHijackDel: PluginTunHijackStateProps
@@ -32,6 +33,7 @@ export interface PluginTunHijackParams {
     PluginName: "Tun劫持服务" | "路由表增加" | "路由表删除" | "路由表查询" | "劫持进程"
     onError?: () => void
     onEnd?: () => void
+    setRuntimeId?: (id: string) => void
 }
 
 export interface PluginTunHijackTableProps {
@@ -82,7 +84,6 @@ export interface TunHijackProcessTableProps {
     deviceName: string
     setTableType: (type: "process" | "route") => void
     pluginTunHijackAddActionsFun: (target: string) => void
-    searchVal: string
 }
 
 export interface HijackProcessInfoModalProps {

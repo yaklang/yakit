@@ -39,7 +39,10 @@
         }
     }
 }
-
+.plugin-tun-hijack-hidden{
+    height: 0px;
+    overflow: hidden;
+}
 .connection-info-item {
     display: flex;
     flex-direction: column;
@@ -70,6 +73,45 @@
         .opt {
             display: flex;
             align-items: center;
+        }
+    }
+}
+
+.action-spin {
+    display: inline-block;
+    width: auto;
+}
+
+.filter-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.hijack-process-search-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .hijack-process-search {
+        margin-bottom: 8px;
+        :global {
+            .ant-input-search-button {
+                width: 40px;
+            }
+        }
+    }
+
+    .hijack-process-tabs {
+        flex: 1;
+        :global {
+            .ant-tabs-top {
+                & > .ant-tabs-nav {
+                    &::before {
+                        border-bottom: unset;
+                    }
+                }
+            }
         }
     }
 }
