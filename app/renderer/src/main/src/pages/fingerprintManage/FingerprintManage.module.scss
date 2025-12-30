@@ -275,6 +275,10 @@
     }
 
     :global {
+        .ant-table-cell:hover {
+            background: var(--Colors-Use-Basic-Background) !important;
+        }
+
         .ant-table.ant-table-bordered > .ant-table-container {
             border-color: var(--Colors-Use-Neutral-Border);
         }
