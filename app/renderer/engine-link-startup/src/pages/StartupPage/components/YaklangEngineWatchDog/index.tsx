@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {EngineWatchDogCallbackType, YakitStatusType, YaklangEngineWatchDogCredential} from "../../types"
+import {YakitStatusType, YaklangEngineWatchDogCredential} from "../../types"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {debugToPrintLog} from "@/utils/logCollection"
 import {yakitNotify} from "@/utils/notification"
@@ -19,8 +19,6 @@ export interface YaklangEngineWatchDogProps {
     onReady?: () => void
     onFailed?: (failedCount: number) => void
     onKeepaliveShouldChange?: (keepalive: boolean) => void
-
-    failedCallback: (type: EngineWatchDogCallbackType) => void
 
     setYakitStatus: (v: YakitStatusType) => void
 
