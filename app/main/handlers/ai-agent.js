@@ -306,4 +306,25 @@ module.exports = (win, getClient) => {
         return await asyncGetRandomAIMaterials(params)
     })
     // #endregion
+
+    // #region AI-Log-Export
+    const asyncExportAILogs = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportAILogs(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportAILogs", async (e, params) => {
+        const res = await asyncExportAILogs(params)
+        if (res && res.FilePath) {
+            require('electron').shell.showItemInFolder(res.FilePath)
+        }
+        return res
+    })
+    // #endregion
 }

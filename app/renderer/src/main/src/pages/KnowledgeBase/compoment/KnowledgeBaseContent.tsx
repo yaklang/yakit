@@ -369,7 +369,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
         if (showID && events.fetchToken() && showID === events.fetchToken()) {
             const answer: AIChatInfo["answer"] = {
-                runTimeIDs: cloneDeep(runTimeIDs),
+                runTimeIDs: cloneDeep(runTimeIDs) || [],
                 taskChat: cloneDeep(taskChat),
                 aiPerfData: cloneDeep(aiPerfData),
                 casualChat: cloneDeep(casualChat),
@@ -378,7 +378,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
                 }),
                 grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines)
+                reActTimelines: cloneDeep(reActTimelines),
+                coordinatorIDs: []
             }
             setChats &&
                 setChats((old) => {
