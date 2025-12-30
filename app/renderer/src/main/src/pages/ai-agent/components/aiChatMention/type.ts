@@ -2,6 +2,7 @@ import {KnowledgeBase} from "@/components/playground/knowlegeBase/types"
 import {AITool} from "../../type/aiTool"
 import {AIForge} from "../../type/forge"
 import {AIMentionTabsEnum} from "../../defaultConstant"
+import {KnowledgeBaseItem} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 
 export type AIMentionTabsItem = "forge" | "tool" | "knowledgeBase" | "file" | "folder"
 export interface AIChatMentionSelectItem {
@@ -34,7 +35,7 @@ export interface ToolListOfMentionProps extends AIChatMention, AIChatMentionRef 
 }
 
 export interface KnowledgeBaseListOfMentionProps extends AIChatMention, AIChatMentionRef {
-    onSelect: (f: KnowledgeBase) => void
+    onSelect: (f: KnowledgeBaseItem) => void
 }
 
 export interface AIMentionSelectItemProps {
