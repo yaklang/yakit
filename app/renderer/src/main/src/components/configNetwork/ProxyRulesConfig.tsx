@@ -23,6 +23,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {useProxy} from "@/hook/useProxy"
 import {YakitSideTab} from "../yakitSideTab/YakitSideTab"
+import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import styles from "./ConfigNetworkPage.module.scss"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import classNames from "classnames"
@@ -254,6 +255,9 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                     total: Endpoints.length
                 }}
                 rowKey='Id'
+                locale={{
+                    emptyText: <YakitEmpty />
+                }}
             />
         )
     })
@@ -337,6 +341,10 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                     total: Routes.length
                 }}
                 rowKey='Id'
+                locale={{
+                    emptyText: <YakitEmpty />
+                }}
+                
             />
         )
     })

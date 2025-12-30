@@ -532,6 +532,10 @@
     }
 
     :global {
+        .ant-table-cell:hover {
+            background: var(--Colors-Use-Basic-Background) !important;
+        }
+
         .ant-drawer-header-title {
             flex-direction: row-reverse;
         }
