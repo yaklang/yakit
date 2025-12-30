@@ -26,5 +26,6 @@ export interface AIChatInfo {
         yakExecResult: AIChatYakExecResult
         grpcFolders: UseChatIPCState["grpcFolders"]
         reActTimelines: UseChatIPCState["reActTimelines"]
+        coordinatorIDs: UseChatIPCState["coordinatorIDs"]
     }
 }

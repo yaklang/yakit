@@ -182,6 +182,8 @@ export interface UseChatIPCState {
     memoryList: AIAgentGrpcApi.MemoryEntryList
     /** 任务规划的loading状态信息 */
     taskStatus: PlanLoadingStatus
+    /** 所有的 coordinatorID */
+    coordinatorIDs: string[]
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
