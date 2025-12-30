@@ -77,8 +77,8 @@ const KnowledgeBase: FC = () => {
                 const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
 
                 const filteredInstall = resultList.filter((item) => !exclude.includes(item.Name))
-                if (filteredInstall.length !== 0) {
-                    info(`使用知识库缺少第三方依赖，需安装${filteredInstall.length}个`)
+                if (filteredInstall?.length !== 0) {
+                    info(`使用知识库缺少第三方依赖，需安装${filteredInstall?.length}个`)
                     setInstallPlug(true)
                 } else {
                     setInstallPlug(false)
@@ -173,7 +173,7 @@ const KnowledgeBase: FC = () => {
     }, [])
 
     const onCloseKnowledgeRepository = () => {
-        if (apiRef?.current && apiRef.current.tokens.length > 0) {
+        if (apiRef?.current && apiRef.current.tokens?.length > 0) {
             setVisible(true)
             return
         } else {

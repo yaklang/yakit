@@ -17,9 +17,14 @@ interface AddKnowledgeBaseModalProps {
             KnowledgeBaseName: string
         }>
     >
+    addManuallyItem?: boolean
 }
 
-const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({addModalData, setAddModalData}) => {
+const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
+    addModalData,
+    setAddModalData,
+    addManuallyItem = true
+}) => {
     const [form] = Form.useForm()
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
 
@@ -36,7 +41,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({addModalData, se
             KnowledgeBaseFile: file,
             streamToken,
             streamstep: 1,
-            addManuallyItem: true,
+            addManuallyItem,
             historyGenerateKnowledgeList: []
         }
         if (findKnowledgeBase?.ID) {

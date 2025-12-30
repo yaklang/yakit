@@ -56,6 +56,12 @@ const KnowledgeBaseContainer: FC<
 > = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA, addMode}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [state, dispatch] = useReducer(reducer, initialValue)
+    const [structureTableHeaderGroupOptions, setStructureTableHeaderGroupOptions] = useSafeState<
+        {
+            value: string
+            label: string
+        }[]
+    >()
 
     // 当前知识库信息
     const findKnowledgeBaseItems: any = useMemo(() => {
@@ -163,15 +169,19 @@ const KnowledgeBaseContainer: FC<
         }
     }, [exportToken])
 
-    const resultContainer = useMemo(() => {
-        if (
+    const targetEditKnowledgeBase = useMemo(() => {
+        const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
+        return result as KnowledgeBaseItem
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [knowledgeBaseID])
+
+    return (
+        <>
+            {!structureTableHeaderGroupOptions?.length &&
             findKnowledgeBaseItems.streamstep === 1 &&
-            findKnowledgeBaseItems.addManuallyItem === false &&
-            // findKnowledgeBaseItems.streamToken &&
             streams?.[findKnowledgeBaseItems.streamToken] &&
-            !hasBuildData
-        ) {
-            return (
+            findKnowledgeBaseItems.addManuallyItem === false &&
+            !hasBuildData ? (
                 <div className={styles["building-knowledge-base"]}>
                     {/* header */}
                     <div className={styles["header"]}>
@@ -214,9 +224,7 @@ const KnowledgeBaseContainer: FC<
                         defaultActiveKey='日志'
                     />
                 </div>
-            )
-        } else {
-            return (
+            ) : (
                 <KnowledgeBaseTable
                     streams={streams}
                     knowledgeBaseItems={findKnowledgeBaseItems}
@@ -225,20 +233,9 @@ const KnowledgeBaseContainer: FC<
                     onDeleteVisible={onDeleteVisible}
                     onExportKnowledgeBase={onExportKnowledgeBase}
                     setOpenQA={setOpenQA}
+                    setStructureTableHeaderGroupOptions={setStructureTableHeaderGroupOptions}
                 />
-            )
-        }
-    }, [api, findKnowledgeBaseItems, hasBuildData, streams])
-
-    const targetEditKnowledgeBase = useMemo(() => {
-        const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
-        return result as KnowledgeBaseItem
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [knowledgeBaseID])
-
-    return (
-        <>
-            {resultContainer}
+            )}
             <DeleteConfirm
                 knowledgeBase={knowledgeBases}
                 visible={state.deleteVisible}
@@ -258,3 +255,6 @@ const KnowledgeBaseContainer: FC<
 }
 
 export default memo(KnowledgeBaseContainer)
+
+// 实体/关系(Entity/Relationship)
+// [multi-hops]: knowledge
