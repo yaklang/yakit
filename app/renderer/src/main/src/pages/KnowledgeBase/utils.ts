@@ -8,6 +8,7 @@ import {
     SearchKnowledgeBaseEntryRequest,
     SearchKnowledgeBaseEntryResponse,
     TClearKnowledgeResponse,
+    TResultAllTableTotal,
     VectorStoreEntryResponse,
     type KnowledgeBaseFile
 } from "./TKnowledgeBase"
@@ -282,6 +283,12 @@ const tableHeaderGroupOptions = [
         label: "向量"
     }
 ]
+
+const totalKeyMap: Record<string, keyof TResultAllTableTotal> = {
+    entity: "entityTotal",
+    knowledge: "knowledgeTotal",
+    vector: "vectorTotal"
+}
 
 // 查询知识库-知识列表
 const apiSearchKnowledgeBaseEntry: (
@@ -828,5 +835,6 @@ export {
     ClearAllKnowledgeBase,
     insertModaOptions,
     checkAIModelAvailability,
-    mergeKnowledgeBaseList
+    mergeKnowledgeBaseList,
+    totalKeyMap
 }

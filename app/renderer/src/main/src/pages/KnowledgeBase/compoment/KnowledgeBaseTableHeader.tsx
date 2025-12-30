@@ -1,4 +1,4 @@
-import React, {Dispatch, SetStateAction, useEffect, useMemo, type FC} from "react"
+import {Dispatch, SetStateAction, useEffect, useMemo, type FC} from "react"
 import {KnowledgeBaseTableProps} from "./KnowledgeBaseTable"
 import {ChevronDownIcon, PlusIcon} from "@/assets/newIcon"
 import {LightningBoltIcon} from "../icon/sidebarIcon"
@@ -18,12 +18,12 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {tableHeaderGroupOptions} from "../utils"
 import {useMemoizedFn, useSafeState} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {AddKnowledgeBaseModal} from "./AddKnowledgeBaseModal"
 
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 import {PluginExecuteDetailDrawer} from "./PluginExecuteDetailDrawer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CheckboxOptionType} from "antd"
 
 export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     setTableProps: Dispatch<
@@ -47,6 +47,8 @@ export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
 const KnowledgeBaseTableHeader: FC<
     KnowledgeBaseTableHeaderProps & {
         setLinkId: Dispatch<SetStateAction<string[]>>
+        structureTableHeaderGroupOptions?: Array<CheckboxOptionType | string | number>
+        onOpenAddKnowledgeBaseModal: () => void
     }
 > = ({
     knowledgeBaseItems,
@@ -61,7 +63,9 @@ const KnowledgeBaseTableHeader: FC<
     setOpenQA,
     setSelectList,
     setAllCheck,
-    api
+    api,
+    structureTableHeaderGroupOptions,
+    onOpenAddKnowledgeBaseModal
 }) => {
     const [searchValue, setSearchValue] = useSafeState("")
     const [addModalData, setAddModalData] = useSafeState<{visible: boolean; KnowledgeBaseName: string}>({
@@ -119,13 +123,6 @@ const KnowledgeBaseTableHeader: FC<
             </div>
         )
     }, [tableProps.tableTotal, tableProps.type])
-
-    const onOpenAddKnowledgeBaseModal = () => {
-        setAddModalData({
-            visible: true,
-            KnowledgeBaseName: knowledgeBaseItems.KnowledgeBaseName
-        })
-    }
 
     return (
         <div className={styles["table-header"]}>
@@ -234,45 +231,46 @@ const KnowledgeBaseTableHeader: FC<
                 </div>
             </div>
             <div className={styles["table-header-last"]}>{knowledgeBaseItems?.KnowledgeBaseDescription}</div>
-            <div className={styles["table-content-header"]}>
-                <div className={styles["header-left"]}>
-                    <YakitRadioButtons
-                        value={tableProps.type}
-                        onChange={(e) => {
-                            setSelectList([])
-                            setAllCheck(false)
-                            setTableProps((preValue) => ({
-                                ...preValue,
-                                selectAll: false,
-                                type: e.target.value
-                            }))
-                            setLinkId([])
-                        }}
-                        buttonStyle='solid'
-                        options={tableHeaderGroupOptions}
-                    />
-                    {tableHeaderSize}
-                    {tableHeaderSpin}
+            {structureTableHeaderGroupOptions && structureTableHeaderGroupOptions?.length > 0 ? (
+                <div className={styles["table-content-header"]}>
+                    <div className={styles["header-left"]}>
+                        <YakitRadioButtons
+                            value={tableProps.type}
+                            onChange={(e) => {
+                                setSelectList([])
+                                setAllCheck(false)
+                                setTableProps((preValue) => ({
+                                    ...preValue,
+                                    selectAll: false,
+                                    type: e.target.value
+                                }))
+                                setLinkId([])
+                            }}
+                            buttonStyle='solid'
+                            options={structureTableHeaderGroupOptions}
+                        />
+                        {tableHeaderSize}
+                        {tableHeaderSpin}
+                    </div>
+                    <div className={styles["header-right"]}>
+                        <YakitInput.Search
+                            value={searchValue}
+                            onSearch={(value) => {
+                                setSearchValue(value)
+                                setQuery?.(value)
+                            }}
+                            allowClear
+                            onChange={(e) => setSearchValue?.(e.target.value)}
+                            placeholder='请输入搜索关键词'
+                            onPressEnter={(e) => {
+                                e.preventDefault()
+                                setSearchValue(e.currentTarget.value)
+                                setQuery?.(e.currentTarget.value)
+                            }}
+                        />
+                    </div>
                 </div>
-                <div className={styles["header-right"]}>
-                    <YakitInput.Search
-                        value={searchValue}
-                        onSearch={(value) => {
-                            setSearchValue(value)
-                            setQuery?.(value)
-                        }}
-                        allowClear
-                        onChange={(e) => setSearchValue?.(e.target.value)}
-                        placeholder='请输入搜索关键词'
-                        onPressEnter={(e) => {
-                            e.preventDefault()
-                            setSearchValue(e.currentTarget.value)
-                            setQuery?.(e.currentTarget.value)
-                        }}
-                    />
-                </div>
-            </div>
-            <AddKnowledgeBaseModal addModalData={addModalData} setAddModalData={setAddModalData} />
+            ) : null}
             {buildingDrawer.visible ? (
                 <PluginExecuteDetailDrawer
                     buildingDrawer={buildingDrawer}
