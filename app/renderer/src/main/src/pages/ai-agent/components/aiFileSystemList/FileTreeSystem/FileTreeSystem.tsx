@@ -32,40 +32,45 @@ const FileTreeSystem = () => {
     return (
         <YakitResizeBox
             firstRatio='50%'
-            firstNodeStyle={{padding: "4px", overflowY: "auto"}}
+            firstNodeStyle={{padding: "4px", overflow: "hidden"}}
             lineDirection='right'
             firstMinSize={200}
             lineStyle={{width: 4}}
             firstNode={
-                <div className={styles["file-tree-system-left"]}>
-                    <FileTreeSystemListWapper
-                        key='aiFolder'
-                        path={grpcFolders}
-                        selected={selected}
-                        setSelected={setSelected}
-                        title='AI Artifacts'
-                        isOpen={false}
-                    />
-                    <FileTreeDrop>
-                        {({setDragSource}) => (
-                            <FileTreeSystemListWapper
-                                isOpen
-                                key='customFolder'
-                                title='已打开文件/文件夹'
-                                selected={selected}
-                                historyFolder={historyFolder}
-                                path={customFolder}
-                                setOpenFolder={onSetFolder}
-                                setSelected={setSelected}
-                                onTreeDragStart={() => {
-                                    setDragSource("AIRreeToChat")
-                                }}
-                                onTreeDragEnd={() => {
-                                    setDragSource(null)
-                                }}
-                            />
-                        )}
-                    </FileTreeDrop>
+                <div className={styles.fileTreeSystemLeft}>
+                    <div className={styles.topPanel}>
+                        <FileTreeSystemListWapper
+                            key='aiFolder'
+                            path={grpcFolders}
+                            selected={selected}
+                            setSelected={setSelected}
+                            title='AI Artifacts'
+                            isOpen={false}
+                        />
+                    </div>
+
+                    <div className={styles.bottomPanel}>
+                        <FileTreeDrop>
+                            {({setDragSource}) => (
+                                <FileTreeSystemListWapper
+                                    isOpen
+                                    key='customFolder'
+                                    title='已打开文件/文件夹'
+                                    selected={selected}
+                                    historyFolder={historyFolder}
+                                    path={customFolder}
+                                    setOpenFolder={onSetFolder}
+                                    setSelected={setSelected}
+                                    onTreeDragStart={() => {
+                                        setDragSource("AIRreeToChat")
+                                    }}
+                                    onTreeDragEnd={() => {
+                                        setDragSource(null)
+                                    }}
+                                />
+                            )}
+                        </FileTreeDrop>
+                    </div>
                 </div>
             }
             secondNode={<FilePreview data={filePreviewData} />}

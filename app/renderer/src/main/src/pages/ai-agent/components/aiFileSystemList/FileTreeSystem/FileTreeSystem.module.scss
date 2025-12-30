@@ -1,19 +1,19 @@
-.file-tree-system-left {
+.fileTreeSystemLeft {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-.file-tree-system-left > :first-child {
-    flex: 0 1 auto;
+.topPanel {
+    flex: 0 0 auto;
     max-height: 50%;
-    height: fit-content;
     overflow: auto;
 }
 
-.file-tree-system-left > :last-child {
-    flex: 1 1 auto;  
+.bottomPanel {
+    flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
 }
