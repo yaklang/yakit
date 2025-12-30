@@ -920,17 +920,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         pluginTraceList={pluginTraceActions.pluginTraceList}
                     />
                 )
-            case "tun-hijack":
-                return (
-                    <PluginTunHijack
-                        ref={PluginTunHijackRef}
-                        pluginTunHijackData={pluginTunHijackData}
-                        pluginTunHijackActions={pluginTunHijackActions}
-                        pluginTunHijackDel={pluginTunHijackDel}
-                        onQuitTunHijackFun={onQuitTunHijackFun}
-                        handleDeleteRoute={handleDeleteRoute}
-                    />
-                )
             default:
                 return <></>
         }
@@ -954,12 +943,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 >
                     <div className={styles["mitm-plugin-hijack-heard"]}>{onRenderHeardExtra()}</div>
                     {onRenderContent()}
+                    <PluginTunHijack
+                        ref={PluginTunHijackRef}
+                        hidden={curTabKey !== "tun-hijack"}
+                        pluginTunHijackData={pluginTunHijackData}
+                        pluginTunHijackActions={pluginTunHijackActions}
+                        pluginTunHijackDel={pluginTunHijackDel}
+                        onQuitTunHijackFun={onQuitTunHijackFun}
+                        handleDeleteRoute={handleDeleteRoute}
+                    />
                 </div>
             </div>
             <YakitHint
                 visible={quitVisible}
-                title='关闭Tun代理会清空路由表'
-                content={"关闭Tun代理后会清空路由表，不删除会导致无法访问劫持网站"}
+                title='关闭Tun代理会清空路由表并停止全部劫持中进程'
+                content={"关闭Tun代理会清空路由表并停止全部劫持中进程，防止影响正常使用"}
                 footerExtra={
                     <YakitCheckbox checked={quitNoPrompt} onChange={(e) => setQuitNoPrompt(e.target.checked)}>
                         不再提醒
