@@ -33,7 +33,6 @@ function HijackRunner({
             setRuntimeId(rId)
         }
     })
-    // console.log("aaa---", hijackProcess)
 
     useEffect(() => {
         let ExecParams = [
@@ -43,9 +42,6 @@ function HijackRunner({
         if (task?.pid) {
             ExecParams.push({Key: "pid", Value: String(task.pid)})
         }
-        console.log("start hijack process---", {
-            ExecParams
-        })
         setRuntimeId("")
         hijackProcessActions.startPluginTunHijack({
             ExecParams
@@ -59,7 +55,6 @@ function HijackRunner({
     useThrottleEffect(
         () => {
             try {
-                // console.log("hijackProcess.streamInfo---", hijackProcess.streamInfo)
                 const processesNum = hijackProcess.streamInfo.cardState.filter(
                     (item) => item.tag === "监控劫持进程数"
                 )?.[0]?.info?.[0]?.Data

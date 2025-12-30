@@ -43,39 +43,6 @@
     height: 0px;
     overflow: hidden;
 }
-.connection-info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 8px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    border-radius: 4px;
-    margin-bottom: 8px;
-    .connection-info-item-box {
-        display: flex;
-        justify-content: space-between;
-        line-height: 18px;
-        .title {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            .name {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-weight: 500;
-                font-size: 12px;
-                white-space: nowrap;
-            }
-            .content {
-                font-size: 12px;
-            }
-        }
-        .opt {
-            display: flex;
-            align-items: center;
-        }
-    }
-}
 
 .action-spin {
     display: inline-block;

@@ -212,9 +212,24 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                 setLoading(false)
             }
         })
+
+        // 用于控制路由列表轮询
+        const extraTimerRef = useRef<NodeJS.Timeout>()
         useEffect(() => {
-            updatePluginTunHijack()
-        }, [])
+            if (tableType === "route") {
+                updatePluginTunHijack()
+                // 开启定时器
+                if (extraTimerRef.current) {
+                    clearInterval(extraTimerRef.current)
+                }
+                extraTimerRef.current = setInterval(() => pluginTunHijackFindActions.startPluginTunHijack(), 3 * 1000)
+            }
+            return () => {
+                if (extraTimerRef.current) {
+                    clearInterval(extraTimerRef.current)
+                }
+            }
+        }, [tableType])
 
         const updatePluginTunHijack = useMemoizedFn(() => {
             setLoading(true)
@@ -406,7 +421,6 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         const [searchVal, setSearchVal] = useState<string>("")
         const [activeTab, setActiveTab] = useState<string>("all")
         const addToggleHijack = (pName: string, pid?: number) => {
-            console.log("addToggleHijack---", pName, pid, hijackTasks)
             setHijackTasks((prev) => {
                 return [...prev, {pid, pName, loading: true, uuid: `${uuidv4()}-hijack`}]
             })
@@ -414,7 +428,6 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         }
 
         const removeToggleHijack = (pName: string, pid?: number) => {
-            console.log("removeToggleHijack---", pName, pid, hijackTasks)
             setHijackTasks((prev) => {
                 const exists = prev.some((t) => {
                     if (pid) {
@@ -526,7 +539,11 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                     if (pid) {
                         return pid
                     } else if (record.pids && record.pids.length > 0) {
-                        return <Tooltip placement="topLeft" title={record.pids.join(", ")}>{record.pids.join(", ")}</Tooltip>
+                        return (
+                            <Tooltip placement='topLeft' title={record.pids.join(", ")}>
+                                {record.pids.join(", ")}
+                            </Tooltip>
+                        )
                     }
                     return "-"
                 }
@@ -645,10 +662,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                 ipcRenderer.removeAllListeners(`${token}-end`)
             }
         }, [])
-        console.log("hijackTasks---", hijackTasks)
-
         const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
-            console.log("filter---", filter)
             setSearchVal(filter["Name"])
         })
 
@@ -781,6 +795,49 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         // setTableType("route")
     })
 
+    const hijackInfoColumns: ColumnsTypeProps[] = [
+        {
+            title: "本地地址",
+            dataKey: "LocalAddress",
+            width: 180
+        },
+        {
+            title: "远程地址",
+            dataKey: "RemoteAddress",
+            width: 180
+        },
+        {
+            title: "域名",
+            dataKey: "Domain",
+            width: 200,
+            render: (data) => {
+                return data ? data.join(", ") : "-"
+            }
+        },
+        {
+            title: "操作",
+            width: 100,
+            fixed: "right",
+            dataKey: "Action",
+            render: (_, record: ConnectionInfo) => {
+                return (
+                    <>
+                        <YakitButton
+                            type='text'
+                            size='small'
+                            danger={true}
+                            onClick={(e) => {
+                                onPluginTunHijackAddActionsByConnection(record.RemoteAddress)
+                            }}
+                        >
+                            添加路由
+                        </YakitButton>
+                    </>
+                )
+            }
+        }
+    ]
+
     return (
         <YakitModal
             visible={!!hijackProcessInfo}
@@ -790,91 +847,20 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
             onCancel={() => setHijackProcessInfo(undefined)}
             footer={null}
         >
-            {(hijackProcessInfo || []).length > 3 ? (
-                <RollingLoadList<ConnectionInfo>
-                    data={hijackProcessInfo || []}
-                    loadMoreData={() => {}}
-                    renderRow={(rowData: ConnectionInfo, index: number) => {
-                        return (
-                            <ConnectionInfoItem
-                                data={rowData}
-                                key={`connection-info-item-${index}`}
-                                onPluginTunHijackAddActionsByConnection={onPluginTunHijackAddActionsByConnection}
-                            />
-                        )
-                    }}
-                    page={1}
-                    hasMore={false}
-                    loading={false}
-                    defItemHeight={102}
-                />
-            ) : (
-                <>
-                    {(hijackProcessInfo || []).map((item, index) => (
-                        <ConnectionInfoItem
-                            data={item}
-                            key={`connection-info-item-${index}`}
-                            onPluginTunHijackAddActionsByConnection={onPluginTunHijackAddActionsByConnection}
-                        />
-                    ))}
-                </>
-            )}
+            <TableVirtualResize
+                isRefresh={false}
+                isShowTitle={false}
+                data={hijackProcessInfo || []}
+                renderKey={"LocalAddress"}
+                pagination={{
+                    page: 1,
+                    limit: 50,
+                    total: (hijackProcessInfo || []).length,
+                    onChange: () => {}
+                }}
+                columns={hijackInfoColumns}
+                enableDrag
+            />
         </YakitModal>
-    )
-})
-
-export const ConnectionInfoItem: React.FC<ConnectionInfoItemProps> = React.memo((props) => {
-    const {data, onPluginTunHijackAddActionsByConnection} = props
-
-    const newDomain = useMemo(() => {
-        return data.Domain.join(",")
-    }, [data.Domain])
-
-    return (
-        <div className={styles["connection-info-item"]}>
-            <div className={styles["connection-info-item-box"]}>
-                <div className={styles["title"]}>
-                    <div className={styles["name"]}>本地地址：</div>
-                    <div className={classNames(styles["content"], "yakit-single-line-ellipsis")}>
-                        {data.LocalAddress}
-                    </div>
-                    <CopyComponents copyText={data.LocalAddress} />
-                </div>
-                <div className={styles["opt"]}></div>
-            </div>
-            <div className={styles["connection-info-item-box"]}>
-                <div className={styles["title"]}>
-                    <div className={styles["name"]}>远程地址：</div>
-                    <div className={classNames(styles["content"], "yakit-single-line-ellipsis")}>
-                        {data.RemoteAddress}
-                    </div>
-                    <CopyComponents copyText={data.RemoteAddress} />
-                </div>
-                <div className={styles["opt"]}>
-                    <YakitButton
-                        onClick={() => onPluginTunHijackAddActionsByConnection(data.RemoteAddress)}
-                        type='text'
-                    >
-                        添加至路由表
-                    </YakitButton>
-                </div>
-            </div>
-            <div className={styles["connection-info-item-box"]}>
-                <div className={styles["title"]}>
-                    <div className={styles["name"]}>域名：</div>
-                    <div className={classNames(styles["content"], "yakit-single-line-ellipsis")}>
-                        {newDomain || "-"}
-                    </div>
-                    {newDomain.length > 0 && <CopyComponents copyText={newDomain} />}
-                </div>
-                <div className={styles["opt"]}>
-                    {newDomain.length > 0 && (
-                        <YakitButton onClick={() => onPluginTunHijackAddActionsByConnection(newDomain)} type='text'>
-                            添加至路由表
-                        </YakitButton>
-                    )}
-                </div>
-            </div>
-        </div>
     )
 })
