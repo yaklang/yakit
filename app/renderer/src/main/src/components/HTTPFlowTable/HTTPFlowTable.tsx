@@ -3295,7 +3295,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         i18n.language,
         codecMultipleHistoryPluginCom,
         codecSingleHistoryPluginCom,
-        selectedRowKeysCom
+        selectedRowKeysCom,
+        selected?.Id,
+        data
     ])
 
     /** 菜单自定义快捷键渲染处理事件 */
