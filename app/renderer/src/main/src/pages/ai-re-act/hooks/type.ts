@@ -188,6 +188,8 @@ export interface UseChatIPCState {
     taskStatus: PlanLoadingStatus
     /** 系统流信息(isSystem=true&type=stream) */
     systemStream: string
+    /** 所有的 coordinatorID */
+    coordinatorIDs: string[]
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */

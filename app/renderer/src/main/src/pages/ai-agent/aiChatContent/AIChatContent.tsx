@@ -38,9 +38,14 @@ import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
 import useAIAgentStore from "../useContext/useStore"
 import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
+import {CloudDownloadIcon} from "@/assets/newIcon"
+import {ExportAILogsModal} from "../components/ExportAILogsModal/ExportAILogsModal"
+import {failed, yakitNotify} from "@/utils/notification"
+
+const {ipcRenderer} = window.require("electron")
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
-    const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders} = useAIChatUIData()
+    const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders, coordinatorIDs} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const {activeChat} = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -56,6 +61,40 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
 
     const [fileSystemKey, setFileSystemKey] = useState<TabKey>()
+
+    const [exportModalVisible, setExportModalVisible] = useState(false)
+    const [exportLoading, setExportLoading] = useState(false)
+
+    const onOpenExportModal = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setExportModalVisible(true)
+    })
+
+    const onExportCancel = useMemoizedFn(() => {
+        setExportModalVisible(false)
+    })
+
+    const onExportOk = useMemoizedFn(async (data: {types: string[]; outputPath: string}) => {
+        if (!activeChat?.id) {
+            failed("当前没有活跃的会话")
+            return
+        }
+        setExportLoading(true)
+        try {
+            await ipcRenderer.invoke("ExportAILogs", {
+                SessionID: activeChat.request.TimelineSessionID || "default",
+                CoordinatorIDs: coordinatorIDs,
+                ExportDataTypes: data.types,
+                OutputPath: data.outputPath
+            })
+            yakitNotify("success", "导出成功")
+            setExportModalVisible(false)
+        } catch (error) {
+            failed(`导出失败: ${error}`)
+        } finally {
+            setExportLoading(false)
+        }
+    })
 
     const handleTabStateChange = useMemoizedFn((key: AITabsEnumType, value: AIAgentTabPayload["value"]) => {
         setActiveKey(key)
@@ -387,6 +426,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                             <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                 日志
                             </YakitButton>
+                            <YakitButton type='secondary2' icon={<CloudDownloadIcon />} onClick={onOpenExportModal}>
+                                导出日志
+                            </YakitButton>
                         </div>
                     </div>
                     {yakExecResult.card.length > 0 ? (
@@ -439,6 +481,12 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                     </div>
                 </YakitSideTab>
             </div>
+            <ExportAILogsModal
+                visible={exportModalVisible}
+                onCancel={onExportCancel}
+                onOk={onExportOk}
+                loading={exportLoading}
+            />
         </div>
     )
 })
