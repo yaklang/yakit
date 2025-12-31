@@ -65,3 +65,11 @@ export interface HistoryItem {
     path: string
     isFolder: boolean
 }
+
+export enum PathIncludeResult {
+    Equal = 0,          // 已打开相同路径
+    OriginContains = 1, // 已打开的是父路径
+    IncomingContains = 2, // 已打开的是子路径
+    None = 3,           // 无包含关系
+    Error = 4           // 异常
+}
