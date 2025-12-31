@@ -767,7 +767,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
             }
         }
-    }, [props.refreshTrigger, props.readOnly])
+    }, [useCampare(props.refreshTrigger),props.readOnly])
 
     useEffect(() => {
         props.onChange && props.onChange(strValue)
