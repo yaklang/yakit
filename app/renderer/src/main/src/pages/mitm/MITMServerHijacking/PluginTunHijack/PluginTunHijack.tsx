@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useImperativeHandle, useMemo, useRef} from "react"
 import {Form, Tooltip} from "antd"
-import {useControllableValue, useCreation, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import styles from "./PluginTunHijack.module.scss"
 import {failed, info, success, warn, yakitNotify} from "@/utils/notification"
 import {
@@ -25,7 +25,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import usePluginTunHijack from "./usePluginTunHijack"
+import usePluginTunHijack, { tunSessionStateDefault } from "./usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -40,7 +40,8 @@ import {v4 as uuidv4} from "uuid"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 export const PluginTunHijackDef: PluginTunHijackRefProps = {
-    updatePluginTunHijack: () => {}
+    updatePluginTunHijack: () => {},
+    closeTunHijackError: () => {}
 }
 
 export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
@@ -51,7 +52,8 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
             pluginTunHijackActions,
             pluginTunHijackDel,
             onQuitTunHijackFun,
-            handleDeleteRoute
+            handleDeleteRoute,
+            onCloseTunHijackFun
         } = props
         const {tunSessionState, setTunSessionState} = useStore()
 
@@ -98,6 +100,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
                         pluginTunHijackDel={pluginTunHijackDel}
                         onQuitTunHijackFun={onQuitTunHijackFun}
                         handleDeleteRoute={handleDeleteRoute}
+                        onCloseTunHijackFun={onCloseTunHijackFun}
                     />
                 ) : (
                     <div className={styles["plugin-tun-hijack-create"]}>
@@ -131,7 +134,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
 
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun} = props
+        const {deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun, onCloseTunHijackFun} = props
 
         const [loading, setLoading] = useState<boolean>(false)
         const [tableData, setTableData] = useState<HijackTableDataProps[]>([])
@@ -142,14 +145,36 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
         const [tableType, setTableType] = useState<"process" | "route">("process")
-
+        const tunHijackRunRef = useRef<HTMLDivElement>(null)
+        const [inViewport] = useInViewport(tunHijackRunRef)
         useImperativeHandle(
             ref,
             () => ({
-                updatePluginTunHijack
+                updatePluginTunHijack,
+                closeTunHijackError
             }),
             []
         )
+
+        const {setTunSessionState} = useStore()
+        const timeRef = useRef<NodeJS.Timeout>()
+        // 关闭Tun劫持超时异常
+        const closeTunHijackError = useMemoizedFn(() => {
+            timeRef.current = setTimeout(() => {
+                if (inViewport) {
+                    failed("当前流关闭异常,执行强制关闭")
+                    onCloseTunHijackFun()
+                }
+            }, 5000)
+        })
+        useEffect(() => {
+            return () => {
+                setTunSessionState(tunSessionStateDefault)
+                if (timeRef.current) {
+                    clearTimeout(timeRef.current)
+                }
+            }
+        }, [])
 
         const onSelectAll = (newSelectedRowKeys: string[], selected: HijackTableDataProps[], checked: boolean) => {
             setIsAllSelect(checked)
@@ -295,7 +320,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         }, [pluginTunHijackAdd.streamInfo])
         // 以上为路由表增加逻辑---
         return (
-            <div className={styles["plugin-tun-hijack-table"]}>
+            <div className={styles["plugin-tun-hijack-table"]} ref={tunHijackRunRef}>
                 <div className={styles["plugin-tun-hijack-result"]}>
                     <div className={styles["plugin-tun-hijack-header"]}>
                         <div className={styles["title"]}>
@@ -593,7 +618,9 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                 },
                 ...params
             }
-            ipcRenderer.invoke("WatchProcessConnection", newParams, token)
+            ipcRenderer.invoke("WatchProcessConnection", newParams, token).catch((err: any) => {
+                yakitNotify("error", `[WatchProcessConnection] error:  ${err}`, true)
+            })
         })
 
         const tableDataRef = React.useRef<ProcessInfo[]>([])

@@ -50,7 +50,7 @@ import {PluginTraceRefProps} from "./PluginTrace/type"
 import {pluginTraceRefFunDef} from "./PluginTrace/PluginTrace"
 import {PluginTunHijack, PluginTunHijackDef} from "./PluginTunHijack/PluginTunHijack"
 import {PluginTunHijackRefProps} from "./PluginTunHijack/PluginTunHijackType"
-import usePluginTunHijack from "./PluginTunHijack/usePluginTunHijack"
+import usePluginTunHijack, { tunSessionStateDefault } from "./PluginTunHijack/usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -627,12 +627,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [pluginTunHijackData, pluginTunHijackActions] = usePluginTunHijack({
         PluginName: "Tun劫持服务",
         onEnd: () => {
-            isQuitRef.current = false
-            setTunSessionState({
-                deviceName: null,
-                configuredRoutes: []
-            })
-            onClosePage()
+            onCloseTunHijackFun()
         }
     })
     const isQuitRef = useRef<boolean>(false)
@@ -674,6 +669,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         }
     }, [])
 
+    // Tun劫持关闭逻辑
+    const onCloseTunHijackFun = useMemoizedFn(()=>{
+        isQuitRef.current = false
+        setTunSessionState(tunSessionStateDefault)
+        onClosePage()
+    })
+
     // 页面关闭逻辑
     const onClosePage = useMemoizedFn(() => {
         // 如有其余操作的关闭来源 需通知其已执行Tun劫持关闭
@@ -691,6 +693,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         info("正在关闭Tun劫持服务，请稍后...")
         isQuitRef.current = true
         handleDeleteRoute()
+        // 防止关闭流异常， 5秒后强制关闭
+        PluginTunHijackRef.current.closeTunHijackError()
     })
 
     const [quitVisible, setQuitVisible] = useState<boolean>(false)
@@ -951,6 +955,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         pluginTunHijackDel={pluginTunHijackDel}
                         onQuitTunHijackFun={onQuitTunHijackFun}
                         handleDeleteRoute={handleDeleteRoute}
+                        onCloseTunHijackFun={onCloseTunHijackFun}
                     />
                 </div>
             </div>
