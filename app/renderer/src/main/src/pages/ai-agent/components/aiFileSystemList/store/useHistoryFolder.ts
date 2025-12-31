@@ -26,7 +26,7 @@ export const historyStore = {
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,
 
-    addHistoryItem({path, isFolder}: HistoryItem) {
+    async addHistoryItem({path, isFolder}: HistoryItem) {
         store.setSnapshot((prevList) => {
             const trimmedPath = path.trim()
             const filtered = prevList.filter((item) => item.path.trim() !== "" && item.path !== trimmedPath)
@@ -41,7 +41,7 @@ export const historyStore = {
         })
     },
 
-    async removeHistoryItem(path: string) {
+    removeHistoryItem(path: string) {
         store.setSnapshot((prevList) => {
             const nextList = prevList.filter((item) => item.path !== path)
             if (nextList.length !== prevList.length) {

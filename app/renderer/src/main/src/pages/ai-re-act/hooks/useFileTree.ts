@@ -104,7 +104,7 @@ function useFileTree(params: UseFileTreeParams) {
         try {
             const {path, isFolder} = target || {}
             if (!path) return
-            const targetName = await getNameByPath(path)
+            const targetName = await getNameByPath(path) || path
             if (!targetName) return
 
             let icon = ""
@@ -393,7 +393,7 @@ function useFileTree(params: UseFileTreeParams) {
                 handleFetchChildrenResponse(folderPath, res)
             })
             .catch(() => {
-                pendingFolderList.current.unshift(folderPath)
+                // pendingFolderList.current.unshift(folderPath)
             })
             .finally(() => {
                 executingQueue.current = executingQueue.current.filter((item) => item !== folderPath)

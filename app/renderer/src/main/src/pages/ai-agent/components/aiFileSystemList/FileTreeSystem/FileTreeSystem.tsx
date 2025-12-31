@@ -23,13 +23,11 @@ const FileTreeSystem = () => {
 
     const onSetFolder = useMemoizedFn((path: string, isFolder: boolean) => {
         historyStore.addHistoryItem({path, isFolder})
-        customFolderStore.addCustomFolderItem({path, isFolder})
     })
 
     const {dropRef, dragging, dragSource, setDragSource} = useFileTreeDrop({
         onAddPath: (path, isFolder) => {
             historyStore.addHistoryItem({path, isFolder})
-            customFolderStore.addCustomFolderItem({path, isFolder})
         }
     })
 
