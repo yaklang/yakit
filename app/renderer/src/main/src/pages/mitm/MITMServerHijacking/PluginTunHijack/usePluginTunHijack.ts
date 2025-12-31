@@ -16,7 +16,7 @@ export const tunSessionStateDefault: TunSessionStateProps = {
 
 // 网络劫持HOOK插件-Tun劫持服务
 const usePluginTunHijack = (params: PluginTunHijackParams) => {
-    const {PluginName, onError, onEnd} = params
+    const {PluginName, onError, onEnd, setRuntimeId} = params
     const tokenRef = useRef<string>(randomString(40))
     
     /** 是否在执行中 */
@@ -33,6 +33,7 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
         onError: () => {
             onError?.()
         },
+        setRuntimeId,
         isShowEnd: false
     })
 

@@ -454,4 +454,19 @@ module.exports = (win, getClient) => {
         traceStream.cancel()
         traceStream = null
     })
+
+    // 进程监听
+    const handlerHelper = require("./handleStreamWithContext")
+    const streamWatchProcessConnectionMap = new Map();
+    ipcMain.handle("cancel-WatchProcessConnection", handlerHelper.cancelHandler(streamWatchProcessConnectionMap));
+    ipcMain.handle("WatchProcessConnection", (e, params, token) => {
+        let existedStream = streamWatchProcessConnectionMap.get(token)
+        if (existedStream) {
+            existedStream.write(params)
+            return
+        }
+        let stream = getClient().WatchProcessConnection();
+        handlerHelper.registerHandler(win, stream, streamWatchProcessConnectionMap, token)
+        stream.write(params)
+    })
 }
