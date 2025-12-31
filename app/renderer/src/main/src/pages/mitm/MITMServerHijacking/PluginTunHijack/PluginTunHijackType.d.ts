@@ -23,10 +23,12 @@ export interface PluginTunHijackProps {
     pluginTunHijackDel: PluginTunHijackStateProps
     onQuitTunHijackFun: () => void
     handleDeleteRoute: (ipList?: string[]) => void
+    onCloseTunHijackFun: () => void
 }
 
 export interface PluginTunHijackRefProps {
     updatePluginTunHijack: () => void
+    closeTunHijackError: () => void
 }
 
 export interface PluginTunHijackParams {
@@ -42,6 +44,7 @@ export interface PluginTunHijackTableProps {
     pluginTunHijackDel: PluginTunHijackStateProps
     onQuitTunHijackFun: () => void
     handleDeleteRoute: (ipList?: string[]) => void
+    onCloseTunHijackFun: () => void
 }
 
 type OptionalDebugPluginRequest = Partial<DebugPluginRequest>
