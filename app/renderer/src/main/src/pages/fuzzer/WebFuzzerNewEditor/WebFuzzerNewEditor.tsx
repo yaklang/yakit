@@ -36,6 +36,7 @@ export interface WebFuzzerNewEditorProps {
     oneResponseValue?: {
         [key: string]: any
     }
+    privacy?: boolean
 }
 export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -51,7 +52,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             firstNodeExtra,
             pageId,
             oneResponseValue,
-            hex
+            hex,
+            privacy
         } = props
         const {t, i18n} = useI18nNamespaces(["webFuzzer"])
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -173,7 +175,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                 extraEditorProps={{
                     isShowSelectRangeMenu: true,
-                    pageId
+                    pageId,
+                    privacy
                 }}
                 title={
                     <span style={{fontSize: 12}}>

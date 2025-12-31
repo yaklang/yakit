@@ -20,7 +20,7 @@
     "concurrency": "Group Concurrency"
   },
   "PacketScanButton": {
-    "packetScan": "Packet Scan"
+    "packetScan": "Scan"
   },
   "WebFuzzerResponseExtractor": {
     "cannotGenerateExtractionRule": "Cannot generate data extraction rule:",

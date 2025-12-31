@@ -810,6 +810,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const fixContentTypeFun = useMemoizedFn(() => fixContentType)
     const originalContentTypeFun = useMemoizedFn(() => originalContentType)
     const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
+    const privacyFun = useMemoizedFn(() => props.privacy)
     // 存储当前的隐私遮挡范围信息
     const privacyMaskRangesRef = useRef<{id: string, range: monaco.Range}[]>([])
     // 跟踪 model 是否已被释放
@@ -895,6 +896,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 })()
                 ;(() => {
                     try {
+                        if(!privacyFun()) return
                         //http - 匹配 Host 头及其值，并在整个文本中遮挡该主机名
                         const hostRegex = /\nHost:\s*?([^\r\n]+)/
                         const hostMatch = hostRegex.exec(text)
@@ -1361,7 +1363,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         props.fixContentType,
         props.originalContentType,
         props.fixContentTypeHoverMessage,
-        i18n.language
+        i18n.language,
+        props.privacy
     ])
     // 定位高亮光标位置
     useDebounceEffect(

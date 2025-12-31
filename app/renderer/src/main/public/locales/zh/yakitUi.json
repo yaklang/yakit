@@ -66,7 +66,8 @@
         "debugExecution": "调试执行",
         "restore": "复原",
         "share": "分享",
-        "ImportTutorial": "导入教程"
+        "ImportTutorial": "导入教程",
+        "privacy_mode":"隐私模式"
     },
     "YakitNotification": {
         "unknown_error": "未知错误",
