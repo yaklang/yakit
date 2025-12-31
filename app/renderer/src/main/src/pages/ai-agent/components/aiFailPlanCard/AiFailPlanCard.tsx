@@ -1,11 +1,11 @@
-import type {FailPlanAndExecutionError} from "@/pages/ai-re-act/hooks/aiRender"
+import type {FailTaskChatError} from "@/pages/ai-re-act/hooks/aiRender"
 import {type FC} from "react"
 import ChatCard from "../ChatCard"
 import styles from "./AiFailPlanCard.module.scss"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {TaskErrorIcon} from "../../aiTree/icon"
 
-const AiFailPlanCard: FC<{item: FailPlanAndExecutionError}> = ({item}) => {
+const AiFailPlanCard: FC<{item: FailTaskChatError}> = ({item}) => {
     const {content} = item
     const {nodeLabel} = useAINodeLabel(item.NodeIdVerbose)
     return (

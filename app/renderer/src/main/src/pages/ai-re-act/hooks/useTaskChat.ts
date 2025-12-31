@@ -6,7 +6,7 @@ import {
     AIReviewJudgeLevelMap,
     convertNodeIdToVerbose,
     DefaultAIToolResult,
-    TaskDefaultReToolResultSummary
+    DefaultToolResultSummary
 } from "./defaultConstant"
 import {AIChatLogData, handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
@@ -37,17 +37,7 @@ export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "t
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {
-        onTaskStart,
-        pushLog,
-        getRequest,
-        onReview,
-        onReviewExtra,
-        onReviewRelease,
-        sendRequest,
-        onGrpcFolder,
-        onNotifyMessage
-    } = params || {}
+    const {onTaskStart, pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -376,7 +366,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 toolResult.summary =
                     status === "user_cancelled"
                         ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
-                        : toolResult.summary || TaskDefaultReToolResultSummary[status]?.label || ""
+                        : toolResult.summary || DefaultToolResultSummary[status]?.wait || ""
 
                 setStreams((old) => {
                     let newArr = [...old]
@@ -656,31 +646,6 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
     // #endregion
 
-    /** 文件系统操作处理数据 */
-    const handleFileSystemPin = useMemoizedFn((res: AIOutputEvent) => {
-        try {
-            const {Type} = res
-            const ipcContent = Uint8ArrayToString(res.Content) || ""
-            const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
-
-            // onNotifyMessage &&
-            //     onNotifyMessage({
-            //         Type,
-            //         NodeId,
-            //         NodeIdVerbose,
-            //         Timestamp,
-            //         Content: path
-            //     })
-
-            onGrpcFolder && onGrpcFolder({path, isFolder: Type === "filesystem_pin_directory"})
-        } catch (error) {
-            handleGrpcDataPushLog({
-                info: res,
-                pushLog: handlePushLog
-            })
-        }
-    })
-
     /** 工具决策数据处理 */
     const handleToolCallDecision = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -726,8 +691,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                     return false
                 })
                 if (!!itemInfo && itemInfo.type === "stream") {
-                    if (!itemInfo.data.reference) itemInfo.data.reference = []
-                    itemInfo.data.reference.push(data)
+                    if (!itemInfo.reference) itemInfo.reference = []
+                    itemInfo.reference.push(data)
                 }
 
                 return newArr
@@ -899,12 +864,6 @@ function useTaskChat(params?: UseTaskChatParams) {
                 planTree.current = cloneDeep(tasks.root_task)
                 const plans = genExecTasks(tasks.root_task)
                 setPlan(cloneDeep(plans))
-                return
-            }
-
-            if (["filesystem_pin_directory", "filesystem_pin_filename"].includes(res.Type)) {
-                // 文件系统操作
-                handleFileSystemPin(res)
                 return
             }
 

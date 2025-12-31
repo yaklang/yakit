@@ -8,7 +8,7 @@ import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AITaskInfoProps} from "./aiRender"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
-import {AIChatLogData} from "./type"
+import {AIChatLogData, AIChatLogToInfo} from "./type"
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -17,6 +17,18 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
         AIService: info.AIService,
         AIModelName: info.AIModelName,
         Timestamp: info.Timestamp
+    }
+}
+
+/** 生成一个异常日志数据的对象 */
+export const genErrorLogData = (
+    Timestamp: AIChatLogToInfo["Timestamp"],
+    message: AIChatLogToInfo["data"]["message"]
+): AIChatLogToInfo => {
+    return {
+        type: "log",
+        Timestamp,
+        data: {level: "error", message: message}
     }
 }
 
