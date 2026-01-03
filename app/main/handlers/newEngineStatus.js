@@ -443,12 +443,74 @@ module.exports = {
                     let stdout = ""
                     let stderr = ""
                     let successDetected = false
-                    let killed = false  
-                    const timeoutMs = 20000
+                    let killed = false
+                    let pollIntervalId = null
+                    const timeoutMs = 60000 // 增加到 60 秒，配合轮询检测
+
+                    /** 清理所有定时器和轮询 */
+                    const cleanup = () => {
+                        if (pollIntervalId) {
+                            clearInterval(pollIntervalId)
+                            pollIntervalId = null
+                        }
+                    }
+
+                    /** 成功回调，确保只触发一次 */
+                    const onSuccess = (message) => {
+                        if (successDetected || killed) return
+                        successDetected = true
+                        cleanup()
+                        clearTimeout(timeoutId)
+                        resolve({status: "success", message})
+                    }
+
+                    /** 轮询检测引擎连接状态 */
+                    const startConnectionPolling = () => {
+                        engineLogOutputFileAndUI(win, `开始轮询检测引擎连接状态 (每 2 秒一次)...`)
+                        win.webContents.send("engine-waiting-startup", "正在等待引擎完全启动")
+
+                        pollIntervalId = setInterval(() => {
+                            if (successDetected || killed || checkId !== currentStartId) {
+                                cleanup()
+                                return
+                            }
+
+                            // 尝试连接引擎
+                            const addr = `127.0.0.1:${port}`
+                            engineLogOutputFileAndUI(win, `轮询尝试连接引擎: ${addr}`)
+
+                            try {
+                                callback(addr, "", password)
+                                newClient().Echo({text: ECHO_TEST_MSG}, (err, data) => {
+                                    if (successDetected || killed) return
+
+                                    if (err) {
+                                        engineLogOutputFileAndUI(win, `轮询连接失败，继续等待...`)
+                                        return
+                                    }
+
+                                    if (data && data["result"] === ECHO_TEST_MSG) {
+                                        engineLogOutputFileAndUI(win, `轮询检测到引擎连接成功 (Echo 测试通过)！`)
+                                        onSuccess("引擎启动成功（通过连接检测）")
+                                    }
+                                })
+                            } catch (e) {
+                                engineLogOutputFileAndUI(win, `轮询连接异常: ${e.message || e}`)
+                            }
+                        }, 2000) // 每 2 秒检测一次
+                    }
+
+                    // 延迟 2 秒开始轮询，给引擎一点启动时间
+                    setTimeout(() => {
+                        if (!successDetected && !killed && checkId === currentStartId) {
+                            startConnectionPolling()
+                        }
+                    }, 2000)
 
                     const timeoutId = setTimeout(() => {
                         if (successDetected || killed) return
                         killed = true
+                        cleanup()
                         subprocess.kill()
                         try {
                             if (process.platform === "win32") {
@@ -457,7 +519,7 @@ module.exports = {
                                 process.kill(subprocess.pid, "SIGKILL")
                             }
                         } catch {}
-                        engineLogOutputFileAndUI(win, `----- 启动本地引擎超时 -----`)
+                        engineLogOutputFileAndUI(win, `----- 启动本地引擎超时 (60s) -----`)
                         reject({status: "timeout", message: "启动本地引擎超时"})
                     }, timeoutMs)
 
@@ -475,14 +537,13 @@ module.exports = {
                         if (match) {
                             // 数据库正在初始化中...
                             engineLogOutputFileAndUI(win, `----- 数据库正在初始化中... -----`)
-                            win.webContents.send("db-init-ing", '数据库正在初始化中...')
+                            win.webContents.send("db-init-ing", "数据库正在初始化中...")
                         }
 
+                        // 保留原有的 yak grpc ok 检测方式
                         if (/yak grpc ok/i.test(output)) {
-                            successDetected = true
-                            clearTimeout(timeoutId)
                             engineLogOutputFileAndUI(win, `检测到 'yak grpc ok'，引擎启动成功！`)
-                            resolve({status: "success", message: "引擎启动成功"})
+                            onSuccess("引擎启动成功（通过 yak grpc ok 检测）")
                         }
                     })
 
@@ -494,6 +555,7 @@ module.exports = {
                     })
 
                     process.on("exit", () => {
+                        cleanup()
                         subprocess.kill()
                         try {
                             if (process.platform === "win32") {
@@ -506,6 +568,7 @@ module.exports = {
 
                     subprocess.on("error", (err) => {
                         if (checkId !== currentStartId) return
+                        cleanup()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `启动引擎出错: ${err.message}`)
                         win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
@@ -514,6 +577,7 @@ module.exports = {
 
                     subprocess.on("close", (code) => {
                         if (checkId !== currentStartId || killed || successDetected) return
+                        cleanup()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `----- 引擎进程退出，退出码: ${code} -----`)
                         reject({status: "exit", message: `引擎进程提前退出 (${code})`})
