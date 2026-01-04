@@ -30,7 +30,6 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import TimelineCard from "./TimelineCard/TimelineCard"
 import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
-import Loading from "@/components/Loading/Loading"
 import TaskLoading from "./TaskLoading/TaskLoading"
 
 export enum AIChatLeft {
@@ -56,6 +55,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         setExpand(false)
     })
 
+    const hasTaskTree = (taskChat?.streams?.length ?? 0) > 0
+
     const renderDom = useMemoizedFn(() => {
         switch (activeTab) {
             case AIChatLeft.TaskTree:
@@ -71,33 +72,26 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         }
     })
 
+    const handleTabChange = useMemoizedFn((value: AIChatLeft) => {
+        setActiveTab(value)
+    })
+
     const button = useMemo(() => {
-        const hasStreams = (taskChat?.streams?.length ?? 0) > 0
-        if (hasStreams)
-            return (
-                <YakitRadioButtons
-                    buttonStyle='solid'
-                    size='middle'
-                    defaultValue={AIChatLeft.TaskTree}
-                    options={[
-                        {label: "任务树", value: AIChatLeft.TaskTree},
-                        {label: "时间线", value: AIChatLeft.Timeline}
-                    ]}
-                    value={activeTab}
-                    onChange={({target}) => setActiveTab(target.value)}
-                />
-            )
-
-        return <YakitButton size='middle'>时间线</YakitButton>
-    }, [taskChat?.streams?.length])
-
-    const hasTaskTree = (taskChat?.streams?.length ?? 0) > 0
-
-    useEffect(() => {
-        if (hasTaskTree && activeTab === AIChatLeft.Timeline) {
-            setActiveTab(AIChatLeft.TaskTree)
-        }
-    }, [])
+        if (!hasTaskTree) return <YakitButton size='middle'>时间线</YakitButton>
+        return (
+            <YakitRadioButtons
+                buttonStyle='solid'
+                size='middle'
+                defaultValue={AIChatLeft.TaskTree}
+                options={[
+                    {label: "任务树", value: AIChatLeft.TaskTree},
+                    {label: "时间线", value: AIChatLeft.Timeline}
+                ]}
+                value={activeTab}
+                onChange={({target}) => handleTabChange(target.value)}
+            />
+        )
+    }, [activeTab, handleTabChange, hasTaskTree])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>

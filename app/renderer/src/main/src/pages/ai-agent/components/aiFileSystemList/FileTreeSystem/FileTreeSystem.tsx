@@ -7,9 +7,8 @@ import {useMemoizedFn} from "ahooks"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
 import {useCustomFolder, customFolderStore} from "../store/useCustomFolder"
-import {useFileTreeDrop} from "@/pages/ai-agent/aiChatWelcome/hooks/useFileTreeDrop"
-import classNames from "classnames"
 import styles from "./FileTreeSystem.module.scss"
+import FileTreeDrop from "@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop"
 
 const FileTreeSystem = () => {
     // 单选
@@ -23,14 +22,6 @@ const FileTreeSystem = () => {
 
     const onSetFolder = useMemoizedFn((path: string, isFolder: boolean) => {
         historyStore.addHistoryItem({path, isFolder})
-        customFolderStore.addCustomFolderItem({path, isFolder})
-    })
-
-    const {dropRef, dragging, dragSource, setDragSource} = useFileTreeDrop({
-        onAddPath: (path, isFolder) => {
-            historyStore.addHistoryItem({path, isFolder})
-            customFolderStore.addCustomFolderItem({path, isFolder})
-        }
     })
 
     const filePreviewData = useMemo(() => {
@@ -41,44 +32,45 @@ const FileTreeSystem = () => {
     return (
         <YakitResizeBox
             firstRatio='50%'
-            firstNodeStyle={{padding: "4px", overflowY: "auto"}}
+            firstNodeStyle={{padding: "4px", overflow: "hidden"}}
             lineDirection='right'
             firstMinSize={200}
             lineStyle={{width: 4}}
             firstNode={
-                <div
-                    ref={dropRef}
-                    className={classNames(styles["file-tree-system-left"], {
-                        [styles.dragging]: dragging && dragSource !== "AIRreeToChat"
-                    })}
-                >
-                    {dragging && dragSource !== "AIRreeToChat" && (
-                        <div className={styles.dragHint}>松开以添加文件 / 文件夹</div>
-                    )}
-                    <FileTreeSystemListWapper
-                        key='aiFolder'
-                        path={grpcFolders}
-                        selected={selected}
-                        setSelected={setSelected}
-                        title='AI Artifacts'
-                        isOpen={false}
-                    />
-                    <FileTreeSystemListWapper
-                        isOpen
-                        key='customFolder'
-                        title='已打开文件/文件夹'
-                        selected={selected}
-                        historyFolder={historyFolder}
-                        path={customFolder}
-                        setOpenFolder={onSetFolder}
-                        setSelected={setSelected}
-                        onTreeDragStart={() => {
-                            setDragSource("AIRreeToChat")
-                        }}
-                        onTreeDragEnd={() => {
-                            setDragSource(null)
-                        }}
-                    />
+                <div className={styles.fileTreeSystemLeft}>
+                    <div className={styles.topPanel}>
+                        <FileTreeSystemListWapper
+                            key='aiFolder'
+                            path={grpcFolders}
+                            selected={selected}
+                            setSelected={setSelected}
+                            title='AI Artifacts'
+                            isOpen={false}
+                        />
+                    </div>
+
+                    <div className={styles.bottomPanel}>
+                        <FileTreeDrop>
+                            {({setDragSource}) => (
+                                <FileTreeSystemListWapper
+                                    isOpen
+                                    key='customFolder'
+                                    title='已打开文件/文件夹'
+                                    selected={selected}
+                                    historyFolder={historyFolder}
+                                    path={customFolder}
+                                    setOpenFolder={onSetFolder}
+                                    setSelected={setSelected}
+                                    onTreeDragStart={() => {
+                                        setDragSource("AIRreeToChat")
+                                    }}
+                                    onTreeDragEnd={() => {
+                                        setDragSource(null)
+                                    }}
+                                />
+                            )}
+                        </FileTreeDrop>
+                    </div>
                 </div>
             }
             secondNode={<FilePreview data={filePreviewData} />}

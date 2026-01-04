@@ -105,7 +105,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // 接口流里的文件树路径集合
     const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
-    const handleSetGrpcFolders = useMemoizedFn((info: AIFileSystemPin) => {
+    const handleSetGrpcFolders = useMemoizedFn(async (info: AIFileSystemPin) => {
         setGrpcFolders((old) => {
             const isExist = old.find((item) => item.path === info.path)
             if (!!isExist) {
