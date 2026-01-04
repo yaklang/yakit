@@ -26,4 +26,6 @@ export type AIAgentEventProps = {
     updateOfInputCard: string
     // 一级页面关闭事件
     onClosePageRepository?: string
+    /** 文件系统-文件预览已打开 */
+    filePreviewReady: string
 }

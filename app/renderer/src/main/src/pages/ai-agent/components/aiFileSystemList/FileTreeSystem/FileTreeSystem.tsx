@@ -1,14 +1,15 @@
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
-import {useMemo, useState} from "react"
+import {useEffect, useMemo, useRef, useState} from "react"
 import FilePreview from "../FilePreview/FilePreview"
 import FileTreeSystemListWapper from "../FileTreeSystemListWapper/FileTreeSystemListWapper"
 import {useMemoizedFn} from "ahooks"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
-import {useCustomFolder, customFolderStore} from "../store/useCustomFolder"
+import {useCustomFolder} from "../store/useCustomFolder"
 import styles from "./FileTreeSystem.module.scss"
 import FileTreeDrop from "@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop"
+import emiter from "@/utils/eventBus/eventBus"
 
 const FileTreeSystem = () => {
     // 单选
@@ -29,9 +30,23 @@ const FileTreeSystem = () => {
         return selected
     }, [selected])
 
+    const hasEmittedRef = useRef(false)
+
+    const [firstRatio, setFirstRatio] = useState('50%')
+
+    useEffect(() => {
+        if (!filePreviewData) return
+        // 打开了就一直打开，目前没有关闭预览，所以只发一次事件
+        if (hasEmittedRef.current) return
+
+        emiter.emit("filePreviewReady", "")
+        setFirstRatio('30%')
+        hasEmittedRef.current = true
+    }, [filePreviewData])
+
     return (
         <YakitResizeBox
-            firstRatio='50%'
+            firstRatio={firstRatio}
             firstNodeStyle={{padding: "4px", overflow: "hidden"}}
             lineDirection='right'
             firstMinSize={200}
