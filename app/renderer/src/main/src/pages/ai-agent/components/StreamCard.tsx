@@ -1,10 +1,10 @@
 import {SolidAnnotationIcon, SolidHashtagIcon} from "@/assets/icon/solid"
-import type {FC, ReactNode} from "react"
+import {useState, type FC, type ReactNode} from "react"
 import ChatCard from "./ChatCard"
 import FileList from "./FileList"
 import styles from "./StreamCard.module.scss"
 import ModalInfo, {type ModalInfoProps} from "./ModelInfo"
-import { AIYakExecFileRecord } from "@/pages/ai-re-act/hooks/aiRender"
+import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
 
 interface StreamCardProps {
     content?: ReactNode
@@ -32,7 +32,24 @@ const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
     )
 }
 
-const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileList, prompt, modalInfo, contentExtra,referenceNode}) => {
+const StreamCard: FC<StreamCardProps> = ({
+    titleText,
+    titleIcon,
+    content,
+    fileList,
+    prompt,
+    modalInfo,
+    contentExtra,
+    referenceNode
+}) => {
+    const [active, setActive] = useState(false)
+
+    const onClick = (e) => {
+        e.stopPropagation()
+        setActive(true)
+    }
+    const onMouseLeave = () => setActive(false)
+
     return (
         <ChatCard
             titleText={titleText}
@@ -44,7 +61,15 @@ const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileLis
                 </>
             }
         >
-            <div className={styles["stream-content"]}>{content}</div>
+            <div
+                className={styles["stream-content"]}
+                tabIndex={0}
+                onClick={onClick}
+                onMouseLeave={onMouseLeave}
+                style={{overflowY: active ? "auto" : "hidden"}}
+            >
+                {content}
+            </div>
             {contentExtra}
             {!!fileList?.length && <FileList fileList={fileList} />}
             {referenceNode}

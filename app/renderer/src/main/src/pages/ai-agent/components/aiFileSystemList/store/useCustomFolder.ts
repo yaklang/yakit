@@ -64,14 +64,21 @@ export const customFolderStore = {
 
     async addCustomFolderItem(item: HistoryItem) {
         addQueue = addQueue.then(async () => {
-            const prev = store.getSnapshot()
-            const finalResult = await mergeOnePath(prev, item)
-            opfileNotify({uniquePaths: prev, incoming: item, label: item.isFolder ? "文件夹" : "文件", path: item.path})
-            store.setSnapshot(() => {
-                const next = finalResult
-                sessionStorage.setItem(SESSION_KEY, JSON.stringify(next))
-                return next
-            })
+            try {
+                const prev = store.getSnapshot()
+                const finalResult = await mergeOnePath(prev, item)
+                opfileNotify({
+                    uniquePaths: prev,
+                    incoming: item,
+                    label: item.isFolder ? "文件夹" : "文件",
+                    path: item.path
+                })
+                store.setSnapshot(() => {
+                    const next = finalResult
+                    sessionStorage.setItem(SESSION_KEY, JSON.stringify(next))
+                    return next
+                })
+            } catch {}
         })
     },
 
