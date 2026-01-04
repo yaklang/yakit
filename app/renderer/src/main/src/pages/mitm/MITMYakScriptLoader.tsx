@@ -43,6 +43,7 @@ import UnLogin from "@/assets/unLogin.png"
 import {pluginTypeToName} from "../plugins/builtInData"
 import MITMContext from "./Context/MITMContext"
 import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -525,6 +526,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
     }, [mitmContent.mitmStore.version])
     const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
     const [initWidth, setInitWidth] = useState<number>(drawerWidth)
+    const {t, i18n} = useI18nNamespaces(["mitm"])
 
     useEffect(() => {
         return () => {
@@ -562,6 +564,12 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                         <Tooltip title={i.ScriptName}>{`${i.ScriptName}`}</Tooltip>
                     </div>
                     <Space>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => mitmHasParamsPluginFormRef.current?.reset()}
+                        >
+                            {t("YakScriptLoader.reset_parameters")}
+                        </YakitButton>
                         <YakitButton
                             type='outline2'
                             onClick={() => {
@@ -646,6 +654,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
 })
 interface MitmHasParamsFormPropsRefProps {
     onSubmit: () => Promise<CustomPluginExecuteFormValue | undefined>
+    reset: () => void
 }
 interface MitmHasParamsFormProps {
     ref?: ForwardedRef<MitmHasParamsFormPropsRefProps>
@@ -659,13 +668,18 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
     const jsonSchemaListRef = useRef<{
         [key: string]: any
     }>({})
+    const [resetCounter, setResetCounter] = useState(0)
 
     useImperativeHandle(
         ref,
         () => ({
-            onSubmit: handleFormSubmit
+            onSubmit: handleFormSubmit,
+            reset: () => {
+                form.setFieldsValue(initFormValue)
+                setResetCounter(prev => prev + 1)
+            }
         }),
-        [form]
+        [form, initFormValue]
     )
 
     const handleFormSubmit: () => Promise<CustomPluginExecuteFormValue | undefined> = useMemoizedFn(() => {
@@ -700,6 +714,7 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             initialValues={initFormValue}
         >
             <ExecuteEnterNodeByPluginParams
+                key={resetCounter}
                 paramsList={requiredParams}
                 pluginType={"mitm"}
                 isExecuting={false}
