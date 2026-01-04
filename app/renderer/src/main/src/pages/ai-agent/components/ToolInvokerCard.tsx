@@ -1,5 +1,5 @@
 import {SolidToolIcon} from "@/assets/icon/solid"
-import {FC, memo, ReactNode, useCallback, useEffect, useMemo, useState} from "react"
+import {FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react"
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
@@ -25,6 +25,7 @@ interface ToolInvokerCardProps {
 }
 interface PreWrapperProps {
     code: ReactNode
+    autoScrollBottom?: boolean
 }
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
@@ -123,9 +124,50 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
 export default memo(ToolInvokerCard)
 
 export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
-    const {code} = props
+    const {code, autoScrollBottom = false} = props
+
+    const containerRef = useRef<HTMLPreElement>(null)
+    const [isAtBottom, setIsAtBottom] = useState(true)
+
+    // 只有开启 autoScrollBottom 才监听滚动
+    useEffect(() => {
+        if (!autoScrollBottom) return
+
+        const el = containerRef.current
+        if (!el) return
+
+        const handleScroll = () => {
+            const threshold = 20
+            const atBottom =
+                el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+            setIsAtBottom(atBottom)
+        }
+
+        el.addEventListener("scroll", handleScroll)
+        return () => el.removeEventListener("scroll", handleScroll)
+    }, [autoScrollBottom])
+
+    // code 更新时：只有在底部 & 开启时才置底
+    useEffect(() => {
+        if (!autoScrollBottom) return
+
+        const el = containerRef.current
+        if (!el) return
+
+        if (isAtBottom) {
+            el.scrollTop = el.scrollHeight
+        }
+    }, [code, isAtBottom, autoScrollBottom])
+
     return (
-        <pre className={styles["file-system-wrapper"]}>
+        <pre
+            ref={containerRef}
+            className={styles["file-system-wrapper"]}
+            style={{
+                maxHeight: 100,
+                overflowY: "auto"
+            }}
+        >
             <code>{code}</code>
         </pre>
     )

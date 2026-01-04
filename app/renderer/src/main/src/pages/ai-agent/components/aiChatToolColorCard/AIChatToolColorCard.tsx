@@ -72,7 +72,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
             </div>
             <div className={styles["card-content"]}>
                 {/* 工具紫色卡片所有nodeId都显示代码格式 */}
-                <PreWrapper code={content} />
+                <PreWrapper code={content} autoScrollBottom />
             </div>
             {referenceNode}
         </div>
