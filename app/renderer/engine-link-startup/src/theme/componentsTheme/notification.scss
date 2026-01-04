@@ -185,10 +185,15 @@
 .ant-notification {
     max-height: 60vh;
     overflow-y: auto;
+    // 确保通知不会超出窗口右边界
+    max-width: calc(100vw - 24px);
+    right: 12px !important;
 }
 .ant-notification-notice {
     border-radius: 4px;
     margin-bottom: 5px;
+    // 确保单个通知不超出容器
+    max-width: 100%;
 }
 
 .ant-notification-notice-close {

@@ -305,6 +305,8 @@ export const StartupPage: React.FC = () => {
 
     // 切换远程模式
     const handleLinkRemoteMode = useMemoizedFn(() => {
+        // 如果当前状态是 break，不执行切换
+        if (getYakitStatus() === "break") return
         onDisconnect()
         setYakitStatus("")
         onSetEngineMode("remote")
@@ -312,6 +314,8 @@ export const StartupPage: React.FC = () => {
 
     // 本地连接的状态设置
     const setLinkLocalEngine = useMemoizedFn(() => {
+        // 如果当前状态是 break，不执行切换
+        if (getYakitStatus() === "break") return
         onDisconnect()
         setYakitStatus("")
         onSetEngineMode("local")
@@ -322,6 +326,8 @@ export const StartupPage: React.FC = () => {
 
     // 切换本地模式
     const handleLinkLocalMode = useMemoizedFn(() => {
+        // 如果当前状态是 break，不执行切换
+        if (getYakitStatus() === "break") return
         if (isEngineInstalled.current) {
             if (!isInitLocalLink.current) {
                 setLinkLocalEngine()
@@ -337,6 +343,8 @@ export const StartupPage: React.FC = () => {
             setCheckLog(["检查本地是否已安装引擎..."])
             setCheckLog(["本地没有引擎文件..."])
             setTimeout(() => {
+                // 如果当前状态是 break，不执行
+                if (getYakitStatus() === "break") return
                 setYakitStatus(getBuildInEngineVersion() ? "install" : "installNetWork")
                 onSetEngineMode(undefined)
             }, 1000)
@@ -495,10 +503,18 @@ export const StartupPage: React.FC = () => {
                     setKeepalive(false)
                     return
                 case "break":
-                    // 主动断开引擎
-                    setTimeoutLoading(setRestartLoading)
-                    handleStartLocalLink(false)
-                    isCheckVersion.current = false
+                    // 如果当前状态是 break，则执行重连
+                    if (getYakitStatus() === "break") {
+                        setTimeoutLoading(setRestartLoading)
+                        setYakitStatus("")
+                        handleStartLocalLink(false)
+                        isCheckVersion.current = false
+                        return
+                    }
+                    // 否则执行断开 - 先设置 break 状态，再断开连接，确保状态不被覆盖
+                    setYakitStatus("break")
+                    setCheckLog(["已主动断开, 请点击手动连接引擎"])
+                    onDisconnect()
                     return
                 default:
                     return
@@ -620,6 +636,10 @@ export const StartupPage: React.FC = () => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((params: LocalLinkParams) => {
+        // 如果当前状态是 break，不继续执行连接流程
+        if (getYakitStatus() === "break") {
+            return
+        }
         debugToPrintLog(`------ 开始启动引擎, 指定端口: ${params.port} ------`)
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${params.port}`])
         setCredential({
@@ -639,6 +659,24 @@ export const StartupPage: React.FC = () => {
         setCredential({...DefaultCredential})
         setKeepalive(false)
         setEngineLink(false)
+    })
+
+    // 安全设置 keepalive，如果当前状态是 break 则不设置
+    const safeSetKeepalive = useMemoizedFn((value: boolean) => {
+        // 如果当前状态是 break，不允许设置 keepalive = true
+        if (value && getYakitStatus() === "break") {
+            return
+        }
+        setKeepalive(value)
+    })
+
+    // 安全设置 yakitStatus，如果当前状态是 break 则不允许被其他状态覆盖
+    const safeSetYakitStatus = useMemoizedFn((value: YakitStatusType) => {
+        // 如果当前状态是 break，不允许被其他状态覆盖（除非是显式设置 break）
+        if (getYakitStatus() === "break" && value !== "break") {
+            return
+        }
+        setYakitStatus(value)
     })
     // 开始连接引擎
     const onStartLinkEngine = useMemoizedFn(() => {
@@ -663,6 +701,10 @@ export const StartupPage: React.FC = () => {
 
     // #region 连接成功
     const onReady = useMemoizedFn(() => {
+        // 如果当前状态是 break，不继续执行
+        if (getYakitStatus() === "break") {
+            return
+        }
         if (getKeepalive()) {
             setCheckLog([])
             setYakitStatus("link")
@@ -894,10 +936,10 @@ export const StartupPage: React.FC = () => {
                     credential={credential}
                     keepalive={keepalive}
                     engineLink={engineLink}
-                    onKeepaliveShouldChange={setKeepalive}
+                    onKeepaliveShouldChange={safeSetKeepalive}
                     onReady={onReady}
                     onFailed={onFailed}
-                    setYakitStatus={setYakitStatus}
+                    setYakitStatus={safeSetYakitStatus}
                     setCheckLog={setCheckLog}
                 />
                 <div className={styles["startup-engine-log"]} style={{display: isRemoteEngine ? "none" : "block"}}>
@@ -910,7 +952,7 @@ export const StartupPage: React.FC = () => {
                                 ref={localEngineRef}
                                 setLog={setCheckLog}
                                 onLinkEngine={handleLinkLocalEngine}
-                                setYakitStatus={setYakitStatus}
+                                setYakitStatus={safeSetYakitStatus}
                                 buildInEngineVersion={buildInEngineVersion}
                                 setRestartLoading={setRestartLoading}
                                 yakitUpdate={yakitUpdate}
