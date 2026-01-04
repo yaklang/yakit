@@ -19,7 +19,8 @@ import {showConfigSystemProxyForm, showConfigChromePathForm} from "@/utils/Confi
 import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {Tooltip, Row, Col} from "antd"
+import {Tooltip, Row, Col, Spin} from "antd"
+import {LoadingOutlined} from "@ant-design/icons"
 import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {
@@ -53,14 +54,16 @@ const ShowIcon: Record<string, ReactNode> = {
     error: <ExclamationIcon className={styles["icon-style"]} />,
     warning: <ExclamationIcon className={styles["icon-style"]} />,
     success: <RocketIcon className={styles["icon-style"]} />,
-    help: <OutlineShieldcheckIcon className={styles["icon-style"]} />
+    help: <OutlineShieldcheckIcon className={styles["icon-style"]} />,
+    loading: <LoadingOutlined className={styles["icon-style"]} spin />
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {
     error: styles["error-wrapper-bgcolor"],
     warning: styles["warning-wrapper-bgcolor"],
     success: styles["success-wrapper-bgcolor"],
-    help: styles["success-wrapper-bgcolor"]
+    help: styles["success-wrapper-bgcolor"],
+    loading: styles["loading-wrapper-bgcolor"]
 }
 
 export interface GlobalReverseStateProp {
@@ -461,8 +464,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         }
     }
 
-    const [state, setState] = useState<string>("error")
+    const [state, setState] = useState<string>("loading")
     const [stateNum, setStateNum] = useState<number>(0)
+    // 是否正在检测中
+    const [isChecking, setIsChecking] = useState<boolean>(true)
 
     const updateState = useMemoizedFn(() => {
         let status = "success"
@@ -522,6 +527,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     // 定时器内的逻辑是否在执行
     const isRunRef = useRef<boolean>(false)
+    // 是否是首次检测（仅首次检测显示"自检中..."）
+    const isFirstCheckRef = useRef<boolean>(true)
     const updateAllInfo = useMemoizedFn(() => {
         if (isRunRef.current) return
         isRunRef.current = true
@@ -547,6 +554,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 }
             })
             isRunRef.current = false
+            // 首次检测完成后，关闭检测中状态并标记首次检测完成
+            if (isFirstCheckRef.current) {
+                setIsChecking(false)
+                isFirstCheckRef.current = false
+            }
             setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
         })
     })
@@ -586,8 +598,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             })
             setSystemProxy({Enable: false, CurrentProxy: ""})
 
-            setState("error")
+            setState("loading")
             setStateNum(0)
+            setIsChecking(true)
+            isFirstCheckRef.current = true
 
             isRunRef.current = false
             if (timeRef.current) clearInterval(timeRef.current)
@@ -734,9 +748,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <div className={styles["header-title"]}>系统检测</div>
                     <div className={styles["header-hint"]}>
                         <span className={styles["hint-title"]}>
-                            {stateNum === 0 ? `暂无异常` : `检测到${stateNum}项异常`}
+                            {isChecking ? "自检中..." : stateNum === 0 ? `暂无异常` : `检测到${stateNum}项异常`}
                         </span>
-                        {ShowIcon[state]}
+                        {isChecking ? ShowIcon["loading"] : ShowIcon[state]}
                     </div>
                 </div>
                 <div className={styles["body-wrapper"]}>
@@ -1084,6 +1098,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         state,
         stateNum,
         showCheckEngine,
+        isChecking,
         Array.from(runNodeList).length
     ])
 
@@ -1094,9 +1109,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <div className={styles["header-title"]}>系统检测</div>
                     <div className={styles["header-hint"]}>
                         <span className={styles["hint-title"]}>
-                            {stateNum === 0 ? `暂无异常` : `检测到${stateNum}项异常`}
+                            {isChecking ? "自检中..." : stateNum === 0 ? `暂无异常` : `检测到${stateNum}项异常`}
                         </span>
-                        {ShowIcon[state]}
+                        {isChecking ? ShowIcon["loading"] : ShowIcon[state]}
                     </div>
                 </div>
                 {stateNum !== 0 && (
@@ -1174,20 +1189,20 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 </div>
             </div>
         )
-    }, [timeInterval, state, stateNum, showCheckEngine, ruleUpdate])
+    }, [timeInterval, state, stateNum, showCheckEngine, isChecking, ruleUpdate])
 
     return (
         <>
             <YakitPopover
-                overlayClassName={classNames(styles["global-state-popover"], ShowColorClass[state])}
+                overlayClassName={classNames(styles["global-state-popover"], isChecking ? ShowColorClass["loading"] : ShowColorClass[state])}
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
                 content={isIRify() ? irifyContent : content}
                 visible={show}
                 trigger='click'
                 onVisibleChange={(visible) => setShow(visible)}
             >
-                <div className={classNames(styles["global-state-wrapper"], ShowColorClass[state])}>
-                    <div className={classNames(styles["state-body"])}>{ShowIcon[state]}</div>
+                <div className={classNames(styles["global-state-wrapper"], isChecking ? ShowColorClass["loading"] : ShowColorClass[state])}>
+                    <div className={classNames(styles["state-body"])}>{isChecking ? ShowIcon["loading"] : ShowIcon[state]}</div>
                 </div>
             </YakitPopover>
             <YakitHint

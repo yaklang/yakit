@@ -14,6 +14,10 @@
     --global-state-bg-color: var(--Colors-Use-Purple-Bg);
     --global-state-text-color: var(--Colors-Use-Purple-On-Primary);
 }
+.loading-wrapper-bgcolor {
+    --global-state-bg-color: var(--Colors-Use-Primary-Bg);
+    --global-state-text-color: var(--Colors-Use-Primary-Primary);
+}
 
 .icon-style {
     color: var(--global-state-text-color);
