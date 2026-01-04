@@ -1,11 +1,18 @@
 import {bindExternalStoreHook, createExternalStore} from "@/utils/createExternalStore"
 import {HistoryItem} from "../type"
 import {historyStore} from "./useHistoryFolder"
+import {mergeOnePath} from "../utils"
+import {opfileNotify} from "../FileTreeSystemListWapper/FileTreeSystemListWapper"
 
 const SESSION_KEY = "current-session-files"
 
 const {ipcRenderer} = window.require("electron")
 
+let addQueue: Promise<void> = Promise.resolve()
+
+/**
+ * 获取初始session数据
+ */
 const getInitSession = async (): Promise<HistoryItem[]> => {
     try {
         // 获取session
@@ -26,6 +33,9 @@ const getInitSession = async (): Promise<HistoryItem[]> => {
     }
 }
 
+/**
+ * 获取默认文件夹
+ */
 export const defaultFolder = async (): Promise<HistoryItem | null> => {
     try {
         const result = await ipcRenderer.invoke("fetch-code-path")
@@ -52,15 +62,24 @@ export const customFolderStore = {
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,
 
-    addCustomFolderItem(item: HistoryItem) {
-        store.setSnapshot((prev) => {
-            if (prev.some((i) => i.path === item.path)) return prev
-
-            const next = [...prev, item]
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify(next))
-            return next
+    async addCustomFolderItem(item: HistoryItem) {
+        addQueue = addQueue.then(async () => {
+            const prev = store.getSnapshot()
+            const finalResult = await mergeOnePath(prev, item)
+            opfileNotify({uniquePaths: prev, incoming: item, label: item.isFolder ? "文件夹" : "文件", path: item.path})
+            store.setSnapshot(() => {
+                const next = finalResult
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify(next))
+                return next
+            })
         })
+    },
 
+    updateCustomFolderItem(newItem: HistoryItem[]) {
+        store.setSnapshot(() => {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(newItem))
+            return newItem
+        })
     },
 
     removeCustomFolderItem(path: string) {
@@ -78,20 +97,3 @@ export const customFolderStore = {
 }
 
 export const useCustomFolder = bindExternalStoreHook(store)
-
-// export const initSessionFromHistoryOrIPC = async () => {
-//     const history = historyStore.getSnapshot()
-//     if (history.length > 0) {
-//         customFolderStore.addCustomFolderItem(history[history.length - 1])
-//         return
-//     }
-//     try {
-//         const item = await defaultFolder()
-//         if (!item) return
-//         historyStore.addHistoryItem(item)
-//         return item
-//     } catch (e) {
-//         console.error("fetch-code-path failed", e)
-//         return null
-//     }
-// }
