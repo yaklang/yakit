@@ -41,6 +41,9 @@ export interface YakitLoadingProp {
 
     /** 当前连接端口号 */
     port: number
+    
+    /** 倒计时秒数 */
+    countdown?: number
 
     btnClickCallback: (type: YaklangEngineMode | YakitStatusType, extra?: LoadingClickExtra) => void
 }
@@ -58,7 +61,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         btnClickCallback,
         checkLog,
         dbPath,
-        port
+        port,
+        countdown = 0
     } = props
 
     const [form] = Form.useForm()
@@ -503,6 +507,29 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        if (yakitStatus === "link_countdown") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        type='primary'
+                        onClick={() => btnClickCallback("link_countdown", {enterNow: true})}
+                    >
+                        立即进入 ({countdown}s)
+                    </YakitButton>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        type='secondary2'
+                        onClick={() => btnClickCallback("link_countdown")}
+                    >
+                        取消连接
+                    </YakitButton>
+                </>
+            )
+        }
+
         return null
     }, [
         yakitStatus,
@@ -511,14 +538,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         engineMode,
         checkStatus,
         buildInEngineVersion,
-        JSON.stringify(dbPath)
+        JSON.stringify(dbPath),
+        countdown
     ])
 
     const logError = useMemo(() => {
         if (!yakitStatus) {
             return false
         }
-        return !["install", "installNetWork", "ready", "link"].includes(yakitStatus)
+        return !["install", "installNetWork", "ready", "link", "link_countdown"].includes(yakitStatus)
     }, [yakitStatus])
 
     useEffect(() => {
@@ -535,13 +563,19 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     })}
                 >
                     <div className={styles["log-body"]}>
-                        {checkLog.map((item, index, arr) => {
-                            return (
-                                <div key={item} className={styles["log-item"]}>
-                                    {item}
-                                </div>
-                            )
-                        })}
+                        {yakitStatus === "link_countdown" ? (
+                            <div className={styles["log-item"]}>
+                                引擎连接成功！{countdown} 秒后自动进入...
+                            </div>
+                        ) : (
+                            checkLog.map((item, index, arr) => {
+                                return (
+                                    <div key={item} className={styles["log-item"]}>
+                                        {item}
+                                    </div>
+                                )
+                            })
+                        )}
                     </div>
                 </div>
                 <div className={styles["engine-log-btn"]}>
@@ -575,46 +609,51 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     <>{agreement()}</>
                 ) : (
                     <div className={styles["footer-btn"]}>
-                        <span className={styles["open-engine-path"]} onClick={() => grpcOpenYaklangPath()}>
-                            打开引擎文件
-                        </span>
-                        {/* 中断连接按钮：在连接过程中或空状态时显示，break 状态时不显示 */}
-                        {(!yakitStatus || ["link", "ready"].includes(yakitStatus)) && (
+                        {/* 倒计时状态时不显示底部按钮 */}
+                        {yakitStatus !== "link_countdown" && (
                             <>
-                                <Divider type='vertical'></Divider>
-                                <span
-                                    className={classNames(styles["go-remote"], {
-                                        [styles["go-remote-disable"]]: restartLoading
-                                    })}
-                                    onClick={() => {
-                                        if (restartLoading) {
-                                            return
-                                        }
-                                        btnClickCallback("break")
-                                    }}
-                                >
-                                    中断连接
+                                <span className={styles["open-engine-path"]} onClick={() => grpcOpenYaklangPath()}>
+                                    打开引擎文件
                                 </span>
-                            </>
-                        )}
-                        {/* 远程连接按钮：在非连接状态时显示 */}
-                        {yakitStatus && !["link", "ready"].includes(yakitStatus) && (
-                            <>
-                                <Divider type='vertical'></Divider>
-                                <span
-                                    className={classNames(styles["go-remote"], {
-                                        [styles["go-remote-disable"]]: restartLoading
-                                    })}
-                                    onClick={() => {
-                                        if (restartLoading) {
-                                            return
-                                        }
-                                        btnClickCallback("remote")
-                                    }}
-                                >
-                                    {EngineModeVerbose("remote")}{" "}
-                                    <OutlineArrowcirclerightIcon className={styles["arrow-circle-right-icon"]} />
-                                </span>
+                                {/* 中断连接按钮：在连接过程中或空状态时显示，break 状态时不显示 */}
+                                {(!yakitStatus || ["link", "ready"].includes(yakitStatus)) && (
+                                    <>
+                                        <Divider type='vertical'></Divider>
+                                        <span
+                                            className={classNames(styles["go-remote"], {
+                                                [styles["go-remote-disable"]]: restartLoading
+                                            })}
+                                            onClick={() => {
+                                                if (restartLoading) {
+                                                    return
+                                                }
+                                                btnClickCallback("break")
+                                            }}
+                                        >
+                                            中断连接
+                                        </span>
+                                    </>
+                                )}
+                                {/* 远程连接按钮：在非连接状态时显示 */}
+                                {yakitStatus && !["link", "ready"].includes(yakitStatus) && (
+                                    <>
+                                        <Divider type='vertical'></Divider>
+                                        <span
+                                            className={classNames(styles["go-remote"], {
+                                                [styles["go-remote-disable"]]: restartLoading
+                                            })}
+                                            onClick={() => {
+                                                if (restartLoading) {
+                                                    return
+                                                }
+                                                btnClickCallback("remote")
+                                            }}
+                                        >
+                                            {EngineModeVerbose("remote")}{" "}
+                                            <OutlineArrowcirclerightIcon className={styles["arrow-circle-right-icon"]} />
+                                        </span>
+                                    </>
+                                )}
                             </>
                         )}
                     </div>

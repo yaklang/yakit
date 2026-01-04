@@ -95,6 +95,10 @@ export const StartupPage: React.FC = () => {
     const isRemoteEngine = useMemo(() => engineMode === "remote", [engineMode])
     /** yakit使用状态 */
     const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>("")
+    /** 倒计时秒数 */
+    const [countdown, setCountdown] = useState<number>(3)
+    /** 倒计时定时器引用 */
+    const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
     /** 当前引擎连接状态 */
     const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
     /** 是否阻止发送打开主窗口 */
@@ -512,9 +516,34 @@ export const StartupPage: React.FC = () => {
                         return
                     }
                     // 否则执行断开 - 先设置 break 状态，再断开连接，确保状态不被覆盖
+                    // 清除倒计时定时器
+                    if (countdownTimerRef.current) {
+                        clearInterval(countdownTimerRef.current)
+                        countdownTimerRef.current = null
+                    }
                     setYakitStatus("break")
                     setCheckLog(["已主动断开, 请点击手动连接引擎"])
                     onDisconnect()
+                    return
+                case "link_countdown":
+                    // 用户点击立即进入或取消
+                    if (extra?.enterNow) {
+                        // 立即进入
+                        if (countdownTimerRef.current) {
+                            clearInterval(countdownTimerRef.current)
+                            countdownTimerRef.current = null
+                        }
+                        setYakitStatus("link")
+                    } else {
+                        // 取消连接
+                        if (countdownTimerRef.current) {
+                            clearInterval(countdownTimerRef.current)
+                            countdownTimerRef.current = null
+                        }
+                        setYakitStatus("break")
+                        setCheckLog(["已取消连接, 请点击手动连接引擎"])
+                        onDisconnect()
+                    }
                     return
                 default:
                     return
@@ -670,10 +699,14 @@ export const StartupPage: React.FC = () => {
         setKeepalive(value)
     })
 
-    // 安全设置 yakitStatus，如果当前状态是 break 则不允许被其他状态覆盖
+    // 安全设置 yakitStatus，如果当前状态是 break 或 link_countdown 则不允许被其他状态覆盖
     const safeSetYakitStatus = useMemoizedFn((value: YakitStatusType) => {
         // 如果当前状态是 break，不允许被其他状态覆盖（除非是显式设置 break）
         if (getYakitStatus() === "break" && value !== "break") {
+            return
+        }
+        // 如果当前状态是 link_countdown，不允许被其他状态覆盖（除非是显式设置 link_countdown 或 link）
+        if (getYakitStatus() === "link_countdown" && !["link_countdown", "link", "break"].includes(value)) {
             return
         }
         setYakitStatus(value)
@@ -701,22 +734,56 @@ export const StartupPage: React.FC = () => {
 
     // #region 连接成功
     const onReady = useMemoizedFn(() => {
-        // 如果当前状态是 break，不继续执行
-        if (getYakitStatus() === "break") {
+        // 如果当前状态是 break / link_countdown / link，不继续执行
+        if (["break", "link_countdown", "link"].includes(getYakitStatus())) {
             return
         }
         if (getKeepalive()) {
             setCheckLog([])
-            setYakitStatus("link")
+            // 先设置倒计时状态
+            setYakitStatus("link_countdown")
+            setCountdown(3)
             setEngineLink(true)
+            
+            // 清除之前的定时器
+            if (countdownTimerRef.current) {
+                clearInterval(countdownTimerRef.current)
+            }
+            
+            // 开始倒计时
+            let currentCount = 3
+            countdownTimerRef.current = setInterval(() => {
+                currentCount -= 1
+                setCountdown(currentCount)
+                
+                if (currentCount <= 0) {
+                    if (countdownTimerRef.current) {
+                        clearInterval(countdownTimerRef.current)
+                        countdownTimerRef.current = null
+                    }
+                    // 倒计时结束，正式进入
+                    if (getYakitStatus() === "link_countdown") {
+                        setYakitStatus("link")
+                    }
+                }
+            }, 1000)
         }
     })
+    
+    // 清理倒计时定时器
+    useEffect(() => {
+        return () => {
+            if (countdownTimerRef.current) {
+                clearInterval(countdownTimerRef.current)
+            }
+        }
+    }, [])
     useEffect(() => {
         if (engineLink && getYakitStatus() === "link" && getCredential().Port && !isStopSend.current) {
             ipcRenderer.invoke("engineLinkWin-done", {useOldLink: false, credential: getCredential()})
             cacheLocalModePort(getCredential().Port)
         }
-    }, [engineLink])
+    }, [engineLink, yakitStatus])
     useEffect(() => {
         ipcRenderer.on("from-win-updateCredential", (e, data) => {
             const credential = data.credential
@@ -958,7 +1025,7 @@ export const StartupPage: React.FC = () => {
                                 yakitUpdate={yakitUpdate}
                                 setYakitUpdate={setYakitUpdate}
                             />
-                            {!engineLink && (
+                            {(!engineLink || yakitStatus === "link_countdown") && (
                                 <YakitLoading
                                     isTop={isTop}
                                     setIsTop={setIsTop}
@@ -972,6 +1039,7 @@ export const StartupPage: React.FC = () => {
                                     dbPath={dbPath}
                                     btnClickCallback={loadingClickCallback}
                                     port={customPort}
+                                    countdown={countdown}
                                 />
                             )}
                             {!engineLink && yaklangDownload && (
