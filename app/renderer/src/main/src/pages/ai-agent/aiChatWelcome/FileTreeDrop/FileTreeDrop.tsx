@@ -25,7 +25,6 @@ const FileTreeDrop: FC<FileTreeDropProps> = ({className, children}) => {
     } = useFileTreeDrop({
         onAddPath: (path, isFolder) => {
             historyStore.addHistoryItem({path, isFolder})
-            customFolderStore.addCustomFolderItem({path, isFolder})
         }
     })
 
