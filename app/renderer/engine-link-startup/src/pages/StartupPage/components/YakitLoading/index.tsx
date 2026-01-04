@@ -578,6 +578,26 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <span className={styles["open-engine-path"]} onClick={() => grpcOpenYaklangPath()}>
                             打开引擎文件
                         </span>
+                        {/* 中断连接按钮：在连接过程中或空状态时显示，break 状态时不显示 */}
+                        {(!yakitStatus || ["link", "ready"].includes(yakitStatus)) && (
+                            <>
+                                <Divider type='vertical'></Divider>
+                                <span
+                                    className={classNames(styles["go-remote"], {
+                                        [styles["go-remote-disable"]]: restartLoading
+                                    })}
+                                    onClick={() => {
+                                        if (restartLoading) {
+                                            return
+                                        }
+                                        btnClickCallback("break")
+                                    }}
+                                >
+                                    中断连接
+                                </span>
+                            </>
+                        )}
+                        {/* 远程连接按钮：在非连接状态时显示 */}
                         {yakitStatus && !["link", "ready"].includes(yakitStatus) && (
                             <>
                                 <Divider type='vertical'></Divider>
