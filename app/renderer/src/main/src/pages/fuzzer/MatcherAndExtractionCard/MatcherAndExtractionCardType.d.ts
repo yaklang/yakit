@@ -150,6 +150,7 @@ export interface MatcherAndExtractionValueListProps {
     onEditGroup: (group: string[]) => void
     onAddGroup: () => void
     httpResponse: string
+    searchValue?: string
 }
 
 export interface ExtractionResultsContentProps {

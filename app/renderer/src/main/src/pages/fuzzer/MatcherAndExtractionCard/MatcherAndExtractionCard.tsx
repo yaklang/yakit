@@ -977,7 +977,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
 })
 
 export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps> = React.memo((props) => {
-    const {showRegex, group, notEditable, onEditGroup, onAddGroup, httpResponse} = props
+    const {showRegex, group, notEditable, onEditGroup, onAddGroup, httpResponse, searchValue} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const onChangeGroupItemValue = useMemoizedFn((v: string, number: number) => {
         group[number] = v
@@ -985,8 +985,9 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
     })
     return (
         <div className={styles["matching-extraction-list-value"]}>
-            {group.map((groupItem, number) => (
-                <LabelNodeItem label={`${!showRegex ? number : "Regexp"}`} key={`Data_${number}`}>
+            {group.map((groupItem, number) => {
+                if(!!searchValue && !groupItem.toLowerCase().includes(searchValue.toLowerCase())) return null
+                return <LabelNodeItem label={`${!showRegex ? number : "Regexp"}`} key={`Data_${number}`}>
                     <div className={styles["matcher-item-textarea-body"]}>
                         {notEditable ? (
                             <div className={styles["matcher-item-text"]}>{groupItem}</div>
@@ -1026,12 +1027,13 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
                         </div>
                     )}
                 </LabelNodeItem>
-            ))}
+            })}
             {!notEditable && !showRegex && (
                 <LabelNodeItem label={""}>
                     <div className={styles["add-matcher"]}>
                         <div className={styles["divider"]} />
                         <YakitButton
+                            disabled={!!searchValue}
                             type='text'
                             icon={<PlusIcon />}
                             style={{justifyContent: "flex-start"}}

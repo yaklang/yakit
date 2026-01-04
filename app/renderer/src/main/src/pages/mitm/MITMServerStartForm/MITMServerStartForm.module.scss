@@ -396,7 +396,7 @@
     overflow-y: auto;
     padding: 0 24px 24px;
     min-height: 460px;
-    max-height: 80vh;
+    max-height: 60vh;
     :global {
         .ant-collapse-item > .ant-collapse-header {
             border-top: 0;
@@ -458,8 +458,8 @@
 .filter-operation {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    padding: 12px 0;
+    justify-content: space-between;
+    padding: 12px 0 12px 12px;
 }
 
 .filter-content-hidden {

@@ -18,6 +18,7 @@ import {defaultMITMBaseFilter, defaultMITMAdvancedFilter} from "@/defaultConstan
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -185,7 +186,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
     const {visible = true} = props
 
-    const [activeKey, setActiveKey] = useControllableValue<string>(props, {
+    const [activeKey, setActiveKey] = useControllableValue<string | string[]>(props, {
         defaultValue: "ID:0",
         valuePropName: "activeKey",
         trigger: "setActiveKey"
@@ -196,6 +197,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
         valuePropName: "filterData",
         trigger: "setFilterData"
     })
+    const [searchValue, setSearchValue] = useState("")
 
     const onEdit = useMemoizedFn((field: string, value, index: number) => {
         filterData[index][field] = value
@@ -222,19 +224,34 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             })}
         >
             <div className={styles["filter-operation"]}>
-                <YakitButton type='text' onClick={onAddAdvancedSetting}>
+                <YakitInput.Search onSearch={(value) => {
+                    setSearchValue(value)
+                    if(!value) return
+                    const matchedKeys: string[] = []
+                    filterData.forEach((item, index) => {
+                        const hasMatch = item.Group.some(g => g.toLowerCase().includes(value.toLowerCase()))
+                        if (hasMatch) {
+                            matchedKeys.push(`ID:${index}`)
+                        }
+                    })
+                    setActiveKey(matchedKeys)
+                }} />
+                <YakitButton type='text' disabled={!!searchValue} onClick={onAddAdvancedSetting}>
                     添加高级配置
                 </YakitButton>
             </div>
             {!!filterData.length ? (
                 <YakitCollapse
                     activeKey={activeKey}
-                    onChange={(key) => setActiveKey(key as string)}
-                    accordion
+                    onChange={(key) => setActiveKey(key)}
+                    accordion={!searchValue}
                     className={styles["filter-collapse"]}
                 >
                     {filterData!.map((filterItem, index) => {
                         const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
+
+                        if(!!searchValue && filterItem.Group.every(g => !g.toLowerCase().includes(searchValue.toLowerCase()))) return null
+
                         return (
                             <YakitPanel
                                 header={
@@ -273,6 +290,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                                 <MITMAdvancedFiltersItem
                                     item={filterItem}
                                     onEdit={(field, value) => onEdit(field, value, index)}
+                                    searchValue={searchValue}
                                 />
                             </YakitPanel>
                         )
@@ -281,7 +299,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             ) : (
                 <YakitEmpty
                     description={
-                        <YakitButton type='primary' onClick={onAddAdvancedSetting} style={{marginTop: 12}}>
+                        <YakitButton type='primary' disabled={!!searchValue} onClick={onAddAdvancedSetting} style={{marginTop: 12}}>
                             添加高级配置
                         </YakitButton>
                     }
@@ -294,6 +312,7 @@ export default MITMAdvancedFilters
 interface MITMAdvancedFiltersItemProps {
     item: MITMAdvancedFilter
     onEdit: (f: string, v: any) => void
+    searchValue?: string
 }
 
 export const isFilterItemEmpty = (item: FilterDataItem) => {
@@ -322,7 +341,7 @@ const filterRangeOption: YakitSelectProps["options"] = [
     }
 ]
 export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = React.memo((props) => {
-    const {item, onEdit} = props
+    const {item, onEdit, searchValue} = props
     const onAddGroup = useMemoizedFn(() => {
         if (isFilterItemEmpty(item)) {
             yakitNotify("error", "请将已添加条件配置完成后再新增")
@@ -365,6 +384,7 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
                     onEdit("Group", g)
                 }}
                 onAddGroup={onAddGroup}
+                searchValue={searchValue}
             />
         </>
     )
