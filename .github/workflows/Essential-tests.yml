@@ -1,5 +1,9 @@
 name: Essential tests
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     paths:
@@ -8,7 +12,7 @@ on:
   pull_request:
     branches: [test]
     paths:
-      - 'app/renderer/src/main/**'
+      - 'app/renderer/src/main/src/release/**'
       - '.github/workflows/**'
 
 jobs:
