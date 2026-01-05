@@ -7,9 +7,15 @@ export default defineConfig({
             "@": path.resolve(__dirname, "src")
         }
     },
+    // Set test root to `src` and explicitly include test file patterns to ensure files are found in CI
     test: {
         environment: "jsdom",
         globals: true,
+        root: path.resolve(__dirname, "src"),
+        include: [
+            "**/*.test.{ts,tsx,js,jsx}",
+            "**/*.spec.{ts,tsx,js,jsx}"
+        ],
         setupFiles: ["src/setupTests.ts"],
         // Add JUnit reporter (writes `reports/junit.xml`) and keep default reporter
         // Cast the tuple to `any` to avoid type mismatch on this Vitest version
