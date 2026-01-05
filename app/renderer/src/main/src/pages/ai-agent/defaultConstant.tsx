@@ -255,7 +255,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     casualStatus: {loading: false, title: ""},
     reActTimelines: [],
     memoryList: {...DefaultMemoryList},
-    taskStatus: {loading: false, plan: "", task: ""}
+    taskStatus: {loading: false, plan: "", task: ""},
+    systemStream: ""
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},

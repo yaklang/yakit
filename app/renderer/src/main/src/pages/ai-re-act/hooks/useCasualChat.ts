@@ -44,7 +44,8 @@ export const UseCasualChatTypes = [
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease, onGrpcFolder, sendRequest, onNotifyMessage} = params || {}
+    const {pushLog, getRequest, onReviewRelease, onGrpcFolder, sendRequest, onNotifyMessage, onSystemStream} =
+        params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
@@ -286,6 +287,8 @@ function useCasualChat(params?: UseCasualChatParams) {
                     return newArr
                 })
             } else {
+                // 系统信息展示
+                if (IsSystem) onSystemStream?.(EventUUID, content)
                 // 输出到日志中
                 pushLog?.({
                     type: "stream",

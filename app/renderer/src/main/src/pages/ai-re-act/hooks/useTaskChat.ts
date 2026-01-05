@@ -46,7 +46,8 @@ function useTaskChat(params?: UseTaskChatParams) {
         onReviewRelease,
         sendRequest,
         onGrpcFolder,
-        onNotifyMessage
+        onNotifyMessage,
+        onSystemStream
     } = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
@@ -313,8 +314,10 @@ function useTaskChat(params?: UseTaskChatParams) {
                     return newArr
                 })
             } else {
+                // 系统信息展示
+                if (IsSystem) onSystemStream?.(EventUUID, content)
                 // 输出到日志中
-                pushLog?.({
+                handlePushLog({
                     type: "stream",
                     Timestamp: res.Timestamp,
                     data: {
