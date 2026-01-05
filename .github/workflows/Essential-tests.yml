@@ -1,12 +1,19 @@
 name: Essential tests
 
+# Avoid running both push and pull_request for the same branch/commit.
+# - Run on pull_request for branches (PR builds).
+# - Run on push only for `main` and `release/*` branches (merge / release builds).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
-  push:
+  pull_request:
     paths:
       - 'app/renderer/src/main/**'
       - '.github/workflows/**'
-  pull_request:
-    branches: [test]
+  push:
+    branches: [test, 'release/**']
     paths:
       - 'app/renderer/src/main/**'
       - '.github/workflows/**'
