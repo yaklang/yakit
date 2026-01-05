@@ -14,10 +14,12 @@ on:
 jobs:
   vitest:
     name: Vitest - renderer main
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: [18.x, 20.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,7 +36,7 @@ jobs:
           path: |
             ~/.cache/yarn
             app/renderer/src/main/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ matrix.node-version }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
 
@@ -46,4 +48,32 @@ jobs:
         working-directory: app/renderer/src/main
         env:
           CI: true
-        run: yarn test:vitest -- --run
+        run: yarn test:vitest -- --run --coverage
+
+      - name: Show coverage output (for debugging)
+        if: always()
+        run: |
+          echo "Coverage files:"
+          ls -la app/renderer/src/main/coverage || true
+
+      - name: Upload JUnit report (vitest)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-junit-${{ matrix.os }}-node-${{ matrix.node-version }}
+          path: app/renderer/src/main/reports/junit.xml
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: app/renderer/src/main/coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-coverage-${{ matrix.os }}-node-${{ matrix.node-version }}
+          path: app/renderer/src/main/coverage
