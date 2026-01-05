@@ -41,10 +41,10 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
                 .finally(() => {
                     setTypeLoading(false)
                 })
+        } else {
+            setTypeLoading(true)
         }
-        // else {
-        //     setTypeLoading(false)
-        // }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editorOperationRecord])
 
     return (
