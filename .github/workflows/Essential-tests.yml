@@ -23,14 +23,20 @@ jobs:
       matrix:
         node-version: [18.x]
     steps:
+      - name: Display incoming configuration parameters
+        run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }}
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
+          node-version: 18.18.2
+          cache: "yarn"
+          cache-dependency-path: |
+              yarn.lock
+              app/renderer/src/main/yarn.lock
+              app/renderer/engine-link-startup/yarn.lock
 
       - name: Cache Yarn cache
         uses: actions/cache@v4
