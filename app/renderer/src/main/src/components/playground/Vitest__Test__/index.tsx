@@ -41,10 +41,9 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
                 .finally(() => {
                     setTypeLoading(false)
                 })
+        } else {
+            setTypeLoading(false)
         }
-        // else {
-        //     setTypeLoading(false)
-        // }
     }, [editorOperationRecord])
 
     return (
