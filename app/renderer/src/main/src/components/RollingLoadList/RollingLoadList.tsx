@@ -1,11 +1,12 @@
-import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
+import React, {useEffect, useState, useRef, ReactNode, useMemo, forwardRef, useImperativeHandle} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect} from "ahooks"
+import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./RollingLoadList.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface RollingLoadListProps<T> {
+    ref?: React.ForwardedRef<RollingLoadListRef>
     rowKey?: string
     data: T[]
     loadMoreData: () => void
@@ -26,6 +27,10 @@ export interface RollingLoadListProps<T> {
     targetRef?: React.RefObject<any>
 }
 
+export interface RollingLoadListRef {
+    containerRef: React.RefObject<HTMLDivElement | null> | null
+    scrollTo: (index: number) => void
+}
 const classNameWidth = {
     2: "width-50",
     3: "width-33",
@@ -33,7 +38,7 @@ const classNameWidth = {
     5: "width-20"
 }
 
-export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) => {
+function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.ForwardedRef<RollingLoadListRef>) {
     const {
         data,
         loadMoreData,
@@ -57,11 +62,20 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const [vlistHeigth, setVListHeight] = useState(600)
     const [col, setCol] = useState<number>()
     const [computeOriginalList, setComputeOriginalList] = useState(false)
-    const containerRef = useRef<any>(null)
-    const wrapperRef = useRef<any>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const wrapperRef = useRef<HTMLDivElement>(null)
     let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
     let preLength = useRef<number>(0)
     let preData = useRef<any>([])
+    useImperativeHandle(
+        ref,
+        () => ({
+            containerRef,
+            scrollTo
+        }),
+        []
+    )
+
     const resetPre = useMemoizedFn(() => {
         preLength.current = 0
         preData.current = []
@@ -110,7 +124,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             if (!hasMore) return
             if (!containerRef || !wrapperRef) return
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
-            const containerHeight = containerRef.current?.clientHeight
+            const containerHeight = containerRef.current?.clientHeight || 0
             const wrapperHeight = wrapperRef.current?.clientHeight
             if (wrapperHeight && wrapperHeight <= containerHeight) {
                 loadMoreData()
@@ -259,3 +273,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         </>
     )
 }
+export const RollingLoadList = forwardRef(RollingLoadListInner) as <T>(
+    props: RollingLoadListProps<T> & {
+        ref?: React.ForwardedRef<RollingLoadListRef>
+    }
+) => JSX.Element
