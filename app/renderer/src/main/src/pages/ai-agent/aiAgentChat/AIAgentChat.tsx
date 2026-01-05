@@ -55,6 +55,7 @@ import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHo
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
+import {Tooltip} from "antd"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -755,7 +756,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap, onStopTask} = props
+    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onStopTask} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -776,16 +777,27 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
+                    {showCancelSubtask && (
+                        <YakitPopconfirm
+                            placement='top'
+                            onConfirm={() => onStopTask(true)}
+                            title='是否确认跳过整个任务，确认将停止执行'
+                        >
+                            <YakitButton type='outline2' icon={<OutlineExitIcon />}>
+                                跳过子任务
+                            </YakitButton>
+                        </YakitPopconfirm>
+                    )}
+                    {node}
                     <YakitPopconfirm
                         placement='top'
                         onConfirm={() => onStopTask()}
                         title='是否确认取消整个任务，确认将停止执行'
                     >
-                        <YakitButton type='outline2' icon={<OutlineExitIcon />}>
-                            取消当前任务
-                        </YakitButton>
+                        <Tooltip overlay='终止任务' placement='top'>
+                            <YakitButton className={styles["task-button"]} radius='28px' colors='danger' type='primary' icon={<OutlineExitIcon />} />
+                        </Tooltip>
                     </YakitPopconfirm>
-                    {node}
                 </div>
             </div>
         )

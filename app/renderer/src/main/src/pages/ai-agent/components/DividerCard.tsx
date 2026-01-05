@@ -9,7 +9,8 @@ export enum StreamsStatus {
     success = "completed",
     inProgress = "processing",
     error = "aborted",
-    cancel = "cancel"
+    cancel = "cancel",
+    skipped = "skipped"
 }
 
 interface SuccessStatus {
@@ -20,7 +21,7 @@ interface SuccessStatus {
     name?: string
 }
 interface WarningStatus {
-    status: StreamsStatus.inProgress | StreamsStatus.error
+    status: StreamsStatus.inProgress | StreamsStatus.error | StreamsStatus.skipped
     desc?: string
     name?: string
 }
@@ -68,6 +69,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     </div>
                 ]
             case StreamsStatus.error:
+            case StreamsStatus.skipped:
                 return [
                     <OutlineXcircleIcon className={styles["icon-danger"]} />,
                     <div className={styles["divider-content-text"]}>

@@ -20,6 +20,7 @@ import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/use
 import {AIReviewType} from "../hooks/aiRender"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
+import { Tooltip } from "antd"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat, setTimeLine} = props
@@ -80,22 +81,33 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const getTaskId = useMemoizedFn(() => {
         return chatIPCEvents.fetchReactTaskToAsync()
     })
-    const onStopTask = useMemoizedFn(() => {
-        const taskId = getTaskId()
-        if (!taskId) return
-        handleSendSyncMessage({
-            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-            SyncJsonInput: JSON.stringify({task_id: taskId})
-        })
-        chatIPCEvents.clearReactTaskToAsync()
-        if (!!reviewInfo) {
-            chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+    const onStopTask = useMemoizedFn((isCurTask = false) => {
+        if (isCurTask) {
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+                SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", skip_current_task: true})
+            })
+        } else {
+            const taskId = getTaskId()
+            if (!taskId) return
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+                SyncJsonInput: JSON.stringify({task_id: taskId})
+            })
+            chatIPCEvents.clearReactTaskToAsync()
+            if (!!reviewInfo) {
+                chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+            }
         }
     })
     return (
         <>
             <div className={styles["tab-content"]}>
-                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} taskStatus={chatIPCData.taskStatus} />
+                <AIAgentChatStream
+                    streams={streams}
+                    scrollToBottom={scrollToBottom}
+                    taskStatus={chatIPCData.taskStatus}
+                />
             </div>
             {!!reviewInfo ? (
                 <AIReActTaskChatReview
@@ -103,27 +115,48 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                     planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
                     setScrollToBottom={setScrollToBottom}
                     onStopTask={onStopTask}
+                    showCancelSubtask={taskChat.plan.length > 0}
                 />
             ) : (
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
                         {!!getTaskId() && (
-                            <YakitPopconfirm
-                                onConfirm={() => onStopTask()}
-                                title='是否确认取消整个任务，确认将停止执行'
-                                placement='top'
-                            >
-                                <YakitButton
-                                    type='outline1'
-                                    icon={<OutlineExitIcon />}
-                                    className={styles["task-button"]}
-                                    radius='28px'
-                                    size='large'
-                                    colors='danger'
+                            <>
+                                {taskChat.plan.length > 0 && (
+                                    <YakitPopconfirm
+                                        onConfirm={() => onStopTask(true)}
+                                        title='是否确认跳过整个任务，确认将停止执行'
+                                        placement='top'
+                                    >
+                                        <YakitButton
+                                            type='outline1'
+                                            icon={<OutlineExitIcon />}
+                                            className={styles["task-sub-button"]}
+                                            radius='28px'
+                                            size='large'
+                                            colors='danger'
+                                        >
+                                            跳过子任务
+                                        </YakitButton>
+                                    </YakitPopconfirm>
+                                )}
+                                <YakitPopconfirm
+                                    onConfirm={() => onStopTask()}
+                                    title='是否确认取消整个任务，确认将停止执行'
+                                    placement='top'
                                 >
-                                    取消当前任务
-                                </YakitButton>
-                            </YakitPopconfirm>
+                                    <Tooltip overlay="终止任务" placement="top">
+                                        <YakitButton
+                                        type='primary'
+                                        icon={<OutlineExitIcon />}
+                                        className={styles["task-button"]}
+                                        radius='28px'
+                                        size='large'
+                                        colors='danger'
+                                   />
+                                    </Tooltip>
+                                </YakitPopconfirm>
+                            </>
                         )}
                         <YakitButton
                             type='outline2'

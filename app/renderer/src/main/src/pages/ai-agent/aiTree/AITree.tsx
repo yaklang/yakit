@@ -80,7 +80,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
     const onCancelTask = useMemoizedFn(() => {
         handleSendSyncMessage({
             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
-            SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", subtask_index: data.index})
+            //    SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", subtask_index: data.index})
+            SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", skip_current_task: true})
         })
     })
     const [Icon, Card] = useMemo(() => {

@@ -9,7 +9,8 @@ export interface AIReActTaskChatReviewProps {
     reviewInfo: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     setScrollToBottom: (v: boolean) => void
-    onStopTask: () => void
+    onStopTask: (isCurTask?: boolean) => void
+    showCancelSubtask?: boolean
 }
 
 export interface HandleStartParams extends AIChatTextareaSubmit {

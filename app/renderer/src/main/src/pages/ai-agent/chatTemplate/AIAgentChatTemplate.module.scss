@@ -2,14 +2,12 @@
 .ai-chat-left-side {
     width: 100%;
     min-height: 100%;
-    display: flex;
-    flex-direction: column;
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
     .list-wrapper {
         display: flex;
         flex-direction: column;
-        flex: 1;
+        height: 100%;
         overflow: hidden;
         .side-header {
             padding: 8px 12px 4px 12px;
@@ -35,6 +33,7 @@
     .memory-wrapper {
         display: flex;
         flex-direction: column;
+        height: 100%;
     }
     .task-list {
         flex: 1;

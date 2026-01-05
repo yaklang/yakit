@@ -31,6 +31,7 @@ import TimelineCard from "./TimelineCard/TimelineCard"
 import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import TaskLoading from "./TaskLoading/TaskLoading"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -95,25 +96,32 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
-            <div className={styles["list-wrapper"]}>
-                <div className={styles["side-header"]}>
-                    <YakitButton
-                        type='outline2'
-                        className={styles["side-header-btn"]}
-                        icon={<OutlineChevronrightIcon />}
-                        onClick={handleCancelExpand}
-                        size='small'
-                    />
-                    <div className={styles["header-title"]}>{button}</div>
-                </div>
+            <YakitResizeBox
+                isVer
+                firstNode={
+                    <div className={styles["list-wrapper"]}>
+                        <div className={styles["side-header"]}>
+                            <YakitButton
+                                type='outline2'
+                                className={styles["side-header-btn"]}
+                                icon={<OutlineChevronrightIcon />}
+                                onClick={handleCancelExpand}
+                                size='small'
+                            />
+                            <div className={styles["header-title"]}>{button}</div>
+                        </div>
 
-                <div className={styles["task-list"]}>{renderDom()}</div>
-            </div>
-            {!!length && (
-                <div className={styles["memory-wrapper"]}>
-                    <AIMemoryList />
-                </div>
-            )}
+                        <div className={styles["task-list"]}>{renderDom()}</div>
+                    </div>
+                }
+                secondNode={
+                    !!length && (
+                        <div className={styles["memory-wrapper"]}>
+                            <AIMemoryList />
+                        </div>
+                    )
+                }
+            />
         </div>
     )
 })
@@ -125,6 +133,11 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     useUpdateEffect(() => {
         scrollToIndex("LAST")
     }, [scrollToBottom])
+
+    const {
+        chatIPCData: {systemStream}
+    } = useChatIPCStore()
+
     const renderItem = (stream: AIChatQSData) => {
         return <AIChatListItem item={stream} type='task-agent' />
     }
@@ -142,7 +155,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         []
     )
 
-    const Footer = useCallback(() => <TaskLoading taskStatus={taskStatus} />, [taskStatus])
+    const Footer = useCallback(
+        () => <TaskLoading taskStatus={taskStatus} systemStream={systemStream} />,
+        [taskStatus, systemStream]
+    )
 
     const components = useMemo(
         () => ({
