@@ -143,6 +143,7 @@
         "build-test-memfit": "env-cmd -e memfit,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-breachtrace": "env-cmd -e breachtrace -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
+        "test:vitest": "vitest",
         "eject": "react-app-rewired eject",
         "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build",
         "postinstall": "patch-package",
@@ -180,7 +181,10 @@
         "sass": "^1.54.8",
         "sass-loader": "^12.6.0",
         "source-map-loader": "^4.0.2",
-        "webpack-bundle-analyzer": "^4.10.1"
+        "webpack-bundle-analyzer": "^4.10.1",
+        "vitest": "^0.34.6",
+        "vite": "^4.4.9",
+        "vite-tsconfig-paths": "^3.5.0"
     },
     "resolutions": {
         "//": "See https://github.com/facebook/create-react-app/issues/11773",

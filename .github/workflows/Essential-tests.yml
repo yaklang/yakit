@@ -1,0 +1,77 @@
+name: Essential tests
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [test]
+    paths:
+      - 'app/renderer/src/main/src/release/**'
+      - '.github/workflows/**'
+
+jobs:
+  vitest:
+    name: Vitest - renderer main
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - name: Display incoming configuration parameters
+        run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.18.2
+          cache: "yarn"
+          cache-dependency-path: |
+              yarn.lock
+              app/renderer/src/main/yarn.lock
+              app/renderer/engine-link-startup/yarn.lock
+
+      - name: Cache Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-cache-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: app/renderer/src/main/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies (renderer main)
+        working-directory: app/renderer/src/main
+        run: yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
+
+      - name: Verify installed packages (quick)
+        working-directory: app/renderer/src/main
+        run: |
+          echo "Yarn cache dir: $(yarn cache dir)"
+          ls -la node_modules | head -n 20 || true
+
+      - name: Debug - list candidate test files
+        working-directory: app/renderer/src/main
+        run: |
+          echo "pwd: $(pwd)"
+          echo "node: $(node -v) yarn: $(yarn -v)"
+          echo "Find test/spec files (up to depth 6):"
+          find . -maxdepth 6 -type f \( -name "*.test.*" -o -name "*.spec.*" \) -print || true
+          echo "Show specific folder (if exists):"
+          ls -la src/components/playground/Vitest__Test__ || true
+
+      - name: Run Vitest (renderer main)
+        working-directory: app/renderer/src/main
+        env:
+          CI: true
+        run: yarn test:vitest -- --run --reporter verbose

@@ -5,8 +5,8 @@ import {info} from "@/utils/notification"
 import {SelectOne} from "@/utils/inputUtil"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakURLTree} from "@/pages/yakURLTree/YakURLTree"
-import {TrafficDemo} from "@/components/playground/TrafficDemo"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
+import {Vitest__Test__} from "@/components/playground/Vitest__Test__"
 import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect"
 import {RiskTableDemo} from "@/components/playground/RiskTableDemo"
 import {ChaosMakerRulesDemo} from "@/components/playground/ChaosMakerRulesDemo"
@@ -18,7 +18,7 @@ import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/Jav
 import {KnowledgeBaseDemo} from "@/components/playground/knowlegeBase/KnowledgeBaseDemo"
 import {RagManagerDemo} from "@/components/playground/ragManager/RagManagerDemo"
 import {ThirdPartyBinaryManager} from "@/components/playground/thirdPartyBinary/ThirdPartyBinaryManager"
-import { EntityRepositoryPage } from "@/components/playground/entityRepository/EntityRepositoryPage"
+import {EntityRepositoryPage} from "@/components/playground/entityRepository/EntityRepositoryPage"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -77,6 +77,7 @@ a=1&b=2 Content-Length: a
                             {value: "rag-manager", label: "RAG 向量存储管理"},
                             {value: "third-party-binary", label: "第三方应用管理"},
                             {value: "entity-repository", label: "实体仓库"},
+                            {value: "vitest__test__", label: "Vitest 测试组件"}
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}
@@ -112,7 +113,9 @@ a=1&b=2 Content-Length: a
                             return <ThirdPartyBinaryManager />
                         case "entity-repository":
                             return <EntityRepositoryPage />
-                        }
+                        case "vitest__test__":
+                            return <Vitest__Test__ />
+                    }
                     return <div>NO PLUGIN DEMO</div>
                 })()}
             </AutoCard>
