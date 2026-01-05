@@ -3,6 +3,8 @@ import {DebugPluginRequest} from "@/pages/plugins/utils"
 export interface TunSessionStateProps {
     deviceName: string | null
     configuredRoutes?: string[]
+    // Tun劫持是否已经可退出 （PS:防止Tun劫持导致所有grpc接口死锁）
+    isQuitBtn: boolean
 }
 
 export interface PluginTunHijackStateProps {
@@ -87,6 +89,8 @@ export interface TunHijackProcessTableProps {
     deviceName: string
     setTableType: (type: "process" | "route") => void
     pluginTunHijackAddActionsFun: (target: string) => void
+    processTableData: ProcessInfo[]
+    setProcessTableData: (data: ProcessInfo[]) => void
 }
 
 export interface HijackProcessInfoModalProps {
@@ -99,4 +103,14 @@ export interface HijackProcessInfoModalProps {
 export interface ConnectionInfoItemProps {
     data: ConnectionInfo
     onPluginTunHijackAddActionsByConnection: (target: string) => void
+}
+
+
+export interface StopPluginTunHijackBtnProps {
+    cancelPluginTunHijack: () => void;
+}
+
+export interface QuitTunHijackBtnProps {
+    onQuitTunHijackFun: () => void;
+    processTableData: ProcessInfo[];
 }

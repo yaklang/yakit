@@ -12,6 +12,8 @@ import {
     PluginTunHijackRefProps,
     PluginTunHijackTableProps,
     ProcessInfo,
+    QuitTunHijackBtnProps,
+    StopPluginTunHijackBtnProps,
     TunHijackProcessTableProps,
     WatchProcessRequest,
     WatchProcessResponse
@@ -25,7 +27,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import usePluginTunHijack, { tunSessionStateDefault } from "./usePluginTunHijack"
+import usePluginTunHijack, {tunSessionStateDefault} from "./usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -81,6 +83,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
                         }
                     }
                     setTunSessionState({
+                        ...tunSessionState,
                         deviceName
                     })
                 }
@@ -111,9 +114,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
                             style={{marginTop: 80}}
                         >
                             {isExecuting ? (
-                                <YakitButton type='primary' danger onClick={cancelPluginTunHijack}>
-                                    停止启动
-                                </YakitButton>
+                                <StopPluginTunHijackBtn cancelPluginTunHijack={cancelPluginTunHijack} />
                             ) : (
                                 <YakitButton
                                     type='primary'
@@ -132,12 +133,43 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
     })
 )
 
+export const StopPluginTunHijackBtn: React.FC<StopPluginTunHijackBtnProps> = React.memo((props) => {
+    const {cancelPluginTunHijack} = props
+    const [isStop, setStop] = useState<boolean>(false)
+    /** 定时器 */
+    const timeRef = useRef<NodeJS.Timeout>()
+    useEffect(() => {
+        // 超时5S未启动则显示停止按钮
+        timeRef.current = setTimeout(() => {
+            warn("Tun劫持启动服务已超时")
+            setStop(true)
+        }, 5000)
+        return () => {
+            if (timeRef.current) {
+                clearTimeout(timeRef.current)
+            }
+        }
+    }, [])
+    return (
+        <>
+            {isStop ? (
+                <YakitButton type='primary' danger onClick={cancelPluginTunHijack}>
+                    停止启动
+                </YakitButton>
+            ) : (
+                <YakitSpin spinning={true}>正在启动</YakitSpin>
+            )}
+        </>
+    )
+})
+
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun, onCloseTunHijackFun} = props
 
         const [loading, setLoading] = useState<boolean>(false)
         const [tableData, setTableData] = useState<HijackTableDataProps[]>([])
+        const [processTableData, setProcessTableData] = useState<ProcessInfo[]>([])
         const [visible, setVisible] = useState<boolean>(false)
         const [form] = Form.useForm()
 
@@ -364,9 +396,10 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                                     </YakitButton>
                                 </>
                             )}
-                            <div className={styles["plugin-tun-hijack-quit-icon"]} onClick={onQuitTunHijackFun}>
-                                <QuitIcon />
-                            </div>
+                            <QuitTunHijackBtn
+                                onQuitTunHijackFun={onQuitTunHijackFun}
+                                processTableData={processTableData}
+                            />
                         </div>
                     </div>
                     <div
@@ -405,6 +438,8 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                             deviceName={deviceName}
                             pluginTunHijackAddActionsFun={pluginTunHijackAddActionsFun}
                             setTableType={setTableType}
+                            processTableData={processTableData}
+                            setProcessTableData={setProcessTableData}
                         />
                     </div>
                 </div>
@@ -436,11 +471,50 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
     })
 )
 
+export const QuitTunHijackBtn: React.FC<QuitTunHijackBtnProps> = React.memo((props) => {
+    const {onQuitTunHijackFun, processTableData} = props
+    const {tunSessionState, setTunSessionState} = useStore()
+    const [isStop, setStop] = useState<boolean>(false)
+    /** 定时器 */
+    const timeRef = useRef<NodeJS.Timeout>()
+    useEffect(() => {
+        // 超时5S未启动则显示停止按钮
+        timeRef.current = setTimeout(() => {
+            warn("数据获取已超时")
+            setStop(true)
+            setTunSessionState({...tunSessionState, isQuitBtn: true})
+        }, 5000)
+        return () => {
+            if (timeRef.current) {
+                clearTimeout(timeRef.current)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        if (processTableData.length > 0) {
+            clearTimeout(timeRef.current)
+            setStop(true)
+            setTunSessionState({...tunSessionState, isQuitBtn: true})
+        }
+    }, [processTableData])
+
+    return isStop ? (
+        <div className={styles["plugin-tun-hijack-quit-icon"]} onClick={onQuitTunHijackFun}>
+            <QuitIcon />
+        </div>
+    ) : null
+})
+
 export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React.memo(
     (props: TunHijackProcessTableProps) => {
         const {deviceName, pluginTunHijackAddActionsFun, setTableType} = props
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
-        const [tableData, setTableData] = useState<ProcessInfo[]>([])
+        const [processTableData, setProcessTableData] = useControllableValue<ProcessInfo[]>(props, {
+            valuePropName: "processTableData",
+            trigger: "setProcessTableData",
+            defaultValue: []
+        })
         const [hijackProcessInfo, setHijackProcessInfo] = useState<ConnectionInfo[]>()
         const [hijackTasks, setHijackTasks] = useState<HijackTask[]>([])
         const [searchVal, setSearchVal] = useState<string>("")
@@ -633,7 +707,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                         item.Name.toLowerCase().includes(searchVal.toLowerCase())
                     )
                 }
-                setTableData([...newTableData])
+                setProcessTableData([...newTableData])
                 init && setIsRefresh(!isRefresh)
             },
             {wait: 500}
@@ -781,12 +855,12 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                             <TableVirtualResize
                                 isRefresh={isRefresh}
                                 isShowTitle={false}
-                                data={tableData}
+                                data={processTableData}
                                 renderKey={"Pid"}
                                 pagination={{
                                     page: 1,
                                     limit: 50,
-                                    total: tableData.length,
+                                    total: processTableData.length,
                                     onChange: () => {}
                                 }}
                                 columns={columns}

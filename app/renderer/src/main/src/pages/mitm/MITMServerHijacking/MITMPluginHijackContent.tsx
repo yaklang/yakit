@@ -8,7 +8,7 @@ import {HotPatchTemplate} from "@/pages/invoker/data/MITMPluginTamplate"
 import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {info, yakitFailed, yakitNotify} from "@/utils/notification"
+import {info, warn, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn} from "ahooks"
 import React, {ReactElement, useEffect, useRef, useState, useContext} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus} from "../MITMPage"
@@ -658,6 +658,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     // 关闭来源
     const formPageRef = useRef<"mitm" | "page">()
     const onCloseTunHijackConfirmModalFun = useMemoizedFn((fromPage: "mitm" | "page") => {
+        if(!tunSessionState.isQuitBtn){
+            warn("Tun劫持服务正在加载中，请加载完毕后关闭")
+            return
+        }
         formPageRef.current = fromPage
         onQuitTunHijackFun()
     })

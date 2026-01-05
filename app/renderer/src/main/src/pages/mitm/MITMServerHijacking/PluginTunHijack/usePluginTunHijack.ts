@@ -11,7 +11,8 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 // deviceName: 这是最核心的状态。一旦 “Tun劫持服务” 成功启动，其返回的设备名必须被存储在这里
 export const tunSessionStateDefault: TunSessionStateProps = {
     deviceName: null,
-    configuredRoutes: []
+    configuredRoutes: [],
+    isQuitBtn: false
 }
 
 // 网络劫持HOOK插件-Tun劫持服务
