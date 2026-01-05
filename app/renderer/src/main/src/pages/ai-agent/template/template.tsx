@@ -7,31 +7,28 @@ import React, {
     RefAttributes,
     useEffect,
     useMemo,
-    useRef,
-    useState
-} from "react"
+    useRef} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {v4 as uuidv4} from "uuid"
 
 import classNames from "classnames"
 import styles from "./template.module.scss"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {AIChatMention} from "../components/aiChatMention/AIChatMention"
 import {AIMentionTabsEnum} from "../defaultConstant"
 import {FreeDialogTagList} from "../aiChatWelcome/FreeDialogList/FreeDialogList"
-import FreeDialogFileList, { useGetStoreKey } from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
+import FreeDialogFileList, {useGetStoreKey} from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import {fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
-import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import {isArray} from "lodash"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import {AIMilkdownInput} from "../components/aiMilkdownInput/AIMilkdownInput"
+import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -74,7 +71,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     const {setSelectForges, setSelectTools, setSelectKnowledgeBases} = useChatIPCDispatcher()
     const aiChatTextareaRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(aiChatTextareaRef)
-
 
     useEffect(() => {
         if (!inViewport) return
@@ -139,11 +135,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
 
     const textareaRef = useRef<TextAreaRef>(null)
 
-    const mentionRef = useRef<{
-        destroy: () => void
-    }>()
-    const mentionPerActiveRef = useRef<AIMentionTabsEnum>() // 提及上一次激活的tab
-
     const handleSetTextareaFocus = useMemoizedFn(() => {
         if (textareaRef && textareaRef.current) {
             textareaRef.current.focus()
@@ -153,88 +144,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
         const content = e.target.value
         setQuestion(content)
         onTextareaChange && onTextareaChange(e)
-        if (content.length === 1 && content === "@") {
-            // 内容为空时, 触发mention,后期待优化
-            omMention()
-        } else if (mentionRef.current) {
-            onResetMention()
-        }
-    })
-
-    const handleTextareaFocus = useMemoizedFn((e) => {
-        omMentionByFocus()
-        onTextareaFocus && onTextareaFocus(e)
-    })
-    const omMentionByFocus = useDebounceFn(
-        () => {
-            if (question.length === 1 && question === "@") omMention()
-        },
-        {wait: 200}
-    ).run
-
-    const onResetMention = useMemoizedFn(() => {
-        if (mentionRef.current) {
-            mentionRef.current.destroy()
-            mentionRef.current = undefined
-        }
-    })
-
-    const omMention = useMemoizedFn(() => {
-        if (!textareaRef.current || !!mentionRef.current) return
-        const rect = textareaRef.current.resizableTextArea?.textArea.getBoundingClientRect()
-        if (rect) {
-            const x = rect.x
-            const y = rect.y + 20
-            mentionRef.current = showByRightContext(
-                <AIChatMention
-                    selectForge={selectForges}
-                    selectTool={selectTools}
-                    selectKnowledgeBase={selectKnowledgeBases}
-                    onSelect={onSetMention}
-                    defaultActiveTab={mentionPerActiveRef.current}
-                />,
-                x,
-                y
-            )
-        }
-    })
-
-    const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value?: AIChatMentionSelectItem) => {
-        switch (type) {
-            case AIMentionTabsEnum.Forge_Name:
-                if (value)
-                    setSelectForges((perv) => {
-                        const index = perv.findIndex((item) => item.id === value.id)
-                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                    })
-                break
-
-            case AIMentionTabsEnum.Tool:
-                if (value)
-                    setSelectTools((perv) => {
-                        const index = perv.findIndex((item) => item.id === value.id)
-                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                    })
-                break
-
-            case AIMentionTabsEnum.KnowledgeBase:
-                if (value)
-                    setSelectKnowledgeBases((perv) => {
-                        const index = perv.findIndex((item) => item.id === value.id)
-                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                    })
-                break
-            case AIMentionTabsEnum.File_System:
-                break
-            default:
-                break
-        }
-        if (question === "@") {
-            setQuestion("")
-        }
-        mentionPerActiveRef.current = type
-        onResetMention()
-        handleSetTextareaFocus()
     })
 
     const handleTextareaKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useMemoizedFn((e) => {
@@ -254,6 +163,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
     })
     // #endregion
 
+    /**@deprecated */
     const isShowSelectList = useCreation(() => {
         return (
             selectForges.length > 0 ||
@@ -262,6 +172,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
             fileToQuestion.length > 0
         )
     }, [selectForges, selectTools, selectKnowledgeBases, fileToQuestion])
+
+    const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
+        
+    })
     return (
         <div
             className={classNames(styles["ai-chat-textarea"], className)}
@@ -324,7 +238,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                     </svg>
                 </div>
 
-                <QSInputTextarea
+                {/* <QSInputTextarea
                     ref={textareaRef}
                     {...textareaRest}
                     className={classNames(styles["textarea-textarea"], textareaClassName)}
@@ -332,8 +246,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                     onChange={handleTextareaChange}
                     onKeyDown={handleTextareaKeyDown}
                     onFocus={handleTextareaFocus}
-                />
-                {/* <MilkdownInput/> */}
+                /> */}
+                <AIMilkdownInput onUpdateEditor={onUpdateEditor} />
             </div>
 
             <div className={styles["textarea-footer"]}>

@@ -1,8 +1,8 @@
 import {ReactNode} from "react"
-import {AIMentionTabsItem} from "../../components/aiChatMention/type"
+import {AIMentionTypeItem} from "../../components/aiChatMention/type"
 
 export interface AITagListItem {
-    type: AIMentionTabsItem
+    type: AIMentionTypeItem
     key: string | number
     value: string
 }

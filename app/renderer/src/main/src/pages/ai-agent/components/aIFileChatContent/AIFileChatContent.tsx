@@ -15,7 +15,7 @@ import {
     isHaveSelectKnowledgeBases,
     isHaveSelectTools
 } from "../aiChatListItem/AIChatListItem"
-import {AIChatMentionSelectItem, AIMentionTabsItem} from "../aiChatMention/type"
+import {AIChatMentionSelectItem, AIMentionTypeItem} from "../aiChatMention/type"
 import {iconMap} from "../../defaultConstant"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -36,7 +36,7 @@ const getFileIcon = (data: FileToChatQuestionList) => {
     if (data.isFolder) return <IconNotepadFileTypeDir />
     return renderFileTypeIcon({type: getFileExt(data.path)})
 }
-
+/**@deprecated 废弃 由md编辑器代替 */
 const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}) => {
     const attachedFilePathList: FileToChatQuestionList[] = useCreation(() => {
         return isHaveFreeDialogFileList(extraValue)
@@ -65,7 +65,7 @@ const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}
         )
     }, [attachedFilePathList.length, selectForges.length, selectTools.length, selectKnowledgeBases.length])
     const renderList = useMemoizedFn(
-        (params: {title: string; list: AIChatMentionSelectItem[]; type: AIMentionTabsItem}) => {
+        (params: {title: string; list: AIChatMentionSelectItem[]; type: AIMentionTypeItem}) => {
             const {title, list, type} = params
             return (
                 <div className={styles.file}>

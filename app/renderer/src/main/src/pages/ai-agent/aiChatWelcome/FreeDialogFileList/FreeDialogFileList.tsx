@@ -9,21 +9,23 @@ import {AITagListProps} from "./type"
 import React from "react"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {iconMap} from "../../defaultConstant"
-import { YakitRoute } from "@/enums/yakitRoute"
-import { usePageInfo } from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {usePageInfo} from "@/store/pageInfo"
+import shallow from "zustand/shallow"
 
 export const routeKey = {
-    [YakitRoute.AI_Agent] :FileListStoreKey.FileList,
-    [YakitRoute.AI_REPOSITORY] :FileListStoreKey.Konwledge
+    [YakitRoute.AI_Agent]: FileListStoreKey.FileList,
+    [YakitRoute.AI_REPOSITORY]: FileListStoreKey.Konwledge
 }
 
 export const useGetStoreKey = () => {
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
-    const storeKey = useMemo(() => routeKey[currentRouteKey],[currentRouteKey])
+    const storeKey = useMemo(() => routeKey[currentRouteKey], [currentRouteKey])
     return storeKey
 }
-
+/**
+ * @deprecated 由md编辑器的mention替代
+ */
 const FreeDialogFileList: FC<{storeKey: Key}> = React.memo(({storeKey}) => {
     const fileToQuestion = useFileToQuestion(storeKey)
     return (
@@ -40,7 +42,9 @@ const FreeDialogFileList: FC<{storeKey: Key}> = React.memo(({storeKey}) => {
     )
 })
 export default FreeDialogFileList
-
+/**
+ * @deprecated 由md编辑器的mention替代
+ */
 export const AITagList: React.FC<AITagListProps> = (props) => {
     const {title, onRemove, onClear, list} = props
     const ref = useRef<HTMLDivElement>(null)
@@ -73,7 +77,7 @@ export const AITagList: React.FC<AITagListProps> = (props) => {
                         <div className={styles["file-item-content"]}>
                             {iconMap[item.type]}
                             <span className='content-ellipsis'>{item.value}</span>
-                            <OutlineXIcon className={styles['x-icon']}/>
+                            <OutlineXIcon className={styles["x-icon"]} />
                         </div>
                     </YakitButton>
                 ))}

@@ -4,6 +4,9 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {AITagList} from "../FreeDialogFileList/FreeDialogFileList"
 import {AITagListProps} from "../FreeDialogFileList/type"
 
+/**
+ * @deprecated 由md编辑器的mention替代
+ */
 export const FreeDialogTagList: React.FC<FreeDialogForgeListProps> = React.memo((props) => {
     const {title, select, setSelect, type} = props
     const list: AITagListProps["list"] = useCreation(() => {

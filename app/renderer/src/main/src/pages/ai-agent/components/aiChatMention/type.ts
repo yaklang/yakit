@@ -1,10 +1,11 @@
-import {KnowledgeBase} from "@/components/playground/knowlegeBase/types"
 import {AITool} from "../../type/aiTool"
 import {AIForge} from "../../type/forge"
-import {AIMentionTabsEnum} from "../../defaultConstant"
+import {AIMentionTabsEnum, iconMap} from "../../defaultConstant"
+import {AIMentionCommandParams} from "../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 import {KnowledgeBaseItem} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 
-export type AIMentionTabsItem = "forge" | "tool" | "knowledgeBase" | "file" | "folder"
+export type AIMentionTypeItem = AIMentionCommandParams["mentionType"]
+export type iconMapType = keyof typeof iconMap
 export interface AIChatMentionSelectItem {
     id: string
     name: string
@@ -14,7 +15,7 @@ export interface AIChatMentionProps {
     selectTool: AIChatMentionSelectItem[]
     selectKnowledgeBase: AIChatMentionSelectItem[]
     defaultActiveTab?: AIMentionTabsEnum
-    onSelect: (type: AIMentionTabsEnum, value?: AIChatMentionSelectItem) => void
+    onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
 }
 interface AIChatMention {
     keyWord: string
@@ -45,5 +46,5 @@ export interface AIMentionSelectItemProps {
     onSelect: () => void
 }
 export interface FileSystemTreeOfMentionProps {
-    onSelect: () => void
+    onSelect: (path: string, isFolder: boolean) => void
 }

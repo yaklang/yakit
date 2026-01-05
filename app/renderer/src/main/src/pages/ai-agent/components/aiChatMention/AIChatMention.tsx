@@ -14,7 +14,6 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {
     useCreation,
     useDebounceFn,
-    useFocusWithin,
     useInViewport,
     useKeyPress,
     useMemoizedFn,
@@ -36,7 +35,7 @@ import {OutlineCheckIcon} from "@/assets/icon/outline"
 import {useCustomFolder} from "../aiFileSystemList/store/useCustomFolder"
 import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
-import {FileToChatQuestionList, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import {FileToChatQuestionList, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import {useGetStoreKey} from "../../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 
@@ -55,7 +54,6 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
 
     const mentionRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(mentionRef)
-    const isFocusWithin = useFocusWithin(mentionRef)
     useKeyPress(
         "leftarrow",
         (e) => {
@@ -82,7 +80,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     )
     const onLeftArrow = useDebounceFn(
         () => {
-            if (!inViewport || !isFocusWithin) return
+            if (!inViewport) return
             let newValue = getActiveKey()
             const index = getActiveIndex()
             if (index >= 0 && index < AIMentionTabs.length) {
@@ -95,7 +93,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
 
     const onRightArrow = useDebounceFn(
         () => {
-            if (!inViewport || !isFocusWithin) return
+            if (!inViewport) return
             let newValue = getActiveKey()
             const index = getActiveIndex()
             if (index >= 0 && index < AIMentionTabs.length) {
@@ -113,25 +111,28 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         setActiveKey(k as AIMentionTabsEnum)
     })
     const onSelectForge = useMemoizedFn((forgeItem: AIForge) => {
-        onSelect(AIMentionTabsEnum.Forge_Name, {
+        onSelect("forge", {
             id: `${forgeItem.Id}`,
             name: forgeItem.ForgeVerboseName || forgeItem.ForgeName
         })
     })
     const onSelectTool = useMemoizedFn((toolItem: AITool) => {
-        onSelect(AIMentionTabsEnum.Tool, {
+        onSelect("tool", {
             id: `${toolItem.ID}`,
             name: toolItem.VerboseName || toolItem.Name
         })
     })
     const onSelectKnowledgeBase = useMemoizedFn((knowledgeBaseItem: KnowledgeBaseItem) => {
-        onSelect(AIMentionTabsEnum.KnowledgeBase, {
+        onSelect("knowledgeBase", {
             id: `${knowledgeBaseItem.ID}`,
             name: knowledgeBaseItem.KnowledgeBaseName
         })
     })
-    const onSelectFile = useMemoizedFn(() => {
-        onSelect(AIMentionTabsEnum.KnowledgeBase)
+    const onSelectFile = useMemoizedFn((path: string, isFolder: boolean) => {
+        onSelect(isFolder ? "folder" : "file", {
+            id: path,
+            name: path
+        })
     })
     const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
         switch (key) {
@@ -184,20 +185,10 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 return null
         }
     })
-    // const onPressEnter = useMemoizedFn((e) => {
-    //     onSearch(e.target.value)
-    // })
-    const onMentionClick = useMemoizedFn((e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        onFocusMention()
+    const onPressEnter = useMemoizedFn((e) => {
+        onSearch(e.target.value)
     })
-    useEffect(() => {
-        if (inViewport) onFocusMention()
-    }, [inViewport])
-    const onFocusMention = useMemoizedFn(() => {
-        mentionRef.current?.focus()
-    })
+
     // 用户文件夹
     const customFolder = useCustomFolder()
     const mentionTabs = useCreation(() => {
@@ -207,7 +198,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         return AIMentionTabs
     }, [customFolder.length])
     return (
-        <div className={styles["ai-chat-mention"]} onClick={onMentionClick} tabIndex={0} ref={mentionRef}>
+        <div className={styles["ai-chat-mention"]} tabIndex={0} ref={mentionRef}>
             <YakitSideTab
                 className={styles["tab-wrapper"]}
                 type='horizontal'
@@ -624,16 +615,16 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
                 path: nodeData.path,
                 isFolder: nodeData.isFolder
             })
-            fileToChatQuestionStore.add(storeKey, {
-                path: nodeData.path,
-                isFolder: nodeData.isFolder
-            })
+            // fileToChatQuestionStore.add(storeKey, {
+            //     path: nodeData.path,
+            //     isFolder: nodeData.isFolder
+            // })
         } else {
             newCheckedKeys = newCheckedKeys.filter((key) => key?.path !== nodeData.path)
-            fileToChatQuestionStore.remove(storeKey, nodeData.path)
+            // fileToChatQuestionStore.remove(storeKey, nodeData.path)
         }
         setCheckedKeys(newCheckedKeys)
-        onSelect()
+        onSelect(nodeData.path, nodeData.isFolder)
     })
     return (
         <div className={styles["file-system-tree-of-mention"]}>

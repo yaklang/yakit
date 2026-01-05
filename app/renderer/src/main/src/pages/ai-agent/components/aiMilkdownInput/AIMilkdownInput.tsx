@@ -1,41 +1,53 @@
 import React, {useEffect} from "react"
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {ProsemirrorAdapterProvider} from "@prosemirror-adapter/react"
-import useInitEditorHooks, {InitEditorHooksLocalProps} from "@/components/MilkdownEditor/utils/initEditor"
-import {getMarkdown} from "@milkdown/kit/utils"
-import {useCreation} from "ahooks"
-import {AIMilkdownInputProps} from "./type"
-import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
+import {$remark, getMarkdown} from "@milkdown/kit/utils"
+import {AIMilkdownInputBaseProps, AIMilkdownInputProps} from "./type"
+import {defaultValueCtx, Editor, editorViewCtx, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
-import {mentionCustomPlugin, mentionCustomSchema} from "../../../../components/MilkdownEditor/utils/mentionPlugin"
 import {useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
-import {mentionFactory} from "../../../../components/MilkdownEditor/Mention/MentionListView"
 import {$view} from "@milkdown/kit/utils"
 import {Ctx} from "@milkdown/kit/ctx"
+import {commonmark} from "@milkdown/kit/preset/commonmark"
+import {gfm} from "@milkdown/kit/preset/gfm"
+import classNames from "classnames"
+import styles from "./AIMilkdownInput.module.scss"
+import {cursor} from "@milkdown/kit/plugin/cursor"
+import {history} from "@milkdown/kit/plugin/history"
+import {clipboard} from "@milkdown/kit/plugin/clipboard"
+import {placeholderConfig, placeholderPlugin} from "@/components/MilkdownEditor/Placeholder"
+import {AICustomMention, aiMentionFactory, AIMilkdownMention} from "./aiMilkdownMention/AIMilkdownMention"
+import {aiMentionCustomPlugin, aiMentionCustomSchema} from "./aiMilkdownMention/aiMentionPlugin"
+import directive from "remark-directive"
 
-export const AIMilkdownInput: React.FC<AIMilkdownInputProps> = React.memo(
+const remarkDirective = $remark(`remark-directive`, () => directive)
+
+export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {readonly, defaultValue, onChange} = props
+        const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper} = props
         const nodeViewFactory = useNodeViewFactory()
         const pluginViewFactory = usePluginViewFactory()
+
         const {get, loading} = useEditor(
             (root) => {
                 const mentionPlugin = [
-                    ...mentionCustomPlugin(),
-                    mentionFactory,
-                    // $view(mentionCustomSchema.node, () =>
-                    //     nodeViewFactory({
-                    //         component: () => <AIMention />
-                    //     })
-                    // ),
-                    // (ctx: Ctx) => () => {
-                    //     ctx.set(mentionFactory.key, {
-                    //         view: pluginViewFactory({
-                    //             component: () => <AIMentionList />
-                    //         })
-                    //     })
-                    // }
+                    ...aiMentionCustomPlugin(),
+                    aiMentionFactory,
+                    $view(aiMentionCustomSchema.node, () =>
+                        nodeViewFactory({
+                            component: () => <AICustomMention />
+                        })
+                    ),
+                    (ctx: Ctx) => () => {
+                        ctx.set(aiMentionFactory.key, {
+                            view: pluginViewFactory({
+                                component: () => <AIMilkdownMention />
+                            })
+                        })
+                    }
                 ].flat()
+                const placeholder = [placeholderConfig, placeholderPlugin]
+
                 return (
                     Editor.make()
                         .config((ctx) => {
@@ -49,23 +61,63 @@ export const AIMilkdownInput: React.FC<AIMilkdownInputProps> = React.memo(
                             const listener = ctx.get(listenerCtx)
                             listener.markdownUpdated((ctx, nextMarkdown, prevMarkdown) => {
                                 const isSave = nextMarkdown !== prevMarkdown
-
                                 if (isSave) {
-                                    onChange && onChange(nextMarkdown, prevMarkdown)
+                                    onUpdateContent && onUpdateContent(nextMarkdown)
                                 }
                             })
                         })
+                        .use(remarkDirective)
+                        .use(commonmark)
+                        .use(gfm)
+                        .use(cursor)
+                        .use(history)
+                        .use(clipboard)
+                        // placeholder
+                        .use(placeholder)
+                        // listener
+                        .use(listener)
                         // mention 提及@
                         .use(mentionPlugin)
                 )
             },
             [readonly, defaultValue]
         )
+        useEffect(() => {
+            if (loading) return
+            const editor = get()
+            if (editor) {
+                onUpdateEditor?.(editor)
+            }
+            editor?.action((ctx) => {
+                // 简单阻止所有文件粘贴
+                ctx.get(editorViewCtx).dom.addEventListener("paste", (e) => {
+                    const clipboardData = e.clipboardData
+                    if (clipboardData?.types.includes("Files")) {
+                        e.preventDefault()
+                    }
+                })
+            })
+        }, [loading, get])
+        useEffect(() => {
+            return () => {
+                const value = get()?.action(getMarkdown()) || ""
+                onUpdateContent && onUpdateContent(value)
+            }
+        }, [])
+        return (
+            <div className={classNames(styles["ai-milkdown-input"], classNameWrapper)}>
+                <Milkdown />
+            </div>
+        )
+    })
+)
 
+export const AIMilkdownInput: React.FC<AIMilkdownInputProps> = React.memo(
+    React.forwardRef((props, ref) => {
         return (
             <MilkdownProvider>
                 <ProsemirrorAdapterProvider>
-                    <Milkdown />
+                    <AIMilkdownInputBase {...props} ref={ref} />
                 </ProsemirrorAdapterProvider>
             </MilkdownProvider>
         )
