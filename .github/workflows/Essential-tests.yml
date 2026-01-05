@@ -1,0 +1,61 @@
+name: Essential tests
+
+on:
+  push:
+    paths:
+      - 'app/renderer/src/main/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [test]
+    paths:
+      - 'app/renderer/src/main/**'
+      - '.github/workflows/**'
+
+jobs:
+  vitest:
+    name: Vitest - renderer main
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+
+      - name: Cache Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-cache-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: app/renderer/src/main/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies (renderer main)
+        working-directory: app/renderer/src/main
+        run: yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
+
+      - name: Verify installed packages (quick)
+        working-directory: app/renderer/src/main
+        run: |
+          echo "Yarn cache dir: $(yarn cache dir)"
+          ls -la node_modules | head -n 20 || true
+
+      - name: Run Vitest (renderer main)
+        working-directory: app/renderer/src/main
+        env:
+          CI: true
+        run: yarn test:vitest -- --run
