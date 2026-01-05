@@ -93,7 +93,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
                     [styles["plugin-tun-hijack-hidden"]]: hidden
                 })}
             >
-                {tunSessionState.deviceName ? (
+                {tunSessionState?.deviceName ? (
                     <PluginTunHijackTable
                         ref={ref}
                         deviceName={tunSessionState.deviceName}

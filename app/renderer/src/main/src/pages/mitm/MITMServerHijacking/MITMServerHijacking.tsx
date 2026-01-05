@@ -212,7 +212,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     const {tunSessionState} = useStore()
     const stop = useMemoizedFn(() => {
-        if(tunSessionState.deviceName){
+        if(tunSessionState?.deviceName){
             emiter.emit("onCloseTunHijackConfirmModal", "mitm")
         }else{
            stopFun()

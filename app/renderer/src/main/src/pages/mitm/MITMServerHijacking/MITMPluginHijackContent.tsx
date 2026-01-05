@@ -633,7 +633,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const isQuitRef = useRef<boolean>(false)
     const handleDeleteRoute = useMemoizedFn((ipList?: string[]) => {
         let ExecParams = [
-            {Key: "tunName", Value: tunSessionState.deviceName || ""},
+            {Key: "tunName", Value: tunSessionState?.deviceName || ""},
             {Key: "clear", Value: true}
         ]
         if (ipList && ipList.length !== 0) {
