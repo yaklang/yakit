@@ -459,14 +459,19 @@ module.exports = (win, getClient) => {
     const handlerHelper = require("./handleStreamWithContext")
     const streamWatchProcessConnectionMap = new Map();
     ipcMain.handle("cancel-WatchProcessConnection", handlerHelper.cancelHandler(streamWatchProcessConnectionMap));
+    ipcMain.handle("WatchProcessConnectionWrite", (e, params, token) => {
+        let stream = streamWatchProcessConnectionMap.get(token)
+        if (!!stream) {
+            stream.write(params)
+        }
+    })
     ipcMain.handle("WatchProcessConnection", (e, params, token) => {
-        let existedStream = streamWatchProcessConnectionMap.get(token)
-        if (existedStream) {
-            existedStream.write(params)
+        let stream = streamWatchProcessConnectionMap.get(token)
+        if (stream) {
+            stream.write(params)
             return
         }
-        let stream = getClient().WatchProcessConnection();
+        stream = getClient().WatchProcessConnection(params)
         handlerHelper.registerHandler(win, stream, streamWatchProcessConnectionMap, token)
-        stream.write(params)
     })
 }
