@@ -28,16 +28,12 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
                     setTypeLoading(false)
                 })
         } else {
-            setTypeLoading(true)
+            setTypeLoading(false)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editorOperationRecord])
 
-    return (
-        <YakitSpin spinning={typeLoading}>
-            <div>Vitest__Test__</div>
-        </YakitSpin>
-    )
+    return <YakitSpin spinning={typeLoading}>vitest test page</YakitSpin>
 }
 
 export {Vitest__Test__}
