@@ -183,7 +183,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
 
         // 文本区域聚焦后光标设置到文本内容最后
         const handleTextareaFocus = useMemoizedFn(() => {
-            textAreaRef.current!.focus({cursor: "end"})
+            !textareaFocus && textAreaRef.current!.focus({cursor: "end"})
         })
         /** ---------- 操作相关 End ---------- */
 
