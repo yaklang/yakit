@@ -34,22 +34,6 @@ jobs:
               app/renderer/src/main/yarn.lock
               app/renderer/engine-link-startup/yarn.lock
 
-      - name: Cache Yarn cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/yarn
-          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-cache-
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: app/renderer/src/main/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
       - name: Install dependencies (renderer main)
         working-directory: app/renderer/src/main
         run: yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
