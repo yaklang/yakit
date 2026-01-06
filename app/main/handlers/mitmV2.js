@@ -189,7 +189,7 @@ module.exports = (win, getClient) => {
     // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
     ipcMain.handle("mitmV2-allow-chunk-static-js", (e, allowChunkStaticJS) => {
         if (stream) {
-            sendMessage({AllowChunkStaticJS: allowChunkStaticJS})
+            sendMessage({FilterData: {AllowChunkStaticJS: allowChunkStaticJS}})
         }
     })
 
@@ -325,10 +325,14 @@ module.exports = (win, getClient) => {
             if (params.hasOwnProperty("extra")) {
                 delete params.extra
             }
+            const {AllowChunkStaticJS, ...restExtra} = extra || {}
             const value = {
                 ...params,
-                ...extra,
+                ...restExtra,
                 DisableWebsocketCompression: !extra.DisableWebsocketCompression
+            }
+            if (typeof AllowChunkStaticJS === "boolean") {
+                value.FilterData = {...(params.FilterData || {}), AllowChunkStaticJS}
             }
             sendMessage(value)
         }

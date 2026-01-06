@@ -29,7 +29,10 @@ const specialFiledList = ["IncludeSuffix", "ExcludeSuffix", "ExcludeMIME"]
 
 export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFilterData => {
     const {baseFilter, advancedFilters} = query
-    let data: MITMFilterData =cloneDeep(defaultMITMFilterData)
+    let data: MITMFilterData = cloneDeep(defaultMITMFilterData)
+    if (typeof baseFilter.allowChunkStaticJS === "boolean") {
+        data.AllowChunkStaticJS = baseFilter.allowChunkStaticJS
+    }
     /**baseFilter */
     Object.entries(baseFilter).forEach(([key, value]) => {
         if (key === "allowChunkStaticJS") return
@@ -113,8 +116,12 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
         advancedFilters: []
     }
     if (!FilterData) return data
+    if (typeof FilterData.AllowChunkStaticJS === "boolean") {
+        data.baseFilter.allowChunkStaticJS = FilterData.AllowChunkStaticJS
+    }
     let advancedFilters: MITMAdvancedFilter[] = []
     Object.entries(FilterData || {}).forEach(([key, value]) => {
+        if (key === "AllowChunkStaticJS") return
         const field: keyof Omit<MITMFilterSchema, "FilterData"> = getMITMField(key)
         if (specialFiledList.includes(key)) {
             data.baseFilter[field] = (value[0] && value[0].Group) || []

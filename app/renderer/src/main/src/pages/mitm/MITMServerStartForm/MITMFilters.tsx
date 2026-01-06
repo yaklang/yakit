@@ -191,6 +191,9 @@ export interface MITMFilterData {
     ExcludeMethods: FilterDataItem[]
 
     ExcludeMIME: FilterDataItem[]
+
+    /**是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤） */
+    AllowChunkStaticJS?: boolean
 }
 
 export interface MITMAdvancedFilter extends FilterDataItem {

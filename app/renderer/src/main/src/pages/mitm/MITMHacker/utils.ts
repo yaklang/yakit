@@ -144,6 +144,7 @@ export interface MITMStartCallRequestV2 {
     EnableHttp2: boolean
     ForceDisableKeepAlive: boolean
     Certificates: ClientCertificate[]
+    FilterData?: MITMFilterData
     extra?: ExtraMITMServerV2
 }
 interface ExtraMITMServerV2 {
@@ -164,8 +165,6 @@ interface ExtraMITMServerV2 {
     HostsMapping: KVPair[]
     /**@name 过滤WebSocket */
     FilterWebsocket: boolean
-    /**@name 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤） */
-    AllowChunkStaticJS: boolean
     /**禁用初始页 */
     DisableCACertPage: boolean
     /**禁用系统代理 */
@@ -180,6 +179,7 @@ export const convertMITMStartCallV1 = (oldData: MITMStartCallRequest): MITMStart
 }
 /**转 mitm v2版本grpc参数 */
 export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCallRequestV2 => {
+    const allowChunkStaticJS = value.extra?.allowChunkStaticJS
     const data: MITMStartCallRequestV2 = {
         Host: value.host,
         Port: value.port,
@@ -188,6 +188,10 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
         EnableHttp2: value.enableHttp2,
         ForceDisableKeepAlive: value.ForceDisableKeepAlive,
         Certificates: value.certificates,
+        FilterData:
+            typeof allowChunkStaticJS === "boolean"
+                ? {AllowChunkStaticJS: allowChunkStaticJS}
+                : undefined,
         extra: isEmpty(value.extra)
             ? undefined
             : {
@@ -201,7 +205,6 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   DnsServers: value.extra.dnsServers,
                   HostsMapping: value.extra.hosts,
                   FilterWebsocket: value.extra.filterWebsocket,
-                  AllowChunkStaticJS: value.extra.allowChunkStaticJS,
                   DisableCACertPage: value.extra.disableCACertPage,
                   DisableSystemProxy: value.extra.DisableSystemProxy,
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,

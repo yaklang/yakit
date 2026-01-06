@@ -207,7 +207,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitm-allow-chunk-static-js", (e, allowChunkStaticJS) => {
         if (stream) {
             stream.write({
-                AllowChunkStaticJS: allowChunkStaticJS
+                FilterData: {AllowChunkStaticJS: allowChunkStaticJS}
             })
         }
     })
@@ -320,6 +320,7 @@ module.exports = (win, getClient) => {
         currentPort = port
         currentDownstreamProxy = downstreamProxy
         if (stream) {
+            const {allowChunkStaticJS, ...restExtra} = extra || {}
             const value = {
                 host,
                 port,
@@ -327,10 +328,13 @@ module.exports = (win, getClient) => {
                 enableHttp2,
                 ForceDisableKeepAlive,
                 certificates,
-                ...extra,
+                ...restExtra,
                 DisableCACertPage: extra.disableCACertPage,
                 DisableWebsocketCompression: !extra.DisableWebsocketCompression,
-                AllowChunkStaticJS: extra.allowChunkStaticJS
+                FilterData:
+                    typeof allowChunkStaticJS === "boolean"
+                        ? {AllowChunkStaticJS: allowChunkStaticJS}
+                        : undefined
             }
             stream.write(value)
         }

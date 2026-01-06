@@ -431,7 +431,8 @@ export const defaultMITMFilterData: MITMFilterData = {
     IncludeUri: [],
     ExcludeUri: [],
     ExcludeMethods: [],
-    ExcludeMIME: []
+    ExcludeMIME: [],
+    AllowChunkStaticJS: false
 }
 
 export const MITMHotPatchTempDefault = [
