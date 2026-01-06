@@ -29,7 +29,10 @@ let engineLinkWin = null
 let closeFlag = true
 
 process.on("uncaughtException", (error) => {
-    console.info(error)
+    try {
+        console.info(error)
+        win.webContents.send("debug-print-log", `[Main] index / uncaughtException => ${error?.message || JSON.stringify(error)}`)
+    } catch (error) {}
 })
 
 // 性能优化：https://juejin.cn/post/6844904029231775758

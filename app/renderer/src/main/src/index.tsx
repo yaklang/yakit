@@ -15,6 +15,7 @@ import ChildNewApp from "./ChildNewApp"
 import {getRemoteValue} from "./utils/kv"
 import {getRemoteI18nGV} from "./utils/envfile"
 import i18n from "@/i18n/i18n"
+import { debugToPrintLogs } from "./utils/logCollection"
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -61,7 +62,32 @@ const App = () => {
         }
 
         window.addEventListener("popstate", onPopState)
-        return () => window.removeEventListener("popstate", onPopState)
+
+
+        // 捕获运行中的JS 语法错误及异常
+        const onErrorLog = (event: ErrorEvent) => {
+            debugToPrintLogs({
+                page: "index",
+                fun: "addEventListener error",
+                content: event
+            })
+        }
+        window.addEventListener('error', onErrorLog)
+
+        // 捕获运行中的Promise未处理的异常
+        const onUnhandledrejectionLog = (event: PromiseRejectionEvent) => {
+            debugToPrintLogs({
+                page: "index",
+                fun: "addEventListener unhandledrejection",
+                content: event
+            })
+        }
+        window.addEventListener('unhandledrejection',onUnhandledrejectionLog)
+        return () => {
+            window.removeEventListener("popstate", onPopState)
+            window.removeEventListener('error', onErrorLog)
+            window.removeEventListener('unhandledrejection', onUnhandledrejectionLog)
+        }
     }, [])
     return windowType === "child" ? <ChildNewApp /> : <NewApp />
 }
