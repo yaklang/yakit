@@ -544,7 +544,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                                 size='small'
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    write({QueryPid: record.Pid})
+                                    update({QueryPid: record.Pid})
                                 }}
                             >
                                 查看信息
@@ -610,34 +610,16 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         ]
 
         const [token, setToken] = useState<string>(randomString(40))
-        const update = useMemoizedFn(() => {
+        const update = useMemoizedFn((params: WatchProcessRequest = {}) => {
             const newParams: WatchProcessRequest = {
                 StartParams: {
                     CheckIntervalSeconds: 5,
                     DisableReserveDNS: false
-                }
-            }
-            console.log("newParams---",newParams,token);
-            
-            // ipcRenderer.invoke("WatchProcessConnection", {}, token).then(()=>{
-            //     console.log("ok---ok???");
-            //     info("服务已启动")
-            //     write(newParams)
-            // }).catch((err: any) => {
-            //     yakitNotify("error", `[WatchProcessConnection] error:  ${err}`, true)
-            // })
-        })
-
-        const write = useMemoizedFn((params: WatchProcessRequest = {})=>{
-            const newParams: WatchProcessRequest = {
-                // StartParams: {
-                //     CheckIntervalSeconds: 5,
-                //     DisableReserveDNS: false
-                // },
+                },
                 ...params
             }
-            ipcRenderer.invoke("WatchProcessConnectionWrite", newParams, token).catch((err: any) => {
-                yakitNotify("error", `[WatchProcessConnectionWrite] error:  ${err}`, true)
+            ipcRenderer.invoke("WatchProcessConnection", newParams, token).catch((err: any) => {
+                yakitNotify("error", `[WatchProcessConnection] error:  ${err}`, true)
             })
         })
 
@@ -664,8 +646,6 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         useEffect(() => {
             update()
             ipcRenderer.on(`${token}-data`, async (e, data: WatchProcessResponse) => {
-                console.log("data???---",data);
-                
                 switch (data.Action) {
                     case "start":
                         if (!tableDataRef.current.find((item) => item.Pid === data.Process.Pid)) {
