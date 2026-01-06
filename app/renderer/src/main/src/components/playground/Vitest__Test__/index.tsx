@@ -16,35 +16,34 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
     const [noWordwrap, setNoWordwrap] = useSafeState(false)
 
     useEffect(() => {
-        setTypeLoading(true)
-        if (editorOperationRecord) {
-            getRemoteValue(editorOperationRecord)
-                .then((data) => {
-                    try {
-                        setTypeLoading(false)
-                        if (!data) return
-                        let obj: OperationRecordRes = JSON.parse(data)
-                        if (obj?.fontSize) {
-                            setFontSize(obj?.fontSize)
-                        }
-                        if (typeof obj?.showBreak === "boolean") {
-                            setShowLineBreaks(obj?.showBreak)
-                        }
-                        if (typeof obj?.noWordWrap === "boolean") {
-                            setNoWordwrap(obj?.noWordWrap)
-                        }
-                    } catch (error) {
-                        setTypeLoading(false)
-                        fail(error + "")
-                    }
-                })
-                .finally(() => {
-                    setTypeLoading(false)
-                })
+        if (!editorOperationRecord) {
+            setTypeLoading(false)
+            return
         }
-        // else {
-        //     setTypeLoading(true)
-        // }
+        setTypeLoading(true)
+        getRemoteValue(editorOperationRecord)
+            .then((data) => {
+                try {
+                    setTypeLoading(false)
+                    if (!data) return
+                    let obj: OperationRecordRes = JSON.parse(data)
+                    if (obj?.fontSize) {
+                        setFontSize(obj?.fontSize)
+                    }
+                    if (typeof obj?.showBreak === "boolean") {
+                        setShowLineBreaks(obj?.showBreak)
+                    }
+                    if (typeof obj?.noWordWrap === "boolean") {
+                        setNoWordwrap(obj?.noWordWrap)
+                    }
+                } catch (error) {
+                    setTypeLoading(false)
+                    fail(error + "")
+                }
+            })
+            .finally(() => {
+                setTypeLoading(false)
+            })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editorOperationRecord])
 
