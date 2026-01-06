@@ -126,6 +126,10 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
     if (!FilterData) return data
     let advancedFilters: MITMAdvancedFilter[] = []
     Object.entries(FilterData || {}).forEach(([key, value]) => {
+        if (key === "AllowChunkStaticJS" && typeof value === "boolean") {
+            data.baseFilter.allowChunkStaticJS = value
+            return
+        }
         const field: keyof Omit<MITMFilterSchema, "FilterData"> = getMITMField(key)
         if (specialFiledList.includes(key)) {
             data.baseFilter[field] = (value[0] && value[0].Group) || []

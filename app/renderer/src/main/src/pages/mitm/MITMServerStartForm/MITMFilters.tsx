@@ -181,7 +181,7 @@ export interface MITMFilterData {
 
     ExcludeMIME: FilterDataItem[]
 
-    AllowChunkStaticJS: boolean
+    AllowChunkStaticJS?: boolean
 }
 
 export interface MITMAdvancedFilter extends FilterDataItem {

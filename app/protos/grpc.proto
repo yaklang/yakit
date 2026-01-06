@@ -6657,10 +6657,6 @@ message MITMRequest {
   // disable websocket compression
   bool DisableWebsocketCompression = 64;
 
-  // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
-  // 使用 optional 以区分“未设置”和“显式设置为 false”，便于运行时更新开关且不误伤其他控制消息。
-  optional bool AllowChunkStaticJS = 68;
-
   // hijack filter
   MITMFilterData HijackFilterData = 65;
   bool updateHijackFilter = 66;
@@ -6683,6 +6679,9 @@ message MITMFilterData {
 
   repeated FilterDataItem ExcludeMethods = 7;
   repeated FilterDataItem ExcludeMIME = 8;
+
+  // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
+  optional bool AllowChunkStaticJS = 9;
 }
 
 message Certificate {
@@ -8323,9 +8322,6 @@ message MITMV2Request{
   // runtime change system proxy enable/disable
   bool SetDisableSystemProxy = 50;
 
-  // 是否允许抓取 chunk/static JS（默认 false：不允许，即默认过滤 chunk/static JS）
-  // 使用 optional 以区分“未设置”和“显式设置为 false”，便于运行时更新开关且不误伤其他控制消息。
-  optional bool AllowChunkStaticJS = 51;
 }
 
 message MITMV2Response {
