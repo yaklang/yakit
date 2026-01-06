@@ -11,11 +11,8 @@ export default defineConfig({
     test: {
         environment: "jsdom",
         globals: true,
-        root: path.resolve(__dirname, "src"),
-        include: [
-            "**/*.test.{ts,tsx,js,jsx}",
-            "**/*.spec.{ts,tsx,js,jsx}"
-        ],
+        root: "src",
+        include: ["**/*.test.{ts,tsx,js,jsx}", "**/*.spec.{ts,tsx,js,jsx}"],
         setupFiles: ["src/setupTests.ts"],
         // Add JUnit reporter (writes `reports/junit.xml`) and keep default reporter
         // Cast the tuple to `any` to avoid type mismatch on this Vitest version
