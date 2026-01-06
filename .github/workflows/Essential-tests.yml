@@ -84,8 +84,15 @@ jobs:
 
           echo "Changed files:\n$CHANGED"
 
+          # Normalize changed paths to be relative to the working dir (strip up to 'src/')
+          CHANGED_REL=$(printf "%s\n" "$CHANGED" | grep -o -E 'src/.*' | sort -u || true)
+          if [ -z "$CHANGED_REL" ]; then
+            CHANGED_REL="$CHANGED"
+          fi
+          echo "Normalized changes:\n$CHANGED_REL"
+
           # Prefer explicitly changed test files
-          TEST_FILES=$(printf "%s\n" "$CHANGED" | grep -E 'src/.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
+          TEST_FILES=$(printf "%s\n" "$CHANGED_REL" | grep -E 'src/.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
           if [ -n "$TEST_FILES" ]; then
             TF=$(echo "$TEST_FILES" | tr '\n' ' ')
             echo "Found test files: $TF"
@@ -94,7 +101,7 @@ jobs:
           fi
 
           # Otherwise, map changed source dirs to test globs
-          DIRS=$(printf "%s\n" "$CHANGED" | grep -E '^src/' || true)
+          DIRS=$(printf "%s\n" "$CHANGED_REL" | grep -E '^src/' || true)
           if [ -n "$DIRS" ]; then
             PATTERNS=$(printf "%s\n" "$DIRS" | sed -E 's|/[^/]+$||' | sort -u | awk '{print $0"/**/*.test.* "$0"/**/*.spec.*"}' | tr '\n' ' ')
             echo "Derived patterns: $PATTERNS"
