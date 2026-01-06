@@ -436,6 +436,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                 setShowItem={setShowItem}
                                 isShowEditorDetails={isShowEditorDetails}
                                 setEditorDetails={setEditorDetails}
+                                auditRightParams={auditRightParams}
                             />
                         )
                     }

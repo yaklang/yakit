@@ -769,9 +769,54 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         setExpandedKeys([])
     })
 
+
     useUpdateEffect(() => {
         resetMap()
         setRefreshTree(!refreshTree)
+    }, [projectName])
+
+    // Listen for node selection event from graph
+    const onSelectNodeFun = useMemoizedFn((data: string) => {
+        try {
+            const {variable} = JSON.parse(data)
+            if (!variable) return
+
+            // Search for the node in current loaded details
+            // We assume the variables are children of the root or loaded locations
+            // This is a simplified search primarily for root variables or explicitly loaded ones
+            
+            // Get all known keys is expensive, effectively we want to search in getMapAuditChildDetail(projectName || "/")
+            // But projectName usually starts with /, so we check root
+            
+            const rootId = projectName || "/"
+            // Ensure format matches how we init tree
+            const searchId = rootId.startsWith("/") ? rootId : `/${rootId}`
+            
+            const childIds = getMapAuditChildDetail(searchId)
+            
+            // Normalize variable name (remove $ if present, though ResourceName usually doesn't have it, but var_name in graph might)
+            const cleanVarName = variable.replace(/^\$/, '')
+
+            const foundId = childIds.find(id => {
+                const detail = getMapAuditDetail(id)
+                // Loose match
+                return detail && (detail.name === cleanVarName || detail.name === variable)
+            })
+
+            if (foundId) {
+                setFoucsedKey(foundId)
+                // Ensure parent is expanded
+                // Since this is a direct child of root, root should be expanded or visible
+                // setExpandedKeys(prev => [...prev, searchId]) // Optional if we want to expand root
+            }
+        } catch (e) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onAuditSelectNode", onSelectNodeFun)
+        return () => {
+            emiter.off("onAuditSelectNode", onSelectNodeFun)
+        }
     }, [projectName])
 
     const [resultId, setResultId] = useState<string>()

@@ -56,4 +56,6 @@ export type YakRunnerAuditEventProps = {
     onOpenLeftSecondNode: "result" | "history"
     // 刷新文件树或者规则树
     onRefreshFileOrRuleTree?: string
+    // 选中审计节点
+    onAuditSelectNode: string
 }
