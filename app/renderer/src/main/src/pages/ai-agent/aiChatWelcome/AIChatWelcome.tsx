@@ -1,4 +1,4 @@
-import React, {useEffect, useId, useMemo, useRef, useState} from "react"
+import React, {useEffect, useId, useRef, useState} from "react"
 import {
     AIChatWelcomeProps,
     AIMaterialsData,
@@ -49,21 +49,15 @@ import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
-import {historyStore} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
-import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
-import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
-import {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import useAIChatDrop from "./hooks/useAIChatDrop"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {KnowledgeSidebarList} from "./KnowledgeSidebarList/KnowledgeSidebarList"
-import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 
 const sideberRadioOptions = [
     {
@@ -112,11 +106,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
 
     // #region 问题相关逻辑
-    const textareaProps: AIChatTextareaProps["textareaProps"] = useCreation(() => {
-        return {
-            placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
-        }
-    }, [])
 
     useEffect(() => {
         const konwledgeInputStringFn = (params: string) => {
@@ -139,7 +128,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const [questionList, setQuestionList] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
-    const customFolder = useCustomFolder()
     // 控制下拉菜单
     const [openDrawer, setOpenDrawer] = useState<boolean>(true)
 
@@ -270,7 +258,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
         onTriageSubmit(value)
-        fileToChatQuestionStore.clear(FileListStoreKey.FileList)
         setQuestion("")
     })
     const onMore = useMemoizedFn((item: string) => {
@@ -368,15 +355,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setCheckItems([])
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
-
-    const onOpenFileFolder = async (data: OpenFileDropdownItem) => {
-        if (!data.path) return
-        historyStore.addHistoryItem(data)
-        setOpenDrawer(true)
-    }
-
-    // 拖拽
-    const {isHovering, dropRef} = useAIChatDrop(FileListStoreKey.FileList)
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
             <div className={styles["open-file-tree-button"]}>
@@ -411,13 +389,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <div className={styles["title"]}>Memfit AI Agent</div>
                             <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
-                        <div
-                            ref={dropRef}
-                            className={classNames(styles["input-body-wrapper"], {
-                                [styles.draggingFromTree]: isHovering
-                            })}
-                        >
-                            {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
+                        <div className={classNames(styles["input-body-wrapper"])}>
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return
@@ -431,7 +403,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <AIChatTextarea
                                 question={question}
                                 setQuestion={setQuestion}
-                                textareaProps={textareaProps}
                                 onSubmit={handleTriageSubmit}
                                 extraFooterLeft={
                                     <>

@@ -21,8 +21,29 @@ textarea.qs-input-textarea {
     background: var(--Colors-Use-Basic-Background);
     padding: 12px;
     border-radius: 8px;
+    position: relative;
 }
+.dragging-from-tree {
+    outline: 1px dashed var(--Colors-Use-Main-Primary);
+    border-radius: 8px;
+    .drag-hint {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        border-radius: 8px;
 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        pointer-events: none;
+
+        font-size: 14px;
+        color: var(--Colors-Use-Main-Primary);
+        background: var(--yakit-colors-Main-0);
+        backdrop-filter: blur(2px);
+    }
+}
 .textarea-body {
     display: flex;
     gap: 4px;

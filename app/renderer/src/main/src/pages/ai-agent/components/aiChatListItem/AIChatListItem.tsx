@@ -17,9 +17,9 @@ import AIFileChatContent from "../aIFileChatContent/AIFileChatContent"
 import classNames from "classnames"
 import {has, isArray} from "lodash"
 import {HandleStartParams} from "../../aiAgentChat/type"
-import {FileToChatQuestionList} from "@/pages/ai-re-act/aiReActChat/store"
 import {AIChatMentionSelectItem} from "../aiChatMention/type"
 import {AITaskStatus} from "@/pages/ai-re-act/hooks/grpcApi"
+import {FileToChatQuestionList} from "../../template/type"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],

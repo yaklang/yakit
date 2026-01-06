@@ -11,14 +11,7 @@ import {
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import styles from "./AIChatMention.module.scss"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {
-    useCreation,
-    useDebounceFn,
-    useInViewport,
-    useKeyPress,
-    useMemoizedFn,
-    useSafeState
-} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useKeyPress, useMemoizedFn, useSafeState} from "ahooks"
 import {AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs} from "../../defaultConstant"
 import {RollingLoadList, RollingLoadListRef} from "@/components/RollingLoadList/RollingLoadList"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../../type/forge"
@@ -35,7 +28,6 @@ import {OutlineCheckIcon} from "@/assets/icon/outline"
 import {useCustomFolder} from "../aiFileSystemList/store/useCustomFolder"
 import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
-import {FileToChatQuestionList, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import {useGetStoreKey} from "../../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 
@@ -600,30 +592,12 @@ const AIMentionSelectItem: React.FC<AIMentionSelectItemProps> = React.memo((prop
 
 const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.memo((props) => {
     const {onSelect} = props
-    const storeKey = useGetStoreKey()
-    const fileToQuestion = useFileToQuestion(storeKey)
     const [selected, setSelected] = useState<FileNodeProps>()
-    const [checkedKeys, setCheckedKeys] = useState<FileToChatQuestionList[]>(fileToQuestion)
     // 用户文件夹
     const customFolder = useCustomFolder()
 
     const onSetCheckedKeys = useMemoizedFn((c: boolean, nodeData: FileNodeProps) => {
         if (!nodeData) return
-        let newCheckedKeys = [...checkedKeys]
-        if (c) {
-            newCheckedKeys.push({
-                path: nodeData.path,
-                isFolder: nodeData.isFolder
-            })
-            // fileToChatQuestionStore.add(storeKey, {
-            //     path: nodeData.path,
-            //     isFolder: nodeData.isFolder
-            // })
-        } else {
-            newCheckedKeys = newCheckedKeys.filter((key) => key?.path !== nodeData.path)
-            // fileToChatQuestionStore.remove(storeKey, nodeData.path)
-        }
-        setCheckedKeys(newCheckedKeys)
         onSelect(nodeData.path, nodeData.isFolder)
     })
     return (
@@ -638,7 +612,8 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
                     isFolder={item.isFolder}
                     selected={selected}
                     setSelected={setSelected}
-                    checkedKeys={checkedKeys}
+                    checkedKeys={[]}
+                    // checkedKeys={checkedKeys}
                     setCheckedKeys={onSetCheckedKeys}
                 />
             ))}

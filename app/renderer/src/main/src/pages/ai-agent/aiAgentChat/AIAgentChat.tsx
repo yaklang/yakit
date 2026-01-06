@@ -50,7 +50,6 @@ import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
-import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -77,7 +76,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [streams, api] = useMultipleHoldGRPCStream()
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
-    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
 
     const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
         setMode("re-act")
@@ -226,7 +224,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             selectForges,
             selectTools,
             selectKnowledgeBases,
-            fileToQuestion
+            fileToQuestion: []
         })
         // 发送初始化参数
         const startParams: AIInputEvent = {

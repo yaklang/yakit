@@ -16,14 +16,6 @@ export type AIAgentEventProps = {
     konwledgeInputString: string
     /**ai侧边栏展开收起模式 */
     switchSideHiddenMode: string
-    /**
-     * 设置输入款里面选择得卡片数据 {AIAgentTriggerEventInfo}
-     * @name type {AIMentionTabsEnum}
-     * @name params {AIChatMentionSelectItem[]} 传递的值
-     * */
-    settingInputCard: string
-    /**类型同 settingInputCard */
-    updateOfInputCard: string
     // 一级页面关闭事件
     onClosePageRepository?: string
     /** 文件系统-文件预览已打开 */

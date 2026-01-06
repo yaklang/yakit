@@ -1,7 +1,7 @@
-import React, {useEffect} from "react"
+import React, {useEffect, useImperativeHandle} from "react"
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {ProsemirrorAdapterProvider} from "@prosemirror-adapter/react"
-import {$remark, getMarkdown} from "@milkdown/kit/utils"
+import {$remark, callCommand, getMarkdown} from "@milkdown/kit/utils"
 import {AIMilkdownInputBaseProps, AIMilkdownInputProps} from "./type"
 import {defaultValueCtx, Editor, editorViewCtx, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
@@ -17,8 +17,14 @@ import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 import {placeholderConfig, placeholderPlugin} from "@/components/MilkdownEditor/Placeholder"
 import {AICustomMention, aiMentionFactory, AIMilkdownMention} from "./aiMilkdownMention/AIMilkdownMention"
-import {aiMentionCustomPlugin, aiMentionCustomSchema} from "./aiMilkdownMention/aiMentionPlugin"
+import {
+    aiMentionCommand,
+    AIMentionCommandParams,
+    aiMentionCustomPlugin,
+    aiMentionCustomSchema
+} from "./aiMilkdownMention/aiMentionPlugin"
 import directive from "remark-directive"
+import {useMemoizedFn} from "ahooks"
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -27,7 +33,15 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
         const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper} = props
         const nodeViewFactory = useNodeViewFactory()
         const pluginViewFactory = usePluginViewFactory()
-
+        useImperativeHandle(
+            ref,
+            () => ({
+                setMention: (v: AIMentionCommandParams) => {
+                    onSetMention(v)
+                }
+            }),
+            []
+        )
         const {get, loading} = useEditor(
             (root) => {
                 const mentionPlugin = [
@@ -69,7 +83,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                         .use(remarkDirective)
                         .use(commonmark)
                         .use(gfm)
-                        .use(cursor)
+                        // .use(cursor)
                         .use(history)
                         .use(clipboard)
                         // placeholder
@@ -104,6 +118,10 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                 onUpdateContent && onUpdateContent(value)
             }
         }, [])
+
+        const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
+            get()?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+        })
         return (
             <div className={classNames(styles["ai-milkdown-input"], classNameWrapper)}>
                 <Milkdown />

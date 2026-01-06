@@ -1,8 +1,11 @@
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
+import {AIMentionCommandParams} from "./aiMilkdownMention/aiMentionPlugin"
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
-export interface AIMilkdownInputRef {}
+export interface AIMilkdownInputRef {
+    setMention: (v: AIMentionCommandParams) => void
+}
 export interface AIMilkdownInputBaseProps {
     ref?: React.ForwardedRef<AIMilkdownInputRef>
     /**true 只读 */

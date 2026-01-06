@@ -3,7 +3,6 @@ import {FC} from "react"
 import styles from "./AIFileChatContent.module.scss"
 import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
-import {FileToChatQuestionList} from "@/pages/ai-re-act/aiReActChat/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
@@ -20,6 +19,7 @@ import {iconMap} from "../../defaultConstant"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import classNames from "classnames"
+import {FileToChatQuestionList} from "../../template/type"
 
 interface AIFileChatContentProps {
     qs: string

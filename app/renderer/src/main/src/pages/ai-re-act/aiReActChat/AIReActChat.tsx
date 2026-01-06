@@ -1,13 +1,12 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 
 import styles from "./AIReActChat.module.scss"
 import {AIReActChatProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
-import {AIChatTextareaProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
-import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
+import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {AIModelSelect} from "@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect"
@@ -15,25 +14,22 @@ import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButton} from "./AIReActComponent"
-import {AIInputEvent, AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
+import {AIInputEvent} from "../hooks/grpcApi"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
-import {AISendSyncMessageParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {fileToChatQuestionStore, useFileToQuestion} from "./store"
 import {PageNodeItemProps} from "@/store/pageInfo"
 import emiter from "@/utils/eventBus/eventBus"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {getAIReActRequestParams} from "@/pages/ai-agent/utils"
-import useAIChatDrop from "@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName, storeKey, title = "自由对话"} = props
+    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话"} = props
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
@@ -52,16 +48,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {activeChat, setting} = useAIAgentStore()
     const {selectForges, selectTools, selectKnowledgeBases} = useChatIPCStore()
-    const fileToQuestion = useFileToQuestion(storeKey)
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
     const [question, setQuestion] = useState<string>("")
-    const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
-        return {
-            placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
-        }
-    }, [])
+    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
     // #endregion
 
     // #region 问题相关逻辑
@@ -88,7 +79,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 selectForges,
                 selectTools,
                 selectKnowledgeBases,
-                fileToQuestion
+                fileToQuestion: []
             })
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
@@ -150,8 +141,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         setTimelineVisible(false)
     })
 
-    const {isHovering, dropRef} = useAIChatDrop(storeKey)
-
     return (
         <>
             <div
@@ -182,23 +171,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
                                 {execute && questionQueue?.total > 0 && <AITaskQuery />}
-                                <div
-                                    ref={dropRef}
-                                    className={classNames(styles["footer-inputs-file-list"], {
-                                        [styles.draggingFromTree]: isHovering
-                                    })}
-                                >
-                                    {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
+                                <div className={classNames(styles["footer-inputs-file-list"])}>
                                     <AIChatTextarea
+                                        ref={aiChatTextareaRef}
                                         loading={false}
                                         question={question}
                                         setQuestion={setQuestion}
-                                        textareaProps={textareaProps}
                                         onSubmit={handleSubmit}
                                         extraFooterRight={
                                             <div className={styles["extra-footer-right"]}>
                                                 <OpenFileDropdown
-                                                    cb={(data) => fileToChatQuestionStore.add(storeKey, data)}
+                                                    cb={(data) => {
+                                                        aiChatTextareaRef.current?.setMention({
+                                                            mentionId: data.path,
+                                                            mentionType: data.isFolder ? "folder" : "file",
+                                                            mentionName: data.path
+                                                        })
+                                                    }}
                                                 >
                                                     <UploadFileButton title='打开文件夹' />
                                                 </OpenFileDropdown>

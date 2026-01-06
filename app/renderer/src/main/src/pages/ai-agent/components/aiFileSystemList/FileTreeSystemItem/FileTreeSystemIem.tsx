@@ -7,7 +7,6 @@ import {setClipboardText} from "@/utils/clipboard"
 import {FileTreeSystemItemProps} from "../type"
 import {historyStore} from "../store/useHistoryFolder"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {FileListStoreKey, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
 import {YakitProtoCheckbox} from "@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox"
 
 const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
@@ -79,10 +78,10 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
                 onResetTree?.()
                 break
             case "sendToChat":
-                fileToChatQuestionStore.add(FileListStoreKey.FileList, {
-                    path: data.path,
-                    isFolder: data.isFolder
-                })
+                // fileToChatQuestionStore.add(FileListStoreKey.FileList, {
+                //     path: data.path,
+                //     isFolder: data.isFolder
+                // })
                 break
             default:
                 break

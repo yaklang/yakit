@@ -1,7 +1,7 @@
-import {useDrop} from "ahooks"
-import {DragEvent, useRef, useState, useCallback} from "react"
-import {FileListStoreKey, FileToChatQuestionList, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
+import {useDrop, useMemoizedFn} from "ahooks"
+import {DragEvent, useRef, useState} from "react"
 import {handleOnFiles} from "../utils"
+import {FileToChatQuestionList} from "../../template/type"
 
 export const TREE_DRAG_KEY = "application/x-file-chat-path"
 
@@ -28,21 +28,18 @@ const isValidDrag = (e: DragEvent<Element>): boolean => {
     )
     return isTreeDrag || isDesktopDragByTypes || isDesktopDragByFileTypes
 }
-
-const useAIChatDrop = (key: FileListStoreKey) => {
+interface UseAIChatDropProps {
+    onFilesChange?: (files: FileToChatQuestionList[]) => void
+}
+const useAIChatDrop = ({onFilesChange}: UseAIChatDropProps) => {
     const [isHovering, setIsHovering] = useState(false)
 
     const dropRef = useRef<HTMLDivElement | null>(null)
 
-    const addToChatStore = useCallback(
-        (items: FileToChatQuestionList[]) => {
-            if (items.length === 0) return
-            for (const item of items) {
-                fileToChatQuestionStore.add(key, item)
-            }
-        },
-        [key]
-    )
+    const addToChatStore = useMemoizedFn((items: FileToChatQuestionList[]) => {
+        if (items.length === 0) return
+        onFilesChange?.(items)
+    })
 
     useDrop(dropRef, {
         onDragEnter: (e) => {
