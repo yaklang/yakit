@@ -29,8 +29,8 @@ const isUploadImg = (params: HttpUploadImgBaseRequest) => {
 export interface HttpUploadImgPathRequest extends HttpUploadImgBaseRequest {
     path: string
 }
-/** @name 上传图片(文件路径) */
-export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest, string> = (request, hiddenError) => {
+/** @name 上传图片(文件路径/base64) */
+export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest|HttpUploadImgBase64Request, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
 
         if (!isUploadImg({type: request.type, filedHash: request.filedHash})) {
@@ -39,32 +39,6 @@ export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest, string> = (req
         }
         
         ipcRenderer.invoke("split-upload", {...request,url:"fragment/upload"})
-            .then(({resArr}) => {
-                const res = resArr?.[0]
-                if (res?.code === 200 && res?.data?.from) {
-                    resolve(res?.data?.from)
-                } else {
-                    let data = `分片异常错误`
-                    if (!hiddenError) yakitNotify("error", "上传图片失败:" + data)
-                    reject(data)
-                }
-            })
-            .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "上传图片失败:" + e)
-                reject(e)
-            })
-    })
-}
-
-/** @name 上传图片(base64)使用切片公共方法 */
-export const httpSplitUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = (request, hiddenError) => {
-    return new Promise(async (resolve, reject) => {
-        if (!isUploadImg({type: request.type, filedHash: request.filedHash})) {
-            reject("参数错误")
-            return
-        }
-        ipcRenderer
-            .invoke("split-upload", {...request,url:"fragment/upload"})
             .then(({resArr}) => {
                 const res = resArr?.[0]
                 if (res?.code === 200 && res?.data?.from) {
