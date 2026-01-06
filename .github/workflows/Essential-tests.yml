@@ -84,11 +84,11 @@ jobs:
 
           echo "Changed files:\n$CHANGED"
 
-          # Normalize changed paths to be relative to the working dir (strip up to 'src/')
-          CHANGED_REL=$(printf "%s\n" "$CHANGED" | grep -o -E 'src/.*' | sort -u || true)
-          if [ -z "$CHANGED_REL" ]; then
-            CHANGED_REL="$CHANGED"
-          fi
+          # Normalize changed paths to be relative to the working dir by
+          # taking the last occurrence of 'src/' (works for nested 'src' paths)
+          CHANGED_REL=$(printf "%s\n" "$CHANGED" | awk -F'src/' '{ if (NF>1) print "src/"$(NF) ; else print $0 }' | sort -u || true)
+          # remove empty lines
+          CHANGED_REL=$(printf "%s\n" "$CHANGED_REL" | sed '/^$/d' || true)
           echo "Normalized changes:\n$CHANGED_REL"
 
           # Prefer explicitly changed test files
