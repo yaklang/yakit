@@ -70,7 +70,7 @@ jobs:
 
           # 2) If still empty, try fetching the base branch (for PRs) and compare
           if [ -z "$CHANGED" ] && [ -n "${{ github.event.pull_request.base.ref }}" ]; then
-            echo "Standard range not available — fetching base branch ${ { github.event.pull_request.base.ref } }"
+            echo "Standard range not available — fetching base branch ${{ github.event.pull_request.base.ref }}"
             git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.ref }}" || true
             BASE_REF="origin/${{ github.event.pull_request.base.ref }}"
             CHANGED=$(git diff --name-only "$BASE_REF" "${{ github.sha }}" || true)
