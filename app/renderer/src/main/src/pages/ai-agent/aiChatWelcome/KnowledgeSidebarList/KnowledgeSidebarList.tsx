@@ -38,6 +38,8 @@ import {KnowledgeBaseTableHeaderProps} from "@/pages/KnowledgeBase/compoment/Kno
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 import AllInstallPlugins from "@/pages/KnowledgeBase/compoment/AllInstallPlugins"
+import emiter from "@/utils/eventBus/eventBus"
+import {AIMentionCommandParams} from "../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -324,6 +326,21 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         }
     })
 
+    const onSelectItem = useMemoizedFn((item: KnowledgeBaseItem) => {
+        const params: AIMentionCommandParams = {
+            mentionId: item.ID,
+            mentionType: "knowledgeBase",
+            mentionName: item.KnowledgeBaseName
+        }
+        emiter.emit(
+            "setAIInputByType",
+            JSON.stringify({
+                type: "mention",
+                params
+            })
+        )
+    })
+
     return (
         <React.Fragment>
             {installPlug ? (
@@ -356,23 +373,9 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                                 const Icon = targetIcon(index)
                                 return (
                                     <div
-                                        className={classNames(styles["knowledge-base-info-card"], {
-                                            [styles["base-info-card-selected"]]: selectKnowledgeBases?.some(
-                                                (it) => it.id === items.ID
-                                            )
-                                        })}
+                                        className={classNames(styles["knowledge-base-info-card"])}
                                         key={items.ID}
-                                        onClick={() => {
-                                            const targetKnowledgeBase = selectKnowledgeBases?.some(
-                                                (it) => it.id === items.ID
-                                            )
-                                                ? selectKnowledgeBases?.filter((it) => it.id !== items.ID)
-                                                : selectKnowledgeBases?.concat({
-                                                      id: items.ID,
-                                                      name: items.KnowledgeBaseName
-                                                  })
-                                            setSelectKnowledgeBases(targetKnowledgeBase)
-                                        }}
+                                        onClick={() => onSelectItem(items)}
                                     >
                                         <div
                                             className={classNames({

@@ -1,4 +1,4 @@
-import React, {forwardRef, memo, Ref, RefAttributes, useImperativeHandle, useMemo, useRef} from "react"
+import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useMemo, useRef} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -9,12 +9,13 @@ import {v4 as uuidv4} from "uuid"
 
 import classNames from "classnames"
 import styles from "./template.module.scss"
-import {useGetStoreKey} from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
 import {AIMilkdownInput} from "../components/aiMilkdownInput/AIMilkdownInput"
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import {callCommand} from "@milkdown/kit/utils"
 import useAIChatDrop from "../aiChatWelcome/hooks/useAIChatDrop"
 import {aiMentionCommand, AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
+import emiter from "@/utils/eventBus/eventBus"
+import {AIAgentTriggerEventInfo} from "../aiAgentType"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -41,7 +42,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     forwardRef((props, ref) => {
         const {loading, extraFooterLeft, extraFooterRight, onSubmit, className, children} = props
 
-        const storeKey = useGetStoreKey()
         // icon的唯一id生成
         const iconId = useRef(uuidv4())
         // #region question-相关逻辑
@@ -65,6 +65,30 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             },
             []
         )
+        useEffect(() => {
+            if (inViewport) {
+                emiter.on("setAIInputByType", onSetAIInputByType)
+                return () => {
+                    emiter.off("setAIInputByType", onSetAIInputByType)
+                }
+            }
+        }, [inViewport])
+
+        const onSetAIInputByType = useMemoizedFn((res) => {
+            try {
+                const data: AIAgentTriggerEventInfo = JSON.parse(res)
+                const {type} = data
+                switch (type) {
+                    case "mention":
+                        const params = data.params as AIMentionCommandParams
+                        onSetMention(params)
+                        break
+
+                    default:
+                        break
+                }
+            } catch (error) {}
+        })
 
         const isQuestion = useMemo(() => {
             return !!(question && question.trim())

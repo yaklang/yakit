@@ -20,4 +20,10 @@ export type AIAgentEventProps = {
     onClosePageRepository?: string
     /** 文件系统-文件预览已打开 */
     filePreviewReady: string
+    /**
+     *@deprecated 设置ai输入框 {AIAgentTriggerEventInfo}
+     * @name type "mention"
+     * @name params {mention=>AIMentionCommandParams}传递的值
+     */
+    setAIInputByType?: string
 }
