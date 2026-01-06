@@ -60,7 +60,7 @@ describe("Vitest__Test__ component - loading behavior", () => {
         expect(spin).toHaveAttribute("data-spinning", "true")
 
         await waitFor(() => {
-            expect(spin).toHaveAttribute("data-spinning", "true")
+            expect(spin).toHaveAttribute("data-spinning", "false")
         })
     })
 })

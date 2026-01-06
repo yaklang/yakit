@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [test]
     paths:
-      - 'app/renderer/src/main/src/release/**'
+      - 'app/renderer/src/main/src/__tests__/**'
       - '.github/workflows/**'
 
 jobs:
