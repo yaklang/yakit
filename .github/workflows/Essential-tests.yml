@@ -70,8 +70,45 @@ jobs:
           echo "Show specific folder (if exists):"
           ls -la src/components/playground/Vitest__Test__ || true
 
+      - name: Determine relevant test files
+        id: test_selection
+        working-directory: app/renderer/src/main
+        shell: bash
+        run: |
+          # Get files changed in the PR
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          echo "Changed files:\n$CHANGED"
+
+          # Prefer explicitly changed test files
+          TEST_FILES=$(printf "%s\n" "$CHANGED" | grep -E 'src/.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
+          if [ -n "$TEST_FILES" ]; then
+            TF=$(echo "$TEST_FILES" | tr '\n' ' ')
+            echo "Found test files: $TF"
+            echo "tests=$TF" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Otherwise, map changed source dirs to test globs
+          DIRS=$(printf "%s\n" "$CHANGED" | grep -E '^src/' || true)
+          if [ -n "$DIRS" ]; then
+            PATTERNS=$(printf "%s\n" "$DIRS" | sed -E 's|/[^/]+$||' | sort -u | awk '{print $0"/**/*.test.* "$0"/**/*.spec.*"}' | tr '\n' ' ')
+            echo "Derived patterns: $PATTERNS"
+            echo "tests=$PATTERNS" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "No relevant tests found to run"
+          echo "tests=none" >> $GITHUB_OUTPUT
+
       - name: Run Vitest (renderer main)
         working-directory: app/renderer/src/main
         env:
           CI: true
-        run: yarn test:vitest -- --run --reporter verbose
+        run: |
+          TESTS="${{ steps.test_selection.outputs.tests }}"
+          if [ "$TESTS" = "none" ]; then
+            echo "No relevant tests changed, skipping vitest"
+            exit 0
+          fi
+          echo "Running tests: $TESTS"
+          yarn test:vitest -- $TESTS -- --run --reporter verbose
