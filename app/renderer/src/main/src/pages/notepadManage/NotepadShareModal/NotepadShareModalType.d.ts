@@ -21,3 +21,7 @@ export interface NotepadRoleProps {
 }
 
 export type NotepadPermissionType = NotepadRoleProps[keyof NotepadRoleProps]
+
+export interface UserListProps extends API.UserList {
+    avatarColor?: string
+}
