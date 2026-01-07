@@ -117,7 +117,6 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
             excludeSuffix: [],
             includeUri: [],
             excludeUri: [],
-            allowChunkStaticJS: false,
             excludeMethod: [],
             excludeContentTypes: []
         },
