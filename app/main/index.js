@@ -313,7 +313,7 @@ function registerGlobalIPC() {
 
     // ------------------- 软件退出逻辑 -------------------
     ipcMain.handle("app-exit", async (e, params) => {
-        const {showCloseMessageBox, isIRify} = params
+        const {showCloseMessageBox, isIRify, isMemfit} = params
         const parentWindow = getActiveWindow()
 
         const exitCleanupOperation = () => {
@@ -323,14 +323,15 @@ function registerGlobalIPC() {
             app.exit()
         }
         if (closeFlag && showCloseMessageBox && parentWindow) {
+            const showIcon = isIRify
+                ? "../renderer/src/main/src/assets/irify-close.png"
+                : isMemfit
+                ? "../renderer/src/main/src/assets/memfit-close.png"
+                : "../renderer/src/main/src/assets/yakit-close.png"
+
             dialog
                 .showMessageBox(parentWindow, {
-                    icon: nativeImage.createFromPath(
-                        path.join(
-                            __dirname,
-                            isIRify ? "../renderer/src/main/src/assets/yakitSS.png" : "../assets/yakitlogo.pic.jpg"
-                        )
-                    ),
+                    icon: nativeImage.createFromPath(path.join(__dirname, showIcon)),
                     type: "none",
                     title: "提示",
                     defaultId: 0,

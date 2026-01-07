@@ -120,6 +120,7 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                 <YakitPopover
                     content={
                         <div className={styles["popover-wrapper"]}>
+                            <span>风险阈值：</span>
                             <FormItemSlider
                                 value={selectAIReviewRiskControlScore}
                                 onChange={setAIReviewRiskControlScore}

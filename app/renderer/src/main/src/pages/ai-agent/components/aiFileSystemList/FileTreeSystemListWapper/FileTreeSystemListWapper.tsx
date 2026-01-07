@@ -29,7 +29,7 @@ export const opfileNotify = async ({uniquePaths, incoming, label, path}: OpFileN
             yakitNotify("info", `所选${label}${pathText}已存在于列表中，无需重复添加。`)
             return
         case PathIncludeResult.IncomingContains:
-            yakitNotify("info", `所选${label}${pathText}已包含已存在的路径，已为您自动优化。`)
+            yakitNotify("info", `所选${label}${pathText}已包含列表中部分路径，已为您自动优化。`)
             break
         case PathIncludeResult.Error:
             yakitNotify("error", `添加${label}${pathText}时发生错误，请重试。`)

@@ -21,7 +21,7 @@ import ChatIPCContent, {
 } from "../useContext/ChatIPCContent/ChatIPCContent"
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon} from "@/assets/icon/outline"
+import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon, RedoDotIcon} from "@/assets/icon/outline"
 import {
     AIChatIPCNotifyMessage,
     AIChatIPCStartParams,
@@ -781,9 +781,9 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                         <YakitPopconfirm
                             placement='top'
                             onConfirm={() => onStopTask(true)}
-                            title='是否确认跳过整个任务，确认将停止执行'
+                            title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
                         >
-                            <YakitButton type='outline2' icon={<OutlineExitIcon />}>
+                            <YakitButton type='outline2' icon={<RedoDotIcon />}>
                                 跳过子任务
                             </YakitButton>
                         </YakitPopconfirm>

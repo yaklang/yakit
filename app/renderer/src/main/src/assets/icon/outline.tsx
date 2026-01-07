@@ -6160,3 +6160,17 @@ const OutlineBookOpenText = () => (
 export const OutlineBookOpenTextIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineBookOpenText} {...props} />
 }
+
+const RedoDot = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M21 7V13M21 13H15M21 13L18 10.3C16.3511 8.82116 14.2149 8.00226 12 8C9.61305 8 7.32387 8.94821 5.63604 10.636C3.94821 12.3239 3 14.6131 3 17M13 17C13 17.5523 12.5523 18 12 18C11.4477 18 11 17.5523 11 17C11 16.4477 11.4477 16 12 16C12.5523 16 13 16.4477 13 17Z'
+            stroke='currentColor'
+            stroke-width='2'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+    </svg>
+)
+
+export const RedoDotIcon = (props: Partial<IconProps>) => <Icon component={RedoDot} {...props} />

@@ -12,7 +12,8 @@ import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineExitIcon,
-    OutlinePositionIcon
+    OutlinePositionIcon,
+    RedoDotIcon
 } from "@/assets/icon/outline"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -125,12 +126,12 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                                 {taskChat.plan.length > 0 && (
                                     <YakitPopconfirm
                                         onConfirm={() => onStopTask(true)}
-                                        title='是否确认跳过整个任务，确认将停止执行'
+                                        title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
                                         placement='top'
                                     >
                                         <YakitButton
                                             type='outline1'
-                                            icon={<OutlineExitIcon />}
+                                            icon={<RedoDotIcon />}
                                             className={styles["task-sub-button"]}
                                             radius='28px'
                                             size='large'

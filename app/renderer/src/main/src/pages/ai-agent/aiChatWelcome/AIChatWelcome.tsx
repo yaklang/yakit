@@ -560,7 +560,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
     return (
         <Tooltip
             title={
-                isAutoHidden
+                !isAutoHidden
                     ? "已开启固定菜单栏，点击icon则可关闭"
                     : "点击icon高亮后则开启固定菜单栏，菜单栏不会在失焦后自动关闭"
             }
