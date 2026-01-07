@@ -169,7 +169,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 FilterData: filter,
                 version: mitmVersion
             }
-            console.log("set mitm", value)
             grpcMITMSetFilter(value)
                 .then(() => {
                     emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
@@ -184,7 +183,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 FilterData: filter,
                 version: mitmVersion
             }
-            console.log("set hick", value)
             grpcMITMHijackSetFilter(value)
                 .then(() => {
                     // 是否配置过 劫持 过滤器
@@ -203,7 +201,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         if (filterType === "filter") {
             grpcMITMGetFilter()
                 .then((val: MITMFilterSchema) => {
-                    console.log("get mitm", val.FilterData)
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
                     setFilterData(newValue.advancedFilters)
@@ -214,7 +211,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         } else {
             grpcMITMHijackGetFilter()
                 .then((val: MITMFilterSchema) => {
-                    console.log("get hick", val.FilterData)
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
                     setFilterData(newValue.advancedFilters)
