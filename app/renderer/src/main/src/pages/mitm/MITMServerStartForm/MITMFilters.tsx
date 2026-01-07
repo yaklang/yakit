@@ -189,7 +189,7 @@ export interface MITMAdvancedFilter extends FilterDataItem {
 }
 
 export type MITMFilterArrayKey = {
-    [K in keyof MITMFilterData]: MITMFilterData[K] extends FilterDataItem[] ? K : never
+    [K in keyof MITMFilterData]-?: MITMFilterData[K] extends FilterDataItem[] ? K : never
 }[keyof MITMFilterData]
 
 export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
