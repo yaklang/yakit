@@ -98,6 +98,8 @@ export interface YakitEditorProps {
 
     // 查找关键字
     keepSearchName?: string
+    /** @name 隐私模式 */
+    privacy?: boolean
 }
 
 /**

@@ -100,7 +100,8 @@ import {
     OutlineSearchIcon,
     OutlineFilterIcon,
     OutlineSwitchhorizontalIcon,
-    OutlineCogIcon
+    OutlineCogIcon,
+    OutlineDotsverticalIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import { shallow } from "zustand/shallow"
@@ -171,6 +172,7 @@ import { PublicHTTPHistoryIcon } from "@/routes/publicIcon"
 import { useProxy } from "@/hook/useProxy"
 import { MITMConsts } from "../mitm/MITMConsts"
 import { RemoteGV } from "@/yakitGV"
+import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -802,6 +804,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
     const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
     const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+    
+    // first Node
+    const firstNodeRef = useRef(null)
+    const firstNodeSize = useSize(firstNodeRef)
     // second Node
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
@@ -824,6 +830,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const inViewportRef = useRef<boolean>(inViewport)
 
     const [hex, setHex] = useState<boolean>(false)
+    const [privacy, setPrivacy] = useState(false)
 
     const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
@@ -1787,6 +1794,34 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         onClick={() => onNextPage()}
                     />
                 </div>
+                {+(firstNodeSize?.width || 0) < 500 ? (
+                    <YakitPopover
+                        trigger={"click"}
+                        content={
+                            <>
+                                <div>
+                                    {t("YakitButton.privacy_mode")}&nbsp;
+                                     <YakitSwitch checked={privacy} onChange={setPrivacy} />
+                                </div>
+                                <div style={{display: "flex", justifyContent: "space-between"}}>
+                                    HEX
+                                    <YakitSwitch checked={hex} onChange={setHex} />
+                                </div>
+                            </>
+                        }
+                    >
+                        <OutlineDotsverticalIcon className={styles["resize-card-icon"]} />
+                    </YakitPopover>
+                ) : (
+                    <>
+                        <YakitCheckableTag checked={privacy} onChange={setPrivacy} style={{marginRight: 0}}>
+                            {t("YakitButton.privacy_mode")}
+                        </YakitCheckableTag>
+                        <YakitCheckableTag checked={hex} onChange={setHex} style={{marginRight: 0}}>
+                            HEX
+                        </YakitCheckableTag>
+                    </>
+                )}
                 <PacketScanButton
                     packetGetter={() => {
                         return {
@@ -1797,7 +1832,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 />
                 <YakitButton
                     size='small'
-                    type='primary'
+                    type='outline2'
                     onClick={async () => {
                         if (!requestRef.current) return
                         const beautifyValue = await prettifyPacketCode(requestRef.current)
@@ -1807,16 +1842,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 >
                     {t("YakitButton.beautify")}
                 </YakitButton>
-                <YakitCheckableTag checked={hex} onChange={setHex}>
-                    HEX
-                </YakitCheckableTag>
                 <YakitButton
                     size='small'
                     type='primary'
                     onClick={() => {
                         hotPatchTrigger()
                     }}
-                    style={{ marginLeft: -8 }}
+                    // style={{ marginLeft: -8 }}
                 >
                     {t("HTTPFuzzerPage.hotReload")}
                 </YakitButton>
@@ -2427,6 +2459,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         firstNodeStyle={{ padding: secondFull ? 0 : undefined, display: secondFull ? "none" : "" }}
                         {...ResizeBoxProps}
                         firstNode={
+                            <div ref={firstNodeRef} style={{ height: "100%", overflow: "hidden" }}>
                             <WebFuzzerNewEditor
                                 ref={webFuzzerNewEditorRef}
                                 refreshTrigger={refreshTrigger}
@@ -2448,7 +2481,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         }
                                         : undefined
                                 }
+                                privacy={privacy}
                             />
+                            </div>
                         }
                         secondNode={
                             <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
