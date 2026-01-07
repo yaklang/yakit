@@ -408,7 +408,7 @@ module.exports = {
         })
 
         let currentStartId = 0 // 全局启动任务标识
-        const asyncStartSecretLocalYakEngineServer = async (win, params, attempt = 1, maxRetry = 3) => {
+        const asyncStartSecretLocalYakEngineServer = async (win, params) => {
             const checkId = ++currentStartId
             const {version, port, password, isEnpriTraceAgent, softwareVersion} = params
 
@@ -447,7 +447,7 @@ module.exports = {
                     let pollIntervalId = null
                     const timeoutMs = 60000 // 增加到 60 秒，配合轮询检测
 
-                    /** 清理所有定时器和轮询 */
+                    /** 清理轮询 */
                     const cleanup = () => {
                         if (pollIntervalId) {
                             clearInterval(pollIntervalId)
@@ -456,18 +456,19 @@ module.exports = {
                     }
 
                     /** 成功回调，确保只触发一次 */
-                    const onSuccess = (message) => {
+                    const onSuccess = (msg1, msg2) => {
                         if (successDetected || killed) return
                         successDetected = true
                         cleanup()
                         clearTimeout(timeoutId)
-                        resolve({status: "success", message})
+                        engineLogOutputFileAndUI(win, msg2)
+                        resolve({status: "success", msg1})
                     }
 
                     /** 轮询检测引擎连接状态 */
                     const startConnectionPolling = () => {
                         engineLogOutputFileAndUI(win, `开始轮询检测引擎连接状态 (每 2 秒一次)...`)
-                        win.webContents.send("engine-waiting-startup", "正在等待引擎完全启动")
+                        win.webContents.send("startUp-engine-msg", "正在等待引擎完全启动")
 
                         pollIntervalId = setInterval(() => {
                             if (successDetected || killed || checkId !== currentStartId) {
@@ -490,8 +491,7 @@ module.exports = {
                                     }
 
                                     if (data && data["result"] === ECHO_TEST_MSG) {
-                                        engineLogOutputFileAndUI(win, `轮询检测到引擎连接成功 (Echo 测试通过)！`)
-                                        onSuccess("引擎启动成功（通过连接检测）")
+                                        onSuccess("引擎启动成功（通过连接检测）", `轮询检测到引擎连接成功 (Echo 测试通过)！`)
                                     }
                                 })
                             } catch (e) {
@@ -537,13 +537,12 @@ module.exports = {
                         if (match) {
                             // 数据库正在初始化中...
                             engineLogOutputFileAndUI(win, `----- 数据库正在初始化中... -----`)
-                            win.webContents.send("db-init-ing", "数据库正在初始化中...")
+                            win.webContents.send("startUp-engine-msg", "数据库正在初始化中...")
                         }
 
                         // 保留原有的 yak grpc ok 检测方式
                         if (/yak grpc ok/i.test(output)) {
-                            engineLogOutputFileAndUI(win, `检测到 'yak grpc ok'，引擎启动成功！`)
-                            onSuccess("引擎启动成功（通过 yak grpc ok 检测）")
+                            onSuccess("引擎启动成功（通过 yak grpc ok 检测）", `检测到 'yak grpc ok'，引擎启动成功！`)
                         }
                     })
 
@@ -586,17 +585,6 @@ module.exports = {
                     reject({status: "exception", message: e.message || String(e)})
                 }
             }).catch(async (err) => {
-                // 超时或异常重试
-                // if (attempt < maxRetry && (err.status === "timeout" || err.status === "exit")) {
-                //     const nextAttempt = attempt + 1
-                //     engineLogOutputFileAndUI(
-                //         win,
-                //         `----- 启动失败 (${err.status})，将在 1 秒后重试 (${nextAttempt}/${maxRetry}) -----`
-                //     )
-                //     await new Promise((r) => setTimeout(r, 1000))
-                //     return asyncStartSecretLocalYakEngineServer(win, params, nextAttempt, maxRetry)
-                // }
-
                 return Promise.reject({ok: false, ...err})
             })
         }

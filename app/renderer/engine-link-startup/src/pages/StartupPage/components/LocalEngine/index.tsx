@@ -317,11 +317,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 监听数据库初始化中
         useEffect(() => {
-            ipcRenderer.on("db-init-ing", (_, str: string) => {
+            ipcRenderer.on("startUp-engine-msg", (_, str: string) => {
                 setLog([str])
             })
             return () => {
-                ipcRenderer.removeAllListeners("db-init-ing")
+                ipcRenderer.removeAllListeners("startUp-engine-msg")
             }
         }, [])
 
