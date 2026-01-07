@@ -80,6 +80,8 @@ export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadRe
  */
 export const apiSaveNotepad: APIFunc<API.PostNotepadRequest, string> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
+        console.log("保存/新建云文档 params---", params);
+        
         NetWorkApi<API.PostNotepadRequest, string>({
             method: "post",
             url: "notepad",
@@ -111,7 +113,11 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
                 hash
             }
         })
-            .then(resolve)
+            .then((res) => {
+                console.log("apiGetNotepadDetail res---", res);
+                
+                resolve(res)
+            })
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "获取云文档详情失败:" + err)
                 reject(err)

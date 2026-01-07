@@ -30,6 +30,8 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
     useEffect(() => {
         let errorReason = ""
         ipcRenderer.on(`oss-split-upload-${taskToken}-data`, async (e, resData) => {
+            console.log("oss-split-upload-data---", resData);
+            
             const {progress, res} = resData
             const p = Math.trunc(progress)
             onUploadData(p)
@@ -76,6 +78,8 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
                 type,
                 token: taskToken
             }
+            console.log("onStart---", params);
+            
             ipcRenderer.invoke("oss-split-upload", params)
         }
     }

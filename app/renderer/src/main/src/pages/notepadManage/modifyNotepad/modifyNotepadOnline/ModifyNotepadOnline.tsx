@@ -221,6 +221,8 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
             }
             onBaseNotepadDown(downParams)
                 .then((res) => {
+                    console.log("onBaseNotepadDown res---", res);
+
                     const m = showYakitModal({
                         hiddenHeader: true,
                         footer: <></>,
@@ -258,6 +260,8 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
     //#region 保存最新的文档内容
     useEffect(() => {
         if (!inViewport) {
+            console.log("保存最新的文档内容---");
+            
             notepadContentRef.current = editor?.action(getMarkdown()) || ""
             onSaveNewContent(notepadContentRef.current)
         }

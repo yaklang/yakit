@@ -187,6 +187,8 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     setFileInfo(item)
                 })
                 .catch((e) => {
+                    console.log("getFileInfoByLink Error---", e, fileId);
+
                     setTimeout(() => {
                         setQueryFileErrorInfo(`${e}`)
                     }, 500)
@@ -227,6 +229,8 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
         const {fileId} = attrs
         apiDownloadStorageType(fileId).then((filePath) => {
             saveDialogAndGetLocalFileInfo(filePath).then((v) => {
+                console.log("down-file-info---",filePath, v);
+                
                 setDownFileInfo(v)
                 setFileInfo({...fileInfo, path: v.path})
             })

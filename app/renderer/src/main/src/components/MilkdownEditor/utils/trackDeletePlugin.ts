@@ -12,8 +12,13 @@ export const getFileNameByUrl = (url) => {
     if (!name || !path) {
         return ""
     }
+    console.log("getFileNameByUrl---",url,name,path);
+    
     const fileName = `${path}/${name}`
-    return fileName
+    // 此处后端已处理，后续简化此逻辑
+    // return fileName
+    return url
+    
 }
 const findOSSResource = (node, schema) => {
     const deletedFileNames: DeleteOSSFileItem[] = []
@@ -75,6 +80,8 @@ export const trackDeletePlugin = () =>
                                         // 批量选中删除
                                         const oldSlice = oldState.doc.slice(from, to)
                                         const deleteDoc = oldSlice.content
+                                        console.log("批量删除---",deleteDoc);
+                                        
                                         const urls = findOSSResource(deleteDoc, oldState.schema) || []
                                         deletedFileUrls = [...deletedFileUrls, ...urls]
                                     }

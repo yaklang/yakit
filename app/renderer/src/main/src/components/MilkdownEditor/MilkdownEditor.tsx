@@ -186,6 +186,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
 
     /**删除文档中被删除的所有文件 */
     const onDeleteAllFiles = useMemoizedFn(() => {
+        console.log("deletedFiles---",deletedFiles);
+        
         if (deletedFiles.length > 0) {
             httpDeleteNotepadFile({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
         }
