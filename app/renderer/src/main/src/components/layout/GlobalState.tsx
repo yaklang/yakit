@@ -16,10 +16,9 @@ import {
     RocketIcon
 } from "./globalStateIcon"
 import {showConfigSystemProxyForm, showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
-import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {Tooltip, Row, Col, Spin} from "antd"
+import {Tooltip, Row, Col} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
@@ -55,7 +54,7 @@ const ShowIcon: Record<string, ReactNode> = {
     warning: <ExclamationIcon className={styles["icon-style"]} />,
     success: <RocketIcon className={styles["icon-style"]} />,
     help: <OutlineShieldcheckIcon className={styles["icon-style"]} />,
-    loading: <LoadingOutlined className={styles["icon-style"]} spin />
+    loading: <LoadingOutlined className={styles["icon-style"]} style={{color: "var(--Colors-Use-Main-Primary)"}} />
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {
