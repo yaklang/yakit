@@ -25,13 +25,6 @@ import styles from "./SinglePluginExecution.module.scss"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
-type PluginTabKeys = "plugin"
-interface PluginTabsItem {
-    key: PluginTabKeys
-    label: ReactElement | string
-    contShow: boolean
-}
-
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
     if (allCheck === false && selectList.length === 0) {
@@ -51,7 +44,7 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?:
 }
 const SinglePluginExecutionTab: YakitTabsProps[] = [
     {
-        label: "插件1",
+        label: "插件",
         value: "plugin"
     }
 ]
