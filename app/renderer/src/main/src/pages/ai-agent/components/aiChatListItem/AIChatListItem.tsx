@@ -8,7 +8,7 @@ import {AITriageChatContent} from "../aiTriageChat/AITriageChat"
 import ToolInvokerCard from "../ToolInvokerCard"
 import styles from "./AIChatListItem.module.scss"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
-import DividerCard, {StreamsStatus} from "../DividerCard"
+import DividerCard from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
@@ -19,6 +19,7 @@ import {has, isArray} from "lodash"
 import {HandleStartParams} from "../../aiAgentChat/type"
 import {FileToChatQuestionList} from "@/pages/ai-re-act/aiReActChat/store"
 import {AIChatMentionSelectItem} from "../aiChatMention/type"
+import {AITaskStatus} from "@/pages/ai-re-act/hooks/grpcApi"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -145,7 +146,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
                 const task = getTask(data.taskIndex)
                 const dividerCardProps = {
-                    status: task?.progress as StreamsStatus,
+                    status: task?.progress as AITaskStatus,
                     desc: task?.goal,
                     name: task?.name,
                     success: 0,
@@ -159,7 +160,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
                 return (
                     <DividerCard
-                        status={StreamsStatus.cancel}
+                        status={AITaskStatus.cancel}
                         name='任务结束标志'
                         desc='当前任务已经结束，下面为新的任务数据'
                         success={0}

@@ -20,7 +20,7 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent, AITaskStatus} from "./grpcApi"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,
@@ -650,8 +650,8 @@ function useTaskChat(params?: UseTaskChatParams) {
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
-                if (item.progress === "processing") {
-                    item.progress = "aborted"
+                if (item.progress === AITaskStatus.inProgress) {
+                    item.progress = AITaskStatus.error
                 }
                 return item
             })
@@ -770,7 +770,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     // 开始任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
                     handleTaskStartNode(res, data)
-                    handleUpdateTaskState(data.task.index, "processing")
+                    handleUpdateTaskState(data.task.index, AITaskStatus.inProgress)
                     return
                 }
                 if (obj.type && obj.type === "pop_task") {

@@ -216,6 +216,16 @@ export interface AIOutputEvent {
 }
 // #endregion
 
+/** 任务状态枚举 */
+export enum AITaskStatus {
+    success = "completed",
+    inProgress = "processing",
+    error = "aborted",
+    cancel = "cancel",
+    skipped = "skipped",
+    created = ""
+}
+
 export declare namespace AIAgentGrpcApi {
     /** 上传/下载 Token 量 */
     export interface Consumption {
@@ -303,11 +313,7 @@ export declare namespace AIAgentGrpcApi {
         name: string
         /** 正文 */
         goal: string
-        /**
-         * 后端发送的任务状态
-         * progress: "processing" | "completed" | "aborted" | "skipped"
-         */
-        progress?: string
+        progress?: AITaskStatus
         subtasks?: AITaskInfoProps[]
         /**评阅时树节点是否被删 */
         isRemove: boolean
@@ -497,19 +503,10 @@ export declare namespace AIAgentGrpcApi {
         /** 移除队列的原因 */
         reason?: string
     }
-    /**
-     * 问题队列里单个问题信息
-     * @description status的可能值有:
-     * - AITaskState_Created created
-     * - AITaskState_Queueing queueing
-     * - AITaskState_Processing processing
-     * - AITaskState_Completed completed
-     * - AITaskState_Aborted aborted
-     */
     export interface QuestionQueueItem {
         created_at: string
         id: string
-        status: string
+        status: AITaskStatus
         user_input: string
     }
     /** 问题队列信息 */
