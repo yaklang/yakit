@@ -36,6 +36,7 @@ import {SizeType} from "antd/lib/config-provider/SizeContext"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
 import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {RegexTester} from "./RegexTester"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -785,7 +786,6 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
     const onGetRule = useMemoizedFn((val: string) => {
         setRule(val)
         getRule(val)
-        setRuleVisible(false)
     })
 
     return (
@@ -818,7 +818,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 closable={true}
                 bodyStyle={{padding: 0}}
             >
-                <ExtractRegular onSave={(v) => onGetRule(v)} defaultCode={defaultCode} />
+                <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode}/>
             </YakitModal>
         </>
     )

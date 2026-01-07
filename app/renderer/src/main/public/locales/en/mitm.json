@@ -174,5 +174,9 @@
     "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?",
     "downstream_agent": "Downstream Agent",
     "select_disabled_tip":"The selected proxy has been disabled. We recommend using a different, available proxy."
+  },
+  "RegexTester": {
+    "test_content": "Test Content",
+    "matching_results": "Matching Results"
   }
 }
