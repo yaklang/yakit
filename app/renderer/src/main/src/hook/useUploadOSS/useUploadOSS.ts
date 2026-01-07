@@ -1,8 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {useEffect} from "react"
 import {UploadImgType, UploadFileType} from "./constants"
-import { useMemoizedFn } from "ahooks"
-import { apiDownloadStorageType } from "@/pages/notepadManage/notepadManage/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,12 +27,6 @@ export interface UploadOSSStartProps {
 export default function useUploadOSSHooks(props: useUploadOSSHooks) {
     const {taskToken, setUrl, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
 
-    const onSetUrl = useMemoizedFn(async(url: string) => {
-        apiDownloadStorageType(url).then((filePath) => {
-            setUrl(filePath)
-        })
-    })
-
     useEffect(() => {
         let errorReason = ""
         ipcRenderer.on(`oss-split-upload-${taskToken}-data`, async (e, resData) => {
@@ -43,7 +35,7 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
             onUploadData(p)
             if (res?.code === 200 && typeof res?.data?.from === "string") {
                 const url = res?.data?.from || ""
-                onSetUrl(url)
+                setUrl(url)
             }
         })
         ipcRenderer.on(`oss-split-upload-${taskToken}-error`, async (e, error) => {
