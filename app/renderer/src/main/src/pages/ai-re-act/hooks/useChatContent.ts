@@ -1,30 +1,18 @@
 import {useRef} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import {
     genBaseAIChatData,
+    genErrorLogData,
     handleGrpcDataPushLog,
     isToolExecStream,
     isToolStderrStream,
     isToolStdoutStream
 } from "./utils"
-import {AIChatLogToInfo, UseChatContentEvents, UseChatContentParams} from "./type"
+import {UseChatContentEvents, UseChatContentParams} from "./type"
 import {convertNodeIdToVerbose, DefaultAIToolResult, DefaultToolResultSummary} from "./defaultConstant"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ToolStreamSelectors} from "./aiRender"
-import cloneDeep from "lodash/cloneDeep"
-
-/** 生成错误日志对象信息 */
-const genErrorLog = (
-    Timestamp: AIChatLogToInfo["Timestamp"],
-    message: AIChatLogToInfo["data"]["message"]
-): AIChatLogToInfo => {
-    return {
-        type: "log",
-        Timestamp,
-        data: {level: "error", message: message}
-    }
-}
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
 
@@ -39,7 +27,7 @@ function useChatContent(params: UseChatContentParams) {
         if (target >= 0) {
             setElements((old) => {
                 const newArr = [...old]
-                newArr[target].renderNum + 1
+                newArr[target].renderNum += 1
                 return newArr
             })
         } else {
@@ -102,7 +90,7 @@ function useChatContent(params: UseChatContentParams) {
             const {event_writer_id} = JSON.parse(ipcContent) as {event_writer_id: string}
             // event_writer_id为空
             if (!event_writer_id) {
-                pushLog(genErrorLog(res.Timestamp, `stream_start数据(NodeId: ${NodeId}), event_writer_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `stream_start数据(NodeId: ${NodeId}), event_writer_id 为空`))
                 return
             }
 
@@ -127,7 +115,7 @@ function useChatContent(params: UseChatContentParams) {
             // 数据已存在，流数据输出顺序不对, 视为异常
             if (!!streamData) {
                 pushLog(
-                    genErrorLog(
+                    genErrorLogData(
                         res.Timestamp,
                         `异常 stream_start 类型, NodeId: ${NodeId}, eventuuid: (${event_writer_id}), 已存在对应的数据`
                     )
@@ -197,7 +185,9 @@ function useChatContent(params: UseChatContentParams) {
 
             // 数据不存在
             if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
-                pushLog(genErrorLog(res.Timestamp, `异常 stream 类型, NodeId: ${NodeId}, eventuuid: (${EventUUID})`))
+                pushLog(
+                    genErrorLogData(res.Timestamp, `异常 stream 类型, NodeId: ${NodeId}, eventuuid: (${EventUUID})`)
+                )
                 return
             }
 
@@ -254,7 +244,7 @@ function useChatContent(params: UseChatContentParams) {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
             const {event_writer_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
             if (!event_writer_id) {
-                pushLog(genErrorLog(res.Timestamp, `stream-finished数据, event_writer_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `stream-finished数据, event_writer_id 为空`))
                 return
             }
 
@@ -320,7 +310,7 @@ function useChatContent(params: UseChatContentParams) {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const {call_tool_id, tool} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
             if (!call_tool_id) {
-                pushLog(genErrorLog(res.Timestamp, `tool_call_start数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `tool_call_start数据, call_tool_id 为空`))
                 return
             }
 
@@ -352,7 +342,7 @@ function useChatContent(params: UseChatContentParams) {
 
             if (!call_tool_id || !id || !selectors || !selectors?.length) {
                 pushLog(
-                    genErrorLog(
+                    genErrorLogData(
                         res.Timestamp,
                         `tool_call_watcher数据, call_tool_id: ${call_tool_id || "为空"} | id: ${id || "为空"}`
                     )
@@ -374,7 +364,7 @@ function useChatContent(params: UseChatContentParams) {
 
                 if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
                     pushLog(
-                        genErrorLog(
+                        genErrorLogData(
                             res.Timestamp,
                             `tool_call_watcher数据中, 对应的stream数据不存在(call_tool_id:${call_tool_id})`
                         )
@@ -410,14 +400,14 @@ function useChatContent(params: UseChatContentParams) {
             const {call_tool_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
             if (!call_tool_id) {
-                pushLog(genErrorLog(res.Timestamp, `tool_call(user_cancel/done/error)数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `tool_call(user_cancel/done/error)数据, call_tool_id 为空`))
                 return
             }
 
             const toolResult = getContentMap(call_tool_id)
             if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
                 pushLog(
-                    genErrorLog(
+                    genErrorLogData(
                         res.Timestamp,
                         `tool_call(user_cancel/done/error)数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
                     )
@@ -479,14 +469,14 @@ function useChatContent(params: UseChatContentParams) {
             const {call_tool_id, summary} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
             if (!call_tool_id) {
-                pushLog(genErrorLog(res.Timestamp, `tool_call_summary数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `tool_call_summary数据, call_tool_id 为空`))
                 return
             }
 
             const toolResult = getContentMap(call_tool_id)
             if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
                 pushLog(
-                    genErrorLog(
+                    genErrorLogData(
                         res.Timestamp,
                         `tool_call_summary数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
                     )
@@ -731,7 +721,11 @@ function useChatContent(params: UseChatContentParams) {
         streamToToolResultError.current.clear()
     })
 
-    return {handleSetData, handleResetData}
+    const events: UseChatContentEvents = useCreation(() => {
+        return {handleSetData, handleResetData}
+    }, [])
+
+    return events
 }
 
 export default useChatContent

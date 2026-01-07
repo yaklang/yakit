@@ -32,7 +32,6 @@ export interface AIStreamOutput extends AIOutputBaseInfo {
     content: string
     ContentType: AIOutputEvent["ContentType"]
     selectors?: ToolStreamSelectors
-    reference?: AIAgentGrpcApi.ReferenceMaterialPayload[]
 }
 
 /** 工具结果的信息内容 */
@@ -41,6 +40,8 @@ export interface AIToolResult {
     callToolId: string
     /**工具名称 */
     toolName: string
+    /** 工具介绍 */
+    toolDescription: string
     /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
     status: "default" | "success" | "failed" | "user_cancelled"
     /**执行完后的总结 */
@@ -101,7 +102,7 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
 }
 
 /** 任务规划-执行崩溃后的错误信息展示 */
-export interface FailPlanAndExecutionError {
+export interface FailTaskChatError {
     NodeId: AIOutputEvent["NodeId"]
     NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
     content: string
@@ -148,8 +149,19 @@ export enum AIChatQSDataTypeEnum {
     /** ReAct任务崩溃的错误信息 */
     FAIL_REACT = "fail_react_task",
     /** 工具结果 */
-    TOOL_CALL_RESULT = "tool_call_result"
+    TOOL_CALL_RESULT = "tool_call_result",
+    /** 参考资料 */
+    Reference_Material = "reference_material"
 }
+
+/** 控制UI渲染的数据数组元素 */
+export interface ReActChatElement {
+    token: string
+    type: AIChatQSDataTypeEnum
+    /** 触发渲染的次数, 无实际逻辑意义 */
+    renderNum: number
+}
+
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
     type: T
@@ -160,6 +172,8 @@ interface AIChatQSDataBase<T extends string, U> {
     Timestamp: AIOutputEvent["Timestamp"]
     /** 前端专属数据，供前端逻辑和UI处理使用 */
     extraValue?: AIChatIPCStartParams["extraValue"]
+    /** 参考资料 */
+    reference?: AIAgentGrpcApi.ReferenceMaterialPayload[]
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, {qs: string; setting: AIInputEvent}>
@@ -181,11 +195,12 @@ type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_
 type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
-type ChatFailPlanAndExecution = AIChatQSDataBase<
-    AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
-    FailPlanAndExecutionError
->
+type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
 type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
+type ChatReferenceMaterial = AIChatQSDataBase<
+    AIChatQSDataTypeEnum.Reference_Material,
+    {NodeId: AIOutputEvent["NodeId"]; NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]}
+>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -205,4 +220,5 @@ export type AIChatQSData =
     | ChatFailPlanAndExecution
     | ChatFailReact
     | ChatToolCallResult
+    | ChatReferenceMaterial
 // #endregion

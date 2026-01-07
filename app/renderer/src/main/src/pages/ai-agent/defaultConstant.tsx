@@ -236,7 +236,8 @@ export const defaultChatIPCData: UseChatIPCState = {
         totalCost: []
     },
     casualChat: {
-        contents: []
+        elements: [],
+        contents: {current: new Map()}
     },
     yakExecResult: {
         card: [],
@@ -245,7 +246,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     },
     taskChat: {
         plan: [],
-        streams: []
+        elements: [],
+        contents: {current: new Map()}
     },
     grpcFolders: [],
     questionQueue: {
