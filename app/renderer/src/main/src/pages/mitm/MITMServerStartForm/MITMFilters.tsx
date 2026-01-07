@@ -134,14 +134,16 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={"过滤 JS"} help={"开启后过滤打包/构建产物的静态 JS"}>
-                    <YakitSwitch
-                        checked={!!params?.filterBundledStaticJS}
-                        onChange={(checked) => {
-                            setParams({...params, filterBundledStaticJS: checked})
-                        }}
-                    ></YakitSwitch>
-                </Form.Item>
+                {props.filterType === "filter" && (
+                    <Form.Item label={"过滤 JS"} help={"开启后过滤打包/构建产物的静态 JS"}>
+                        <YakitSwitch
+                            checked={!!params?.filterBundledStaticJS}
+                            onChange={(checked) => {
+                                setParams({...params, filterBundledStaticJS: checked})
+                            }}
+                        ></YakitSwitch>
+                    </Form.Item>
+                )}
                 <Form.Item label={"排除 HTTP 方法"}>
                     <YakitSelect
                         mode='tags'

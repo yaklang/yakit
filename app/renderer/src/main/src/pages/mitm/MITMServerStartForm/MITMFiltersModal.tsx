@@ -66,7 +66,13 @@ export const getAdvancedFlag = (advancedFilters: MITMAdvancedFilter[]): boolean 
 // 是否配置过条件劫持
 export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilters: MITMAdvancedFilter[]): boolean => {
     return (
-        !!Object.keys(baseFilter).filter((key) => baseFilter[key].length > 0).length ||
+        !!Object.keys(baseFilter).filter((key) => {
+            if (key === "filterBundledStaticJS") {
+                return false
+            } else {
+                return baseFilter[key].length > 0
+            }
+        }).length ||
         !!advancedFilters.filter((ele) =>
             ["ExcludeHostnames", "IncludeHostnames", "ExcludeUri", "IncludeUri", "ExcludeMethods"].includes(
                 ele.Field || ""
@@ -163,7 +169,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 FilterData: filter,
                 version: mitmVersion
             }
-            console.log('set mitm', value);
+            console.log("set mitm", value)
             grpcMITMSetFilter(value)
                 .then(() => {
                     emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
@@ -178,7 +184,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 FilterData: filter,
                 version: mitmVersion
             }
-            console.log('set hick', value);
+            console.log("set hick", value)
             grpcMITMHijackSetFilter(value)
                 .then(() => {
                     // 是否配置过 劫持 过滤器
@@ -197,7 +203,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         if (filterType === "filter") {
             grpcMITMGetFilter()
                 .then((val: MITMFilterSchema) => {
-                    console.log('get mitm', val.FilterData);
+                    console.log("get mitm", val.FilterData)
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
                     setFilterData(newValue.advancedFilters)
@@ -208,7 +214,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         } else {
             grpcMITMHijackGetFilter()
                 .then((val: MITMFilterSchema) => {
-                    console.log('get hick', val.FilterData);
+                    console.log("get hick", val.FilterData)
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
                     setFilterData(newValue.advancedFilters)
