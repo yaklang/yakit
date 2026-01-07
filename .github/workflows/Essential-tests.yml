@@ -6,7 +6,7 @@ concurrency:
 
 on:
   pull_request:
-    branches: [test]
+    branches: [master]
     paths:
       - 'app/renderer/src/main/src/__tests__/**'
       - '.github/workflows/**'
