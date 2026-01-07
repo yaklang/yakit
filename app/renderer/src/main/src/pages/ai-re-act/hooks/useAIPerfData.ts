@@ -1,4 +1,3 @@
-import {useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
@@ -6,6 +5,7 @@ import {AIChatLogData, UseAIPerfDataEvents, UseAIPerfDataParams, UseAIPerfDataSt
 import {handleGrpcDataPushLog} from "./utils"
 import {AITokenConsumption} from "./aiRender"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
+import useThrottleState from "@/hook/useThrottleState"
 
 // 属于该 hook 处理数据的类型
 export const UseAIPerfDataTypes = ["consumption", "pressure", "ai_first_byte_cost_ms", "ai_total_cost_ms"]
@@ -21,10 +21,10 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
     })
 
     // 因为可能存在多个 ai 并发输出，所以这里的 token 量是一个集合
-    const [consumption, setConsumption] = useState<AITokenConsumption>({})
-    const [pressure, setPressure] = useState<AIAgentGrpcApi.Pressure[]>([])
-    const [firstCost, setFirstCost] = useState<AIAgentGrpcApi.AICostMS[]>([])
-    const [totalCost, setTotalCost] = useState<AIAgentGrpcApi.AICostMS[]>([])
+    const [consumption, setConsumption] = useThrottleState<AITokenConsumption>({}, {wait: 333})
+    const [pressure, setPressure] = useThrottleState<AIAgentGrpcApi.Pressure[]>([], {wait: 333})
+    const [firstCost, setFirstCost] = useThrottleState<AIAgentGrpcApi.AICostMS[]>([], {wait: 333})
+    const [totalCost, setTotalCost] = useThrottleState<AIAgentGrpcApi.AICostMS[]>([], {wait: 333})
 
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {

@@ -60,13 +60,14 @@ export default createContext<ChatIPCContextValue>({
     dispatcher: {
         chatIPCEvents: {
             fetchToken: () => "",
-            fetchReactTaskToAsync: () => "",
-            clearReactTaskToAsync: () => {},
+            fetchTaskChatID: () => "",
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},
             onReset: () => {},
-            handleTaskReviewRelease: () => {}
+            handleTaskReviewRelease: () => {},
+            getCasualMap: () => undefined,
+            getTaskMap: () => undefined
         },
         handleSendCasual: () => {},
         handleSendTask: () => {},

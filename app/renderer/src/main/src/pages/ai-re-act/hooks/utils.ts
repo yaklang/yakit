@@ -8,7 +8,7 @@ import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AITaskInfoProps} from "./aiRender"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
-import {AIChatLogData} from "./type"
+import {AIChatLogData, AIChatLogToInfo} from "./type"
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -17,6 +17,18 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
         AIService: info.AIService,
         AIModelName: info.AIModelName,
         Timestamp: info.Timestamp
+    }
+}
+
+/** 生成一个异常日志数据的对象 */
+export const genErrorLogData = (
+    Timestamp: AIChatLogToInfo["Timestamp"],
+    message: AIChatLogToInfo["data"]["message"]
+): AIChatLogToInfo => {
+    return {
+        type: "log",
+        Timestamp,
+        data: {level: "error", message: message}
     }
 }
 
@@ -76,21 +88,23 @@ export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGr
     }
 }
 
-/** 判断接口请求参数里，是否自动继续执行 review 操作 */
-export const isAutoContinueReview = (getFunc?: () => AIAgentSetting | undefined) => {
+/** 是否自动执行review的continue操作 */
+export const isAutoExecuteReviewContinue = (params: {type?: string; getFunc?: () => AIAgentSetting | undefined}) => {
     try {
-        if (getFunc) {
-            const request = getFunc()
-            return request ? request.ReviewPolicy === "yolo" : false
+        const {type, getFunc} = params
+        if (!!type && ["require_user_interactive"].includes(type)) {
+            // AI交互review不自动执行
+            return false
+        } else {
+            if (getFunc) {
+                const request = getFunc()
+                return request ? request.ReviewPolicy === "yolo" : false
+            }
+            return false
         }
-        return false
     } catch (error) {
         return false
     }
-}
-/** 不跳过 review 的数据类型 */
-export const noSkipReviewTypes = (type: string) => {
-    return ["require_user_interactive"].includes(type)
 }
 
 /** 判断是否为tool_xxx_stdout类型数据 */

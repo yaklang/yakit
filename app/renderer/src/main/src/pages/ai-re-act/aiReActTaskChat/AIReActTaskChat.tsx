@@ -81,7 +81,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         setScrollToBottom((v) => !v)
     })
     const getTaskId = useMemoizedFn(() => {
-        return chatIPCEvents.fetchReactTaskToAsync()
+        return chatIPCEvents.fetchTaskChatID()
     })
     /**取消当前指定任务 */
     const onStopTask = useMemoizedFn(() => {
@@ -91,7 +91,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
             SyncJsonInput: JSON.stringify({task_id: taskId})
         })
-        chatIPCEvents.clearReactTaskToAsync()
         if (!!reviewInfo) {
             chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
         }
