@@ -41,8 +41,8 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
     Object.entries(baseFilter).forEach(([key, value]) => {
         const field: keyof MITMFilterData = getMITMField(key)
         if (typeof value === "boolean") {
-            if (field === "AllowChunkStaticJS") {
-                data.AllowChunkStaticJS = value
+            if (field === "FilterBundledStaticJS") {
+                data.FilterBundledStaticJS = value
             }
             return
         }
@@ -117,6 +117,7 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
             excludeSuffix: [],
             includeUri: [],
             excludeUri: [],
+            filterBundledStaticJS: true,
             excludeMethod: [],
             excludeContentTypes: []
         },
@@ -125,8 +126,8 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
     if (!FilterData) return data
     let advancedFilters: MITMAdvancedFilter[] = []
     Object.entries(FilterData || {}).forEach(([key, value]) => {
-        if (key === "AllowChunkStaticJS" && typeof value === "boolean") {
-            data.baseFilter.allowChunkStaticJS = value
+        if (key === "FilterBundledStaticJS" && typeof value === "boolean") {
+            data.baseFilter.filterBundledStaticJS = value
             return
         }
         if (key === "_AllowChunkStaticJS") return

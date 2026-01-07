@@ -38,7 +38,7 @@ export interface MITMFilterSchema {
     excludeHostname?: string[]
     includeSuffix?: string[]
     excludeSuffix?: string[]
-    allowChunkStaticJS?: boolean
+    filterBundledStaticJS?: boolean
     excludeMethod?: string[]
     excludeContentTypes?: string[]
     excludeUri?: string[]
@@ -134,16 +134,14 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                {props.filterType === "filter" && (
-                    <Form.Item label={"过滤 JS"} help={"开启后过滤 chunk/static JS；关闭后允许抓取 chunk/static JS"}>
-                        <YakitSwitch
-                            checked={!params?.allowChunkStaticJS}
-                            onChange={(checked) => {
-                                setParams({...params, allowChunkStaticJS: !checked})
-                            }}
-                        ></YakitSwitch>
-                    </Form.Item>
-                )}
+                <Form.Item label={"过滤 JS"} help={"开启后过滤打包/构建产物的静态 JS"}>
+                    <YakitSwitch
+                        checked={!!params?.filterBundledStaticJS}
+                        onChange={(checked) => {
+                            setParams({...params, filterBundledStaticJS: checked})
+                        }}
+                    ></YakitSwitch>
+                </Form.Item>
                 <Form.Item label={"排除 HTTP 方法"}>
                     <YakitSelect
                         mode='tags'
@@ -185,7 +183,7 @@ export interface MITMFilterData {
 
     ExcludeMIME: FilterDataItem[]
 
-    AllowChunkStaticJS?: boolean
+    FilterBundledStaticJS?: boolean
 }
 
 export interface MITMAdvancedFilter extends FilterDataItem {
