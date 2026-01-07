@@ -6,7 +6,7 @@ concurrency:
 
 on:
   pull_request:
-    branches: [test]
+    branches: [master]
     paths:
       - 'app/renderer/src/main/src/__tests__/**'
       - '.github/workflows/**'
@@ -53,12 +53,12 @@ jobs:
       #       ${{ runner.os }}-node-modules-
 
       - name: Install dependencies (renderer main)
-        if: steps.node-mod-cache.outputs.cache-hit != 'true'
+        # if: steps.node-mod-cache.outputs.cache-hit != 'true'
         working-directory: app/renderer/src/main
         run: yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
 
       - name: Skip install (node_modules cache hit)
-        if: steps.node-mod-cache.outputs.cache-hit == 'true'
+        # if: steps.node-mod-cache.outputs.cache-hit == 'true'
         run: echo "node_modules cache restored; skipping yarn install"
 
       - name: Verify installed packages (quick)
