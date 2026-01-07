@@ -3,7 +3,7 @@ import {Ctx} from "@milkdown/kit/ctx"
 import {slashFactory, SlashProvider} from "@milkdown/kit/plugin/slash"
 import {useInstance} from "@milkdown/react"
 import {useNodeViewContext, usePluginViewContext} from "@prosemirror-adapter/react"
-import {useClickAway, useDebounceEffect, useKeyPress, useMemoizedFn} from "ahooks"
+import {useClickAway, useCreation, useDebounceEffect, useKeyPress, useMemoizedFn} from "ahooks"
 import {InputRef} from "antd"
 import styles from "./AIMilkdownMention.module.scss"
 import {iconMap} from "@/pages/ai-agent/defaultConstant"
@@ -91,6 +91,9 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
 interface AICustomMentionProps {}
 export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
     const {node, selected, view, contentRef} = useNodeViewContext()
+    const readonly = useCreation(() => {
+        return !view.editable
+    }, [view.editable])
     const onRemove = useMemoizedFn(() => {
         const {state, dispatch} = view
         const {from, to} = state.selection
@@ -107,7 +110,7 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
     return (
         <div
             className={classNames(styles["mention-custom"], {
-                [styles["mention-custom-selected"]]: selected
+                [styles["mention-custom-selected"]]: selected && !readonly
             })}
             contentEditable={false}
         >
@@ -115,7 +118,7 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
                 {iconMap[node?.attrs?.mentionType as iconMapType] || null}
             </div>
             <div className={styles["content"]} ref={contentRef} contentEditable={false}></div>
-            <OutlineXIcon className={styles["mention-icon-wrapper"]} onClick={onRemove} />
+            {!readonly && <OutlineXIcon className={styles["mention-icon-wrapper"]} onClick={onRemove} />}
         </div>
     )
 }

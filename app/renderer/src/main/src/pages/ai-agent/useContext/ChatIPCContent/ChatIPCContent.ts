@@ -13,9 +13,6 @@ export interface ChatIPCContextStore {
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
     timelineMessage?: string
-    selectForges: AIChatMentionSelectItem[]
-    selectTools: AIChatMentionSelectItem[]
-    selectKnowledgeBases: AIChatMentionSelectItem[]
 }
 
 export interface AIChatIPCSendParams {
@@ -45,9 +42,6 @@ export interface ChatIPCContextDispatcher {
     setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
     handleSendSyncMessage: (params: AISendSyncMessageParams) => void
     handleSendConfigHotpatch: (params: AISendConfigHotpatchParams) => void
-    setSelectForges: React.Dispatch<React.SetStateAction<AIChatMentionSelectItem[]>>
-    setSelectTools: React.Dispatch<React.SetStateAction<AIChatMentionSelectItem[]>>
-    setSelectKnowledgeBases: React.Dispatch<React.SetStateAction<AIChatMentionSelectItem[]>>
 }
 
 export interface ChatIPCContextValue {
@@ -61,10 +55,7 @@ export default createContext<ChatIPCContextValue>({
         reviewInfo: undefined,
         planReviewTreeKeywordsMap: new Map(),
         reviewExpand: false,
-        timelineMessage: undefined,
-        selectForges: [],
-        selectTools: [],
-        selectKnowledgeBases: []
+        timelineMessage: undefined
     },
     dispatcher: {
         chatIPCEvents: {
@@ -84,9 +75,6 @@ export default createContext<ChatIPCContextValue>({
         handleStop: () => {},
         setTimelineMessage: () => {},
         handleSendSyncMessage: () => {},
-        handleSendConfigHotpatch: () => {},
-        setSelectForges: () => {},
-        setSelectTools: () => {},
-        setSelectKnowledgeBases: () => {}
+        handleSendConfigHotpatch: () => {}
     }
 })

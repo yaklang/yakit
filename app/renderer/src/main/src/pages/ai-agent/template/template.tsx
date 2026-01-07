@@ -1,9 +1,9 @@
-import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useMemo, useRef} from "react"
+import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useControllableValue, useInViewport, useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {v4 as uuidv4} from "uuid"
 
@@ -11,11 +11,12 @@ import classNames from "classnames"
 import styles from "./template.module.scss"
 import {AIMilkdownInput} from "../components/aiMilkdownInput/AIMilkdownInput"
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
-import {callCommand} from "@milkdown/kit/utils"
+import {callCommand, getMarkdown} from "@milkdown/kit/utils"
 import useAIChatDrop from "../aiChatWelcome/hooks/useAIChatDrop"
 import {aiMentionCommand, AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
+import {extractDataWithMilkdown, setEditorValue} from "../components/aiMilkdownInput/utils"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -40,16 +41,11 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
  */
 export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     forwardRef((props, ref) => {
-        const {loading, extraFooterLeft, extraFooterRight, onSubmit, className, children} = props
+        const {loading, extraFooterLeft, extraFooterRight, onSubmit, className, children, defaultValue} = props
 
         // icon的唯一id生成
         const iconId = useRef(uuidv4())
-        // #region question-相关逻辑
-        const [question, setQuestion] = useControllableValue<string>(props, {
-            defaultValue: "",
-            valuePropName: "question",
-            trigger: "setQuestion"
-        })
+
         const {isHovering, dropRef} = useAIChatDrop({
             onFilesChange: (v) => onFilesChange(v)
         })
@@ -60,11 +56,14 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             ref,
             () => {
                 return {
-                    setMention: (v) => onSetMention(v)
+                    setMention: (v) => onSetMention(v),
+                    setValue: (v) => onSetValue(v),
+                    getValue: () => getMarkdownValue()
                 }
             },
             []
         )
+        // #region question-相关逻辑
         useEffect(() => {
             if (inViewport) {
                 emiter.on("setAIInputByType", onSetAIInputByType)
@@ -90,28 +89,22 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             } catch (error) {}
         })
 
-        const isQuestion = useMemo(() => {
-            return !!(question && question.trim())
-        }, [question])
-
         const handleSubmit = useMemoizedFn(() => {
-            if (!isQuestion) return
+            const qs = getMarkdownValue()
+            if (!qs || !editorMilkdown.current) return
+            const {mentions, plainText} = extractDataWithMilkdown(editorMilkdown.current)
             const value: AIChatTextareaSubmit = {
-                qs: question.trim()
+                qs: plainText,
+                mentionList: mentions,
+                showQS: qs
             }
             onSubmit && onSubmit(value)
         })
         // #endregion
 
-        // #region textarea-相关逻辑
+        // #region 编辑器-相关逻辑
 
-        const textareaRef = useRef<TextAreaRef>(null)
-
-        const handleSetTextareaFocus = useMemoizedFn(() => {
-            if (textareaRef && textareaRef.current) {
-                textareaRef.current.focus()
-            }
-        })
+        const handleSetTextareaFocus = useMemoizedFn(() => {})
 
         const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
             editorMilkdown.current = editor
@@ -126,9 +119,20 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 })
             }
         })
+        /**插入提及数据 */
         const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
             editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
         })
+        /**设置编辑器值 */
+        const onSetValue = useMemoizedFn((value: string) => {
+            if (!editorMilkdown.current) return
+            setEditorValue(editorMilkdown.current, value)
+        })
+        const getMarkdownValue = useMemoizedFn(() => {
+            const value = editorMilkdown.current?.action(getMarkdown()) || ""
+            return value
+        })
+        // #endregion
         return (
             <div
                 className={classNames(
@@ -178,7 +182,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     onKeyDown={handleTextareaKeyDown}
                     onFocus={handleTextareaFocus}
                 /> */}
-                    <AIMilkdownInput onUpdateEditor={onUpdateEditor} />
+                    <AIMilkdownInput defaultValue={defaultValue} onUpdateEditor={onUpdateEditor} />
                 </div>
 
                 <div className={styles["textarea-footer"]}>
@@ -201,7 +205,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                             className={styles["round-btn"]}
                             radius='50%'
                             loading={loading}
-                            disabled={!isQuestion}
+                            disabled={!getMarkdownValue()}
                             icon={<OutlineArrowupIcon />}
                             onClick={(e) => {
                                 e.stopPropagation()

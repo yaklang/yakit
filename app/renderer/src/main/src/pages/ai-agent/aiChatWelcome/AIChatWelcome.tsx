@@ -10,7 +10,7 @@ import {
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
 import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useSafeState} from "ahooks"
-import {AIChatTextareaProps, AIChatTextareaSubmit} from "../template/type"
+import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "../template/type"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -111,7 +111,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         const konwledgeInputStringFn = (params: string) => {
             try {
                 const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-                setQuestion(data?.inputString ?? "")
+                onSetQuestion(data?.inputString ?? "")
                 removePagesDataCacheById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
             } catch (error) {}
         }
@@ -122,7 +122,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     }, [])
 
     const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
-    const [question, setQuestion] = useState<string>(initKnowledgeStr())
     const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
     const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
     const [questionList, setQuestionList] = useState<string[]>([])
@@ -134,6 +133,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
+    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
+    const inputDefaultValue = useRef<string>(initKnowledgeStr())
     const [inViewPort = true] = useInViewport(welcomeRef)
 
     const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
@@ -180,6 +181,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         [checkItems],
         {wait: 500, leading: true}
     )
+    const onSetQuestion = useMemoizedFn((value: string) => {
+        aiChatTextareaRef.current?.setValue(value ?? "")
+    })
     const onStartExecute = useMemoizedFn(() => {
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.stop()
@@ -258,7 +262,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
         onTriageSubmit(value)
-        setQuestion("")
+        onSetQuestion("")
     })
     const onMore = useMemoizedFn((item: string) => {
         switch (item) {
@@ -401,8 +405,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                 refreshRate={50}
                             />
                             <AIChatTextarea
-                                question={question}
-                                setQuestion={setQuestion}
+                                defaultValue={inputDefaultValue.current}
+                                ref={aiChatTextareaRef}
                                 onSubmit={handleTriageSubmit}
                                 extraFooterLeft={
                                     <>
@@ -446,7 +450,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                         <div
                                             key={item}
                                             className={styles["suggestion-tips-item"]}
-                                            onClick={() => setQuestion(item)}
+                                            onClick={() => onSetQuestion(item)}
                                         >
                                             <div className={styles["suggestion-tips-item-text"]}>{item}</div>
                                         </div>

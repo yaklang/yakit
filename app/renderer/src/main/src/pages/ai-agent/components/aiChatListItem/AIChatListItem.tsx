@@ -13,7 +13,6 @@ import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
-import AIFileChatContent from "../aIFileChatContent/AIFileChatContent"
 import classNames from "classnames"
 import {has, isArray} from "lodash"
 import {HandleStartParams} from "../../aiAgentChat/type"
@@ -90,7 +89,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return (
                     <AITriageChatContent
                         isAnswer={false}
-                        content={<AIFileChatContent {...data} extraValue={extraValue} />}
+                        content={data?.qs}
                         extraValue={extraValue}
                         {...chatContentExtraProps}
                         contentClassName={classNames({

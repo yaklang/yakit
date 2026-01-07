@@ -219,13 +219,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
         onSetReAct()
-        const {extra, attachedResourceInfo} = getAIReActRequestParams({
-            ...value,
-            selectForges,
-            selectTools,
-            selectKnowledgeBases,
-            fileToQuestion: []
-        })
+        const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -234,7 +228,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             },
             AttachedResourceInfo: attachedResourceInfo
         }
-
         events.onStart({token: newChat.id, params: startParams, extraValue: extra})
     })
 
@@ -590,30 +583,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setReplaceToolShow(false)
     })
     // #endregion
-    const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
-    const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
-    const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
     const store: ChatIPCContextStore = useCreation(() => {
         return {
             chatIPCData,
             planReviewTreeKeywordsMap,
             reviewInfo,
             reviewExpand,
-            timelineMessage,
-            selectForges,
-            selectTools,
-            selectKnowledgeBases
+            timelineMessage
         }
-    }, [
-        chatIPCData,
-        planReviewTreeKeywordsMap,
-        reviewInfo,
-        reviewExpand,
-        timelineMessage,
-        selectForges,
-        selectTools,
-        selectKnowledgeBases
-    ])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -625,10 +603,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSend,
             setTimelineMessage,
             handleSendSyncMessage,
-            handleSendConfigHotpatch,
-            setSelectForges,
-            setSelectTools,
-            setSelectKnowledgeBases
+            handleSendConfigHotpatch
         }
     }, [events])
 

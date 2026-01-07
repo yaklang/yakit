@@ -47,11 +47,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
 
     const {activeChat, setting} = useAIAgentStore()
-    const {selectForges, selectTools, selectKnowledgeBases} = useChatIPCStore()
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
     // #region 问题相关逻辑
-    const [question, setQuestion] = useState<string>("")
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
     // #endregion
 
@@ -67,20 +65,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         } else {
             handleStart(value)
         }
-        setQuestion("")
+        onSetQuestion("")
     })
 
     /**自由对话 */
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
         if (!activeChat?.id) return
         try {
-            const {extra, attachedResourceInfo} = getAIReActRequestParams({
-                ...data,
-                selectForges,
-                selectTools,
-                selectKnowledgeBases,
-                fileToQuestion: []
-            })
+            const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
                 FreeInput: data.qs,
@@ -100,7 +92,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         const konwledgeInputStringFn = (params: string) => {
             try {
                 const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-                setQuestion(data?.inputString ?? "")
+                onSetQuestion(data?.inputString ?? "")
             } catch (error) {}
         }
         emiter.on("konwledgeInputString", konwledgeInputStringFn)
@@ -140,7 +132,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const onClose = useMemoizedFn(() => {
         setTimelineVisible(false)
     })
-
+    const onSetQuestion = useMemoizedFn((value: string) => {
+        aiChatTextareaRef.current?.setValue(value ?? "")
+    })
     return (
         <>
             <div
@@ -175,8 +169,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     <AIChatTextarea
                                         ref={aiChatTextareaRef}
                                         loading={false}
-                                        question={question}
-                                        setQuestion={setQuestion}
                                         onSubmit={handleSubmit}
                                         extraFooterRight={
                                             <div className={styles["extra-footer-right"]}>

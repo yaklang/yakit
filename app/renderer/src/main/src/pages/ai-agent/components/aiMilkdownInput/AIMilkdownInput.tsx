@@ -12,7 +12,7 @@ import {commonmark} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import classNames from "classnames"
 import styles from "./AIMilkdownInput.module.scss"
-import {cursor} from "@milkdown/kit/plugin/cursor"
+import {gapCursorPlugin} from "@milkdown/kit/plugin/cursor"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 import {placeholderConfig, placeholderPlugin} from "@/components/MilkdownEditor/Placeholder"
@@ -83,7 +83,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                         .use(remarkDirective)
                         .use(commonmark)
                         .use(gfm)
-                        // .use(cursor)
+                        .use(gapCursorPlugin)
                         .use(history)
                         .use(clipboard)
                         // placeholder

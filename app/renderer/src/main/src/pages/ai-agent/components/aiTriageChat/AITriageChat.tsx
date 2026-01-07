@@ -5,6 +5,7 @@ import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
 import {PreWrapper} from "../ToolInvokerCard"
 import {useMemoizedFn} from "ahooks"
+import {AIMilkdownInput} from "../aiMilkdownInput/AIMilkdownInput"
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
     const {isAnswer, content, contentClassName, chatClassName, extraValue} = props
@@ -15,6 +16,13 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
                 <>
                     {extraValue?.showForgeQuestion}
                     <PreWrapper code={`${extraValue?.forgeParams}`} />
+                </>
+            )
+        }
+        if (!!extraValue?.showQS) {
+            return (
+                <>
+                    <AIMilkdownInput defaultValue={`${extraValue?.showQS}`} readonly={true} />
                 </>
             )
         }
