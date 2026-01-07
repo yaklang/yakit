@@ -10,9 +10,10 @@ function useSwitchSelectByKeyboard<T>(
         onSelectNumber: (m: number, isScroll: boolean) => void
         onEnter: () => void
         defItemHeight?: number
+        getContainer?: () => HTMLElement | null
     }
 ): void {
-    const {data, selected, rowKey, onSelectNumber, onEnter} = params
+    const {data, selected, rowKey, onSelectNumber, onEnter, getContainer} = params
 
     const defItemHeight = useCreation(() => {
         return params.defItemHeight ?? 24
@@ -35,8 +36,9 @@ function useSwitchSelectByKeyboard<T>(
             onUpArrow()
         },
         {
+            target: getContainer ? getContainer() : undefined,
             exactMatch: true,
-            useCapture: true
+            useCapture: inViewport
         }
     )
     useKeyPress(
@@ -47,8 +49,9 @@ function useSwitchSelectByKeyboard<T>(
             onDownArrow()
         },
         {
+            target: getContainer ? getContainer() : undefined,
             exactMatch: true,
-            useCapture: true
+            useCapture: inViewport
         }
     )
     useKeyPress(
@@ -59,8 +62,9 @@ function useSwitchSelectByKeyboard<T>(
             onEnterKey()
         },
         {
+            target: getContainer ? getContainer() : undefined,
             exactMatch: true,
-            useCapture: true
+            useCapture: inViewport
         }
     )
 

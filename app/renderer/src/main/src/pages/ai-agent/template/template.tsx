@@ -1,4 +1,4 @@
-import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef} from "react"
+import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -17,6 +17,7 @@ import {aiMentionCommand, AIMentionCommandParams} from "../components/aiMilkdown
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import {extractDataWithMilkdown, setEditorValue} from "../components/aiMilkdownInput/utils"
+import {editorViewCtx} from "@milkdown/kit/core"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -42,6 +43,8 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
 export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     forwardRef((props, ref) => {
         const {loading, extraFooterLeft, extraFooterRight, onSubmit, className, children, defaultValue} = props
+
+        const [disabled, setDisabled] = useState<boolean>(false)
 
         // icon的唯一id生成
         const iconId = useRef(uuidv4())
@@ -104,7 +107,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
         // #region 编辑器-相关逻辑
 
-        const handleSetTextareaFocus = useMemoizedFn(() => {})
+        const handleSetTextareaFocus = useMemoizedFn(() => {
+            editorMilkdown.current?.action((ctx) => {
+                const view = ctx.get(editorViewCtx)
+                view.focus()
+            })
+        })
 
         const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
             editorMilkdown.current = editor
@@ -131,6 +139,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         const getMarkdownValue = useMemoizedFn(() => {
             const value = editorMilkdown.current?.action(getMarkdown()) || ""
             return value
+        })
+
+        const onUpdateContent = useMemoizedFn((value: string) => {
+            setDisabled(!value.trim())
         })
         // #endregion
         return (
@@ -173,16 +185,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         </svg>
                     </div>
 
-                    {/* <QSInputTextarea
-                    ref={textareaRef}
-                    {...textareaRest}
-                    className={classNames(styles["textarea-textarea"], textareaClassName)}
-                    value={question}
-                    onChange={handleTextareaChange}
-                    onKeyDown={handleTextareaKeyDown}
-                    onFocus={handleTextareaFocus}
-                /> */}
-                    <AIMilkdownInput defaultValue={defaultValue} onUpdateEditor={onUpdateEditor} />
+                    <AIMilkdownInput
+                        defaultValue={defaultValue}
+                        onUpdateEditor={onUpdateEditor}
+                        onUpdateContent={onUpdateContent}
+                    />
                 </div>
 
                 <div className={styles["textarea-footer"]}>
@@ -205,7 +212,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                             className={styles["round-btn"]}
                             radius='50%'
                             loading={loading}
-                            disabled={!getMarkdownValue()}
+                            disabled={disabled}
                             icon={<OutlineArrowupIcon />}
                             onClick={(e) => {
                                 e.stopPropagation()

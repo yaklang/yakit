@@ -34,6 +34,10 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
         [loading]
     )
 
+    useClickAway(() => {
+        onHide()
+    }, ref)
+
     useEffect(() => {
         const div = ref.current
         if (loading || !div) {
@@ -68,8 +72,13 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
             mentionName: value?.name || ""
         }
         action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
-        // 关闭窗口
+
+        onHide()
+    })
+
+    const onHide = useMemoizedFn(() => {
         view.focus()
+        // 关闭窗口
         slashProvider.current?.hide()
     })
 
@@ -83,7 +92,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
             }}
             ref={ref}
         >
-            <AIChatMention selectForge={[]} selectTool={[]} selectKnowledgeBase={[]} onSelect={onSure} />
+            <AIChatMention onSelect={onSure} />
         </div>
     )
 }

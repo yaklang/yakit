@@ -18,6 +18,8 @@
 
 .ai-mention[data-show="false"] {
     display: none;
+    opacity: 0;
+    visibility: hidden;
 }
 .mention-custom {
     // height: 18px;

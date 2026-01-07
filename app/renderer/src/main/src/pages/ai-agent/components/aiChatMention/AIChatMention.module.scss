@@ -32,14 +32,6 @@
     .row-item-active {
         background-color: var(--Colors-Use-Main-Bg-Hover);
     }
-    .row-item-select {
-        color: var(--Colors-Use-Main-Primary);
-        svg {
-            width: 16px;
-            height: 16px;
-            color: var(--Colors-Use-Main-Primary);
-        }
-    }
 }
 .ai-chat-mention {
     width: 300px;

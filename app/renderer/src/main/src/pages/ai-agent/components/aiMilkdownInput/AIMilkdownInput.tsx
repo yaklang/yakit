@@ -60,7 +60,16 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                         })
                     }
                 ].flat()
-                const placeholder = [placeholderConfig, placeholderPlugin]
+                const placeholder = [
+                    placeholderConfig,
+                    placeholderPlugin,
+                    (ctx: Ctx) => () => {
+                        ctx.update(placeholderConfig.key, (prev) => ({
+                            ...prev,
+                            text: "请告诉我，你想做什么...(shift + enter 换行)"
+                        }))
+                    }
+                ]
 
                 return (
                     Editor.make()

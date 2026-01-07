@@ -11,15 +11,12 @@ export interface AIChatMentionSelectItem {
     name: string
 }
 export interface AIChatMentionProps {
-    selectForge: AIChatMentionSelectItem[]
-    selectTool: AIChatMentionSelectItem[]
-    selectKnowledgeBase: AIChatMentionSelectItem[]
     defaultActiveTab?: AIMentionTabsEnum
     onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
 }
 interface AIChatMention {
     keyWord: string
-    selectList: AIChatMentionSelectItem[]
+    getContainer: () => HTMLElement | null
 }
 export interface AIChatMentionListRefProps {
     onRefresh: () => void
@@ -40,7 +37,6 @@ export interface KnowledgeBaseListOfMentionProps extends AIChatMention, AIChatMe
 }
 
 export interface AIMentionSelectItemProps {
-    isSelect: boolean
     isActive: boolean
     item: AIChatMentionSelectItem
     onSelect: () => void
