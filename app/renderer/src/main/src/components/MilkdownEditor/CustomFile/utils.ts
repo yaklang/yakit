@@ -12,7 +12,7 @@ export interface HttpFileInfoRespose {
 export const getHttpFileLinkInfo: APIFunc<string, HttpFileInfoRespose> = (onlineUrl, hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("get-http-file-link-info", onlineUrl)
+            .invoke("get-http-file-link-info", encodeURI(onlineUrl))
             .then(resolve)
             .catch((error) => {
                 if (!hiddenError) yakitNotify("error", `获取链接信息错误${error}`)
