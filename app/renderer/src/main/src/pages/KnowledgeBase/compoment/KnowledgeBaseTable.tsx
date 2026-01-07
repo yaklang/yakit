@@ -47,6 +47,7 @@ interface KnowledgeBaseTableProps {
             | undefined
         >
     >
+    hasBuildDataProps?: boolean
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -98,7 +99,7 @@ const loadTotals = async (knowledgeBaseItems: KnowledgeBaseTableProps["knowledge
 }
 
 const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
-    const {streams, knowledgeBaseItems, setOpenQA, setStructureTableHeaderGroupOptions} = props
+    const {streams, knowledgeBaseItems, setOpenQA, setStructureTableHeaderGroupOptions, hasBuildDataProps} = props
     const [query, setQuery] = useSafeState("")
     const [linkId, setLinkId] = useSafeState<string[]>([])
     const [tableProps, setTableProps] = useSafeState<{
@@ -126,10 +127,6 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
         }
     )
 
-    useEffect(() => {
-        knowledgeBaseIndexRun()
-    }, [knowledgeBaseItems.ID])
-
     useUpdateEffect(() => {
         setStructureTableHeaderGroupOptions?.(structureTableHeaderGroupOptions)
     }, [structureTableHeaderGroupOptions])
@@ -148,10 +145,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
 
     const hasBuildData = useMemo(() => {
         // 检查是否需要执行筛选
-        if (
-            knowledgeBaseItems.streamstep !== 1 &&
-            (knowledgeBaseItems.streamToken || knowledgeBaseItems.historyGenerateKnowledgeList?.length > 0)
-        ) {
+        if (knowledgeBaseItems.streamToken || knowledgeBaseItems.historyGenerateKnowledgeList?.length > 0) {
             if (streams) {
                 // 筛选单条构建流数据
                 let result = false
@@ -201,8 +195,24 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
         }
     }, [streams, knowledgeBaseItems])
 
-    useUpdateEffect(() => {
-        hasBuildData && knowledgeBaseIndexRun()
+    useEffect(() => {
+        knowledgeBaseIndexRun()
+    }, [knowledgeBaseItems])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            knowledgeBaseIndexRun()
+        }, 5000)
+        return () => clearTimeout(timer)
+    }, [knowledgeBaseItems, hasBuildDataProps])
+
+    useEffect(() => {
+        if (hasBuildData) {
+            const timer = setTimeout(() => {
+                knowledgeBaseIndexRun()
+            }, 5000)
+            return () => clearTimeout(timer)
+        }
     }, [hasBuildData])
 
     const TargetTableRender = useMemo(() => {
@@ -275,6 +285,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                 setAllCheck={setAllCheck}
                 structureTableHeaderGroupOptions={structureTableHeaderGroupOptions}
                 onOpenAddKnowledgeBaseModal={onOpenAddKnowledgeBaseModal}
+                knowledgeBaseIndexRun={knowledgeBaseIndexRun}
             />
             {structureTableHeaderGroupOptions && structureTableHeaderGroupOptions?.length > 0 ? (
                 TargetTableRender

@@ -25,8 +25,8 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                   .pop()! // 最后一个就是文件名 + 扩展名
                   .replace(/\.[^/.]+$/, "") // 去掉扩展名
             : undefined
-
-        if (result) {
+        const getKnowledgeBaseName = form.getFieldValue("KnowledgeBaseName")
+        if (result && (!getKnowledgeBaseName || getKnowledgeBaseName?.trim() === "")) {
             form.setFieldsValue({KnowledgeBaseName: result})
         }
     }, [KnowledgeBaseFileValue])
@@ -46,18 +46,16 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
             <Form.Item
                 label='知识库名：'
                 name='KnowledgeBaseName'
+                required
                 rules={[
-                    {required: true, message: "请输入知识库名"},
                     {
                         validator: (_, value) => {
-                            if (typeof value === "string" && value.trim() === "") {
-                                return Promise.reject(new Error("知识库名不能为空字符串"))
+                            if (!value || value.trim() === "") {
+                                return Promise.reject(new Error("请输入知识库名"))
                             }
                             if (type !== "new") {
-                                const findKnowledgeIdx = knowledgeBases.findIndex(
-                                    (it) => it.KnowledgeBaseName === value
-                                )
-                                if (findKnowledgeIdx === 0) {
+                                const exists = knowledgeBases.some((it) => it.KnowledgeBaseName === value)
+                                if (exists) {
                                     return Promise.reject(new Error("知识库名称重复，请重新输入"))
                                 }
                             }

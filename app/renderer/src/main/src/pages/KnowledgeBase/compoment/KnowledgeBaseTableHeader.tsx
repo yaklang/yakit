@@ -9,6 +9,7 @@ import {
     OutlineExternallinkIcon,
     OutlineLoadingIcon,
     OutlinePencilaltIcon,
+    OutlineRefreshIcon,
     OutlineTimeIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
@@ -23,7 +24,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 import {PluginExecuteDetailDrawer} from "./PluginExecuteDetailDrawer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {CheckboxOptionType} from "antd"
+import {CheckboxOptionType, Tooltip} from "antd"
 
 export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     setTableProps: Dispatch<
@@ -42,6 +43,7 @@ export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     selectList: any[]
     allCheck: boolean
     setAllCheck: Dispatch<SetStateAction<boolean>>
+    knowledgeBaseIndexRun?: () => void
 }
 
 const KnowledgeBaseTableHeader: FC<
@@ -65,7 +67,8 @@ const KnowledgeBaseTableHeader: FC<
     setAllCheck,
     api,
     structureTableHeaderGroupOptions,
-    onOpenAddKnowledgeBaseModal
+    onOpenAddKnowledgeBaseModal,
+    knowledgeBaseIndexRun
 }) => {
     const [searchValue, setSearchValue] = useSafeState("")
     const [addModalData, setAddModalData] = useSafeState<{visible: boolean; KnowledgeBaseName: string}>({
@@ -268,6 +271,9 @@ const KnowledgeBaseTableHeader: FC<
                                 setQuery?.(e.currentTarget.value)
                             }}
                         />
+                        <Tooltip title='刷新'>
+                            <YakitButton icon={<OutlineRefreshIcon />} type='text2' onClick={knowledgeBaseIndexRun} />
+                        </Tooltip>
                     </div>
                 </div>
             ) : null}

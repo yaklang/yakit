@@ -234,6 +234,7 @@ const KnowledgeBaseContainer: FC<
                     onExportKnowledgeBase={onExportKnowledgeBase}
                     setOpenQA={setOpenQA}
                     setStructureTableHeaderGroupOptions={setStructureTableHeaderGroupOptions}
+                    hasBuildDataProps={hasBuildData}
                 />
             )}
             <DeleteConfirm
