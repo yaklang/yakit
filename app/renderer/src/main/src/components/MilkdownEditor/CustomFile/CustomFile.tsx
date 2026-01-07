@@ -174,20 +174,22 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
         const path = initPath.replace(/\\/g, "\\")
         if (fileId !== "0") {
             setLoadingRefresh(true)
-            getHttpFileLinkInfo(fileId, true)
+
+            apiDownloadStorageType(fileId).then((filePath) => {
+                getHttpFileLinkInfo(filePath, true)
                 .then((res) => {
                     const {fileType, fileName} = getTypeAndNameByPath(fileId)
                     const item = {
                         name: fileName,
                         size: res.size,
                         type: fileType,
-                        url: fileId,
+                        url: filePath,
                         path
                     }
                     setFileInfo(item)
                 })
                 .catch((e) => {
-                    console.log("getFileInfoByLink Error---", e, fileId);
+                    console.log("getFileInfoByLink Error---", e, filePath);
 
                     setTimeout(() => {
                         setQueryFileErrorInfo(`${e}`)
@@ -198,6 +200,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                         setLoadingRefresh(false)
                     }, 200)
                 )
+            })
         }
     })
     const onUpload = (filePath) => {
@@ -415,7 +418,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     setVisible={() => setDownFileInfo(undefined)}
                     onCancelDownload={onCancelDownload}
                     onSuccess={onOpenFile}
-                    isEncodeURI={false}
+                    // isEncodeURI={false}
                 />
             )}
         </>
