@@ -449,7 +449,6 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
             setHijackTasks((prev) => {
                 return [...prev, {pid, pName, loading: true, uuid: `${uuidv4()}-hijack`}]
             })
-            setActiveTab("hijacking")
         }
 
         const removeToggleHijack = (pName: string, pid?: number) => {
@@ -735,6 +734,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                                 info("该进程已在劫持中")
                             } else {
                                 addToggleHijack(value)
+                                setActiveTab("hijacking")
                             }
                         }}
                         enterButton='劫持'
