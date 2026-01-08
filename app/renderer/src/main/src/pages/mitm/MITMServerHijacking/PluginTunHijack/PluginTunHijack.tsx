@@ -25,7 +25,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import usePluginTunHijack, { tunSessionStateDefault } from "./usePluginTunHijack"
+import usePluginTunHijack, {tunSessionStateDefault} from "./usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -837,8 +837,13 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
             title: "域名",
             dataKey: "Domain",
             width: 200,
-            render: (data) => {
-                return data ? data.join(", ") : "-"
+            render: (data?:string[]) => {
+                let newData = data?.filter((d) => d && d.length > 0)
+                return newData ? 
+                <Tooltip title={newData.join(", ")}>
+                    {newData.join(", ")}
+                </Tooltip>
+                : "-"
             }
         },
         {
@@ -874,20 +879,23 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
             onCancel={() => setHijackProcessInfo(undefined)}
             footer={null}
         >
-            <TableVirtualResize
-                isRefresh={false}
-                isShowTitle={false}
-                data={hijackProcessInfo || []}
-                renderKey={"LocalAddress"}
-                pagination={{
-                    page: 1,
-                    limit: 50,
-                    total: (hijackProcessInfo || []).length,
-                    onChange: () => {}
-                }}
-                columns={hijackInfoColumns}
-                enableDrag
-            />
+            <div
+                style={{height: (hijackProcessInfo || []).length > 15 ? 400 : "auto"}}
+            >
+                <TableVirtualResize
+                    isRefresh={false}
+                    isShowTitle={false}
+                    data={hijackProcessInfo || []}
+                    renderKey={"LocalAddress"}
+                    pagination={{
+                        page: 1,
+                        limit: 50,
+                        total: (hijackProcessInfo || []).length,
+                        onChange: () => {}
+                    }}
+                    columns={hijackInfoColumns}
+                />
+            </div>
         </YakitModal>
     )
 })
