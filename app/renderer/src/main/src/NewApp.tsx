@@ -8,7 +8,7 @@ import {API} from "./services/swagger/resposeType"
 import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify} from "@/utils/envfile"
+import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {coordinate, setChartsColorList} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
@@ -227,9 +227,9 @@ function NewApp() {
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
                 await remoteOperation(false, dynamicStatus)
-                ipcRenderer.invoke("app-exit", {showCloseMessageBox, isIRify: isIRify()})
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit()})
             } else {
-                ipcRenderer.invoke("app-exit", {showCloseMessageBox, isIRify: isIRify()})
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit()})
             }
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {

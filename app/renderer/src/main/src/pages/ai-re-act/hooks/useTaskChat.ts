@@ -20,7 +20,7 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent, AITaskStatus} from "./grpcApi"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,
@@ -46,7 +46,8 @@ function useTaskChat(params?: UseTaskChatParams) {
         onReviewRelease,
         sendRequest,
         onGrpcFolder,
-        onNotifyMessage
+        onNotifyMessage,
+        onSystemStream
     } = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
@@ -313,8 +314,10 @@ function useTaskChat(params?: UseTaskChatParams) {
                     return newArr
                 })
             } else {
+                // 系统信息展示
+                if (IsSystem) onSystemStream?.(EventUUID, content)
                 // 输出到日志中
-                pushLog?.({
+                handlePushLog({
                     type: "stream",
                     Timestamp: res.Timestamp,
                     data: {
@@ -647,8 +650,8 @@ function useTaskChat(params?: UseTaskChatParams) {
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
-                if (item.progress === "processing") {
-                    item.progress = "aborted"
+                if (item.progress === AITaskStatus.inProgress) {
+                    item.progress = AITaskStatus.error
                 }
                 return item
             })
@@ -767,7 +770,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     // 开始任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
                     handleTaskStartNode(res, data)
-                    handleUpdateTaskState(data.task.index, "processing")
+                    handleUpdateTaskState(data.task.index, AITaskStatus.inProgress)
                     return
                 }
                 if (obj.type && obj.type === "pop_task") {

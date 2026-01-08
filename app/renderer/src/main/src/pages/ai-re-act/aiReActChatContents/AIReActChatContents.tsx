@@ -16,13 +16,14 @@ import {AIStreamContentType} from "../hooks/defaultConstant"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
 import {AIChatQSData} from "../hooks/aiRender"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import classNames from "classnames"
 import {PreWrapper} from "@/pages/ai-agent/components/ToolInvokerCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 import Loading from "@/components/Loading/Loading"
+import useAISystemStream from "../hooks/useAISystemStream"
+import {ScrollText} from "@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading"
 
 const getAIReferenceNodeByType = (contentType?: string) => {
     switch (contentType) {
@@ -104,7 +105,8 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const {chats} = props
     const {
         chatIPCData: {
-            casualStatus: {loading, title}
+            casualStatus: {loading, title},
+            systemStream
         }
     } = useChatIPCStore()
     const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
@@ -122,6 +124,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         []
     )
 
+    const {displayValue, mode} = useAISystemStream({
+        value: title,
+        systemStream
+    })
     const Footer = useCallback(
         () =>
             loading ? (
@@ -132,11 +138,13 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                             marginTop: 8
                         }}
                     >
-                        <div style={{fontWeight: 400, display: "flex", alignItems: "center"}}>{title}</div>
+                        <div className='text-ellipsis' style={{fontWeight: 400, display: "flex", alignItems: "center"}}>
+                            {mode === "value" ? displayValue : <ScrollText text={displayValue as string} />}
+                        </div>
                     </Loading>
                 </div>
             ) : null,
-        [loading, title]
+        [loading, mode, displayValue]
     )
 
     const components = useMemo(

@@ -10,7 +10,7 @@ module.exports = {
                 try {
                     const stats = FS.statSync(path)
                     resolve(stats)
-                } catch (error) {   
+                } catch (error) {
                     reject(error)
                 }
             })
@@ -64,8 +64,7 @@ module.exports = {
                 if (!data || typeof data !== "string") return fileInfo
                 fileInfo.suffix = path.extname(data).toLowerCase()
                 fileInfo.name = path.basename(data, fileInfo.suffix)
-            } catch (error) {
-            }
+            } catch (error) {}
             return fileInfo
         })
 
@@ -79,6 +78,38 @@ module.exports = {
             }
         })
 
+        /**
+         * @name 判断路径A和路径B是否存在包含关系
+         * @param {string} pathA 路径A
+         * @param {string} pathB 路径B
+         * @return {number} 0：相等；1：A包含B；2：B包含A；3：无包含关系；4：异常
+         */
+        ipcMain.handle("fetch-path-contains-relation", (e, params) => {
+            try {
+                const {pathA, pathB} = params
+
+                const pa = path.resolve(pathA)
+                const pb = path.resolve(pathB)
+
+                if (pa === pb) return 0
+
+                const relAtoB = path.relative(pa, pb)
+                // A是否包含B
+                if (relAtoB && !relAtoB.startsWith("..") && !path.isAbsolute(relAtoB)) {
+                    return 1
+                }
+
+                const relBtoA = path.relative(pb, pa)
+                // B是否包含A
+                if (relBtoA && !relBtoA.startsWith("..") && !path.isAbsolute(relBtoA)) {
+                    return 2
+                }
+
+                return 3
+            } catch (error) {
+                return 4
+            }
+        })
     },
     registerNewIPC: (win, getClient, ipcEventPre) => {}
 }

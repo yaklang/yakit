@@ -10,6 +10,7 @@ import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {SolidStarIcon, SolidToolIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
+    OutlineClipboardcopyIcon,
     OutlineDotsverticalIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
@@ -238,7 +239,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
             {
                 key: "copy",
                 label: "复制",
-                itemIcon: <OutlineTrashIcon />
+                itemIcon: <OutlineClipboardcopyIcon />
             },
             {
                 key: "delete",

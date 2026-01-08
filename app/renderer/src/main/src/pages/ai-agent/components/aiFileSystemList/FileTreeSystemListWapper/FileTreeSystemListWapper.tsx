@@ -1,6 +1,6 @@
 import {handleOpenFileSystemDialog, type OpenDialogOptions} from "@/utils/fileSystemDialog"
-import {FileListTileMenu, FileTreeSystemListWapperProps} from "../type"
-import {type FC, useMemo} from "react"
+import {FileListTileMenu, FileTreeSystemListWapperProps, HistoryItem, PathIncludeResult} from "../type"
+import {type FC, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -9,6 +9,37 @@ import FileTreeSystemList from "../FileTreeSystemList/FileTreeSystemList"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {OutlinePluscircleIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {checkPathIncludeRelation, mergePathArray} from "../utils"
+import {yakitNotify} from "@/utils/notification"
+
+interface OpFileNotifyParams {
+    uniquePaths: HistoryItem[]
+    incoming: HistoryItem
+    label: string
+    path?: string
+}
+
+export const opfileNotify = async ({uniquePaths, incoming, label, path}: OpFileNotifyParams) => {
+    const relation = await checkPathIncludeRelation(uniquePaths, incoming)
+    const pathText = path?`：${path} `:""
+    switch (relation) {
+        case PathIncludeResult.Equal:
+        case PathIncludeResult.OriginContains:
+            yakitNotify("info", `所选${label}${pathText}已存在于列表中，无需重复添加。`)
+            return
+        case PathIncludeResult.IncomingContains:
+            yakitNotify("info", `所选${label}${pathText}已包含列表中部分路径，已为您自动优化。`)
+            break
+        case PathIncludeResult.Error:
+            yakitNotify("error", `添加${label}${pathText}时发生错误，请重试。`)
+            break
+        case PathIncludeResult.None:
+            break
+        default:
+            break
+    }
+}
 
 const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     path,
@@ -21,6 +52,8 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     onTreeDragStart,
     onTreeDragEnd
 }) => {
+    // 去重path
+    const [uniquePaths, setUniquePaths, getUniquePaths] = useGetSetState<HistoryItem[]>([])
     const onOpenFileFolder = async (flag) => {
         try {
             const label = flag ? "文件夹" : "文件"
@@ -28,11 +61,12 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             const {filePaths} = await handleOpenFileSystemDialog({title: `请选择${label}`, properties: args})
             if (!filePaths.length) return
             let absolutePath: string = filePaths[0].replace(/\\/g, "\\")
+            await opfileNotify({uniquePaths, incoming: {path: absolutePath, isFolder: flag}, label, path: absolutePath})
             setOpenFolder?.(absolutePath, flag)
         } catch {}
     }
     const renderContent = useMemoizedFn(() => {
-        if (isOpen && path.length === 0) {
+        if (isOpen && uniquePaths.length === 0) {
             return (
                 <div>
                     <YakitEmpty />
@@ -47,7 +81,8 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                 </div>
             )
         }
-        return path.map((item) => (
+
+        return uniquePaths.map((item) => (
             <FileTreeSystemList
                 key={item.path}
                 path={item.path}
@@ -60,6 +95,30 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             />
         ))
     })
+
+    useEffect(() => {
+        if (!path || path.length === 0) return setUniquePaths([])
+
+        const current = getUniquePaths()
+        if (path.length < current.length) return setUniquePaths(path)
+
+        let cancelled = false
+
+        const run = async () => {
+            const next = await mergePathArray(current, path)
+
+            if (!cancelled) {
+                setUniquePaths(next)
+            }
+        }
+
+        run()
+
+        return () => {
+            cancelled = true
+        }
+    }, [getUniquePaths, path, setUniquePaths])
+
     // 菜单选择
     const menuData = useMemo(() => {
         if (!isOpen) return []
@@ -135,7 +194,9 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                     />
                 </YakitDropdownMenu>
             </div>
-            {renderContent()}
+          <div className={styles["file-tree-system-list"]}>
+              {renderContent()}
+          </div>
         </div>
     )
 }

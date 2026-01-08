@@ -55,6 +55,8 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     sendRequest?: (request: AIInputEvent) => void
     /** 通知消息回调 */
     onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
+    /** 系统消息的收集(isSystem=true&type=stream) */
+    onSystemStream?: (uuid: string, content: string) => void
 }
 
 export interface UseCasualChatState {
@@ -82,6 +84,8 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     /** 通知消息回调 */
     onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
     onTaskStart: UseChatIPCParams["onTaskStart"]
+    /** 系统消息的收集(isSystem=true&type=stream) */
+    onSystemStream?: (uuid: string, content: string) => void
 }
 
 export interface UseTaskChatState {
@@ -182,6 +186,8 @@ export interface UseChatIPCState {
     memoryList: AIAgentGrpcApi.MemoryEntryList
     /** 任务规划的loading状态信息 */
     taskStatus: PlanLoadingStatus
+    /** 系统流信息(isSystem=true&type=stream) */
+    systemStream: string
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -242,7 +248,7 @@ export type AIChatLogData = AIChatLogToInfo | AIChatLogToStream
 
 export interface UseAIChatLogEvents {
     /** 获取当前执行接口流的唯一标识符 */
-    pushLog: (log: AIChatLogData) => string
+    pushLog: (log: AIChatLogData) => void
     /** 都劝我 */
     sendStreamLog: (uuid: string) => void
     /** 获取当前执行接口流的请求参数 */

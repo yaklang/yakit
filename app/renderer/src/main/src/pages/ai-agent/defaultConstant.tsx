@@ -29,7 +29,7 @@ import {
     YakIcon
 } from "./aiModelList/icon"
 import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
-import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AITaskStatus} from "../ai-re-act/hooks/grpcApi"
 import {
     SolidCursorclickIcon,
     SolidHashtagIcon,
@@ -116,7 +116,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         index: "",
         name: "",
         goal: "",
-        progress: "",
+        progress: AITaskStatus.created,
         isRemove: false,
         tools: [],
         description: "",
@@ -129,7 +129,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         data.index = info.index || ""
         data.name = info.name || ""
         data.goal = info.goal || ""
-        data.progress = info.progress || ""
+        data.progress = info.progress || AITaskStatus.created
         data.isRemove = info.isRemove || false
         data.tools = info.tools || []
         data.description = info.description || ""
@@ -255,7 +255,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     casualStatus: {loading: false, title: ""},
     reActTimelines: [],
     memoryList: {...DefaultMemoryList},
-    taskStatus: {loading: false, plan: "", task: ""}
+    taskStatus: {loading: false, plan: "", task: ""},
+    systemStream: ""
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},

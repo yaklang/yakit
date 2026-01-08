@@ -2,7 +2,7 @@ import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useCreation, useInterval, useMemoizedFn} from "ahooks"
+import {useCreation, useInterval, useMemoizedFn, useMount} from "ahooks"
 import {HorizontalScrollCard} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import classNames from "classnames"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
@@ -37,6 +37,7 @@ import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
 import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
 import useAIAgentStore from "../useContext/useStore"
+import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders} = useAIChatUIData()
@@ -177,8 +178,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
         if (activeKey === AITabsEnum.File_System) {
             nextShowHot = false
-        }
-        else if (prev.chatId === currentChatId && currentLen > prev.foldersLen) {
+        } else if (prev.chatId === currentChatId && currentLen > prev.foldersLen) {
             nextShowHot = true
         }
         setShowHot(nextShowHot)
@@ -303,77 +303,25 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         e.stopPropagation()
         onOpenLogWindow()
     })
-    const resizeBoxProps: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = useCreation(() => {
-        if (!activeKey) {
-            return {
-                firstNodeStyle: {display: "none"},
-                secondRatio: "100%",
-                lineStyle: {display: "none"},
-                secondNodeStyle: {width: "100%", padding: 0}
-            }
-        }
 
-        let secondRatio
-        let firstRatio
+    const {resizeBoxProps, emitResizeBox} = useAIChatResizeBox({
+        activeKey,
+        showFreeChat,
+        timeLine,
+        taskChat
+    })
 
-        const isFileSystemKey = activeKey === AITabsEnum.File_System
-        // 选中任务内容
-        const isTaskContentKey = activeKey === AITabsEnum.Task_Content
-        // 获取任务内容是否为空
-        const isTaskStreamsEmpty = (taskChat.streams.length ?? 0) <= 0
-        if (showFreeChat) {
-            if (isFileSystemKey) {
-                // 文件系统，自由对话默认显示60%
-                secondRatio = "60%"
-            } else if (isTaskContentKey && isTaskStreamsEmpty) {
-                // 任务内容，自由对话默认显示80%
-                secondRatio = "80%"
-            } else {
-                secondRatio = "432px"
-            }
+    useMount(() => {
+        const onFilePreviewReady = () => {
+            emitResizeBox({
+                secondRatio: "432px"
+            })
         }
-
-        // firstRatio 逻辑
-        if (isTaskContentKey && isTaskStreamsEmpty) {
-            if (timeLine) {
-                // 时间线展开
-                firstRatio = "30%"
-            } else {
-                firstRatio = 30
-            }
-            firstRatio = undefined
+        emiter.on("filePreviewReady", onFilePreviewReady)
+        return () => {
+            emiter.off("filePreviewReady", onFilePreviewReady)
         }
-        return {
-            freeze: showFreeChat,
-            firstRatio,
-            firstMinSize: !showFreeChat ? 400 : 30,
-            secondMinSize: showFreeChat ? 400 : 30,
-            secondRatio,
-            secondNodeStyle: {
-                padding: 0,
-                ...(!showFreeChat && {
-                    minWidth: 30,
-                    maxWidth: 30
-                }),
-                ...(!timeLine &&
-                    isTaskStreamsEmpty && {
-                        width: "calc(100% - 30px)"
-                    })
-            },
-            firstNodeStyle: {
-                padding: 0,
-                ...(!showFreeChat && {
-                    width: "100%"
-                }),
-                ...(!timeLine &&
-                    isTaskStreamsEmpty && {
-                        width: 30
-                    })
-            },
-            lineDirection: "left",
-            lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined
-        }
-    }, [activeKey, showFreeChat, timeLine, taskChat.streams.length])
+    })
 
     return (
         <div className={styles["ai-chat-content-wrapper"]}>

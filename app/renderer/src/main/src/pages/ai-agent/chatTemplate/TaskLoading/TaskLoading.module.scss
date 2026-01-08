@@ -18,3 +18,27 @@
         @include mixin.text-ellipsis;
     }
 }
+
+.scrollWrapper {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.scrollText {
+  display: inline-block;
+  white-space: nowrap;
+  animation-name: scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

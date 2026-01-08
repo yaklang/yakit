@@ -4,18 +4,18 @@
             background-color: var(--Colors-Use-Main-Hover);
         }
         .ant-slider-handle:not(.ant-tooltip-open) {
-            border-color: var(--Colors-Use-Main-Hover);
+            border-color: var(--Colors-Use-Main-Primary);
         }
     }
 }
 .ant-slider-track {
-    background-color: var(--Colors-Use-Main-Border);
+    background-color: var(--Colors-Use-Main-Primary);
 }
 .ant-slider:hover .ant-slider-rail{
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .ant-slider-rail{
-    background-color: var(--Colors-Use-Neutral-Bg);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .ant-slider-dot{
     background-color: var(--Colors-Use-Neutral-Bg);

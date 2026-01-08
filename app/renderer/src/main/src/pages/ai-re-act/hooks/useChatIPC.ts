@@ -105,7 +105,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // 接口流里的文件树路径集合
     const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
-    const handleSetGrpcFolders = useMemoizedFn((info: AIFileSystemPin) => {
+    const handleSetGrpcFolders = useMemoizedFn(async (info: AIFileSystemPin) => {
         setGrpcFolders((old) => {
             const isExist = old.find((item) => item.path === info.path)
             if (!!isExist) {
@@ -151,6 +151,29 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // 日志
     const logEvents = useAIChatLog()
+
+    /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
+    const systemEventUUID = useRef<string[]>([])
+    const [systemStream, setSystemStream] = useState("")
+    const handleSetSystemStream = useMemoizedFn((uuid: string, content: string) => {
+        const lastUUID = systemEventUUID.current[systemEventUUID.current.length - 1]
+        if (lastUUID) {
+            if (lastUUID === uuid) {
+                setSystemStream((old) => old + content)
+            } else {
+                if (systemEventUUID.current.includes(uuid)) return
+                systemEventUUID.current.push(uuid)
+                setSystemStream(content)
+            }
+        } else {
+            systemEventUUID.current.push(uuid)
+            setSystemStream(content)
+        }
+    })
+    const handleResetSystemStream = useMemoizedFn(() => {
+        systemEventUUID.current = []
+        setSystemStream("")
+    })
 
     // AI性能相关数据和逻辑
     const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: logEvents.pushLog})
@@ -201,7 +224,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease: handleCasualReviewRelease,
         onGrpcFolder: handleSetGrpcFolders,
         sendRequest: sendRequest,
-        onNotifyMessage
+        onNotifyMessage,
+        onSystemStream: handleSetSystemStream
     })
 
     // 任务规划相关数据和逻辑
@@ -214,7 +238,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         sendRequest: sendRequest,
         onGrpcFolder: handleSetGrpcFolders,
         onNotifyMessage,
-        onTaskStart
+        onTaskStart,
+        onSystemStream: handleSetSystemStream
     })
     // #endregion
 
@@ -271,6 +296,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setRunTimeIDs([])
         setGrpcFolders([])
         handleResetMemoryList()
+        handleResetSystemStream()
         // handleResetQuestionQueueTimer()
         setQuestionQueue(cloneDeep(DeafultAIQuestionQueues))
         // logEvents.clearLogs()
@@ -600,7 +626,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             casualStatus,
             reActTimelines,
             memoryList,
-            taskStatus
+            taskStatus,
+            systemStream
         },
         {
             fetchToken,

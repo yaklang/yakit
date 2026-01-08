@@ -1,7 +1,7 @@
 import {memo, useEffect} from "react"
 import {StartupPage} from "./pages/StartupPage"
 import "./theme/ThemeClass.scss"
-import {getReleaseEditionName, isCommunityEdition, isIRify} from "./utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isIRify, isMemfit} from "./utils/envfile"
 import {ipcEventPre} from "./utils/ipcEventPre"
 
 import styles from "./App.module.scss"
@@ -21,7 +21,7 @@ const App: React.FC = memo(() => {
 
         // 通知应用退出
         ipcRenderer.on("close-engineLinkWin-renderer", async (e, res: any) => {
-            ipcRenderer.invoke("app-exit", {showCloseMessageBox: true, isIRify: isIRify()})
+            ipcRenderer.invoke("app-exit", {showCloseMessageBox: true, isIRify: isIRify(), isMemfit: isMemfit()})
         })
         return () => {
             ipcRenderer.removeAllListeners("close-engineLinkWin-renderer")
