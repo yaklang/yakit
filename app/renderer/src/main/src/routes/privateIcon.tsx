@@ -2596,38 +2596,38 @@ const PrivateSolidFingerprintManage = () => {
                 <path
                     d='M30.6668 12L16.0002 1.33337L1.3335 12'
                     stroke='var(--Colors-Use-Neutral-Text-1-Title)'
-                    stroke-width='2'
-                    stroke-linecap='round'
-                    stroke-linejoin='round'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
                 />
                 <path
                     d='M5.3335 14.3334V25.3334C5.3335 26.8061 6.52741 28 8.00017 28H16.0002M26.6668 13.3334V16'
                     stroke='var(--Colors-Use-Neutral-Text-1-Title)'
-                    stroke-width='2'
-                    stroke-linecap='round'
-                    stroke-linejoin='round'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
                 />
                 <path
                     d='M5.3335 14.3333C5.3335 13.597 5.93045 13 6.66683 13H10.6668V18.3333H5.3335V14.3333Z'
                     fill='white'
                     stroke='#F28C45'
-                    stroke-width='2'
-                    stroke-linecap='round'
-                    stroke-linejoin='round'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
                 />
                 <path
                     d='M5.3335 18.3334H10.6668V22.3334C10.6668 23.0698 10.0699 23.6667 9.3335 23.6667H6.66683C5.93045 23.6667 5.3335 23.0698 5.3335 22.3334V18.3334Z'
                     stroke='var(--Colors-Use-Neutral-Text-1-Title)'
-                    stroke-width='2'
-                    stroke-linecap='round'
-                    stroke-linejoin='round'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
                 />
                 <path
                     d='M10.6665 13H14.6665C15.4029 13 15.9998 13.597 15.9998 14.3333V17C15.9998 17.7364 15.4029 18.3333 14.6665 18.3333H10.6665V13Z'
                     stroke='var(--Colors-Use-Neutral-Text-1-Title)'
-                    stroke-width='2'
-                    stroke-linecap='round'
-                    stroke-linejoin='round'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
                 />
             </g>
             <g clipPath='url(#clip0_38051_63673)'>
