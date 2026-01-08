@@ -1,4 +1,14 @@
-import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {
+    forwardRef,
+    KeyboardEventHandler,
+    memo,
+    Ref,
+    RefAttributes,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState
+} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -18,6 +28,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import {extractDataWithMilkdown, setEditorValue} from "../components/aiMilkdownInput/utils"
 import {editorViewCtx} from "@milkdown/kit/core"
+import {convertKeyEventToKeyCombination} from "@/utils/globalShortcutKey/utils"
+import {YakitKeyBoard} from "@/utils/globalShortcutKey/keyboard"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -94,7 +106,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
         const handleSubmit = useMemoizedFn(() => {
             const qs = getMarkdownValue()
-            if (!qs || !editorMilkdown.current) return
+            if (!qs.trim() || !editorMilkdown.current) return
             const {mentions, plainText} = extractDataWithMilkdown(editorMilkdown.current)
             const value: AIChatTextareaSubmit = {
                 qs: plainText,
@@ -145,6 +157,14 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             setDisabled(!value.trim())
         })
         // #endregion
+        const handleTextareaKeyDown = useMemoizedFn((e) => {
+            const keys = convertKeyEventToKeyCombination(e)
+            if (keys?.join() === YakitKeyBoard.Enter) {
+                e.stopPropagation()
+                e.preventDefault()
+                handleSubmit()
+            }
+        })
         return (
             <div
                 className={classNames(
@@ -158,7 +178,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 ref={dropRef}
             >
                 {isHovering && <div className={styles["drag-hint"]}>松开以添加到对话</div>}
-                <div className={styles["textarea-body"]}>
+                <div className={styles["textarea-body"]} onKeyDown={handleTextareaKeyDown}>
                     <div className={styles["textarea-icon"]}>
                         {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
                         <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>
