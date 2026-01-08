@@ -201,10 +201,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
         setCurBottomTab(key)
     }
 
-    useEffect(() => {
-        onClickFooterTabItem("rule")
-    }, [pageInfo.webFuzzer])
-
     return (
         <div className={styles["HTTPHistoryAnalysis"]} ref={hTTPHistoryAnalysisRef}>
             <YakitResizeBox

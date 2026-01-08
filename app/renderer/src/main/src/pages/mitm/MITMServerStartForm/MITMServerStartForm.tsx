@@ -471,7 +471,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <Item
                         label={"HTTPS 配置"}
                         name='stateSecretHijacking'
-                        initialValue={"enableGMTLS"}
+                        initialValue={"stateSecretHijacking"}
                         help={
                             stateSecretHijacking === "enableGMTLS"
                                 ? "适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"

@@ -500,12 +500,12 @@ const getDefaultFixedTabs = () => {
     if (isMemfit()) {
         return [YakitRoute.AI_Agent, YakitRoute.AI_REPOSITORY]
     }
-    return [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
+    return [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 }
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = getDefaultFixedTabs()
 /** 一级tab固定展示tab支持多开页面 */
-export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = [YakitRoute.DB_HTTPHistoryAnalysis]
+export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = []
 /** 用户退出登录后，需自动关闭的页面 */
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 

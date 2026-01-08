@@ -425,12 +425,6 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
             }
         ]
     }
-
-    const time = new Date().getTime().toString()
-    const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
-    const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
-    let tabName = routeKeyToLabel.get(YakitRoute.DB_HTTPHistoryAnalysis) || menuName
-    let verbose = `${tabName}-1`
     return [
         {
             routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -447,23 +441,6 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
             route: YakitRoute.DB_HTTPHistory,
             singleNode: true,
             multipleNode: []
-        },
-        {
-            routeKey: routeConvertKey(YakitRoute.DB_HTTPHistoryAnalysis, ""),
-            verbose: "流量分析器",
-            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
-            route: YakitRoute.DB_HTTPHistoryAnalysis,
-            singleNode: false,
-            multipleLength: 1,
-            multipleNode: [
-                {
-                    id: tabId,
-                    verbose,
-                    time,
-                    groupId: "0",
-                    sortFieId: 1
-                }
-            ]
         }
     ]
 }

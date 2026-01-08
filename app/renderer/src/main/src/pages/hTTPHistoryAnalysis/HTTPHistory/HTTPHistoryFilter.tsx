@@ -14,6 +14,7 @@ import {getHTTPFlowExportFields} from "@/components/HTTPFlowTable/HTTPFlowExport
 import {
     OutlineChevrondownIcon,
     OutlineCogIcon,
+    OutlineFilterIcon,
     OutlineRefreshIcon,
     OutlineReplyIcon,
     OutlineSearchIcon,
@@ -59,7 +60,7 @@ import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "@/components/layout/icons"
-import {Divider} from "antd"
+import {Divider, Tooltip} from "antd"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 import {WebTree} from "@/components/WebTree/WebTree"
@@ -2226,15 +2227,27 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                         返回
                                     </YakitButton>
                                 )}
-                                <YakitButton
-                                    type='text'
-                                    onClick={() => {
-                                        setDrawerFormVisible(true)
-                                    }}
-                                    style={{padding: 0}}
-                                >
-                                    {t("HTTPFlowTable.advancedFilter")}
-                                </YakitButton>
+                                {size?.width && size?.width > 820 ? (
+                                    <YakitButton
+                                        type='text'
+                                        onClick={() => {
+                                            setDrawerFormVisible(true)
+                                        }}
+                                        style={{padding: 0}}
+                                    >
+                                        {t("HTTPFlowTable.advancedFilter")}
+                                    </YakitButton>
+                                ) : (
+                                    <Tooltip title={t("HTTPFlowTable.advancedFilter")} placement='top'>
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineFilterIcon />}
+                                            onClick={() => {
+                                                setDrawerFormVisible(true)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                )}
                                 {isFilter && (
                                     <YakitTag color={"success"} style={{margin: 0}}>
                                         {t("HTTPFlowTable.configured")}
@@ -2243,7 +2256,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 )}
                                 <Divider type='vertical' style={{margin: 0, top: 1}} />
                                 <div className={classNames(styles["http-history-table-right-item"])}>
-                                    {size?.width && size?.width > 800 && (
+                                    {size?.width && size?.width > 860 && (
                                         <div className={styles["http-history-table-right-label"]}>
                                             {t("HTTPFlowTable.protocolType")}
                                         </div>
@@ -2251,7 +2264,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     <YakitSelect
                                         size='small'
                                         value={query?.IsWebsocket || ""}
-                                        wrapperStyle={{width: 150}}
+                                        wrapperStyle={{width: 100}}
                                         onSelect={(val) => {
                                             setQuery((prev) => {
                                                 return {
