@@ -57,8 +57,6 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
-    /** 系统消息的收集(isSystem=true&type=stream) */
-    onSystemStream?: (uuid: string, content: string) => void
 }
 
 export interface UseCasualChatState {
@@ -84,8 +82,6 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onReviewRelease?: (id: string) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
-    /** 系统消息的收集(isSystem=true&type=stream) */
-    onSystemStream?: (uuid: string, content: string) => void
 }
 
 export interface UseTaskChatState {

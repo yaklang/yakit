@@ -13,22 +13,14 @@ import {
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent, AITaskStatus} from "./grpcApi"
-import {
-    AIChatQSData,
-    AIChatQSDataTypeEnum,
-    AIReviewType,
-    AIStreamOutput,
-    AITaskInfoProps,
-    AIToolResult,
-    ReActChatElement
-} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, AITaskInfoProps, ReActChatElement} from "./aiRender"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useChatContent from "./useChatContent"
 
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest, onSystemStream} = params || {}
+    const {pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)

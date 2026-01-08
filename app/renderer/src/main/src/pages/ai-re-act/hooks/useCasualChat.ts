@@ -15,7 +15,7 @@ import useChatContent from "./useChatContent"
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease, onSystemStream} = params || {}
+    const {pushLog, getRequest, onReviewRelease} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
