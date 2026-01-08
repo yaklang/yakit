@@ -324,10 +324,10 @@ function registerGlobalIPC() {
         }
         if (closeFlag && showCloseMessageBox && parentWindow) {
             const showIcon = isIRify
-                ? "../renderer/src/main/src/assets/irify-close.png"
+                ? "../assets/irify-close.png"
                 : isMemfit
-                ? "../renderer/src/main/src/assets/memfit-close.png"
-                : "../renderer/src/main/src/assets/yakit-close.png"
+                ? "../assets/memfit-close.png"
+                : "../assets/yakit-close.png"
 
             dialog
                 .showMessageBox(parentWindow, {
