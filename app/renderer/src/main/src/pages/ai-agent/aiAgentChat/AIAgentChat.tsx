@@ -21,7 +21,12 @@ import ChatIPCContent, {
 } from "../useContext/ChatIPCContent/ChatIPCContent"
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon, RedoDotIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondoubledownIcon,
+    OutlineChevrondoubleupIcon,
+    OutlineExitIcon,
+    RedoDotIcon
+} from "@/assets/icon/outline"
 import {
     AIChatIPCNotifyMessage,
     AIChatIPCStartParams,
@@ -729,7 +734,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onStopTask} = props
+    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onExtraAction} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -753,7 +758,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {showCancelSubtask && (
                         <YakitPopconfirm
                             placement='top'
-                            onConfirm={() => onStopTask(true)}
+                            onConfirm={() => onExtraAction("stopSubTask")}
                             title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
                         >
                             <YakitButton type='outline2' icon={<RedoDotIcon />}>
@@ -764,11 +769,17 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {node}
                     <YakitPopconfirm
                         placement='top'
-                        onConfirm={() => onStopTask()}
+                        onConfirm={() => onExtraAction("stopTask")}
                         title='是否确认取消整个任务，确认将停止执行'
                     >
                         <Tooltip overlay='终止任务' placement='top'>
-                            <YakitButton className={styles["task-button"]} radius='28px' colors='danger' type='primary' icon={<OutlineExitIcon />} />
+                            <YakitButton
+                                className={styles["task-button"]}
+                                radius='28px'
+                                colors='danger'
+                                type='primary'
+                                icon={<OutlineExitIcon />}
+                            />
                         </Tooltip>
                     </YakitPopconfirm>
                 </div>
