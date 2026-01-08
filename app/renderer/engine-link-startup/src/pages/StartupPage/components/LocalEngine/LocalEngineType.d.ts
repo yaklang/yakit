@@ -5,6 +5,7 @@ export interface LocalEngineProps {
     ref?: React.ForwardedRef<LocalEngineLinkFuncProps>
     setLog: Dispatch<SetStateAction<string[]>>
     onLinkEngine: (params: LocalLinkParams) => void
+    yakitStatus: YakitStatusType
     setYakitStatus: (v: YakitStatusType) => void
     buildInEngineVersion: string
     setRestartLoading: Dispatch<SetStateAction<boolean>>

@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
-import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, SystemInfo} from "./utils"
+import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, outputToWelcomeConsole, SystemInfo} from "./utils"
 import {
     grpcFetchBuildInYakVersion,
     grpcFetchLocalYakitVersion,
@@ -14,7 +14,6 @@ import {
 import {debugToPrintLog} from "@/utils/logCollection"
 import {LocalGVS} from "@/enums/yakitGV"
 import {
-    EngineWatchDogCallbackType,
     IgnoreYakit,
     LoadingClickExtra,
     ModalIsTop,
@@ -93,8 +92,12 @@ export const StartupPage: React.FC = () => {
     })
     /** 是否为远程模式 */
     const isRemoteEngine = useMemo(() => engineMode === "remote", [engineMode])
-    /** yakit使用状态 */
-    const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>("")
+    /** yakit使用状态 请用 safeSetYakitStatus 设置状态 */
+    const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>("init")
+    /** 手动点击中断连接 */
+    const breakHandleRef = useRef<boolean>(false)
+    /** 手动点击倒计时连接取消 */
+    const cancelCountdownLinkRef = useRef<boolean>(false)
     /** 倒计时秒数 */
     const [countdown, setCountdown] = useState<number>(3)
     /** 倒计时定时器引用 */
@@ -124,11 +127,9 @@ export const StartupPage: React.FC = () => {
             if (getEngineLink() && getEngineMode() === "local") return
         }
         handleBuiltInCheck()
-        setTimeout(() => {
-            handleFetchBaseInfo(() => {
-                handleLinkEngineMode()
-            })
-        }, 1000)
+        handleFetchBaseInfo(() => {
+            handleLinkEngineMode()
+        })
     }, [])
 
     /** 插件漏洞信息库自检 */
@@ -275,14 +276,14 @@ export const StartupPage: React.FC = () => {
                     debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
-                    }, 1000)
+                    }, 500)
                     return
                 default:
                     setCheckLog((arr) => arr.concat(["未获取到连接模式-默认(本地)模式"]))
                     debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
-                    }, 1000)
+                    }, 500)
                     return
             }
         })
@@ -300,6 +301,7 @@ export const StartupPage: React.FC = () => {
 
     // 本地连接的两种模式
     const handleStartLocalLink = useMemoizedFn((isInit: boolean) => {
+        debugToPrintLog(`------ 开始执行本地${isInit ? "初始化" : "连接"} ------`)
         if (isInit) {
             if (localEngineRef.current) localEngineRef.current.init(getCustomPort())
         } else {
@@ -309,29 +311,26 @@ export const StartupPage: React.FC = () => {
 
     // 切换远程模式
     const handleLinkRemoteMode = useMemoizedFn(() => {
-        // 如果当前状态是 break，不执行切换
-        if (getYakitStatus() === "break") return
         onDisconnect()
-        setYakitStatus("")
+        safeSetYakitStatus("")
         onSetEngineMode("remote")
     })
 
     // 本地连接的状态设置
     const setLinkLocalEngine = useMemoizedFn(() => {
-        // 如果当前状态是 break，不执行切换
-        if (getYakitStatus() === "break") return
         onDisconnect()
-        setYakitStatus("")
+        safeSetYakitStatus("")
         onSetEngineMode("local")
         debugToPrintLog(`------ 启动环境检查逻辑 ------`)
-        handleStartLocalLink(isCheckVersion.current)
-        isInitLocalLink.current = false
+        // 等YakitStatus更新
+        setTimeout(() => {
+            handleStartLocalLink(isCheckVersion.current)
+            isInitLocalLink.current = false
+        }, 300)
     })
 
     // 切换本地模式
     const handleLinkLocalMode = useMemoizedFn(() => {
-        // 如果当前状态是 break，不执行切换
-        if (getYakitStatus() === "break") return
         if (isEngineInstalled.current) {
             if (!isInitLocalLink.current) {
                 setLinkLocalEngine()
@@ -341,17 +340,15 @@ export const StartupPage: React.FC = () => {
             setCheckLog(["本地已安装引擎，准备环境检查中..."])
             setTimeout(() => {
                 setLinkLocalEngine()
-            }, 1000)
+            }, 500)
         } else {
             debugToPrintLog(`------ 启动无本地引擎逻辑 ------`)
             setCheckLog(["检查本地是否已安装引擎..."])
             setCheckLog(["本地没有引擎文件..."])
             setTimeout(() => {
-                // 如果当前状态是 break，不执行
-                if (getYakitStatus() === "break") return
-                setYakitStatus(getBuildInEngineVersion() ? "install" : "installNetWork")
+                safeSetYakitStatus(getBuildInEngineVersion() ? "install" : "installNetWork")
                 onSetEngineMode(undefined)
-            }, 1000)
+            }, 500)
         }
     })
     // #endregion
@@ -377,7 +374,7 @@ export const StartupPage: React.FC = () => {
 
     // yakit不再提示更新
     const noHintYakitUpdate = useMemoizedFn((ignoreYakit: IgnoreYakit) => {
-        setYakitStatus("")
+        safeSetYakitStatus("")
         if (ignoreYakit === "ignoreUpdates") {
             setLocalValue(LocalGVS.NoAutobootLatestVersionCheck, true)
         }
@@ -388,7 +385,7 @@ export const StartupPage: React.FC = () => {
 
     // yak不再提示更新
     const noHintYakUpdate = useMemoizedFn(() => {
-        setYakitStatus("")
+        safeSetYakitStatus("")
         setLocalValue(LocalGVS.NoYakVersionCheck, true)
         if (localEngineRef.current) {
             localEngineRef.current.checkEngineSource()
@@ -397,10 +394,11 @@ export const StartupPage: React.FC = () => {
     // #endregion
 
     // #region YakitLoading逻辑
+    // YakitLoading 界面暂时无法操作
+    const [yakitLoadingTip, setYakitLoadingTip] = useState<string>("")
+    const [disableYakitLoading, setDisableYakitLoading] = useState<boolean>(false)
     // 手动重连时按钮的loading
     const [restartLoading, setRestartLoading] = useState<boolean>(false)
-    // 远程控制时的刷新按钮loading
-    const [remoteControlRefreshLoading, setRemoteControlRefreshLoading] = useState<boolean>(false)
     const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any, time = 2000) => {
         setLoading(true)
         setTimeout(() => {
@@ -410,7 +408,6 @@ export const StartupPage: React.FC = () => {
     useEffect(() => {
         if (engineLink) {
             setRestartLoading(false)
-            setRemoteControlRefreshLoading(false)
         }
     }, [engineLink])
     // Loading页面切换引擎连接模式
@@ -442,7 +439,7 @@ export const StartupPage: React.FC = () => {
                             handleStartLocalLink(isCheckVersion.current)
                         }, [getCustomPort()])
                     } else {
-                        setYakitStatus("port_occupied")
+                        safeSetYakitStatus("port_occupied")
                     }
                     return
                 case "port_occupied":
@@ -507,42 +504,48 @@ export const StartupPage: React.FC = () => {
                     setKeepalive(false)
                     return
                 case "break":
-                    // 如果当前状态是 break，则执行重连
-                    if (getYakitStatus() === "break") {
-                        setTimeoutLoading(setRestartLoading)
-                        setYakitStatus("")
-                        handleStartLocalLink(false)
-                        isCheckVersion.current = false
-                        return
+                    // 用户点中断连接 或 手动连接引擎
+                    if (extra?.linkAgain) {
+                        // 手动点倒计时取消，再点连接
+                        if (cancelCountdownLinkRef.current) {
+                            cancelCountdownLinkRef.current = false
+                            // 立即进入
+                            setEngineLink(true)
+                            safeSetYakitStatus("link")
+                        } else {
+                            breakHandleRef.current = false
+                            safeSetYakitStatus("")
+                            // 需要等 yakitStatus 状态更新
+                            setTimeout(() => {
+                                handleStartLocalLink(false)
+                                isCheckVersion.current = false
+                            }, 300)
+                        }
+                    } else {
+                        // 否则执行断开
+                        outputToWelcomeConsole("手动触发中断连接")
+                        debugToPrintLog(`------ 手动触发中断连接 ------`)
+                        handleOperations("break")
+                        breakHandleRef.current = true
+                        setYakitLoadingTip("中断中...")
+                        setDisableYakitLoading(true)
+                        cancelAllTasks()
+                        setTimeout(() => {
+                            setYakitLoadingTip("")
+                            setDisableYakitLoading(false)
+                        }, 2000)
                     }
-                    // 否则执行断开 - 先设置 break 状态，再断开连接，确保状态不被覆盖
-                    // 清除倒计时定时器
-                    if (countdownTimerRef.current) {
-                        clearInterval(countdownTimerRef.current)
-                        countdownTimerRef.current = null
-                    }
-                    setYakitStatus("break")
-                    setCheckLog(["已主动断开, 请点击手动连接引擎"])
-                    onDisconnect()
                     return
                 case "link_countdown":
-                    // 用户点击立即进入或取消
+                    // 倒计时用户点击立即进入或取消
+                    clearCountDownTime()
                     if (extra?.enterNow) {
                         // 立即进入
-                        if (countdownTimerRef.current) {
-                            clearInterval(countdownTimerRef.current)
-                            countdownTimerRef.current = null
-                        }
-                        setYakitStatus("link")
+                        setEngineLink(true)
+                        safeSetYakitStatus("link")
                     } else {
-                        // 取消连接
-                        if (countdownTimerRef.current) {
-                            clearInterval(countdownTimerRef.current)
-                            countdownTimerRef.current = null
-                        }
-                        setYakitStatus("break")
-                        setCheckLog(["已取消连接, 请点击手动连接引擎"])
-                        onDisconnect()
+                        cancelCountdownLinkRef.current = true
+                        safeSetYakitStatus("break")
                     }
                     return
                 default:
@@ -550,6 +553,24 @@ export const StartupPage: React.FC = () => {
             }
         }
     )
+
+    // 在 3 秒内，不断尝试让主进程取消所有正在执行的任务
+    const cancelAllTasks = async () => {
+        const start = Date.now()
+        while (Date.now() - start < 3000) {
+            let res: any = null
+            try {
+                res = await ipcRenderer.invoke(ipcEventPre + "cancel-all-tasks")
+            } catch (e) {
+                debugToPrintLog(`------ cancel-all-tasks failed: ${e}`)
+            }
+            if (!res || res.canceled === 0) {
+                await new Promise((r) => setTimeout(r, 300))
+            } else {
+                await new Promise((r) => setTimeout(r, 500))
+            }
+        }
+    }
 
     // 解压内置引擎
     const initializeEngine = useMemoizedFn((callback = () => {}) => {
@@ -559,7 +580,7 @@ export const StartupPage: React.FC = () => {
             try {
                 await grpcUnpackBuildInYak(true)
                 grpcWriteEngineKeyToYakitProjects({}, true).finally(() => {
-                    setYakitStatus("")
+                    safeSetYakitStatus("")
                     callback()
                 })
             } catch (error) {
@@ -568,7 +589,7 @@ export const StartupPage: React.FC = () => {
                         ? "初始化失败，请点击下载引擎继续使用..."
                         : `解压失败：${error}，请点击下载引擎继续使用...`
                 ])
-                setYakitStatus(isInitLocalLink.current ? "installNetWork" : "skipAgreement_InstallNetWork")
+                safeSetYakitStatus(isInitLocalLink.current ? "installNetWork" : "skipAgreement_InstallNetWork")
             } finally {
                 setRestartLoading(false)
             }
@@ -578,13 +599,20 @@ export const StartupPage: React.FC = () => {
     // 数据库修复
     const [dbPath, setDbPath] = useState<string[]>([])
     const handleFixupDatabase = useMemoizedFn(async () => {
+        // 中断连接 后续不执行
+        if (breakHandleRef.current) {
+            debugToPrintLog(`------ 开始修复数据库 被阻止 ------`)
+            setCheckLog([])
+            return
+        }
+
         setCheckLog(["开始修复数据库中..."])
         try {
             const res = await grpcFixupDatabase({softwareVersion: FetchSoftwareVersion()})
             setRestartLoading(false)
             if (res.ok && res.status === "success") {
                 setCheckLog((arr) => arr.concat(["修复数据库成功"]))
-                setYakitStatus("")
+                safeSetYakitStatus("")
                 setDbPath([])
                 handleStartLocalLink(true)
                 return
@@ -592,15 +620,23 @@ export const StartupPage: React.FC = () => {
             switch (res.status) {
                 case "timeout":
                     setCheckLog((arr) => arr.concat(["命令执行超时，可查看日志详细信息..."]))
-                    setYakitStatus("fix_database_timeout")
+                    safeSetYakitStatus("fix_database_timeout")
                     break
                 default:
                     setDbPath(res.json.path)
                     setCheckLog((arr) => arr.concat(["修复失败，可将日志信息发送给工作人员处理..."]))
-                    setYakitStatus("fix_database_error")
+                    safeSetYakitStatus("fix_database_error")
             }
         } catch (error) {
-            yakitNotify("error", "fix db：" + error + "，建议重启软件")
+            // 如果意外情况则按照修复失败处理
+            if (!breakHandleRef.current) {
+                outputToWelcomeConsole(`修复数据库出现意外情况：${error}`)
+                setCheckLog(["修复数据库出现意外情况，可查看日志详细信息..."])
+                safeSetYakitStatus("fix_database_error")
+            } else {
+                setCheckLog(["已主动断开, 请点击手动连接引擎"])
+                safeSetYakitStatus("break")
+            }
         }
     })
     // #endregion
@@ -642,6 +678,9 @@ export const StartupPage: React.FC = () => {
     const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
     // 开始远程连接引擎
     const handleLinkRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
+        breakHandleRef.current = false
+        cancelCountdownLinkRef.current = false
+        safeSetYakitStatus("")
         setTimeoutLoading(setRemoteLinkLoading)
         setCredential({
             Host: info.host,
@@ -655,6 +694,8 @@ export const StartupPage: React.FC = () => {
     })
     // 远程切换本地
     const handleRemoteToLocal = useMemoizedFn(() => {
+        breakHandleRef.current = false
+        cancelCountdownLinkRef.current = false
         setCheckLog([])
         onSetEngineMode(undefined)
         // 可能isRemoteEngine状态值没有变
@@ -665,10 +706,6 @@ export const StartupPage: React.FC = () => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((params: LocalLinkParams) => {
-        // 如果当前状态是 break，不继续执行连接流程
-        if (getYakitStatus() === "break") {
-            return
-        }
         debugToPrintLog(`------ 开始启动引擎, 指定端口: ${params.port} ------`)
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${params.port}`])
         setCredential({
@@ -679,7 +716,7 @@ export const StartupPage: React.FC = () => {
             Port: params.port,
             Mode: "local"
         })
-        setYakitStatus("ready")
+        safeSetYakitStatus("ready")
         onStartLinkEngine()
     })
 
@@ -690,27 +727,22 @@ export const StartupPage: React.FC = () => {
         setEngineLink(false)
     })
 
-    // 安全设置 keepalive，如果当前状态是 break 则不设置
+    // 安全设置 keepalive，当手动点中断连接的时候，不需要再探测引擎是否存活
     const safeSetKeepalive = useMemoizedFn((value: boolean) => {
-        // 如果当前状态是 break，不允许设置 keepalive = true
-        if (value && getYakitStatus() === "break") {
+        if (breakHandleRef.current) {
             return
         }
         setKeepalive(value)
     })
 
-    // 安全设置 yakitStatus，如果当前状态是 break 或 link_countdown 则不允许被其他状态覆盖
+    // 安全设置 yakitStatus，当手动点中断连接的时候，不能更新状态
     const safeSetYakitStatus = useMemoizedFn((value: YakitStatusType) => {
-        // 如果当前状态是 break，不允许被其他状态覆盖（除非是显式设置 break）
-        if (getYakitStatus() === "break" && value !== "break") {
-            return
-        }
-        // 如果当前状态是 link_countdown，不允许被其他状态覆盖（除非是显式设置 link_countdown 或 link）
-        if (getYakitStatus() === "link_countdown" && !["link_countdown", "link", "break"].includes(value)) {
+        if (breakHandleRef.current) {
             return
         }
         setYakitStatus(value)
     })
+
     // 开始连接引擎
     const onStartLinkEngine = useMemoizedFn(() => {
         isStopSend.current = false
@@ -734,56 +766,56 @@ export const StartupPage: React.FC = () => {
 
     // #region 连接成功
     const onReady = useMemoizedFn(() => {
-        // 如果当前状态是 break / link_countdown / link，不继续执行
         if (["break", "link_countdown", "link"].includes(getYakitStatus())) {
             return
         }
         if (getKeepalive()) {
             setCheckLog([])
             // 先设置倒计时状态
-            setYakitStatus("link_countdown")
+            safeSetYakitStatus("link_countdown")
             setCountdown(3)
-            setEngineLink(true)
-            
             // 清除之前的定时器
-            if (countdownTimerRef.current) {
-                clearInterval(countdownTimerRef.current)
-            }
-            
+            clearCountDownTime()
             // 开始倒计时
             let currentCount = 3
             countdownTimerRef.current = setInterval(() => {
                 currentCount -= 1
                 setCountdown(currentCount)
-                
+
                 if (currentCount <= 0) {
-                    if (countdownTimerRef.current) {
-                        clearInterval(countdownTimerRef.current)
-                        countdownTimerRef.current = null
-                    }
+                    clearCountDownTime()
                     // 倒计时结束，正式进入
                     if (getYakitStatus() === "link_countdown") {
-                        setYakitStatus("link")
+                        safeSetYakitStatus("link")
+                        setEngineLink(true)
                     }
                 }
             }, 1000)
         }
     })
-    
+
     // 清理倒计时定时器
+    const clearCountDownTime = useMemoizedFn(() => {
+        if (countdownTimerRef.current) {
+            clearInterval(countdownTimerRef.current)
+            countdownTimerRef.current = null
+        }
+    })
     useEffect(() => {
         return () => {
-            if (countdownTimerRef.current) {
-                clearInterval(countdownTimerRef.current)
-            }
+            clearCountDownTime()
         }
     }, [])
+
+    // 引擎连接成功发送数据到主界面
     useEffect(() => {
         if (engineLink && getYakitStatus() === "link" && getCredential().Port && !isStopSend.current) {
             ipcRenderer.invoke("engineLinkWin-done", {useOldLink: false, credential: getCredential()})
             cacheLocalModePort(getCredential().Port)
         }
     }, [engineLink, yakitStatus])
+
+    // 主界面远程连接引擎更新认证信息
     useEffect(() => {
         ipcRenderer.on("from-win-updateCredential", (e, data) => {
             const credential = data.credential
@@ -795,6 +827,7 @@ export const StartupPage: React.FC = () => {
             ipcRenderer.removeAllListeners("from-win-updateCredential")
         }
     }, [])
+
     /**
      * 1、清空日志信息|将远程连接loading置为false(不管是不是远程连接)|
      * 2、执行连接成功的外界回调事件
@@ -816,6 +849,8 @@ export const StartupPage: React.FC = () => {
                         isEngineInstalled.current = flag
                         isInitLocalLink.current = true
                         isCheckVersion.current = true
+                        breakHandleRef.current = false
+                        cancelCountdownLinkRef.current = false
                         // 清空主进程yaklang版本缓存
                         ipcRenderer.invoke(ipcEventPre + "clear-local-yaklang-version-cache")
                     })
@@ -838,40 +873,38 @@ export const StartupPage: React.FC = () => {
     // #endregion
 
     const onFailed = useMemoizedFn((count) => {
-        // 20以上的次数属于无效次数
-        if (count > 20) {
+        // 10以上的次数属于无效次数
+        if (count > 10) {
             setKeepalive(false)
             return
         }
+
         debugToPrintLog(`[INFO] 目标引擎进程不存在: 探活失败${count}次`)
         setEngineLink(false)
 
-        if (getYakitStatus() === "error" && count === 20) {
-            // 连接断开后的20次尝试过后，不在进行尝试
-            setCheckLog((arr) => {
-                return arr.slice(1).concat(["连接超时, 请手动启动引擎"])
-            })
+        if (getYakitStatus() === "error" && count === 10) {
+            // 连接断开后的10次尝试过后，不在进行尝试
+            setCheckLog(["请点击手动连接引擎，再次尝试"])
             return
         }
 
-        if (getYakitStatus() === "link" || getYakitStatus() === "ready") {
-            // 连接中或正在连接中触发
+        // 连接中触发
+        if (getYakitStatus() === "link") {
             if (getEngineMode() === "remote") {
                 yakitNotify("error", "远程连接已断开")
                 onDisconnect()
-                setYakitStatus("")
+                safeSetYakitStatus("")
                 handleOperations("remote")
-            }
-
-            if (getEngineMode() === "local") {
-                if (getYakitStatus() === "link") setCheckLog(["引擎连接超时, 正在尝试重连"])
+            } else if (getEngineMode() === "local") {
+                setCheckLog(["引擎连接未成功, 正在尝试重连"])
                 if (count > 4) {
-                    setYakitStatus("error")
+                    safeSetYakitStatus("error")
                 }
             }
         }
     })
 
+    // 主界面发送有关引擎操作的信息到连接界面
     useEffect(() => {
         ipcRenderer.on("from-win", (e, data) => {
             const type = data.yakitStatus
@@ -890,14 +923,14 @@ export const StartupPage: React.FC = () => {
                 onDisconnect()
                 onSetEngineMode(undefined)
                 if (isInitLocalLink.current) {
-                    setYakitStatus("installNetWork")
+                    safeSetYakitStatus("installNetWork")
                 } else {
-                    setYakitStatus("skipAgreement_InstallNetWork")
+                    safeSetYakitStatus("skipAgreement_InstallNetWork")
                 }
                 break
-            case "break": // 小风车关闭引擎
+            case "break": // 主动中断连接 或 小风车断开引擎
+                safeSetYakitStatus("break")
                 onDisconnect()
-                setYakitStatus("break")
                 setCheckLog(["已主动断开, 请点击手动连接引擎"])
                 break
             case "install": // 下载的yaklang时候，或切换本地时 --- 本地引擎不存在
@@ -910,11 +943,11 @@ export const StartupPage: React.FC = () => {
             case "installNetWork":
                 onDisconnect()
                 onSetEngineMode(undefined)
-                setYakitStatus("skipAgreement_InstallNetWork")
+                safeSetYakitStatus("skipAgreement_InstallNetWork")
                 return
             case "error":
                 setEngineLink(false)
-                setYakitStatus("error")
+                safeSetYakitStatus("error")
                 break
             case "local":
                 onDisconnect()
@@ -1006,6 +1039,7 @@ export const StartupPage: React.FC = () => {
                     onKeepaliveShouldChange={safeSetKeepalive}
                     onReady={onReady}
                     onFailed={onFailed}
+                    yakitStatus={yakitStatus}
                     setYakitStatus={safeSetYakitStatus}
                     setCheckLog={setCheckLog}
                 />
@@ -1019,6 +1053,7 @@ export const StartupPage: React.FC = () => {
                                 ref={localEngineRef}
                                 setLog={setCheckLog}
                                 onLinkEngine={handleLinkLocalEngine}
+                                yakitStatus={yakitStatus}
                                 setYakitStatus={safeSetYakitStatus}
                                 buildInEngineVersion={buildInEngineVersion}
                                 setRestartLoading={setRestartLoading}
@@ -1027,6 +1062,8 @@ export const StartupPage: React.FC = () => {
                             />
                             {(!engineLink || yakitStatus === "link_countdown") && (
                                 <YakitLoading
+                                    yakitLoadingTip={yakitLoadingTip}
+                                    disableYakitLoading={disableYakitLoading}
                                     isTop={isTop}
                                     setIsTop={setIsTop}
                                     system={system}
@@ -1035,7 +1072,6 @@ export const StartupPage: React.FC = () => {
                                     yakitStatus={yakitStatus}
                                     engineMode={engineMode || "local"}
                                     restartLoading={restartLoading}
-                                    remoteControlRefreshLoading={remoteControlRefreshLoading}
                                     dbPath={dbPath}
                                     btnClickCallback={loadingClickCallback}
                                     port={customPort}

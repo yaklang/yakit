@@ -61,11 +61,7 @@ import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
 import {SolidCheckCircleIcon, SolidHomeIcon} from "@/assets/icon/solid"
 import {setNowProjectDescription} from "@/pages/globalVariable"
-import {
-    handleAIConfig,
-    apiGetGlobalNetworkConfig,
-    apiSetGlobalNetworkConfig
-} from "@/pages/spaceEngine/utils"
+import {handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -187,7 +183,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.on("from-engineLinkWin", (e, data) => {
             setOldLink(data.useOldLink)
             if (!data.useOldLink) {
-                setNewCheckLog(["引擎连接中..."])
+                setNewCheckLog(["即将进入..."])
                 setShowLoadingPage(true)
                 handleFetchBaseInfo()
                 setCredential(data.credential)
@@ -753,7 +749,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 // 先销毁 antd 消息通知 弹窗
                 emiter.emit("destroyMainWinAntdUiEvent")
                 ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type})
-            }, 1000)
+            }, 1500)
             setTimeout(() => {
                 setNewCheckLog([])
             }, 2000)
@@ -943,6 +939,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         if (!yaklangDownload) {
             setEngineLink(false)
             setKeepalive(false)
+
             if (!yaklangSpecifyVersion) {
                 setYaklangKillPssText({
                     title: "更新引擎，需关闭所有本地进程",
@@ -989,6 +986,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ipcRenderer
                     .invoke("install-yak-engine", version)
                     .then(() => {
+                        yakitNotify("info", "已检测到本地存在对应版本引擎，直接进行安装")
                         yakitNotify("success", `安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
                         installSuccessCallback()
                     })
@@ -1227,7 +1225,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     }
                     setYakitStatus("control-remote")
                     onDisconnect()
-                    
+
                     const obj = {
                         Host: resultObj.host,
                         IsTLS: true,
@@ -1453,8 +1451,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             onAdd={(data) => {
                                                 // 新增，有影响ai优化级
                                                 const newParams = handleAIConfig({
-                                                    AppConfigs: obj.AppConfigs,
-                                                    AiApiPriority: obj.AiApiPriority
+                                                        AppConfigs: obj.AppConfigs,
+                                                        AiApiPriority: obj.AiApiPriority
                                                 }, data)
                                                 if (!newParams) {
                                                     yakitNotify("error", "onFuzzerModal 参数错误")
@@ -1720,8 +1718,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onFailed = useMemoizedFn((count: number) => {
         if (getOldLink()) {
-            // 20以上的次数属于无效次数
-            if (count > 20) {
+            // 10以上的次数属于无效次数
+            if (count > 10) {
                 setKeepalive(false)
                 return
             }
@@ -1747,7 +1745,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
             }
 
-            if (getYakitStatus() === "error" && count === 20) {
+            if (getYakitStatus() === "error" && count === 10) {
                 // 连接断开后的20次尝试过后，不在进行尝试
                 setCheckLog((arr) => {
                     return arr.slice(1).concat(["连接超时, 请手动启动引擎"])
@@ -1770,8 +1768,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
             }
         } else {
-            // 20以上的次数属于无效次数
-            if (count > 20) {
+            // 10以上的次数属于无效次数
+            if (count > 10) {
                 setKeepalive(false)
                 return
             }
@@ -1796,20 +1794,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
             }
 
-            if (getYakitStatus() === "error" && count === 20) {
-                // 连接断开后的20次尝试过后，不在进行尝试
+            if (getYakitStatus() === "error" && count === 10) {
+                // 连接断开后的10次尝试过后，不在进行尝试
                 return
             }
 
-            if (getYakitStatus() === "link" || getYakitStatus() === "ready") {
-                // 连接中或正在连接中触发
+            // 连接中触发
+            if (getYakitStatus() === "link") {
                 if (getEngineMode() === "remote") {
                     failed("远程连接已断开")
                     onDisconnect()
                     setYakitStatus("")
                     handleOperations("remote")
-                }
-                if (getEngineMode() === "local") {
+                } else if (getEngineMode() === "local") {
                     if (count > 4) {
                         setYakitStatus("error")
                         openEngineLinkWin("error")

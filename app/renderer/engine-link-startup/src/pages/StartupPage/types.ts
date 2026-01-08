@@ -33,6 +33,7 @@ export interface SystemInfoProps {
 
 /** @name 当前yakit使用状态 */
 export type YakitStatusType =
+    | "init" // 初始
     | "install" // 解压内置引擎
     | "installNetWork" // 初始内置引擎不存在，联网安装
     | "check_timeout" // 引擎check超时
@@ -107,6 +108,7 @@ export interface LoadingClickExtra {
     downYakit?: boolean
     ignoreYakit?: IgnoreYakit
     downYak?: boolean
+    linkAgain?: boolean
     /** 是否立即进入（跳过倒计时） */
     enterNow?: boolean
 }

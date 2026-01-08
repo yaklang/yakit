@@ -4,6 +4,9 @@ const {GLOBAL_YAK_SETTING} = require("../state")
 const {getLocalYaklangEngine, YakitProjectPath} = require("../filePath")
 const {engineLogOutputFileAndUI, engineLogOutputUI} = require("../logFile")
 
+// 引擎连接过程中涉及到的执行任务，请务必存入，引擎引擎连接有中断连接功能
+const runningTasks = new Map()
+
 const ECHO_TEST_MSG = "Hello Yakit!"
 
 /** 各版本下的数据库环境变量 */
@@ -48,19 +51,37 @@ module.exports = {
                     let stderr = ""
                     const timeoutMs = 11000
                     let killed = false
-                    let close = false
+                    let successDetected = false
+                    const taskKey = "check_" + checkId
+                    let cleaned = false
 
-                    const timeoutId = setTimeout(() => {
-                        if (close) return
+                    const killFun = (timeOut = false) => {
+                        if (killed) return
                         killed = true
-                        subprocess.kill()
+                        cleanTask()
+                        clearTimeout(timeoutId)
+                        !timeOut && engineLogOutputFileAndUI(win, `----- 执行中止 check -----`)
                         try {
+                            subprocess.kill()
                             if (process.platform === "win32") {
                                 childProcess.exec(`taskkill /PID ${subprocess.pid} /T /F`)
                             } else {
                                 process.kill(subprocess.pid, "SIGKILL")
                             }
                         } catch {}
+                    }
+
+                    runningTasks.set(taskKey, killFun)
+
+                    const cleanTask = () => {
+                        if (cleaned) return
+                        cleaned = true
+                        runningTasks.delete(taskKey)
+                    }
+
+                    const timeoutId = setTimeout(() => {
+                        if (checkId !== currentStartId || successDetected || killed) return
+                        killFun(true)
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式超时 -----`)
                         reject({status: "timeout", message: "检查随机密码模式超时"})
                     }, timeoutMs)
@@ -81,6 +102,7 @@ module.exports = {
 
                     subprocess.on("error", (error) => {
                         if (checkId !== currentCheckId) return
+                        cleanTask()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
                         engineLogOutputFileAndUI(win, `process_error: ${error.message}`)
@@ -89,7 +111,7 @@ module.exports = {
 
                     subprocess.on("close", (code) => {
                         if (checkId !== currentCheckId || killed) return
-                        close = true
+                        cleanTask()
                         clearTimeout(timeoutId)
                         const combinedOutput = (stdout + stderr).trim()
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式结束，退出码: ${code} -----`)
@@ -106,6 +128,7 @@ module.exports = {
                         }
 
                         if (json && json.ok === true) {
+                            successDetected = true
                             engineLogOutputFileAndUI(win, `----- 随机密码模式检查通过 -----`)
                             return resolve({status: "success", json})
                         }
@@ -255,17 +278,37 @@ module.exports = {
                     let stderr = ""
                     const timeoutMs = 11000
                     let killed = false
+                    let successDetected = false
+                    const taskKey = "fixdb_" + checkId
+                    let cleaned = false
 
-                    const timeoutId = setTimeout(() => {
+                    const killFun = (timeOut = false) => {
+                        if (killed) return
                         killed = true
-                        subprocess.kill()
+                        cleanTask()
+                        clearTimeout(timeoutId)
+                        !timeOut && engineLogOutputFileAndUI(win, `----- 执行中止 修复数据库 -----`)
                         try {
+                            subprocess.kill()
                             if (process.platform === "win32") {
                                 childProcess.exec(`taskkill /PID ${subprocess.pid} /T /F`)
                             } else {
                                 process.kill(subprocess.pid, "SIGKILL")
                             }
                         } catch {}
+                    }
+
+                    runningTasks.set(taskKey, killFun)
+
+                    const cleanTask = () => {
+                        if (cleaned) return
+                        cleaned = true
+                        runningTasks.delete(taskKey)
+                    }
+
+                    const timeoutId = setTimeout(() => {
+                        if (checkId !== currentStartId || successDetected || killed) return
+                        killFun(true)
                         engineLogOutputFileAndUI(win, `----- 修复数据库超时 -----`)
                         reject({status: "timeout", message: "修复数据库超时"})
                     }, timeoutMs)
@@ -286,6 +329,7 @@ module.exports = {
 
                     subprocess.on("error", (error) => {
                         if (checkId !== currentFixId) return
+                        cleanTask()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `----- 修复数据库失败 -----`)
                         engineLogOutputFileAndUI(win, `process_error: ${error.message}`)
@@ -294,6 +338,7 @@ module.exports = {
 
                     subprocess.on("close", (code) => {
                         if (checkId !== currentFixId || killed) return
+                        cleanTask()
                         clearTimeout(timeoutId)
                         const combinedOutput = (stdout + stderr).trim()
                         engineLogOutputFileAndUI(win, `----- 修复数据库结束，退出码: ${code} -----`)
@@ -310,6 +355,7 @@ module.exports = {
                         }
 
                         if (json && json.ok === true) {
+                            successDetected = true
                             engineLogOutputFileAndUI(win, `----- 修复数据库成功 -----`)
                             return resolve({status: "success", json})
                         }
@@ -444,26 +490,10 @@ module.exports = {
                     let stderr = ""
                     let successDetected = false
                     let killed = false
+                    const taskKey = "start_" + checkId
+                    let cleaned = false
                     let pollIntervalId = null
                     const timeoutMs = 60000 // 增加到 60 秒，配合轮询检测
-
-                    /** 清理轮询 */
-                    const cleanup = () => {
-                        if (pollIntervalId) {
-                            clearInterval(pollIntervalId)
-                            pollIntervalId = null
-                        }
-                    }
-
-                    /** 成功回调，确保只触发一次 */
-                    const onSuccess = (msg1, msg2) => {
-                        if (successDetected || killed) return
-                        successDetected = true
-                        cleanup()
-                        clearTimeout(timeoutId)
-                        engineLogOutputFileAndUI(win, msg2)
-                        resolve({status: "success", msg1})
-                    }
 
                     /** 轮询检测引擎连接状态 */
                     const startConnectionPolling = () => {
@@ -491,7 +521,10 @@ module.exports = {
                                     }
 
                                     if (data && data["result"] === ECHO_TEST_MSG) {
-                                        onSuccess("引擎启动成功（通过连接检测）", `轮询检测到引擎连接成功 (Echo 测试通过)！`)
+                                        onSuccess(
+                                            "引擎启动成功（通过连接检测）",
+                                            `轮询检测到引擎连接成功 (Echo 测试通过)！`
+                                        )
                                     }
                                 })
                             } catch (e) {
@@ -499,29 +532,61 @@ module.exports = {
                             }
                         }, 2000) // 每 2 秒检测一次
                     }
-
                     // 延迟 2 秒开始轮询，给引擎一点启动时间
                     setTimeout(() => {
                         if (!successDetected && !killed && checkId === currentStartId) {
                             startConnectionPolling()
                         }
                     }, 2000)
+                    /** 清理轮询 */
+                    const cleanup = () => {
+                        if (pollIntervalId) {
+                            clearInterval(pollIntervalId)
+                            pollIntervalId = null
+                        }
+                    }
 
-                    const timeoutId = setTimeout(() => {
-                        if (successDetected || killed) return
+                    const killFun = (timeOut = false) => {
+                        if (killed) return
                         killed = true
                         cleanup()
-                        subprocess.kill()
+                        cleanTask()
+                        clearTimeout(timeoutId)
+                        !timeOut && engineLogOutputFileAndUI(win, `----- 执行中止 启动本地引擎  -----`)
                         try {
+                            subprocess.kill()
                             if (process.platform === "win32") {
                                 childProcess.exec(`taskkill /PID ${subprocess.pid} /T /F`)
                             } else {
                                 process.kill(subprocess.pid, "SIGKILL")
                             }
                         } catch {}
+                    }
+
+                    runningTasks.set(taskKey, killFun)
+                    const cleanTask = () => {
+                        if (cleaned) return
+                        cleaned = true
+                        runningTasks.delete(taskKey)
+                    }
+
+                    const timeoutId = setTimeout(() => {
+                        if (checkId !== currentStartId || successDetected || killed) return
+                        killFun(true)
                         engineLogOutputFileAndUI(win, `----- 启动本地引擎超时 (60s) -----`)
                         reject({status: "timeout", message: "启动本地引擎超时"})
                     }, timeoutMs)
+
+                    /** 成功回调，确保只触发一次 */
+                    const onSuccess = (msg1, msg2) => {
+                        if (checkId !== currentStartId || successDetected || killed) return
+                        successDetected = true
+                        cleanup()
+                        cleanTask()
+                        clearTimeout(timeoutId)
+                        engineLogOutputFileAndUI(win, msg2)
+                        resolve({status: "success", msg1})
+                    }
 
                     subprocess.stdout.on("data", (data) => {
                         if (checkId !== currentStartId) return
@@ -554,20 +619,13 @@ module.exports = {
                     })
 
                     process.on("exit", () => {
-                        cleanup()
-                        subprocess.kill()
-                        try {
-                            if (process.platform === "win32") {
-                                childProcess.exec(`taskkill /PID ${subprocess.pid} /T /F`)
-                            } else {
-                                process.kill(subprocess.pid, "SIGKILL")
-                            }
-                        } catch {}
+                        killFun()
                     })
 
                     subprocess.on("error", (err) => {
                         if (checkId !== currentStartId) return
                         cleanup()
+                        cleanTask()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `启动引擎出错: ${err.message}`)
                         win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
@@ -577,6 +635,7 @@ module.exports = {
                     subprocess.on("close", (code) => {
                         if (checkId !== currentStartId || killed || successDetected) return
                         cleanup()
+                        cleanTask()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `----- 引擎进程退出，退出码: ${code} -----`)
                         reject({status: "exit", message: `引擎进程提前退出 (${code})`})
@@ -599,6 +658,29 @@ module.exports = {
                     status: safeError.status,
                     message: safeError.message
                 }
+            }
+        })
+
+        // 中断连接 取消所有正在执行的任务
+        ipcMain.handle(ipcEventPre + "cancel-all-tasks", () => {
+            if (runningTasks.size === 0) {
+                return {ok: true, canceled: 0}
+            }
+
+            let count = 0
+
+            for (const [, cancel] of runningTasks) {
+                try {
+                    cancel()
+                    count++
+                } catch {}
+            }
+
+            runningTasks.clear()
+
+            return {
+                ok: true,
+                canceled: count
             }
         })
     }
