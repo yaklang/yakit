@@ -87,7 +87,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // #region 接口更新的(文件|文件夹)数据集合
     const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
-    const handleSetGrpcFolders = useMemoizedFn(async (info: AIFileSystemPin) => {
+    const handleSetGrpcFolders = useMemoizedFn((info: AIFileSystemPin) => {
         setGrpcFolders((old) => {
             const isExist = old.find((item) => item.path === info.path)
             if (!!isExist) return old
@@ -138,10 +138,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     //#endregion
 
-    // #region 单次流执行时的输出展示数据
-    // 日志
-    const logEvents = useAIChatLog()
-
+    // #region 系统信息流展示相关逻辑
     /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
     const systemEventUUID = useRef<string[]>([])
     const [systemStream, setSystemStream] = useState("")
@@ -164,6 +161,11 @@ function useChatIPC(params?: UseChatIPCParams) {
         systemEventUUID.current = []
         setSystemStream("")
     })
+    // #endregion
+
+    // #region 单次流执行时的输出展示数据
+    // 日志
+    const logEvents = useAIChatLog()
 
     // AI性能相关数据和逻辑
     const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: logEvents.pushLog})
@@ -183,8 +185,26 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [casualChat, casualChatEvent] = useCasualChat({
         pushLog: logEvents.pushLog,
         getRequest: fetchRequestParams,
-        onReviewRelease: handleCasualReviewRelease,
-        onSystemStream: handleSetSystemStream
+        onReviewRelease: handleCasualReviewRelease
+    })
+    // #endregion
+
+    // #region 任务规划相关变量和hook
+    /** 任务规划对应的问题ID */
+    const taskChatID = useRef("")
+    const fetchTaskChatID = useMemoizedFn(() => {
+        return taskChatID.current
+    })
+
+    /** 当前任务规划对应的数据流-CoordinatorId */
+    const planCoordinatorId = useRef("")
+    /** 任务规划的loading状态 */
+    const [taskStatus, setTaskStatus] = useState<PlanLoadingStatus>(cloneDeep(DefaultPlanLoadingStatus))
+
+    const handleResetTaskChatLoading = useMemoizedFn(() => {
+        taskChatID.current = ""
+        planCoordinatorId.current = ""
+        setTaskStatus(cloneDeep(DefaultPlanLoadingStatus))
     })
 
     const [taskChat, taskChatEvent] = useTaskChat({
@@ -193,8 +213,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
-        sendRequest: sendRequest,
-        onSystemStream: handleSetSystemStream
+        sendRequest: sendRequest
     })
     // #endregion
 
@@ -300,15 +319,14 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 重置所有数据 */
     const onReset = useMemoizedFn(() => {
         chatID.current = ""
-       
+        setExecute(false)
         handleResetGrpcFile()
         handleResetRunTimeIDs()
         setCoordinatorIDs([])
         handleResetQuestionQueue()
-        
         handleResetMemoryList()
-        handleResetSystemStream()
         handleResetReActTimelines()
+        handleResetSystemStream()
         handleResetCasualChatLoading()
         handleResetTaskChatLoading()
 
@@ -593,6 +611,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                                 ContentType
                             }
                         })
+
+                        // 输出实时系统信息流
+                        if (res.IsSystem) handleSetSystemStream(EventUUID, content)
                         return
                     }
 
