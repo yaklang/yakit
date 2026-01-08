@@ -39,7 +39,7 @@
         }
     }
 }
-.plugin-tun-hijack-hidden{
+.plugin-tun-hijack-hidden {
     height: 0px;
     overflow: hidden;
 }
@@ -81,5 +81,13 @@
                 }
             }
         }
+    }
+}
+
+.exclamationcircleIcon {
+    svg {
+        width: 16px;
+        height: 16px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }

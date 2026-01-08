@@ -19,7 +19,7 @@ import {
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TraceSvgSvgIcon} from "@/assets/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePlay2Icon, OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineExclamationcircleIcon, OutlinePlay2Icon, OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {QuitIcon} from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -827,7 +827,19 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         {
             title: "本地地址",
             dataKey: "LocalAddress",
-            width: 180
+            width: 180,
+            render(text) {
+                return (
+                    <div
+                        style={{cursor: "pointer", userSelect: "none"}}
+                        onDoubleClick={() => {
+                            setClipboardText(text)
+                        }}
+                    >
+                        {text}
+                    </div>
+                )
+            }
         },
         {
             title: "远程地址",
@@ -836,7 +848,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
             render(text) {
                 return (
                     <div
-                        style={{cursor: "pointer"}}
+                        style={{cursor: "pointer", userSelect: "none"}}
                         onDoubleClick={() => {
                             setClipboardText(text)
                         }}
@@ -856,7 +868,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
                 return newData && newData.length > 0 ? (
                     <Tooltip title={text}>
                         <div
-                            style={{cursor: "pointer"}}
+                            style={{cursor: "pointer", userSelect: "none"}}
                             onDoubleClick={() => {
                                 setClipboardText(text)
                             }}
@@ -896,7 +908,14 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
     return (
         <YakitModal
             visible={!!hijackProcessInfo}
-            title='信息详情'
+            title={
+                <>
+                    信息详情
+                    <Tooltip title='双击内容可复制到剪贴板' placement='top'>
+                        <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
+                    </Tooltip>
+                </>
+            }
             width={800}
             destroyOnClose={true}
             onCancel={() => setHijackProcessInfo(undefined)}
@@ -915,6 +934,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
                         onChange: () => {}
                     }}
                     columns={hijackInfoColumns}
+                    lineHighlight={false}
                 />
             </div>
         </YakitModal>
