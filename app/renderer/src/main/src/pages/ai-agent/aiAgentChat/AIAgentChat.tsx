@@ -337,7 +337,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     case ReActChatEventEnum.OPEN_FORGE_FORM:
                         const {value: forgeValue} = data.params || {}
                         handleClearActiveTool()
-                        handleTriggerExecForge(forgeValue)
+                        handleTriggerExecForge(forgeValue,data.useForge)
                         break
                     // 替换当前使用的 ai tool
                     case ReActChatEventEnum.USE_AI_TOOL:
@@ -390,13 +390,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const replaceToolNoPromptCache = useRef(false)
 
     /** 从别的元素上触发使用 forge 模板的功能 */
-    const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
+    const handleTriggerExecForge = useMemoizedFn((forge: AIForge,useForge?: boolean) => {
         if (!forge || !forge.Id) {
             yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
             return
         }
         if (!chatIPCData.execute) {
-            handleReplaceActiveForge(forge.Id)
+            handleReplaceActiveForge(forge,useForge)
         } else {
             const m = YakitModalConfirm({
                 title: "切换forge模板",
@@ -415,7 +415,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 onOk: () => {
                     m.destroy()
                     onStop()
-                    handleReplaceActiveForge(forge.Id)
+                    handleReplaceActiveForge(forge,useForge)
                 },
                 onCancel: () => {
                     m.destroy()
@@ -507,36 +507,38 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleClearActiveTool()
     })
 
-    const handleReplaceActiveForge = useMemoizedFn((id: number) => {
-        const forgeID = Number(id) || 0
-        if (!forgeID) {
-            yakitNotify("error", `准备使用的模板异常: id('${id}'), 操作失败`)
-            return
-        }
-
-        grpcGetAIForge({ID: forgeID})
-            .then((res) => {
-                const forgeInfo = cloneDeep(res)
-                if (!activeForge) setActiveForge(forgeInfo)
-                else {
-                    if (forgeInfo.Id === activeForge.Id) {
-                        // 同一个forge模板, 检查名字和参数是否一至
-                        let isReplace = false
-                        isReplace = forgeInfo.ForgeName !== activeForge.ForgeName
-                        isReplace = !isEqual(forgeInfo.ParamsUIConfig, activeForge.ParamsUIConfig)
-                        if (isReplace) setActiveForge(forgeInfo)
+    const handleReplaceActiveForge = useMemoizedFn(async(forge: AIForge, useForge?: boolean) => {
+        try {
+            const forgeID = Number(forge.Id) || 0
+            if (!forgeID) {
+                yakitNotify("error", `准备使用的模板异常: id('${forgeID}'), 操作失败`)
+                return
+            }
+            let forgeInfo = cloneDeep(forge)
+            if(!useForge){
+                let res = await grpcGetAIForge({ID: forgeID})
+                forgeInfo = cloneDeep(res)
+            }
+            if (!activeForge) setActiveForge(forgeInfo)
+            else {
+                if (forgeInfo.Id === activeForge.Id) {
+                    // 同一个forge模板, 检查名字和参数是否一至
+                    let isReplace = false
+                    isReplace = forgeInfo.ForgeName !== activeForge.ForgeName
+                    isReplace = !isEqual(forgeInfo.ParamsUIConfig, activeForge.ParamsUIConfig)
+                    if (isReplace) setActiveForge(forgeInfo)
+                } else {
+                    // 不同forge模板，弹出提示框是否替换
+                    if (replaceForgeNoPrompt) {
+                        setActiveForge({...forgeInfo})
                     } else {
-                        // 不同forge模板，弹出提示框是否替换
-                        if (replaceForgeNoPrompt) {
-                            setActiveForge({...forgeInfo})
-                        } else {
-                            replaceForge.current = {...forgeInfo}
-                            if (!replaceForgeNoPromptCache.current) setReplaceShow(true)
-                        }
+                        replaceForge.current = {...forgeInfo}
+                        if (!replaceForgeNoPromptCache.current) setReplaceShow(true)
                     }
                 }
-            })
-            .catch(() => {})
+            }
+
+        } catch (error) {}
     })
     const handleReplaceActiveTool = useMemoizedFn((id: number) => {
         const toolId = Number(id) || 0

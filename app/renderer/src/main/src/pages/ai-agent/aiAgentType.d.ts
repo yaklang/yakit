@@ -20,6 +20,8 @@ export interface AIAgentSetting
 export interface AIAgentTriggerEventInfo {
     type: string
     params?: Record<string, any>
+    // 是否直接使用所传forge
+    useForge?: boolean
 }
 // #endregion
 

@@ -26,7 +26,8 @@ import {
     OutlineSearchIcon,
     OutlineTerminalIcon,
     OutlineTrashIcon,
-    OutlineUploadIcon
+    OutlineUploadIcon,
+    OutlineBotIcon
 } from "@/assets/icon/outline"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -92,6 +93,8 @@ import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import importExportStyles from "@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss"
+import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
+import {ReActChatEventEnum} from "@/pages/ai-agent/defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -870,12 +873,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }
     })
 
-    useUpdateEffect(()=>{
-        if(allCheck){
+    useUpdateEffect(() => {
+        if (allCheck) {
             setSelectList(tableData)
         }
-    },[tableData])
-    
+    }, [tableData])
+
     const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: SSARisk) => {
         if (c) {
             setSelectList((s) => [...s, selectedRows])
@@ -1534,6 +1537,52 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 </div>
                 {isShowExtra && (
                     <div className={styles["content-heard-right"]} style={{height: "100%", alignItems: "center"}}>
+                        <YakitButton
+                            style={{marginRight: 8}}
+                            type='outline2'
+                            icon={<OutlineBotIcon />}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                grpcGetAIForge({
+                                    ForgeName: "ssapoc"
+                                },true)
+                                    .then((res) => {
+                                        if (!res) {
+                                            yakitNotify("warning", "暂无ForgeName匹配项")
+                                            return
+                                        }
+                                        if(!res.ParamsUIConfig){
+                                            yakitNotify("warning", "暂无ParamsUIConfig配置项")
+                                            return
+                                        }
+                                        let paramsUIConfig = JSON.parse(res.ParamsUIConfig)
+                                        // 给予默认值
+                                        paramsUIConfig.map((item) => {
+                                            if (item.Field === "risk_id") {
+                                                item.DefaultValue = info.Id
+                                            }
+                                            return item
+                                        })
+                                        let newRes = {...res, ParamsUIConfig: JSON.stringify(paramsUIConfig)}
+                                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                                        setTimeout(() => {
+                                            emiter.emit(
+                                                "onReActChatEvent",
+                                                JSON.stringify({
+                                                    type: ReActChatEventEnum.OPEN_FORGE_FORM,
+                                                    params: {value: newRes},
+                                                    useForge: true
+                                                })
+                                            )
+                                        }, 100)
+                                    })
+                                    .catch((e) => {
+                                        yakitNotify("error", "匹配ForgeName异常:" + e)
+                                    })
+                            }}
+                        >
+                            在AIAgent中打开
+                        </YakitButton>
                         {isShowCollapse ? (
                             <YakitButton
                                 type='outline2'
