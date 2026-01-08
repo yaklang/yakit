@@ -33,7 +33,19 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
         },
         [loading]
     )
-
+    useKeyPress(
+        "esc",
+        (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            onHide()
+        },
+        {
+            target: ref,
+            exactMatch: true,
+            useCapture: true
+        }
+    )
     useClickAway(() => {
         onHide()
     }, ref)
