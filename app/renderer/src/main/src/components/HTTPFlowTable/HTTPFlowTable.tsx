@@ -731,8 +731,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
     // 高级筛选所选项
-    const [filterMode, setFilterMode] = useState<"shield" | "show">("shield")
-    const [hostName, setHostName] = useState<string[]>([])
+    const [filterMode, setFilterMode, getFilterMode] = useGetSetState<"shield" | "show">("shield")
+    const [hostName, setHostName, getHostName] = useGetSetState<string[]>([])
     const [urlPath, setUrlPath] = useState<string[]>([])
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
@@ -912,6 +912,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         ExcludeStatusCode: ""
                     }
                 }
+                refreshTabsContRef.current = true
                 setParams(newParams)
 
                 emiter.emit(
@@ -1107,36 +1108,33 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     /**
      * 网站树部分
      */
-    useUpdateEffect(() => {
-        if (["History", "Plugin"].includes(pageType || "")) {
-            setParams((prev) => ({
-                ...prev,
-                SearchURL: props.searchURL,
-            }))
-            setScrollToIndex(0)
-            setCurrentIndex(undefined)
-            setSelected(undefined)
-            setSelectedRowKeys([])
-            setSelectedRows([])
-            setIsAllSelect(false)
+    const campareSelectedKeys = useCampare(props.selectedKeys)
+    useDebounceEffect(
+        () => {
+            if (["History", "Plugin"].includes(pageType || "")) {
+                const url = props.includeInUrl
+                const includeInUrlArr = url ? (Array.isArray(url) ? url : [url]) : []
+                const treeArr = props.selectedKeys ? [...includeInUrlArr, ...props.selectedKeys] : includeInUrlArr
+                // 当高级筛选为展示状态，同时host有值的时候
+                if (getFilterMode() === "show" && getHostName().length) {
+                    treeArr.push(...getHostName())
+                }
+                setParams((prev) => ({
+                    ...prev,
+                    IncludeInUrl: [...new Set(treeArr)]
+                }))
+            }
+        },
+        [props.includeInUrl, campareSelectedKeys, pageType],
+        {
+            wait: 200
         }
-    }, [props.searchURL, props.includeInUrl, pageType])// 这里加上includeInUrl依赖但里面没用到 是因为下面selectedKeys只需要设置setParams 不需要重置
+    )
     useUpdateEffect(() => {
         if (params.SearchURL === "") {
             refreshTabsContRef.current = true
         }
     }, [params.SearchURL])
-
-    useUpdateEffect(() => {
-        const {includeInUrl, selectedKeys = []} = props
-        setParams((prev) => ({
-            ...prev,
-            IncludeInUrl: [
-                ...(includeInUrl ? (Array.isArray(includeInUrl) ? includeInUrl : [includeInUrl]) : []),
-                ...selectedKeys
-            ]
-        }))
-    }, [props.selectedKeys, props.includeInUrl])
 
     const [queryParams, setQueryParams] = useState<string>("")
     useDebounceEffect(
@@ -3560,7 +3558,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             // 高级筛选里面的参数，没有放开高级筛选按钮的一开始就不会获取下面的值，传进去也没有关系
             SearchContentType: params.SearchContentType,
             ExcludeContentType: params.ExcludeContentType,
-            IncludeInUrl: params.IncludeInUrl,
+            IncludeInUrl: params.IncludeInUrl, // 网站树也有用到此参数
             IncludePath: params.IncludePath,
             ExcludePath: params.ExcludePath,
             IncludeSuffix: params.IncludeSuffix,
@@ -5011,9 +5009,10 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
             getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
             getRemoteValue(RemoteGV.MITMDisableSystemProxy)
         ])
-        const stateSecretHijacking = stateSecretHijackingResult.status === 'fulfilled' ? stateSecretHijackingResult.value : ''
-        const disableSystemProxy = disableSystemProxyResult.status === 'fulfilled' ? disableSystemProxyResult.value : ''
-        
+        const stateSecretHijacking =
+            stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
+        const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
+
         if (stateSecretHijacking) {
             if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
                 Object.assign(params, {enableGMTLS: true})

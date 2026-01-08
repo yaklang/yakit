@@ -398,14 +398,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
 
     // #region 网站树、进程
+    const refreshTabsContRef = useRef<boolean>(false)
     const campareProcessName = useCampare(ProcessName)
     useDebounceEffect(
         () => {
+            const treeArr = includeInUrl ? (Array.isArray(includeInUrl) ? includeInUrl : [includeInUrl]) : []
+            // 当高级筛选为展示状态，同时host有值的时候
+            if (getFilterMode() === "show" && getHostName().length) {
+                treeArr.push(...getHostName())
+            }
             setQuery((prev) => {
                 return {
                     ...prev,
                     SearchURL: searchURL,
-                    IncludeInUrl: includeInUrl ? (Array.isArray(includeInUrl) ? includeInUrl : [includeInUrl]) : [""],
+                    IncludeInUrl: treeArr,
                     ProcessName: ProcessName
                 }
             })
@@ -417,8 +423,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     // #region 高级筛选
     const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
-    const [filterMode, setFilterMode] = useState<"shield" | "show">("shield")
-    const [hostName, setHostName] = useState<string[]>([])
+    const [filterMode, setFilterMode, getFilterMode] = useGetSetState<"shield" | "show">("shield")
+    const [hostName, setHostName, getHostName] = useGetSetState<string[]>([])
     const [urlPath, setUrlPath] = useState<string[]>([])
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
@@ -479,6 +485,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     }
     useDebounceEffect(
         () => {
+            refreshTabsContRef.current = true
             setQuery((prev) => {
                 // 屏蔽
                 if (filterMode === "shield") {
@@ -674,8 +681,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         if (!getBodyLengthSort() || newSort.orderBy !== "") {
             sorterTableRef.current = {
                 ...newSort,
-                ...newSort.order === "none" ? { order : "desc" } : {},
-                ...newSort.orderBy === "DurationMs" ? { orderBy : "duration" } : newSort.orderBy === "RequestSizeVerbose" ?  { orderBy : "request_length" } : {},
+                ...(newSort.order === "none" ? {order: "desc"} : {}),
+                ...(newSort.orderBy === "DurationMs"
+                    ? {orderBy: "duration"}
+                    : newSort.orderBy === "RequestSizeVerbose"
+                    ? {orderBy: "request_length"}
+                    : {})
             }
             setBodyLengthSort(false)
         }
@@ -1050,7 +1061,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
-                                    {rowData.BodyLength}{rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）`: ''}
+                                    {rowData.BodyLength}
+                                    {rowData.BodySizeVerbose && rowData.BodyLength > 1024
+                                        ? `（${rowData.BodySizeVerbose}）`
+                                        : ""}
                                 </div>
                             )}
                         </>
@@ -1162,7 +1176,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 sorterProps: {
                     sorter: true
                 },
-                render: (text, {RequestLength}) => `${RequestLength || text.slice(0,-1)}${RequestLength > 1024 ? `（${text}）` : '' }`
+                render: (text, {RequestLength}) =>
+                    `${RequestLength || text.slice(0, -1)}${RequestLength > 1024 ? `（${text}）` : ""}`
             },
             {
                 title: t("YakitTable.action"),
@@ -1199,7 +1214,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     e.stopPropagation()
                                     let m = showYakitDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), '', t),
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), "", t),
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
@@ -2012,7 +2027,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const handleClickHarExport = useMemoizedFn((ids: number[]) => {
         handleSaveFileSystemDialog({
             title: t("HTTPFlowTable.saveFile"),
-            defaultPath: (!toWebFuzzer ? "History" : "WebFuzzer")+`-${Date.now()}` ,
+            defaultPath: (!toWebFuzzer ? "History" : "WebFuzzer") + `-${Date.now()}`,
             filters: [
                 {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
             ]
@@ -2061,6 +2076,23 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         queyChangeUpdateData()
     }, [query, refresh])
 
+
+    const [queryParams, setQueryParams] = useState<string>("")
+    useDebounceEffect(
+        () => {
+            if (queryParams !== "") {
+                let refreshFlag = false
+                if (refreshTabsContRef.current) {
+                    refreshTabsContRef.current = false
+                    refreshFlag = true
+                }
+                onQueryParams?.(queryParams, refreshFlag)
+            }
+        },
+        [queryParams],
+        {wait: 200}
+    )
+
     const update = useMemoizedFn((page: number) => {
         const isInit = page === 1
         if (isInit) {
@@ -2084,7 +2116,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         const copyParams = {...params}
         copyParams.Color = copyParams.Color ? copyParams.Color : []
         copyParams.StatusCode = copyParams.StatusCode ? copyParams.StatusCode : ""
-        onQueryParams && onQueryParams(JSON.stringify(copyParams), copyParams.SearchURL ? false : true)
+
+        if (copyParams.SearchURL === "") {
+            refreshTabsContRef.current = true
+        }
+        setQueryParams(JSON.stringify(copyParams))
         ipcRenderer
             .invoke("QueryHTTPFlows", params)
             .then((res: YakQueryHTTPFlowResponse) => {
@@ -2201,7 +2237,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 />
                             </div>
                             <div className={styles["http-history-table-right"]}>
-                                {webFuzzerPageId && toWebFuzzer && closable &&(
+                                {webFuzzerPageId && toWebFuzzer && closable && (
                                     <YakitButton
                                         icon={<OutlineReplyIcon />}
                                         size='small'
