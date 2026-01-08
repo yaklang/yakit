@@ -37,6 +37,7 @@ import {HijackRunnerPool, HijackTask} from "./HijackRunner"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {v4 as uuidv4} from "uuid"
+import {setClipboardText} from "@/utils/clipboard"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 export const PluginTunHijackDef: PluginTunHijackRefProps = {
@@ -831,19 +832,41 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         {
             title: "远程地址",
             dataKey: "RemoteAddress",
-            width: 180
+            width: 180,
+            render(text) {
+                return (
+                    <div
+                        style={{cursor: "pointer"}}
+                        onDoubleClick={() => {
+                            setClipboardText(text)
+                        }}
+                    >
+                        {text}
+                    </div>
+                )
+            }
         },
         {
             title: "域名",
             dataKey: "Domain",
             width: 200,
-            render: (data?:string[]) => {
+            render: (data?: string[]) => {
                 let newData = data?.filter((d) => d && d.length > 0)
-                return newData ? 
-                <Tooltip title={newData.join(", ")}>
-                    {newData.join(", ")}
-                </Tooltip>
-                : "-"
+                const text = (newData || []).join(", ")
+                return newData && newData.length > 0 ? (
+                    <Tooltip title={text}>
+                        <div
+                            style={{cursor: "pointer"}}
+                            onDoubleClick={() => {
+                                setClipboardText(text)
+                            }}
+                        >
+                            {text}
+                        </div>
+                    </Tooltip>
+                ) : (
+                    "-"
+                )
             }
         },
         {
@@ -874,14 +897,12 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         <YakitModal
             visible={!!hijackProcessInfo}
             title='信息详情'
-            width={600}
+            width={800}
             destroyOnClose={true}
             onCancel={() => setHijackProcessInfo(undefined)}
             footer={null}
         >
-            <div
-                style={{height: (hijackProcessInfo || []).length > 15 ? 400 : "auto"}}
-            >
+            <div style={{height: (hijackProcessInfo || []).length > 15 ? 400 : "auto"}}>
                 <TableVirtualResize
                     isRefresh={false}
                     isShowTitle={false}
