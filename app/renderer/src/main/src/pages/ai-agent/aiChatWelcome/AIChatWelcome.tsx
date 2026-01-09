@@ -1,4 +1,4 @@
-import React, {useEffect, useId, useMemo, useRef, useState} from "react"
+import React, {useEffect, useId, useRef, useState} from "react"
 import {
     AIChatWelcomeProps,
     AIMaterialsData,
@@ -10,7 +10,7 @@ import {
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
 import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useSafeState} from "ahooks"
-import {AIChatTextareaProps, AIChatTextareaSubmit} from "../template/type"
+import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "../template/type"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -49,21 +49,15 @@ import classNames from "classnames"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
-import {historyStore} from "../components/aiFileSystemList/store/useHistoryFolder"
 
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
-import {useCustomFolder} from "../components/aiFileSystemList/store/useCustomFolder"
-import {FileListStoreKey, fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
-import {OpenFileDropdownItem} from "./OpenFileDropdown/OpenFileDropdown"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import useAIChatDrop from "./hooks/useAIChatDrop"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {KnowledgeSidebarList} from "./KnowledgeSidebarList/KnowledgeSidebarList"
-import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 
 const sideberRadioOptions = [
     {
@@ -112,17 +106,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
 
     // #region 问题相关逻辑
-    const textareaProps: AIChatTextareaProps["textareaProps"] = useCreation(() => {
-        return {
-            placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
-        }
-    }, [])
 
     useEffect(() => {
         const konwledgeInputStringFn = (params: string) => {
             try {
                 const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-                setQuestion(data?.inputString ?? "")
+                onSetQuestion(data?.inputString ?? "")
                 removePagesDataCacheById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
             } catch (error) {}
         }
@@ -133,19 +122,19 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     }, [])
 
     const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
-    const [question, setQuestion] = useState<string>(initKnowledgeStr())
     const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
     const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
     const [questionList, setQuestionList] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
-    const customFolder = useCustomFolder()
     // 控制下拉菜单
     const [openDrawer, setOpenDrawer] = useState<boolean>(true)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
+    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
+    const inputDefaultValue = useRef<string>(initKnowledgeStr())
     const [inViewPort = true] = useInViewport(welcomeRef)
 
     const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
@@ -192,6 +181,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         [checkItems],
         {wait: 500, leading: true}
     )
+    const onSetQuestion = useMemoizedFn((value: string) => {
+        aiChatTextareaRef.current?.setValue(value ?? "")
+    })
     const onStartExecute = useMemoizedFn(() => {
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.stop()
@@ -270,8 +262,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     })
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
         onTriageSubmit(value)
-        fileToChatQuestionStore.clear(FileListStoreKey.FileList)
-        setQuestion("")
+        onSetQuestion("")
     })
     const onMore = useMemoizedFn((item: string) => {
         switch (item) {
@@ -368,15 +359,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         setCheckItems([])
         setQuestionList(getRandomItems(questionListAllRef.current))
     })
-
-    const onOpenFileFolder = async (data: OpenFileDropdownItem) => {
-        if (!data.path) return
-        historyStore.addHistoryItem(data)
-        setOpenDrawer(true)
-    }
-
-    // 拖拽
-    const {isHovering, dropRef} = useAIChatDrop(FileListStoreKey.FileList)
     return (
         <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
             <div className={styles["open-file-tree-button"]}>
@@ -411,13 +393,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                             <div className={styles["title"]}>Memfit AI Agent</div>
                             <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
                         </div>
-                        <div
-                            ref={dropRef}
-                            className={classNames(styles["input-body-wrapper"], {
-                                [styles.draggingFromTree]: isHovering
-                            })}
-                        >
-                            {isHovering && <div className={styles.dragHint}>松开以添加到对话</div>}
+                        <div className={classNames(styles["input-body-wrapper"])}>
                             <ReactResizeDetector
                                 onResize={(_, height) => {
                                     if (!height) return
@@ -429,9 +405,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                 refreshRate={50}
                             />
                             <AIChatTextarea
-                                question={question}
-                                setQuestion={setQuestion}
-                                textareaProps={textareaProps}
+                                defaultValue={inputDefaultValue.current}
+                                ref={aiChatTextareaRef}
                                 onSubmit={handleTriageSubmit}
                                 extraFooterLeft={
                                     <>
@@ -475,7 +450,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                         <div
                                             key={item}
                                             className={styles["suggestion-tips-item"]}
-                                            onClick={() => setQuestion(item)}
+                                            onClick={() => onSetQuestion(item)}
                                         >
                                             <div className={styles["suggestion-tips-item-text"]}>{item}</div>
                                         </div>

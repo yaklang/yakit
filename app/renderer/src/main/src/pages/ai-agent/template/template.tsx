@@ -1,37 +1,35 @@
 import React, {
-    ChangeEventHandler,
     forwardRef,
     KeyboardEventHandler,
     memo,
     Ref,
     RefAttributes,
     useEffect,
-    useMemo,
+    useImperativeHandle,
     useRef,
     useState
 } from "react"
-import {AIChatTextareaProps, AIChatTextareaSubmit, QSInputTextareaProps} from "./type"
+import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {v4 as uuidv4} from "uuid"
 
 import classNames from "classnames"
 import styles from "./template.module.scss"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {AIChatMention} from "../components/aiChatMention/AIChatMention"
-import {AIMentionTabsEnum} from "../defaultConstant"
-import {FreeDialogTagList} from "../aiChatWelcome/FreeDialogList/FreeDialogList"
-import FreeDialogFileList, { useGetStoreKey } from "../aiChatWelcome/FreeDialogFileList/FreeDialogFileList"
-import {fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
+import {AIMilkdownInput} from "../components/aiMilkdownInput/AIMilkdownInput"
+import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
+import {callCommand, getMarkdown} from "@milkdown/kit/utils"
+import useAIChatDrop from "../aiChatWelcome/hooks/useAIChatDrop"
+import {aiMentionCommand, AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
-import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
-import {isArray} from "lodash"
-import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
-import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import {extractDataWithMilkdown, setEditorValue} from "../components/aiMilkdownInput/utils"
+import {editorViewCtx} from "@milkdown/kit/core"
+import {convertKeyEventToKeyCombination} from "@/utils/globalShortcutKey/utils"
+import {YakitKeyBoard} from "@/utils/globalShortcutKey/keyboard"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -53,319 +51,198 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
 /**
  * @name chat-问题输入框(带提交按钮)
  * @description
- * - 默认行高是20px, 默认最大行数是5行,
- * - 想调整最大行数，需在 textareaProps 里传入 className 控制 maxHeight(注意，需要带上!important修饰)
- * - !!! 调整行数只能通过 className 控制，style 会被 antd 逻辑覆盖
  */
-export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
-    const {loading, extraFooterLeft, extraFooterRight, onSubmit, textareaProps, className, children} = props
+export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
+    forwardRef((props, ref) => {
+        const {loading, extraFooterLeft, extraFooterRight, onSubmit, className, children, defaultValue} = props
 
-    const storeKey = useGetStoreKey()
-    // icon的唯一id生成
-    const iconId = useRef(uuidv4())
-    const fileToQuestion = useFileToQuestion(storeKey)
-    // #region question-相关逻辑
-    const [question, setQuestion] = useControllableValue<string>(props, {
-        defaultValue: "",
-        valuePropName: "question",
-        trigger: "setQuestion"
-    })
-    const {selectForges, selectTools, selectKnowledgeBases} = useChatIPCStore()
-    const {setSelectForges, setSelectTools, setSelectKnowledgeBases} = useChatIPCDispatcher()
-    const aiChatTextareaRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(aiChatTextareaRef)
+        const [disabled, setDisabled] = useState<boolean>(false)
 
+        // icon的唯一id生成
+        const iconId = useRef(uuidv4())
 
-    useEffect(() => {
-        if (!inViewport) return
-        emiter.on("settingInputCard", onSettingInputCard)
-        return () => {
-            emiter.off("settingInputCard", onSettingInputCard)
-        }
-    }, [inViewport])
-    useDebounceEffect(
-        () => {
-            const value: AIAgentTriggerEventInfo = {
-                type: AIMentionTabsEnum.KnowledgeBase,
-                params: selectKnowledgeBases
-            }
-            emiter.emit("updateOfInputCard", JSON.stringify(value))
-        },
-        [selectKnowledgeBases],
-        {wait: 200, leading: true}
-    )
-    const isQuestion = useMemo(() => {
-        return !!(question && question.trim())
-    }, [question])
+        const {isHovering, dropRef} = useAIChatDrop({
+            onFilesChange: (v) => onFilesChange(v)
+        })
+        const [inViewport = true] = useInViewport(dropRef)
+        const editorMilkdown = useRef<EditorMilkdownProps>()
 
-    const handleSubmit = useMemoizedFn(() => {
-        if (!isQuestion) return
-        const value: AIChatTextareaSubmit = {
-            qs: question.trim()
-        }
-        onSubmit && onSubmit(value)
-        setSelectForges([])
-        setSelectTools([])
-        setSelectKnowledgeBases([])
-        fileToChatQuestionStore.clear(storeKey)
-    })
-    const onSettingInputCard = useMemoizedFn((res) => {
-        if (!inViewport) return
-        try {
-            const data: AIAgentTriggerEventInfo = JSON.parse(res)
-            const {type, params} = data
-            switch (type as AIMentionTabsEnum) {
-                case AIMentionTabsEnum.KnowledgeBase:
-                    if (isArray(params)) {
-                        setSelectKnowledgeBases(params)
-                    }
-                    break
-
-                default:
-                    break
-            }
-        } catch (error) {}
-    })
-    // #endregion
-
-    // #region textarea-相关逻辑
-    const {
-        className: textareaClassName,
-        onChange: onTextareaChange,
-        onKeyDown: onTextareaKeyDown,
-        onFocus: onTextareaFocus,
-        ...textareaRest
-    } = textareaProps || {}
-
-    const textareaRef = useRef<TextAreaRef>(null)
-
-    const mentionRef = useRef<{
-        destroy: () => void
-    }>()
-    const mentionPerActiveRef = useRef<AIMentionTabsEnum>() // 提及上一次激活的tab
-
-    const handleSetTextareaFocus = useMemoizedFn(() => {
-        if (textareaRef && textareaRef.current) {
-            textareaRef.current.focus()
-        }
-    })
-    const handleTextareaChange: ChangeEventHandler<HTMLTextAreaElement> = useMemoizedFn((e) => {
-        const content = e.target.value
-        setQuestion(content)
-        onTextareaChange && onTextareaChange(e)
-        if (content.length === 1 && content === "@") {
-            // 内容为空时, 触发mention,后期待优化
-            omMention()
-        } else if (mentionRef.current) {
-            onResetMention()
-        }
-    })
-
-    const handleTextareaFocus = useMemoizedFn((e) => {
-        omMentionByFocus()
-        onTextareaFocus && onTextareaFocus(e)
-    })
-    const omMentionByFocus = useDebounceFn(
-        () => {
-            if (question.length === 1 && question === "@") omMention()
-        },
-        {wait: 200}
-    ).run
-
-    const onResetMention = useMemoizedFn(() => {
-        if (mentionRef.current) {
-            mentionRef.current.destroy()
-            mentionRef.current = undefined
-        }
-    })
-
-    const omMention = useMemoizedFn(() => {
-        if (!textareaRef.current || !!mentionRef.current) return
-        const rect = textareaRef.current.resizableTextArea?.textArea.getBoundingClientRect()
-        if (rect) {
-            const x = rect.x
-            const y = rect.y + 20
-            mentionRef.current = showByRightContext(
-                <AIChatMention
-                    selectForge={selectForges}
-                    selectTool={selectTools}
-                    selectKnowledgeBase={selectKnowledgeBases}
-                    onSelect={onSetMention}
-                    defaultActiveTab={mentionPerActiveRef.current}
-                />,
-                x,
-                y
-            )
-        }
-    })
-
-    const onSetMention = useMemoizedFn((type: AIMentionTabsEnum, value?: AIChatMentionSelectItem) => {
-        switch (type) {
-            case AIMentionTabsEnum.Forge_Name:
-                if (value)
-                    setSelectForges((perv) => {
-                        const index = perv.findIndex((item) => item.id === value.id)
-                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                    })
-                break
-
-            case AIMentionTabsEnum.Tool:
-                if (value)
-                    setSelectTools((perv) => {
-                        const index = perv.findIndex((item) => item.id === value.id)
-                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                    })
-                break
-
-            case AIMentionTabsEnum.KnowledgeBase:
-                if (value)
-                    setSelectKnowledgeBases((perv) => {
-                        const index = perv.findIndex((item) => item.id === value.id)
-                        return index === -1 ? [...perv, value] : perv.filter((item) => item.id !== value.id)
-                    })
-                break
-            case AIMentionTabsEnum.File_System:
-                break
-            default:
-                break
-        }
-        if (question === "@") {
-            setQuestion("")
-        }
-        mentionPerActiveRef.current = type
-        onResetMention()
-        handleSetTextareaFocus()
-    })
-
-    const handleTextareaKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useMemoizedFn((e) => {
-        const keyCode = e.keyCode ? e.keyCode : e.key
-        const shiftKey = e.shiftKey
-        if (keyCode === 13 && shiftKey) {
-            e.stopPropagation()
-            e.preventDefault()
-            setQuestion(`${question}\n`)
-        }
-        if (keyCode === 13 && !shiftKey) {
-            e.stopPropagation()
-            e.preventDefault()
-            handleSubmit()
-        }
-        onTextareaKeyDown && onTextareaKeyDown(e)
-    })
-    // #endregion
-
-    const isShowSelectList = useCreation(() => {
-        return (
-            selectForges.length > 0 ||
-            selectTools.length > 0 ||
-            selectKnowledgeBases.length > 0 ||
-            fileToQuestion.length > 0
+        useImperativeHandle(
+            ref,
+            () => {
+                return {
+                    setMention: (v) => onSetMention(v),
+                    setValue: (v) => onSetValue(v),
+                    getValue: () => getMarkdownValue()
+                }
+            },
+            []
         )
-    }, [selectForges, selectTools, selectKnowledgeBases, fileToQuestion])
-    return (
-        <div
-            className={classNames(styles["ai-chat-textarea"], className)}
-            onClick={handleSetTextareaFocus}
-            ref={aiChatTextareaRef}
-        >
-            {isShowSelectList && (
-                <div>
-                    <FreeDialogFileList storeKey={storeKey} />
-                    {selectForges.length > 0 && (
-                        <FreeDialogTagList
-                            type='forge'
-                            title='智能体列表'
-                            select={selectForges}
-                            setSelect={setSelectForges}
-                        />
-                    )}
-                    {selectTools.length > 0 && (
-                        <FreeDialogTagList
-                            type='tool'
-                            title='工具列表'
-                            select={selectTools}
-                            setSelect={setSelectTools}
-                        />
-                    )}
-                    {selectKnowledgeBases.length > 0 && (
-                        <FreeDialogTagList
-                            type='knowledgeBase'
-                            title='知识库列表'
-                            select={selectKnowledgeBases}
-                            setSelect={setSelectKnowledgeBases}
-                        />
-                    )}
-                </div>
-            )}
-            <div className={styles["textarea-body"]}>
-                <div className={styles["textarea-icon"]}>
-                    {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
-                    <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>
-                        <path
-                            d='M3.83333 2V4.66667M2.5 3.33333H5.16667M4.5 11.3333V14M3.16667 12.6667H5.83333M9.16667 2L10.6905 6.57143L14.5 8L10.6905 9.42857L9.16667 14L7.64286 9.42857L3.83333 8L7.64286 6.57143L9.16667 2Z'
-                            stroke={`url(#${iconId.current})`}
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                        />
-                        <defs>
-                            <linearGradient
-                                id={iconId.current}
-                                x1='2.5'
-                                y1='2'
-                                x2='16.8935'
-                                y2='6.75561'
-                                gradientUnits='userSpaceOnUse'
-                            >
-                                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
-                                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
-                                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
+        // #region question-相关逻辑
+        useEffect(() => {
+            if (inViewport) {
+                emiter.on("setAIInputByType", onSetAIInputByType)
+                return () => {
+                    emiter.off("setAIInputByType", onSetAIInputByType)
+                }
+            }
+        }, [inViewport])
 
-                <QSInputTextarea
-                    ref={textareaRef}
-                    {...textareaRest}
-                    className={classNames(styles["textarea-textarea"], textareaClassName)}
-                    value={question}
-                    onChange={handleTextareaChange}
-                    onKeyDown={handleTextareaKeyDown}
-                    onFocus={handleTextareaFocus}
-                />
-                {/* <MilkdownInput/> */}
-            </div>
+        const onSetAIInputByType = useMemoizedFn((res) => {
+            try {
+                const data: AIAgentTriggerEventInfo = JSON.parse(res)
+                const {type} = data
+                switch (type) {
+                    case "mention":
+                        const params = data.params as AIMentionCommandParams
+                        onSetMention(params)
+                        break
 
-            <div className={styles["textarea-footer"]}>
-                <div
-                    className={styles["footer-left"]}
-                    onClick={(e) => {
-                        if (!!extraFooterLeft) e.stopPropagation()
-                    }}
-                >
-                    {extraFooterLeft || null}
-                </div>
-                <div
-                    className={styles["footer-right"]}
-                    onClick={(e) => {
-                        if (!!extraFooterRight) e.stopPropagation()
-                    }}
-                >
-                    {extraFooterRight || null}
-                    <YakitButton
-                        className={styles["round-btn"]}
-                        radius='50%'
-                        loading={loading}
-                        disabled={!isQuestion}
-                        icon={<OutlineArrowupIcon />}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            handleSubmit()
-                        }}
+                    default:
+                        break
+                }
+            } catch (error) {}
+        })
+
+        const handleSubmit = useMemoizedFn(() => {
+            const qs = getMarkdownValue()
+            if (!qs.trim() || !editorMilkdown.current) return
+            const {mentions, plainText} = extractDataWithMilkdown(editorMilkdown.current)
+            const value: AIChatTextareaSubmit = {
+                qs: plainText,
+                mentionList: mentions,
+                showQS: qs
+            }
+            onSubmit && onSubmit(value)
+        })
+        // #endregion
+
+        // #region 编辑器-相关逻辑
+
+        const handleSetTextareaFocus = useMemoizedFn(() => {
+            editorMilkdown.current?.action((ctx) => {
+                const view = ctx.get(editorViewCtx)
+                view.focus()
+            })
+        })
+
+        const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
+            editorMilkdown.current = editor
+        })
+
+        const onFilesChange = useMemoizedFn((files: FileToChatQuestionList[]) => {
+            for (const item of files) {
+                onSetMention({
+                    mentionId: item.path,
+                    mentionType: item.isFolder ? "folder" : "file",
+                    mentionName: item.path
+                })
+            }
+        })
+        /**插入提及数据 */
+        const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
+            editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+        })
+        /**设置编辑器值 */
+        const onSetValue = useMemoizedFn((value: string) => {
+            if (!editorMilkdown.current) return
+            setEditorValue(editorMilkdown.current, value)
+        })
+        const getMarkdownValue = useMemoizedFn(() => {
+            const value = editorMilkdown.current?.action(getMarkdown()) || ""
+            return value
+        })
+
+        const onUpdateContent = useMemoizedFn((value: string) => {
+            setDisabled(!value.trim())
+        })
+        // #endregion
+        const handleTextareaKeyDown = useMemoizedFn((e) => {
+            const keys = convertKeyEventToKeyCombination(e)
+            if (!e.nativeEvent?.isComposing && keys?.join() === YakitKeyBoard.Enter) {
+                e.stopPropagation()
+                e.preventDefault()
+                handleSubmit()
+            }
+        })
+        return (
+            <div
+                className={classNames(
+                    styles["ai-chat-textarea"],
+                    {
+                        [styles["dragging-from-tree"]]: isHovering
+                    },
+                    className
+                )}
+                onClick={handleSetTextareaFocus}
+                ref={dropRef}
+            >
+                {isHovering && <div className={styles["drag-hint"]}>松开以添加到对话</div>}
+                <div className={styles["textarea-body"]} onKeyDown={handleTextareaKeyDown}>
+                    <div className={styles["textarea-icon"]}>
+                        {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
+                        <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>
+                            <path
+                                d='M3.83333 2V4.66667M2.5 3.33333H5.16667M4.5 11.3333V14M3.16667 12.6667H5.83333M9.16667 2L10.6905 6.57143L14.5 8L10.6905 9.42857L9.16667 14L7.64286 9.42857L3.83333 8L7.64286 6.57143L9.16667 2Z'
+                                stroke={`url(#${iconId.current})`}
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                            />
+                            <defs>
+                                <linearGradient
+                                    id={iconId.current}
+                                    x1='2.5'
+                                    y1='2'
+                                    x2='16.8935'
+                                    y2='6.75561'
+                                    gradientUnits='userSpaceOnUse'
+                                >
+                                    <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                                    <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                                    <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    <AIMilkdownInput
+                        defaultValue={defaultValue}
+                        onUpdateEditor={onUpdateEditor}
+                        onUpdateContent={onUpdateContent}
                     />
                 </div>
+
+                <div className={styles["textarea-footer"]}>
+                    <div
+                        className={styles["footer-left"]}
+                        onClick={(e) => {
+                            if (!!extraFooterLeft) e.stopPropagation()
+                        }}
+                    >
+                        {extraFooterLeft || null}
+                    </div>
+                    <div
+                        className={styles["footer-right"]}
+                        onClick={(e) => {
+                            if (!!extraFooterRight) e.stopPropagation()
+                        }}
+                    >
+                        {extraFooterRight || null}
+                        <YakitButton
+                            className={styles["round-btn"]}
+                            radius='50%'
+                            loading={loading}
+                            disabled={disabled}
+                            icon={<OutlineArrowupIcon />}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                handleSubmit()
+                            }}
+                        />
+                    </div>
+                </div>
+                {children}
             </div>
-            {children}
-        </div>
-    )
-})
+        )
+    })
+)

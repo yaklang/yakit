@@ -7,8 +7,9 @@ import {setClipboardText} from "@/utils/clipboard"
 import {FileTreeSystemItemProps} from "../type"
 import {historyStore} from "../store/useHistoryFolder"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {FileListStoreKey, fileToChatQuestionStore} from "@/pages/ai-re-act/aiReActChat/store"
 import {YakitProtoCheckbox} from "@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox"
+import {AIMentionCommandParams} from "../../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
+import emiter from "@/utils/eventBus/eventBus"
 
 const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     data,
@@ -79,10 +80,18 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
                 onResetTree?.()
                 break
             case "sendToChat":
-                fileToChatQuestionStore.add(FileListStoreKey.FileList, {
-                    path: data.path,
-                    isFolder: data.isFolder
-                })
+                const params: AIMentionCommandParams = {
+                    mentionId: data.path,
+                    mentionType: data.isFolder ? "folder" : "file",
+                    mentionName: data.path
+                }
+                emiter.emit(
+                    "setAIInputByType",
+                    JSON.stringify({
+                        type: "mention",
+                        params
+                    })
+                )
                 break
             default:
                 break

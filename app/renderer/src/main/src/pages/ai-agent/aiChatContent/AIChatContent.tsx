@@ -39,7 +39,6 @@ import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TabKey} from "../components/aiFileSystemList/type"
 import {onNewChat} from "../historyChat/HistoryChat"
-import {FileListStoreKey} from "@/pages/ai-re-act/aiReActChat/store"
 import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
 import useAIAgentStore from "../useContext/useStore"
@@ -487,7 +486,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                     chatContainerHeaderClassName={classNames({
                                         [styles["re-act-chat-container-header"]]: !activeKey
                                     })}
-                                    storeKey={FileListStoreKey.FileList}
                                     mode={!!activeKey ? "task" : "welcome"}
                                     showFreeChat={showFreeChat}
                                     setShowFreeChat={setShowFreeChat}

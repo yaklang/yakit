@@ -1,8 +1,9 @@
 import {AIAgentSetting} from "./aiAgentType"
 import isNil from "lodash/isNil"
 import {AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "./defaultConstant"
-import {AIAgentGrpcApi, AIInputEvent} from "../ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo} from "../ai-re-act/hooks/grpcApi"
 import {HandleStartParams} from "./aiAgentChat/type"
+import {AIMentionCommandParams} from "./components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 /**
  * @name 将一维tree转换成树结构
@@ -129,58 +130,50 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     return {...data}
 }
 
-/** @name 将前端的结构转化为符合定义的结构 */
-export const getAIReActRequestParams = (value: HandleStartParams) => {
-    const {selectForges, extraValue, selectTools, selectKnowledgeBases, fileToQuestion} = value
-    let extra: HandleStartParams["extraValue"] = {}
-    let attachedResourceInfo: AIInputEvent["AttachedResourceInfo"] = []
-    if (!!fileToQuestion?.length) {
-        /**自由对话文件列表 */
-        extra.freeDialogFileList = fileToQuestion.map((item) => ({...item}))
-        attachedResourceInfo = [
-            ...attachedResourceInfo,
-            ...fileToQuestion.map((ele) => ({
+const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedResourceInfo | null => {
+    switch (mention.mentionType) {
+        case "file":
+        case "folder":
+            return {
                 Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
                 Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
-                Value: ele.path
-            }))
-        ]
-    }
-    if (!!selectForges?.length) {
-        /**智能体列表 */
-        extra.selectForges = selectForges.map((item) => ({...item}))
-        attachedResourceInfo = [
-            ...attachedResourceInfo,
-            ...selectForges.map((ele) => ({
+                Value: mention.mentionName
+            }
+        case "forge":
+            return {
                 Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AIFORGE,
                 Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-                Value: ele.name
-            }))
-        ]
-    }
-    if (!!selectTools?.length) {
-        /**工具列表 */
-        extra.selectTools = selectTools.map((item) => ({...item}))
-        attachedResourceInfo = [
-            ...attachedResourceInfo,
-            ...selectTools.map((ele) => ({
+                Value: mention.mentionName
+            }
+        case "tool":
+            return {
                 Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AITOOL,
                 Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-                Value: ele.name
-            }))
-        ]
-    }
-    if (!!selectKnowledgeBases?.length) {
-        /**知识库列表 */
-        extra.selectKnowledgeBases = selectKnowledgeBases.map((item) => ({...item}))
-        attachedResourceInfo = [
-            ...attachedResourceInfo,
-            ...selectKnowledgeBases.map((ele) => ({
+                Value: mention.mentionName
+            }
+        case "knowledgeBase":
+            return {
                 Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
                 Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-                Value: ele.name
-            }))
-        ]
+                Value: mention.mentionName
+            }
+        default:
+            return null
+    }
+}
+/** @name 将前端的结构转化为符合定义的结构 */
+export const getAIReActRequestParams = (value: HandleStartParams) => {
+    const {extraValue, mentionList = [], showQS} = value
+    let extra: HandleStartParams["extraValue"] = {}
+    let attachedResourceInfo: AIInputEvent["AttachedResourceInfo"] = []
+    for (let item of mentionList) {
+        const addItem = getResourceInfoByMention(item)
+        if (addItem) {
+            attachedResourceInfo = [...attachedResourceInfo, addItem] // 不需要去重，按显示顺序给后端
+        }
+    }
+    if (!!showQS) {
+        extra.showQS = showQS
     }
     extra = Object.assign(extraValue || {}, extra)
     return {

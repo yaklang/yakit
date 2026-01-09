@@ -21,7 +21,12 @@ import ChatIPCContent, {
 } from "../useContext/ChatIPCContent/ChatIPCContent"
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon, OutlineExitIcon, RedoDotIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondoubledownIcon,
+    OutlineChevrondoubleupIcon,
+    OutlineExitIcon,
+    RedoDotIcon
+} from "@/assets/icon/outline"
 import {
     AIChatIPCNotifyMessage,
     AIChatIPCStartParams,
@@ -50,7 +55,6 @@ import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
-import {FileListStoreKey, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -77,7 +81,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [streams, api] = useMultipleHoldGRPCStream()
 
     const [mode, setMode] = useState<AIAgentChatMode>("welcome")
-    const fileToQuestion = useFileToQuestion(FileListStoreKey.FileList)
 
     const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
         setMode("re-act")
@@ -222,13 +225,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
         onSetReAct()
-        const {extra, attachedResourceInfo} = getAIReActRequestParams({
-            ...value,
-            selectForges,
-            selectTools,
-            selectKnowledgeBases,
-            fileToQuestion
-        })
+        const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -237,7 +234,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             },
             AttachedResourceInfo: attachedResourceInfo
         }
-
         events.onStart({token: newChat.id, params: startParams, extraValue: extra})
     })
 
@@ -595,30 +591,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setReplaceToolShow(false)
     })
     // #endregion
-    const [selectForges, setSelectForges] = useState<AIChatMentionSelectItem[]>([])
-    const [selectTools, setSelectTools] = useState<AIChatMentionSelectItem[]>([])
-    const [selectKnowledgeBases, setSelectKnowledgeBases] = useState<AIChatMentionSelectItem[]>([])
     const store: ChatIPCContextStore = useCreation(() => {
         return {
             chatIPCData,
             planReviewTreeKeywordsMap,
             reviewInfo,
             reviewExpand,
-            timelineMessage,
-            selectForges,
-            selectTools,
-            selectKnowledgeBases
+            timelineMessage
         }
-    }, [
-        chatIPCData,
-        planReviewTreeKeywordsMap,
-        reviewInfo,
-        reviewExpand,
-        timelineMessage,
-        selectForges,
-        selectTools,
-        selectKnowledgeBases
-    ])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -630,10 +611,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSend,
             setTimelineMessage,
             handleSendSyncMessage,
-            handleSendConfigHotpatch,
-            setSelectForges,
-            setSelectTools,
-            setSelectKnowledgeBases
+            handleSendConfigHotpatch
         }
     }, [events])
 
@@ -759,7 +737,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onStopTask} = props
+    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onExtraAction} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -783,7 +761,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {showCancelSubtask && (
                         <YakitPopconfirm
                             placement='top'
-                            onConfirm={() => onStopTask(true)}
+                            onConfirm={() => onExtraAction("stopSubTask")}
                             title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
                         >
                             <YakitButton type='outline2' icon={<RedoDotIcon />}>
@@ -794,11 +772,17 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {node}
                     <YakitPopconfirm
                         placement='top'
-                        onConfirm={() => onStopTask()}
+                        onConfirm={() => onExtraAction("stopTask")}
                         title='是否确认取消整个任务，确认将停止执行'
                     >
                         <Tooltip overlay='终止任务' placement='top'>
-                            <YakitButton className={styles["task-button"]} radius='28px' colors='danger' type='primary' icon={<OutlineExitIcon />} />
+                            <YakitButton
+                                className={styles["task-button"]}
+                                radius='28px'
+                                colors='danger'
+                                type='primary'
+                                icon={<OutlineExitIcon />}
+                            />
                         </Tooltip>
                     </YakitPopconfirm>
                 </div>

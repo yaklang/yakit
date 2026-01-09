@@ -1,0 +1,14 @@
+.ai-milkdown-input {
+    width: 100%;
+    flex: 1;
+    overflow: auto;
+    max-height: 100px;
+    p {
+        margin-bottom: 0;
+    }
+    :global {
+        .milkdown .editor {
+            padding: 0;
+        }
+    }
+}
