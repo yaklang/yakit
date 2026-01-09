@@ -21,10 +21,10 @@ const ExportTypes = [
 export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
     const {visible, onCancel, onOk, loading} = props
     const [types, setTypes] = useState<string[]>(["checkpoints", "memory", "timeline", "output_event"])
-    const [outputPath, setOutputPath] = useState<string>("")
+    // const [outputPath, setOutputPath] = useState<string>("")
 
     const handleOk = useMemoizedFn(() => {
-        onOk({types, outputPath})
+        onOk({types, outputPath: ""})
     })
 
     const toggleType = useMemoizedFn((value: string) => {
@@ -43,8 +43,23 @@ export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
             onOk={handleOk}
             confirmLoading={loading}
             width={520}
+            type='white'
+            bodyStyle={{padding: 0}}
         >
-            <div style={{display: "flex", flexDirection: "column", gap: 24, padding: "12px 0"}}>
+            <div
+                style={{
+                    marginBottom: 16,
+                    padding: "8px 24px",
+                    fontWeight: 400,
+                    fontSize: 12,
+                    lineHeight: "16px",
+                    color: "var(--Colors-Use-Neutral-Text-1-Title)",
+                    backgroundColor: "var(--Colors-Use-Success-Bg)"
+                }}
+            >
+                远程模式下导出后请打开~memfit\yakit-projects\temp路径查看导出文件
+            </div>
+            <div style={{display: "flex", flexDirection: "column", gap: 24, padding: "8px 16px"}}>
                 <div style={{display: "flex", flexDirection: "column", gap: 12}}>
                     <div style={{color: "var(--text-title-color)", fontWeight: 500}}>导出内容</div>
                     <div style={{display: "flex", gap: 16, flexWrap: "wrap"}}>
@@ -59,7 +74,7 @@ export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
                         ))}
                     </div>
                 </div>
-                <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                {/* <div style={{display: "flex", flexDirection: "column", gap: 12}}>
                     <div style={{color: "var(--text-title-color)", fontWeight: 500}}>
                         导出路径 <span style={{color: "var(--text-sub-color)", fontSize: 12, fontWeight: 400}}>(可选)</span>
                     </div>
@@ -68,9 +83,8 @@ export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
                         value={outputPath}
                         onChange={(e) => setOutputPath(e.target.value)}
                     />
-                </div>
+                </div> */}
             </div>
         </YakitModal>
     )
 }
-
