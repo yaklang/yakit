@@ -1018,7 +1018,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             const value =
                 currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
             return (value && Uint8ArrayToString(value)) || ""
-        }, [currentSelectShowType, currentSelectItem])
+        }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
 
         const copyUrl = useMemoizedFn(() => {
             if (currentSelectItem?.RequestRaw) {

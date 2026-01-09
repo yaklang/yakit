@@ -338,7 +338,7 @@ export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: st
                 } else {
                     onFormatted()
                 }
-            })
+            }).catch(onFormatted)
     }
 }
 

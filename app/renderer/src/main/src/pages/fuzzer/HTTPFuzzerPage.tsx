@@ -173,6 +173,7 @@ import { useProxy } from "@/hook/useProxy"
 import { MITMConsts } from "../mitm/MITMConsts"
 import { RemoteGV } from "@/yakitGV"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import { useAutoScrollToBottom } from "./hooks/useAutoScrollToBottom"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -775,6 +776,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer)
     const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0)
     const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
+    const [fuzzerListVersion, setFuzzerListVersion] = useState(0)
 
     const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
     const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
@@ -784,17 +786,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
         return [...successFuzzerRef.current]
-    }, [_successCount])
+    }, [_successCount, fuzzerListVersion])
     const failedFuzzer: FuzzerResponse[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
         return [...failedFuzzerRef.current]
-    }, [_failedCount])
+    }, [_failedCount, fuzzerListVersion])
     const fuzzerResChartData: FuzzerResChartData[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
         return [...fuzzerResChartDataBufferRef.current]
-    }, [_successCount, _failedCount])
+    }, [_successCount, _failedCount, fuzzerListVersion])
 
     /**/
 
@@ -1359,6 +1361,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             setFailedCount(failedCount)
             setSuccessCount(successCount)
+            setFuzzerListVersion((v) => v + 1)
         }
 
         const releaseQueue: FuzzerResponse[] = []
@@ -1417,28 +1420,77 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setFirstResponse(r)
             }
 
-            if (data.Ok) {
-                successCount++
-                successFuzzerRef.current.push(r)
-                // 超过最大显示 展示最新数据
-                if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
-                    const oldest = successFuzzerRef.current.shift()
-                    if (oldest) scheduleRelease(oldest)
+            const tryUpsertByUUID = (list: FuzzerResponse[], item: FuzzerResponse): boolean => {
+                if (!item.UUID) return false
+                const idx = list.findIndex((i) => i.UUID === item.UUID)
+                if (idx < 0) return false
+
+                const existed = list[idx]
+                const keepCount = existed.Count
+                const existedChunks = existed.RandomChunkedData || []
+                const nextChunks = item.RandomChunkedData || []
+
+                Object.assign(existed, item)
+                existed.Count = keepCount
+
+                if (nextChunks.length > 0) {
+                    const merged = existedChunks.slice()
+                    const existedIndexes = new Set<number>(
+                        merged.map((c) => Number(c?.Index)).filter((n) => Number.isFinite(n)) as number[]
+                    )
+                    nextChunks.forEach((c) => {
+                        const id = Number(c?.Index)
+                        if (Number.isFinite(id) && existedIndexes.has(id)) return
+                        merged.push(c)
+                        if (Number.isFinite(id)) existedIndexes.add(id)
+                    })
+                    existed.RandomChunkedData = merged.length > 2048 ? merged.slice(merged.length - 2048) : merged
                 }
-            } else {
-                failedCount++
-                failedFuzzerRef.current.push(r)
+
+                const first = getFirstResponse()
+                if (first?.UUID && first.UUID === existed.UUID) {
+                    setFirstResponse(existed)
+                }
+                return true
             }
 
-            fuzzerResChartDataBufferRef.current.push({
-                Count: (r.Count as number) + 1,
-                TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
-                TCPDurationMs: +r.TCPDurationMs,
-                ConnectDurationMs: +r.ConnectDurationMs,
-                DurationMs: +r.DurationMs
-            } as FuzzerResChartData)
-            if (fuzzerResChartDataBufferRef.current.length > 5000) {
-                fuzzerResChartDataBufferRef.current.shift()
+            let isNewRow = true
+            if (data.Ok) {
+                const upserted =
+                    tryUpsertByUUID(successFuzzerRef.current, r) || tryUpsertByUUID(failedFuzzerRef.current, r)
+                if (upserted) {
+                    isNewRow = false
+                } else {
+                    successCount++
+                    successFuzzerRef.current.push(r)
+                    // 超过最大显示 展示最新数据
+                    if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
+                        const oldest = successFuzzerRef.current.shift()
+                        if (oldest) scheduleRelease(oldest)
+                    }
+                }
+            } else {
+                const upserted =
+                    tryUpsertByUUID(failedFuzzerRef.current, r) || tryUpsertByUUID(successFuzzerRef.current, r)
+                if (upserted) {
+                    isNewRow = false
+                } else {
+                    failedCount++
+                    failedFuzzerRef.current.push(r)
+                }
+            }
+
+            if (isNewRow) {
+                fuzzerResChartDataBufferRef.current.push({
+                    Count: (r.Count as number) + 1,
+                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                    TCPDurationMs: +r.TCPDurationMs,
+                    ConnectDurationMs: +r.ConnectDurationMs,
+                    DurationMs: +r.DurationMs
+                } as FuzzerResChartData)
+                if (fuzzerResChartDataBufferRef.current.length > 5000) {
+                    fuzzerResChartDataBufferRef.current.shift()
+                }
             }
 
             r = null as unknown as FuzzerResponse
@@ -1505,11 +1557,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.id])
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
-        if (inViewport) setAll(extractedMap)
+        if (inViewport) setAll(extractedMap) 
     })
     const onlyOneResponse = useMemo(() => {
-        return !loading && failedFuzzer.length + successFuzzer.length === 1
-    }, [loading, failedFuzzer, successFuzzer])
+        return failedFuzzer.length + successFuzzer.length === 1
+    }, [failedFuzzer, successFuzzer])
 
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
@@ -2522,6 +2574,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         secondNodeTitle={secondNodeTitle}
                                         secondNodeExtra={secondNodeExtra}
                                         onSetOnlyOneResEditor={setOnlyOneResEditor}
+                                        loading={loading}
                                     />
                                 ) : (
                                     <div
@@ -3723,6 +3776,8 @@ interface ResponseViewerProps {
     secondNodeTitle?: () => JSX.Element
     secondNodeExtra?: () => JSX.Element
     onSetOnlyOneResEditor: (editor: IMonacoEditor) => void
+    /** 是否正在流式加载中，用于控制自动滚动到底部 */
+    loading?: boolean
 
     keepSearchName?: string
 }
@@ -3748,7 +3803,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             webFuzzerValue,
             request,
             keepSearchName,
-            onSetOnlyOneResEditor
+            onSetOnlyOneResEditor,
+            loading
         } = props
         const { t, i18n } = useI18nNamespaces(["webFuzzer"])
 
@@ -3908,6 +3964,17 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return { RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false }
         }, [fuzzerResponse.RuntimeID])
 
+        // 计算当前显示的值
+        const currentOriginValue = codeKey === "utf-8" ? responseRawString : codeValue
+
+        // 自动滚动到底部 hook（仅在流式加载时启用）
+        const { handleEditorMount } = useAutoScrollToBottom({
+            enabled: loading,
+            content: currentOriginValue,
+            resetDep: fuzzerResponse,
+            onEditorMount: onSetOnlyOneResEditor
+        })
+
         return (
             <>
                 <YakitResizeBox
@@ -3921,7 +3988,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
-                            originValue={codeKey === "utf-8" ? responseRawString : codeValue}
+                            originValue={currentOriginValue}
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
                             isResponse={true}
@@ -4000,9 +4067,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             onClickUrlMenu={copyUrl}
                             onClickOpenBrowserMenu={onClickOpenBrowserMenu}
                             downbodyParams={editorDownBodyParams}
-                            onEditor={(editor) => {
-                                onSetOnlyOneResEditor && onSetOnlyOneResEditor(editor)
-                            }}
+                            onEditor={handleEditorMount}
                             onClickOpenPacketNewWindowMenu={() => {
                                 openPacketNewWindow({
                                     request: {
