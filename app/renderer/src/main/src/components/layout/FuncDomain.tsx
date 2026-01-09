@@ -2187,14 +2187,14 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         )
     }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
 
-    const [noticeType, setNoticeType] = useState<"message" | "update">("message")
-    // useUpdateEffect(() => {
-    //     if (userInfo.isLogin) {
-    //         setNoticeType("message")
-    //     } else {
-    //         setNoticeType("update")
-    //     }
-    // }, [userInfo.isLogin])
+    const [noticeType, setNoticeType] = useState<"message" | "update">("update")
+    useUpdateEffect(() => {
+        if (userInfo.isLogin) {
+            setNoticeType("message")
+        } else {
+            setNoticeType("update")
+        }
+    }, [userInfo.isLogin])
 
     const getAllMessage = useMemoizedFn(() => {
         setShow(false)
@@ -2270,10 +2270,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     label: "消息中心",
                                     value: "message"
                                 },
-                                // {
-                                //     label: "更新通知",
-                                //     value: "update"
-                                // }
+                                {
+                                    label: "更新通知",
+                                    value: "update"
+                                }
                             ]}
                         />
                         {noticeType === "update" ? (
