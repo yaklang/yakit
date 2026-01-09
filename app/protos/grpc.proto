@@ -894,6 +894,7 @@ service Yak {
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
   rpc QueryAIEvent(AIEventQueryRequest) returns (AIEventQueryResponse);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
+  rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
@@ -1380,6 +1381,7 @@ message GetKnowledgeBaseRequest {
   string Keyword = 2;
   Paging Pagination = 3;
   bool OnlyCreatedFromUI = 4;
+  bool OnlyIsDefault = 5;
 }
 
 message KnowledgeBaseInfo {
@@ -1739,7 +1741,7 @@ message AIInputEvent {
   bool IsFreeInput = 11;
   string FreeInput = 12;
   repeated string AttachedFilePath = 14;
-  
+
   // 附加资源信息
   repeated AttachedResourceInfo AttachedResourceInfo = 15;
 }
@@ -1959,6 +1961,18 @@ message QueryAIForgeResponse {
 message GetAIForgeRequest {
   int64 ID = 1;
   string ForgeName = 2;
+}
+
+message ExportAILogsRequest {
+  string SessionID = 1;
+  repeated string CoordinatorIDs = 2;
+  repeated string ExportDataTypes = 3;
+  string OutputPath = 4;
+  string MemoryID = 5;
+}
+
+message ExportAILogsResponse {
+  string FilePath = 1;  
 }
 
 message StartMcpServerRequest {

@@ -102,6 +102,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     // #region 单次流执行时的输出展示数据
     // RunTimeIDs
     const [runTimeIDs, setRunTimeIDs] = useState<string[]>([])
+    // CoordinatorIDs
+    const [coordinatorIDs, setCoordinatorIDs] = useState<string[]>([])
 
     // 接口流里的文件树路径集合
     const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
@@ -294,6 +296,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatID.current = ""
         handleResetGrpcStatus()
         setRunTimeIDs([])
+        setCoordinatorIDs([])
         setGrpcFolders([])
         handleResetMemoryList()
         handleResetSystemStream()
@@ -319,6 +322,14 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatID.current = token
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
+                // 记录会话中所有的 CoordinatorId
+                if (res.CoordinatorId) {
+                    setCoordinatorIDs((old) => {
+                        if (old.includes(res.CoordinatorId)) return old
+                        return [...old, res.CoordinatorId]
+                    })
+                }
+
                 // 记录会话中所有的RunTimeID
                 setRunTimeIDs((old) => {
                     if (!res.CallToolID || old.includes(res.CallToolID)) return old
@@ -627,7 +638,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             reActTimelines,
             memoryList,
             taskStatus,
-            systemStream
+            systemStream,
+            coordinatorIDs
         },
         {
             fetchToken,

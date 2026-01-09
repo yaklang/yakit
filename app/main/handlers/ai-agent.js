@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron")
+const {ipcMain, shell} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -255,7 +255,6 @@ module.exports = (win, getClient) => {
         return await asyncUpdateAITool(param)
     })
 
-
     const asyncToggleAIToolFavorite = (params) => {
         return new Promise((resolve, reject) => {
             getClient().ToggleAIToolFavorite(params, (err, data) => {
@@ -304,6 +303,27 @@ module.exports = (win, getClient) => {
     // 获取首页随机列表数据
     ipcMain.handle("GetRandomAIMaterials", async (e, params) => {
         return await asyncGetRandomAIMaterials(params)
+    })
+    // #endregion
+
+    // #region AI-Log-Export
+    const asyncExportAILogs = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportAILogs(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportAILogs", async (e, params) => {
+        const res = await asyncExportAILogs(params)
+        if (res && res.FilePath) {
+            shell.showItemInFolder(res.FilePath)
+        }
+        return res
     })
     // #endregion
 }
