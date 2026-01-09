@@ -18,7 +18,7 @@ const MITMHacker: React.FC<MITMHackerProps> = React.memo((props) => {
 
     const onCloseTunHijackByPageFun = useMemoizedFn(()=>{
         // 如若存在Tun劫持服务则需先关闭Tun劫持服务及清空列表后再关闭MITM页面
-        if(tunSessionState.deviceName){
+        if(tunSessionState && tunSessionState.deviceName){
             emiter.emit("onCloseTunHijackConfirmModal", "page")    
         }else{
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.MITMHacker}))
@@ -30,7 +30,7 @@ const MITMHacker: React.FC<MITMHackerProps> = React.memo((props) => {
         return ()=>{
             emiter.off("onCloseTunHijackByPage", onCloseTunHijackByPageFun)
         }
-    },[tunSessionState.deviceName])
+    },[tunSessionState?.deviceName])
 
     return (
         <MITMContext.Provider value={{mitmStore}}>

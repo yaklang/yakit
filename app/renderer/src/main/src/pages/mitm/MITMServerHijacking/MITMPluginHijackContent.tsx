@@ -50,7 +50,7 @@ import {PluginTraceRefProps} from "./PluginTrace/type"
 import {pluginTraceRefFunDef} from "./PluginTrace/PluginTrace"
 import {PluginTunHijack, PluginTunHijackDef} from "./PluginTunHijack/PluginTunHijack"
 import {PluginTunHijackRefProps} from "./PluginTunHijack/PluginTunHijackType"
-import usePluginTunHijack from "./PluginTunHijack/usePluginTunHijack"
+import usePluginTunHijack, { tunSessionStateDefault } from "./PluginTunHijack/usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -627,18 +627,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [pluginTunHijackData, pluginTunHijackActions] = usePluginTunHijack({
         PluginName: "Tun劫持服务",
         onEnd: () => {
-            isQuitRef.current = false
-            setTunSessionState({
-                deviceName: null,
-                configuredRoutes: []
-            })
-            onClosePage()
+            onCloseTunHijackFun()
         }
     })
     const isQuitRef = useRef<boolean>(false)
     const handleDeleteRoute = useMemoizedFn((ipList?: string[]) => {
         let ExecParams = [
-            {Key: "tunName", Value: tunSessionState.deviceName || ""},
+            {Key: "tunName", Value: tunSessionState?.deviceName || ""},
             {Key: "clear", Value: true}
         ]
         if (ipList && ipList.length !== 0) {
@@ -674,6 +669,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         }
     }, [])
 
+    // Tun劫持关闭逻辑
+    const onCloseTunHijackFun = useMemoizedFn(()=>{
+        isQuitRef.current = false
+        setTunSessionState(tunSessionStateDefault)
+        onClosePage()
+    })
+
     // 页面关闭逻辑
     const onClosePage = useMemoizedFn(() => {
         // 如有其余操作的关闭来源 需通知其已执行Tun劫持关闭
@@ -691,6 +693,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         info("正在关闭Tun劫持服务，请稍后...")
         isQuitRef.current = true
         handleDeleteRoute()
+        // 防止关闭流异常， 5秒后强制关闭
+        PluginTunHijackRef.current.closeTunHijackError()
     })
 
     const [quitVisible, setQuitVisible] = useState<boolean>(false)
@@ -920,17 +924,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         pluginTraceList={pluginTraceActions.pluginTraceList}
                     />
                 )
-            case "tun-hijack":
-                return (
-                    <PluginTunHijack
-                        ref={PluginTunHijackRef}
-                        pluginTunHijackData={pluginTunHijackData}
-                        pluginTunHijackActions={pluginTunHijackActions}
-                        pluginTunHijackDel={pluginTunHijackDel}
-                        onQuitTunHijackFun={onQuitTunHijackFun}
-                        handleDeleteRoute={handleDeleteRoute}
-                    />
-                )
             default:
                 return <></>
         }
@@ -954,12 +947,22 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 >
                     <div className={styles["mitm-plugin-hijack-heard"]}>{onRenderHeardExtra()}</div>
                     {onRenderContent()}
+                    <PluginTunHijack
+                        ref={PluginTunHijackRef}
+                        hidden={curTabKey !== "tun-hijack"}
+                        pluginTunHijackData={pluginTunHijackData}
+                        pluginTunHijackActions={pluginTunHijackActions}
+                        pluginTunHijackDel={pluginTunHijackDel}
+                        onQuitTunHijackFun={onQuitTunHijackFun}
+                        handleDeleteRoute={handleDeleteRoute}
+                        onCloseTunHijackFun={onCloseTunHijackFun}
+                    />
                 </div>
             </div>
             <YakitHint
                 visible={quitVisible}
-                title='关闭Tun代理会清空路由表'
-                content={"关闭Tun代理后会清空路由表，不删除会导致无法访问劫持网站"}
+                title='关闭Tun代理会清空路由表并停止全部劫持中进程'
+                content={"关闭Tun代理会清空路由表并停止全部劫持中进程，防止影响正常使用"}
                 footerExtra={
                     <YakitCheckbox checked={quitNoPrompt} onChange={(e) => setQuitNoPrompt(e.target.checked)}>
                         不再提醒

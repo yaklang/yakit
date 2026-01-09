@@ -1,35 +1,61 @@
-import React, {useEffect, useState, useImperativeHandle, useMemo} from "react"
-import {Form} from "antd"
-import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
+import React, {useEffect, useState, useImperativeHandle, useMemo, useRef} from "react"
+import {Form, Tooltip} from "antd"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import styles from "./PluginTunHijack.module.scss"
-import {failed, success} from "@/utils/notification"
+import {failed, info, success, warn, yakitNotify} from "@/utils/notification"
 import {
+    ConnectionInfo,
+    ConnectionInfoItemProps,
+    HijackProcessInfoModalProps,
     HijackTableDataProps,
     PluginTunHijackProps,
     PluginTunHijackRefProps,
-    PluginTunHijackTableProps
+    PluginTunHijackTableProps,
+    ProcessInfo,
+    TunHijackProcessTableProps,
+    WatchProcessRequest,
+    WatchProcessResponse
 } from "./PluginTunHijackType"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TraceSvgSvgIcon} from "@/assets/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePlay2Icon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineExclamationcircleIcon, OutlinePlay2Icon, OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {QuitIcon} from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import usePluginTunHijack from "./usePluginTunHijack"
+import usePluginTunHijack, {tunSessionStateDefault} from "./usePluginTunHijack"
 import {useStore} from "@/store/mitmState"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {randomString} from "@/utils/randomUtil"
+import classNames from "classnames"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import {HijackRunnerPool, HijackTask} from "./HijackRunner"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {v4 as uuidv4} from "uuid"
+import {setClipboardText} from "@/utils/clipboard"
+const {TabPane} = PluginTabs
+const {ipcRenderer} = window.require("electron")
 export const PluginTunHijackDef: PluginTunHijackRefProps = {
-    updatePluginTunHijack: () => {}
+    updatePluginTunHijack: () => {},
+    closeTunHijackError: () => {}
 }
 
 export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {pluginTunHijackData, pluginTunHijackActions, pluginTunHijackDel, onQuitTunHijackFun, handleDeleteRoute} =
-            props
+        const {
+            hidden,
+            pluginTunHijackData,
+            pluginTunHijackActions,
+            pluginTunHijackDel,
+            onQuitTunHijackFun,
+            handleDeleteRoute,
+            onCloseTunHijackFun
+        } = props
         const {tunSessionState, setTunSessionState} = useStore()
 
         const startPluginTunHijack = useMemoizedFn(() => {
@@ -63,14 +89,19 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
         }, [pluginTunHijackData.streamInfo])
 
         return (
-            <div className={styles["plugin-tun-hijack"]}>
-                {tunSessionState.deviceName ? (
+            <div
+                className={classNames(styles["plugin-tun-hijack"], {
+                    [styles["plugin-tun-hijack-hidden"]]: hidden
+                })}
+            >
+                {tunSessionState?.deviceName ? (
                     <PluginTunHijackTable
                         ref={ref}
                         deviceName={tunSessionState.deviceName}
                         pluginTunHijackDel={pluginTunHijackDel}
                         onQuitTunHijackFun={onQuitTunHijackFun}
                         handleDeleteRoute={handleDeleteRoute}
+                        onCloseTunHijackFun={onCloseTunHijackFun}
                     />
                 ) : (
                     <div className={styles["plugin-tun-hijack-create"]}>
@@ -104,7 +135,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
 
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun} = props
+        const {deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun, onCloseTunHijackFun} = props
 
         const [loading, setLoading] = useState<boolean>(false)
         const [tableData, setTableData] = useState<HijackTableDataProps[]>([])
@@ -114,13 +145,37 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
         const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
+        const [tableType, setTableType] = useState<"process" | "route">("process")
+        const tunHijackRunRef = useRef<HTMLDivElement>(null)
+        const [inViewport] = useInViewport(tunHijackRunRef)
         useImperativeHandle(
             ref,
             () => ({
-                updatePluginTunHijack
+                updatePluginTunHijack,
+                closeTunHijackError
             }),
             []
         )
+
+        const {setTunSessionState} = useStore()
+        const timeRef = useRef<NodeJS.Timeout>()
+        // 关闭Tun劫持超时异常
+        const closeTunHijackError = useMemoizedFn(() => {
+            timeRef.current = setTimeout(() => {
+                if (inViewport) {
+                    failed("当前流关闭异常,执行强制关闭")
+                    onCloseTunHijackFun()
+                }
+            }, 5000)
+        })
+        useEffect(() => {
+            return () => {
+                setTunSessionState(tunSessionStateDefault)
+                if (timeRef.current) {
+                    clearTimeout(timeRef.current)
+                }
+            }
+        }, [])
 
         const onSelectAll = (newSelectedRowKeys: string[], selected: HijackTableDataProps[], checked: boolean) => {
             setIsAllSelect(checked)
@@ -183,9 +238,24 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                 setLoading(false)
             }
         })
+
+        // 用于控制路由列表轮询
+        const extraTimerRef = useRef<NodeJS.Timeout>()
         useEffect(() => {
-            updatePluginTunHijack()
-        }, [])
+            if (tableType === "route") {
+                updatePluginTunHijack()
+                // 开启定时器
+                if (extraTimerRef.current) {
+                    clearInterval(extraTimerRef.current)
+                }
+                extraTimerRef.current = setInterval(() => pluginTunHijackFindActions.startPluginTunHijack(), 3 * 1000)
+            }
+            return () => {
+                if (extraTimerRef.current) {
+                    clearInterval(extraTimerRef.current)
+                }
+            }
+        }, [tableType])
 
         const updatePluginTunHijack = useMemoizedFn(() => {
             setLoading(true)
@@ -224,15 +294,20 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
             }
         })
         const [addLoading, setAddLoading] = useState<boolean>(false)
+        const pluginTunHijackAddActionsFun = useMemoizedFn((target: string) => {
+            pluginTunHijackAddActions.startPluginTunHijack({
+                ExecParams: [
+                    {Key: "name", Value: deviceName},
+                    {Key: "target", Value: target}
+                ]
+            })
+        })
         const handleRouteOk = useMemoizedFn(() => {
             setAddLoading(true)
             form.validateFields().then((res) => {
-                pluginTunHijackAddActions.startPluginTunHijack({
-                    ExecParams: [
-                        {Key: "name", Value: deviceName},
-                        {Key: "target", Value: res.target}
-                    ]
-                })
+                pluginTunHijackAddActionsFun(res.target)
+            }).catch(()=>{
+                setAddLoading(false)
             })
         })
         useUpdateEffect(() => {
@@ -247,36 +322,61 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
             }
         }, [pluginTunHijackAdd.streamInfo])
         // 以上为路由表增加逻辑---
-
         return (
-            <div className={styles["plugin-tun-hijack-table"]}>
+            <div className={styles["plugin-tun-hijack-table"]} ref={tunHijackRunRef}>
                 <div className={styles["plugin-tun-hijack-result"]}>
                     <div className={styles["plugin-tun-hijack-header"]}>
                         <div className={styles["title"]}>
-                            <div className={styles["text"]}>路由列表</div>
-                            <YakitButton type='text' onClick={() => updatePluginTunHijack()}>
-                                <OutlineRefreshIcon />
-                            </YakitButton>
+                            <YakitRadioButtons
+                                value={tableType}
+                                onChange={(e) => {
+                                    setTableType(e.target.value)
+                                }}
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: "process",
+                                        label: "进程列表"
+                                    },
+                                    {
+                                        value: "route",
+                                        label: "路由列表"
+                                    }
+                                ]}
+                            />
+                            {tableType === "route" && (
+                                <YakitButton type='text' onClick={() => updatePluginTunHijack()}>
+                                    <OutlineRefreshIcon />
+                                </YakitButton>
+                            )}
                         </div>
                         <div className={styles["extra"]}>
-                            <YakitButton type='primary' onClick={addRoute}>
-                                添加路由
-                            </YakitButton>
-                            <YakitButton
-                                type='outline1'
-                                colors='danger'
-                                onClick={() =>
-                                    handleDeleteRoute(selectedRowKeys.length > 0 ? selectedRowKeys : undefined)
-                                }
-                            >
-                                {selectedRowKeys.length > 0 ? "删除" : "清空"}
-                            </YakitButton>
+                            {tableType === "route" && (
+                                <>
+                                    <YakitButton type='primary' onClick={addRoute}>
+                                        添加路由
+                                    </YakitButton>
+                                    <YakitButton
+                                        type='outline1'
+                                        colors='danger'
+                                        onClick={() =>
+                                            handleDeleteRoute(selectedRowKeys.length > 0 ? selectedRowKeys : undefined)
+                                        }
+                                    >
+                                        {selectedRowKeys.length > 0 ? "删除" : "清空"}
+                                    </YakitButton>
+                                </>
+                            )}
                             <div className={styles["plugin-tun-hijack-quit-icon"]} onClick={onQuitTunHijackFun}>
                                 <QuitIcon />
                             </div>
                         </div>
                     </div>
-                    <div className={styles["plugin-tun-hijack-content"]}>
+                    <div
+                        className={classNames(styles["plugin-tun-hijack-content"], {
+                            [styles["plugin-tun-hijack-content-hidden"]]: tableType === "process"
+                        })}
+                    >
                         <TableVirtualResize
                             loading={loading}
                             isRefresh={loading}
@@ -297,6 +397,17 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                                 onChangeCheckboxSingle
                             }}
                             columns={columns}
+                        />
+                    </div>
+                    <div
+                        className={classNames(styles["plugin-tun-hijack-content"], {
+                            [styles["plugin-tun-hijack-content-hidden"]]: tableType === "route"
+                        })}
+                    >
+                        <TunHijackProcessTable
+                            deviceName={deviceName}
+                            pluginTunHijackAddActionsFun={pluginTunHijackAddActionsFun}
+                            setTableType={setTableType}
                         />
                     </div>
                 </div>
@@ -327,3 +438,507 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         )
     })
 )
+
+export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React.memo(
+    (props: TunHijackProcessTableProps) => {
+        const {deviceName, pluginTunHijackAddActionsFun, setTableType} = props
+        const [isRefresh, setIsRefresh] = useState<boolean>(false)
+        const [tableData, setTableData] = useState<ProcessInfo[]>([])
+        const [hijackProcessInfo, setHijackProcessInfo] = useState<ConnectionInfo[]>()
+        const [hijackTasks, setHijackTasks] = useState<HijackTask[]>([])
+        const [searchVal, setSearchVal] = useState<string>("")
+        const [activeTab, setActiveTab] = useState<string>("all")
+        const addToggleHijack = (pName: string, pid?: number) => {
+            setHijackTasks((prev) => {
+                return [...prev, {pid, pName, loading: true, uuid: `${uuidv4()}-hijack`}]
+            })
+        }
+
+        const removeToggleHijack = (pName: string, pid?: number) => {
+            setHijackTasks((prev) => {
+                const exists = prev.some((t) => {
+                    if (pid) {
+                        return t.pid === pid
+                    }
+                    return t.pName === pName && !t.pid
+                })
+                if (exists) {
+                    return prev.filter((t) => {
+                        if (pid) {
+                            return t.pid !== pid
+                        }
+                        return t.pName !== pName && !t.pid
+                    })
+                }
+                // 如若没找到 则是由进程名劫持的多个pid 停止其多个任务
+                else {
+                    return prev.filter((t) => {
+                        return pid ? !(t.pids || []).includes(pid) : t
+                    })
+                }
+            })
+        }
+
+        const columns: ColumnsTypeProps[] = [
+            {
+                title: "PID",
+                dataKey: "Pid",
+                width: 96
+            },
+            {
+                title: "进程名",
+                dataKey: "Name",
+                width: 120,
+                filterProps: {
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />,
+                    filterInputProps: {
+                        placeholder: "请输入进程名搜索..."
+                    }
+                }
+            },
+            {
+                title: "操作",
+                width: 128,
+                fixed: "right",
+                dataKey: "Action",
+                render: (_, record: ProcessInfo) => {
+                    const hijackItem = hijackTasks.find((t) => {
+                        if (t.pid) {
+                            return t.pid === record.Pid
+                        }
+                        return t.pName === record.Name
+                    })
+                    return (
+                        <>
+                            <YakitSpin
+                                spinning={!!hijackItem && hijackItem.loading}
+                                size='small'
+                                wrapperClassName={styles["action-spin"]}
+                            >
+                                {!!hijackItem && !hijackItem.loading ? (
+                                    <YakitButton
+                                        size='small'
+                                        type='text'
+                                        danger={!!hijackItem}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            removeToggleHijack(record.Name, record.Pid)
+                                        }}
+                                    >
+                                        停止
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton
+                                        size='small'
+                                        type='text'
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            addToggleHijack(record.Name, record.Pid)
+                                        }}
+                                    >
+                                        劫持
+                                    </YakitButton>
+                                )}
+                            </YakitSpin>
+                            <YakitButton
+                                type='text'
+                                size='small'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    update({QueryPid: record.Pid})
+                                }}
+                            >
+                                查看信息
+                            </YakitButton>
+                        </>
+                    )
+                }
+            }
+        ]
+
+        const hijackColumns: ColumnsTypeProps[] = [
+            {
+                title: "PID",
+                dataKey: "pid",
+                width: 96,
+                render: (pid: number | undefined, record: HijackTask) => {
+                    if (pid) {
+                        return pid
+                    } else if (record.pids && record.pids.length > 0) {
+                        return (
+                            <Tooltip placement='topLeft' title={record.pids.join(", ")}>
+                                {record.pids.join(", ")}
+                            </Tooltip>
+                        )
+                    }
+                    return "-"
+                }
+            },
+            {
+                title: "进程名",
+                dataKey: "pName",
+                width: 120
+            },
+            {
+                title: "进程数",
+                dataKey: "processesNum",
+                width: 96,
+                render: (processesNum: string) => (processesNum ? processesNum : "-")
+            },
+            {
+                title: "操作",
+                width: 70,
+                fixed: "right",
+                dataKey: "Action",
+                render: (_, record: HijackTask) => {
+                    return (
+                        <>
+                            <YakitButton
+                                type='text'
+                                size='small'
+                                danger={true}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    removeToggleHijack(record.pName, record.pid)
+                                }}
+                            >
+                                停止
+                            </YakitButton>
+                        </>
+                    )
+                }
+            }
+        ]
+
+        const [token, setToken] = useState<string>(randomString(40))
+        const update = useMemoizedFn((params: WatchProcessRequest = {}) => {
+            const newParams: WatchProcessRequest = {
+                StartParams: {
+                    CheckIntervalSeconds: 5,
+                    DisableReserveDNS: false
+                },
+                ...params
+            }
+            ipcRenderer.invoke("WatchProcessConnection", newParams, token).catch((err: any) => {
+                yakitNotify("error", `[WatchProcessConnection] error:  ${err}`, true)
+            })
+        })
+
+        const tableDataRef = React.useRef<ProcessInfo[]>([])
+
+        const updateTableDate = useThrottleFn(
+            (init?: boolean) => {
+                let newTableData = [...tableDataRef.current]
+                if (searchVal) {
+                    newTableData = newTableData.filter((item) =>
+                        item.Name.toLowerCase().includes(searchVal.toLowerCase())
+                    )
+                }
+                setTableData([...newTableData])
+                init && setIsRefresh(!isRefresh)
+            },
+            {wait: 500}
+        ).run
+
+        useUpdateEffect(() => {
+            updateTableDate(true)
+        }, [searchVal])
+
+        useEffect(() => {
+            update()
+            ipcRenderer.on(`${token}-data`, async (e, data: WatchProcessResponse) => {
+                switch (data.Action) {
+                    case "start":
+                        if (!tableDataRef.current.find((item) => item.Pid === data.Process.Pid)) {
+                            tableDataRef.current = tableDataRef.current.concat(data.Process)
+                        }
+                        break
+                    case "exit":
+                        tableDataRef.current = tableDataRef.current.filter((item) => item.Pid !== data.Process.Pid)
+                        break
+                    case "refresh":
+                        tableDataRef.current = tableDataRef.current.map((item) => {
+                            if (item.Pid === data.Process.Pid) {
+                                return data.Process
+                            }
+                            return item
+                        })
+                        break
+                    case "refresh_connections":
+                        let Connections = data?.Connections
+                        if (Connections && Connections.length > 0) {
+                            setHijackProcessInfo(data.Connections)
+                        } else {
+                            warn("当前进程无网络连接信息")
+                        }
+                        break
+                    default:
+                        break
+                }
+                updateTableDate()
+            })
+            ipcRenderer.on(`${token}-error`, (e, error) => {
+                yakitNotify("error", `[WatchProcessConnection] error:  ${error}`, true)
+            })
+            ipcRenderer.on(`${token}-end`, (e, data) => {
+                info("[WatchProcessConnection] finished")
+            })
+            return () => {
+                ipcRenderer.invoke("cancel-WatchProcessConnection", token)
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            }
+        }, [])
+        const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
+            setSearchVal(filter["Name"])
+        })
+
+        return (
+            <>
+                <HijackRunnerPool
+                    deviceName={deviceName}
+                    tasks={hijackTasks}
+                    onTaskStop={(pid) => {
+                        setHijackTasks((prev) =>
+                            prev.filter((t) => {
+                                // PID停止
+                                if (t.pid) {
+                                    return t.pid !== pid
+                                }
+                                // 进程名停止
+                                else {
+                                    return t.pName !== pid
+                                }
+                            })
+                        )
+                    }}
+                    onTaskStatus={(i: HijackTask) => {
+                        setHijackTasks((prev) =>
+                            prev.map((t) => {
+                                if (i.pid && t.pid === i.pid) {
+                                    return i
+                                }
+                                if (!i.pid && !t.pid && t.pName === i.pName) {
+                                    return i
+                                }
+                                return t
+                            })
+                        )
+                    }}
+                />
+                <div className={styles["hijack-process-search-wrapper"]}>
+                    <YakitInput.Search
+                        placeholder='可直接输入进程名劫持，根据glob模式匹配，如: *chrome*'
+                        onSearch={(value) => {
+                            if (!value) return
+                            if (hijackTasks.find((task) => task.pName === value && !task.pid)) {
+                                info("该进程已在劫持中")
+                            } else {
+                                addToggleHijack(value)
+                                setActiveTab("hijacking")
+                            }
+                        }}
+                        enterButton='劫持'
+                        wrapperClassName={styles["hijack-process-search"]}
+                    />
+                    <PluginTabs
+                        activeKey={activeTab}
+                        onChange={(v) => {
+                            setActiveTab(v)
+                        }}
+                        wrapperClassName={styles["hijack-process-tabs"]}
+                        tabBarExtraContent={
+                            hijackTasks.length > 0 ? (
+                                <YakitButton
+                                    danger
+                                    size='small'
+                                    onClick={() => {
+                                        setHijackTasks([])
+                                    }}
+                                >
+                                    全部停止
+                                </YakitButton>
+                            ) : null
+                        }
+                    >
+                        <TabPane key='hijacking' tab='已劫持任务'>
+                            <TableVirtualResize
+                                isRefresh={false}
+                                isShowTitle={false}
+                                data={hijackTasks}
+                                renderKey={"uuid"}
+                                pagination={{
+                                    page: 1,
+                                    limit: 50,
+                                    total: hijackTasks.length,
+                                    onChange: () => {}
+                                }}
+                                columns={hijackColumns}
+                                enableDrag
+                            />
+                        </TabPane>
+
+                        <TabPane key='all' tab='全部'>
+                            <TableVirtualResize
+                                isRefresh={isRefresh}
+                                isShowTitle={false}
+                                data={tableData}
+                                renderKey={"Pid"}
+                                pagination={{
+                                    page: 1,
+                                    limit: 50,
+                                    total: tableData.length,
+                                    onChange: () => {}
+                                }}
+                                columns={columns}
+                                enableDrag
+                                onChange={onTableChange}
+                            />
+                        </TabPane>
+                    </PluginTabs>
+                </div>
+
+                <HijackProcessInfoModal
+                    hijackProcessInfo={hijackProcessInfo}
+                    setHijackProcessInfo={setHijackProcessInfo}
+                    pluginTunHijackAddActionsFun={pluginTunHijackAddActionsFun}
+                    setTableType={setTableType}
+                />
+            </>
+        )
+    }
+)
+
+export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = React.memo((props) => {
+    const {pluginTunHijackAddActionsFun, setTableType} = props
+    const [hijackProcessInfo, setHijackProcessInfo] = useControllableValue<ConnectionInfo[] | undefined>(props, {
+        valuePropName: "hijackProcessInfo",
+        trigger: "setHijackProcessInfo",
+        defaultValue: undefined
+    })
+
+    const onPluginTunHijackAddActionsByConnection = useMemoizedFn((target: string) => {
+        pluginTunHijackAddActionsFun(target)
+        // 是否切换到路由表（由需求决定）
+        // setTableType("route")
+    })
+
+    const hijackInfoColumns: ColumnsTypeProps[] = [
+        {
+            title: "本地地址",
+            dataKey: "LocalAddress",
+            width: 180,
+            render(text) {
+                return (
+                    <div
+                        style={{cursor: "pointer", userSelect: "none"}}
+                        onDoubleClick={() => {
+                            setClipboardText(text)
+                        }}
+                    >
+                        {text}
+                    </div>
+                )
+            }
+        },
+        {
+            title: "远程地址",
+            dataKey: "RemoteAddress",
+            width: 180,
+            render(text) {
+                return (
+                    <div
+                        style={{cursor: "pointer", userSelect: "none"}}
+                        onDoubleClick={() => {
+                            setClipboardText(text)
+                        }}
+                    >
+                        {text}
+                    </div>
+                )
+            }
+        },
+        {
+            title: "域名",
+            dataKey: "Domain",
+            width: 200,
+            render: (data?: string[]) => {
+                let newData = data?.filter((d) => d && d.length > 0)
+                const text = (newData || []).join(", ")
+                return newData && newData.length > 0 ? (
+                    <Tooltip title={text}>
+                        <div
+                            style={{cursor: "pointer", userSelect: "none"}}
+                            onDoubleClick={() => {
+                                setClipboardText(text)
+                            }}
+                        >
+                            {text}
+                        </div>
+                    </Tooltip>
+                ) : (
+                    "-"
+                )
+            }
+        },
+        {
+            title: "操作",
+            width: 100,
+            fixed: "right",
+            dataKey: "Action",
+            render: (_, record: ConnectionInfo) => {
+                return (
+                    <>
+                        <YakitButton
+                            type='text'
+                            size='small'
+                            danger={true}
+                            onClick={(e) => {
+                                onPluginTunHijackAddActionsByConnection(record.RemoteAddress)
+                            }}
+                        >
+                            添加路由
+                        </YakitButton>
+                    </>
+                )
+            }
+        }
+    ]
+
+    return (
+        <YakitModal
+            visible={!!hijackProcessInfo}
+            title={
+                <>
+                    信息详情
+                    <Tooltip title='双击内容可复制到剪贴板' placement='top'>
+                        <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
+                    </Tooltip>
+                </>
+            }
+            width={800}
+            destroyOnClose={true}
+            onCancel={() => setHijackProcessInfo(undefined)}
+            footer={null}
+        >
+            <div style={{height: (hijackProcessInfo || []).length > 15 ? 400 : "auto"}}>
+                <TableVirtualResize
+                    isRefresh={false}
+                    isShowTitle={false}
+                    data={hijackProcessInfo || []}
+                    renderKey={"LocalAddress"}
+                    pagination={{
+                        page: 1,
+                        limit: 50,
+                        total: (hijackProcessInfo || []).length,
+                        onChange: () => {}
+                    }}
+                    columns={hijackInfoColumns}
+                    lineHighlight={false}
+                />
+            </div>
+        </YakitModal>
+    )
+})
