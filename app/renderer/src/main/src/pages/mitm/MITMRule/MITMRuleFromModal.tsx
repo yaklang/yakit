@@ -818,7 +818,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 closable={true}
                 bodyStyle={{padding: 0}}
             >
-                <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode}/>
+                <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={rule}/>
             </YakitModal>
         </>
     )
