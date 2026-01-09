@@ -20,16 +20,22 @@ export interface YaklangEngineWatchDogProps {
     onFailed?: (failedCount: number) => void
     onKeepaliveShouldChange?: (keepalive: boolean) => void
 
+    yakitStatus: YakitStatusType
     setYakitStatus: (v: YakitStatusType) => void
 
     setCheckLog: (log: string[]) => void
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo((props) => {
+    const yakitStatusRef = useRef<YakitStatusType>(props.yakitStatus)
     // 是否自动重启引擎进程
     const [autoStartProgress, setAutoStartProgress] = useState(false)
     // 是否正在重启引擎进程
     const startingUp = useRef<boolean>(false)
+
+    useEffect(() => {
+        yakitStatusRef.current = props.yakitStatus
+    }, [props.yakitStatus])
 
     useEffect(() => {
         if (!props.engineLink) setAutoStartProgress(false)
@@ -121,23 +127,31 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         version: __PLATFORM__,
                         isEnpriTraceAgent: isEnpriTraceAgent(),
                         softwareVersion: FetchSoftwareVersion()
-                    }).then((res) => {
-                        if (res.ok && res.status === "success") {
-                            debugToPrintLog(`[INFO] 本地新引擎进程启动成功`)
-                            if (props.onKeepaliveShouldChange) {
-                                props.onKeepaliveShouldChange(true)
-                            }
-                        } else {
-                            if (res.status === "timeout") {
-                                props.setCheckLog(["命令执行超时，请点击重新执行"])
-                                props.setYakitStatus("start_timeout")
-                            } else {
-                                outputToWelcomeConsole("引擎启动失败:" + res.status + ":" + res.message)
-                            }
-                            debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ":" + res.message}`)
-                        }
-                        startingUp.current = false
                     })
+                        .then((res) => {
+                            if (yakitStatusRef.current === "break") return
+                            
+                            if (res.ok && res.status === "success") {
+                                debugToPrintLog(`[INFO] 本地新引擎进程启动成功`)
+                                if (props.onKeepaliveShouldChange) {
+                                    props.onKeepaliveShouldChange(true)
+                                }
+                            } else {
+                                if (res.status === "timeout") {
+                                    props.setCheckLog(["命令执行超时，请点击重新执行"])
+                                    props.setYakitStatus("start_timeout")
+                                } else {
+                                    outputToWelcomeConsole("引擎启动失败:" + res.status + ":" + res.message)
+                                }
+                                debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ":" + res.message}`)
+                            }
+                            startingUp.current = false
+                        })
+                        .catch((error) => {
+                            // 如果手动中断 显示中断界面 意外情况暂时不做处理
+                            outputToWelcomeConsole(`引擎启动命令被中断或意外情况：${error}`)
+                            props.setCheckLog(["引擎启动命令被中断或意外情况，可查看日志详细信息..."])
+                        })
                 }
             }
         },
@@ -150,7 +164,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
     /**
      * 引擎连接尝试逻辑
-     * 引擎连接有效尝试次数: 1-20
+     * 引擎连接有效尝试次数: 1-10
      */
     useEffect(() => {
         const keepalive = props.keepalive
@@ -184,7 +198,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 })
                 .catch((e) => {
                     failedCount++
-                    if (failedCount > 0 && failedCount <= 20) {
+                    if (failedCount > 0 && failedCount <= 10) {
                         outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
                     }
                     if (props.onFailed) {
@@ -193,7 +207,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 })
         }
         connect()
-        const id = setInterval(connect, 1000)
+        const id = setInterval(connect, 3000)
         return () => {
             clearInterval(id)
         }

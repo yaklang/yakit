@@ -33,6 +33,7 @@ export interface SystemInfoProps {
 
 /** @name 当前yakit使用状态 */
 export type YakitStatusType =
+    | "init" // 初始
     | "install" // 解压内置引擎
     | "installNetWork" // 初始内置引擎不存在，联网安装
     | "check_timeout" // 引擎check超时
@@ -53,6 +54,7 @@ export type YakitStatusType =
     | "ready" // 开始尝试连接引擎
     | "start_timeout" // 引擎启动超时
     | "error" // 引擎连接超时
+    | "link_countdown" // 引擎连接成功，倒计时进入
     | "link" // 引擎连接成功
     | "break" // 小风车主动断开本地连接的引擎
     | "control-remote" // 远程控制
@@ -106,6 +108,9 @@ export interface LoadingClickExtra {
     downYakit?: boolean
     ignoreYakit?: IgnoreYakit
     downYak?: boolean
+    linkAgain?: boolean
+    /** 是否立即进入（跳过倒计时） */
+    enterNow?: boolean
 }
 
 export interface StartLocalEngine {

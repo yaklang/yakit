@@ -204,7 +204,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /**
          * 引擎连接尝试逻辑
-         * 引擎连接有效尝试次数: 1-20
+         * 引擎连接有效尝试次数: 1-10
          */
         useEffect(() => {
             const keepalive = props.keepalive
@@ -239,7 +239,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     .catch((e) => {
                         // debugToPrintLog(`[INFO] 探活结果: 不存在`)
                         failedCount++
-                        if (failedCount > 0 && failedCount <= 20) {
+                        if (failedCount > 0 && failedCount <= 10) {
                             outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
                         }
 

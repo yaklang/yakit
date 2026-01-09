@@ -11,9 +11,9 @@ import {
     grpcFetchLocalYakVersionHash,
     grpcFetchSpecifiedYakVersionHash
 } from "../../grpc"
-import {FetchSoftwareVersion, getReleaseEditionName, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {FetchSoftwareVersion, getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
 import {yakitNotify} from "@/utils/notification"
-import {SystemInfo} from "../../utils"
+import {outputToWelcomeConsole, SystemInfo} from "../../utils"
 import {getLocalValue} from "@/utils/kv"
 import {LocalGVS} from "@/enums/yakitGV"
 import {UpdateYakitHint} from "../UpdateYakitHint"
@@ -29,6 +29,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const {
             setLog,
             onLinkEngine,
+            yakitStatus,
             setYakitStatus,
             buildInEngineVersion,
             setRestartLoading,
@@ -46,7 +47,20 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         // 本地引擎版本
         const currentYak = useRef<string>("")
 
+        const yakitStatusRef = useRef(yakitStatus)
+        useEffect(() => {
+            yakitStatusRef.current = yakitStatus
+        }, [yakitStatus])
+
         const handleAllowSecretLocal = useMemoizedFn(async (port: number, checkVersion: boolean) => {
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 开始 check 被阻止 ------`)
+                setLog([])
+                return
+            }
+
+            debugToPrintLog(`------ 开始执行 check ------`)
             setLog(["开始检查随机密码模式中..."])
             try {
                 const res = await grpcCheckAllowSecretLocal({port, softwareVersion: FetchSoftwareVersion()})
@@ -103,7 +117,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         setYakitStatus("allow-secret-error")
                 }
             } catch (error) {
-                yakitNotify("error", "check：" + error + "，建议重启软件")
+                if (yakitStatusRef.current !== "break") {
+                    // 未知意外情况则重置引擎
+                    outputToWelcomeConsole(`check出现意外情况：${error}`)
+                    setLog(["check出现意外情况，可查看日志详细信息..."])
+                    setYakitStatus("skipAgreement_Install")
+                } else {
+                    setLog(["已主动断开, 请点击手动连接引擎"])
+                    setYakitStatus("break")
+                }
             }
         })
 
@@ -114,6 +136,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 先进行 yakit 检查，在进行引擎检查
          */
         const handlePreCheckForLinkEngine = useMemoizedFn((checkVersion: boolean) => {
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 开始连接引擎的前置版本检查 被阻止 ------`)
+                setLog([])
+                return
+            }
+
+            debugToPrintLog(`------ 开始执行初始化启动-连接引擎的前置版本检查 ------`)
             if (SystemInfo.isDev) {
                 setLog(["开发环境，直接连接引擎"])
                 startYakEngine()
@@ -131,6 +161,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 未开启 yakit 更新检查，不进行 yakit 更新检查，直接检查引擎和内置的版本
          */
         const handleCheckYakitLatestVersion = useMemoizedFn(() => {
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 开始检查yakit是否有版本更新 被阻止 ------`)
+                setLog([])
+                return
+            }
+
             if (isEnpriTraceAgent()) {
                 handleCheckEngineVersion()
                 return
@@ -190,6 +227,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          */
 
         const handleCheckEngineVersion = useMemoizedFn(async () => {
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 开始检查引擎本地版本和内置版本 被阻止 ------`)
+                setLog([])
+                return
+            }
+
             try {
                 const res = await getLocalValue(LocalGVS.NoYakVersionCheck)
                 if (res) {
@@ -255,9 +299,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 通过相同版本的线上hash和本地hash对比，判断是否一样
          */
         const handleCheckEngineSource = useMemoizedFn(async (version?: string) => {
-            const checkVersion = version || currentYak.current
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 开始校验引擎是否来源正确 被阻止 ------`)
+                setLog([])
+                return
+            }
+
             debugToPrintLog(`------ 开始校验引擎来源逻辑 ------`)
             setLog(["开始校验引擎来源..."])
+            const checkVersion = version || currentYak.current
             try {
                 const promise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error("Fetch engine online hash request timed out")), 2100)
@@ -290,6 +341,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         })
 
         const startYakEngine = useMemoizedFn(async () => {
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 准备开始启动引擎逻辑 被阻止 ------`)
+                setLog([])
+                return
+            }
+
             if (allowSecretLocalJson.current) {
                 debugToPrintLog(`------ 准备开始启动引擎逻辑 ------`)
                 setTimeout(() => {
