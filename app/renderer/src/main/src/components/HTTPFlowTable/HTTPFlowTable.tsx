@@ -1155,6 +1155,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const copyQuery = structuredClone(query)
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
         copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode : ""
+        if (Array.isArray(copyQuery.Methods)) {
+            copyQuery.Methods = copyQuery.Methods.filter((item) => item).join(",")
+        }
+        if ("bodyLength" in copyQuery) {
+            delete copyQuery.bodyLength
+        }
         setQueryParams(JSON.stringify(copyQuery))
     }
 
