@@ -31,7 +31,7 @@ import TimelineCard from "./TimelineCard/TimelineCard"
 import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import TaskLoading from "./TaskLoading/TaskLoading"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -93,7 +93,22 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
             />
         )
     }, [activeTab, handleTabChange, hasTaskTree])
-
+    const extraProps = useCreation(() => {
+        let p: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = {}
+        if (!length) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+            p.secondNodeStyle = {
+                display: "none",
+                padding: 0
+            }
+            p.lineStyle = {
+                display: "none",
+                padding: 0
+            }
+        }
+        return p
+    }, [length])
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
             <YakitResizeBox
@@ -121,6 +136,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         </div>
                     )
                 }
+                {...extraProps}
             />
         </div>
     )
