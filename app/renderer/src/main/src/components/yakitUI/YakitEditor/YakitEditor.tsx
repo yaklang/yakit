@@ -1218,11 +1218,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         // 监听光标位置变化，用于隐私模式的动态显示/隐藏
         const cursorPositionDisposable = editor.onDidChangeCursorPosition(() => {
             if (props.type === "http") {
-                current = model.deltaDecorations(current, generateDecorations())
+                scheduleDecorations()
             }
         })
-        
-        current = model.deltaDecorations(current, generateDecorations())
 
         // 监听查找面板变化
         const findController = editor.getContribution<IFindController>("editor.contrib.findController")
