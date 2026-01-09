@@ -214,6 +214,12 @@ interface TClearKnowledgeResponseParam {
     UISchema?: string
 }
 
+interface TResultAllTableTotal {
+    entityTotal: string
+    knowledgeTotal: string
+    vectorTotal: string
+}
+
 export type {
     TKnowledgeBaseProps,
     TDeleteConfirmProps,
@@ -231,5 +237,6 @@ export type {
     QueryEntityRequest,
     QueryEntityResponse,
     EntityFilter,
-    TClearKnowledgeResponse
+    TClearKnowledgeResponse,
+    TResultAllTableTotal
 }

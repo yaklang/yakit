@@ -84,7 +84,9 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (pro
         },
         {
             manual: true,
-            onError: (err) => failed(`获取实体关系图失败: ${err}`)
+            onError: (err) => {}
+
+            // onError: (err) => failed(`获取实体关系图失败: ${err}`)
         }
     )
 

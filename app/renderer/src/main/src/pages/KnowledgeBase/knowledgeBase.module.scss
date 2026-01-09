@@ -785,6 +785,7 @@
                     gap: 4px;
                     border-radius: 4px;
                     cursor: pointer;
+                    white-space: nowrap;
                     background: var(--2, linear-gradient(
                         135deg,
                         var(--Colors-Use-Magenta-Bg) 0%,

@@ -238,7 +238,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 onError: (e) => {
                     buildingSetRef.current.delete(key)
                     api.removeStream?.(history.token)
-                    failed(`知识库条目构建流失败: ${e + ""}`)
                 }
             })
         } catch (e) {
@@ -311,22 +310,18 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             streamstep: "success"
                         })
                     },
-                    onError: (e) => {
+                    onError: () => {
                         try {
                             editKnowledgeBase(updateItems.ID, {
                                 ...updateItems,
                                 streamstep: "success"
                             })
                             api.removeStream && api.removeStream(updateItems.streamToken)
-                        } catch {
-                            failed(`知识库条目构建流失败: ${e + ""}`)
-                        }
+                        } catch {}
                     }
                 })
             }
-        } catch (e) {
-            failed(`知识库条目构建流失败: ${e + ""}`)
-        }
+        } catch (e) {}
     })
 
     useImperativeHandle(ref, () => ({

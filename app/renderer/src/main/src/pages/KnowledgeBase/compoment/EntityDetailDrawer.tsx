@@ -97,7 +97,8 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
         },
         {
             manual: true,
-            onError: (err) => failed(`获取实体关系图失败: ${err}`),
+            onError: (err) => {},
+            // failed(`获取实体关系图失败: ${err}`),
             debounceWait: 2000,
             debounceLeading: true
         }
@@ -117,7 +118,12 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
             })
             return response?.KnowledgeBaseEntries ?? []
         },
-        {manual: true, onError: (err) => failed(`获取实体关系图失败: ${err}`)}
+        {
+            manual: true,
+            onError: (err) => {}
+
+            // onError: (err) => failed(`获取实体关系图失败: ${err}`)
+        }
     )
 
     const {data: relationsshipData, run: relationshipRun} = useRequest(
