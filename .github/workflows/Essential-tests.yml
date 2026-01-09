@@ -15,9 +15,6 @@ jobs:
   vitest:
     name: Vitest - renderer main
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x]
     steps:
       - name: Display incoming configuration parameters
         run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }}
@@ -146,4 +143,4 @@ jobs:
             exit 0
           fi
           echo "Running tests: $TESTS"
-          yarn test:vitest -- $TESTS -- --run --reporter verbose
+          yarn test:vitest $TESTS --run --reporter verbose
