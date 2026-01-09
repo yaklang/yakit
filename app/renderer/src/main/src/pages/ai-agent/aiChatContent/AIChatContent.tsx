@@ -24,11 +24,17 @@ import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEchart
 import {formatTime} from "@/utils/timeUtil"
 import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon, OutlinePlussmIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowdownIcon,
+    OutlineArrowupIcon,
+    OutlineClouddownloadIcon,
+    OutlineNewspaperIcon,
+    OutlinePlussmIcon
+} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
-import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {grpcQueryHTTPFlows} from "../grpc"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {grpcExportAILogs, grpcQueryHTTPFlows} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TabKey} from "../components/aiFileSystemList/type"
@@ -38,14 +44,18 @@ import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
 import useAIAgentStore from "../useContext/useStore"
 import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
-import {CloudDownloadIcon} from "@/assets/newIcon"
 import {ExportAILogsModal} from "../components/ExportAILogsModal/ExportAILogsModal"
 import {failed, yakitNotify} from "@/utils/notification"
 
-const {ipcRenderer} = window.require("electron")
-
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
-    const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders, coordinatorIDs} = useAIChatUIData()
+    const {
+        runTimeIDs: initRunTimeIDs,
+        yakExecResult,
+        aiPerfData,
+        taskChat,
+        grpcFolders,
+        coordinatorIDs
+    } = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const {activeChat} = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -81,12 +91,15 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         }
         setExportLoading(true)
         try {
-            await ipcRenderer.invoke("ExportAILogs", {
-                SessionID: activeChat.request.TimelineSessionID || "default",
-                CoordinatorIDs: coordinatorIDs,
-                ExportDataTypes: data.types,
-                OutputPath: data.outputPath
-            })
+            await grpcExportAILogs(
+                {
+                    SessionID: activeChat.request.TimelineSessionID || "default",
+                    CoordinatorIDs: coordinatorIDs,
+                    ExportDataTypes: data.types,
+                    OutputPath: data.outputPath
+                },
+                true
+            )
             yakitNotify("success", "导出成功")
             setExportModalVisible(false)
         } catch (error) {
@@ -426,7 +439,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                             <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                 日志
                             </YakitButton>
-                            <YakitButton type='secondary2' icon={<CloudDownloadIcon />} onClick={onOpenExportModal}>
+                            <YakitButton
+                                type='secondary2'
+                                icon={<OutlineClouddownloadIcon />}
+                                onClick={onOpenExportModal}
+                            >
                                 导出日志
                             </YakitButton>
                         </div>

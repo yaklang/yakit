@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron")
+const {ipcMain, shell} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -255,7 +255,6 @@ module.exports = (win, getClient) => {
         return await asyncUpdateAITool(param)
     })
 
-
     const asyncToggleAIToolFavorite = (params) => {
         return new Promise((resolve, reject) => {
             getClient().ToggleAIToolFavorite(params, (err, data) => {
@@ -322,7 +321,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ExportAILogs", async (e, params) => {
         const res = await asyncExportAILogs(params)
         if (res && res.FilePath) {
-            require('electron').shell.showItemInFolder(res.FilePath)
+            shell.showItemInFolder(res.FilePath)
         }
         return res
     })

@@ -604,7 +604,7 @@ export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
 }
 
-/**GetRandomAIMaterials 接口请求 */
+/** GetRandomAIMaterials 接口请求 */
 export interface GetRandomAIMaterialsRequest {
     Limit: number
 }
@@ -612,5 +612,17 @@ export interface GetRandomAIMaterialsResponse {
     KnowledgeBaseEntries: KnowledgeBaseEntry[]
     AITools: AITool[]
     AIForges: AIForge[]
+}
+
+/** AI-Log Export */
+export interface ExportAILogsRequest {
+    SessionID?: string
+    CoordinatorIDs?: string[]
+    ExportDataTypes: string[]
+    OutputPath?: string
+    MemoryID?: string
+}
+export interface ExportAILogsResponse {
+    FilePath: string
 }
 // #endregion

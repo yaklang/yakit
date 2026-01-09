@@ -1,15 +1,16 @@
-import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
+import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
     AIEventQueryRequest,
     AIEventQueryResponse,
+    ExportAILogsRequest,
+    ExportAILogsResponse,
     GetRandomAIMaterialsRequest,
     GetRandomAIMaterialsResponse
 } from "../ai-re-act/hooks/grpcApi"
 import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/forge"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
-import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -119,6 +120,18 @@ export const grpcGetRandomAIMaterials: APIFunc<GetRandomAIMaterialsRequest, GetR
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询 GetRandomAIMaterials 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcExportAILogs: APIFunc<ExportAILogsRequest, ExportAILogsResponse> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("ExportAILogs", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "导出 AI 日志失败:" + e)
                 reject(e)
             })
     })
