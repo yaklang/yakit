@@ -178,5 +178,8 @@
   "RegexTester": {
     "test_content": "测试内容",
     "matching_results": "匹配结果"
+  },
+  "YakScriptLoader":{
+    "reset_parameters":"重置参数"
   }
 }

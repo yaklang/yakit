@@ -43,6 +43,7 @@ import UnLogin from "@/assets/unLogin.png"
 import {pluginTypeToName} from "../plugins/builtInData"
 import MITMContext from "./Context/MITMContext"
 import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -80,6 +81,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
      */
     const [mitmParamsDrawer, setMitmParamsDrawer] = useState<boolean>(false)
     const mitmParamsInitFormValueRef = useRef<CustomPluginExecuteFormValue>({})
+    const mitmParamsDefaultFormValueRef = useRef<CustomPluginExecuteFormValue>({})
     const mitmParamsRequiredParamsRef = useRef<YakParamProps[]>([])
     const mitmParamsGroupParamsRef = useRef<YakExtraParamProps[]>([])
     const [drawerWidth, setDrawerWidth] = useState<number>(45) // 默认45vw
@@ -95,6 +97,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 [ele.Field]: value
             }
         })
+        mitmParamsDefaultFormValueRef.current = {...initFormValue}
         getRemoteValue("mitm_has_params_" + i.ScriptName).then((res) => {
             if (res) {
                 try {
@@ -432,6 +435,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     drawerWidth={drawerWidth}
                     onSetDrawerWidth={setDrawerWidth}
                     initFormValue={mitmParamsInitFormValueRef.current}
+                    defaultFormValue={mitmParamsDefaultFormValueRef.current}
                     requiredParams={mitmParamsRequiredParamsRef.current}
                     groupParams={mitmParamsGroupParamsRef.current}
                     onSubmitYakScriptId={onSubmitYakScriptId}
@@ -498,6 +502,7 @@ interface MitmHasParamsDrawer {
     i: YakScript
     drawerWidth: number
     initFormValue: CustomPluginExecuteFormValue
+    defaultFormValue: CustomPluginExecuteFormValue
     requiredParams: YakParamProps[]
     groupParams: YakExtraParamProps[]
     onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => void
@@ -511,6 +516,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
         i,
         drawerWidth,
         initFormValue,
+        defaultFormValue,
         requiredParams,
         groupParams,
         onSubmitYakScriptId,
@@ -525,6 +531,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
     }, [mitmContent.mitmStore.version])
     const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
     const [initWidth, setInitWidth] = useState<number>(drawerWidth)
+    const {t, i18n} = useI18nNamespaces(["mitm"])
 
     useEffect(() => {
         return () => {
@@ -562,6 +569,12 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                         <Tooltip title={i.ScriptName}>{`${i.ScriptName}`}</Tooltip>
                     </div>
                     <Space>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => mitmHasParamsPluginFormRef.current?.reset()}
+                        >
+                            {t("YakScriptLoader.reset_parameters")}
+                        </YakitButton>
                         <YakitButton
                             type='outline2'
                             onClick={() => {
@@ -636,6 +649,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                     <MitmHasParamsForm
                         ref={mitmHasParamsPluginFormRef}
                         initFormValue={initFormValue}
+                        defaultFormValue={defaultFormValue}
                         requiredParams={requiredParams}
                         groupParams={groupParams}
                     />
@@ -646,26 +660,35 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
 })
 interface MitmHasParamsFormPropsRefProps {
     onSubmit: () => Promise<CustomPluginExecuteFormValue | undefined>
+    reset: () => void
 }
 interface MitmHasParamsFormProps {
     ref?: ForwardedRef<MitmHasParamsFormPropsRefProps>
     initFormValue: CustomPluginExecuteFormValue
+    defaultFormValue: CustomPluginExecuteFormValue
     requiredParams: YakParamProps[]
     groupParams: YakExtraParamProps[]
 }
 const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) => {
-    const {initFormValue, requiredParams, groupParams} = props
+    const {initFormValue, defaultFormValue, requiredParams, groupParams} = props
     const [form] = Form.useForm()
     const jsonSchemaListRef = useRef<{
         [key: string]: any
     }>({})
+    const [resetCounter, setResetCounter] = useState(0)
+    const [currentJsonSchemaInitial, setCurrentJsonSchemaInitial] = useState(initFormValue)
 
     useImperativeHandle(
         ref,
         () => ({
-            onSubmit: handleFormSubmit
+            onSubmit: handleFormSubmit,
+            reset: () => {
+                form.setFieldsValue(defaultFormValue)
+                setCurrentJsonSchemaInitial(defaultFormValue)
+                setResetCounter(prev => prev + 1)
+            }
         }),
-        [form]
+        [form, defaultFormValue]
     )
 
     const handleFormSubmit: () => Promise<CustomPluginExecuteFormValue | undefined> = useMemoizedFn(() => {
@@ -700,11 +723,12 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             initialValues={initFormValue}
         >
             <ExecuteEnterNodeByPluginParams
+                key={resetCounter}
                 paramsList={requiredParams}
                 pluginType={"mitm"}
                 isExecuting={false}
                 jsonSchemaListRef={jsonSchemaListRef}
-                jsonSchemaInitial={initFormValue}
+                jsonSchemaInitial={currentJsonSchemaInitial}
             />
             <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"mitm"} />
         </Form>
