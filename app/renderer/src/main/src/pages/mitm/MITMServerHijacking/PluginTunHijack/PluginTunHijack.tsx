@@ -306,6 +306,8 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
             setAddLoading(true)
             form.validateFields().then((res) => {
                 pluginTunHijackAddActionsFun(res.target)
+            }).catch(()=>{
+                setAddLoading(false)
             })
         })
         useUpdateEffect(() => {
