@@ -1,0 +1,146 @@
+name: Essential tests
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'app/renderer/src/main/src/__tests__/**'
+      - '.github/workflows/**'
+
+jobs:
+  vitest:
+    name: Vitest - renderer main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display incoming configuration parameters
+        run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.18.2
+          cache: "yarn"
+          cache-dependency-path: |
+              yarn.lock
+              app/renderer/src/main/yarn.lock
+              app/renderer/engine-link-startup/yarn.lock
+
+      # - name: Cache Yarn cache
+      #   id: yarn-cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.cache/yarn
+      #     key: ${{ runner.os }}-yarn-cache-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-yarn-cache-
+
+      # - name: Cache node_modules
+      #   id: node-mod-cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: app/renderer/src/main/node_modules
+      #     key: ${{ runner.os }}-node-modules-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies (renderer main)
+        # if: steps.node-mod-cache.outputs.cache-hit != 'true'
+        working-directory: app/renderer/src/main
+        run: yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
+
+      - name: Skip install (node_modules cache hit)
+        # if: steps.node-mod-cache.outputs.cache-hit == 'true'
+        run: echo "node_modules cache restored; skipping yarn install"
+
+      - name: Verify installed packages (quick)
+        working-directory: app/renderer/src/main
+        run: |
+          echo "Yarn cache dir: $(yarn cache dir)"
+          ls -la node_modules | head -n 20 || true
+
+      - name: Debug - list candidate test files
+        working-directory: app/renderer/src/main
+        run: |
+          echo "pwd: $(pwd)"
+          echo "node: $(node -v) yarn: $(yarn -v)"
+          echo "Find test/spec files (up to depth 6):"
+          find . -maxdepth 6 -type f \( -name "*.test.*" -o -name "*.spec.*" \) -print || true
+          echo "Show specific folder (if exists):"
+          ls -la src/components/playground/Vitest__Test__ || true
+
+      - name: Determine relevant test files
+        id: test_selection
+        working-directory: app/renderer/src/main
+        shell: bash
+        run: |
+          # Get files changed in the PR. Use multiple fallbacks because the runner
+          # may have a shallow checkout and referenced commits might not exist.
+          CHANGED=""
+
+          # 1) Try the standard range if both commits are present
+          if git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1 && git rev-parse --verify "${{ github.sha }}" >/dev/null 2>&1; then
+            CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" || true)
+          fi
+
+          # 2) If still empty, try fetching the base branch (for PRs) and compare
+          if [ -z "$CHANGED" ] && [ -n "${{ github.event.pull_request.base.ref }}" ]; then
+            echo "Standard range not available — fetching base branch ${{ github.event.pull_request.base.ref }}"
+            git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.ref }}" || true
+            BASE_REF="origin/${{ github.event.pull_request.base.ref }}"
+            CHANGED=$(git diff --name-only "$BASE_REF" "${{ github.sha }}" || true)
+          fi
+
+          # 3) Final fallback: use files from the last commit(s)
+          if [ -z "$CHANGED" ]; then
+            echo "Falling back to last commit changes"
+            CHANGED=$(git diff --name-only HEAD^ HEAD || git show --name-only --pretty= "" "${{ github.sha }}" || true)
+          fi
+
+          echo "Changed files:\n$CHANGED"
+
+          # Normalize changed paths to be relative to the working dir by
+          # taking the last occurrence of 'src/' (works for nested 'src' paths)
+          CHANGED_REL=$(printf "%s\n" "$CHANGED" | awk -F'src/' '{ if (NF>1) print "src/"$(NF) ; else print $0 }' | sort -u || true)
+          # remove empty lines
+          CHANGED_REL=$(printf "%s\n" "$CHANGED_REL" | sed '/^$/d' || true)
+          echo "Normalized changes:\n$CHANGED_REL"
+
+          # Prefer explicitly changed test files
+          TEST_FILES=$(printf "%s\n" "$CHANGED_REL" | grep -E 'src/.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
+          if [ -n "$TEST_FILES" ]; then
+            TF=$(echo "$TEST_FILES" | tr '\n' ' ')
+            echo "Found test files: $TF"
+            echo "tests=$TF" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Otherwise, map changed source dirs to test globs
+          DIRS=$(printf "%s\n" "$CHANGED_REL" | grep -E '^src/' || true)
+          if [ -n "$DIRS" ]; then
+            PATTERNS=$(printf "%s\n" "$DIRS" | sed -E 's|/[^/]+$||' | sort -u | awk '{print $0"/**/*.test.* "$0"/**/*.spec.*"}' | tr '\n' ' ')
+            echo "Derived patterns: $PATTERNS"
+            echo "tests=$PATTERNS" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "No relevant tests found to run"
+          echo "tests=none" >> $GITHUB_OUTPUT
+
+      - name: Run Vitest (renderer main)
+        working-directory: app/renderer/src/main
+        env:
+          CI: true
+        run: |
+          TESTS="${{ steps.test_selection.outputs.tests }}"
+          if [ "$TESTS" = "none" ]; then
+            echo "No relevant tests changed, skipping vitest"
+            exit 0
+          fi
+          echo "Running tests: $TESTS"
+          yarn test:vitest $TESTS --run --reporter verbose
