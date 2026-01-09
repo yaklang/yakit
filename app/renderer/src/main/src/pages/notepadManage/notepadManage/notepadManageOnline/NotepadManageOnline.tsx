@@ -408,7 +408,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                         onSuccess={onSuccessDownload}
                         visible={!!batchDownInfo.url}
                         setVisible={onCancelDownload}
-                        isEncodeURI={false}
+                        // isEncodeURI={false}
                     />
                 )}
             </div>

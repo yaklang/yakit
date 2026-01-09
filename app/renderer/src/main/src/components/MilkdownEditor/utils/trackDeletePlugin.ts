@@ -7,13 +7,15 @@ import {DeleteOSSFileItem} from "../MilkdownEditorType"
 import {ReplaceStep} from "@milkdown/kit/prose/transform"
 
 export const getFileNameByUrl = (url) => {
-    if (!url) return ""
-    const [name, path] = url.split("?")[0].split("/").reverse()
-    if (!name || !path) {
-        return ""
-    }
-    const fileName = `${path}/${name}`
-    return fileName
+    // if (!url) return ""
+    // const [name, path] = url.split("?")[0].split("/").reverse()
+    // if (!name || !path) {
+    //     return ""
+    // }
+    // const fileName = `${path}/${name}`
+    // return fileName
+    // 重要！！！ 此处后端已处理，后续简化此逻辑
+    return url
 }
 const findOSSResource = (node, schema) => {
     const deletedFileNames: DeleteOSSFileItem[] = []

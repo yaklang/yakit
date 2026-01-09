@@ -332,7 +332,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 token: onlineToken,
                 type: "Project"
             }
-            apiSplitUpload(onlineParams).then((TaskStatus) => {
+            apiSplitUpload(onlineParams).then(({TaskStatus}) => {
                 if (!TaskStatus) {
                     failed(`${projectName}项目数据同步失败,请手动上传`)
                 }
