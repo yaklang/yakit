@@ -53,6 +53,7 @@ import {applyYakitMonacoTheme} from "./monacoSpec/theme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {fontSizeOptions, useEditorFontSize} from "@/store/editorFontSize"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { newWebFuzzerTab } from "@/pages/fuzzer/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1034,17 +1035,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     size={"small"}
                                     type={"primary"}
                                     icon={<ThunderboltFilled />}
-                                    onClick={() => {
-                                        ipcRenderer.invoke("send-to-tab", {
-                                            type: "fuzzer",
-                                            // 这儿的编码为了保证不要乱动
-                                            data: {
-                                                isHttps: props.defaultHttps || false,
-                                                request: props.defaultPacket ? props.defaultPacket : originValue,
-                                                downstreamProxyStr: downstreamProxyStr
-                                            }
+                                    onClick={() =>
+                                        newWebFuzzerTab({
+                                            isHttps: props.defaultHttps || false,
+                                            request: props.defaultPacket ? props.defaultPacket : originValue,
+                                            downstreamProxyStr,
+                                            openFlag: true
                                         })
-                                    }}
+                                    }
                                 >
                                     FUZZ
                                 </YakitButton>
