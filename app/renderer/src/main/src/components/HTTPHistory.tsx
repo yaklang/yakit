@@ -177,8 +177,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             delete treeQuery.Pagination
             delete treeQuery.AfterId
             delete treeQuery.BeforeId
-            delete treeQuery.SearchURL
-            delete treeQuery.IncludeInUrl
             setTreeQueryparams(JSON.stringify(treeQuery))
             setRefreshFlag(!!execFlag)
 

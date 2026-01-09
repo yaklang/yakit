@@ -9,7 +9,7 @@ import {
     OutlineLink2Icon,
     OutlineVariableIcon
 } from "@/assets/icon/outline"
-import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
+import {requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURL, YakURLResource} from "@/pages/yakURLTree/data"
 import {SolidFolderIcon, SolidFolderaddIcon, SolidFolderopenIcon} from "@/assets/icon/solid"
@@ -95,44 +95,63 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         return iconsEle[treeNodeType] || <></>
     }
 
+    const buildYakURL = useMemoizedFn((raw: string): YakURL => {
+        const parsed = new URL(raw)
+        const query = Array.from(parsed.searchParams.entries()).map(([Key, Value]) => ({Key, Value}))
+        return {
+            FromRaw: "",
+            Schema: parsed.protocol.replace(":", "").toLowerCase(),
+            User: parsed.username,
+            Pass: parsed.password,
+            Location: parsed.host,
+            Path: parsed.pathname || "/",
+            Query: query
+        }
+    })
+
     const getTreeData = useMemoizedFn((yakurl: string) => {
         if (treeLoading) return
 
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
-            let params: string = ""
+            const urlObj = buildYakURL(yakurl)
+            const query = [...urlObj.Query]
             if (treeExtraQueryparams) {
-                params = `params=${treeExtraQueryparams}`
+                query.push({Key: "params", Value: treeExtraQueryparams})
             }
 
-            let search: string = ""
             if (searchTreeFlag.current) {
                 setSearchWebTreeData([])
-                search = params ? `&search=${1}` : `search=${1}`
+                query.push({Key: "search", Value: "1"})
             } else {
                 setWebTreeData([])
             }
 
-            let runTime_id: string = ""
             if (runTimeId) {
-                runTime_id = params || search ? `&runtime_id=${runTimeId}` : `runtime_id=${runTimeId}`
+                query.push({Key: "runtime_id", Value: runTimeId})
             }
-
-            loadFromYakURLRaw(`${yakurl}?${params}${search}${runTime_id}`, (res) => {
-                // 判断是否是搜索树
-                if (searchTreeFlag.current) {
-                    setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
-                } else {
-                    setWebTreeData(assembleFirstTreeNode(res.Resources))
+            requestYakURLList(
+                {
+                    ...urlObj,
+                    Query: query
+                },
+                (res) => {
+                    // 判断是否是搜索树
+                    if (searchTreeFlag.current) {
+                        setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
+                    } else {
+                        setWebTreeData(assembleFirstTreeNode(res.Resources))
+                    }
+                    setTimeout(() => {
+                        setTreeLoading(false)
+                    }, 50)
                 }
-                setTimeout(() => {
+            )
+                .catch((error) => {
                     setTreeLoading(false)
-                }, 50)
-            }).catch((error) => {
-                setTreeLoading(false)
-                yakitFailed(`${t("YakitNotification.loadFailed", {colon: true})}${error}`)
-            })
+                    yakitFailed(`${t("YakitNotification.loadFailed", {colon: true})}${error}`)
+                })
         }, 30)
     })
 
