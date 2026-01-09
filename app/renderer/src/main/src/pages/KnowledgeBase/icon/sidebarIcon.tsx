@@ -327,7 +327,8 @@ const YakitLogoSvg = () => (
             fillRule='evenodd'
             clipRule='evenodd'
             d='M16.4716 27.7825C15.6693 27.9254 14.8434 28 14 28C6.26801 28 0 21.732 0 14C0 6.26801 6.26801 0 14 0C21.732 0 28 6.26801 28 14C28 14.8434 27.9254 15.6693 27.7825 16.4716C26.326 14.9486 24.2738 14 22 14C17.5817 14 14 17.5817 14 22C14 24.2738 14.9486 26.326 16.4716 27.7825Z'
-            fill='var(--Colors-Use-Main-Primary)'
+            // fill='var(--Colors-Use-Main-Primary)'
+            fill='#FF7B00'
         />
         <path
             fillRule='evenodd'
