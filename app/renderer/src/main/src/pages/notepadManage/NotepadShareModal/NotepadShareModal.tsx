@@ -230,7 +230,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                                 ) : (
                                     <div key={item.user_id} className={styles["manage-item"]}>
                                         <div className={styles["user-item"]}>
-                                            <img src={item.head_img} alt='作者' className={styles["user-img"]} />
+                                            {item.imgNode}
                                             <span className={styles["user-name"]}>{item.user_name}</span>
                                         </div>
                                         <AuthPopover
