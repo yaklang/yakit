@@ -100,22 +100,6 @@ module.exports = (win, getClient) => {
         })
     }
 
-    const postProjectFail = ({fileName, hash, fileIndex, type}) => {
-        // 此接口中的hash等待后端移除
-        service({
-            url: "import/project/fail",
-            method: "post",
-            data: {
-                fileName,
-                hash,
-                fileIndex,
-                type
-            }
-        }).then((res) => {
-            // console.log("rrrr---", res)
-        })
-    }
-
     // 将base64图片信息转换为FormData
     const getBase64ImgToFormData = (base64) => {
         // 去掉 Base64 字符串前缀
@@ -201,12 +185,6 @@ module.exports = (win, getClient) => {
                         })
                         resArr.push(res)
                     } catch (error) {
-                        postProjectFail({
-                            fileName,
-                            hash: fileHashTime,
-                            fileIndex: chunkIndex,
-                            type
-                        })
                         reject(error)
                         TaskStatus = false
                     }
