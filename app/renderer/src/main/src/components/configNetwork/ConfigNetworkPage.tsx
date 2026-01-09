@@ -1057,6 +1057,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         onChange={(e) => {
                                             setParams({...params, CallPluginTimeout: e as number})
                                         }}
+                                        min={1}
                                     />
                                 </Form.Item>
                                 <Form.Item label={"免配置启动路径"}>

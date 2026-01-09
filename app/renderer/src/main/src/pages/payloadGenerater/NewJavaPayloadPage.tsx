@@ -1051,6 +1051,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                 )}
                                 {item.Type === FormParamsType.StringPort && (
                                     <YakitInputNumber
+                                        min={0}
                                         precision={0}
                                         value={+params[item.Key]}
                                         onChange={(value) => setParamsValue([{key: item.Key, value: value as number}])}

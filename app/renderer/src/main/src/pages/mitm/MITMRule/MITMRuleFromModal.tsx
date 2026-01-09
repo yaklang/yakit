@@ -756,10 +756,10 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
                             />
                         </Form.Item>
                         <Form.Item label={t("InputHTTPCookieForm.expires_timestamp")} name='Expires'>
-                            <YakitInputNumber type='horizontal' />
+                            <YakitInputNumber type='horizontal' min={0} />
                         </Form.Item>
                         <Form.Item label='MaxAge' name='MaxAge'>
-                            <YakitInputNumber type='horizontal' />
+                            <YakitInputNumber type='horizontal' min={0} />
                         </Form.Item>
                     </>
                 )}

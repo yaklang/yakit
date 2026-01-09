@@ -132,13 +132,13 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                             setParams({...params, ScanBeforeSave: i})
                         )}/>
                         <InputInteger label={"最大页数"} setValue={MaxPage => setParams({...params, MaxPage})}
-                                      value={params.MaxPage}/>
+                                      value={params.MaxPage} min={1} />
                         <InputInteger label={"最大记录数"} setValue={MaxRecord => setParams({...params, MaxRecord})}
-                                      value={params.MaxRecord}/>
+                                      value={params.MaxRecord} min={1} />
                         <InputInteger label={"随机延迟(秒)"} setValue={RandomDelay => setParams({...params, RandomDelay})}
-                                      value={params.RandomDelay || 0}/>
+                                      value={params.RandomDelay || 0} min={0}/>
                         <InputInteger label={"重试次数"} setValue={RetryTimes => setParams({...params, RetryTimes})}
-                                      value={params.RetryTimes || 3}/>
+                                      value={params.RetryTimes || 3} min={0} />
                     </Form>}
             </AutoCard>}
             firstMinSize={`350px`}

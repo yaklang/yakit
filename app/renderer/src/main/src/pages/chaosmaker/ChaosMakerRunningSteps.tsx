@@ -96,7 +96,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
             }}
         >
             <InputInteger label={"并发模拟数"} setValue={Concurrent => setParams({...params, Concurrent})}
-                          value={params.Concurrent} help={"并发数越高，模拟攻击速度越快"}/>
+                          value={params.Concurrent} help={"并发数越高，模拟攻击速度越快"} />
             <SelectOne oldTheme={false} label={"重复模拟"} data={[
                 {text: "无限重复", value: -1},
                 {text: "不重复", value: 0},
@@ -104,7 +104,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
             ]} setValue={ExtraRepeat => setParams({...params, ExtraRepeat})} value={params.ExtraRepeat}/>
             <InputInteger label={"剧本间隔"} help={"指在大类别的模拟攻击间隔的秒数"}
                           setValue={GroupGapSeconds => setParams({...params, GroupGapSeconds})}
-                          value={params.GroupGapSeconds}/>
+                          value={params.GroupGapSeconds} />
             <Form.Item colon={false} label={" "}>
                 <YakitButton size={"max"} type="primary" htmlType="submit"> 执行模拟攻击剧本 </YakitButton>
             </Form.Item>

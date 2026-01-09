@@ -143,10 +143,10 @@ const PluginBatchExecuteExtraParams: React.FC<PluginBatchExecuteExtraParamsProps
                     />
                 </Form.Item>
                 <Form.Item label='并发进程' name='Concurrent'>
-                    <YakitInputNumber type='horizontal' size='small' min={0} precision={0} />
+                    <YakitInputNumber type='horizontal' size='small' min={1} precision={0} />
                 </Form.Item>
                 <Form.Item label='总超时时间' name='TotalTimeoutSecond'>
-                    <YakitInputNumber type='horizontal' size='small' min={0} precision={0} />
+                    <YakitInputNumber type='horizontal' size='small' min={1} precision={0} />
                 </Form.Item>
             </YakitPanel>
         </YakitCollapse>
