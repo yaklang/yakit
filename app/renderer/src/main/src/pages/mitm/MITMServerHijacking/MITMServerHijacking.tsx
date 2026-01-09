@@ -42,6 +42,7 @@ import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRules
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import { useStore } from "@/store/mitmState"
 import {useProxy} from "@/hook/useProxy"
+import { debugToPrintLogs } from "@/utils/logCollection"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -203,6 +204,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 .catch((e: any) => {
                     reject(e)
                     notification["error"]({message: `停止中间人劫持失败：${e}`})
+                    debugToPrintLogs({
+                        page: "MITMServerHijacking",
+                        fun: "stopFun",
+                        content: e
+                    })
                 })
                 .finally(() => {
                     // setLoading(false)

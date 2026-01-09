@@ -39,6 +39,7 @@ import {
     grpcResetMITMFilter
 } from "../MITMHacker/utils"
 import MITMContext from "../Context/MITMContext"
+import { JSONParseLog } from "@/utils/tool"
 
 const MITMAdvancedFilters = React.lazy(() => import("./MITMFilters"))
 const {ipcRenderer} = window.require("electron")
@@ -138,7 +139,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             }
             getRemoteValue(removeFilterKey).then((data) => {
                 try {
-                    const saveFilterData: SaveObjProps[] = JSON.parse(data)
+                    const saveFilterData: SaveObjProps[] = JSONParseLog(data,{page: "MITMFiltersModal", fun: "onSetFilter"})
                     const newSaveFilterData = saveFilterData.map((item) => {
                         if (item.filterName === editFilterName) {
                             return saveObj
@@ -508,7 +509,10 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                 return
             }
             try {
-                const filterData: SaveObjProps[] = JSON.parse(data)
+                const filterData: SaveObjProps[] = JSONParseLog(data,{
+                    page: "MITMFiltersModal",
+                    fun: "onMitmSaveFilter"
+                })
                 setMitmSaveData(filterData)
             } catch (error) {}
         })

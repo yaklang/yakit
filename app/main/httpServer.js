@@ -4,6 +4,8 @@ const {ipcMain} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
 const url = require("url")
 const {HttpsProxyAgent} = require("hpagent")
+const {printLogOutputFile} = require("./logFile")
+const {pickAxiosErrorCore} = require ("./toolsFunc")
 
 // 请求超时时间
 const DefaultTimeOut = 30 * 1000
@@ -80,7 +82,10 @@ service.interceptors.response.use(
         return res
     },
     (error) => {
-        // console.log("error_1", error)
+        const coreError = pickAxiosErrorCore(error)
+        printLogOutputFile(
+            `[HTTP ERROR] => ${JSON.stringify(coreError)}`
+        )
         if (error.response && error.response.data && error.response.data.message === "token过期") {
             const res = {
                 code: 401,
