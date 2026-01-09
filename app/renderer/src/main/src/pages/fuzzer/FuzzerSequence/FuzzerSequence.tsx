@@ -40,6 +40,7 @@ import {
     OutlineArrowcirclerightIcon,
     OutlineCodeIcon,
     OutlineCogIcon,
+    OutlineDotsverticalIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
     OutlineQuestionmarkcircleIcon,
@@ -2600,6 +2601,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             valuePropName: "showMatcherAndExtraction",
             trigger: "setShowMatcherAndExtraction"
         })
+
+        // first Node
+        const firstNodeRef = useRef(null)
+        const firstNodeSize = useSize(firstNodeRef)
+        
         const secondNodeRef = useRef(null)
         const secondNodeSize = useSize(secondNodeRef)
 
@@ -2723,8 +2729,37 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         }, [firstFull, secondFull])
 
         const [hex, setHex] = useState<boolean>(false)
+        const [privacy, setPrivacy] = useState(false)
         const firstNodeExtra = () => (
             <>
+                {+(firstNodeSize?.width || 0) < 350 ? (
+                    <YakitPopover
+                        trigger={"click"}
+                        content={
+                            <>
+                                <div>
+                                    {t("YakitButton.privacy_mode")}&nbsp;
+                                    <YakitSwitch checked={privacy} onChange={setPrivacy} />
+                                </div>
+                                <div style={{display: "flex", justifyContent: "space-between"}}>
+                                    HEX
+                                    <YakitSwitch checked={hex} onChange={setHex} />
+                                </div>
+                            </>
+                        }
+                    >
+                        <OutlineDotsverticalIcon className={styles["resize-card-icon"]} />
+                    </YakitPopover>
+                ) : (
+                    <>
+                        <YakitCheckableTag checked={privacy} onChange={setPrivacy}>
+                            {t("YakitButton.privacy_mode")}
+                        </YakitCheckableTag>
+                        <YakitCheckableTag checked={hex} onChange={setHex}>
+                            HEX
+                        </YakitCheckableTag>
+                    </>
+                )}
                 <YakitButton
                     size='small'
                     type='primary'
@@ -2738,9 +2773,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 >
                     {t("YakitButton.beautify")}
                 </YakitButton>
-                <YakitCheckableTag checked={hex} onChange={setHex}>
-                    HEX
-                </YakitCheckableTag>
                 <YakitButton
                     size='small'
                     type='primary'
@@ -2893,6 +2925,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                     firstNodeStyle={{padding: secondFull ? 0 : undefined, display: secondFull ? "none" : ""}}
                     {...ResizeBoxProps}
                     firstNode={
+                        <div ref={firstNodeRef} style={{height: "100%", overflow: "hidden"}}>
                         <WebFuzzerNewEditor
                             ref={webFuzzerNewEditorRef}
                             refreshTrigger={refreshTrigger}
@@ -2914,7 +2947,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     : undefined
                             }
                             hex={hex}
+                            privacy={privacy}
                         />
+                        </div>
                     }
                     secondNode={
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>

@@ -810,6 +810,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const fixContentTypeFun = useMemoizedFn(() => fixContentType)
     const originalContentTypeFun = useMemoizedFn(() => originalContentType)
     const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
+    const privacyFun = useMemoizedFn(() => props.privacy)
+    // 存储当前的隐私遮挡范围信息
+    const privacyMaskRangesRef = useRef<{id: string, range: monaco.Range}[]>([])
+    // 跟踪 model 是否已被释放
+    const isModelDisposedRef = useRef<boolean>(false)
     useEffect(() => {
         if (!editor) {
             return
@@ -818,6 +823,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (!model) {
             return
         }
+        isModelDisposedRef.current = false
 
         let current: string[] = []
 
@@ -845,9 +851,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             randomStr
         )
         const generateDecorations = (): YakitIModelDecoration[] => {
-            // const text = model.getValue();
-            if (!model) return []
-            const endsp = model.getPositionAt(1800)
+            // 检查 model 是否已被释放
+            if (!model || isModelDisposedRef.current) return []
+            try {
+                const endsp = model.getPositionAt(1800)
             const dec: YakitIModelDecoration[] = []
             const text =
                 endsp.lineNumber === 1
@@ -889,24 +896,97 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 })()
                 ;(() => {
                     try {
-                        //http
-                        ;[{regexp: /\nHost:\s*?.+/, classType: "host"}].map((detail) => {
-                            // handle host
-                            const match = detail.regexp.exec(text)
-                            if (!match) {
-                                return
+                        const hostRegex = /\nHost:\s*?([^\r\n]+)/
+                        const hostMatch = hostRegex.exec(text)
+                        if (!hostMatch) return
+                        
+                        const fullMatch = hostMatch[0]
+                        const hostColonIndex = hostMatch.index + fullMatch.indexOf(":")
+                        const hostLabelStart = model.getPositionAt(hostMatch.index)
+                        const hostLabelEnd = model.getPositionAt(hostColonIndex + 1)
+                        
+                        // 添加 Host 标签装饰器（? 标记）
+                        dec.push({
+                            id: `host-label-${hostMatch.index}`,
+                            ownerId: 0,
+                            range: new monaco.Range(
+                                hostLabelStart.lineNumber,
+                                hostLabelStart.column,
+                                hostLabelEnd.lineNumber,
+                                hostLabelEnd.column
+                            ),
+                            options: {
+                                afterContentClassName: `host lang-${i18n.language}`
                             }
-                            const start = model.getPositionAt(match.index)
-                            const end = model.getPositionAt(match.index + match[0].indexOf(":"))
-                            dec.push({
-                                id: detail.classType + match.index,
-                                ownerId: 0,
-                                range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                options: {
-                                    afterContentClassName: `${detail.classType} lang-${i18n.language}`
-                                }
-                            } as YakitIModelDecoration)
+                        } as YakitIModelDecoration)
+                        
+                        if (!privacyFun()) return
+                        
+                        // 提取并处理 Host 值
+                        const hostValue = hostMatch[1].trim()
+                        if (!hostValue) return
+                        
+                        const colonIndex = hostValue.indexOf(":")
+                        const hostname = colonIndex > 0 ? hostValue.substring(0, colonIndex) : hostValue
+                        if (!hostname) return
+                        
+                        // 构建搜索模式（hostname、hostname:port、不带www的域名）
+                        const patterns = [hostname]
+                        if (colonIndex > 0) patterns.push(hostValue)
+                        if (hostname.toLowerCase().startsWith("www.")) {
+                            const withoutWww = hostname.substring(4)
+                            if (withoutWww) patterns.push(withoutWww)
+                        }
+                        
+                        // 使用正则一次性查找所有匹配
+                        const fullText = model.getValue()
+                        const escapedPatterns = patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+                        const searchRegex = new RegExp(escapedPatterns.join('|'), 'g')
+                        
+                        const matches: {index: number, length: number}[] = []
+                        let match: RegExpExecArray | null
+                        while ((match = searchRegex.exec(fullText)) !== null) {
+                            matches.push({index: match.index, length: match[0].length})
+                        }
+                        
+                        // 去重重叠匹配（保留较长的）
+                        const filtered = matches.sort((a, b) => 
+                            a.index !== b.index ? a.index - b.index : b.length - a.length
+                        ).filter((curr, idx, arr) => 
+                            idx === 0 || curr.index >= arr[idx - 1].index + arr[idx - 1].length
+                        )
+                        
+                        // 获取光标位置用于判断是否显示遮罩
+                        const cursorPos = editor.getPosition()
+                        const newPrivacyRanges: {id: string, range: monaco.Range}[] = []
+                        
+                        filtered.forEach((m, idx) => {
+                            const start = model.getPositionAt(m.index)
+                            const end = model.getPositionAt(m.index + m.length)
+                            const range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column)
+                            const decorationId = `host-privacy-${idx}`
+                            
+                            newPrivacyRanges.push({id: decorationId, range})
+                            
+                            // 光标在范围内则不显示遮罩
+                            const isCursorIn = cursorPos?.lineNumber === start.lineNumber &&
+                                cursorPos.column >= start.column &&
+                                cursorPos.column <= end.column
+                            
+                            if (!isCursorIn) {
+                                dec.push({
+                                    id: decorationId,
+                                    ownerId: 0,
+                                    range,
+                                    options: {
+                                        inlineClassName: `host-privacy-mask-hidden lang-${i18n.language}`,
+                                        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+                                    }
+                                } as YakitIModelDecoration)
+                            }
                         })
+                        
+                        privacyMaskRangesRef.current = newPrivacyRanges
                     } catch (e) {}
                 })()
             }
@@ -1095,7 +1175,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 })
             })()
 
-            return dec
+                return dec
+            } catch (e) {
+                // model 可能已被释放
+                return []
+            }
         }
 
         const scheduleDecorations = () => {
@@ -1130,6 +1214,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             } catch (e) {}
         })
         scheduleDecorations()
+        
+        // 监听光标位置变化，用于隐私模式的动态显示/隐藏
+        const cursorPositionDisposable = editor.onDidChangeCursorPosition(() => {
+            if (props.type === "http") {
+                scheduleDecorations()
+            }
+        })
 
         // 监听查找面板变化
         const findController = editor.getContribution<IFindController>("editor.contrib.findController")
@@ -1142,8 +1233,70 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 keepSearchNameMapStore.removeKeepSearchNameMap(keepSearchName)
             }
         })
+
+        // 添加点击事件处理，用于临时解除 Host 值的打码
+        let isHandlingPrivacyClick = false
+        const handleHostPrivacyClick = (e: monaco.editor.IEditorMouseEvent) => {
+            if (!e.event.leftButton || props.type !== "http" || isHandlingPrivacyClick) {
+                return
+            }
+            
+            const clickPosition = e.target.position
+            if (!clickPosition) {
+                return
+            }
+            
+            // 获取当前光标位置
+            const currentCursorPosition = editor.getPosition()
+            
+            // 使用存储的隐私遮挡范围来检测点击
+            const clickedPrivacyRange = privacyMaskRangesRef.current.find((item) => {
+                const range = item.range
+                // 检查点击位置是否在遮挡范围内
+                return (
+                    clickPosition.lineNumber === range.startLineNumber &&
+                    clickPosition.column >= range.startColumn &&
+                    clickPosition.column <= range.endColumn
+                )
+            })
+            
+            if (clickedPrivacyRange) {
+                const range = clickedPrivacyRange.range
+                
+                // 检查光标是否已经在这个区域内（遮挡已解除）
+                // 如果是，则不需要再设置光标位置
+                if (currentCursorPosition) {
+                    const isCursorAlreadyInRange = (
+                        currentCursorPosition.lineNumber === range.startLineNumber &&
+                        currentCursorPosition.column >= range.startColumn &&
+                        currentCursorPosition.column <= range.endColumn
+                    )
+                    if (isCursorAlreadyInRange) {
+                        return // 光标已在区域内，不处理
+                    }
+                }
+                
+                isHandlingPrivacyClick = true
+                // 将光标移动到隐私区域之后，触发临时解除
+                // 光标位置变化会自动通过 onDidChangeCursorPosition 触发装饰器更新
+                editor.setPosition({
+                    lineNumber: range.endLineNumber,
+                    column: range.endColumn
+                })
+                editor.focus()
+                // 使用 setTimeout 重置标志，避免连续触发
+                setTimeout(() => {
+                    isHandlingPrivacyClick = false
+                }, 100)
+            }
+        }
+        
+        const mouseDownDisposable = editor.onMouseDown(handleHostPrivacyClick)
         return () => {
             try {
+                isModelDisposedRef.current = true
+                cursorPositionDisposable.dispose()
+                mouseDownDisposable.dispose()
                 editor.dispose()
             } catch (e) {}
         }
@@ -1160,7 +1313,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         props.fixContentType,
         props.originalContentType,
         props.fixContentTypeHoverMessage,
-        i18n.language
+        i18n.language,
+        props.privacy
     ])
     // 定位高亮光标位置
     useDebounceEffect(

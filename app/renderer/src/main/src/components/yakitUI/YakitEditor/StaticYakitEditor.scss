@@ -58,6 +58,32 @@
         border-radius: 4px;
     }
 
+    .host-privacy-mask-hidden {
+        color: transparent !important;
+        background-color: var(--yakit-colors-Neutral-40);
+        border-radius: 3px;
+        position: relative;
+        &::after {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+        &.lang-zh::after {
+            content: "隐私模式";
+        }
+        &.lang-en::after {
+            content: "Privacy Mode";
+        }
+        &:hover {
+            background-color: var(--yakit-colors-Neutral-50);
+        }
+    }
+
+
     .unicode-decode {
         background-color: var(--yakit-colors-Neutral-40);
     }

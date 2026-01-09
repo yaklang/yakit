@@ -130,6 +130,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import i18n from "@/i18n/i18n"
 import {OptionProps, YakitCombinationSearchProps} from "../YakitCombinationSearch/YakitCombinationSearchType"
+import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -4101,15 +4102,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     <div className={style["http-history-table-right"]}>
                                         {showAdvancedSearch && (
                                             <>
-                                                <YakitButton
-                                                    type='text'
-                                                    onClick={() => {
-                                                        setDrawerFormVisible(true)
-                                                    }}
-                                                    style={{padding: 0}}
-                                                >
-                                                    {t("HTTPFlowTable.advancedFilter")}
-                                                </YakitButton>
+                                                {size?.width && size?.width > 920 ? (
+                                                    <YakitButton
+                                                        type='text'
+                                                        onClick={() => {
+                                                            setDrawerFormVisible(true)
+                                                        }}
+                                                        style={{padding: 0}}
+                                                    >
+                                                        {t("HTTPFlowTable.advancedFilter")}
+                                                    </YakitButton>
+                                                ) : (
+                                                    <Tooltip title={t("HTTPFlowTable.advancedFilter")} placement='top'>
+                                                        <YakitButton
+                                                            type='text2'
+                                                            icon={<OutlineFilterIcon />}
+                                                            onClick={() => {
+                                                                setDrawerFormVisible(true)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                )}
                                                 {isFilter && (
                                                     <YakitTag color={"success"} style={{margin: 0}}>
                                                         {t("HTTPFlowTable.configured")}
@@ -4121,7 +4134,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         )}
                                         {showProtocolType && (
                                             <div className={classNames(style["http-history-table-right-item"])}>
-                                                {size?.width && size?.width > 1060 && (
+                                                {size?.width && size?.width > 960 && (
                                                     <div className={style["http-history-table-right-label"]}>
                                                         {t("HTTPFlowTable.protocolType")}
                                                     </div>
@@ -4129,7 +4142,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 <YakitSelect
                                                     size='small'
                                                     value={params.IsWebsocket || ""}
-                                                    wrapperStyle={{width: 150}}
+                                                    wrapperStyle={{width: 100}}
                                                     onSelect={(val) => {
                                                         setParams((prev) => ({
                                                             ...prev,
@@ -4200,7 +4213,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 </YakitPopover>
                                             </div>
                                         )}
-                                        {showBatchActions && size?.width && size?.width >= 800 && (
+                                        {showBatchActions && (
                                             <>
                                                 {(selectedRowKeys.length === 0 && (
                                                     <YakitButton
@@ -4245,6 +4258,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 )}
                                             </>
                                         )}
+                                        <Tooltip title={t("YakitRoute.trafficAnalysis")} placement='top'>
+                                            <YakitButton
+                                                type='outline2'
+                                                icon={<PublicHTTPHistoryIcon />}
+                                                onClick={() => {
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.DB_HTTPHistoryAnalysis,
+                                                            params: {}
+                                                        })
+                                                    )
+                                                }}
+                                            />
+                                        </Tooltip>
                                         {showDelAll && (
                                             <YakitDropdownMenu
                                                 menu={{

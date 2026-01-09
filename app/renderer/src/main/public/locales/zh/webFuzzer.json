@@ -20,7 +20,7 @@
     "concurrency": "组并发"
   },
   "PacketScanButton": {
-    "packetScan": "数据包扫描"
+    "packetScan": "扫描"
   },
   "WebFuzzerResponseExtractor": {
     "cannotGenerateExtractionRule": "无法生成数据提取规则：",
