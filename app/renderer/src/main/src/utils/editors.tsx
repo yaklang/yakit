@@ -804,10 +804,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     }, [props.defaultSearchKeyword, monacoEditor])
 
-    useEffect(() => {
-        setRenderHTML(undefined)
-        setTypeOptions([])
-        setShowValue(originValue)
+    const setTypeOptionFn = useMemoizedFn(() => {
         if (originValue.length > 0) {
             // 默认展示 originValue
             const encoder = new TextEncoder()
@@ -890,7 +887,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         } else {
             setTypeOptions([])
         }
-    }, [originValue, originalPackage, i18n.language])
+    })
+
+    useEffect(() => {
+        setRenderHTML(undefined)
+        setShowValue(originValue)
+        setTypeOptionFn()
+    }, [originValue, setTypeOptionFn])
 
     const isShowBeautifyRenderRef = useRef<boolean>()
     useEffect(() => {

@@ -173,6 +173,7 @@ import { useProxy } from "@/hook/useProxy"
 import { MITMConsts } from "../mitm/MITMConsts"
 import { RemoteGV } from "@/yakitGV"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import { useAutoScrollToBottom } from "./hooks/useAutoScrollToBottom"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -1556,11 +1557,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.id])
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
-        if (inViewport) setAll(extractedMap)
+        if (inViewport) setAll(extractedMap) 
     })
     const onlyOneResponse = useMemo(() => {
-        return !loading && failedFuzzer.length + successFuzzer.length === 1
-    }, [loading, failedFuzzer, successFuzzer])
+        return failedFuzzer.length + successFuzzer.length === 1
+    }, [failedFuzzer, successFuzzer])
 
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
@@ -2573,6 +2574,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         secondNodeTitle={secondNodeTitle}
                                         secondNodeExtra={secondNodeExtra}
                                         onSetOnlyOneResEditor={setOnlyOneResEditor}
+                                        loading={loading}
                                     />
                                 ) : (
                                     <div
@@ -3774,6 +3776,8 @@ interface ResponseViewerProps {
     secondNodeTitle?: () => JSX.Element
     secondNodeExtra?: () => JSX.Element
     onSetOnlyOneResEditor: (editor: IMonacoEditor) => void
+    /** 是否正在流式加载中，用于控制自动滚动到底部 */
+    loading?: boolean
 
     keepSearchName?: string
 }
@@ -3799,7 +3803,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             webFuzzerValue,
             request,
             keepSearchName,
-            onSetOnlyOneResEditor
+            onSetOnlyOneResEditor,
+            loading
         } = props
         const { t, i18n } = useI18nNamespaces(["webFuzzer"])
 
@@ -3959,6 +3964,17 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return { RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false }
         }, [fuzzerResponse.RuntimeID])
 
+        // 计算当前显示的值
+        const currentOriginValue = codeKey === "utf-8" ? responseRawString : codeValue
+
+        // 自动滚动到底部 hook（仅在流式加载时启用）
+        const { handleEditorMount } = useAutoScrollToBottom({
+            enabled: loading,
+            content: currentOriginValue,
+            resetDep: fuzzerResponse,
+            onEditorMount: onSetOnlyOneResEditor
+        })
+
         return (
             <>
                 <YakitResizeBox
@@ -3972,7 +3988,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
-                            originValue={codeKey === "utf-8" ? responseRawString : codeValue}
+                            originValue={currentOriginValue}
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
                             isResponse={true}
@@ -4051,9 +4067,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             onClickUrlMenu={copyUrl}
                             onClickOpenBrowserMenu={onClickOpenBrowserMenu}
                             downbodyParams={editorDownBodyParams}
-                            onEditor={(editor) => {
-                                onSetOnlyOneResEditor && onSetOnlyOneResEditor(editor)
-                            }}
+                            onEditor={handleEditorMount}
                             onClickOpenPacketNewWindowMenu={() => {
                                 openPacketNewWindow({
                                     request: {
