@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {editor} from "monaco-editor"
 import * as monaco from "monaco-editor"
 import classNames from "classnames"
@@ -17,6 +17,7 @@ const {ipcRenderer} = window.require("electron")
 interface RegexTesterProps {
     onSave: (pattern: string) => void
     defaultCode?: string
+    rule?: string
 }
 
 interface MatchResult {
@@ -26,10 +27,10 @@ interface MatchResult {
 }
 
 export const RegexTester: React.FC<RegexTesterProps> = React.memo((props) => {
-    const {onSave, defaultCode = ""} = props
+    const {onSave, defaultCode = "", rule = ''} = props
     const {t} = useI18nNamespaces(["mitm", "webFuzzer"])
 
-    const [regexPattern, setRegexPattern] = useState("")
+    const [regexPattern, setRegexPattern] = useState(rule)
     const [testText, setTestText] = useState(defaultCode)
     const [editorInstance, setEditorInstance] = useState<editor.IStandaloneCodeEditor>()
     const [matches, setMatches] = useState<MatchResult[]>([])
@@ -153,8 +154,11 @@ export const RegexTester: React.FC<RegexTesterProps> = React.memo((props) => {
     const handleRegexSave = useMemoizedFn((val: string) => {
         setActiveMatchIndex(undefined)
         setRegexPattern(val)
-        onSave(val)
     })
+
+    useUpdateEffect(()=>{
+        onSave(regexPattern)
+    },[regexPattern])
 
     return (
         <div className={styles["regex-tester"]}>
