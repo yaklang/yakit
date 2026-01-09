@@ -89,6 +89,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     })
 
     const onHide = useMemoizedFn(() => {
+        if (slashProvider.current?.element?.dataset?.show === "false") return
         view.focus()
         // 关闭窗口
         slashProvider.current?.hide()
