@@ -202,8 +202,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         try {
             const treeQuery = JSON.parse(queryParams) || {}
             delete treeQuery.Pagination
-            delete treeQuery.SearchURL
-            delete treeQuery.IncludeInUrl
             setTreeQueryparams(JSON.stringify(treeQuery))
             setRefreshFlag(!!execFlag)
 
@@ -2112,11 +2110,14 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         delete params["UpdatedAt"]
         delete params["UpdatedAt-time"]
         delete params["ContentType"]
+        delete params['bodyLength']
 
         const copyParams = {...params}
         copyParams.Color = copyParams.Color ? copyParams.Color : []
         copyParams.StatusCode = copyParams.StatusCode ? copyParams.StatusCode : ""
-
+        if (Array.isArray(copyParams.Methods)) {
+            copyParams.Methods = copyParams.Methods.filter((item) => item).join(",")
+        }
         if (copyParams.SearchURL === "") {
             refreshTabsContRef.current = true
         }
