@@ -1,16 +1,23 @@
 import {Theme} from "@/hooks/useTheme"
 import {monaco} from "react-monaco-editor"
+type CssVars = Record<string, string>
 
 let currentAppliedTheme: Theme | null = null
 /**
  * 定义并应用 monaco 编辑器主题
  */
 const applyYakitMonacoTheme = (themeGlobal: Theme) => {
-    if (!monaco || currentAppliedTheme === themeGlobal) return // 避免重复应用
+    if (!monaco || currentAppliedTheme === themeGlobal) return
     currentAppliedTheme = themeGlobal
 
-    const vars = getAllYakitColorVars()
+    requestAnimationFrame(() => {
+        const vars = getAllYakitColorVars()
+        defineMonacoTheme(vars, themeGlobal)
+        monaco.editor.setTheme("kurior")
+    })
+}
 
+const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
     const editorIndentGuideSetting: Record<Theme, Record<string, string>> = {
         dark: {
             background: "#f6a317",
@@ -745,17 +752,24 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             "editorSuggestWidget.highlightForeground": vars["--Colors-Use-Blue-Primary"]
         }
     })
-
     monaco.editor.setTheme("kurior")
 }
-
 export {applyYakitMonacoTheme}
 
 /**
- * 提取所有 --Colors-Use- 变量
+ * 提取所有 yakit / Colors-Use CSS 变量（包含继承 & inline）
  */
-export const getAllYakitColorVars = (): Record<string, string> => {
-    const style = getComputedStyle(document.documentElement)
+export const getAllYakitColorVars = (theme?: "light" | "dark"): Record<string, string> => {
+    const el = document.documentElement
+
+    if (theme) {
+        const currentTheme = el.getAttribute("data-theme")
+        if (currentTheme !== theme) {
+            console.warn(`[getAllYakitColorVars] theme mismatch: expect=${theme}, actual=${currentTheme}`)
+        }
+    }
+
+    const computed = getComputedStyle(el)
     const seen = new Set<string>()
     const result: Record<string, string> = {}
 
@@ -766,27 +780,28 @@ export const getAllYakitColorVars = (): Record<string, string> => {
         } catch {
             continue
         }
+
         for (const rule of rules) {
             if (rule.type !== CSSRule.STYLE_RULE) continue
             const styleRule = rule as CSSStyleRule
-            const styleDecl = styleRule.style
-            for (let i = 0; i < styleDecl.length; i++) {
-                const prop = styleDecl[i]
-                if (prop.startsWith("--Colors-Use-") && !seen.has(prop)) {
+
+            for (let i = 0; i < styleRule.style.length; i++) {
+                const prop = styleRule.style[i]
+                if ((prop.startsWith("--Colors-Use-") || prop.startsWith("--yakit-colors-")) && !seen.has(prop)) {
                     seen.add(prop)
-                    const value = style.getPropertyValue(prop).trim()
-                    if (value) {
-                        result[prop] = value
-                    }
-                }
-                if (prop.startsWith("--yakit-colors-") && !seen.has(prop)) {
-                    seen.add(prop)
-                    const value = style.getPropertyValue(prop).trim()
-                    if (value) {
-                        result[prop] = value
-                    }
+                    const value = computed.getPropertyValue(prop).trim()
+                    if (value) result[prop] = value
                 }
             }
+        }
+    }
+
+    for (let i = 0; i < el.style.length; i++) {
+        const prop = el.style[i]
+        if ((prop.startsWith("--Colors-Use-") || prop.startsWith("--yakit-colors-")) && !seen.has(prop)) {
+            seen.add(prop)
+            const value = computed.getPropertyValue(prop).trim()
+            if (value) result[prop] = value
         }
     }
 

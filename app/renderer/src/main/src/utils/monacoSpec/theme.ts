@@ -1,16 +1,50 @@
 import type {Theme} from "@/hook/useTheme"
 import {monaco} from "react-monaco-editor"
+import {getReleaseEditionName} from "../envfile"
+type CssVars = Record<string, string>
+type TGeneratorColor = (
+    vars: CssVars,
+    theme: Theme,
+    releaseEditionName: ReturnType<typeof getReleaseEditionName>
+) => Record<string, string>
 
 let currentAppliedTheme: Theme | null = null
 /**
  * 定义并应用 monaco 编辑器主题
  */
 const applyYakitMonacoTheme = (themeGlobal: Theme) => {
-    if (!monaco || currentAppliedTheme === themeGlobal) return // 避免重复应用
+    if (!monaco || currentAppliedTheme === themeGlobal) return
     currentAppliedTheme = themeGlobal
 
-    const vars = getAllYakitColorVars()
+    requestAnimationFrame(() => {
+        const vars = getAllYakitColorVars()
+        defineMonacoTheme(vars, themeGlobal)
+        monaco.editor.setTheme("kurior")
+    })
+}
 
+const tartgetEditionName = ["IRify", "IRify-EnpriTrace", "Memfit AI"]
+
+const generatorColor: TGeneratorColor = (vars, theme, releaseEditionName) => {
+    if (tartgetEditionName.includes(releaseEditionName)) {
+        if (theme === "dark") {
+            return {
+                selectionBackground: vars["--Colors-Use-Main-Border"]
+            }
+        } else {
+            return {
+                selectionBackground: vars["--Colors-Use-Main-Focus"]
+            }
+        }
+    } else {
+        return {
+            selectionBackground: vars["--Colors-Use-Warning-Border"]
+        }
+    }
+}
+
+const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
+    const result = generatorColor(vars, themeGlobal, getReleaseEditionName())
     const editorIndentGuideSetting: Record<Theme, Record<string, string>> = {
         dark: {
             background: "#f6a317",
@@ -25,6 +59,7 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             scrollbarShadow: "#17171714"
         }
     }
+
     monaco.editor.defineTheme("kurior", {
         base: "vs",
         inherit: true,
@@ -165,7 +200,7 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             },
             {
                 token: "delimiter.xml",
-                foreground: vars["--Colors-Use-Neutral-Text-1-Title"],
+                foreground: vars["--Colors-Use-Neutral-Text-1-Title"]
             },
             {
                 token: "attribute.name.xml",
@@ -173,7 +208,7 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             },
             {
                 token: "attribute.value.xml",
-                foreground: vars["--yakit-colors-Green-80"],
+                foreground: vars["--yakit-colors-Green-80"]
             },
             // ------------------------------------------
 
@@ -666,16 +701,20 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
         colors: {
             "editor.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
             "editor.background": vars["--Colors-Use-Neutral-Bg-Hover"],
-            "editor.selectionBackground": vars["--Colors-Use-Warning-Border"],
-            "editor.inactiveSelectionBackground": vars["--Colors-Use-Warning-Border"],
+            "editor.selectionBackground": result.selectionBackground,
+            // vars["--Colors-Use-Warning-Border"],
+            "editor.inactiveSelectionBackground": result.selectionBackground,
+            // vars["--Colors-Use-Warning-Border"],
             "editor.lineHighlightBackground": editorIndentGuideSetting[themeGlobal].lineHighlightBackground,
             "editorCursor.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
             "editorWhitespace.foreground": vars["--Colors-Use-Neutral-Text-4-Help-text"],
 
-            "editorIndentGuide.background": editorIndentGuideSetting[themeGlobal].background,
-            "editorIndentGuide.activeBackground": editorIndentGuideSetting[themeGlobal].activeBackground,
-            "editorLineNumber.foreground": vars["--yakit-colors-Lake-blue-80"],
-            "editorLineNumber.activeForeground": "#f6a317",
+            "editorIndentGuide.background": vars["--Colors-Use-Neutral-Disable"],
+            // editorIndentGuideSetting[themeGlobal].background,
+            "editorIndentGuide.activeBackground": vars["--Colors-Use-Main-Primary"],
+            // editorIndentGuideSetting[themeGlobal].activeBackground,
+            "editorLineNumber.foreground": vars["--Colors-Use-Neutral-Text-4-Help-text"],
+            "editorLineNumber.activeForeground": vars["--Colors-Use-Main-Primary"],
 
             "minimap.background": vars["--Colors-Use-Neutral-Bg-Hover"],
             "minimap.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
@@ -688,7 +727,8 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             "editorOverviewRuler.background": vars["--Colors-Use-Neutral-Bg-Hover"],
             "editorGutter.foldingControlForeground": vars["--Colors-Use-Neutral-Text-3-Secondary"],
 
-            "editorLink.activeForeground": "#F28C45",
+            "editorLink.activeForeground": vars["--Colors-Use-Main-Border"],
+            // "#F28C45",
 
             "editorBracketHighlight.foreground1": vars["--Colors-Use-Blue-Primary"],
             "editorBracketHighlight.foreground2": vars["--Colors-Use-Blue-Primary"],
@@ -742,21 +782,27 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             // 输入框边框
             "input.border": vars["--Colors-Use-Neutral-Border"],
 
-            "editorSuggestWidget.highlightForeground": vars["--Colors-Use-Blue-Primary"],
-
+            "editorSuggestWidget.highlightForeground": vars["--Colors-Use-Blue-Primary"]
         }
     })
-
     monaco.editor.setTheme("kurior")
 }
-
 export {applyYakitMonacoTheme}
 
 /**
- * 提取所有 --Colors-Use- 变量
+ * 提取所有 yakit / Colors-Use CSS 变量（包含继承 & inline）
  */
-export const getAllYakitColorVars = (): Record<string, string> => {
-    const style = getComputedStyle(document.documentElement)
+export const getAllYakitColorVars = (theme?: "light" | "dark"): Record<string, string> => {
+    const el = document.documentElement
+
+    if (theme) {
+        const currentTheme = el.getAttribute("data-theme")
+        if (currentTheme !== theme) {
+            console.warn(`[getAllYakitColorVars] theme mismatch: expect=${theme}, actual=${currentTheme}`)
+        }
+    }
+
+    const computed = getComputedStyle(el)
     const seen = new Set<string>()
     const result: Record<string, string> = {}
 
@@ -767,27 +813,28 @@ export const getAllYakitColorVars = (): Record<string, string> => {
         } catch {
             continue
         }
+
         for (const rule of rules) {
             if (rule.type !== CSSRule.STYLE_RULE) continue
             const styleRule = rule as CSSStyleRule
-            const styleDecl = styleRule.style
-            for (let i = 0; i < styleDecl.length; i++) {
-                const prop = styleDecl[i]
-                if (prop.startsWith("--Colors-Use-") && !seen.has(prop)) {
+
+            for (let i = 0; i < styleRule.style.length; i++) {
+                const prop = styleRule.style[i]
+                if ((prop.startsWith("--Colors-Use-") || prop.startsWith("--yakit-colors-")) && !seen.has(prop)) {
                     seen.add(prop)
-                    const value = style.getPropertyValue(prop).trim()
-                    if (value) {
-                        result[prop] = value
-                    }
-                }
-                if (prop.startsWith("--yakit-colors-") && !seen.has(prop)) {
-                    seen.add(prop)
-                    const value = style.getPropertyValue(prop).trim()
-                    if (value) {
-                        result[prop] = value
-                    }
+                    const value = computed.getPropertyValue(prop).trim()
+                    if (value) result[prop] = value
                 }
             }
+        }
+    }
+
+    for (let i = 0; i < el.style.length; i++) {
+        const prop = el.style[i]
+        if ((prop.startsWith("--Colors-Use-") || prop.startsWith("--yakit-colors-")) && !seen.has(prop)) {
+            seen.add(prop)
+            const value = computed.getPropertyValue(prop).trim()
+            if (value) result[prop] = value
         }
     }
 

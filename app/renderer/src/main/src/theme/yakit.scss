@@ -5,8 +5,7 @@ $color-names: Main, Error, Warning, Success, "Blue";
 $color-tag-names: "Purple", "Magenta",  "Lake-blue", "Cyan", "Green", "Red", "Orange", "Yellow", "Grey";
 
 html[data-theme="light"] {
-
-    @include generator.generate-all-theme-colors(light);
+    // @include generator.generate-all-theme-colors(light);
     @include components.generate-neutral-semantic-colors(light);
     @include components.generate-basic-semantic-colors(light);
     @include components.generate-status-semantic-colors(light);
@@ -29,8 +28,7 @@ html[data-theme="light"] {
     }
 }
 html[data-theme="dark"] {
-
-    @include generator.generate-all-theme-colors(dark);
+    // @include generator.generate-all-theme-colors(dark);
     @include components.generate-neutral-semantic-colors(dark);
     @include components.generate-basic-semantic-colors(dark);
     @include components.generate-status-semantic-colors(dark);
@@ -52,4 +50,3 @@ html[data-theme="dark"] {
         color: #C8D0DD
     }
 }
-

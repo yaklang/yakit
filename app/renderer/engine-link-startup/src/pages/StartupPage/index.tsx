@@ -51,14 +51,16 @@ import {YaklangEngineWatchDog} from "./components/YaklangEngineWatchDog"
 import {ipcEventPre} from "@/utils/ipcEventPre"
 import yakitLogo from "@/assets/YakitLogo.png"
 import yakitEELogo from "@/assets/yakitEELogo.png"
+import yakitEEDarkLogo from "@/assets/yakitEEDarkLogo.png"
 import yakitSELogo from "@/assets/yakitSELogo.png"
+import yakitSEDarkLogo from "@/assets/yakitSEDarkLogo.png"
 import irifyRight from "@/assets/irify-right.png"
 import yakitRight from "@/assets/yakit-right.png"
 import memfitRight from "@/assets/memfit-right.webm"
 import memfitRightDark from "@/assets/memfit-right-dark.webm"
 
 import styles from "./index.module.scss"
-import {SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon} from "@/assets/colors"
+import {SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon} from "@/assets/colors"
 
 import {useTheme} from "@/hooks/useTheme"
 
@@ -120,6 +122,8 @@ export const StartupPage: React.FC = () => {
     const [keepalive, setKeepalive, getKeepalive] = useGetSetState<boolean>(false)
     /** 本地连接自定义端口号 */
     const [customPort, setCustomPort, getCustomPort] = useGetSetState<number>(GetConnectPort())
+
+    const {theme} = useTheme()
 
     // #region 软件开始进行逻辑启动
     useEffect(() => {
@@ -970,7 +974,7 @@ export const StartupPage: React.FC = () => {
             } else if (isCommunityMemfit()) {
                 return {type: "svg", component: SolidMemfitFontLogoIcon, width: 112, height: 41}
             } else {
-                return {type: "img", src: yakitLogo, width: 112, height: 41}
+                return {type: "svg", component: SolidYakitFontLogoIcon, width: 112, height: 41}
             }
         }
 
@@ -981,19 +985,17 @@ export const StartupPage: React.FC = () => {
             } else if (isMemfit()) {
                 return {type: "svg", component: SolidMemfitFontLogoIcon, width: 112, height: 41}
             } else {
-                return {type: "img", src: yakitEELogo, width: 137, height: 40}
+                return {type: "img", src: theme === "light" ? yakitEELogo : yakitEEDarkLogo, width: 137, height: 40}
             }
         }
 
         // se
         if (isEnpriTraceAgent()) {
-            return {type: "img", src: yakitSELogo, width: 190, height: 40}
+            return {type: "img", src: theme === "light" ? yakitSELogo : yakitSEDarkLogo, width: 190, height: 40}
         }
 
-        return {src: yakitLogo, width: 112, height: 41}
-    }, [])
-
-    const {theme} = useTheme()
+        return {type: "svg", component: SolidYakitFontLogoIcon, width: 112, height: 41}
+    }, [theme])
 
     const startupRightImg = useMemo(() => {
         if (isIRify()) {
