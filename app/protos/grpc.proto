@@ -6679,6 +6679,9 @@ message MITMFilterData {
 
   repeated FilterDataItem ExcludeMethods = 7;
   repeated FilterDataItem ExcludeMIME = 8;
+
+  // 是否过滤打包/构建产物的静态 JS（默认 true：过滤）
+  bool FilterBundledStaticJS = 9;
 }
 
 message Certificate {
@@ -8318,6 +8321,7 @@ message MITMV2Request{
   bool DisableSystemProxy = 49;
   // runtime change system proxy enable/disable
   bool SetDisableSystemProxy = 50;
+
 }
 
 message MITMV2Response {

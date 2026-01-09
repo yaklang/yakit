@@ -18,11 +18,14 @@ import {defaultMITMBaseFilter, defaultMITMAdvancedFilter} from "@/defaultConstan
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {FilterType} from "./MITMFiltersModal"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMFiltersProp {
+    filterType: FilterType
     filter?: MITMFilterSchema
     onFinished?: (filter: MITMFilterSchema) => any
     onClosed?: () => any
@@ -35,6 +38,7 @@ export interface MITMFilterSchema {
     excludeHostname?: string[]
     includeSuffix?: string[]
     excludeSuffix?: string[]
+    filterBundledStaticJS?: boolean
     excludeMethod?: string[]
     excludeContentTypes?: string[]
     excludeUri?: string[]
@@ -85,10 +89,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item
-                    label='包含 URL 路径'
-                    help={"可理解为 URI 匹配，例如 /main/index.php?a=123"}
-                >
+                <Form.Item label='包含 URL 路径' help={"可理解为 URI 匹配，例如 /main/index.php?a=123"}>
                     <YakitSelect
                         mode='tags'
                         value={params?.includeUri || undefined}
@@ -133,6 +134,16 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
+                {props.filterType === "filter" && (
+                    <Form.Item label={"过滤 JS"} help={"开启后过滤打包/构建产物的静态 JS"}>
+                        <YakitSwitch
+                            checked={!!params?.filterBundledStaticJS}
+                            onChange={(checked) => {
+                                setParams({...params, filterBundledStaticJS: checked})
+                            }}
+                        ></YakitSwitch>
+                    </Form.Item>
+                )}
                 <Form.Item label={"排除 HTTP 方法"}>
                     <YakitSelect
                         mode='tags'
@@ -173,11 +184,17 @@ export interface MITMFilterData {
     ExcludeMethods: FilterDataItem[]
 
     ExcludeMIME: FilterDataItem[]
+
+    FilterBundledStaticJS?: boolean
 }
 
 export interface MITMAdvancedFilter extends FilterDataItem {
-    Field?: keyof MITMFilterData
+    Field?: MITMFilterArrayKey
 }
+
+export type MITMFilterArrayKey = {
+    [K in keyof MITMFilterData]-?: MITMFilterData[K] extends FilterDataItem[] ? K : never
+}[keyof MITMFilterData]
 
 export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))

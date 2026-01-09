@@ -1,6 +1,13 @@
-import { cloneDeep } from "lodash"
-import {FilterDataItem, FilterMatcherType, MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "./MITMFilters"
-import { defaultMITMFilterData } from "@/defaultConstants/mitm"
+import {cloneDeep} from "lodash"
+import {
+    FilterDataItem,
+    FilterMatcherType,
+    MITMAdvancedFilter,
+    MITMFilterArrayKey,
+    MITMFilterData,
+    MITMFilterSchema
+} from "./MITMFilters"
+import {defaultMITMFilterData} from "@/defaultConstants/mitm"
 
 /**首字母是小写转大写，首字母是大写转小写 */
 const toggleCase = (str) => {
@@ -29,10 +36,19 @@ const specialFiledList = ["IncludeSuffix", "ExcludeSuffix", "ExcludeMIME"]
 
 export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFilterData => {
     const {baseFilter, advancedFilters} = query
-    let data: MITMFilterData =cloneDeep(defaultMITMFilterData)
+    let data: MITMFilterData = cloneDeep(defaultMITMFilterData)
     /**baseFilter */
     Object.entries(baseFilter).forEach(([key, value]) => {
         const field: keyof MITMFilterData = getMITMField(key)
+        if (typeof value === "boolean") {
+            if (field === "FilterBundledStaticJS") {
+                data.FilterBundledStaticJS = value
+            }
+            return
+        }
+        // 非 boolean，只能是数组字段
+        const arrayField = field as MITMFilterArrayKey
+        if (!value.length) return
         let matcherType: FilterMatcherType = "word"
         switch (field) {
             case "IncludeSuffix":
@@ -46,14 +62,11 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
                 matcherType = "word"
                 break
         }
-
-        if (!!value.length) {
-            const item: FilterDataItem = {
-                MatcherType: matcherType,
-                Group: value
-            }
-            data[field] = [item]
+        const item: FilterDataItem = {
+            MatcherType: matcherType,
+            Group: value
         }
+        data[arrayField] = [item]
     })
 
     /**advancedFilters */
@@ -104,6 +117,7 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
             excludeSuffix: [],
             includeUri: [],
             excludeUri: [],
+            filterBundledStaticJS: true,
             excludeMethod: [],
             excludeContentTypes: []
         },
@@ -112,6 +126,11 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
     if (!FilterData) return data
     let advancedFilters: MITMAdvancedFilter[] = []
     Object.entries(FilterData || {}).forEach(([key, value]) => {
+        if (key === "FilterBundledStaticJS" && typeof value === "boolean") {
+            data.baseFilter.filterBundledStaticJS = value
+            return
+        }
+        if (key === "_AllowChunkStaticJS") return
         const field: keyof Omit<MITMFilterSchema, "FilterData"> = getMITMField(key)
         if (specialFiledList.includes(key)) {
             data.baseFilter[field] = (value[0] && value[0].Group) || []

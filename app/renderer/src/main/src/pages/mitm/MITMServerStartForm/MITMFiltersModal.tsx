@@ -43,8 +43,9 @@ import MITMContext from "../Context/MITMContext"
 const MITMAdvancedFilters = React.lazy(() => import("./MITMFilters"))
 const {ipcRenderer} = window.require("electron")
 
+export type FilterType = "filter" | "hijackFilter"
 interface MITMFiltersModalProps {
-    filterType: "filter" | "hijackFilter"
+    filterType: FilterType
     isStartMITM: boolean
     visible: boolean
     setVisible: (b: boolean) => void
@@ -65,7 +66,13 @@ export const getAdvancedFlag = (advancedFilters: MITMAdvancedFilter[]): boolean 
 // 是否配置过条件劫持
 export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilters: MITMAdvancedFilter[]): boolean => {
     return (
-        !!Object.keys(baseFilter).filter((key) => baseFilter[key].length > 0).length ||
+        !!Object.keys(baseFilter).filter((key) => {
+            if (key === "filterBundledStaticJS") {
+                return false
+            } else {
+                return baseFilter[key].length > 0
+            }
+        }).length ||
         !!advancedFilters.filter((ele) =>
             ["ExcludeHostnames", "IncludeHostnames", "ExcludeUri", "IncludeUri", "ExcludeMethods"].includes(
                 ele.Field || ""
@@ -106,15 +113,17 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         }
     })
     useEffect(() => {
-        grpcClientMITMfilter(mitmVersion).on((filter) => {
-            const value = convertMITMFilterUI(filter)
-            setMITMFilter({
-                ...value.baseFilter
+        if (filterType === "filter") {
+            grpcClientMITMfilter(mitmVersion).on((filter) => {
+                const value = convertMITMFilterUI(filter)
+                setMITMFilter({
+                    ...value.baseFilter
+                })
+                setFilterData([...value.advancedFilters])
             })
-            setFilterData([...value.advancedFilters])
-        })
-        return () => {
-            grpcClientMITMfilter(mitmVersion).remove()
+            return () => {
+                grpcClientMITMfilter(mitmVersion).remove()
+            }
         }
     }, [])
     useEffect(() => {
@@ -469,6 +478,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 )}
             </div>
             <MITMFilters
+                filterType={filterType}
                 visible={type === "base-setting"}
                 filter={_mitmFilter}
                 onFinished={() => onSetFilter()}
@@ -678,7 +688,7 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
             onOk={() => onOk(value)}
         >
             <div className={styles["import-editor"]} onDragOver={handleDragOver} onDrop={handleDrop}>
-                <YakitEditor value={value} setValue={setValue} type="json"></YakitEditor>
+                <YakitEditor value={value} setValue={setValue} type='json'></YakitEditor>
             </div>
         </YakitModal>
     )
