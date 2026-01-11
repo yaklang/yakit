@@ -7,6 +7,7 @@ import babelParser from "prettier/plugins/babel"
 import htmlParser from "prettier/plugins/html"
 import espreeParser from "prettier/plugins/estree"
 import xmlParser from "@prettier/plugin-xml"
+import xmlFormatter from "xml-formatter"
 import {debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import DOMPurify from "isomorphic-dompurify"
 
@@ -251,39 +252,29 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
                 contentType.includes("soap") ||
                 Uint8ArrayToString(rsp.Body).trim().includes("<?xml version")
             ) {
-                formatCode(
-                    rsp,
-                    {
-                        parser: "xml", // HTML代码使用 "html" 解析器
-                        printWidth: 80,
-                        tabWidth: 2,
-                        useTabs: false,
-                        plugins: plugins,
-                        semi: true,
-                        singleQuote: true,
-                        trailingComma: "all",
-                        bracketSpacing: true,
-                        arrowParens: "avoid"
-                    },
-                    (formattedCode) => {
-                        if (formattedCode) {
-                            ipcRenderer
-                                .invoke("PacketPrettifyHelper", {
-                                    Packet: rsp.Packet,
-                                    Body: StringToUint8Array(formattedCode),
-                                    SetReplaceBody: true
-                                })
-                                .then((replacedRsp: PacketPrettifyHelperResponse) => {
-                                    onFormatted(replacedRsp.Packet, formattedCode)
-                                })
-                                .catch((e) => {
-                                    onFormatted(rsp.Packet, formattedCode)
-                                })
-                        } else {
-                            onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
-                        }
+                 try {
+                    const formattedXml = xmlFormatter(Uint8ArrayToString(rsp.Body), {
+                        indentation: "  ",          // 两个空格
+                        lineSeparator: "\n",
+                        collapseContent: false,     // 关键：属性 & 子节点全部展开
+                    })
+
+                    ipcRenderer
+                        .invoke("PacketPrettifyHelper", {
+                            Packet: rsp.Packet,
+                            Body: StringToUint8Array(formattedXml),
+                            SetReplaceBody: true
+                        })
+                        .then((replacedRsp) => {
+                            onFormatted(replacedRsp.Packet, formattedXml)
+                        })
+                        .catch(() => {
+                            onFormatted(rsp.Packet, formattedXml)
+                        })
+                    } catch (e) {
+                        // XML 解析失败，直接回退原文
+                        onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
                     }
-                )
             } else if (rsp.IsImage) {
                 onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
             } else {
