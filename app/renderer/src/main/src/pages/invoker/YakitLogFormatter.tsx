@@ -7,7 +7,6 @@ import {ExecResultLog} from "./batch/ExecMessageViewer"
 import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer"
 import {AutoCard} from "../../components/AutoCard"
-import MDEditor from "@uiw/react-md-editor"
 import {openABSFileLocated} from "../../utils/openWebsite"
 import styles from "./YakitLogFormatter.module.scss"
 import classNames from "classnames"
@@ -31,6 +30,7 @@ import {PluginExecuteLogFile} from "../plugins/operator/pluginExecuteResult/Plug
 import {onOpenLocalFileByPath} from "../notepadManage/notepadManage/utils"
 import {getFileActionStatus, isPluginExecuteLogFileItem, modeToPermissions} from "./utils"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
+import { SafeMarkdown } from "../assetViewer/reportRenders/markdownRender"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 const WordCloudCharts = React.lazy(() => import("./LogCharts/WordCloudCharts"))
@@ -273,7 +273,7 @@ const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
                 })}
                 ref={markdownLogBodyRef}
             >
-                <MDEditor.Markdown source={data} />
+                <SafeMarkdown source={data} />
             </div>
             {isShowExpand && (
                 <div className={styles["md-expand-text"]} onClick={onExpand}>

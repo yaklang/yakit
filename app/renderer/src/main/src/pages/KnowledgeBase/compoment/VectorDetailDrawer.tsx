@@ -6,10 +6,9 @@ import styles from "../knowledgeBase.module.scss"
 import {Descriptions} from "antd"
 import {useRequest} from "ahooks"
 import {useTheme} from "@/hook/useTheme"
-import MDEditor from "@uiw/react-md-editor"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {info} from "@/utils/notification"
-const {Markdown} = MDEditor
+import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -102,18 +101,16 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
                 </div>
                 <div className={styles["vector-drawer-box"]}>
                     <div className={styles["title"]}>内容预览</div>
-                    <Markdown
+                    <SafeMarkdown
                         source={openVectorDetailDrawerData.selectedVectorDetail?.Content}
                         className={classNames(styles["box-content"], styles["markdown-box"])}
-                        warpperElement={{"data-color-mode": theme}}
                     />
                 </div>
                 <div className={styles["vector-drawer-box"]}>
                     <div className={styles["title"]}>元数据</div>
-                    <Markdown
+                    <SafeMarkdown
                         source={openVectorDetailDrawerData.selectedVectorDetail?.Metadata}
                         className={classNames(styles["box-content"], styles["markdown-box"])}
-                        warpperElement={{"data-color-mode": theme}}
                     />
                 </div>
                 {entryDocument ? (

@@ -3,7 +3,7 @@ import {AIMarkdownProps} from "./type"
 import React, {ReactNode, useState} from "react"
 import {ReportItem} from "@/pages/assetViewer/reportRenders/schema"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {ReportMarkdownBlock} from "@/pages/assetViewer/reportRenders/markdownRender"
+import {SafeMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 import classNames from "classnames"
 import styles from "./AIMarkdown.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -35,7 +35,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
         let content: ReactNode = <></>
         switch (type) {
             case "preview":
-                content = <ReportMarkdownBlock className={classNames(styles["ai-milkdown"])} item={item} />
+                content = <SafeMarkdown className={classNames(styles["ai-milkdown"])} source={item.content} />
                 break
             case "code":
                 content = <div className={styles["ai-milkdown-code"]}>{item.content}</div>

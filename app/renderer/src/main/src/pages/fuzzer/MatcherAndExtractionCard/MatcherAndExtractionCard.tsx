@@ -73,9 +73,8 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
 import i18n from "@/i18n/i18n"
-import MDEditor from "@uiw/react-md-editor"
 import { YakitSegmented } from "@/components/yakitUI/YakitSegmented/YakitSegmented"
-const {Markdown} = MDEditor
+import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -165,7 +164,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 maskClosable: false,
                 content: (
                     <div className={styles["extract-results"]}>
-                        <Markdown source={MatchersAndExtractorsUseInstructions} />
+                        <SafeMarkdown source={MatchersAndExtractorsUseInstructions} />
                     </div>
                 )
             })

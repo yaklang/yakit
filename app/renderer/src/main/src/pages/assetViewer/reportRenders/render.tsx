@@ -1,6 +1,6 @@
 import React from "react"
 import {ReportItem, ReportJsonKindData} from "./schema"
-import {ReportMarkdownBlock} from "./markdownRender"
+import {SafeMarkdown} from "./markdownRender"
 import {YakEditor} from "../../../utils/editors"
 import {AutoCard} from "../../../components/AutoCard"
 import {Tag} from "antd"
@@ -18,7 +18,7 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
     const {type, content} = props.item
     switch (type) {
         case "markdown":
-            return <ReportMarkdownBlock item={props.item} />
+            return <SafeMarkdown source={props.item.content} />
         case "json-table":
             return <JSONTableRender item={props.item} />
         case "pie-graph":

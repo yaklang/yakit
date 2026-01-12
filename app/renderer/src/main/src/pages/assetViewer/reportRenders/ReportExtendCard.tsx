@@ -1,9 +1,8 @@
 import React, {useEffect, useState} from "react"
 import {MinusSquareOutlined, PlusSquareOutlined} from "@ant-design/icons"
 import styles from "./ReportExtendCard.module.scss"
-import MDEditor from "@uiw/react-md-editor"
 import {YakEditor} from "@/utils/editors"
-const {Markdown} = MDEditor
+import { SafeMarkdown } from "./markdownRender"
 
 interface FoldHoleCardItemProps {
     [key: string]: any
@@ -32,7 +31,7 @@ export const FoldHoleCard: React.FC<FoldHoleCardProps> = (props) => {
                     return (
                         <div className={styles["fold-hole-title"]} onClick={() => setExtendItem(!extendItem)}>
                             {extendItem ? <MinusSquareOutlined /> : <PlusSquareOutlined />}
-                            <Markdown source={`#### ${content}`} />
+                            <SafeMarkdown source={`#### ${content}`} />
                         </div>
                     )
                 }
@@ -64,7 +63,7 @@ export const FoldHoleCard: React.FC<FoldHoleCardProps> = (props) => {
                                 <div className={styles["fold-hole-item"]}>
                                     <div className={styles["title"]}>{title}：</div>
                                     <div className={styles["content"]}>
-                                        {content ? <Markdown source={content} /> : "-"}
+                                        {content ? <SafeMarkdown source={content} /> : "-"}
                                     </div>
                                 </div>
                             )
@@ -93,7 +92,7 @@ export const FoldRuleCard: React.FC<FoldRuleCardProps> = (props) => {
         <div className={styles["rule-risk"]}>
             <div className={styles["rule-risk-title"]} onClick={() => setExtendItem(!extendItem)}>
                 {extendItem ? <MinusSquareOutlined size={12} /> : <PlusSquareOutlined size={12} />}
-                <Markdown source={`#### ${title} (共${data.length}个)`} />
+                <SafeMarkdown source={`#### ${title} (共${data.length}个)`} />
             </div>
             {extendItem && (
                 <div className={styles["rule-risk-content"]}>
