@@ -156,6 +156,7 @@ export enum AIChatQSDataTypeEnum {
 
 /** 控制UI渲染的数据数组元素 */
 export interface ReActChatElement {
+    chatType: "reAct" | "task"
     token: string
     type: AIChatQSDataTypeEnum
     /** 触发渲染的次数, 无实际逻辑意义 */

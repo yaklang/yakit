@@ -66,7 +66,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
             review.current = isAuto ? undefined : chatData
             setContentMap(chatData.id, chatData)
-            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "reAct"}])
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -104,7 +104,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
             review.current = isAuto ? undefined : chatData
             setContentMap(chatData.id, chatData)
-            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "reAct"}])
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -132,7 +132,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             setElements((old) => {
                 const newArr = [...old]
                 if (!review.current) return newArr
-                newArr.push({token: review.current.id, type: review.current.type, renderNum: 1})
+                newArr.push({token: review.current.id, type: review.current.type, renderNum: 1, chatType: "reAct"})
                 return newArr
             })
         } catch (error) {
@@ -308,6 +308,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     const chatContentEvent = useChatContent({
+        chatType: "reAct",
         getContentMap,
         setContentMap,
         deleteContentMap,
@@ -368,7 +369,10 @@ function useCasualChat(params?: UseCasualChatParams) {
                     extraValue: extraValue
                 }
                 setContentMap(chatData.id, chatData)
-                setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+                setElements((old) => [
+                    ...old,
+                    {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "reAct"}
+                ])
             }
 
             cb && cb()

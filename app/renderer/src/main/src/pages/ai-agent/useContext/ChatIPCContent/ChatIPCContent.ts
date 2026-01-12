@@ -66,8 +66,7 @@ export default createContext<ChatIPCContextValue>({
             onClose: () => {},
             onReset: () => {},
             handleTaskReviewRelease: () => {},
-            getCasualMap: () => undefined,
-            getTaskMap: () => undefined
+            getChatContentMap: () => undefined
         },
         handleSendCasual: () => {},
         handleSendTask: () => {},

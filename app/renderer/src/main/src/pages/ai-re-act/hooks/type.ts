@@ -227,10 +227,8 @@ export interface UseChatIPCEvents {
     onReset: () => void
     /** 取消任务规划当前的Review */
     handleTaskReviewRelease: (id: string) => void
-    /** 获取自由对话(ReAct)指定mapKey的详情数据 */
-    getCasualMap: (mapKey: string) => AIChatQSData | undefined
-    /** 获取任务规划指定mapKey的详情数据 */
-    getTaskMap: (mapKey: string) => AIChatQSData | undefined
+    /** 获取[自由对话(ReAct)|任务规划]指定mapKey的详情数据 */
+    getChatContentMap: (chatType: ReActChatElement["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 // #endregion
 
@@ -262,6 +260,7 @@ export interface UseAIChatLogEvents {
 
 // #region useChatContent相关定义
 export interface UseChatContentParams {
+    chatType: ReActChatElement["chatType"]
     getContentMap: (token: string) => AIChatQSData | undefined
     setContentMap: (token: string, content: AIChatQSData) => void
     deleteContentMap: (token: string) => void

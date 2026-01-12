@@ -673,13 +673,12 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
     })
 
-    /** 获取自由对话(ReAct)指定mapKey的详情数据 */
-    const getCasualMap = useMemoizedFn((mapKey: string) => {
+    /** 获取[自由对话(ReAct)|任务规划]指定mapKey的详情数据 */
+    const getChatContentMap: UseChatIPCEvents["getChatContentMap"] = useMemoizedFn((chatType, mapKey) => {
+        if (chatType === "task") {
+            return taskChatEvent.handleGetContentMap(mapKey)
+        }
         return casualChatEvent.handleGetContentMap(mapKey)
-    })
-    /** 获取任务规划指定mapKey的详情数据 */
-    const getTaskMap = useMemoizedFn((mapKey: string) => {
-        return taskChatEvent.handleGetContentMap(mapKey)
     })
 
     useInterval(
@@ -709,8 +708,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             onClose,
             onReset,
             handleTaskReviewRelease,
-            getCasualMap,
-            getTaskMap
+            getChatContentMap
         }
     }, [])
 

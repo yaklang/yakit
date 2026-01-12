@@ -66,7 +66,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 }
             }
             setContentMap(chatData.id, chatData)
-            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}])
         } catch (error) {}
     })
 
@@ -149,7 +149,10 @@ function useTaskChat(params?: UseTaskChatParams) {
             review.current = isAuto ? undefined : chatData
             if (isAuto) {
                 setContentMap(chatData.id, chatData)
-                setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+                setElements((old) => [
+                    ...old,
+                    {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}
+                ])
                 handleRviewDataToUI(chatData)
             } else {
                 onReview && onReview(chatData)
@@ -233,7 +236,10 @@ function useTaskChat(params?: UseTaskChatParams) {
             review.current = isAuto ? undefined : chatData
             if (isAuto) {
                 setContentMap(chatData.id, chatData)
-                setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+                setElements((old) => [
+                    ...old,
+                    {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}
+                ])
             } else {
                 onReview && onReview(chatData)
             }
@@ -275,7 +281,10 @@ function useTaskChat(params?: UseTaskChatParams) {
             review.current = isAuto ? undefined : chatData
             if (isAuto) {
                 setContentMap(chatData.id, chatData)
-                setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+                setElements((old) => [
+                    ...old,
+                    {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}
+                ])
             } else {
                 onReview && onReview(chatData)
             }
@@ -484,6 +493,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     const chatContentEvent = useChatContent({
+        chatType: "task",
         getContentMap,
         setContentMap,
         deleteContentMap,
@@ -557,7 +567,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             data: ""
         }
         setContentMap(chatData.id, chatData)
-        setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1}])
+        setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}])
     })
 
     const events: UseTaskChatEvents = useCreation(() => {

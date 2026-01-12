@@ -17,7 +17,8 @@ import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ToolStreamSelectors} f
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
 
 function useChatContent(params: UseChatContentParams) {
-    const {getContentMap, setContentMap, deleteContentMap, getElements, setElements, pushLog, handleUnkData} = params
+    const {chatType, getContentMap, setContentMap, deleteContentMap, getElements, setElements, pushLog, handleUnkData} =
+        params
 
     /** 更新触发渲染的UI数据项 */
     const updateElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
@@ -31,7 +32,7 @@ function useChatContent(params: UseChatContentParams) {
                 return newArr
             })
         } else {
-            setElements((old) => old.concat([{token: token, type: type, renderNum: 1}]))
+            setElements((old) => old.concat([{token: token, type: type, renderNum: 1, chatType: chatType}]))
         }
     })
     /** 删除触发渲染的UI数据项 */
@@ -564,9 +565,7 @@ function useChatContent(params: UseChatContentParams) {
                     data: thought || ""
                 }
                 setContentMap(chatData.id, chatData)
-                setElements((old) => {
-                    return old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}])
-                })
+                updateElements(chatData.id, chatData.type)
                 return
             }
 
@@ -581,9 +580,7 @@ function useChatContent(params: UseChatContentParams) {
                     data: result || ""
                 }
                 setContentMap(chatData.id, chatData)
-                setElements((old) => {
-                    return old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}])
-                })
+                updateElements(chatData.id, chatData.type)
                 return
             }
 
@@ -599,7 +596,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                setElements((old) => old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}]))
+                updateElements(chatData.id, chatData.type)
                 return
             }
             // #endregion
@@ -677,7 +674,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                setElements((old) => old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}]))
+                updateElements(chatData.id, chatData.type)
                 return
             }
 
@@ -693,7 +690,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                setElements((old) => old.concat([{token: chatData.id, type: chatData.type, renderNum: 1}]))
+                updateElements(chatData.id, chatData.type)
                 return
             }
 
