@@ -391,11 +391,11 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             selectedRowKeys,
                             onSelectAll: onSelectAll,
                             onChangeCheckboxSingle: onSelectChange,
-                            getCheckboxProps: (record) => {
-                                return {
-                                    disabled: record.userName !== userInfo.companyName
-                                }
-                            }
+                            // getCheckboxProps: (record) => {
+                            //     return {
+                            //         disabled: record.userName !== userInfo.companyName
+                            //     }
+                            // }
                         }}
                     />
                 )}
