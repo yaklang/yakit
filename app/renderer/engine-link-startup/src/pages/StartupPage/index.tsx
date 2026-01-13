@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useSize} from "ahooks"
 import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, outputToWelcomeConsole, SystemInfo} from "./utils"
 import {
     grpcFetchBuildInYakVersion,
@@ -49,7 +49,6 @@ import {EngineLog} from "./components/EngineLog"
 import emiter from "@/utils/eventBus/eventBus"
 import {YaklangEngineWatchDog} from "./components/YaklangEngineWatchDog"
 import {ipcEventPre} from "@/utils/ipcEventPre"
-import yakitLogo from "@/assets/YakitLogo.png"
 import yakitEELogo from "@/assets/yakitEELogo.png"
 import yakitEEDarkLogo from "@/assets/yakitEEDarkLogo.png"
 import yakitSELogo from "@/assets/yakitSELogo.png"
@@ -76,6 +75,8 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 }
 
 export const StartupPage: React.FC = () => {
+    const titleRef = useRef(null)
+    const titleSize = useSize(titleRef)
     /** 是否置顶 */
     const [isTop, setIsTop] = useState<ModalIsTop>(0)
     /** 操作系统 */
@@ -1019,7 +1020,7 @@ export const StartupPage: React.FC = () => {
         <div className={styles["startup-wrapper"]}>
             <div className={styles["startup-header-drap"]}></div>
             <div className={styles["startup-wrapper-left"]}>
-                <div className={styles["startup-title"]}>
+                <div className={styles["startup-title"]} ref={titleRef}>
                     <div className={styles["startup-logo"]}>
                         {startupLogo.type === "img" ? (
                             <img
@@ -1050,7 +1051,10 @@ export const StartupPage: React.FC = () => {
                 </div>
                 {!isRemoteEngine ? (
                     <>
-                        <div className={styles["startup-content-wrapper"]}>
+                        <div
+                            className={styles["startup-content-wrapper"]}
+                            style={{height: `calc(100% - ${(titleSize?.height || 0) + 232}px)`}}
+                        >
                             <LocalEngine
                                 ref={localEngineRef}
                                 setLog={setCheckLog}
