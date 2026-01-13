@@ -8,7 +8,6 @@ import {useRequest} from "ahooks"
 import {useTheme} from "@/hook/useTheme"
 import MDEditor from "@uiw/react-md-editor"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {info} from "@/utils/notification"
 const {Markdown} = MDEditor
 
 const {ipcRenderer} = window.require("electron")
@@ -42,8 +41,7 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
             return result?.Document
         },
         {
-            manual: true,
-            onError: (error) => info(error + "")
+            manual: true
         }
     )
 

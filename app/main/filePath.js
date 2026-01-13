@@ -49,6 +49,7 @@ try {
  * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
 const YakitProjectPath = project_path || osHomeProjectPath
+console.log(YakitProjectPath, "YakitProjectPath")
 
 console.log(`---------- Global-Path Start ----------`)
 console.log(`software-path: ${appPath}`)
@@ -61,6 +62,9 @@ const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
 
 /** yakit安装包路径 */
 const yakitInstallDir = path.join(os.homedir(), "Downloads")
+
+// 线上知识库安装路径
+const yakOnlineRagLastest = path.join(YakitProjectPath, "projects/libs/rag_files")
 
 /** 引擎文件路径 */
 const getLocalYaklangEngine = () => {
@@ -145,5 +149,7 @@ module.exports = {
 
     htmlTemplateDir,
     windowStatePatch,
-    yakProjects
+    yakProjects,
+
+    yakOnlineRagLastest
 }

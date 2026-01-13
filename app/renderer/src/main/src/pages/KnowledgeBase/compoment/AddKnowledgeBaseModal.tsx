@@ -8,6 +8,7 @@ import {getFileInfoList} from "../utils"
 import {randomString} from "@/utils/randomUtil"
 import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {success} from "@/utils/notification"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 interface AddKnowledgeBaseModalProps {
     addModalData: {visible: boolean; KnowledgeBaseName: string}
@@ -60,7 +61,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
     }
     return (
         <YakitModal title='添加' visible={addModalData.visible} onCancel={onCancel} onOk={onOk}>
-            <Form form={form} layout='vertical'>
+            <Form form={form} layout='vertical' initialValues={{disableERM: false}}>
                 <YakitFormDragger
                     formItemProps={{
                         name: "KnowledgeBaseFile",
@@ -111,6 +112,9 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
                     rules={[{max: 500, message: "描述最多 500 个字符"}]}
                 >
                     <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
+                </Form.Item>
+                <Form.Item label='仅构建知识' name='disableERM' valuePropName='checked'>
+                    <YakitSwitch />
                 </Form.Item>
                 <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
                     <YakitInputNumber />

@@ -53,7 +53,7 @@ const KnowledgeBaseContainer: FC<
         | "aIModelAvailableTokens"
         | "progress"
     >
-> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA, addMode}) => {
+> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA, addMode, setRefreshOlineRag}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [state, dispatch] = useReducer(reducer, initialValue)
     const [structureTableHeaderGroupOptions, setStructureTableHeaderGroupOptions] = useSafeState<
@@ -199,7 +199,7 @@ const KnowledgeBaseContainer: FC<
                                 AI 召回
                             </div>
                             <Tooltip title='停止'>
-                                <RoundedStopButton onClick={onStop} />
+                                <RoundedStopButton onClick={onStop} style={{width: 24, height: 24}} />
                             </Tooltip>
                         </div>
                     </div>
@@ -244,18 +244,17 @@ const KnowledgeBaseContainer: FC<
                 KnowledgeBaseId={knowledgeBaseID}
                 setKnowledgeBaseID={setKnowledgeBaseID}
                 addMode={addMode}
+                setRefreshOlineRag={setRefreshOlineRag}
             />
 
             <EditKnowledgenBaseModal
                 visible={state.editVisble}
                 setVisible={onEditVisible}
                 items={targetEditKnowledgeBase}
+                setRefreshOlineRag={setRefreshOlineRag}
             />
         </>
     )
 }
 
 export default memo(KnowledgeBaseContainer)
-
-// 实体/关系(Entity/Relationship)
-// [multi-hops]: knowledge

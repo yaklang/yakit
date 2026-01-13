@@ -65,6 +65,7 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {AIChatMentionSelectItem} from "@/pages/ai-agent/components/aiChatMention/type"
+import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -79,6 +80,7 @@ interface KnowledgeBaseContentProps {
     binariesToInstallRefreshAsync?: () => Promise<any[]>
     inViewport: boolean
     streamsRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["streams"] | undefined>
+    loading: boolean
 }
 
 const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
@@ -93,7 +95,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         apiRef,
         refreshAsync,
         binariesToInstallRefreshAsync,
-        inViewport
+        inViewport,
+        loading
     } = props
     const [showFreeChat, setShowFreeChat] = useSafeState(false)
     const [streams, api] = useMultipleHoldGRPCStream()
@@ -210,11 +213,22 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         buildingSetRef.current.add(key)
 
         try {
-            await BuildingKnowledgeBaseEntry({
-                ...kb,
-                ...history,
-                streamToken: history.token
-            })
+            // 仅在未禁用 ERM 时才执行构建
+            if (!kb.disableERM) {
+                await BuildingKnowledgeBaseEntry({
+                    ...kb,
+                    ...history,
+                    streamToken: history.token
+                })
+            } else {
+                // editKnowledgeBase(kb.ID, {
+                //     ...kb,
+                //     historyGenerateKnowledgeList: kb.historyGenerateKnowledgeList.filter(
+                //         (it) => it.token !== history.token
+                //     )
+                // })
+                return
+            }
 
             if (!api?.createStream) return
 
@@ -285,7 +299,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     useAsyncEffect(async () => {
         try {
             for (const kb of knowledgeBases) {
-                if (kb.streamstep === 2 && kb.streamToken) {
+                if (kb.streamstep === 2 && kb.streamToken && !kb.disableERM) {
                     await starKnowledgeeBaseEntry(kb)
                 }
             }
@@ -338,6 +352,10 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     // TODO  AI 召回逻辑
     const [reviewInfo, setReviewInfo] = useSafeState<AIChatQSData>()
+
+    // #region 问题相关逻辑
+    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
+
     const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
         string,
         AIAgentGrpcApi.PlanReviewRequireExtra
@@ -648,6 +666,23 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         }
     }
 
+    useUpdateEffect(() => {
+        if (showFreeChat) {
+            const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
+            if (typeof targetKnowledgeBase === "object") {
+                setTimeout(() => {
+                    aiChatTextareaRef.current?.setMention({
+                        mentionId: targetKnowledgeBase.ID,
+                        mentionType: "knowledgeBase",
+                        mentionName: targetKnowledgeBase.KnowledgeBaseName
+                    })
+                })
+            }
+        }
+    }, [showFreeChat, knowledgeBaseID])
+
+    const [refreshOlineRag, setRefreshOlineRag] = useSafeState(false)
+
     return (
         <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
             <ChatIPCContent.Provider value={{store, dispatcher}}>
@@ -669,6 +704,9 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         setIsAIModelAvailable={setIsAIModelAvailable}
                         aIModelAvailableTokens={aIModelAvailableTokens}
                         progress={progress}
+                        loading={loading}
+                        refreshOlineRag={refreshOlineRag}
+                        setRefreshOlineRag={setRefreshOlineRag}
                     />
                     {knowledgeBaseID ? (
                         <KnowledgeBaseContainer
@@ -679,6 +717,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             api={api}
                             setOpenQA={setShowFreeChat}
                             addMode={addMode}
+                            setRefreshOlineRag={setRefreshOlineRag}
                         />
                     ) : (
                         <div className={styles["knowledge-base-container-empty"]}>
@@ -700,10 +739,12 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     {showFreeChat ? (
                         <div style={{width: 520, borderRight: "1px solid var(--Colors-Use-Neutral-Border)"}}>
                             <AIReActChat
+                                key={knowledgeBaseID}
                                 mode={"task"}
                                 showFreeChat={showFreeChat}
                                 setShowFreeChat={setShowFreeChat}
                                 title='AI 召回'
+                                aiChatTextareaRef={aiChatTextareaRef}
                             />
                         </div>
                     ) : null}

@@ -14,6 +14,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import styles from "../knowledgeBase.module.scss"
 import {extractFileName, knowledgeTypeOptions} from "../utils"
 import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form, type}) => {
     const {knowledgeBases} = useKnowledgeBase()
@@ -36,6 +37,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
             form={form}
             layout='vertical'
             className={styles["create-knowledge-from"]}
+            initialValues={{disableERM: false}}
             onValuesChange={(changedValues) => {
                 if (changedValues.importPath) {
                     const fileName = extractFileName(changedValues.importPath)
@@ -124,6 +126,9 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                     >
                         <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
                     </Form.Item>
+                    <Form.Item label='仅构建知识' name='disableERM' valuePropName='checked'>
+                        <YakitSwitch />
+                    </Form.Item>
                     <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
                         <YakitInputNumber />
                     </Form.Item>
@@ -140,6 +145,9 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                             rules={[{max: 500, message: "描述最多 500 个字符"}]}
                         >
                             <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
+                        </Form.Item>
+                        <Form.Item label='仅构建知识' name='disableERM' valuePropName='checked'>
+                            <YakitSwitch />
                         </Form.Item>
                         <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
                             <YakitInputNumber />

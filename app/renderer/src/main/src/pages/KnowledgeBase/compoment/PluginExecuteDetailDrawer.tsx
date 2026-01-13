@@ -79,7 +79,9 @@ const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) =>
                 style={{
                     position: "absolute",
                     right: "24px",
-                    transform: "translateY(12px)"
+                    transform: "translateY(12px)",
+                    width: 24,
+                    height: 24
                 }}
                 onClick={() => onStop()}
             />

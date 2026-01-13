@@ -1,3 +1,79 @@
+// import React, {useState} from "react"
+// import {Button, Card, Typography, Space} from "antd"
+// import Joyride, {Step, CallBackProps, STATUS} from "react-joyride"
+
+// const {Title, Paragraph} = Typography
+
+// export default function KnowledgeBase() {
+//     const [run, setRun] = useState(true)
+
+//     // Joyride 步骤定义
+//     const steps: Step[] = [
+//         {
+//             target: ".first-step",
+//             content: "这是第 1 步：欢迎使用知识库功能!"
+//         },
+//         {
+//             target: ".second-step",
+//             content: "这是第 2 步：点击这里可以了解更多信息!"
+//         },
+//         {
+//             target: ".third-step",
+//             content: "这是第 3 步：引导完成，你可以开始操作了!"
+//         }
+//     ]
+
+//     // Joyride 回调
+//     const handleJoyrideCallback = (data: CallBackProps) => {
+//         const {status} = data
+//         console.log(status, STATUS, run, "status")
+//         if (status === STATUS.SKIPPED) {
+//             setRun(false)
+//         }
+//     }
+
+//     return (
+//         <div style={{padding: 24}}>
+//             {/* Joyride 引导组件 */}
+//             <Joyride
+//                 steps={steps}
+//                 run={run}
+//                 // continuous
+//                 showSkipButton
+//                 showProgress
+//                 callback={handleJoyrideCallback}
+//                 styles={{
+//                     options: {
+//                         primaryColor: "#5E50FF",
+//                         zIndex: 1000,
+//                         width: 300
+//                     }
+//                 }}
+//             />
+
+//             {/* 页面内容 */}
+//             <Space direction='vertical' size='large' style={{width: "100%"}}>
+//                 <Card className='first-step' hoverable>
+//                     <Title level={3}>欢迎来到知识库页面</Title>
+//                     <Paragraph>这里是知识库首页，你可以在这里查看所有文档和记录。</Paragraph>
+//                 </Card>
+
+//                 <Card className='second-step' hoverable>
+//                     <Title level={4}>操作指南</Title>
+//                     <Paragraph>点击下面按钮了解更多知识库的操作方法。</Paragraph>
+//                     <Button type='primary'>点我了解更多</Button>
+//                 </Card>
+
+//                 <Card className='third-step' hoverable>
+//                     <Title level={4}>完成引导</Title>
+//                     <Paragraph>恭喜，你已经完成知识库功能的引导，可以开始使用了。</Paragraph>
+//                     <Button onClick={() => setRun(true)}>重新开始引导</Button>
+//                 </Card>
+//             </Space>
+//         </div>
+//     )
+// }
+
 import {useEffect, useMemo, useRef, type FC} from "react"
 
 import {useAsyncEffect, useDebounceFn, useInViewport, useRequest, useSafeState, useUpdateEffect} from "ahooks"
@@ -242,6 +318,7 @@ const KnowledgeBase: FC = () => {
                         binariesToInstall={binariesToInstall}
                         apiRef={apiRef}
                         refreshAsync={refreshAsync}
+                        loading={existsKnowledgeLoading}
                         binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
                         inViewport={inViewport}
                         streamsRef={streamsRef}

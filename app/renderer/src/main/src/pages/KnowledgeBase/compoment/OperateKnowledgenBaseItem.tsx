@@ -1,4 +1,4 @@
-import {FC, useEffect} from "react"
+import {Dispatch, FC, SetStateAction, useEffect} from "react"
 
 import {SolidDotsverticalIcon} from "@/assets/icon/solid"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -29,6 +29,7 @@ interface TOperateKnowledgenBaseItemProps {
     knowledgeBase: KnowledgeBaseItem[]
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
     addMode: string[]
+    setRefreshOlineRag?: Dispatch<SetStateAction<boolean>>
 }
 
 const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
@@ -37,7 +38,8 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     setKnowledgeBaseID,
     knowledgeBase,
     api,
-    addMode
+    addMode,
+    setRefreshOlineRag
 }) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [menuOpen, setMenuOpen] = useSafeState(false)
@@ -183,8 +185,15 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
                 knowledgeBase={knowledgeBase}
                 api={api}
                 addMode={addMode}
+                items={items}
+                setRefreshOlineRag={setRefreshOlineRag}
             />
-            <EditKnowledgenBaseModal visible={editVisible} setVisible={setEditVisible} items={items} />
+            <EditKnowledgenBaseModal
+                visible={editVisible}
+                setVisible={setEditVisible}
+                items={items}
+                setRefreshOlineRag={setRefreshOlineRag}
+            />
         </div>
     )
 }
@@ -194,14 +203,26 @@ interface DeleteConfirmProps extends Partial<Pick<TKnowledgeBaseSidebarProps, "s
     setVisible: (preValue: boolean) => void
     KnowledgeBaseId: string
     knowledgeBase?: KnowledgeBaseItem[]
+    items?: KnowledgeBaseItem
 }
 const DeleteConfirm: FC<
     DeleteConfirmProps & {
         api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
         addMode: string[]
+        setRefreshOlineRag?: Dispatch<SetStateAction<boolean>>
     }
 > = (props) => {
-    const {visible, setVisible, KnowledgeBaseId, setKnowledgeBaseID, knowledgeBase, api, addMode} = props
+    const {
+        visible,
+        setVisible,
+        KnowledgeBaseId,
+        setKnowledgeBaseID,
+        knowledgeBase,
+        api,
+        addMode,
+        items,
+        setRefreshOlineRag
+    } = props
     const {deleteKnowledgeBase} = useKnowledgeBase()
 
     const {runAsync, loading} = useRequest(
@@ -239,6 +260,19 @@ const DeleteConfirm: FC<
                     }
 
                     setVisible(false)
+
+                    try {
+                        const deleteOnlineRagName =
+                            items?.KnowledgeBaseName ??
+                            knowledgeBase?.find((it) => it.ID === KnowledgeBaseId)?.KnowledgeBaseName
+                        await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
+                            name: deleteOnlineRagName
+                        })
+                        setRefreshOlineRag?.((preValue) => !preValue)
+                    } catch (e) {
+                        console.warn("删除线上知识库失败：", e)
+                    }
+
                     success("删除知识库成功")
                 } catch (error) {
                     failed(error + "")
@@ -271,10 +305,11 @@ const DeleteConfirm: FC<
 
 interface TEditKnowledgeBaseModalProps extends Omit<DeleteConfirmProps, "KnowledgeBaseId"> {
     items: KnowledgeBaseItem
+    setRefreshOlineRag?: Dispatch<SetStateAction<boolean>>
 }
 
 const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
-    const {visible, setVisible, items} = props
+    const {visible, setVisible, items, setRefreshOlineRag} = props
     const [form] = Form.useForm()
     const {editKnowledgeBase} = useKnowledgeBase()
 
@@ -292,10 +327,18 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
         },
         {
             manual: true,
-            onSuccess: () => {
+            onSuccess: async () => {
                 success("编辑知识库成功")
-                form.resetFields()
-                setVisible(false)
+                try {
+                    await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
+                        name: items.KnowledgeBaseName
+                    })
+                    form.resetFields()
+                    setVisible(false)
+                    setRefreshOlineRag?.((preValue) => !preValue)
+                } catch (e) {
+                    console.warn("删除线上知识库失败：", e)
+                }
             },
             onError: (error) => {
                 failed(`编辑知识库失败: ${error}`)
@@ -378,22 +421,6 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
             </Form>
         </YakitModal>
     )
-}
-
-interface GeneralProgress {
-    Percent: number
-    Message: string
-    MessageType: string
-}
-
-type TExportModalProps = {
-    setExportVisible: (preValue: {open: boolean; filePath?: string}) => void
-
-    exportVisible: {
-        open: boolean
-        filePath?: string
-    }
-    KnowledgeBaseId: string
 }
 
 export {OperateKnowledgenBaseItem, DeleteConfirm, EditKnowledgenBaseModal}

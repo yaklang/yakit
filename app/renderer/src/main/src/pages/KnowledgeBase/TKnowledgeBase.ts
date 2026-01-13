@@ -40,6 +40,7 @@ interface CreateKnowledgeBaseData extends Omit<Entity, "ID">, Omit<KnowledgeBase
     IsDefault?: boolean
     addManuallyItem: boolean
     prompt?: string
+    disableERM: boolean
     // 从实体生成知识 流数据收集
     historyGenerateKnowledgeList: Array<{
         date: string
@@ -220,6 +221,16 @@ interface TResultAllTableTotal {
     vectorTotal: string
 }
 
+interface ResponseRagsLatest {
+    name: string
+    name_zh: string
+    version: string
+    file: string
+    hashfile: string
+    hashtype: string
+    hash: string
+}
+
 export type {
     TKnowledgeBaseProps,
     TDeleteConfirmProps,
@@ -238,5 +249,6 @@ export type {
     QueryEntityResponse,
     EntityFilter,
     TClearKnowledgeResponse,
-    TResultAllTableTotal
+    TResultAllTableTotal,
+    ResponseRagsLatest
 }
