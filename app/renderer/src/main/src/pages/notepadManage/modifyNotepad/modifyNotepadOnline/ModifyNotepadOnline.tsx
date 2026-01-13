@@ -14,7 +14,7 @@ import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/stor
 import {shallow} from "zustand/shallow"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {API} from "@/services/swagger/resposeType"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -243,6 +243,9 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         bodyStyle: {padding: 0}
                     })
                 })
+                .catch((err) => {
+                    failed(`下载失败：${err?.message || err}`)
+                })
                 .finally(() =>
                     setTimeout(() => {
                         setDownItemLoading(false)
@@ -260,6 +263,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (!inViewport) {
             notepadContentRef.current = editor?.action(getMarkdown()) || ""
             onSaveNewContent(notepadContentRef.current)
+            setNotepadDetail((v) => ({...v, content: notepadContentRef.current}))
         }
     }, [inViewport])
     /**保存最新的文档内容 */
