@@ -1,5 +1,5 @@
 .drop-select-wrapper {
-    max-width: 320px;
+    width: 200px;
     :global {
         .ant-select-item-option-grouped {
             padding-left: 8px;
@@ -12,6 +12,20 @@
         line-height: 16px; /* 133.333% */
         letter-spacing: 0.5px;
         padding: 2px 12px 4px 12px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .select-title-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+    }
+    .type-btn {
+        margin-bottom: 4px;
+        padding: 0 4px;
     }
 }
 

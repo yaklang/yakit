@@ -1,10 +1,12 @@
+import {APINoRequestFunc} from "@/apiUtils/type"
 import {
     GlobalNetworkConfig,
     HandleAIConfigProps,
     ThirdPartyApplicationConfig
 } from "@/components/configNetwork/ConfigNetworkPage"
+import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 import {SpaceEngineStartParams, SpaceEngineStatus} from "@/models/SpaceEngine"
-import { PcapMetadata } from "@/models/Traffic"
+import {PcapMetadata} from "@/models/Traffic"
 import {yakitNotify} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
@@ -29,9 +31,9 @@ export const apiGetSpaceEngineStatus: (params: GetSpaceEngineStatusProps) => Pro
 /**
  * @description 校验引擎状态，根据前端传的值
  */
-export const apiGetSpaceEngineAccountStatus: (
-    params: ThirdPartyApplicationConfig
-) => Promise<SpaceEngineStatus> = (params) => {
+export const apiGetSpaceEngineAccountStatus: (params: ThirdPartyApplicationConfig) => Promise<SpaceEngineStatus> = (
+    params
+) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("GetSpaceEngineAccountStatusV2", {...params})
@@ -63,6 +65,21 @@ export const apiSetGlobalNetworkConfig: (params: GlobalNetworkConfig) => Promise
             .then(resolve)
             .catch((e: any) => {
                 yakitNotify("error", "设置全局配置错误:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** 获取第三方应用配置模板 */
+export const apiGetThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPartyAppConfigTemplateResponse> = (
+    hiddenError
+) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetThirdPartyAppConfigTemplate")
+            .then(resolve)
+            .catch((e) => {
+                if (hiddenError) yakitNotify("error", "获取第三方应用配置模板错误:" + e)
                 reject(e)
             })
     })

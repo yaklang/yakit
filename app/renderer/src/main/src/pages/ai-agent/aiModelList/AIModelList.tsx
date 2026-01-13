@@ -48,7 +48,8 @@ import {
     OutlinePlussmIcon,
     OutlineRefreshIcon,
     OutlineTrashIcon,
-    OutlineSpeechToTextIcon
+    OutlineSpeechToTextIcon,
+    OutlineCheckIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -72,10 +73,11 @@ import classNames from "classnames"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
-import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 
 export const setAIModal = (params: {
     config: GlobalNetworkConfig
@@ -323,6 +325,7 @@ export default AIModelList
 
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
+        const {setSetting} = useAIAgentDispatcher()
         const {setOnlineTotal, onAdd} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
@@ -426,6 +429,20 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             },
             {wait: 500}
         ).run
+        const onSelectModel = useMemoizedFn((rowData: ThirdPartyApplicationConfig) => {
+            const aiModelName = rowData.ExtraParams?.find((ele) => ele.Key === "model")?.Value || ""
+            setSetting && setSetting((old) => ({...old, AIService: rowData.Type, AIModelName: aiModelName}))
+            emiter.emit(
+                "aiModelSelectChange",
+                JSON.stringify({
+                    type: "online",
+                    params: {
+                        AIService: rowData.Type,
+                        AIModelName: aiModelName
+                    }
+                })
+            )
+        })
         return (
             <YakitSpin spinning={spinning}>
                 {list.length > 0 ? (
@@ -446,6 +463,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                                             [styles["ai-online-model-list-row-isDragging"]]:
                                                                 snapshot.isDragging
                                                         })}
+                                                        onClick={() => onSelectModel(rowData)}
                                                     >
                                                         <SolidDragsortIcon className={styles["drag-sort-icon"]} />
                                                         <AIOnlineModelListItem
@@ -482,6 +500,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
 )
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
     const {item, onEdit, onRemove} = props
+    const {setting} = useAIAgentStore()
     const model = useCreation(() => {
         return item.ExtraParams?.find((ele) => ele.Key === "model")?.Value
     }, [item.ExtraParams])
@@ -502,6 +521,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
                     <YakitButton type='text2' icon={<OutlineTrashIcon />} className={styles["trash-icon"]} />
                 </YakitPopconfirm>
             </div>
+            {setting.AIService === item.Type && <OutlineCheckIcon className={styles["check-icon"]} />}
         </div>
     )
 })
@@ -732,7 +752,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             setIsReady(response?.Ok || false)
         })
     })
-    const onStart = useMemoizedFn(() => {
+    const onStart = useMemoizedFn((e) => {
+        e.stopPropagation()
         const m = showYakitModal({
             title: `启动模型 - ${item.Name}`,
             width: "50%",
@@ -753,7 +774,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             }
         })
     })
-    const onStop = useMemoizedFn(() => {
+    const onStop = useMemoizedFn((e) => {
+        e.stopPropagation()
         setStopLoading(true)
         grpcStopLocalModel({ModelName: item.Name})
             .then(() => {
@@ -766,7 +788,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                 }, 200)
             )
     })
-    const onDown = useMemoizedFn(() => {
+    const onDown = useMemoizedFn((e) => {
+        e.stopPropagation()
         const m = showYakitModal({
             title: "下载模型",
             subTitle: item.Name,
@@ -897,6 +920,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     const isShowEnable = useCreation(() => {
         return !isReady && !item.IsLocal
     }, [isReady, item.IsLocal])
+
     return (
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
@@ -939,7 +963,10 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                             <YakitDropdownMenu
                                 menu={{
                                     data: localModelMenu,
-                                    onClick: ({key}) => menuSelect(key)
+                                    onClick: (e) => {
+                                        e.domEvent.stopPropagation()
+                                        menuSelect(e.key)
+                                    }
                                 }}
                                 dropdown={{
                                     trigger: ["click", "contextMenu"],
@@ -953,6 +980,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                                     type='text2'
                                     size='small'
                                     icon={<OutlineDotsverticalIcon />}
+                                    onClick={(e) => e.stopPropagation()}
                                 />
                             </YakitDropdownMenu>
                         </div>

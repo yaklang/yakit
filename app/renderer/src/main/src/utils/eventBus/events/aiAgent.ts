@@ -26,4 +26,10 @@ export type AIAgentEventProps = {
      * @name params {mention=>AIMentionCommandParams}传递的值
      */
     setAIInputByType?: string
+
+    /** @deprecated AIModelList=> AIModelSelect{AIAgentTriggerEventInfo}
+     * @name type "online"|"local"
+     * @name params 传递的值
+     */
+    aiModelSelectChange: string
 }
