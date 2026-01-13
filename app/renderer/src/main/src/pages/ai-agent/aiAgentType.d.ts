@@ -1,4 +1,4 @@
-import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
+import {CSSProperties, Dispatch, ReactNode, SetStateAction, MutableRefObject} from "react"
 import {AIChatInfo} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -6,7 +6,8 @@ import {AITabsEnum} from "./defaultConstant"
 import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIStreamOutput, AITaskInfoProps} from "../ai-re-act/hooks/aiRender"
 import {UseYakExecResultState, PlanLoadingStatus} from "../ai-re-act/hooks/type"
-
+import {ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
+import {UseChatIPCEvents} from "@/pages/ai-re-act/hooks/type"
 export interface AIAgentProps {
     pageId: string
 }
@@ -70,7 +71,8 @@ export interface AIChatLeftSideProps {
 export type AITabsEnumType = `${AITabsEnum}`
 
 export interface AIAgentChatStreamProps {
-    streams: AIChatQSData[]
+    streams: ReActChatElement[]
+    getChatContentMap: UseChatIPCEvents["getChatContentMap"]
     defaultExpand?: boolean
     scrollToBottom: boolean
     taskStatus: PlanLoadingStatus

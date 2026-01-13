@@ -1,7 +1,6 @@
 import React from "react"
 import {AIChatListItemProps} from "./type"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {AIReviewResult} from "../aiReviewResult/AIReviewResult"
 import {AITriageChatContent} from "../aiTriageChat/AITriageChat"
@@ -11,7 +10,7 @@ import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import DividerCard from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
-import {AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
 import classNames from "classnames"
 import {has, isArray} from "lodash"
@@ -19,6 +18,8 @@ import {HandleStartParams} from "../../aiAgentChat/type"
 import {AIChatMentionSelectItem} from "../aiChatMention/type"
 import {AITaskStatus} from "@/pages/ai-re-act/hooks/grpcApi"
 import {FileToChatQuestionList} from "../../template/type"
+import StreamingChatContent from "./StreamingChatContent/StreamingChatContent"
+import StaticChatContent from "./StaticChatContent/StaticChatContent"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -79,11 +80,15 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return {}
         }
     }, [type])
-    const getTask = (id) => {
-        return taskChat.plan.find((item) => item.index === id)
-    }
-    const renderContent = useMemoizedFn(() => {
-        const {id, type, Timestamp, data, extraValue} = item
+
+    const getTask = useMemoizedFn((id) => taskChat.plan.find((item) => item.index === id))
+
+    const isStream = useCreation(() => {
+        return item.type === AIChatQSDataTypeEnum.STREAM
+    }, [item.type])
+
+    const ChatItemRenderer = useMemoizedFn((item: AIChatQSData) => {
+        const {type, Timestamp, data, extraValue} = item
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
                 return (
@@ -97,8 +102,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         })}
                     />
                 )
-            case AIChatQSDataTypeEnum.STREAM:
-                return <AIStreamNode {...aiStreamNodeProps} stream={item} />
+            // case AIChatQSDataTypeEnum.STREAM:
+            //     return <AIStreamNode {...aiStreamNodeProps} stream={item} />
             case AIChatQSDataTypeEnum.RESULT:
                 return <AITriageChatContent isAnswer={true} content={data} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.THOUGHT:
@@ -173,5 +178,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return <></>
         }
     })
-    return <React.Fragment key={item.id}>{renderContent()}</React.Fragment>
+
+    const renderContent = useMemoizedFn(() => {
+        if (isStream) return <StreamingChatContent {...item} streamClassName={aiStreamNodeProps} />
+        return <StaticChatContent {...item}>{(contentItem) => ChatItemRenderer(contentItem)}</StaticChatContent>
+    })
+    return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

@@ -214,7 +214,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             tab.push(AITabs[AITabsEnum.Risk])
         }
         return tab
-    }, [tempRiskTotal, tempHTTPTotal, taskChat?.streams?.length])
+    }, [tempRiskTotal, tempHTTPTotal, taskChat?.elements?.length])
 
     const [showHot, setShowHot] = useState(false)
     const prevRef = useRef<{

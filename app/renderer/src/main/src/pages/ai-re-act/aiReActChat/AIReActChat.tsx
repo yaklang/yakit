@@ -159,7 +159,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                 {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}
                             </div>
                         </div>
-                        <AIReActChatContents chats={casualChat.contents} />
+                        <AIReActChatContents chats={casualChat} />
                     </div>
                     <div className={classNames(styles["chat-footer"])}>
                         <div className={styles["footer-body"]}>

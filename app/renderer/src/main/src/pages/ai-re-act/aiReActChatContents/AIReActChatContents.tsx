@@ -15,7 +15,7 @@ import {ModalInfoProps} from "@/pages/ai-agent/components/ModelInfo"
 import {AIStreamContentType} from "../hooks/defaultConstant"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
-import {AIChatQSData} from "../hooks/aiRender"
+import {ReActChatElement} from "../hooks/aiRender"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import classNames from "classnames"
 import {PreWrapper} from "@/pages/ai-agent/components/ToolInvokerCard"
@@ -42,7 +42,8 @@ const getAIReferenceNodeByType = (contentType?: string) => {
 }
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
-    const {NodeId, content, NodeIdVerbose, CallToolID, ContentType, reference} = stream.data
+    const {reference} = stream
+    const {NodeId, content, NodeIdVerbose, CallToolID, ContentType} = stream.data
     const {yakExecResult} = useAIChatUIData()
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
@@ -111,8 +112,9 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     } = useChatIPCStore()
     const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
 
-    const renderItem = (item: AIChatQSData) => {
-        return <AIChatListItem key={item.id} item={item} type='re-act' />
+    const renderItem = (item?: ReActChatElement) => {
+        if(!item?.token) return null 
+        return <AIChatListItem key={item.token} item={item} type='re-act' />
     }
 
     const Item = useCallback(
@@ -159,7 +161,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
             <Virtuoso
                 ref={virtuosoRef}
                 atBottomStateChange={setIsAtBottomRef}
-                data={chats}
+                data={chats.elements}
                 followOutput={followOutput}
                 itemContent={(_, item) => renderItem(item)}
                 initialTopMostItemIndex={{index: "LAST"}}

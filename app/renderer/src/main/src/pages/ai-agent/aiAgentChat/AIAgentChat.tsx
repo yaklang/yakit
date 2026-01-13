@@ -54,7 +54,6 @@ import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -67,7 +66,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
     if (!taskChat) return false
 
     const isHavePlan = !!taskChat.plan.length
-    const isHaveStreams = !!taskChat.streams.length
+    const isHaveStreams = !!taskChat.elements?.length
     return isHavePlan || isHaveStreams
 }
 

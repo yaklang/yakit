@@ -11,7 +11,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
-import {AIChatQSData, AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AITaskStartInfo, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
@@ -56,7 +56,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         setExpand(false)
     })
 
-    const hasTaskTree = (taskChat?.streams?.length ?? 0) > 0
+    const hasTaskTree = (taskChat?.elements?.length ?? 0) > 0
 
     const renderDom = useMemoizedFn(() => {
         switch (activeTab) {
@@ -144,7 +144,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {streams, scrollToBottom, taskStatus} = props
+    const {streams, scrollToBottom, taskStatus, getChatContentMap} = props
     const {virtuosoRef, setIsAtBottomRef, scrollToIndex, followOutput} = useVirtuosoAutoScroll()
     useUpdateEffect(() => {
         scrollToIndex("LAST")
@@ -154,13 +154,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         chatIPCData: {systemStream}
     } = useChatIPCStore()
 
-    const renderItem = (stream: AIChatQSData) => {
-        return <AIChatListItem item={stream} type='task-agent' />
+    const renderItem = (stream: ReActChatElement) => {
+        if(!stream.token) return null 
+        return <AIChatListItem key={stream.token} item={stream} type='task-agent' />
     }
-    // const loading = useMemo(() => {
-    //     if (!execute || !streams.length) return false
-    //     return streams[streams.length - 1].type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
-    // }, [streams.length, execute])
 
     const Item = useCallback(
         ({children, style, "data-index": dataIndex}) => (
@@ -187,7 +184,9 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const onScrollToIndex = useMemoizedFn((id) => {
         const index = streams.findIndex((item) => {
             if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
-                const taskIndex = item.data.taskIndex
+                const chatItem = getChatContentMap(item.chatType, item.token)
+                if (!chatItem) return false
+                const taskIndex = (chatItem.data as AITaskStartInfo).taskIndex
                 return taskIndex === id
             }
             return false
@@ -205,7 +204,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     return (
         <div className={styles["ai-agent-chat-stream"]}>
-            <Virtuoso
+            <Virtuoso<ReActChatElement>
                 ref={virtuosoRef}
                 atBottomStateChange={setIsAtBottomRef}
                 style={{height: "100%", width: "100%"}}

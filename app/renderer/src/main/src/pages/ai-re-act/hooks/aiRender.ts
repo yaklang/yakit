@@ -115,6 +115,9 @@ export interface FailReactError {
     content: string
 }
 
+/** 会话参参考资料 */
+export type ChatReferenceMaterialPayload = AIAgentGrpcApi.ReferenceMaterialPayload[]
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
@@ -174,7 +177,7 @@ interface AIChatQSDataBase<T extends string, U> {
     /** 前端专属数据，供前端逻辑和UI处理使用 */
     extraValue?: AIChatIPCStartParams["extraValue"]
     /** 参考资料 */
-    reference?: AIAgentGrpcApi.ReferenceMaterialPayload[]
+    reference?: ChatReferenceMaterialPayload
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, {qs: string; setting: AIInputEvent}>
