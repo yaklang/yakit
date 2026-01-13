@@ -39,6 +39,7 @@ import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
+import { failed } from "@/utils/notification"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
@@ -289,6 +290,9 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
         onBaseNotepadDown(downParams)
             .then((res) => {
                 setBatchDownInfo(res)
+            })
+            .catch((err)=>{
+                failed(`下载失败：${err?.message || err}`)
             })
             .finally(() =>
                 setTimeout(() => {

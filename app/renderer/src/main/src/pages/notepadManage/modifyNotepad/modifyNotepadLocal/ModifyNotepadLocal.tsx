@@ -185,6 +185,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
             // 保存最新的文档内容
             notepadContentRef.current = editor?.action(getMarkdown()) || ""
             onSaveNewContent(notepadContentRef.current)
+            setNote((v) => ({...v, Content: notepadContentRef.current}))
             return
         }
         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
