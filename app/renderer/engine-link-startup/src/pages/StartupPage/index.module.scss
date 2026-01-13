@@ -1,4 +1,5 @@
 .startup-wrapper {
+  height: 100%;
   display: flex;
   justify-content: space-between;
   padding: 12px 12px 12px 32px;
@@ -48,8 +49,9 @@
     }
 
     .startup-content-wrapper {
-      position: relative;
+      display: flex;
       flex: 1;
+      position: relative;
       background-color: var(--Colors-Use-Basic-Background);
     }
   }

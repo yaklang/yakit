@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useSize} from "ahooks"
 import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, outputToWelcomeConsole, SystemInfo} from "./utils"
 import {
     grpcFetchBuildInYakVersion,
@@ -49,7 +49,6 @@ import {EngineLog} from "./components/EngineLog"
 import emiter from "@/utils/eventBus/eventBus"
 import {YaklangEngineWatchDog} from "./components/YaklangEngineWatchDog"
 import {ipcEventPre} from "@/utils/ipcEventPre"
-import yakitLogo from "@/assets/YakitLogo.png"
 import yakitEELogo from "@/assets/yakitEELogo.png"
 import yakitEEDarkLogo from "@/assets/yakitEEDarkLogo.png"
 import yakitSELogo from "@/assets/yakitSELogo.png"
@@ -1055,7 +1054,9 @@ export const StartupPage: React.FC = () => {
                 </div>
                 {!isRemoteEngine ? (
                     <>
-                        <div className={styles["startup-content-wrapper"]}>
+                        <div
+                            className={styles["startup-content-wrapper"]}
+                        >
                             <LocalEngine
                                 ref={localEngineRef}
                                 setLog={setCheckLog}
