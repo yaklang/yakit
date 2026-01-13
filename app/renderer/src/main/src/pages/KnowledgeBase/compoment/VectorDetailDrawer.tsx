@@ -7,7 +7,6 @@ import {Descriptions} from "antd"
 import {useRequest} from "ahooks"
 import {useTheme} from "@/hook/useTheme"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {info} from "@/utils/notification"
 import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 
 const {ipcRenderer} = window.require("electron")
@@ -41,8 +40,7 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
             return result?.Document
         },
         {
-            manual: true,
-            onError: (error) => info(error + "")
+            manual: true
         }
     )
 

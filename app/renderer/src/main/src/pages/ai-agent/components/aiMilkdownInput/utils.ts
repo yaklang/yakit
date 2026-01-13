@@ -24,6 +24,40 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
     return {mentions, plainText}
 }
 
+type Mention = {
+    text: string
+    mentionId: string
+    mentionType: string
+    mentionName: string
+}
+export const parseMentions = (markdown: string): Mention[] => {
+    const result: Mention[] = []
+
+    const mentionRegex = /:mention\[([^\]]+)\]\{([^}]+)\}/g
+    let match: RegExpExecArray | null
+
+    while ((match = mentionRegex.exec(markdown))) {
+        const text = match[1]
+        const attrs = match[2]
+
+        const attrMap: Record<string, string> = {}
+
+        attrs.replace(/(\w+)="([^"]*)"/g, (_, key, value) => {
+            attrMap[key] = value
+            return ""
+        })
+
+        result.push({
+            text,
+            mentionId: attrMap.mentionId,
+            mentionType: attrMap.mentionType,
+            mentionName: attrMap.mentionName
+        })
+    }
+
+    return result
+}
+
 /**设置编辑器内容 */
 export const setEditorValue = (editor: EditorMilkdownProps, value: string) => {
     editor?.action((ctx) => {

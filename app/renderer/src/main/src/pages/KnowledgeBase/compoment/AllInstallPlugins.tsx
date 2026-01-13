@@ -25,7 +25,7 @@ import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 
 const {ipcRenderer} = window.require("electron")
 
-export const installWithEvents = (binary: {Name: string}, token: string) => {
+export const installWithEvents = (binary: {Name: string; Force: boolean}, token: string) => {
     return new Promise<void>((resolve, reject) => {
         let settled = false
 
@@ -93,7 +93,9 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                 setInstallTokens(tokens)
 
                 // 并发执行安装
-                const promises = emptyInstallPathItem.map((b) => installWithEvents({Name: b.Name}, b.installToken))
+                const promises = emptyInstallPathItem.map((b) =>
+                    installWithEvents({Name: b.Name, Force: true}, b.installToken)
+                )
                 await Promise.all(promises)
             }
 
@@ -174,7 +176,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                 return prev
             })
 
-            await installWithEvents({Name: binary.Name}, binary.installToken)
+            await installWithEvents({Name: binary.Name, Force: true}, binary.installToken)
             await binariesToInstallRefreshAsync()
             success(`${binary.Name} 下载完成`)
             onInstallPlug(false)

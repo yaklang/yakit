@@ -16,6 +16,7 @@ const {windowStatePatch} = require("./filePath")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
 const {MenuTemplate} = require("./menu")
+
 const {renderLogOutputFile, getAllLogHandles, closeAllLogHandles, initAllLogFolders} = require("./logFile")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */

@@ -128,6 +128,12 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
     )
 
     useUpdateEffect(() => {
+        setTableProps((preValue) => {
+            return {
+                ...preValue,
+                type: structureTableHeaderGroupOptions?.[0]?.value ?? ""
+            }
+        })
         setStructureTableHeaderGroupOptions?.(structureTableHeaderGroupOptions)
     }, [structureTableHeaderGroupOptions])
 
