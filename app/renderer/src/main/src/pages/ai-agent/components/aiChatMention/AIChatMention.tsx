@@ -503,7 +503,42 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         })
 
         const [knowledgeBaseList, setKnowledgeBaseList] = useSafeState<KnowledgeBaseItem[]>([])
-
+        const knowledgeList = useCreation(() => {
+            const value: KnowledgeBaseItem = {
+                ID: "@所有知识库",
+                KnowledgeBaseName: "@所有知识库",
+                Description: "",
+                KnowledgeBaseFile: [],
+                KnowledgeBaseType: "",
+                KnowledgeBaseDescription: "",
+                KnowledgeBaseLength: 0,
+                streamToken: "",
+                streamstep: 1,
+                Tags: [],
+                IsImported: false,
+                addManuallyItem: false,
+                historyGenerateKnowledgeList: [],
+                Type: "",
+                Name: "",
+                BaseID: 0,
+                BaseIndex: "",
+                Attributes: [],
+                Rationale: "",
+                HiddenIndex: "",
+                KnowledgeBaseId: 0,
+                KnowledgeTitle: "",
+                KnowledgeType: "",
+                ImportanceScore: 0,
+                Keywords: [],
+                KnowledgeDetails: "",
+                Summary: "",
+                SourcePage: 0,
+                PotentialQuestions: [],
+                PotentialQuestionsVector: [],
+                RelatedEntityUUIDS: ""
+            }
+            return [value, ...(knowledgeBaseList || [])]
+        }, [knowledgeBaseList])
         useImperativeHandle(
             ref,
             () => ({
@@ -518,15 +553,16 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         }, [knowledgeBases])
 
         const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
-            if (value >= 0 && value < (knowledgeBaseList || []).length) {
-                setSelected(knowledgeBaseList?.[value])
+            if (value >= 0 && value < (knowledgeList || []).length) {
+                setSelected(knowledgeList?.[value])
                 if (isScroll) {
                     listRef.current.scrollTo(value)
                 }
             }
         })
+
         useSwitchSelectByKeyboard<KnowledgeBaseItem>(listRef.current.containerRef, {
-            data: knowledgeBaseList || [],
+            data: knowledgeList,
             selected,
             rowKey: (item) => `AIMentionSelectItem-${item.ID}`,
             onSelectNumber: onKeyboardSelect,
@@ -540,17 +576,22 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         const getList = useMemoizedFn(async () => {
             try {
                 setKnowledgeBaseList(
-                    knowledgeBases.filter((it) => it?.KnowledgeBaseName?.toLowerCase().includes(keyWord.toLowerCase()))
+                    knowledgeBases.filter(
+                        (it) =>
+                            it?.KnowledgeBaseName === "@所有知识库" ||
+                            it?.KnowledgeBaseName?.toLowerCase().includes(keyWord.toLowerCase())
+                    )
                 )
             } catch (error) {
                 failed(error + "")
             }
         })
+
         return (
             <div className={styles["knowledge-base-list-of-mention"]}>
                 <RollingLoadList<KnowledgeBaseItem>
                     ref={listRef}
-                    data={knowledgeBaseList || []}
+                    data={knowledgeList}
                     loadMoreData={() => {}}
                     renderRow={(rowData: KnowledgeBaseItem, index: number) => {
                         return (
