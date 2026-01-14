@@ -31,6 +31,7 @@ import {PluginExecuteLogFile} from "../plugins/operator/pluginExecuteResult/Plug
 import {onOpenLocalFileByPath} from "../notepadManage/notepadManage/utils"
 import {getFileActionStatus, isPluginExecuteLogFileItem, modeToPermissions} from "./utils"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
+import { JSONParseLog } from "@/utils/tool"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 const WordCloudCharts = React.lazy(() => import("./LogCharts/WordCloudCharts"))
@@ -69,7 +70,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
         switch (level) {
             case "file":
                 try {
-                    const obj = JSON.parse(data) as PluginExecuteLogFile.FileItem | FileLogShowDataProps
+                    const obj = JSONParseLog(data, {page: "YakitLogFormatter", fun: "file"}) as PluginExecuteLogFile.FileItem | FileLogShowDataProps
 
                     if (isPluginExecuteLogFileItem(obj)) {
                         return (
@@ -102,7 +103,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                 return <EditorLogShow {...props} />
             case "json-table":
                 try {
-                    let obj: {head: string[]; data: string[][]} = JSON.parse(data)
+                    let obj: {head: string[]; data: string[][]} = JSONParseLog(data, {page: "YakitLogFormatter", fun: "json-table"})
                     return (
                         <Space direction={"vertical"} style={{width: "100%"}}>
                             {showTime && <div className={styles["log-time"]}>{formatTime(timestamp)}</div>}
@@ -159,7 +160,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                 }
             case "json-httpflow-risk":
                 try {
-                    return <HTTPFlowRiskViewer risk={JSON.parse(data) as YakitHTTPFlowRisk} />
+                    return <HTTPFlowRiskViewer risk={JSONParseLog(data, {page: "YakitLogFormatter", fun: "json-httpflow-risk"}) as YakitHTTPFlowRisk} />
                 } catch (e) {
                     return <span className={styles["log-time"]}>{formatTime(timestamp)}</span>
                 }
@@ -418,7 +419,7 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
 
     const graphData: GraphData = useCreation(() => {
         try {
-            return JSON.parse(data)
+            return JSONParseLog(data, {page: "YakitLogFormatter", fun: "GraphLogShow"})
         } catch (error) {
             return {
                 type: "",

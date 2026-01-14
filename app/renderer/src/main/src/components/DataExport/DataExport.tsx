@@ -12,6 +12,7 @@ import styles from "./DataExport.module.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 interface ExportExcelProps {
     btnProps?: YakitButtonProp
     getData: (query: PaginationSchema) => Promise<any>
@@ -358,7 +359,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
                 setExportTitle(handleExportVal(initCheckValue || exportValue))
                 setCheckValue(handleExportVal(initCheckValue || exportValue))
             } else {
-                const values = JSON.parse(setting)
+                const values = JSONParseLog(setting,{page:"DataExport", fun:"exportKey"})
                 setCheckValue(values?.checkedValues)
                 setExportTitle(values?.checkedValues)
             }

@@ -45,6 +45,7 @@ import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAut
 import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
 import {getJsonSchemaListResult, JsonFormWrapper} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -526,7 +527,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     let extraSetting: FormExtraSettingProps | undefined = undefined
     try {
-        extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
+        extraSetting = JSONParseLog(item.ExtraSetting || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "FormContentItemByType"}) || {
             double: false,
             data: []
         }
@@ -670,7 +671,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                         const {BoolResult, Result} = res
                         if (BoolResult && Result) {
                             try {
-                                let arr: string[] = JSON.parse(Result)
+                                let arr: string[] = JSONParseLog(Result, {page: "LocalPluginExecuteDetailHeard", fun: "grpcFetchExpressionToResult"})
                                 !Array.isArray(arr) && (arr = [])
                                 setAdditionalConfig({
                                     inputOption: arr.map((item) => ({
@@ -783,7 +784,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         case "yak":
             let language: string = pluginType || ""
             try {
-                const info = JSON.parse(item.ExtraSetting || "") as PluginParamDataEditorProps
+                const info = JSONParseLog(item.ExtraSetting || "", {page: "LocalPluginExecuteDetailHeard", fun: "yak"}) as PluginParamDataEditorProps
                 language = info?.language || pluginType || ""
             } catch (error) {}
             language = GetPluginLanguage(language || codeType || "yak")
@@ -826,10 +827,10 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             let uiSchema: any = {}
             let value: any = undefined
             try {
-                schema = JSON.parse(item?.JsonSchema || "{}")
-                uiSchema = JSON.parse(item?.UISchema || "{}")
+                schema = JSONParseLog(item?.JsonSchema || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "schema"})
+                uiSchema = JSONParseLog(item?.UISchema || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "uiSchema"})
                 if (jsonSchemaInitial && jsonSchemaInitial[item.Field]) {
-                    value = JSON.parse(jsonSchemaInitial[item.Field])
+                    value = JSONParseLog(jsonSchemaInitial[item.Field], {page: "LocalPluginExecuteDetailHeard", fun: "jsonSchemaInitial"})
                 }
             } catch (error) {
                 console.error("Parse JsonSchema failed:", error)

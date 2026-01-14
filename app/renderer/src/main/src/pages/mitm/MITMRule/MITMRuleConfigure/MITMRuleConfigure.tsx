@@ -11,6 +11,7 @@ import {useMemoizedFn} from "ahooks"
 import defaultConfig from "./yakitMitmReplacerRulesConfig.json"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -69,7 +70,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
             return
         }
         try {
-            let rules = JSON.parse(new Buffer(params.JsonRaw).toString("utf8")).map((item, index) => ({
+            let rules = JSONParseLog(new Buffer(params.JsonRaw).toString("utf8"),{page: "MITMRuleConfigure", fun: "onImport"}).map((item, index) => ({
                 ...item,
                 Index: index + 1
             }))

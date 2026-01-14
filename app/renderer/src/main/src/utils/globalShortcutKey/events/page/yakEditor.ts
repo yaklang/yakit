@@ -9,6 +9,7 @@ import {
 } from "../../utils"
 import {System, SystemInfo} from "@/constants/hardware"
 import {addScopeShow} from "../global"
+import { JSONParseLog } from "@/utils/tool"
 
 interface MonacoShortcutKeyEventInfo extends ShortcutKeyEventInfo {
     type?: System
@@ -290,7 +291,7 @@ export const getStorageYakEditorShortcutKeyEvents = () => {
         .then((res) => {
             if (!res) return
             try {
-                const data: EventsType = JSON.parse(res)
+                const data: EventsType = JSONParseLog(res,{page: "yakEditor", fun: "getStorageYakEditorShortcutKeyEvents"})
                 currentKeyEvents = addScopeShow(data, YakEditorShortcutKeyEvents)
             } catch (error) {}
         })

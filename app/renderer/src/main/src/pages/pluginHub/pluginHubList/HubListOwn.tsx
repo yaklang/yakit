@@ -55,6 +55,7 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import { JSONParseLog } from "@/utils/tool"
 
 interface HubListOwnProps extends HubListBaseProps {}
 /** @name 我的插件 */
@@ -249,7 +250,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     const handleDetailDeleteToOnline = useMemoizedFn((info: string) => {
         if (!info) return
         try {
-            const plugin: {name: string; uuid: string} = JSON.parse(info)
+            const plugin: {name: string; uuid: string} = JSONParseLog(info, {page: "HubListOwn", fun: "handleDetailDeleteToOnline"})
             if (!plugin.name && !plugin.uuid) return
             const index = selectList.findIndex((ele) => ele.uuid === plugin.uuid)
             const data: YakitPluginOnlineDetail = {
@@ -275,7 +276,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     const handleChangeStatus = useMemoizedFn((content: string) => {
         if (!content) return
         try {
-            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSON.parse(content)
+            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSONParseLog(content, {page: "HubListOwn", fun: "handleChangeStatus"})
             if (!plugin.name && !plugin.uuid) return
             const el = response.data.find((ele) => ele.uuid === plugin.uuid)
             if (!el) return

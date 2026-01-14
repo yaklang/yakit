@@ -19,6 +19,7 @@ import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import styles from "./PacketListDemo.module.scss"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {useTheme} from "@/hook/useTheme"
+import { JSONParseLog } from "@/utils/tool"
 const DirectoryTree = Tree.DirectoryTree
 const MemoTooltip = Tooltip || React.memo(Tooltip)
 export interface PacketListProp {
@@ -97,7 +98,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                 typ = "reassembled"
             }
             ipcRenderer.invoke("ParseTraffic", {Id: data.Id, Type: typ}).then((data) => {
-                let res = JSON.parse(data.Result)
+                let res = JSONParseLog(data.Result,{page:"PacketListDemo", fun:"parseData"})
                 let result = res.Result
                 let keyToScope = {}
                 let toTreeData = (obj, keys: string[]) => {

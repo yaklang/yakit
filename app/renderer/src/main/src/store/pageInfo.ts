@@ -15,6 +15,7 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import {ConcurrencyAdvancedConfigValue} from "@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency"
 import {FilterLibRuleKind} from "@/pages/ruleManagement/RuleManagementType"
+import { JSONParseLog } from "@/utils/tool"
 
 /**
  * @description 页面暂存数据
@@ -568,7 +569,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                         try {
                             const str = sessionStorage.getItem(name)
                             if (!str) return null
-                            const {state} = JSON.parse(str)
+                            const {state} = JSONParseLog(str,{page:"pageInfo"})
                             return {
                                 state: {
                                     ...state,

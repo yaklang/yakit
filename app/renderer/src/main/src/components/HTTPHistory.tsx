@@ -67,6 +67,7 @@ import {cloneDeep} from "lodash"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitSideTab} from "./yakitSideTab/YakitSideTab"
 import {YakitTabsProps} from "./yakitSideTab/YakitSideTabType"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -117,7 +118,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         getRemoteValue(RemoteHistoryGV.HistoryLeftTabs).then((setting: string) => {
             if (setting) {
                 try {
-                    const tabs = JSON.parse(setting)
+                    const tabs = JSONParseLog(setting,{page:"HTTPHistory", fun:"RemoteHistoryGV.HistoryLeftTabs"})
                     setOpenTabsFlag(tabs.contShow)
                     onActiveKey(tabs.key)
                 } catch (error) {}
@@ -173,14 +174,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         try {
-            const treeQuery = JSON.parse(queryParams) || {}
+            const treeQuery = JSONParseLog(queryParams,{page:"HTTPHistory", fun:"onQueryParams-treeQuery"}) || {}
             delete treeQuery.Pagination
             delete treeQuery.AfterId
             delete treeQuery.BeforeId
             setTreeQueryparams(JSON.stringify(treeQuery))
             setRefreshFlag(!!execFlag)
 
-            const processQuery = JSON.parse(queryParams) || {}
+            const processQuery = JSONParseLog(queryParams,{page:"HTTPHistory", fun:"onQueryParams-processQuery"}) || {}
             delete processQuery.Pagination
             delete processQuery.AfterId
             delete processQuery.BeforeId
@@ -198,7 +199,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 跳转网站树指定节点
     const onJumpWebTree = useMemoizedFn((value) => {
         if (webTreeRef.current) {
-            const val = JSON.parse(value)
+            const val = JSONParseLog(value,{page:"HTTPHistory", fun:"onJumpWebTree"})
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
             setOpenTabsFlag(true)
@@ -444,7 +445,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         getRemoteValue(RemoteGV.historyTableYakitResizeBox).then((res) => {
             if (res) {
                 try {
-                    const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                    const {firstSizePercent, secondSizePercent} = JSONParseLog(res,{page:"HTTPHistory", fun:"RemoteGV.historyTableYakitResizeBox"})
                     lastRatioRef.current = {
                         firstRatio: firstSizePercent,
                         secondRatio: secondSizePercent
@@ -759,7 +760,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         setProcessLoading(true)
         onSetCurProcess([])
         try {
-            const query = JSON.parse(queryparamsStr)
+            const query = JSONParseLog(queryparamsStr,{page:"HTTPHistory", fun:"refreshProcess"})
             ipcRenderer
                 .invoke("QueryHTTPFlowsProcessNames", query)
                 .then((res) => {

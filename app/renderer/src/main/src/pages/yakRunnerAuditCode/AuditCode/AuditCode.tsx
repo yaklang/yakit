@@ -129,6 +129,7 @@ import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRules
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
+import { JSONParseLog } from "@/utils/tool"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -152,7 +153,7 @@ export const getDetailFun = (info: AuditNodeProps | AuditDetailItemProps) => {
         if (info.ResourceType === "value") {
             const result = info.Extra.find((item) => item.Key === "code_range")?.Value
             if (result) {
-                const item: CodeRangeProps = JSON.parse(result)
+                const item: CodeRangeProps = JSONParseLog(result, {page: "AuditCode", fun: "getDetailFun"})
                 const {url, start_line, start_column, end_line, end_column} = item
                 const lastSlashIndex = url.lastIndexOf("/")
                 const fileName = url.substring(lastSlashIndex + 1)
@@ -393,7 +394,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         try {
             const arr = data.Extra.filter((item) => item.Key === "code_range")
             if (arr.length > 0) {
-                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                const item: CodeRangeProps = JSONParseLog(arr[0].Value, {page: "AuditCode", fun: "onContext"})
                 const {url, start_line, start_column, end_line, end_column} = item
                 const name = await getNameByPath(url)
                 // console.log("monaca跳转", item, name)
@@ -1576,11 +1577,11 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
             const peephole = customArr.find((item) => item.Field === "peephole")?.ExtraSetting || "{}"
             const language = customArr.find((item) => item.Field === "language")?.ExtraSetting || "{}"
 
-            const peepholeArr: FormExtraSettingProps = JSON.parse(peephole) || {
+            const peepholeArr: FormExtraSettingProps = JSONParseLog(peephole, {page: "AuditCode", fun: "peepholeArr"}) || {
                 double: false,
                 data: []
             }
-            const languageArr: FormExtraSettingProps = JSON.parse(language) || {
+            const languageArr: FormExtraSettingProps = JSONParseLog(language, {page: "AuditCode", fun: "languageArr"}) || {
                 double: false,
                 data: []
             }
@@ -1951,7 +1952,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
             const startLog = newStreamInfo.logState.find((item) => item.level === "code")
             if (startLog && startLog.data) {
                 try {
-                    const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
+                    const verifyStart = JSONParseLog(startLog?.data, {page: "AuditCode", fun: "onStreamInfoFun"}) as VerifyStartProps
                     const {kind, msg} = verifyStart.error
                     setVerifyForm(false)
                     programNameCacheRef.current = verifyStart.BaseInfo.program_names[0]
@@ -2249,7 +2250,7 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
         // 当任务结束时
         if (streamInfo.logState[0]?.level === "json") {
             try {
-                const resultData = JSON.parse(streamInfo.logState[0].data) as ResultDataProps
+                const resultData = JSONParseLog(streamInfo.logState[0].data, {page: "AuditCode", fun: "streamInfo"}) as ResultDataProps
                 if (resultData.success) {
                     onFinish(resultData)
                 }
@@ -2259,7 +2260,7 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
 
     useEffect(() => {
         try {
-            const newValue = JSON.parse(JSONStringConfig)
+            const newValue = JSONParseLog(JSONStringConfig, {page: "AuditCode", fun: "JSONStringConfig"})
             setValue(newValue)
         } catch (error) {}
     }, [])
@@ -2429,8 +2430,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目更新"}, true)
                 newPlugin.Params.forEach((item) => {
                     if (item.Field === "config_data") {
-                        let schema = JSON.parse(item?.JsonSchema || "{}")
-                        // let uiSchema = JSON.parse(item?.UISchema || "{}")
+                        let schema = JSONParseLog(item?.JsonSchema || "{}", {page: "AuditCode", fun: "handleFetchJSONSchema"})
+                        // let uiSchema = JSONParseLog(item?.UISchema || "{}")
                         setSchema(schema)
                     }
                 })

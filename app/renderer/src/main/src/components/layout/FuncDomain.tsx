@@ -124,6 +124,7 @@ import {useTheme} from "@/hook/useTheme"
 import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
 import {useDownloadYakit} from "./update/DownloadYakit"
 import i18n from "@/i18n/i18n"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1928,10 +1929,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 try {
                     data.forEach((item) => {
                         if (item.type === "yakit") {
-                            const content: UpdateContentProp = JSON.parse(item.content)
+                            const content: UpdateContentProp = JSONParseLog(item.content,{page:"FuncDomain", fun:"fetchYakitAndYaklangVersionInfo-yakit"})
                             setCommunityYakitContent({...content})
                         } else if (item.type === "yaklang") {
-                            const content: UpdateContentProp = JSON.parse(item.content)
+                            const content: UpdateContentProp = JSONParseLog(item.content,{page:"FuncDomain", fun:"fetchYakitAndYaklangVersionInfo-yaklang"})
                             setCommunityYaklangContent({...content})
                         }
                     })
@@ -2249,7 +2250,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
         try {
-            const obj: API.MessageLogDetail = JSON.parse(data)
+            const obj: API.MessageLogDetail = JSONParseLog(data,{page:"FuncDomain", fun:"onRefreshMessageSocketFun"})
             setMessageList((prev) => {
                 return [obj, ...prev]
             })
@@ -2642,7 +2643,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
     const onRefRisksRead = useMemoizedFn((res) => {
         try {
-            const value = JSON.parse(res)
+            const value = JSONParseLog(res,{page:"FuncDomain", fun:"onRefRisksRead"})
             if (!!value.isAllRead) {
                 // 全部已读
                 setRisks({
@@ -2890,7 +2891,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
     const onRefRisksRead = useMemoizedFn((res) => {
         try {
-            const value = JSON.parse(res)
+            const value = JSONParseLog(res,{page:"FuncDomain", fun:"onRefRisksRead-IRify"})
             if (!!value.isAllRead) {
                 // 全部已读
                 setRisks({
@@ -3224,7 +3225,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 const logs: PerformanceSamplingLog[] = []
                 streamInfo.logState.forEach((item) => {
                     if (item.level === "file") {
-                        const {title, path, dir} = JSON.parse(item.data) || {}
+                        const {title, path, dir} = JSONParseLog(item.data,{page:"FuncDomain", fun:"useEffect"}) || {}
                         logs.push({title, path, dir})
                     }
                 })

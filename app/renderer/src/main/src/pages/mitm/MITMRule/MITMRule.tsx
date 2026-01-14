@@ -55,6 +55,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -129,7 +130,7 @@ const batchMenuData = (excludeBatchMenuKey: string, t: (text: string) => string)
         }
     ]
     try {
-        const excludeBatchMenuKeyArr = JSON.parse(excludeBatchMenuKey) || []
+        const excludeBatchMenuKeyArr = JSONParseLog(excludeBatchMenuKey, {page: "MITMRule", fun: "batchMenuData"}) || []
         return arr.filter((ele) => !excludeBatchMenuKeyArr.includes(ele.key))
     } catch (error) {
         return arr
@@ -531,7 +532,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             ]
 
             try {
-                const excludeColumnsKeyArr = JSON.parse(excludeColumnsKey) || []
+                const excludeColumnsKeyArr = JSONParseLog(excludeColumnsKey, {page: "MITMRule", fun: "excludeColumnsKey"}) || []
                 return columnArr.filter((ele) => !excludeColumnsKeyArr.includes(ele.dataKey))
             } catch (error) {
                 return columnArr

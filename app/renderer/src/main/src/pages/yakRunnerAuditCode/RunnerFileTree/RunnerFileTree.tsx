@@ -56,6 +56,7 @@ import {genDefaultPagination} from "@/pages/invoker/schema"
 import {warn} from "@/utils/notification"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import { JSONParseLog } from "@/utils/tool"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
 const RunnerFileTreeTab: YakitTabsProps[] = [
@@ -111,7 +112,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     // 默认展开项
     const onDefaultExpanded = useMemoizedFn(async (data: string) => {
         try {
-            const defaultExpanded: string[] = JSON.parse(data)
+            const defaultExpanded: string[] = JSONParseLog(data, {page: "RunnerFileTree", fun: "onDefaultExpanded"})
             setExpandedKeys(defaultExpanded)
         } catch (error) {}
     })
@@ -895,7 +896,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
                         const arr = data.Extra.filter((item) => item.Key === "code_range")
                         const hash = data.Extra.find((item) => item.Key === "hash")?.Value
                         if (arr.length > 0) {
-                            const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                            const item: CodeRangeProps = JSONParseLog(arr[0].Value, {page: "RunnerFileTree", fun: "onSelectFileTree"})
                             const {url, start_line, start_column, end_line, end_column} = item
                             const lastSlashIndex = url.lastIndexOf("/")
                             const fileName = url.substring(lastSlashIndex + 1)

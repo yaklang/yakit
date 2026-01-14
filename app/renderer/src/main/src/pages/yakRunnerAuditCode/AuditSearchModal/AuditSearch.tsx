@@ -38,6 +38,7 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {KVPair} from "@/models/kv"
+import { JSONParseLog } from "@/utils/tool"
 
 let selectedSearchVal: string = ""
 export const onSetSelectedSearchVal = (v: string = "") => {
@@ -205,7 +206,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             try {
                 const newPlugin = await grpcFetchLocalPluginDetail({Name: "SyntaxFlow Searcher"}, true)
                 const ExtraSetting = newPlugin?.Params.find((item) => item.Field === "kind")?.ExtraSetting || ""
-                let obj = JSON.parse(ExtraSetting) as ExtraSettingProps
+                let obj = JSONParseLog(ExtraSetting, {page: "AuditSearch", fun: "handleFetchParams"}) as ExtraSettingProps
                 setExtraSettingData(obj.data)
             } catch (error) {}
         }),
@@ -314,7 +315,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             const CodeRange = activeInfo?.Extra.find((item) => item.Key === "code_range")?.Value
             const CodeFragment = activeInfo?.Extra.find((item) => item.Key === "source")?.Value
             if (Index && CodeRange && CodeFragment) {
-                const code_range: CodeRangeProps = JSON.parse(CodeRange)
+                const code_range: CodeRangeProps = JSONParseLog(CodeRange, {page: "AuditSearch", fun: "yakURLData"})
                 return {
                     index: Index,
                     code_range,

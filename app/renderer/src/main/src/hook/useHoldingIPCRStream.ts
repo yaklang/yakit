@@ -11,6 +11,7 @@ import {failed, info, yakitInfo} from "../utils/notification"
 import {useGetState} from "ahooks"
 import {Risk} from "@/pages/risks/schema";
 import {isEnpriTraceAgent} from "@/utils/envfile"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -137,9 +138,9 @@ export default function useHoldingIPCRStream(
 
             if (data.IsMessage) {
                 try {
-                    let obj: ExecResultMessage = JSON.parse(
+                    let obj: ExecResultMessage = JSONParseLog(
                         Buffer.from(data.Message).toString()
-                    )
+                    ,{page:"useHoldingIPCRStream"})
 
                     // 处理 Process KVPair
                     if (obj.type === "progress") {
@@ -161,7 +162,7 @@ export default function useHoldingIPCRStream(
                     // 处理 log feature-status-card-data
                     if (obj.type === "log" && logData.level === "feature-status-card-data") {
                         try {
-                            const obj = JSON.parse(logData.data)
+                            const obj = JSONParseLog(logData.data, {page:"useHoldingIPCRStream"})
                             const {id, data, tags} = obj
                             const {timestamp} = logData
                             const originData = statusKVPair.current.get(id)
@@ -197,7 +198,7 @@ export default function useHoldingIPCRStream(
 
                     if (obj.type === "log" && logData.level === "json-risk") {
                         try {
-                            const risk = JSON.parse(logData.data) as Risk
+                            const risk = JSONParseLog(logData.data, {page:"useHoldingIPCRStream"}) as Risk
                             riskMessages.current.unshift(risk)
                             if (isEnpriTraceAgent()) riskMessages.current = riskMessages.current.slice(0,10)
                         } catch (e) {

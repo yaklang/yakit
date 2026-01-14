@@ -44,6 +44,7 @@ import {pluginTypeToName} from "../plugins/builtInData"
 import MITMContext from "./Context/MITMContext"
 import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
 import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -101,7 +102,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         getRemoteValue("mitm_has_params_" + i.ScriptName).then((res) => {
             if (res) {
                 try {
-                    const arr: YakExecutorParam[] = JSON.parse(res) || []
+                    const arr: YakExecutorParam[] = JSONParseLog(res, {page: "MITMYakScriptLoader", fun: "mitm_has_params"}) || []
                     arr.forEach((item) => {
                         if (initFormValue.hasOwnProperty(item.Key)) {
                             initFormValue[item.Key] = item.Value
@@ -260,7 +261,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
 
     const onHistoryTagToMitm = (data: string) => {
         try {
-            const value = JSON.parse(data)
+            const value = JSONParseLog(data, {page: "MITMYakScriptLoader", fun: "onHistoryTagToMitm"})
             const {tags, version} = value
             if (version !== mitmVersion) return
             const newSelectTags = tags.split(",")

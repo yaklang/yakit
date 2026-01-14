@@ -95,6 +95,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import importExportStyles from "@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss"
 import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
 import {ReActChatEventEnum} from "@/pages/ai-agent/defaultConstant"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -233,7 +234,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn((data) => {
         try {
-            const updateData = JSON.parse(data)
+            const updateData = JSONParseLog(data, { page: "YakitAuditHoleTable", fun: "onStartInterval" })
             const {RuntimeID} = query
             const runTimeId = RuntimeID?.[0]
             // 没有RuntimeID时直接更新
@@ -1414,7 +1415,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
         try {
             const {Index, CodeRange, ProgramName, CodeFragment} = info
             if (Index && CodeRange) {
-                const code_range: CodeRangeProps = JSON.parse(CodeRange)
+                const code_range: CodeRangeProps = JSONParseLog(CodeRange, {page: "YakitAuditHoleTable", fun: "initData"})
                 setYakURLData([
                     {
                         index: Index,
@@ -1555,7 +1556,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                                             yakitNotify("warning", "暂无ParamsUIConfig配置项")
                                             return
                                         }
-                                        let paramsUIConfig = JSON.parse(res.ParamsUIConfig)
+                                        let paramsUIConfig = JSONParseLog(res.ParamsUIConfig, { page: "YakitAuditHoleTable", fun: "onClick" })
                                         // 给予默认值
                                         paramsUIConfig.map((item) => {
                                             if (item.Field === "risk_id") {

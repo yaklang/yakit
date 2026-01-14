@@ -127,6 +127,7 @@ import {
     getStorageChatCSShortcutKeyEvents
 } from "@/utils/globalShortcutKey/events/page/chatCS"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -171,7 +172,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         getRemoteValue(RemoteGV.ChatCSStorage).then((value: string) => {
             if (!value) return
             try {
-                const data: {lists: CacheChatCSProps[]; user_id: number} = JSON.parse(value)
+                const data: {lists: CacheChatCSProps[]; user_id: number} = JSONParseLog(value)
                 if (!Array.isArray(data.lists)) return
                 if (data.user_id !== userInfo.user_id) {
                     setStorage([])
@@ -349,7 +350,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         getRemoteValue(PlginRunMaxNumber).then((value: string) => {
             if (!value) return
             try {
-                const data: {maxNumber: number} = JSON.parse(value)
+                const data: {maxNumber: number} = JSONParseLog(value)
                 setMaxNumber(data.maxNumber)
             } catch (error) {}
         })
@@ -361,7 +362,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         getRemoteValue(PluginAIListCache).then((value: string) => {
             if (!value) return
             try {
-                const data: PluginAiItem[] = JSON.parse(value)
+                const data: PluginAiItem[] = JSONParseLog(value)
                 setPluginAIList(data)
             } catch (error) {}
         })
@@ -373,7 +374,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const onFuzzerRunChatcsAI = useMemoizedFn((value) => {
         try {
-            const val: CodecParamsProps = JSON.parse(value)
+            const val: CodecParamsProps = JSONParseLog(value)
             setVisible(true)
             setPluginAIParams(val)
             setChatcsType("PluginAI")
@@ -486,7 +487,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             .filter((item) => item.length !== 0)
             .forEach((itemIn) => {
                 try {
-                    objects.push(JSON.parse(itemIn))
+                    objects.push(JSONParseLog(itemIn))
                 } catch (error) {}
             })
 
@@ -516,7 +517,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         let match
         while ((match = regex.exec(flow)) !== null) {
             try {
-                loadObj.push(JSON.parse(`{${match[1]}}`) as LoadObjProps)
+                loadObj.push(JSONParseLog(`{${match[1]}}`) as LoadObjProps)
             } catch (error) {}
         }
 
@@ -533,7 +534,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     if (isPlugin && stateIndex !== -1) {
                         newItemIn = newItemIn.substring(0, stateIndex)
                     }
-                    objects.push(JSON.parse(newItemIn))
+                    objects.push(JSONParseLog(newItemIn))
                 } catch (error) {}
             })
 
@@ -1808,13 +1809,13 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (setting) {
-                const values = JSON.parse(setting)
+                const values = JSONParseLog(setting)
                 privateDomainRef.current = values.BaseUrl
             }
             if (!data) return
             // 私有域获取完成后再解析数据
             try {
-                const arr: ChatPluginListProps = JSON.parse(data)
+                const arr: ChatPluginListProps = JSONParseLog(data)
                 if (arr.data.length === 0) return
                 setDatsSource(arr)
             } catch (error) {
@@ -3065,7 +3066,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             let extra = {}
             ;(streamInfo.logState || []).reverse().forEach((item) => {
                 try {
-                    const obj = JSON.parse(item.data)
+                    const obj = JSONParseLog(item.data)
                     str += obj?.data || ""
                     extra = obj?.extra || {}
                 } catch (error) {}
