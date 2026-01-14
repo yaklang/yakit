@@ -97,7 +97,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 try {
                     const cache = JSON.parse(res) as AIAgentSetting
                     if (typeof cache !== "object") return
-                    getAIModelListOption(!cache.AIService)
+                    getAIModelListOption(!cache.AIModelName)
                 } catch (error) {}
             })
             .catch(() => {})
