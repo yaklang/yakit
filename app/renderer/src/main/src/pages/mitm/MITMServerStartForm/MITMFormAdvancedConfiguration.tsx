@@ -25,6 +25,9 @@ import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { JSONParseLog } from "@/utils/tool"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {RemoteMitmGV} from "@/enums/mitm"
+import {isEqual} from "lodash"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -57,6 +60,8 @@ export interface AdvancedConfigurationFromValue {
     DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
+    OverwriteSNI: string
+    SNI: string
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -78,13 +83,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [disableSystemProxyDef, setDisableSystemProxyDef] = useState<boolean>(false)
         const [disableWebsocketCompressionDef, setDisableWebsocketCompressionDef] = useState<boolean>(false)
         const [pluginConcurrencyDef, setPluginConcurrencyDef] = useState<number>(20)
-
+        const [overwriteSNIDef, setOverwriteSNIDef] = useState<string>("auto")
+        const [sNIDef, setSNIDef] = useState<string>("")
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
         const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
+        const overwriteSNI = useWatch("OverwriteSNI", form)
         const {t, i18n} = useI18nNamespaces(["webFuzzer"])
 
         const getValue = useMemoizedFn(() => {
@@ -105,7 +112,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     disableCACertPage: disableCACertPageDef,
                     DisableSystemProxy: disableSystemProxyDef,
                     DisableWebsocketCompression: disableWebsocketCompressionDef,
-                    PluginConcurrency: pluginConcurrencyDef
+                    PluginConcurrency: pluginConcurrencyDef,
+                    OverwriteSNI: overwriteSNIDef,
+                    SNI: sNIDef
                 }
             }
         })
@@ -213,6 +222,26 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setPluginConcurrencyDef(v)
                 form.setFieldsValue({PluginConcurrency: v})
             })
+            // SNI
+            getRemoteValue(RemoteMitmGV.MitmSNI).then((e) => {
+                let v = "auto"
+                let v2 = ""
+                try {
+                    const obj = JSON.parse(e)
+                    v = obj.OverwriteSNI
+                    if (v !== "mandatory") {
+                        v2 = ""
+                    } else {
+                        v2 = obj.SNI
+                    }
+                } catch {
+                } finally {
+                    setOverwriteSNIDef(v)
+                    form.setFieldsValue({OverwriteSNI: v})
+                    setSNIDef(v2)
+                    form.setFieldsValue({SNI: v2})
+                }
+            })
         }, [visible])
         /**
          * @description 单个导出证书
@@ -300,6 +329,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(RemoteGV.MITMDisableSystemProxy, params.DisableSystemProxy ? "true" : "")
                 setRemoteValue(RemoteGV.MITMDisableWebsocketCompression, params.DisableWebsocketCompression + "")
                 setRemoteValue(RemoteGV.MITMPluginConcurrency, params.PluginConcurrency + "")
+                setRemoteValue(
+                    RemoteMitmGV.MitmSNI,
+                    JSON.stringify({OverwriteSNI: params.OverwriteSNI, SNI: params.SNI})
+                )
                 onSave(params)
             })
         })
@@ -316,7 +349,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 DisableWebsocketCompression: disableWebsocketCompressionDef,
                 PluginConcurrency: pluginConcurrencyDef,
                 proxyUsername: proxyUsernameDef,
-                proxyPassword: proxyPasswordDef
+                proxyPassword: proxyPasswordDef,
+                OverwriteSNI: overwriteSNIDef,
+                SNI: sNIDef
             }
             if (enableGMTLS) {
                 oldValue.preferGMTLS = preferGMTLSDef
@@ -327,9 +362,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 ...formValue,
                 proxyUsername: formValue.proxyUsername || "",
                 proxyPassword: formValue.proxyPassword || "",
-                etcHosts
+                etcHosts,
+                SNI: formValue.OverwriteSNI === "mandatory" ? formValue.SNI : ""
             }
-            if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+            if (!isEqual(oldValue, newValue)) {
                 Modal.confirm({
                     title: "温馨提示",
                     icon: <ExclamationCircleOutlined />,
@@ -391,11 +427,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 }
                 maskClosable={false}
             >
-                <Form
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 18}}
-                    form={form}
-                >
+                <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
                     <Form.Item
                         label='DNS服务器'
                         name='dnsServers'
@@ -505,13 +537,38 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         <YakitSwitch size='large' />
                     </Form.Item>
                     <Form.Item label={"插件并发进程"} name='PluginConcurrency' style={{marginBottom: 12}}>
-                        <YakitInputNumber
-                            type='horizontal'
-                            size='small'
-                            min={1}
-                            defaultValue={20}
+                        <YakitInputNumber type='horizontal' size='small' min={1} defaultValue={20} />
+                    </Form.Item>
+                    <Form.Item label={"SNI 配置"} name='OverwriteSNI'>
+                        <YakitRadioButtons
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "auto",
+                                    label: "自动"
+                                },
+                                {
+                                    value: "mandatory",
+                                    label: "强制"
+                                },
+                                {
+                                    value: "clear",
+                                    label: "清空"
+                                }
+                            ]}
+                            size={"small"}
+                            onChange={(e) => {
+                                if (e.target.value !== "mandatory") {
+                                    form.setFieldsValue({SNI: ""})
+                                }
+                            }}
                         />
                     </Form.Item>
+                    {overwriteSNI === "mandatory" && (
+                        <Form.Item label={"强制SNI"} name='SNI'>
+                            <YakitInput size='small' />
+                        </Form.Item>
+                    )}
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
                         <div className={styles["drawer-TLS-item"]}>
                             <YakitButton

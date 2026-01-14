@@ -170,6 +170,8 @@ interface ExtraMITMServerV2 {
     DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
+    OverwriteSNI: boolean
+    SNI: string
 }
 /**转 mitm v1版本grpc参数 */
 export const convertMITMStartCallV1 = (oldData: MITMStartCallRequest): MITMStartCallRequestV1 => {
@@ -203,6 +205,8 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   DisableSystemProxy: value.extra.DisableSystemProxy,
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
                   PluginConcurrency: value.extra.PluginConcurrency,
+                  OverwriteSNI: value.extra.OverwriteSNI,
+                  SNI: value.extra.SNI
               }
     }
     return data

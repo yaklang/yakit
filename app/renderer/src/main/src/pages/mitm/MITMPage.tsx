@@ -520,6 +520,8 @@ export interface ExtraMITMServerProps {
     DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
+    OverwriteSNI: boolean
+    SNI: string
 }
 
 interface MITMServerProps {
