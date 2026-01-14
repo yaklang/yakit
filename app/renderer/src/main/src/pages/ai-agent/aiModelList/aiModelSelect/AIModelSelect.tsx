@@ -118,9 +118,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             if (!setting?.AIService) return
             try {
                 setOnlineLoading(true)
-                const globalConfig = await apiGetGlobalNetworkConfig()
+                await getGlobalConfig()
                 const templatesRes = await apiGetThirdPartyAppConfigTemplate()
-                globalNetworkConfigRef.current = globalConfig
                 const currentAI = globalNetworkConfigRef.current?.AppConfigs.find(
                     (item) => item.Type === setting.AIService
                 )
@@ -172,14 +171,26 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         }),
         {wait: 200}
     ).run
+    const getGlobalConfig = useMemoizedFn(async () => {
+        try {
+            const globalConfig = await apiGetGlobalNetworkConfig()
+            globalNetworkConfigRef.current = globalConfig
+        } catch (error) {}
+    })
     const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
+        getGlobalConfig()
         getAIModelListOption(data === "true")
     })
     const getAIModelListOption = useDebounceFn(
         (refreshValue?: boolean) => {
             isForcedSetAIModal({
                 noDataCall: () => {
-                    onSelectModel("", "online")
+                    setSetting &&
+                        setSetting((old) => ({
+                            ...old,
+                            AIService: "",
+                            AIModelName: ""
+                        }))
                 },
                 haveDataCall: (res) => {
                     setAIModelOptions(res)
@@ -243,7 +254,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             },
             params
         )
-
         apiSetGlobalNetworkConfig({...globalNetworkConfigRef.current, ...config}).then(() => {
             emiter.emit("onRefreshAIModelList")
         })
@@ -273,9 +283,11 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             setAIType(type as AISelectType)
             if (!!params?.AIService) {
                 onHotpatchAIService(params.AIService)
+                params?.setting && setSetting?.((old) => ({...old, AIService: params.AIService}))
             }
             if (!!params?.AIModelName) {
                 onHotpatchAIModelName(params.AIModelName)
+                params?.setting && setSetting?.((old) => ({...old, AIModelName: params.AIModelName}))
             }
         } catch (error) {}
     })
@@ -301,8 +313,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     })
 
     const isHaveData = useCreation(() => {
-        return (modelNames?.length || 0) > 0 || aiModelOptions.localModels.length > 0
-    }, [modelNames?.length, aiModelOptions.localModels.length])
+        return !!modelValue || (modelNames?.length || 0) > 0 || aiModelOptions.localModels.length > 0
+    }, [modelValue, modelNames?.length, aiModelOptions.localModels.length])
 
     //#endregion
 

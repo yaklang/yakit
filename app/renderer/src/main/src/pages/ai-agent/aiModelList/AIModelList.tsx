@@ -104,6 +104,9 @@ export const setAIModal = (params: {
         closable: true,
         maskClosable: false,
         onCancel: () => {
+            // if (config?.AppConfigs?.length === 0) {
+            //     emiter.emit("onRefreshAvailableAIModelList", "false")
+            // }
             m.destroy()
         },
         content: (
@@ -128,10 +131,24 @@ export const setAIModal = (params: {
                         apiSetGlobalNetworkConfig({...config, ...params}).then(() => {
                             onSuccess()
                             emiter.emit("onRefreshAvailableAIModelList", isAdd)
+                            emiter.emit(
+                                "aiModelSelectChange",
+                                JSON.stringify({
+                                    type: "online",
+                                    params: {
+                                        setting: true,
+                                        AIService: data.Type,
+                                        AIModelName: data?.ExtraParams?.find((e) => e.Key === "model")?.Value || ""
+                                    }
+                                })
+                            )
                             m.destroy()
                         })
                     }}
                     onCancel={() => {
+                        // if (config?.AppConfigs?.length === 0) {
+                        //     emiter.emit("onRefreshAvailableAIModelList", "false")
+                        // }
                         m.destroy()
                     }}
                 />
@@ -325,6 +342,7 @@ export default AIModelList
 
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
+        const {setting} = useAIAgentStore()
         const {setSetting} = useAIAgentDispatcher()
         const {setOnlineTotal, onAdd} = props
         const [spinning, setSpinning] = useState<boolean>(false)
@@ -387,16 +405,18 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             if (!configRef.current) return
             const newList = list.filter((i) => i.Type !== item.Type)
             setList(newList)
-            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig(newList)}).then(() => {
+            const appConfigs = getNewAppConfig(newList)
+            const isRefreshValue = setting.AIService === item.Type || appConfigs.length === 0
+            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: appConfigs}).then(() => {
                 getList()
-                emiter.emit("onRefreshAvailableAIModelList")
+                emiter.emit("onRefreshAvailableAIModelList", `${isRefreshValue}`)
             })
         })
         const onRemoveAll = useMemoizedFn(() => {
             if (!configRef.current) return
             apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig([])}).then(() => {
                 getList()
-                emiter.emit("onRefreshAvailableAIModelList")
+                emiter.emit("onRefreshAvailableAIModelList", "true")
             })
         })
         /**
@@ -504,6 +524,14 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     const model = useCreation(() => {
         return item.ExtraParams?.find((ele) => ele.Key === "model")?.Value
     }, [item.ExtraParams])
+    const onEditClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onEdit(item)
+    })
+    const onRemoveClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onRemove(item)
+    })
     return (
         <div className={styles["ai-online-model-list-item"]}>
             <div className={styles["ai-online-model-list-item-header"]}>
@@ -515,13 +543,22 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
                     <span className={styles["ai-online-model-list-item-model-text"]}>{model}</span>
                 </div>
             </div>
-            <div className={styles["ai-online-model-list-item-edit"]}>
-                <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={() => onEdit(item)} />
-                <YakitPopconfirm title={`确定要删除模型 ${item.Type} 吗？`} onConfirm={() => onRemove(item)}>
-                    <YakitButton type='text2' icon={<OutlineTrashIcon />} className={styles["trash-icon"]} />
-                </YakitPopconfirm>
+            <div className={styles["ai-online-model-list-item-extra"]}>
+                <div className={styles["ai-online-model-list-item-extra-edit"]}>
+                    <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
+                    <YakitPopconfirm title={`确定要删除模型 ${item.Type} 吗？`} onConfirm={onRemoveClick}>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineTrashIcon />}
+                            className={styles["trash-icon"]}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                        />
+                    </YakitPopconfirm>
+                </div>
+                {setting.AIService === item.Type && <OutlineCheckIcon className={styles["check-icon"]} />}
             </div>
-            {setting.AIService === item.Type && <OutlineCheckIcon className={styles["check-icon"]} />}
         </div>
     )
 })
