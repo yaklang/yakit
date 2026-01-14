@@ -129,7 +129,7 @@ export interface UseChatIPCParams {
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
     /** 设置会话的名字 */
-    setSessionChatName?: (name: string) => void
+    setSessionChatName?: (session: string, name: string) => void
 }
 
 /** 会话文件系统-pin */

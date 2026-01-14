@@ -150,6 +150,21 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleStopAfterChangeState()
     })
 
+    const setSessionChatName = (session: string, name: string) => {
+        setActiveChat?.((prev) => {
+            if (!prev) return prev
+            if (prev.session !== session) return prev
+            return {...prev, name}
+        })
+        setChats?.((prev) => {
+            const chatIndex = prev.findIndex((item) => item.session === session)
+            if (chatIndex === -1) return prev
+            const newChats = [...prev]
+            newChats[chatIndex] = {...newChats[chatIndex], name}
+            return newChats
+        })
+    }
+
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
@@ -157,6 +172,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
         getRequest: getSetting,
+        setSessionChatName
     })
     const {
         execute,

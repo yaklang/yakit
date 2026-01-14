@@ -408,7 +408,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (res.Type === "structured" && res.NodeId === "session_title") {
                     // 生成会话的名称
                     const nameInfo = JSON.parse(ipcContent) as {title: string}
-                    if (nameInfo && nameInfo.title && !!setSessionChatName) setSessionChatName(nameInfo.title)
+                    if (nameInfo && nameInfo.title && !!setSessionChatName)
+                        setSessionChatName(chatID.current, nameInfo.title)
                     return
                 }
 
