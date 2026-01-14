@@ -14,6 +14,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import styles from "./ConfigNetworkPage.module.scss"
+import {isMemfit} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 interface ThirdPartyAppConfigItemTemplate {
@@ -321,7 +322,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                 className={styles["config-form"]}
             >
                 <Form.Item
-                    label={"类型"}
+                    label={isMemfit() ? "厂商" : "类型"}
                     rules={[{required: true, message: `请${canAddType ? "填写" : "选择"}类型`}]}
                     name={"Type"}
                 >
