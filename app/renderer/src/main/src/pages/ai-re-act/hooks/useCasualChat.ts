@@ -386,11 +386,15 @@ function useCasualChat(params?: UseCasualChatParams) {
         setElements([])
     })
 
+    const state: UseCasualChatState = useCreation(() => {
+        return {elements, contents: contentMap}
+    }, [elements])
+
     const events: UseCasualChatEvents = useCreation(() => {
         return {handleSetData, handleResetData, handleSend, handleGetContentMap: getContentMap}
     }, [])
 
-    return [{elements, contents: contentMap}, events] as const
+    return [state, events] as const
 }
 
 export default useCasualChat

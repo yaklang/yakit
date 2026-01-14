@@ -1,6 +1,6 @@
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
-import {ExecResult} from "@/pages/invoker/schema"
+import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
 import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
@@ -598,13 +598,29 @@ export declare namespace AIAgentGrpcApi {
 }
 
 // #region AI相关普通接口的请求和定义结构
+export interface AIEventFilter {
+    EventUUIDS?: string[]
+    EventType?: string[]
+    CoordinatorId?: string[]
+    TaskIndex?: string[]
+    TaskUUID?: string[]
+    SessionID?: string
+    /** call_tool_id */
+    ProcessID?: string
+    NodeId?: string[]
+}
+
 /** QueryAIEvent 接口请求 */
 export interface AIEventQueryRequest {
-    ProcessID: string
+    Filter?: AIEventFilter
+    ProcessID?: string
+    Pagination?: PaginationSchema
 }
 /** QueryAIEvent 接口响应 */
 export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
+    Pagination: PaginationSchema
+    Total: number
 }
 
 /** GetRandomAIMaterials 接口请求 */

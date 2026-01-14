@@ -24,6 +24,8 @@ export interface PaginationSchema {
     OrderBy: string
     Order: string
     RawOrder?: string
+    BeforeId?: number
+    AfterId?: number
 }
 
 export type ExecHistoryRecordResponse = QueryGeneralResponse<ExecHistoryRecord>

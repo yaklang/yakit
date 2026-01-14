@@ -132,6 +132,8 @@ export interface UseChatIPCParams {
     onEnd?: () => void
     /** 通知消息的回调 */
     onNotifyMessage?: (message: AIChatIPCNotifyMessage) => void
+    /** 设置会话的名字 */
+    setSessionChatName?: (name: string) => void
 }
 
 /** 会话文件系统-pin */
@@ -162,6 +164,8 @@ export interface PlanLoadingStatus {
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
+    /** 所有的 coordinatorID */
+    coordinatorIDs: string[]
     /** 运行时的runtimeid合集 */
     runTimeIDs: string[]
     /** 插件输出的卡片数据 */
@@ -178,7 +182,7 @@ export interface UseChatIPCState {
     questionQueue: AIQuestionQueues
     /** 自由对话的loading状态信息 */
     casualStatus: CasualLoadingStatus
-    /** 实时时间线 */
+    /** 时间线 */
     reActTimelines: AIAgentGrpcApi.TimelineItem[]
     /** 记忆列表 */
     memoryList: AIAgentGrpcApi.MemoryEntryList
@@ -186,8 +190,6 @@ export interface UseChatIPCState {
     taskStatus: PlanLoadingStatus
     /** 系统流信息(isSystem=true&type=stream) */
     systemStream: string
-    /** 所有的 coordinatorID */
-    coordinatorIDs: string[]
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -273,4 +275,7 @@ export interface UseChatContentParams {
 }
 
 export interface UseChatContentEvents extends UseHookBaseEvents {}
+// #endregion
+
+// #region useHistoryChat相关定义
 // #endregion

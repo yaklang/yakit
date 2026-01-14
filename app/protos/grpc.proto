@@ -1890,6 +1890,8 @@ message AIEventFilter {
   repeated string TaskUUID = 5;
   string SessionID = 6;
   string ProcessID = 7;
+
+  repeated string NodeId = 8;
 }
 
 message AIEventQueryRequest {

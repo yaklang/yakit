@@ -206,9 +206,9 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                         <YakitInputNumber type='horizontal' size='small' min={0} max={20} />
                     </Form.Item>
                 )}
-                <Form.Item label={<>会话ID</>} name='TimelineSessionID'>
+                {/* <Form.Item label={<>会话ID</>} name='TimelineSessionID'>
                     <YakitInput size='small' />
-                </Form.Item>
+                </Form.Item> */}
             </Form>
         </div>
     )

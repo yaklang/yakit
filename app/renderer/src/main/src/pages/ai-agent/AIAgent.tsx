@@ -5,7 +5,7 @@ import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./u
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {AIChatInfo} from "./type/aiChat"
+import {AIChatData, AIChatInfo} from "./type/aiChat"
 import {
     useDebounceFn,
     useInViewport,
@@ -18,28 +18,42 @@ import {
 import {AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
 import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
-
-import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
-import emiter from "@/utils/eventBus/eventBus"
 import {loadRemoteHistory} from "./components/aiFileSystemList/store/useHistoryFolder"
 import {initCustomFolderStore} from "./components/aiFileSystemList/store/useCustomFolder"
 import {KnowledgeBaseContentProps} from "../KnowledgeBase/TKnowledgeBase"
 import {useKnowledgeBase} from "../KnowledgeBase/hooks/useKnowledgeBase"
 import {failed} from "@/utils/notification"
 import {mergeKnowledgeBaseList} from "../KnowledgeBase/utils"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+
+import emiter from "@/utils/eventBus/eventBus"
+import classNames from "classnames"
+import styles from "./AIAgent.module.scss"
 
 /** 清空用户缓存的固定值 */
-export const AIAgentCacheClearValue = "20250808"
+export const AIAgentCacheClearValue = "20260113"
 
 const {ipcRenderer} = window.require("electron")
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
-    // mcp 服务器列表
-    // const [servers, setServers, getServers] = useGetSetState<RenderMCPClientInfo[]>([])
     // ai-agent-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+
+    /** 历史会话对应的数据集合 */
+    const chatDataRef = useRef<Map<string, AIChatData>>(new Map())
+    const getChatData = useMemoizedFn((session: string) => {
+        return chatDataRef.current.get(session)
+    })
+    const setChatData = useMemoizedFn((session: string, data: AIChatData) => {
+        chatDataRef.current.set(session, data)
+    })
+    const removeChatData = useMemoizedFn((session: string) => {
+        chatDataRef.current.delete(session)
+    })
+    const clearChatData = useMemoizedFn(() => {
+        chatDataRef.current.clear()
+    })
 
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
@@ -53,6 +67,24 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const {initialize, knowledgeBases} = useKnowledgeBase()
     const welcomeRef = useRef<HTMLDivElement>(null)
     const [inViewPort = true] = useInViewport(welcomeRef)
+
+    // #region 新版本删除缓存提示框
+    const [delCacheVisible, setDelCacheVisible] = useState(false)
+    const [delCacheLoading, setDelCacheLoading] = useState(false)
+    const handleDelCache = useMemoizedFn(() => {
+        setDelCacheLoading(true)
+        // 清空无效的用户缓存数据-全局配置数据
+        setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
+        // 清空无效的用户缓存数据-taskChat历史对话数据
+        setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
+        // 设置清空标志位
+        setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
+        setDelCacheVisible(false)
+        setTimeout(() => {
+            setDelCacheLoading(false)
+        }, 300)
+    })
+    // #endregion
 
     // 缓存全局配置数据
     useUpdateEffect(() => {
@@ -76,50 +108,54 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat
+            setActiveChat: setActiveChat,
+            getChatData,
+            setChatData,
+            removeChatData,
+            clearChatData
         }
     }, [])
 
-    useEffect(() => {
-        // 清空用户的无效缓存数据
-        getRemoteValue(RemoteAIAgentGV.AIAgentCacheClear)
-            .then((res) => {
-                if (res === AIAgentCacheClearValue) {
-                    // 获取缓存的全局配置数据
-                    getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-                        .then((res) => {
-                            if (!res) return
-                            try {
-                                const cache = JSON.parse(res) as AIAgentSetting
-                                if (typeof cache !== "object") return
-                                setSetting(cache)
-                            } catch (error) {}
-                        })
-                        .catch(() => {})
-                    // 获取缓存的历史对话数据
-                    getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
-                        .then((res) => {
-                            if (!res) return
-                            try {
-                                const cache = JSON.parse(res) as AIChatInfo[]
-                                if (!Array.isArray(cache) || cache.length === 0) return
-                                setChats(cache)
-                            } catch (error) {}
-                        })
-                        .catch(() => {})
-                } else {
-                    // 清空无效的用户缓存数据-mcp服务器数据
-                    setRemoteValue(RemoteAIAgentGV.MCPClientList, "")
-                    // 清空无效的用户缓存数据-全局配置数据
-                    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
-                    // 清空无效的用户缓存数据-taskChat历史对话数据
-                    setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
+    /**
+     * 读取缓存并设置数据
+     * 读取全局配置setting和历史会话chats
+     */
+    const initToCacheData = useMemoizedFn(async () => {
+        try {
+            const res = await getRemoteValue(RemoteAIAgentGV.AIAgentCacheClear)
+            if (!res) return
 
-                    // 设置清空标志位
-                    setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
-                }
-            })
-            .catch(() => {})
+            if (res >= AIAgentCacheClearValue) {
+                // 获取缓存的历史对话数据
+                getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
+                    .then((res) => {
+                        if (!res) return
+                        try {
+                            const cache = JSON.parse(res) as AIChatInfo[]
+                            if (!Array.isArray(cache) || cache.length === 0) return
+                            setChats(cache)
+                        } catch (error) {}
+                    })
+                    .catch(() => {})
+                // 获取缓存的全局配置数据
+                getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+                    .then((res) => {
+                        if (!res) return
+                        try {
+                            const cache = JSON.parse(res) as AIAgentSetting
+                            if (typeof cache !== "object") return
+                            setSetting(cache)
+                        } catch (error) {}
+                    })
+                    .catch(() => {})
+            } else {
+                setDelCacheVisible(true)
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        initToCacheData().catch(() => {})
 
         // 加载历史文件数据
         const bootstrap = async () => {
@@ -222,6 +258,16 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 >
                     <AIAgentChat />
                 </div>
+
+                <YakitHint
+                    getContainer={welcomeRef.current || undefined}
+                    visible={delCacheVisible}
+                    title='提示'
+                    content='Memfit会话数据升级，会删除系统内的所有历史会话记录'
+                    cancelButtonProps={{style: {display: "none"}}}
+                    okButtonProps={{loading: delCacheLoading}}
+                    onOk={handleDelCache}
+                ></YakitHint>
             </div>
         </AIAgentContext.Provider>
     )

@@ -1,10 +1,17 @@
 import {UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
-import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
 
-interface AIChatYakExecResult extends Omit<UseChatIPCState["yakExecResult"], "execFileRecord"> {
-    execFileRecord: [string, AIYakExecFileRecord[]][]
+export interface AIChatData {
+    coordinatorIDs: UseChatIPCState["coordinatorIDs"]
+    runTimeIDs: UseChatIPCState["runTimeIDs"]
+    yakExecResult: UseChatIPCState["yakExecResult"]
+    aiPerfData: UseChatIPCState["aiPerfData"]
+    casualChat: UseChatIPCState["casualChat"]
+    taskChat: UseChatIPCState["taskChat"]
+    grpcFolders: UseChatIPCState["grpcFolders"]
+    reActTimelines: UseChatIPCState["reActTimelines"]
 }
+
 /** UI-chat 信息 */
 export interface AIChatInfo {
     /** 唯一标识 */
@@ -17,15 +24,6 @@ export interface AIChatInfo {
     time: number
     /** 请求参数 */
     request: AIStartParams
-    /** 回答 */
-    answer?: {
-        runTimeIDs: UseChatIPCState["runTimeIDs"]
-        aiPerfData: UseChatIPCState["aiPerfData"]
-        casualChat: UseChatIPCState["casualChat"]
-        taskChat: UseChatIPCState["taskChat"]
-        yakExecResult: AIChatYakExecResult
-        grpcFolders: UseChatIPCState["grpcFolders"]
-        reActTimelines: UseChatIPCState["reActTimelines"]
-        coordinatorIDs: UseChatIPCState["coordinatorIDs"]
-    }
+    /** 会话 session */
+    session: string
 }

@@ -570,6 +570,10 @@ function useTaskChat(params?: UseTaskChatParams) {
         setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}])
     })
 
+    const state: UseTaskChatState = useCreation(() => {
+        return {plan, elements, contents: contentMap}
+    }, [plan, elements])
+
     const events: UseTaskChatEvents = useCreation(() => {
         return {
             fetchPlanTree,
@@ -582,7 +586,7 @@ function useTaskChat(params?: UseTaskChatParams) {
         }
     }, [])
 
-    return [{plan, elements, contents: contentMap}, events] as const
+    return [state, events] as const
 }
 
 export default useTaskChat

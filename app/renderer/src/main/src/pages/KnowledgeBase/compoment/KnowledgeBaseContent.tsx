@@ -44,7 +44,7 @@ import {AIChatIPCNotifyMessage, ChatIPCSendType} from "../../ai-re-act/hooks/typ
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
-import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
+import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
 import {cloneDeep} from "lodash"
@@ -66,6 +66,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {AIChatMentionSelectItem} from "@/pages/ai-agent/components/aiChatMention/type"
 import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
+import {v4 as uuidv4} from "uuid"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -369,6 +370,21 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
+    /** 历史会话对应的数据集合 */
+    const chatDataRef = useRef<Map<string, AIChatData>>(new Map())
+    const getChatData = useMemoizedFn((session: string) => {
+        return chatDataRef.current.get(session)
+    })
+    const setChatData = useMemoizedFn((session: string, data: AIChatData) => {
+        chatDataRef.current.set(session, data)
+    })
+    const removeChatData = useMemoizedFn((session: string) => {
+        chatDataRef.current.delete(session)
+    })
+    const clearChatData = useMemoizedFn(() => {
+        chatDataRef.current.clear()
+    })
+
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
@@ -380,28 +396,17 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         const showID = activeID
         // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
         if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatInfo["answer"] = {
-                runTimeIDs: cloneDeep(runTimeIDs) || [],
-                taskChat: cloneDeep(taskChat),
+            const answer: AIChatData = {
+                runTimeIDs: cloneDeep(runTimeIDs),
+                coordinatorIDs: cloneDeep(coordinatorIDs),
+                yakExecResult: cloneDeep(yakExecResult),
                 aiPerfData: cloneDeep(aiPerfData),
                 casualChat: cloneDeep(casualChat),
-                yakExecResult: cloneDeep({
-                    ...yakExecResult,
-                    execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
-                }),
+                taskChat: cloneDeep(taskChat),
                 grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines),
-                coordinatorIDs: []
+                reActTimelines: cloneDeep(reActTimelines)
             }
-            setChats &&
-                setChats((old) => {
-                    const newValue = cloneDeep(old)
-                    const findIndex = newValue.findIndex((item) => item.id === showID)
-                    if (findIndex !== -1) {
-                        newValue[findIndex].answer = {...(answer || {})}
-                    }
-                    return newValue
-                })
+            setChatData?.(showID, answer)
         }
     })
 
@@ -482,8 +487,17 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         onNotifyMessage
     })
 
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders, reActTimelines} =
-        chatIPCData
+    const {
+        execute,
+        runTimeIDs,
+        aiPerfData,
+        casualChat,
+        taskChat,
+        yakExecResult,
+        grpcFolders,
+        reActTimelines,
+        coordinatorIDs
+    } = chatIPCData
 
     /** 停止回答后的状态调整||清空Review状态 */
     const handleStopAfterChangeState = useMemoizedFn(() => {
@@ -495,7 +509,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.id
+        return activeChat?.session
     }, [activeChat])
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
@@ -518,13 +532,19 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             CoordinatorId: "",
             Sequence: 1
         }
+        // 设置会话的session
+        const session: string = request.TimelineSessionID
+            ? request.TimelineSessionID
+            : uuidv4().replace(/-/g, "").substring(0, 16)
+        if (!request.TimelineSessionID) request.TimelineSessionID = session
         // 创建新的聊天记录
         const newChat: AIChatInfo = {
             id: knowledgeBaseID,
             name: qs || `AI Agent - ${new Date().toLocaleString()}`,
             question: qs,
             time: new Date().getTime(),
-            request
+            request,
+            session: session
         }
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
@@ -536,7 +556,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 ...request
             }
         }
-        events.onStart({token: newChat.id, params: startParams, extraValue})
+        events.onStart({token: newChat.session, params: startParams, extraValue})
     })
 
     const onStop = useMemoizedFn(() => {

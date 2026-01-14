@@ -98,7 +98,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     TimelineItemLimit: 100,
     TimelineContentSizeLimit: 20 * 1024,
     UserInteractLimit: 0,
-    TimelineSessionID: "default"
+    TimelineSessionID: ""
 }
 
 /** mcp 自定义服务器配置类型选项 */

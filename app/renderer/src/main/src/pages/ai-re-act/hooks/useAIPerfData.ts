@@ -1,4 +1,4 @@
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {AIChatLogData, UseAIPerfDataEvents, UseAIPerfDataParams, UseAIPerfDataState} from "./type"
@@ -96,10 +96,15 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
         setTotalCost([])
     })
 
-    return [
-        {consumption, pressure, firstCost, totalCost},
-        {handleSetData, handleResetData}
-    ] as const
+    const state: UseAIPerfDataState = useCreation(() => {
+        return {consumption, pressure, firstCost, totalCost}
+    }, [consumption, pressure, firstCost, totalCost])
+
+    const events: UseAIPerfDataEvents = useCreation(() => {
+        return {handleSetData, handleResetData}
+    }, [])
+
+    return [state, events] as const
 }
 
 export default useAIPerfData

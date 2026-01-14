@@ -1,5 +1,5 @@
 import {useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -147,10 +147,15 @@ function useYakExecResult(params?: UseYakExecResultParams) {
         setExecFileRecord(new Map())
     })
 
-    return [
-        {card, execFileRecord, yakExecResultLogs},
-        {handleSetData, handleResetData}
-    ] as const
+    const state: UseYakExecResultState = useCreation(() => {
+        return {card, execFileRecord, yakExecResultLogs}
+    }, [card, execFileRecord, yakExecResultLogs])
+
+    const events: UseYakExecResultEvents = useCreation(() => {
+        return {handleSetData, handleResetData}
+    }, [])
+
+    return [state, events] as const
 }
 
 export default useYakExecResult

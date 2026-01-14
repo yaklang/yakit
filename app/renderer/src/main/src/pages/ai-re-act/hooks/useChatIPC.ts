@@ -45,7 +45,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease,
         onTimelineMessage,
         onEnd,
-        onNotifyMessage
+        onNotifyMessage,
+        setSessionChatName
     } = params || {}
 
     // #region 全局公共方法集合
@@ -374,6 +375,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
                 console.log("onStart-res", res, ipcContent)
 
+                if (res.Type === "structured" && res.NodeId === "session_title") {
+                    // 生成会话的名称
+                    const nameInfo = JSON.parse(ipcContent) as {title: string}
+                    if (nameInfo && nameInfo.title && !!setSessionChatName) setSessionChatName(nameInfo.title)
+                    return
+                }
+
                 if (res.Type === "start_plan_and_execution") {
                     // 触发任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
@@ -489,6 +497,25 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
+                if (res.Type === "structured" && res.NodeId === "queue_info") {
+                    // 因为问题队列也分自由对话和任务规划队列，所以需要先屏蔽处理任务规划的队列信息
+                    if (planCoordinatorId.current === res.CoordinatorId) return
+                    // 问题队列信息由chatIPC-hook进行收集
+                    const {tasks, total_tasks} = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
+                    setQuestionQueue({
+                        total: total_tasks,
+                        data: tasks ?? []
+                    })
+                    return
+                }
+
+                if (res.Type === "structured" && res.NodeId === "timeline_item") {
+                    /* 实时时间线单条 */
+                    const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
+                    setReActTimelines((old) => [...old, timelineItem])
+                    return
+                }
+
                 if (res.Type === "structured") {
                     const obj = JSON.parse(ipcContent) || ""
 
@@ -503,16 +530,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
-                    } else if (res.NodeId === "queue_info") {
-                        // 因为问题队列也分自由对话和任务规划队列，所以需要先屏蔽处理任务规划的队列信息
-                        if (planCoordinatorId.current === res.CoordinatorId) return
-                        // 问题队列信息由chatIPC-hook进行收集
-                        const {tasks, total_tasks} = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
-                        setQuestionQueue({
-                            total: total_tasks,
-                            data: tasks ?? []
-                        })
-                        return
                     } else if (res.NodeId === "react_task_status_changed") {
                         // 只负责获取自由对话的任务状态
                         if (planCoordinatorId.current === res.CoordinatorId) return
@@ -529,11 +546,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                         if (react_task_now_status === "completed") {
                             handleResetCasualChatLoading()
                         }
-                        return
-                    } else if (res.NodeId === "timeline_item") {
-                        /* 问题的状态变化 */
-                        const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
-                        setReActTimelines((old) => [...old, timelineItem])
                         return
                     } else if (res.NodeId === "status") {
                         const data = JSON.parse(ipcContent) as {key: string; value: string}
@@ -699,21 +711,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
     }, [])
 
-    const event: UseChatIPCEvents = useCreation(() => {
+    const state: UseChatIPCState = useCreation(() => {
         return {
-            fetchToken,
-            fetchTaskChatID,
-            onStart,
-            onSend,
-            onClose,
-            onReset,
-            handleTaskReviewRelease,
-            getChatContentMap
-        }
-    }, [])
-
-    return [
-        {
             execute,
             runTimeIDs,
             yakExecResult,
@@ -728,9 +727,38 @@ function useChatIPC(params?: UseChatIPCParams) {
             taskStatus,
             systemStream,
             coordinatorIDs
-        },
-        event
-    ] as const
+        }
+    }, [
+        execute,
+        runTimeIDs,
+        yakExecResult,
+        aiPerfData,
+        casualChat,
+        taskChat,
+        grpcFolders,
+        questionQueue,
+        casualStatus,
+        reActTimelines,
+        memoryList,
+        taskStatus,
+        systemStream,
+        coordinatorIDs
+    ])
+
+    const event: UseChatIPCEvents = useCreation(() => {
+        return {
+            fetchToken,
+            fetchTaskChatID,
+            onStart,
+            onSend,
+            onClose,
+            onReset,
+            handleTaskReviewRelease,
+            getChatContentMap
+        }
+    }, [])
+
+    return [state, event] as const
 }
 
 export default useChatIPC
