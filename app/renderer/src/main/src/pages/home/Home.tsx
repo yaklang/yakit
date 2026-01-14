@@ -67,7 +67,7 @@ import {RouteToPageProps} from "../layout/publicMenu/PublicMenu"
 import {usePluginToId} from "@/store/publicMenu"
 import {ResidentPluginName} from "@/routes/newRoute"
 import {Form, Tooltip} from "antd"
-import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -796,6 +796,7 @@ const Home: React.FC<HomeProp> = (props) => {
     const vulnerabilityRef = useRef<HTMLDivElement>(null)
     const informationGatheringRef = useRef<HTMLDivElement>(null)
     const scanningRef = useRef<HTMLDivElement>(null)
+    const scanningSize = useSize(scanningRef)
     const pluginHubRef = useRef<HTMLDivElement>(null)
     const smallToolsRef = useRef<HTMLDivElement>(null)
     const [watchWidth, setWatchWidth] = useState<number>(0)
@@ -1057,7 +1058,14 @@ const Home: React.FC<HomeProp> = (props) => {
                                             <div className={styles["operation-btn-wrapper"]} ref={scanningdropdownRef}>
                                                 <div
                                                     className={styles["operation-btn-left"]}
-                                                    style={{borderRadius: "40px 0 0 40px"}}
+                                                    style={{
+                                                        borderRadius: "40px 0 0 40px",
+                                                        width: scanningSize?.width
+                                                            ? scanningSize?.width > 600
+                                                                ? (scanningSize?.width - 200) / 3
+                                                                : undefined
+                                                            : undefined
+                                                    }}
                                                     onClick={handleOpenScanning}
                                                 >
                                                     <SolidPlayIcon className={styles["open-icon"]} />
@@ -1065,7 +1073,9 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 </div>
                                                 <div
                                                     className={styles["operation-btn-right"]}
-                                                    style={{borderRadius: "0 40px 40px 0"}}
+                                                    style={{
+                                                        borderRadius: "0 40px 40px 0"
+                                                    }}
                                                     onClick={() => setShowScanningDropdown(!showScanningDropdown)}
                                                 >
                                                     <OutlineChevronupIcon
