@@ -907,6 +907,9 @@ service Yak {
   rpc ExportAIForge(ExportAIForgeRequest) returns (stream GeneralProgress);
   rpc ImportAIForge(ImportAIForgeRequest) returns (stream GeneralProgress);
 
+  // AI Focus CRUD
+  rpc QueryAIFocus(QueryAIFocusRequest) returns (QueryAIFocusResponse);
+
   // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
@@ -1760,6 +1763,9 @@ message AIInputEvent {
 
   // 附加资源信息
   repeated AttachedResourceInfo AttachedResourceInfo = 15;
+
+  // 设置专注模式
+  string FocusModeLoop = 16;
 }
 
 message AttachedResourceInfo {
@@ -1999,6 +2005,20 @@ message ImportAIForgeRequest {
 message GetAIForgeRequest {
   int64 ID = 1;
   string ForgeName = 2;
+}
+
+message AIFocus {
+  string Name = 1;
+  string Description = 2;
+  string OutputExamplePrompt = 3;
+  string UsagePrompt = 4;
+}
+
+message QueryAIFocusRequest {
+}
+
+message QueryAIFocusResponse {
+  repeated AIFocus Data = 1;
 }
 
 message ExportAILogsRequest {
