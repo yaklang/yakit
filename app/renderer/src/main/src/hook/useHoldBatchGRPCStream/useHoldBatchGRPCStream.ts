@@ -13,6 +13,7 @@ import {
 import {HybridScanActiveTask, HybridScanControlAfterRequest} from "@/models/HybridScan"
 import omit from "lodash/omit"
 import isEqual from "lodash/isEqual"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -88,7 +89,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     /** 判断是否为无效数据 */
     const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
         try {
-            const check = JSON.parse(stream.data)
+            const check = JSONParseLog(stream.data, {page:"useHoldBatchGRPCStream"})
             if (check === "null" || !check || check === "undefined") return false
             return check
         } catch (e) {
@@ -124,7 +125,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             }
             if (data.IsMessage) {
                 try {
-                    let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
+                    let obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {page:"useHoldBatchGRPCStream"})
                     const logData = obj.content as StreamResult.Log
                     // feature-status-card-data 卡片展示
                     if (obj.type === "log" && logData.level === "feature-status-card-data") {

@@ -3926,7 +3926,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     /**订阅的时候已经判断 pageType === "MITM" */
     const onHasParamsJumpHistory = useMemoizedFn((data) => {
         try {
-            const value = JSON.parse(data)
+            const value = JSONParseLog(data,{page: "HTTPFlowTable",fun: "onHasParamsJumpHistory"})
             const {version = "", mitmHasParamsNames = ""} = value
             if (version !== mitmVersion) return
             const mitmHasParamsNamesArr = mitmHasParamsNames.split(",").filter((item) => item)

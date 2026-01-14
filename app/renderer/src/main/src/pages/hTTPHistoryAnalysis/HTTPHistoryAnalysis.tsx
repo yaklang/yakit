@@ -89,6 +89,7 @@ import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelecti
 
 import styles from "./HTTPHistoryAnalysis.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
@@ -126,7 +127,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     const [hTTPFlowFilter, setHTTPFlowFilter] = useState<YakQueryHTTPFlowRequest>()
     const onSetHTTPFlowFilter = useMemoizedFn((filterStr) => {
         try {
-            const filter = JSON.parse(filterStr) || {}
+            const filter = JSONParseLog(filterStr, {page: "HTTPHistoryAnalysis", fun: "onSetHTTPFlowFilter"}) || {}
             delete filter.Pagination
             setHTTPFlowFilter(filter)
         } catch (error) {}
@@ -151,7 +152,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
         getRemoteValue(RemoteHistoryGV.HTTPFlowAnalysisYakitResizeBox).then((res) => {
             if (res) {
                 try {
-                    const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                    const {firstSizePercent, secondSizePercent} = JSONParseLog(res,{ page: "HTTPHistoryAnalysis", fun: "HTTPFlowAnalysisYakitResizeBox"})
                     setLastRatio({
                         firstRatio: firstSizePercent,
                         secondRatio: secondSizePercent
@@ -333,7 +334,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         getRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave).then((setting: string) => {
             let code = HotPatchDefaultContent
             try {
-                const obj = JSON.parse(setting) || {}
+                const obj = JSONParseLog(setting, {page: "HTTPHistoryAnalysis", fun: "HistoryAnalysisHotPatchCodeSave"}) || {}
                 if (obj.code !== undefined) {
                     code = obj.code
                 }
@@ -422,7 +423,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         getRemoteValue(RemoteHistoryGV.HTTPFlowAnalysisMainYakitResizeBox).then((res) => {
             if (res) {
                 try {
-                    const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                    const {firstSizePercent, secondSizePercent} = JSONParseLog(res, {page: "HTTPHistoryAnalysis", fun: "HTTPFlowAnalysisMainYakitResizeBox"})
                     setLastRatio({
                         firstRatio: firstSizePercent,
                         secondRatio: secondSizePercent

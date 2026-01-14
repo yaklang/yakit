@@ -61,6 +61,7 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { JSONParseLog } from "@/utils/tool"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -1001,15 +1002,17 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         onSetHasNewData={setHasNewData}
                         wrapperStyle={{padding: 0}}
                         onQueryParams={(queryParams) => {
-                            const processQuery = JSON.parse(queryParams) || {}
-                            delete processQuery.Pagination
-                            delete processQuery.AfterId
-                            delete processQuery.BeforeId
-                            delete processQuery.ProcessName
-                            emiter.emit(
-                                "onMITMLogProcessQuery",
-                                JSON.stringify({queryStr: JSON.stringify(processQuery), version: mitmVersion})
-                            )
+                            try {
+                                const processQuery = JSONParseLog(queryParams, {page: "MITMHijackedContent", fun: "onQueryParams"}) || {}
+                                delete processQuery.Pagination
+                                delete processQuery.AfterId
+                                delete processQuery.BeforeId
+                                delete processQuery.ProcessName
+                                emiter.emit(
+                                    "onMITMLogProcessQuery",
+                                    JSON.stringify({queryStr: JSON.stringify(processQuery), version: mitmVersion})
+                                )
+                            } catch (error) {}
                         }}
                     />
                 </div>

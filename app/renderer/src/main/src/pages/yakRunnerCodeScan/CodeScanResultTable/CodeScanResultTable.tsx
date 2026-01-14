@@ -25,6 +25,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
+import { JSONParseLog } from "@/utils/tool"
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
@@ -545,7 +546,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
 
     const onRefreshCodeScanResultFun = useMemoizedFn((data) => {
         try {
-            const updateData = JSON.parse(data)
+            const updateData = JSONParseLog(data, {page: "CodeScanResultTable", fun: "onRefreshCodeScanResultFun"})
             if (typeof updateData !== "string" && updateData.task_id === runtimeId) {
                 if (updateData.action === "update") {
                     setIsLoop(true)

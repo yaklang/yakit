@@ -95,6 +95,7 @@ import {NewYakitLoading} from "../basics/NewYakitLoading"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -268,7 +269,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     useEffect(() => {
         emiter.on("autoUploadProject", (data) => {
             try {
-                onGetProjects(JSON.parse(data).day)
+                onGetProjects(JSONParseLog(data,{page:"UILayout", fun:"autoUploadProject"}).day)
             } catch (error) {}
         })
         return () => {
@@ -1055,7 +1056,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // kill完引擎进程后开始更新指定Yaklang版本引擎
     const downYaklangSpecifyVersion = (res: string) => {
         try {
-            const {version, killPssText = {}} = JSON.parse(res) || {}
+            const {version, killPssText = {}} = JSONParseLog(res, {page:"UILayout", fun:"downYaklangSpecifyVersion"}) || {}
             setYaklangSpecifyVersion(version)
             setYaklangKillPssText({
                 title: killPssText.title || "更新引擎，需关闭所有本地进程",
@@ -1210,7 +1211,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** yaklang远程控制-自动远程模式连接 */
     const runControlRemote = useMemoizedFn((v: string, baseUrl: string) => {
         try {
-            const resultObj: ResultObjProps = JSON.parse(v)
+            const resultObj: ResultObjProps = JSONParseLog(v, {page:"UILayout", fun:"runControlRemote"})
 
             // 缓存远程控制参数
             setDynamicStatus({...dynamicStatus, baseUrl, ...resultObj})
@@ -1421,7 +1422,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onFuzzerModal = useMemoizedFn(async (value) => {
         try {
-            const val: {text?: string; scriptName?: string; code?: string; isAiPlugin: any} = JSON.parse(value)
+            const val: {text?: string; scriptName?: string; code?: string; isAiPlugin: any} = JSONParseLog(value, {page:"UILayout", fun:"onFuzzerModal"})
             if (val.isAiPlugin === "isGetPlugin") {
                 percentContainerRef.current = currentPageTabRouteKey
                 setCoedcPluginShow(true)

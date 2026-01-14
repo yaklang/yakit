@@ -16,6 +16,7 @@ import classNames from "classnames"
 import styles from "./MenuPlugin.module.scss"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -66,7 +67,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                     .then((val) => {
                         if (val !== "{}") {
                             try {
-                                deleteCache = JSON.parse(val) || {}
+                                deleteCache = JSONParseLog(val, {page: "MenuPlugin", fun: "onRestore"}) || {}
                                 delete deleteCache[CodeGV.PublicMenuModeValue]
                             } catch (error) {}
                         }

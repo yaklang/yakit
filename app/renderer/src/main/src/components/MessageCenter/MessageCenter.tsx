@@ -28,6 +28,7 @@ import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/conv
 import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 import {LoginMessageIcon, NoLoginMessageIcon} from "./IconMessageCenter"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -459,7 +460,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
 
     const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
         try {
-            const obj: API.MessageLogDetail = JSON.parse(data)
+            const obj: API.MessageLogDetail = JSONParseLog(data,{page:"MessageCenterModal", fun:"onRefreshMessageSocketFun"})
             if (obj.isRead === false) {
                 setNoRedDataTotal((prev) => {
                     return (prev || 0) + 1

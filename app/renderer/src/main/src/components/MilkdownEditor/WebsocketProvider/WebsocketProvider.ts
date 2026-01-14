@@ -35,6 +35,7 @@ import {
     notepadSaveStatus
 } from "./constants"
 import {ObservableV2} from "lib0/observable"
+import { JSONParseLog } from "@/utils/tool"
 
 /**
  *                       encoder,          decoder,          provider,          emitSynced, messageType
@@ -111,7 +112,7 @@ const setupWS = (provider: WebsocketProvider) => {
         websocket.onmessage = (event) => {
             try {
                 const bytes = Buffer.from(event.data).toString()
-                const data: NotepadWsRequest = JSON.parse(bytes)
+                const data: NotepadWsRequest = JSONParseLog(bytes,{page:"WebsocketProvider", fun:"onMessage"})
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
                 provider.wsLastMessageReceived = time.getUnixTime()
                 const encoder = readMessage(provider, yjsParams, true)

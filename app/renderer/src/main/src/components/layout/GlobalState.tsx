@@ -45,6 +45,7 @@ import {
 } from "@/apiUtils/grpc"
 import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -670,7 +671,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     useEffect(() => {
         getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
             if (!setting) return
-            const values: string = JSON.parse(setting)
+            const values: string = JSONParseLog(setting,{page:"GlobalState", fun:"RemoteGV.GlobalChromePath"})
             if (values.length > 0) {
                 setAlreadyChromePath(true)
             }
@@ -737,6 +738,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             yakitNotify("success", "成功关闭运行节点")
         } catch (error) {
             yakitFailed(error + "")
+        }
+    })
+
+    const onJsonParseToKeyFun = useMemoizedFn((value,key)=>{
+        try {
+            return JSONParseLog(value,{page:"GlobalState", fun:"onJsonParseToKeyFun"})[key]
+        } catch (error) {
+            return "解析失败"
         }
     })
 
@@ -1043,10 +1052,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <div className={styles["run-node-item"]} key={key}>
                                         <Row>
                                             <Col span={6} className={styles["ellipsis"]}>
-                                                {JSON.parse(key).nodename}
+                                                {onJsonParseToKeyFun(key,"nodename")}
                                             </Col>
                                             <Col span={15} className={styles["ellipsis"]}>
-                                                {JSON.parse(key).ipOrdomain}:{JSON.parse(key).port}
+                                                {onJsonParseToKeyFun(key,"ipOrdomain")}:{onJsonParseToKeyFun(key,"port")}
                                             </Col>
                                             <Col span={3} style={{textAlign: "right"}}>
                                                 <YakitButton

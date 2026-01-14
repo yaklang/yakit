@@ -2,6 +2,7 @@ import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import {addScopeShow} from "../global"
+import { JSONParseLog } from "@/utils/tool"
 
 export enum HttpFuzzerShortcutKey {
     /** 发送请求 */
@@ -32,7 +33,7 @@ export const getStorageHttpFuzzerShortcutKeyEvents = () => {
         .then((res) => {
             if (!res) return
             try {
-                const data: EventsType = JSON.parse(res)
+                const data: EventsType = JSONParseLog(res,{page: "httpFuzzer", fun: "getStorageHttpFuzzerShortcutKeyEvents"})
                 currentKeyEvents = addScopeShow(data, HttpFuzzerShortcutKeyEvents)
             } catch (error) {}
         })

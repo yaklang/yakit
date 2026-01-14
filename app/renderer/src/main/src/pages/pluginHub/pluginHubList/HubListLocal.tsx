@@ -81,6 +81,7 @@ import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
 import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
@@ -116,7 +117,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             .then((res) => {
                 if (res) {
                     try {
-                        const value = JSON.parse(res)
+                        const value = JSONParseLog(res, {page: "HubListLocal", fun: "fetchPrivateDomain"})
                         privateDomain.current = value.BaseUrl
                         if (callback) callback()
                     } catch (error) {}
@@ -937,7 +938,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 更新本地插件信息，存在则进行局部更新，不存在则刷新列表
     const handleUpdatePluginInfo = useMemoizedFn(async (content: string) => {
         try {
-            const info: KeyParamsFetchPluginDetail = JSON.parse(content)
+            const info: KeyParamsFetchPluginDetail = JSONParseLog(content, {page: "HubListLocal", fun: "handleUpdatePluginInfo"})
             if (!info.name) return
             const plugin: YakScript = await grpcFetchLocalPluginDetail({Name: info.name, UUID: info.uuid || undefined})
             plugin.isLocalPlugin = privateDomain.current !== plugin.OnlineBaseUrl
@@ -963,7 +964,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const handleDetailDeleteToLocal = useMemoizedFn((info: string) => {
         if (!info) return
         try {
-            const plugin: {name: string; id: number} = JSON.parse(info)
+            const plugin: {name: string; id: number} = JSONParseLog(info, {page: "HubListLocal", fun: "handleDetailDeleteToLocal"})
             if (!plugin.name) return
             const index = selectList.findIndex((ele) => ele.ScriptName === plugin.name || ele.Id === Number(plugin.id))
             const data: YakScript = {

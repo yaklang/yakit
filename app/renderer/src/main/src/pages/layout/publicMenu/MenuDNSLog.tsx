@@ -18,6 +18,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RemoteGV} from "@/yakitGV"
 import {LoadingOutlined} from "@ant-design/icons"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -185,7 +186,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 // 默认内置
                 updateToken()
             } else {
-                let obj = JSON.parse(data)
+                let obj = JSONParseLog(data, {page: "MenuDNSLog", fun: "DNS_LOG_PAGE_UPDATE_TOKEN"})
                 // 内置
                 if (obj.type === "builtIn") {
                     updateToken(obj)

@@ -75,6 +75,7 @@ import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import { getStorageMitmShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/mitm"
+import { JSONParseLog } from "@/utils/tool"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
@@ -194,7 +195,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
                     try {
                         // 解析 Object
-                        const obj = JSON.parse(currentLog.data)
+                        const obj = JSONParseLog(currentLog.data, {page: "MITMPage", fun: "feature-status-card-data"})
                         const {id, data} = obj
                         if (!data) {
                             statusMap.delete(`${id}`)
@@ -451,7 +452,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     useEffect(() => {
         const onChangeAddrAndEnableInitialPlugin = (values) => {
             try {
-                const valObj = JSON.parse(values) || {}
+                const valObj = JSONParseLog(values, {page: "MITMPage", fun: "onChangeAddrAndEnableInitialPlugin"}) || {}
                 if (valObj.version !== mitmVersion) return
                 setAddr(`http://${valObj.host}:${valObj.port} 或 socks5://${valObj.host}:${valObj.port}`)
                 setHost(valObj.host)
@@ -606,7 +607,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
                 getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
                     if (!!data && !!is) {
-                        const cacheData: string[] = JSON.parse(data)
+                        const cacheData: string[] = JSONParseLog(data, {page: "MITMPage", fun: "CHECK_CACHE_LIST_DATA"})
                         if (isFirst.current) {
                             setNoParamsCheckList(cacheData)
                             isFirst.current = false
@@ -790,7 +791,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
                 if (setting) {
                     try {
-                        const tabs = JSON.parse(setting)
+                        const tabs = JSONParseLog(setting, {page: "MITMPage", fun: "MitmIdleLeftTabs"})
                         setOpenTabsFlag(tabs.contShow)
                         onActiveKey(tabs.curTabKey)
                     } catch (error) {}

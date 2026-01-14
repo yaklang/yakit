@@ -1,5 +1,6 @@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
+import { JSONParseLog } from "@/utils/tool"
 
 export interface YakitOptionTypeProps {
     value: string
@@ -32,7 +33,7 @@ export const onGetRemoteValuesBase: (cacheHistoryDataKey: string) => Promise<Cac
                         resolve({...cacheData, firstUse: true})
                         return
                     }
-                    const newData = JSON.parse(data)
+                    const newData = JSONParseLog(data)
 
                     if (Object.prototype.toString.call(newData) === "[object Object]") {
                         cacheData = newData.options

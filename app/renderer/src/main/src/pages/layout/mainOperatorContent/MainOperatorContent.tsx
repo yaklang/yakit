@@ -176,6 +176,7 @@ import {keepSearchNameMapStore} from "@/store/keepSearchName"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useProxy } from "@/hook/useProxy"
+import { JSONParseLog } from "@/utils/tool"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -596,7 +597,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
     const onSwitchMenuItem = useMemoizedFn((data) => {
         try {
-            const value = JSON.parse(data)
+            const value = JSONParseLog(data, {page: "MainOperatorContent", fun: "onSwitchMenuItem"})
             if (value?.route) {
                 setCurrentTabKey(value.route)
             }
@@ -606,7 +607,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     const onCloseFirstMenu = useMemoizedFn((res) => {
         try {
-            const value: OnlyPageCache = JSON.parse(res)
+            const value: OnlyPageCache = JSONParseLog(res, {page: "MainOperatorContent", fun: "onCloseFirstMenu"})
             const data: OnlyPageCache = {
                 menuName: "",
                 route: value.route
@@ -630,7 +631,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         // @ts-ignore
         let data: RouteToPageProps = {}
         try {
-            data = JSON.parse(res || "{}")
+            data = JSONParseLog(res || "{}", {page: "MainOperatorContent", fun: "menuOpenPage"})
         } catch (error) {}
 
         if (!data.route) {
@@ -655,7 +656,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         // @ts-ignore
         let data: {route: YakitRoute; params: any} = {}
         try {
-            data = JSON.parse(res || "{}")
+            data = JSONParseLog(res || "{}", {page: "MainOperatorContent", fun: "onOpenPage"})
         } catch (error) {}
 
         const {route, params} = data
@@ -1197,7 +1198,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         // @ts-ignore
         let data: {route: YakitRoute} = {}
         try {
-            data = JSON.parse(res || "{}")
+            data = JSONParseLog(res || "{}", {page: "MainOperatorContent", fun: "onClosePage"})
         } catch (error) {}
 
         const {route} = data
@@ -1358,7 +1359,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             let newRequest = request || defaultPostTemplate
             // 有分享内容，数据以分享内容为准
             if (res.hasOwnProperty("shareContent")) {
-                const shareContent: ShareValueProps = JSON.parse(res.shareContent)
+                const shareContent: ShareValueProps = JSONParseLog(res.shareContent, {page: "MainOperatorContent", fun: "addFuzzer"})
                 newIsHttps = shareContent.advancedConfiguration.isHttps
                 newRequest = shareContent.request || defaultPostTemplate
 
@@ -1480,7 +1481,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 Targets: {
                                     HTTPRequestTemplate: cloneDeep(defPluginBatchExecuteExtraFormValue),
                                     InputFile: [],
-                                    Input: bugUrl ? JSON.parse(bugUrl).join(",") : ""
+                                    Input: bugUrl ? JSONParseLog(bugUrl, {page: "MainOperatorContent", fun: "addBugTest"}).join(",") : ""
                                 } as HybridScanInputTarget
                             }
                         }
@@ -2292,7 +2293,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 try {
                     setLoading(true)
                     const res = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerCache)
-                    const cache = JSON.parse(res || "[]")
+                    const cache = JSONParseLog(res || "[]", {page: "MainOperatorContent", fun: "onInitFuzzer"})
                     await fetchFuzzerList(cache)
                     await getFuzzerSequenceCache()
                     setTimeout(() => setLoading(false), 200)
@@ -2308,7 +2309,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
-                const cache = JSON.parse(res || "[]")
+                const cache = JSONParseLog(res || "[]", {page: "MainOperatorContent", fun: "getFuzzerSequenceCache"})
                 onSetFuzzerSequenceCacheData(cache)
             } catch (error) {
                 yakitNotify("error", "webFuzzer序列化获取缓存数据解析失败:" + error)
@@ -2497,7 +2498,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
     const onFuzzerSequenceImportUpdateMenu = useMemoizedFn((data: string) => {
         try {
-            const newGroupItem: MultipleNodeInfo = JSON.parse(data)
+            const newGroupItem: MultipleNodeInfo = JSONParseLog(data, {page: "MainOperatorContent", fun: "onFuzzerSequenceImportUpdateMenu"})
             const index = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
             if (index === -1) return
             const fuzzerMenuItem = structuredClone(pageCache[index])
@@ -2786,14 +2787,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 try {
                     const pageList =
                         Data.map((ele) => ({
-                            ...JSON.parse(ele.Config)
+                            ...JSONParseLog(ele.Config, {page: "MainOperatorContent", fun: "onRestoreHTTPFuzzer"})
                         })) || []
                     if (pageList.length > 0) {
                         await fetchFuzzerList(pageList)
                         // FuzzerSequence
                         const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList)
                         if (!!resSequence) {
-                            const listSequence = JSON.parse(resSequence)
+                            const listSequence = JSONParseLog(resSequence, {page: "MainOperatorContent", fun: "onRestoreHTTPFuzzer"})
                             if (listSequence?.length > 0) {
                                 const itemSequence = listSequence[0]
                                 await onSetFuzzerSequenceCacheData(itemSequence)
@@ -2837,7 +2838,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             .then(async () => {
                 // FuzzerSequence
                 const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCache)
-                const cacheSequence = JSON.parse(resSequence || "[]")
+                const cacheSequence = JSONParseLog(resSequence || "[]", {page: "MainOperatorContent", fun: "onSaveHTTPFuzzer"})
                 if (cacheSequence.length > 0) {
                     const historySequenceList = [cacheSequence]
                     setRemoteProjectValue(
@@ -3368,7 +3369,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSetType = useMemoizedFn((res) => {
         if (!inViewport) return
         try {
-            const value = JSON.parse(res)
+            const value = JSONParseLog(res, {page: "MainOperatorContent", fun: "onSetType"})
             setType(value.type)
         } catch (error) {}
     })
@@ -3446,7 +3447,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((resVal) => {
         try {
-            const res: SwitchSubMenuItemProps = JSON.parse(resVal)
+            const res: SwitchSubMenuItemProps = JSONParseLog(resVal, {page: "MainOperatorContent", fun: "onSelectSubMenuById"})
             if (res.forceRefresh !== true && !inViewport) return
             const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
             if (index === -1) return
@@ -4275,7 +4276,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
         const onCloseSubPageByInfoFun = useMemoizedFn((res) => {
             try {
-                const data: MultipleNodeInfo = JSON.parse(res)
+                const data: MultipleNodeInfo = JSONParseLog(res, {page: "MainOperatorContent", fun: "onCloseSubPageByInfoFun"})
                 if (data.id === selectSubMenu.id) {
                     onRemoveSubPageFun(data)
                 }
@@ -4408,7 +4409,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
          */
         const onUpdateSubMenuNameFormPage = useMemoizedFn((val) => {
             try {
-                const data = JSON.parse(val)
+                const data = JSONParseLog(val, {page: "MainOperatorContent", fun: "onUpdateSubMenuNameFormPage"})
                 const {route, value, pageId} = data
                 const {index, subIndex} = getPageItemById(subPage, pageId)
                 if (index === -1) return
@@ -5398,7 +5399,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     }, [])
     // 修改颜色
     const onSimpleDetectTabEvent = useMemoizedFn((v) => {
-        const obj: SimpleTabInterface = JSON.parse(v)
+        const obj: SimpleTabInterface = JSONParseLog(v, {page: "MainOperatorContent", fun: "onSimpleDetectTabEvent"})
         if (obj.tabId === subItem.id) {
             setTabStatus(obj.status)
         }

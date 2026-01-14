@@ -115,6 +115,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import { JSONParseLog } from "@/utils/tool"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -1399,7 +1400,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         // 重新设置代码扫描任务状态
         const onSetCodeScanTaskStatusFun = useMemoizedFn((res) => {
             try {
-                const value = JSON.parse(res)
+                const value = JSONParseLog(res, { page: "yakRunnerCodeScan", fun: "onSetCodeScanTaskStatusFun" })
                 const {runtimeId, codeScanMode, pageId: pId} = value
                 if (pageId !== pId) return
                 if (!runtimeId) {
@@ -1579,7 +1580,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         /** 判断是否为无效数据 */
         const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
             try {
-                const check = JSON.parse(stream.data)
+                const check = JSONParseLog(stream.data, { page: "yakRunnerCodeScan", fun: "checkStreamValidity" })
                 if (check === "null" || !check || check === "undefined") return false
                 return check
             } catch (e) {
@@ -1666,7 +1667,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     }
                     if (data && data.IsMessage) {
                         try {
-                            let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
+                            let obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(),{page: "yakRunnerCodeScan", fun: "streamInfo"})
                             let progressObj = obj.content as StreamResult.Progress
                             if (obj.type === "progress") {
                                 setProgressShow({
@@ -2311,11 +2312,11 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 const peephole = customArr.find((item) => item.Field === "peephole")?.ExtraSetting || "{}"
                 const language = customArr.find((item) => item.Field === "language")?.ExtraSetting || "{}"
 
-                const peepholeArr: FormExtraSettingProps = JSON.parse(peephole) || {
+                const peepholeArr: FormExtraSettingProps = JSONParseLog(peephole, { page: "yakRunnerCodeScan", fun: "peepholeArr" }) || {
                     double: false,
                     data: []
                 }
-                const languageArr: FormExtraSettingProps = JSON.parse(language) || {
+                const languageArr: FormExtraSettingProps = JSONParseLog(language, { page: "yakRunnerCodeScan", fun: "languageArr" }) || {
                     double: false,
                     data: []
                 }
@@ -2504,7 +2505,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 const startLog = newStreamInfo.logState.find((item) => item.level === "code")
                 if (startLog && startLog.data) {
                     try {
-                        const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
+                        const verifyStart = JSONParseLog(startLog?.data, { page: "yakRunnerCodeScan", fun: "onStreamInfoFun" }) as VerifyStartProps
                         const {kind, msg} = verifyStart.error
                         setVerifyForm(false)
                         // CreateSSAProject 创建项目管理数据

@@ -67,6 +67,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {usePluginToId} from "@/store/publicMenu"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -233,7 +234,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         if (val !== "{}") {
                             let filters: string[] = []
                             try {
-                                filters = (JSON.parse(val) || {})[menuMode] || []
+                                filters = (JSONParseLog(val, {page: "HeardMenu", fun: "UserDeleteMenu"}) || {})[menuMode] || []
                             } catch (error) {}
                             for (let item of DefaultMenu) {
                                 if (filters.includes(item.menuName)) continue
@@ -257,7 +258,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     .finally(async () => {
                         let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
                         try {
-                            allowModify = JSON.parse(allowModify) || {}
+                            allowModify = JSONParseLog(allowModify, {page: "HeardMenu", fun: "IsImportJSONMenu"}) || {}
                         } catch (error) {
                             allowModify = {}
                         }
@@ -577,7 +578,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 // 删除缓存中用户删除的系统内定菜单记录
                 let deleteCache: any = await getRemoteValue(RemoteGV.UserDeleteMenu)
                 try {
-                    deleteCache = JSON.parse(deleteCache) || {}
+                    deleteCache = JSONParseLog(deleteCache, {page: "HeardMenu", fun: "DeleteAllNavigation"}) || {}
                 } catch (error) {
                     deleteCache = {}
                 }
@@ -587,7 +588,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     // 取消不可更改菜单的标记(JSON导入的菜单无法更新系统新页面)
                     let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
                     try {
-                        allowModify = JSON.parse(allowModify) || {}
+                        allowModify = JSONParseLog(allowModify, {page: "HeardMenu", fun: "UserDeleteMenu"}) || {}
                     } catch (error) {
                         allowModify = {}
                     }
@@ -636,7 +637,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             return
         }
         try {
-            const {menus, isError} = jsonDataConvertMenus(JSON.parse(menuDataString))
+            const {menus, isError} = jsonDataConvertMenus(JSONParseLog(menuDataString, {page: "HeardMenu", fun: "onImportJSON"}))
             setImportLoading(true)
             ipcRenderer
                 .invoke("DeleteAllNavigation", {Mode: patternMenu})
@@ -648,7 +649,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         .then(async () => {
                             let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
                             try {
-                                allowModify = JSON.parse(allowModify) || {}
+                                allowModify = JSONParseLog(allowModify, {page: "HeardMenu", fun: "AddToNavigation"}) || {}
                             } catch (error) {
                                 allowModify = {}
                             }

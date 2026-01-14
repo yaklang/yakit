@@ -13,6 +13,7 @@ import {PluginUploadSupplement} from "@/pages/pluginHub/pluginUploadModal/Plugin
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginLocalUpload.module.scss"
+import { JSONParseLog } from "@/utils/tool"
 
 interface PluginLocalUploadProps {
     pluginNames: string[]
@@ -215,7 +216,7 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
     const onProgressData = useMemoizedFn((_, data: SmokingEvaluatePluginBatchResponse) => {
         try {
             if (data.Progress === 2) {
-                const pluginNameList: string[] = JSON.parse(data.Message || "[]") || []
+                const pluginNameList: string[] = JSONParseLog(data.Message || "[]", {page: "PluginLocalUpload", fun: "onProgressData"}) || []
                 setSuccessPluginNames(pluginNameList)
                 if (pluginNameList.length === pluginNames.length) {
                     yakitNotify("success", "检测完毕,全部成功,自动进入下一步上传")

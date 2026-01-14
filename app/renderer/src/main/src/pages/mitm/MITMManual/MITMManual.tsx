@@ -85,6 +85,7 @@ import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {getMitmShortcutKeyEvents, MitmShortcutKey} from "@/utils/globalShortcutKey/events/page/mitm"
+import { JSONParseLog } from "@/utils/tool"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -622,7 +623,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             getRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox).then((res) => {
                 if (res) {
                     try {
-                        const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                        const {firstSizePercent, secondSizePercent} = JSONParseLog(res,{page: "MITMManual", fun: "MITMManualHijackYakitResizeBox"})
                         lastRatioRef.current = {
                             firstRatio: firstSizePercent,
                             secondRatio: secondSizePercent

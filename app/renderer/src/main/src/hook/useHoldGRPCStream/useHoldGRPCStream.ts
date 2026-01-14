@@ -7,6 +7,7 @@ import {DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME} from "@/defaultConstants/HoldGRPC
 import {v4 as uuidv4} from "uuid"
 import {getRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -67,7 +68,7 @@ export interface HoldGRPCStreamParams {
 /** 判断是否为无效数据 */
 export const checkStreamValidity = (stream: StreamResult.Log) => {
     try {
-        const check = JSON.parse(stream.data)
+        const check = JSONParseLog(stream.data, {page:"useHoldGRPCStream"})
         if (check === "null" || !check || check === "undefined") return false
         return check
     } catch (e) {
@@ -174,7 +175,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             if (isMessage) {
                 try {
                     const messageArr = data.Message || data.ExecResult?.Message
-                    let obj: StreamResult.Message = JSON.parse(Buffer.from(messageArr).toString())
+                    let obj: StreamResult.Message = JSONParseLog(Buffer.from(messageArr).toString(), {page:"useHoldGRPCStream"})
                     // progress 进度条
                     if (obj.type === "progress") {
                         const processData = obj.content as StreamResult.Progress

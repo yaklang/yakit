@@ -2,6 +2,7 @@ import emiter from "../eventBus/eventBus"
 import {failed} from "@/utils/notification"
 import { Uint8ArrayToString } from "../str"
 import { API } from "@/services/swagger/resposeType"
+import { JSONParseLog } from "../tool"
 const {ipcRenderer} = window.require("electron")
 
 
@@ -11,7 +12,7 @@ export let webSocketStatus = false
 export const startWebSocket = () => {
     ipcRenderer.on("client-socket-message", (e, data:Uint8Array) => {
         try {
-            const obj = JSON.parse(Uint8ArrayToString(data))
+            const obj = JSONParseLog(Uint8ArrayToString(data),{page:"webSocket",fun:"startWebSocket"})
             switch (obj.messageType) {
                 case "messageLog":
                     emiter.emit("onRefreshMessageSocket", JSON.stringify(obj.params))

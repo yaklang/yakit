@@ -6,6 +6,7 @@ import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivat
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import { useUploadInfoByEnpriTrace } from "@/components/layout/utils"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
@@ -53,7 +54,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                     setLoading(false)
                     return
                 }
-                const licenseActivation = JSON.parse(setting)
+                const licenseActivation = JSONParseLog(setting, {page:"EnterpriseJudgeLogin"})
                 judgeLicenseGrpc(licenseActivation, true)
             })
         }

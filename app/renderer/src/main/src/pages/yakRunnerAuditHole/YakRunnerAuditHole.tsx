@@ -36,6 +36,7 @@ import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import { JSONParseLog } from "@/utils/tool"
 
 export const YakRunnerAuditHoleTab: YakitTabsProps[] = [
     {
@@ -70,7 +71,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     useEffect(() => {
         const auditHoleVulnerabilityLevel = (params: string) => {
             try {
-                const data: AuditHoleInfoProps = JSON.parse(params)
+                const data: AuditHoleInfoProps = JSONParseLog(params, {page: "YakRunnerAuditHole", fun: "auditHoleVulnerabilityLevel"})
                 setQuery((query) => ({...query, ...data}))
             } catch (error) {}
         }
@@ -93,7 +94,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
         getRemoteValue(RemoteGV.AuditHoleShow).then((setting: string) => {
             if (setting) {
                 try {
-                    const tabs = JSON.parse(setting)
+                    const tabs = JSONParseLog(setting, {page: "YakRunnerAuditHole", fun: "AuditHoleShow"})
                     setIsUnShow(!tabs.contShow)
                     onActiveKey(tabs.key)
                 } catch (error) {}

@@ -33,6 +33,7 @@ import {SolidCheckIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {useGoogleChromePluginPath} from "@/store"
 import {RemoteMitmGV} from "@/enums/mitm"
 import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import { JSONParseLog } from "@/utils/tool"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -162,7 +163,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             if (res[0].status === "fulfilled") {
                 const value = res[0].value
                 if (value) {
-                    newParams.chromePath = JSON.parse(value)
+                    newParams.chromePath = JSONParseLog(value, {page: "MITMChromeLauncher", fun: "chromePath"})
                 }
             }
 
@@ -171,7 +172,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                 const value = res[1].value
                 if (value) {
                     try {
-                        chromeFlags = JSON.parse(value)
+                        chromeFlags = JSONParseLog(value, {page: "MITMChromeLauncher", fun: "chromeFlags"})
                     } catch (error) {}
                 }
             }
@@ -590,7 +591,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             let arr: ChromeLauncherParams[] = chromeLauncherParamsArr
             if (setting) {
                 try {
-                    arr = JSON.parse(setting)
+                    arr = JSONParseLog(setting, {page: "MITMChromeLauncher", fun: "ChromeLauncherParams"})
                 } catch (error) {}
             }
             setData(handleChromeLauncherParams(arr, googleChromePluginPath))

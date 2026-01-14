@@ -2,6 +2,7 @@ import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
+import { JSONParseLog } from "@/utils/tool"
 
 export enum MitmShortcutKey {
     /** 劫持响应 */
@@ -38,7 +39,7 @@ export const getStorageMitmShortcutKeyEvents = () => {
         .then((res) => {
             if (!res) return
             try {
-                const data: EventsType = JSON.parse(res)
+                const data: EventsType = JSONParseLog(res,{page: "mitm", fun: "getStorageMitmShortcutKeyEvents"})
                 currentKeyEvents = addScopeShow(data,MitmShortcutKeyEvents)
             } catch (error) {}
         })

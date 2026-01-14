@@ -18,6 +18,7 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useFuzzerSequence } from "@/store/fuzzerSequence"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = (t: (text: string) => string) => {
@@ -99,7 +100,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 if (newAdvancedConfigShow) {
                     setAdvancedConfigShow({...newAdvancedConfigShow})
                 } else {
-                    const value = JSON.parse(c)
+                    const value = JSONParseLog(c, {page: "WebFuzzerPage", fun: "WebFuzzerAdvancedConfigShow"})
                     setAdvancedConfigShow({
                         ...value
                     })
@@ -153,7 +154,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const debounceGetFuzzerAdvancedConfigShow = useMemoizedFn((data) => {
         if (inViewport) {
             try {
-                const value = JSON.parse(data)
+                const value = JSONParseLog(data, {page: "WebFuzzerPage", fun: "debounceGetFuzzerAdvancedConfigShow"})
                 const key = value.type as WebFuzzerType
                 if (["sequence", 'concurrency'].includes(key)) return
                 const c = value.checked
@@ -169,7 +170,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const onSwitchType = useMemoizedFn((data) => {
         if (!inViewport) return
         try {
-            const value = JSON.parse(data)
+            const value = JSONParseLog(data, {page: "WebFuzzerPage", fun: "onSwitchType"})
             const type = value.type as WebFuzzerType
             if (["sequence", 'concurrency'].includes(type)) return
             setType(type)

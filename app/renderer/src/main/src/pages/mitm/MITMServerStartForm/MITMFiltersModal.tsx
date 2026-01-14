@@ -277,7 +277,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                                         return
                                     }
                                     try {
-                                        const saveFilterData: SaveObjProps[] = JSON.parse(data)
+                                        const saveFilterData: SaveObjProps[] = JSONParseLog(data, {page:"MITMFiltersModal", fun: "removeFilterKey"})
                                         if (
                                             saveFilterData.filter((item) => item.filterName === getFilterName())
                                                 .length > 0
@@ -404,7 +404,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                                 }}
                                 onOk={(value) => {
                                     try {
-                                        const importValue = JSON.parse(value)
+                                        const importValue = JSONParseLog(value, {page: "MITMFiltersModal", fun: "onOk"})
                                         onMenuSelect(importValue)
                                         setImportVisibel(false)
                                     } catch (error) {

@@ -54,6 +54,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {fontSizeOptions, useEditorFontSize} from "@/store/editorFontSize"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { newWebFuzzerTab } from "@/pages/fuzzer/HTTPFuzzerPage"
+import { JSONParseLog } from "./tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -629,7 +630,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     // 读取上次选择的字体大小/换行符
     const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
         try {
-            const obj: RefreshEditorOperationRecordProps = JSON.parse(v)
+            const obj: RefreshEditorOperationRecordProps = JSONParseLog(v,{page: "editors", fun: "onRefreshEditorOperationRecord"})
             if (obj.editorId === editorId) {
                 if (obj?.fontSize) {
                     setFontSize(obj.fontSize)
@@ -649,7 +650,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             getRemoteValue(editorOperationRecord).then((data) => {
                 try {
                     if (!data) return
-                    let obj: OperationRecordRes = JSON.parse(data)
+                    let obj: OperationRecordRes = JSONParseLog(data,{page: "editors"})
                     if (typeof obj?.showBreak === "boolean") {
                         setShowLineBreaks(obj?.showBreak)
                     }

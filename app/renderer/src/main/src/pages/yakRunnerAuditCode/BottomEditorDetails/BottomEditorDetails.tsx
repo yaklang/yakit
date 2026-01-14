@@ -16,6 +16,7 @@ import {HoleDispose} from "./HoleDispose/HoleDispose"
 import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import { openSSARiskNewWindow } from "@/utils/openWebsite"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -54,7 +55,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
     const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
         try {
-            const {type}: {type: ShowItemType} = JSON.parse(v)
+            const {type}: {type: ShowItemType} = JSONParseLog(v, {page: "BottomEditorDetails", fun: "onOpenBottomDetailFun"})
             setEditorDetails(true)
             setShowItem(type)
         } catch (error) {}

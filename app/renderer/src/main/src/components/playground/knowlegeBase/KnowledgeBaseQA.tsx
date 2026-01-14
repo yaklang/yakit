@@ -17,6 +17,7 @@ import {
 import styles from "./KnowledgeBaseQA.module.scss"
 import {PaperAirplaneIcon} from "@/assets/newIcon"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -74,7 +75,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                             if (Data === "null" || Data === "undefined" || Data === "" || Data == null) break
                             let parsed
                             if (typeof Data === "string") {
-                                parsed = JSON.parse(Data)
+                                parsed = JSONParseLog(Data,{page:"KnowledgeBaseQA", fun:"handleStreamResponse"})
                             } else {
                                 parsed = Data
                             }

@@ -32,6 +32,7 @@ import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useHttpFlowStore} from "@/store/httpFlow"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -505,7 +506,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             let advancedConfigShow = defaultAdvancedConfigShow
                             try {
                                 const resShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
-                                advancedConfigShow = JSON.parse(resShow)
+                                advancedConfigShow = JSONParseLog(resShow, {page:"extraYakitEditor"})
                             } catch (error) {}
                             const params: ShareValueProps = {
                                 advancedConfigShow,

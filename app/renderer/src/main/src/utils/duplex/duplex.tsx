@@ -3,6 +3,7 @@ import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "../eventBus/eventBus"
 import {Uint8ArrayToString} from "../str"
+import { JSONParseLog } from "../tool"
 
 const {ipcRenderer} = window.require("electron")
 let id = randomString(40)
@@ -64,7 +65,7 @@ export const startupDuplexConn = () => {
     ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
         try {
             const resultData: Buffer = data.Data
-            const obj = JSON.parse(Uint8ArrayToString(resultData))
+            const obj = JSONParseLog(Uint8ArrayToString(resultData),{page: "duplex", fun: "startupDuplexConn"})
             switch (data.MessageType) {
                 // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
                 case "global":

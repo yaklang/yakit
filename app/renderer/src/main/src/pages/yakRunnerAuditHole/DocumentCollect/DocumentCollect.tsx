@@ -18,6 +18,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RefreshIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {RiskTree} from "@/pages/yakRunnerAuditCode/RunnerFileTree/RunnerFileTree"
+import { JSONParseLog } from "@/utils/tool"
 
 const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
     const iconsEle = {
@@ -110,7 +111,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                         const filter = node.data?.Extra.find((item) => item.Key === "filter")?.Value
                         if (filter) {
                             try {
-                                const newParams = JSON.parse(filter)
+                                const newParams = JSONParseLog(filter, {page: "DocumentCollect", fun: "onSelectedNodes"})
                                 setQuery({...query, ...cacheQueryRef.current, ...newParams})
                                 // 缓存选中前所更改的参数内容 将其置为空用于还原
                                 let cache: SSARisksFilter = {}

@@ -91,6 +91,7 @@ import {keepSearchNameMapStore, useKeepSearchNameMap} from "@/store/keepSearchNa
 import type {IEvent} from "monaco-editor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {fontSizeOptions, useEditorFontSize} from "@/store/editorFontSize"
+import { JSONParseLog } from "@/utils/tool"
 
 export interface CodecTypeProps {
     key?: string
@@ -571,7 +572,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             getRemoteValue(editorOperationRecord).then((data) => {
                 try {
                     if (!data) return
-                    let obj: OperationRecordRes = JSON.parse(data)
+                    let obj: OperationRecordRes = JSONParseLog(data, {page:"YakitEditor"})
                     if (typeof obj?.showBreak === "boolean") {
                         setShowBreak(obj?.showBreak)
                     }
@@ -591,7 +592,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     setRemoteValue(editorOperationRecord, JSON.stringify(obj))
                 } else {
                     try {
-                        let obj: OperationRecord = JSON.parse(data)
+                        let obj: OperationRecord = JSONParseLog(data, {page:"YakitEditor", fun: "onOperationRecord"})
                         obj[type] = value
                         setRemoteValue(editorOperationRecord, JSON.stringify(obj))
                     } catch (error) {}
