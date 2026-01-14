@@ -15,7 +15,8 @@ import {
     useMemoizedFn,
     useUpdateEffect,
     useVirtualList,
-    useInViewport
+    useInViewport,
+    useThrottleEffect
 } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {
@@ -131,6 +132,8 @@ import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import i18n from "@/i18n/i18n"
 import {OptionProps, YakitCombinationSearchProps} from "../YakitCombinationSearch/YakitCombinationSearchType"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
+import { debugToPrintLogs } from "@/utils/logCollection"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -783,7 +786,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const onScrollToByClickEvent = useMemoizedFn((v) => {
         try {
-            const obj: {historyId: string; id: string} = JSON.parse(v)
+            const obj: {historyId: string; id: string} = JSONParseLog(v,{page:"HTTPFlowTable",fun:"onScrollToByClickEvent"})
             if (historyId === obj.historyId) {
                 let scrollToIndex: number | undefined = undefined
                 data.some((item, index) => {
@@ -820,24 +823,30 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             // HostName
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName).then((e) => {
-                if (!!e) {
-                    let hostName = JSON.parse(e)
-                    setHostName(hostName)
-                }
+                try {
+                    if (!!e) {
+                        let hostName = JSONParseLog(e,{page:"HTTPFlowTable",fun:"getRemoteValue-HTTPFlowTableHostName"})
+                        setHostName(hostName)
+                    }  
+                } catch (error) {}                
             })
             // URL路径
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath).then((e) => {
                 if (!!e) {
-                    let pathArr = JSON.parse(e)
-                    setUrlPath(pathArr)
+                    try {
+                        let pathArr = JSONParseLog(e,{page:"HTTPFlowTable",fun:"getRemoteValue-HTTPFlowTableUrlPath"})
+                        setUrlPath(pathArr)
+                    } catch (error) {}
                 }
             })
             // 文件后缀
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix).then((e) => {
-                if (!!e) {
-                    let fileSuffix = JSON.parse(e)
-                    setFileSuffix(fileSuffix)
-                }
+                try {
+                    if (!!e) {
+                        let fileSuffix = JSONParseLog(e,{page:"HTTPFlowTable",fun:"getRemoteValue-HTTPFlowTableFileSuffix"})
+                        setFileSuffix(fileSuffix)
+                    }
+                } catch (error) {}
             })
             // 响应类型
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
@@ -848,10 +857,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             // 关键字
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableExcludeKeywords).then((e) => {
-                if (!!e) {
-                    let excludeKeywords = JSON.parse(e)
-                    setExcludeKeywords(excludeKeywords)
-                }
+                try {
+                    if (!!e) {
+                        let excludeKeywords = JSONParseLog(e,{page:"HTTPFlowTable",fun:"getRemoteValue-HTTPFlowTableExcludeKeywords"})
+                        setExcludeKeywords(excludeKeywords)
+                    }
+                } catch (error) {}
             })
             // 状态码
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableStatusCode).then((e) => {
@@ -956,7 +967,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
     const onGetOtherPageAdvancedSearchData = useMemoizedFn((str: string) => {
         try {
-            const value = JSON.parse(str)
+            const value = JSONParseLog(str,{page:"HTTPFlowTable", fun:"onGetOtherPageAdvancedSearchData"})
             const {advancedSearchData} = value
             setFilterMode(advancedSearchData.filterMode)
             setHostName(advancedSearchData.hostName)
@@ -1042,7 +1053,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .then((data) => {
                 if (!data) return
                 try {
-                    const cacheData = JSON.parse(data)
+                    const cacheData = JSONParseLog(data,{page:"HTTPFlowTable",fun:"getShieldList"})
                     setShieldData({
                         data: cacheData?.data || []
                     })
@@ -1230,6 +1241,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
         updateQueryParams(realQuery)
+        debugToPrintLogs({
+            page: "HTTPFlowTable",
+            fun: "getDataByGrpc",
+            content: "type:"+ type + "; " + JSON.stringify(realQuery),
+            status: "INFO"
+        })
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1308,6 +1325,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (idRef.current) {
                     clearInterval(idRef.current)
                 }
+                debugToPrintLogs({
+                    page: "HTTPFlowTable",
+                    fun: "getDataByGrpc",
+                    content: e
+                })
                 yakitNotify("error", `query HTTP Flow failed: ${e}`)
             })
             .finally(() =>
@@ -1551,7 +1573,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
         try {
-            const updateData = JSON.parse(data)
+            const updateData = JSONParseLog(data,{page:"HTTPFlowTable",fun:"onRefreshQueryHTTPFlowsFun"})
             if (typeof updateData !== "string") {
                 if (updateData.action === "update") {
                     setUpdateCacheData((prev) => prev.concat(updateData))
@@ -1642,7 +1664,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const cancleMitmFilter = useMemoizedFn((str: string) => {
         try {
-            const data = JSON.parse(str)
+            const data = JSONParseLog(str,{page:"HTTPFlowTable",fun:"cancleMitmFilter"})
             const {version, value} = data
             if (version !== mitmVersion) return
             cancleFilter(value)
@@ -1757,6 +1779,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [columnsOrder, setColumnsOrder] = useState<string[]>([])
     useEffect(() => {
         if (inViewport) {
+            debugToPrintLogs({
+                    page: "HTTPFlowTable",
+                    fun: "get excludeColumnsKey and columnsOrder",
+                    status: "INFO",
+                    content: "start getting"
+                })
             Promise.allSettled([
                 getRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey),
                 getRemoteValue(RemoteHistoryGV.HistroyColumnsOrder)
@@ -1778,7 +1806,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
                 if (res[1].status === "fulfilled") {
                     try {
-                        const arr = JSON.parse(res[1].value) || []
+                        const arr = JSONParseLog(res[1].value,{page:"HTTPFlowTable",fun:"HTTPFlowTableColumnsOrder"}) || []
                         // 确保顺序缓存里面的key一定在默认所有列中存在
                         const arr2 = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
                         // 按照 defalutColumnsOrderRef.current 顺序补充新增列
@@ -1804,6 +1832,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (refreshTabelKey) {
                     setTableKeyNumber(uuidv4())
                 }
+            }).catch((error) => {
+                debugToPrintLogs({
+                    page: "HTTPFlowTable",
+                    fun: "get excludeColumnsKey and columnsOrder",
+                    content: error
+                })
             })
         }
     }, [inViewport])
@@ -1814,6 +1848,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 序号是否固定
     const [idFixed, setIdFixed] = useState<boolean>(true)
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+        debugToPrintLogs({
+            page: "HTTPFlowTable",
+            fun: "columns",
+            status: "INFO",
+            content: "start creating"
+        })
         // ⚠️ 注意：此处新增或删除列请务必同步 流量分析页面，还有处理 defalutColumnsOrder 变量，这个变量是存的全部的列默认顺序key
         const columnArr: ColumnsTypeProps[] = [
             {
@@ -2391,10 +2431,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const onDeleteToUpdateEvent = useMemoizedFn((v: string) => {
-        const {sourcePage}: {sourcePage?: HTTPHistorySourcePageType} = JSON.parse(v)
-        if (sourcePage && pageType && sourcePage !== pageType) {
-            updateData()
-        }
+        try {
+            const {sourcePage}: {sourcePage?: HTTPHistorySourcePageType} = JSONParseLog(v,{page:"HTTPFlowTable", fun:"onDeleteToUpdateEvent"})
+            if (sourcePage && pageType && sourcePage !== pageType) {
+                updateData()
+            }
+        } catch (error) {}
+        
     })
 
     useEffect(() => {
@@ -2544,6 +2587,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
     const getExcelData = useMemoizedFn((pagination, list: HTTPFlow[]) => {
         return new Promise((resolve) => {
+            debugToPrintLogs({
+                page: "HTTPFlowTable",
+                fun: "getExcelData",
+                status: "INFO",
+                content: "start getting excel data"
+            })
             const query: any = {
                 ...params,
                 Pagination: {...pagination},
@@ -2604,6 +2653,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     yakitNotify("warning", `${t("HTTPFlowTable.partialExportMissing")}${message}`)
                 }
                 initExcelData(resolve, rsp.Data, rsp, arrList)
+            }).catch((error) => {
+                debugToPrintLogs({
+                    page: "HTTPFlowTable",
+                    fun: "getExcelData",
+                    content: error
+                })
             })
         })
     })
@@ -2726,6 +2781,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         })
                 }
             }
+        }).catch((error) => {
+            debugToPrintLogs({
+                page: "HTTPFlowTable",
+                fun: "handleClickHarExport",
+                content: error
+            })
         })
     })
 
@@ -2937,7 +2998,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     const onEditTagEvent = useMemoizedFn((infos) => {
         try {
-            const info = JSON.parse(infos) || {}
+            const info = JSONParseLog(infos,{page:"HTTPFlowTable",fun:"onEditTagEvent"}) || {}
             const tagItem = data.find((item) => item.Id == info.id)
             if (tagItem && info.historyId === historyId) {
                 onEditTags(tagItem)
@@ -3734,7 +3795,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     })
                     setSelectedRowKeys([])
                     setSelectedRows([])
-                } catch (error) {}
+                } catch (error) {
+                    debugToPrintLogs({
+                        page: "HTTPFlowTable",
+                        fun: "onMultipleClick",
+                        content: error
+                    })
+                }
                 return
             }
         }
@@ -3886,7 +3953,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     FromPlugin: mitmHasParamsNames
                 }
             })
-        } catch (error) {}
+        } catch (error) {
+            debugToPrintLogs({
+                page: "HTTPFlowTable",
+                fun: "onHasParamsJumpHistory",
+                content: error
+            })
+        }
     })
 
     const onMitmClearFromPlugin = useMemoizedFn((version) => {
@@ -3899,7 +3972,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const onMitmSearchInputVal = useMemoizedFn((searchJson: string) => {
         try {
-            const value = JSON.parse(searchJson) || {}
+            const value = JSONParseLog(searchJson,{page: "HTTPFlowTable",fun: "onMitmSearchInputVal"}) || {}
             const {version, ...searchObj} = value
             if (version !== mitmVersion) return
             setParams((prev) => ({
@@ -3911,7 +3984,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const onMitmCurProcess = useMemoizedFn((data: string) => {
         try {
-            const value = JSON.parse(data) || {}
+            const value = JSONParseLog(data,{page: "HTTPFlowTable",fun: "onMitmCurProcess"}) || {}
             const {curProcess, version} = value
             if (version !== mitmVersion) return
             setParams((prev) => ({
@@ -3993,6 +4066,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             return data
         }
     }, [updateCacheData, data])
+
+    useThrottleEffect(()=>{
+        // 当realData长度大于1000时，打印日志
+        if (realData.length > 1000) {
+            debugToPrintLogs({
+                page: "HTTPFlowTable",
+                fun: "realData useThrottleEffect",
+                title: "HTTP Flow Table Data Length",
+                status: "INFO",
+                content: `${realData.length}`
+            })
+        }
+    },[realData.length])
 
     return (
         <div ref={ref as Ref<any>} tabIndex={-1} className={style["http-history-flow-table-wrapper"]}>
@@ -5028,6 +5114,11 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
         }
         Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
     } catch (e) {
+        debugToPrintLogs({
+            page: "HTTPFlowTable",
+            fun: "onSendToTab",
+            content: e
+        })
         console.error(e)
     }
     ipcRenderer
@@ -5403,7 +5494,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
     useEffect(() => {
         try {
-            setCurColumnsAll(JSON.parse(columnsAllStr))
+            setCurColumnsAll(JSONParseLog(columnsAllStr))
         } catch (error) {}
     }, [columnsAllStr])
     // 处理拖拽结束

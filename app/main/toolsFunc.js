@@ -40,4 +40,37 @@ const hashChunk = ({path, size, chunkSize, chunkIndex}) => {
     })
 }
 
-module.exports = {Uint8ArrayToString, hashChunk}
+const pickAxiosErrorCore = (error) => {
+    try {
+        if (!error) return {}
+
+        let config = error?.config || {}
+
+        function safePick(obj, keys) {
+            let ret = {}
+            if (!obj) return ret
+            keys.forEach(function (k) {
+                if (obj[k] !== undefined) {
+                    ret[k] = obj[k]
+                }
+            })
+            return ret
+        }
+
+        return {
+            error: safePick(error, ["name", "message", "code"]),
+            request: {
+                method: config.method,
+                url: config.url,
+                baseURL: config.baseURL,
+                timeout: config.timeout,
+                params: config.params,
+            },
+        }
+    } catch (e) {
+        return error?.config || e
+    }
+}
+
+
+module.exports = {Uint8ArrayToString, hashChunk, pickAxiosErrorCore}

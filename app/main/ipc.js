@@ -5,6 +5,7 @@ const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
 const {HttpSetting} = require("./state")
 const grpc = require("@grpc/grpc-js")
 const protoLoader = require("@grpc/proto-loader")
+const {printLogOutputFile} = require("./logFile")
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
     longs: String,
@@ -24,10 +25,47 @@ const global = {
 
 let _client
 
+function createGrpcInterceptor() {
+    return (options, nextCall) => {
+        const requester = {
+            // 请求前
+            start(metadata, listener, next) {
+                // 请求前（等价 axios request interceptor）
+                if (global.password) {
+                    metadata.set("authorization", `bearer ${global.password}`)
+                }
+                const newListener = {
+                    ...listener,
+                    // 响应后
+                    onReceiveStatus(status) {
+                        // console.log("[GRPC Status-----------]",options.method_definition?.path, status);
+                        // 响应后（等价 axios response interceptor）
+                        if (status.code !== grpc.status.OK) {
+                            printLogOutputFile(`[GRPC ERRO] => ${JSON.stringify({
+                                method: options.method_definition?.path,
+                                code: status.code,
+                                codeName: grpc.status[status.code],
+                                details: status.details,
+                            })}`)
+                        }
+                        // 向下传递
+                        listener.onReceiveStatus?.(status)
+                    }
+                }
+
+                next(metadata, newListener)
+            }
+        }
+
+        return new grpc.InterceptingCall(nextCall(options), requester)
+    }
+}
+
 const options = {
     "grpc.max_receive_message_length": 1024 * 1024 * 1000,
     "grpc.max_send_message_length": 1024 * 1024 * 1000,
-    "grpc.enable_http_proxy": 0
+    "grpc.enable_http_proxy": 0,
+    interceptors: [createGrpcInterceptor()]
 }
 
 function newClient() {
@@ -64,7 +102,8 @@ function newClient() {
                             next(metadata, listener)
                         }
                     })
-                }
+                },
+                createGrpcInterceptor()
             ]
         }
         return new Yak(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), optionsWithInterceptors)

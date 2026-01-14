@@ -36,6 +36,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import ProxyRulesConfig, { ProxyTest } from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
+import { debugToPrintLogs } from "@/utils/logCollection"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -289,6 +290,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
         const { downstreamProxy = [] } = params
         const { proxyEndpoints: downstreamProxyValue, ProxyRuleIds: downstreamProxyRuleId } = getProxyValue(downstreamProxy)
+        debugToPrintLogs({
+            page: "MITMServerStartForm",
+            fun: "execStartMITM",
+            content: JSON.stringify(params) + JSON.stringify(extra) + "; downstreamProxyValue:" + downstreamProxyValue + "; downstreamProxyRuleId:" + downstreamProxyRuleId
+        })
         props.onStartMITMServer(
             params.host,
             params.port,
