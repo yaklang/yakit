@@ -9,6 +9,7 @@ import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import useTaskChat from "./useTaskChat"
 import {genErrorLogData, handleGrpcDataPushLog} from "./utils"
 import {
+    AIChatIPCNotifyMessage,
     AIChatIPCStartParams,
     AIChatSendParams,
     AIFileSystemPin,
@@ -31,23 +32,18 @@ import {
     DefaultPlanLoadingStatus
 } from "./defaultConstant"
 import useThrottleState from "@/hook/useThrottleState"
+import {grpcQueryAIEvent} from "@/pages/ai-agent/grpc"
+import useAINodeLabel from "./useAINodeLabel"
 
 const {ipcRenderer} = window.require("electron")
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {
-        getRequest,
-        onTaskStart,
-        onTaskReview,
-        onTaskReviewExtra,
-        onReviewRelease,
-        onTimelineMessage,
-        onEnd,
-        onNotifyMessage,
-        setSessionChatName
-    } = params || {}
+    const {getRequest, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd, setSessionChatName} =
+        params || {}
+
+    const {getLabelByParams} = useAINodeLabel()
 
     // #region 全局公共方法集合
     /** 自由对话(ReAct)-review 信息的自动释放 */
@@ -62,6 +58,16 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 获取当前grpc接口的请求参数 */
     const fetchRequestParams = useMemoizedFn(() => {
         return getRequest?.()
+    })
+
+    /** 消息通知提醒弹框 */
+    const handleNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
+        const {NodeIdVerbose, Content} = message
+        const verbose = getLabelByParams(NodeIdVerbose)
+        yakitNotify("info", {
+            message: verbose,
+            description: Content
+        })
     })
 
     // 向进行中的grpc流接口发送请求
@@ -242,14 +248,13 @@ function useChatIPC(params?: UseChatIPCParams) {
             const {Type, NodeId, NodeIdVerbose, Timestamp} = res
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-            onNotifyMessage &&
-                onNotifyMessage({
-                    Type,
-                    NodeId,
-                    NodeIdVerbose,
-                    Timestamp,
-                    Content: data.react_task_input
-                })
+            handleNotifyMessage({
+                Type,
+                NodeId,
+                NodeIdVerbose,
+                Timestamp,
+                Content: data.react_task_input
+            })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -264,14 +269,13 @@ function useChatIPC(params?: UseChatIPCParams) {
     const handleReActTaskCleared = useMemoizedFn((res: AIOutputEvent) => {
         try {
             const {Type, NodeId, NodeIdVerbose, Timestamp} = res
-            onNotifyMessage &&
-                onNotifyMessage({
-                    Type,
-                    NodeId,
-                    NodeIdVerbose,
-                    Timestamp,
-                    Content: "已清空所有任务队列数据"
-                })
+            handleNotifyMessage({
+                Type,
+                NodeId,
+                NodeIdVerbose,
+                Timestamp,
+                Content: "已清空所有任务队列数据"
+            })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -346,6 +350,31 @@ function useChatIPC(params?: UseChatIPCParams) {
         sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT})
     })
 
+    /** 获取历史时间线 */
+    const fetchHistoryTimelines = useMemoizedFn(async () => {
+        try {
+            const {Events, Total} = await grpcQueryAIEvent({
+                Filter: {
+                    SessionID: chatID.current,
+                    NodeId: ["timeline_item"]
+                },
+                Pagination: {
+                    Page: 1,
+                    Limit: 1000,
+                    OrderBy: "created_at",
+                    Order: "desc"
+                }
+            })
+            if (Total === 0) return
+
+            const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
+                let ipcContent = Uint8ArrayToString(item.Content) || ""
+                return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
+            }).reverse()
+            setReActTimelines((old) => [...timelineItems, ...old])
+        } catch (error) {}
+    })
+
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
         const {token, params, extraValue} = args
 
@@ -356,6 +385,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReset()
         setExecute(true)
         chatID.current = token
+        fetchHistoryTimelines()
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
                 // 记录会话中所有的 CoordinatorId
@@ -528,8 +558,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                             data: data
                         })
                     } else if (res.NodeId === "timeline") {
-                        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
-                        onTimelineMessage && onTimelineMessage(data.dump)
+                        // 一次性获取完整时间线数据, 暂无使用位置
+                        return
                     } else if (res.NodeId === "react_task_status_changed") {
                         // 只负责获取自由对话的任务状态
                         if (planCoordinatorId.current === res.CoordinatorId) return

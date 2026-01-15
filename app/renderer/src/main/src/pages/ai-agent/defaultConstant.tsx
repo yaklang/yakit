@@ -96,7 +96,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     AIService: "",
     ReActMaxIteration: 100,
     TimelineItemLimit: 100,
-    TimelineContentSizeLimit: 20 * 1024,
+    TimelineContentSizeLimit: 20,
     UserInteractLimit: 0,
     TimelineSessionID: ""
 }

@@ -190,30 +190,39 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
         const {qs} = value
+        const sessionID = activeChat?.session || ""
+
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
             CoordinatorId: "",
             Sequence: 1
         }
+        request.TimelineSessionID = activeChat?.session || request.TimelineSessionID
         // 设置会话的session
         const session: string = request.TimelineSessionID
             ? request.TimelineSessionID
             : uuidv4().replace(/-/g, "").substring(0, 16)
         if (!request.TimelineSessionID) request.TimelineSessionID = session
-        // 创建新的聊天记录
-        const newChat: AIChatInfo = {
-            id: session,
-            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            time: new Date().getTime(),
-            request,
-            session: session
-        }
 
-        setActiveChat && setActiveChat(newChat)
-        setChats && setChats((old) => [...old, newChat])
-        onSetReAct()
+        let newChat: AIChatInfo
+        if (!sessionID) {
+            // 创建新的聊天记录
+            newChat = {
+                id: session,
+                name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+                question: qs,
+                time: new Date().getTime(),
+                request,
+                session: session
+            }
+
+            setActiveChat && setActiveChat(newChat)
+            setChats && setChats((old) => [...old, newChat])
+            onSetReAct()
+        } else {
+            newChat = activeChat as AIChatInfo
+        }
         const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
         // 发送初始化参数
         const startParams: AIInputEvent = {

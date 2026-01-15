@@ -115,10 +115,10 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
         if (!isNil(setting?.TimelineItemLimit)) {
             data.TimelineItemLimit = setting.TimelineItemLimit || AIAgentSettingDefault.TimelineItemLimit
         }
-        if (!isNil(setting?.TimelineContentSizeLimit)) {
-            data.TimelineContentSizeLimit =
-                setting.TimelineContentSizeLimit || AIAgentSettingDefault.TimelineContentSizeLimit
-        }
+        // TimelineContentSizeLimit 单位是KB，但传到后端需要转换为字节
+        data.TimelineContentSizeLimit =
+            ((setting.TimelineContentSizeLimit ?? AIAgentSettingDefault.TimelineContentSizeLimit) as number) * 1024
+
         if (!isNil(setting?.UserInteractLimit)) {
             data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
         }

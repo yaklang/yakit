@@ -126,12 +126,8 @@ export interface UseChatIPCParams {
     onTaskReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
-    /** timeline 时间线消息回调事件 */
-    onTimelineMessage?: (message: string) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
-    /** 通知消息的回调 */
-    onNotifyMessage?: (message: AIChatIPCNotifyMessage) => void
     /** 设置会话的名字 */
     setSessionChatName?: (name: string) => void
 }
@@ -278,4 +274,7 @@ export interface UseChatContentEvents extends UseHookBaseEvents {}
 // #endregion
 
 // #region useHistoryChat相关定义
+export interface UseHistoryChatParams {}
+
+export interface UseHistoryChatEvents {}
 // #endregion
