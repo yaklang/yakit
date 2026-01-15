@@ -1,7 +1,14 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {ForgeNameProps} from "./type"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineExportIcon,
+    OutlineImportIcon,
+    OutlinePencilaltIcon,
+    OutlinePlussmIcon,
+    OutlineSearchIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     useDebounceEffect,
@@ -260,7 +267,10 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                         技能库
                         <YakitRoundCornerTag>{total}</YakitRoundCornerTag>
                     </div>
-                    <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
+                    <div className={styles['first-btns']}>
+                        <YakitButton icon={<OutlineImportIcon />} />
+                        <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
+                    </div>
                 </div>
 
                 <div className={styles["header-second"]}>
@@ -342,6 +352,20 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                             </div>
 
                                             <div className={styles["item-extra"]}>
+                                                <Tooltip
+                                                    title={"导出Forge"}
+                                                    placement='topRight'
+                                                    overlayClassName={styles["item-extra-tooltip"]}
+                                                >
+                                                    <YakitButton
+                                                        type='text2'
+                                                        icon={<OutlineExportIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            // handleModifyAIForge(data)
+                                                        }}
+                                                    />
+                                                </Tooltip>
                                                 <Tooltip
                                                     title={"编辑Forge"}
                                                     placement='topRight'
