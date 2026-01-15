@@ -100,7 +100,7 @@ const {ipcRenderer} = window.require("electron")
 
 // 是否为Payload操作员
 export const isPayloadOperator = (userInfo?: UserInfoProps) =>
-    userInfo?.isLogin && ["admin", "auditor"].includes(userInfo?.role || "")
+    userInfo?.isLogin && ["admin", "auditor"].includes(userInfo?.role || "") && isEnpriTrace()
 
 interface UploadStatusInfoProps {
     title: string
@@ -1316,7 +1316,9 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
             <div className={styles["new-payload-list"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title-box"]}>
-                        <div className={styles["title"]}>{onlyInsert ? t("NewPayloadLocalList.selectDictionaryToInsert") : "字典管理"}</div>
+                        <div className={styles["title"]}>
+                            {onlyInsert ? t("NewPayloadLocalList.selectDictionaryToInsert") : "字典管理"}
+                        </div>
                         <div className={styles["count"]}>{getPayloadCount}</div>
                         {!onlyInsert && (
                             <YakitButton
@@ -1861,6 +1863,64 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         setUploadVisible(true)
     })
 
+    const menuData = useMemo(() => {
+        let menu = [
+            {
+                key: "copyFuzztag",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineDocumentduplicateIcon />
+                        <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                    </div>
+                )
+            },
+            {
+                key: "addChildPayload",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineAddPayloadIcon />
+                        <div className={styles["menu-name"]}>新增子集字典</div>
+                    </div>
+                )
+            },
+            {
+                key: "rename",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlinePencilaltIcon />
+                        <div className={styles["menu-name"]}>重命名</div>
+                    </div>
+                )
+            },
+            {
+                key: "upload",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineUploadIcon />
+                        <div className={styles["menu-name"]}>上传</div>
+                    </div>
+                ),
+                disabled: !isPayloadOperator(userInfo)
+            },
+            {
+                type: "divider"
+            },
+            {
+                key: "delete",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineTrashIcon />
+                        <div className={styles["menu-name"]}>删除</div>
+                    </div>
+                ),
+                type: "danger"
+            }
+        ]
+        if (!isEnpriTrace()) {
+            menu = menu.filter((item) => item.key !== "upload")
+        }
+        return menu
+    }, [userInfo])
     return (
         <>
             {isEditInput ? (
@@ -1969,58 +2029,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                             {!onlyInsert && (
                                 <YakitDropdownMenu
                                     menu={{
-                                        data: [
-                                            {
-                                                key: "copyFuzztag",
-                                                label: (
-                                                    <div className={styles["extra-menu"]}>
-                                                        <OutlineDocumentduplicateIcon />
-                                                        <div className={styles["menu-name"]}>复制 Fuzztag</div>
-                                                    </div>
-                                                )
-                                            },
-                                            {
-                                                key: "addChildPayload",
-                                                label: (
-                                                    <div className={styles["extra-menu"]}>
-                                                        <OutlineAddPayloadIcon />
-                                                        <div className={styles["menu-name"]}>新增子集字典</div>
-                                                    </div>
-                                                )
-                                            },
-                                            {
-                                                key: "rename",
-                                                label: (
-                                                    <div className={styles["extra-menu"]}>
-                                                        <OutlinePencilaltIcon />
-                                                        <div className={styles["menu-name"]}>重命名</div>
-                                                    </div>
-                                                )
-                                            },
-                                            {
-                                                key: "upload",
-                                                label: (
-                                                    <div className={styles["extra-menu"]}>
-                                                        <OutlineUploadIcon />
-                                                        <div className={styles["menu-name"]}>上传</div>
-                                                    </div>
-                                                ),
-                                                disabled: !isPayloadOperator(userInfo)
-                                            },
-                                            {
-                                                type: "divider"
-                                            },
-                                            {
-                                                key: "delete",
-                                                label: (
-                                                    <div className={styles["extra-menu"]}>
-                                                        <OutlineTrashIcon />
-                                                        <div className={styles["menu-name"]}>删除</div>
-                                                    </div>
-                                                ),
-                                                type: "danger"
-                                            }
-                                        ],
+                                        data: menuData as YakitMenuItemProps[],
                                         onClick: ({key}) => {
                                             setMenuOpen(false)
                                             switch (key) {
@@ -2530,130 +2539,135 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
     const fileMenuData = useMemo(() => {
         // 此处数据库导出为csv 文件导出为txt
-        return file.type === "DataBase"
-            ? [
-                  {
-                      key: "copyFuzztag",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineDocumentduplicateIcon />
-                              <div className={styles["menu-name"]}>复制 Fuzztag</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "importPayload",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineImportIcon />
-                              <div className={styles["menu-name"]}>扩充字典</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "exportCsv",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineExportIcon />
-                              <div className={styles["menu-name"]}>导出字典</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "rename",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlinePencilaltIcon />
-                              <div className={styles["menu-name"]}>重命名</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "upload",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineUploadIcon />
-                              <div className={styles["menu-name"]}>上传</div>
-                          </div>
-                      ),
-                      disabled: !isPayloadOperator(userInfo)
-                  },
-                  {
-                      type: "divider"
-                  },
-                  {
-                      key: "delete",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineTrashIcon />
-                              <div className={styles["menu-name"]}>删除</div>
-                          </div>
-                      ),
-                      type: "danger"
-                  }
-              ]
-            : [
-                  {
-                      key: "copyFuzztag",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineDocumentduplicateIcon />
-                              <div className={styles["menu-name"]}>复制 Fuzztag</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "exportTxt",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineExportIcon />
-                              <div className={styles["menu-name"]}>导出字典</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "rename",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlinePencilaltIcon />
-                              <div className={styles["menu-name"]}>重命名</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "toDatabase",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineDatabasebackupIcon />
-                              <div className={styles["menu-name"]}>转为数据库存储</div>
-                          </div>
-                      )
-                  },
-                  {
-                      key: "upload",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineUploadIcon />
-                              <div className={styles["menu-name"]}>上传</div>
-                          </div>
-                      ),
-                      disabled: !isPayloadOperator(userInfo)
-                  },
-                  {
-                      type: "divider"
-                  },
-                  {
-                      key: "delete",
-                      label: (
-                          <div className={styles["extra-menu"]}>
-                              <OutlineTrashIcon />
-                              <div className={styles["menu-name"]}>删除</div>
-                          </div>
-                      ),
-                      type: "danger"
-                  }
-              ]
-    }, [userInfo?.isLogin])
+        let menu =
+            file.type === "DataBase"
+                ? [
+                      {
+                          key: "copyFuzztag",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineDocumentduplicateIcon />
+                                  <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "importPayload",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineImportIcon />
+                                  <div className={styles["menu-name"]}>扩充字典</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "exportCsv",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineExportIcon />
+                                  <div className={styles["menu-name"]}>导出字典</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "rename",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlinePencilaltIcon />
+                                  <div className={styles["menu-name"]}>重命名</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "upload",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineUploadIcon />
+                                  <div className={styles["menu-name"]}>上传</div>
+                              </div>
+                          ),
+                          disabled: !isPayloadOperator(userInfo)
+                      },
+                      {
+                          type: "divider"
+                      },
+                      {
+                          key: "delete",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineTrashIcon />
+                                  <div className={styles["menu-name"]}>删除</div>
+                              </div>
+                          ),
+                          type: "danger"
+                      }
+                  ]
+                : [
+                      {
+                          key: "copyFuzztag",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineDocumentduplicateIcon />
+                                  <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "exportTxt",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineExportIcon />
+                                  <div className={styles["menu-name"]}>导出字典</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "rename",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlinePencilaltIcon />
+                                  <div className={styles["menu-name"]}>重命名</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "toDatabase",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineDatabasebackupIcon />
+                                  <div className={styles["menu-name"]}>转为数据库存储</div>
+                              </div>
+                          )
+                      },
+                      {
+                          key: "upload",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineUploadIcon />
+                                  <div className={styles["menu-name"]}>上传</div>
+                              </div>
+                          ),
+                          disabled: !isPayloadOperator(userInfo)
+                      },
+                      {
+                          type: "divider"
+                      },
+                      {
+                          key: "delete",
+                          label: (
+                              <div className={styles["extra-menu"]}>
+                                  <OutlineTrashIcon />
+                                  <div className={styles["menu-name"]}>删除</div>
+                              </div>
+                          ),
+                          type: "danger"
+                      }
+                  ]
+        if (!isEnpriTrace()) {
+            menu = menu.filter((item) => item.key !== "upload")
+        }
+        return menu
+    }, [userInfo, file.type])
 
     // 右键展开菜单
     const handleRightClick = useMemoizedFn((e) => {
@@ -4580,7 +4594,9 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                                 <PropertyNoAddIcon />
                             </div>
                             <div className={styles["title"]}>{selectInfo}</div>
-                            <div className={styles["sub-title"]}>{t("ReadOnlyNewPayload.supportInsertFileForFuzz")}</div>
+                            <div className={styles["sub-title"]}>
+                                {t("ReadOnlyNewPayload.supportInsertFileForFuzz")}
+                            </div>
                         </div>
                     ) : (
                         <YakitEmpty title={t("ReadOnlyNewPayload.pleaseSelectDictionaryOrFolder")} />
