@@ -10,6 +10,7 @@ export interface AIChatData {
     taskChat: UseChatIPCState["taskChat"]
     grpcFolders: UseChatIPCState["grpcFolders"]
     reActTimelines: UseChatIPCState["reActTimelines"]
+    getChatContentMap?: (chatType: ReActChatElement["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 
 /** UI-chat 信息 */

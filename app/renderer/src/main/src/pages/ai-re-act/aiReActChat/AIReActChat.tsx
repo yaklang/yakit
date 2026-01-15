@@ -31,7 +31,7 @@ const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIRevi
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话", aiChatTextareaRef} = props
     const {casualChat} = useAIChatUIData()
-    const {chatIPCData, timelineMessage} = useChatIPCStore()
+    const {chatIPCData} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 

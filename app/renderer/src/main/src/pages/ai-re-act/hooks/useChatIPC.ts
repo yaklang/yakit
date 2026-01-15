@@ -34,14 +34,23 @@ import {
 import useThrottleState from "@/hook/useThrottleState"
 import {grpcQueryAIEvent} from "@/pages/ai-agent/grpc"
 import useAINodeLabel from "./useAINodeLabel"
+import {AIChatData} from "@/pages/ai-agent/type/aiChat"
 
 const {ipcRenderer} = window.require("electron")
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {getRequest, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd, setSessionChatName} =
-        params || {}
+    const {
+        getRequest,
+        onTaskStart,
+        onTaskReview,
+        onTaskReviewExtra,
+        onReviewRelease,
+        onEnd,
+        setSessionChatName,
+        saveChatDataStore
+    } = params || {}
 
     const {getLabelByParams} = useAINodeLabel()
 
@@ -372,7 +381,21 @@ function useChatIPC(params?: UseChatIPCParams) {
                 return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
             }).reverse()
             setReActTimelines((old) => [...timelineItems, ...old])
-        } catch (error) {}
+        } catch (error) {}  
+
+    })
+    const savaHistoryChats = useMemoizedFn(() => {
+        const answer: AIChatData = {
+            runTimeIDs: cloneDeep(runTimeIDs),
+            coordinatorIDs: cloneDeep(coordinatorIDs),
+            yakExecResult: cloneDeep(yakExecResult),
+            aiPerfData: cloneDeep(aiPerfData),
+            casualChat: cloneDeep(casualChat),
+            taskChat: cloneDeep(taskChat),
+            grpcFolders: cloneDeep(grpcFolders),
+            reActTimelines: cloneDeep(reActTimelines)
+        }
+        saveChatDataStore?.(chatID.current, answer)
     })
 
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
@@ -680,6 +703,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             }
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
+            savaHistoryChats()
             console.log("end", res)
             handleResetGrpcStatus()
             onEnd && onEnd()

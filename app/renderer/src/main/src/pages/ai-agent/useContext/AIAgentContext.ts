@@ -17,11 +17,6 @@ export interface AIAgentContextDispatcher {
     setChats?: Dispatch<SetStateAction<AIChatInfo[]>>
     getChats?: () => AIChatInfo[]
     setActiveChat?: Dispatch<SetStateAction<AIChatInfo | undefined>>
-
-    getChatData?: (session: string) => AIChatData | undefined
-    setChatData?: (session: string, data: AIChatData) => void
-    removeChatData?: (session: string) => void
-    clearChatData?: () => void
 }
 
 export interface AIAgentContextValue {

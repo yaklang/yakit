@@ -56,6 +56,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
 import {v4 as uuidv4} from "uuid"
+import {knowledgeBaseDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -347,20 +348,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
-    /** 历史会话对应的数据集合 */
-    const chatDataRef = useRef<Map<string, AIChatData>>(new Map())
-    const getChatData = useMemoizedFn((session: string) => {
-        return chatDataRef.current.get(session)
-    })
-    const setChatData = useMemoizedFn((session: string, data: AIChatData) => {
-        chatDataRef.current.set(session, data)
-    })
-    const removeChatData = useMemoizedFn((session: string) => {
-        chatDataRef.current.delete(session)
-    })
-    const clearChatData = useMemoizedFn(() => {
-        chatDataRef.current.clear()
-    })
 
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
@@ -381,7 +368,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 grpcFolders: cloneDeep(grpcFolders),
                 reActTimelines: cloneDeep(reActTimelines)
             }
-            setChatData?.(showID, answer)
+            knowledgeBaseDataStore.set(showID, answer)
         }
     })
 
@@ -470,6 +457,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
             events.onClose(activeID)
+            knowledgeBaseDataStore.set(activeID, chatIPCData)
         }
     })
 

@@ -105,15 +105,13 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats} = props
     const {
-        chatIPCData: {
-            casualStatus: {loading, title},
-            systemStream
-        }
-    } = useChatIPCStore()
+        casualStatus: {loading, title},
+        systemStream
+    } = useChatIPCStore().chatIPCData
     const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
 
     const renderItem = (item?: ReActChatElement) => {
-        if(!item?.token) return null 
+        if (!item?.token) return null
         return <AIChatListItem key={item.token} item={item} type='re-act' />
     }
 

@@ -57,7 +57,7 @@ import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {Tooltip} from "antd"
-
+import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 
@@ -75,7 +75,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
     const {getLabelByParams} = useAINodeLabel()
     const {activeChat, setting} = useAIAgentStore()
-    const {setChats, setActiveChat, getSetting, getChatData, setChatData} = useAIAgentDispatcher()
+    const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
 
     // 插件并发构建流 hooks
     const [streams, api] = useMultipleHoldGRPCStream()
@@ -88,7 +88,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
 
     useEffect(() => {
-        const chatData = getChatData && getChatData(activeChat?.session || "")
+        const chatData = aiChatDataStore.get(activeChat?.session || "")
         if (taskChatIsEmpty(chatData?.taskChat)) {
             onSetKeyTask()
         } else if (!!activeChat?.id) {
@@ -144,9 +144,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const activeID = useCreation(() => {
         return activeChat?.session
     }, [activeChat])
+
+    // 是否在断开接口后清空接口数据 (新开聊天对话窗时需要清空)
+    const isClear=useRef(false)
     // 提问结束后缓存数据
     const handleChatingEnd = useMemoizedFn(() => {
-        handleSaveChatInfo()
+        if(isClear.current){
+            events.onReset()
+            isClear.current=false
+        }
         handleStopAfterChangeState()
     })
 
@@ -172,38 +178,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
         getRequest: getSetting,
-        setSessionChatName
+        setSessionChatName,
+        saveChatDataStore: aiChatDataStore.set
     })
-    const {
-        execute,
-        runTimeIDs,
-        aiPerfData,
-        casualChat,
-        taskChat,
-        yakExecResult,
-        grpcFolders,
-        reActTimelines,
-        coordinatorIDs
-    } = chatIPCData
+    const {execute} = chatIPCData
 
-    // 保存上次对话信息
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const showID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatData = {
-                runTimeIDs: cloneDeep(runTimeIDs),
-                coordinatorIDs: cloneDeep(coordinatorIDs),
-                yakExecResult: cloneDeep(yakExecResult),
-                aiPerfData: cloneDeep(aiPerfData),
-                casualChat: cloneDeep(casualChat),
-                taskChat: cloneDeep(taskChat),
-                grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines)
-            }
-            setChatData?.(showID, answer)
-        }
-    })
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
         const {qs} = value
         const sessionID = activeChat?.session || ""
@@ -238,6 +217,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             onSetReAct()
         } else {
             newChat = activeChat as AIChatInfo
+            aiChatDataStore.remove(newChat.session)
         }
         const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
         // 发送初始化参数
@@ -338,8 +318,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     // 新开聊天对话窗
                     case ReActChatEventEnum.NEW_CHAT:
                         onStop()
-                        handleSaveChatInfo()
-                        events.onReset()
+                        isClear.current=true
+                        // events.onReset()
                         setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
@@ -377,7 +357,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onHistoryAfter = useMemoizedFn(() => {
         const token = events.fetchToken()
         if (mode === "welcome") setMode("re-act")
-        if (execute && activeChat?.id !== token) {
+        if (execute && activeChat?.session !== token) {
             events.onClose(token)
         }
     })
@@ -617,7 +597,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             chatIPCEvents: events,
             handleSendCasual,
             handleSendTask,
-            handleSaveChatInfo,
             handleStart,
             handleStop: onStop,
             handleSend,

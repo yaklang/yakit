@@ -11,6 +11,7 @@ import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpc
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {Dispatch, MutableRefObject, SetStateAction} from "react"
+import { AIChatData } from "@/pages/ai-agent/type/aiChat"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -130,6 +131,8 @@ export interface UseChatIPCParams {
     onEnd?: () => void
     /** 设置会话的名字 */
     setSessionChatName?: (session: string, name: string) => void
+    /** 保存历史数据 */
+    saveChatDataStore?: (session: string, data: AIChatData) => void
 }
 
 /** 会话文件系统-pin */

@@ -1,6 +1,6 @@
-import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import type {ChatStream, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
+import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {useRafInterval} from "ahooks"
 import {useCallback, useRef, useState, type FC} from "react"
 
@@ -9,10 +9,10 @@ interface StreamingChatContentProps extends ReActChatElement {
 }
 
 const StreamingChatContent: FC<StreamingChatContentProps> = ({streamClassName, chatType, token}) => {
-    const {getChatContentMap} = useChatIPCDispatcher().chatIPCEvents
+    const {getChatContentMap} = useAIChatUIData()
 
     const getChatContent = useCallback(() => {
-        return getChatContentMap(chatType, token) as ChatStream
+        return getChatContentMap?.(chatType, token) as ChatStream
     }, [chatType, getChatContentMap, token])
 
     const [renderData, setRenderData] = useState<ChatStream>(getChatContent())

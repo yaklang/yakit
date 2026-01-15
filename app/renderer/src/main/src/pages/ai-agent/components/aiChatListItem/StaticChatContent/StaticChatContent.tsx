@@ -1,17 +1,15 @@
-import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import type {AIChatQSData, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
+import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import type {FC, ReactNode} from "react"
 
 interface StaticChatContentProps extends ReActChatElement {
-    children?: (contentItem: AIChatQSData ) => ReactNode
+    children?: (contentItem: AIChatQSData) => ReactNode
 }
 
 const StaticChatContent: FC<StaticChatContentProps> = ({chatType, token, children}) => {
-    const {
-        chatIPCEvents: {getChatContentMap}
-    } = useChatIPCDispatcher()
+    const {getChatContentMap} = useAIChatUIData()
 
-    const chatItem = getChatContentMap(chatType, token)
+    const chatItem = getChatContentMap?.(chatType, token)
     if (!chatItem) return null
     return <>{children?.(chatItem)}</>
 }

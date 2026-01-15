@@ -40,21 +40,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // ai-agent-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
-    /** 历史会话对应的数据集合 */
-    const chatDataRef = useRef<Map<string, AIChatData>>(new Map())
-    const getChatData = useMemoizedFn((session: string) => {
-        return chatDataRef.current.get(session)
-    })
-    const setChatData = useMemoizedFn((session: string, data: AIChatData) => {
-        chatDataRef.current.set(session, data)
-    })
-    const removeChatData = useMemoizedFn((session: string) => {
-        chatDataRef.current.delete(session)
-    })
-    const clearChatData = useMemoizedFn(() => {
-        chatDataRef.current.clear()
-    })
-
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
@@ -109,10 +94,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setChats: setChats,
             getChats: getChats,
             setActiveChat: setActiveChat,
-            getChatData,
-            setChatData,
-            removeChatData,
-            clearChatData
         }
     }, [])
 
