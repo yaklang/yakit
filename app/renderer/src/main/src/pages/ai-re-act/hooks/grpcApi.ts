@@ -170,6 +170,8 @@ export interface AIInputEvent {
     AttachedFilePath?: string[]
     /** 附加资源信息 */
     AttachedResourceInfo?: AttachedResourceInfo[]
+    /** 专注模式 */
+    FocusModeLoop?: string
 }
 export interface AttachedResourceInfo {
     Key: AttachedResourceKeyEnum

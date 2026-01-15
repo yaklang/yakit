@@ -13,6 +13,8 @@
         }
         .ant-select-single .ant-select-selector .ant-select-selection-item {
             font-size: 11px;
+            display: flex;
+            align-items: center;
         }
     }
 }
@@ -43,6 +45,7 @@
     flex-direction: column;
     gap: 4px;
     font-size: 12px;
+
     .text {
         color: var(--Colors-Use-Neutral-Text-1-Title);
     }
@@ -61,9 +64,17 @@
     gap: 4px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
 
-    font-size: var(--spacing-radius-num-12, 12px);
+    font-size: 12px;
     font-style: normal;
     font-weight: 400;
+
+    .select-option-text {
+        max-width: 120px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
+    }
     svg {
         @extend %icon;
     }

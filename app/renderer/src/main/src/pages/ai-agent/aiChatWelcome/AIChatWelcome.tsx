@@ -408,14 +408,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
                                 defaultValue={inputDefaultValue.current}
                                 ref={aiChatTextareaRef}
                                 onSubmit={handleTriageSubmit}
-                                extraFooterLeft={
-                                    <>
-                                        <AIModelSelect />
-                                        <React.Suspense fallback={<div>loading...</div>}>
-                                            <AIReviewRuleSelect />
-                                        </React.Suspense>
-                                    </>
-                                }
                                 className={classNames({
                                     [styles["input-body"]]: !isEmptyAIMaterials
                                 })}

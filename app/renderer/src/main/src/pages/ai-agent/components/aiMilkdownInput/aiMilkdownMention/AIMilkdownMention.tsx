@@ -4,7 +4,6 @@ import {slashFactory, SlashProvider} from "@milkdown/kit/plugin/slash"
 import {useInstance} from "@milkdown/react"
 import {useNodeViewContext, usePluginViewContext} from "@prosemirror-adapter/react"
 import {useClickAway, useCreation, useDebounceEffect, useKeyPress, useMemoizedFn} from "ahooks"
-import {InputRef} from "antd"
 import styles from "./AIMilkdownMention.module.scss"
 import {iconMap} from "@/pages/ai-agent/defaultConstant"
 import {AIChatMention} from "../../aiChatMention/AIChatMention"
@@ -13,14 +12,18 @@ import {callCommand} from "@milkdown/kit/utils"
 import {aiMentionCommand, AIMentionCommandParams} from "./aiMentionPlugin"
 import classNames from "classnames"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import {removeAIOffsetCommand} from "../customPlugin"
 
 export const aiMentionFactory = slashFactory("ai-mention-commands")
 
-interface AIMilkdownMentionProps {}
+interface AIMilkdownMentionProps {
+    onMemfitExtra?: (v: AIMentionCommandParams) => void
+}
 const mentionWidth = 300
 const mentionTarget = "@"
 
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
+    const {onMemfitExtra} = props
     const ref = useRef<HTMLDivElement>(null)
     const slashProvider = useRef<SlashProvider>()
 
@@ -83,7 +86,16 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
             mentionId: value?.id || "0",
             mentionName: value?.name || ""
         }
-        action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+        switch (type) {
+            case "focusMode":
+                action(callCommand(removeAIOffsetCommand.key))
+                onMemfitExtra?.(params)
+                break
+
+            default:
+                action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+                break
+        }
 
         onHide()
     })

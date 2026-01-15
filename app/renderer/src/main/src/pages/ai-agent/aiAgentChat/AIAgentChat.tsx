@@ -124,7 +124,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
     const [reviewExpand, setReviewExpand] = useState<boolean>(true)
 
-
     const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
         setReviewExpand(true)
         setReviewInfo(cloneDeep(info))
@@ -146,12 +145,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }, [activeChat])
 
     // 是否在断开接口后清空接口数据 (新开聊天对话窗时需要清空)
-    const isClear=useRef(false)
+    const isClear = useRef(false)
     // 提问结束后缓存数据
     const handleChatingEnd = useMemoizedFn(() => {
-        if(isClear.current){
+        if (isClear.current) {
             events.onReset()
-            isClear.current=false
+            isClear.current = false
         }
         handleStopAfterChangeState()
     })
@@ -226,7 +225,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             Params: {
                 ...request
             },
-            AttachedResourceInfo: attachedResourceInfo
+            AttachedResourceInfo: attachedResourceInfo,
+            FocusModeLoop: value.focusMode
         }
         events.onStart({token: newChat.session, params: startParams, extraValue: extra})
     })
@@ -318,7 +318,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     // 新开聊天对话窗
                     case ReActChatEventEnum.NEW_CHAT:
                         onStop()
-                        isClear.current=true
+                        isClear.current = true
                         // events.onReset()
                         setActiveChat?.(undefined)
                         setTimeout(() => {
@@ -589,9 +589,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             chatIPCData,
             planReviewTreeKeywordsMap,
             reviewInfo,
-            reviewExpand,
+            reviewExpand
         }
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, ])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,

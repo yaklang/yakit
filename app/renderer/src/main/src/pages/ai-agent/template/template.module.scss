@@ -76,14 +76,53 @@ textarea.qs-input-textarea {
         justify-content: flex-start;
         gap: 8px;
         flex: 1;
-        // overflow: hidden;
+        overflow: hidden;
+    }
+    .footer-left-btns-default {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+
+        container-type: inline-size;
+        container-name: textareaFooterLeftBtnsDefault;
+    }
+
+    @container textareaFooterLeftBtnsDefault (min-width: 401px) and (max-width: 500px) {
+        .footer-left-btns-default {
+            span[data-label="true"] {
+                max-width: 60px;
+            }
+        }
+    }
+    @container textareaFooterLeftBtnsDefault (min-width: 301px) and (max-width: 400px) {
+        .footer-left-btns-default {
+            & > :nth-last-child(1) {
+                span[data-label="true"] {
+                    max-width: 0;
+                }
+            }
+            & > :nth-last-child(3) {
+                span[data-label="true"] {
+                    max-width: 30px;
+                }
+            }
+        }
+    }
+    @container textareaFooterLeftBtnsDefault (max-width: 300px) {
+        .footer-left-btns-default {
+            span[data-label="true"] {
+                max-width: 0;
+            }
+        }
     }
     .footer-right {
         display: flex;
         align-items: center;
         justify-content: flex-end;
         gap: 8px;
-        flex: 1;
         overflow: hidden;
     }
 }

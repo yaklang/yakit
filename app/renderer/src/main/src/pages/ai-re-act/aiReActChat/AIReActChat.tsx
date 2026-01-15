@@ -1,7 +1,7 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef} from "react"
 
 import styles from "./AIReActChat.module.scss"
-import {AIReActChatProps, AIReActTimelineMessageProps} from "./AIReActChatType"
+import {AIReActChatProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
@@ -15,9 +15,6 @@ import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButton} from "./AIReActComponent"
 import {AIInputEvent} from "../hooks/grpcApi"
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import {PageNodeItemProps} from "@/store/pageInfo"
@@ -42,9 +39,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         valuePropName: "showFreeChat",
         trigger: "setShowFreeChat"
     })
-
-    const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
-    const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
 
     const {activeChat, setting} = useAIAgentStore()
 
@@ -76,7 +70,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
                 FreeInput: data.qs,
-                AttachedResourceInfo: attachedResourceInfo
+                AttachedResourceInfo: attachedResourceInfo,
+                FocusModeLoop: data.focusMode
             }
             // 发送到服务端
             chatIPCEvents.onSend({
@@ -173,14 +168,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                                     />
                                                 )}
                                             </div>
-                                        }
-                                        extraFooterLeft={
-                                            <>
-                                                <AIModelSelect />
-                                                <React.Suspense fallback={<div>loading...</div>}>
-                                                    <AIReviewRuleSelect />
-                                                </React.Suspense>
-                                            </>
                                         }
                                     />
                                 </div>

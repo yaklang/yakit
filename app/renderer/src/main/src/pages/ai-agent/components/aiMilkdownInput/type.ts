@@ -8,12 +8,14 @@ export interface AIMilkdownInputRef {
 }
 export interface AIMilkdownInputBaseProps {
     ref?: React.ForwardedRef<AIMilkdownInputRef>
-    /**true 只读 */
+    /** true 只读 */
     readonly?: boolean
-    /**值变化 */
+    /** 值变化 */
     onUpdateContent?: (nextMarkdown: string) => void
-    /**默认值 */
+    /** 默认值 */
     defaultValue?: string
     classNameWrapper?: string
     onUpdateEditor?: (s: EditorMilkdownProps) => void
+    /** 额外的提及处理 */
+    onMemfitExtra?: (v: AIMentionCommandParams) => void
 }

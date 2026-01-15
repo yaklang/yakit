@@ -1,14 +1,4 @@
-import React, {
-    forwardRef,
-    KeyboardEventHandler,
-    memo,
-    Ref,
-    RefAttributes,
-    useEffect,
-    useImperativeHandle,
-    useRef,
-    useState
-} from "react"
+import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -30,6 +20,9 @@ import {extractDataWithMilkdown, setEditorValue} from "../components/aiMilkdownI
 import {editorViewCtx} from "@milkdown/kit/core"
 import {convertKeyEventToKeyCombination} from "@/utils/globalShortcutKey/utils"
 import {YakitKeyBoard} from "@/utils/globalShortcutKey/keyboard"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
+import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
+import {AIFocusMode} from "@/pages/ai-re-act/aiFocusMode/AIFocusMode"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -111,8 +104,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             const value: AIChatTextareaSubmit = {
                 qs: plainText,
                 mentionList: mentions,
-                showQS: qs
+                showQS: qs,
+                focusMode
             }
+            setFocusMode("")
             onSubmit && onSubmit(value)
         })
         // #endregion
@@ -165,6 +160,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 handleSubmit()
             }
         })
+        const [focusMode, setFocusMode] = useState<string>()
+
+        const onMemfitExtra = useMemoizedFn((value: AIMentionCommandParams) => {
+            setFocusMode(value.mentionName)
+        })
+
         return (
             <div
                 className={classNames(
@@ -209,6 +210,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         defaultValue={defaultValue}
                         onUpdateEditor={onUpdateEditor}
                         onUpdateContent={onUpdateContent}
+                        onMemfitExtra={onMemfitExtra}
                     />
                 </div>
 
@@ -219,6 +221,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                             if (!!extraFooterLeft) e.stopPropagation()
                         }}
                     >
+                        <div className={styles["footer-left-btns-default"]}>
+                            <AIModelSelect />
+                            <React.Suspense fallback={<div>loading...</div>}>
+                                <AIReviewRuleSelect />
+                            </React.Suspense>
+                            {focusMode && <AIFocusMode value={focusMode} onChange={setFocusMode} />}
+                        </div>
                         {extraFooterLeft || null}
                     </div>
                     <div

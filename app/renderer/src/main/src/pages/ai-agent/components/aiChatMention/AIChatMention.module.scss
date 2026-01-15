@@ -63,6 +63,10 @@
     @include ai-chat-mention-body("knowledge-base");
     outline: none;
 }
+.focus-mode-list-of-mention {
+    @include ai-chat-mention-body("focus-mode");
+    outline: none;
+}
 .file-system-tree-of-mention {
     padding: 0 2px;
     height: 340px;

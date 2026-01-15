@@ -101,7 +101,14 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                         label={
                             <div className={styles["select-option"]}>
                                 <OutlineCodepenIcon />
-                                {item.label}
+                                {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
+                                <span
+                                    data-label='true'
+                                    className={styles["select-option-text"]}
+                                    title={`${item.label}`}
+                                >
+                                    {item.label}
+                                </span>
                             </div>
                         }
                     >

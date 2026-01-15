@@ -44,3 +44,7 @@ export interface AIMentionSelectItemProps {
 export interface FileSystemTreeOfMentionProps {
     onSelect: (path: string, isFolder: boolean) => void
 }
+
+export interface FocusModeOfMentionProps extends AIChatMention, AIChatMentionRef{
+    onSelect: (v) => void;
+}
