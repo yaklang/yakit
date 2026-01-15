@@ -111,6 +111,7 @@ export interface ThirdPartyApplicationConfig {
         | "quake"
         | string
     ExtraParams?: KVPair[]
+    APIKey?: string
 }
 
 type TenumBuffer = Buffer | Uint8Array

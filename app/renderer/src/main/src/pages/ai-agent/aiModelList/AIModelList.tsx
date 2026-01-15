@@ -48,7 +48,8 @@ import {
     OutlinePlussmIcon,
     OutlineRefreshIcon,
     OutlineTrashIcon,
-    OutlineSpeechToTextIcon
+    OutlineSpeechToTextIcon,
+    OutlineCheckIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -72,10 +73,11 @@ import classNames from "classnames"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
-import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 
 export const setAIModal = (params: {
     config: GlobalNetworkConfig
@@ -102,6 +104,9 @@ export const setAIModal = (params: {
         closable: true,
         maskClosable: false,
         onCancel: () => {
+            // if (config?.AppConfigs?.length === 0) {
+            //     emiter.emit("onRefreshAvailableAIModelList", "false")
+            // }
             m.destroy()
         },
         content: (
@@ -126,10 +131,24 @@ export const setAIModal = (params: {
                         apiSetGlobalNetworkConfig({...config, ...params}).then(() => {
                             onSuccess()
                             emiter.emit("onRefreshAvailableAIModelList", isAdd)
+                            emiter.emit(
+                                "aiModelSelectChange",
+                                JSON.stringify({
+                                    type: "online",
+                                    params: {
+                                        setting: true,
+                                        AIService: data.Type,
+                                        AIModelName: data?.ExtraParams?.find((e) => e.Key === "model")?.Value || ""
+                                    }
+                                })
+                            )
                             m.destroy()
                         })
                     }}
                     onCancel={() => {
+                        // if (config?.AppConfigs?.length === 0) {
+                        //     emiter.emit("onRefreshAvailableAIModelList", "false")
+                        // }
                         m.destroy()
                     }}
                 />
@@ -323,6 +342,8 @@ export default AIModelList
 
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
+        const {setting} = useAIAgentStore()
+        const {setSetting} = useAIAgentDispatcher()
         const {setOnlineTotal, onAdd} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
@@ -384,16 +405,18 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             if (!configRef.current) return
             const newList = list.filter((i) => i.Type !== item.Type)
             setList(newList)
-            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig(newList)}).then(() => {
+            const appConfigs = getNewAppConfig(newList)
+            const isRefreshValue = setting.AIService === item.Type || appConfigs.length === 0
+            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: appConfigs}).then(() => {
                 getList()
-                emiter.emit("onRefreshAvailableAIModelList")
+                emiter.emit("onRefreshAvailableAIModelList", `${isRefreshValue}`)
             })
         })
         const onRemoveAll = useMemoizedFn(() => {
             if (!configRef.current) return
             apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig([])}).then(() => {
                 getList()
-                emiter.emit("onRefreshAvailableAIModelList")
+                emiter.emit("onRefreshAvailableAIModelList", "true")
             })
         })
         /**
@@ -426,6 +449,20 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             },
             {wait: 500}
         ).run
+        const onSelectModel = useMemoizedFn((rowData: ThirdPartyApplicationConfig) => {
+            const aiModelName = rowData.ExtraParams?.find((ele) => ele.Key === "model")?.Value || ""
+            setSetting && setSetting((old) => ({...old, AIService: rowData.Type, AIModelName: aiModelName}))
+            emiter.emit(
+                "aiModelSelectChange",
+                JSON.stringify({
+                    type: "online",
+                    params: {
+                        AIService: rowData.Type,
+                        AIModelName: aiModelName
+                    }
+                })
+            )
+        })
         return (
             <YakitSpin spinning={spinning}>
                 {list.length > 0 ? (
@@ -446,6 +483,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                                             [styles["ai-online-model-list-row-isDragging"]]:
                                                                 snapshot.isDragging
                                                         })}
+                                                        onClick={() => onSelectModel(rowData)}
                                                     >
                                                         <SolidDragsortIcon className={styles["drag-sort-icon"]} />
                                                         <AIOnlineModelListItem
@@ -482,9 +520,18 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
 )
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
     const {item, onEdit, onRemove} = props
+    const {setting} = useAIAgentStore()
     const model = useCreation(() => {
         return item.ExtraParams?.find((ele) => ele.Key === "model")?.Value
     }, [item.ExtraParams])
+    const onEditClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onEdit(item)
+    })
+    const onRemoveClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onRemove(item)
+    })
     return (
         <div className={styles["ai-online-model-list-item"]}>
             <div className={styles["ai-online-model-list-item-header"]}>
@@ -496,11 +543,21 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
                     <span className={styles["ai-online-model-list-item-model-text"]}>{model}</span>
                 </div>
             </div>
-            <div className={styles["ai-online-model-list-item-edit"]}>
-                <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={() => onEdit(item)} />
-                <YakitPopconfirm title={`确定要删除模型 ${item.Type} 吗？`} onConfirm={() => onRemove(item)}>
-                    <YakitButton type='text2' icon={<OutlineTrashIcon />} className={styles["trash-icon"]} />
-                </YakitPopconfirm>
+            <div className={styles["ai-online-model-list-item-extra"]}>
+                <div className={styles["ai-online-model-list-item-extra-edit"]}>
+                    <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
+                    <YakitPopconfirm title={`确定要删除模型 ${item.Type} 吗？`} onConfirm={onRemoveClick}>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineTrashIcon />}
+                            className={styles["trash-icon"]}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                        />
+                    </YakitPopconfirm>
+                </div>
+                {setting.AIService === item.Type && <OutlineCheckIcon className={styles["check-icon"]} />}
             </div>
         </div>
     )
@@ -732,7 +789,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             setIsReady(response?.Ok || false)
         })
     })
-    const onStart = useMemoizedFn(() => {
+    const onStart = useMemoizedFn((e) => {
+        e.stopPropagation()
         const m = showYakitModal({
             title: `启动模型 - ${item.Name}`,
             width: "50%",
@@ -753,7 +811,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             }
         })
     })
-    const onStop = useMemoizedFn(() => {
+    const onStop = useMemoizedFn((e) => {
+        e.stopPropagation()
         setStopLoading(true)
         grpcStopLocalModel({ModelName: item.Name})
             .then(() => {
@@ -766,7 +825,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                 }, 200)
             )
     })
-    const onDown = useMemoizedFn(() => {
+    const onDown = useMemoizedFn((e) => {
+        e.stopPropagation()
         const m = showYakitModal({
             title: "下载模型",
             subTitle: item.Name,
@@ -897,6 +957,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     const isShowEnable = useCreation(() => {
         return !isReady && !item.IsLocal
     }, [isReady, item.IsLocal])
+
     return (
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
@@ -939,7 +1000,10 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                             <YakitDropdownMenu
                                 menu={{
                                     data: localModelMenu,
-                                    onClick: ({key}) => menuSelect(key)
+                                    onClick: (e) => {
+                                        e.domEvent.stopPropagation()
+                                        menuSelect(e.key)
+                                    }
                                 }}
                                 dropdown={{
                                     trigger: ["click", "contextMenu"],
@@ -953,6 +1017,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                                     type='text2'
                                     size='small'
                                     icon={<OutlineDotsverticalIcon />}
+                                    onClick={(e) => e.stopPropagation()}
                                 />
                             </YakitDropdownMenu>
                         </div>

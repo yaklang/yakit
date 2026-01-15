@@ -2003,7 +2003,7 @@ export const OutlineHandleColorsIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineHandleColors} {...props} />
 }
 
-const OutlineWarpColors = () => {
+const ColorsOutlineWarp = () => {
     const id = uuidv4()
     return (
         <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
@@ -2035,6 +2035,6 @@ const OutlineWarpColors = () => {
 /**
  * @description Outline/换行
  */
-export const OutlineWarpColorsIcon = (props: Partial<IconProps>) => {
-    return <Icon component={OutlineWarpColors} {...props} />
+export const ColorsOutlineWarpIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsOutlineWarp} {...props} />
 }

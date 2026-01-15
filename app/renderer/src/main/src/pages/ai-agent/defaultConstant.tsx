@@ -26,7 +26,7 @@ import {
     OpenRouterIcon,
     SiliconFlowIcon,
     TongyiIcon,
-    YakIcon
+    MemfitIcon
 } from "./aiModelList/icon"
 import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AITaskStatus} from "../ai-re-act/hooks/grpcApi"
@@ -191,11 +191,11 @@ export const AIOnlineModelIconMap: Record<string, ReactNode> = {
     ollama: <OllamaIcon />,
     openrouter: <OpenRouterIcon />,
     gemini: <GeminiIcon />,
-    "yaklang-writer": <YakIcon />,
-    "yaklang-rag": <YakIcon />,
-    "yaklang-com-search": <YakIcon />,
-    "yakit-plugin-search": <YakIcon />,
-    aibalance: <YakIcon />
+    "yaklang-writer": <MemfitIcon />,
+    "yaklang-rag": <MemfitIcon />,
+    "yaklang-com-search": <MemfitIcon />,
+    "yakit-plugin-search": <MemfitIcon />,
+    aibalance: <MemfitIcon />
 }
 
 export enum AILocalModelTypeEnum {
@@ -303,5 +303,6 @@ export enum AttachedResourceTypeEnum {
 export enum AttachedResourceKeyEnum {
     CONTEXT_PROVIDER_KEY_FILE_PATH = "file_path",
     CONTEXT_PROVIDER_KEY_FILE_CONTENT = "file_content",
-    CONTEXT_PROVIDER_KEY_NAME = "name"
+    CONTEXT_PROVIDER_KEY_NAME = "name",
+    CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = "system_flag"
 }

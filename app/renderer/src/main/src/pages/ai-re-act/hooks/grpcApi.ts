@@ -89,6 +89,8 @@ export interface AIStartParams {
     AllowGenerateReport?: boolean
     /**选择 AI 服务 */
     AIService?: string
+    /**选择 AI 服务模型名称 */
+    AIModelName?: string
     ReActMaxIteration?: number
     /** 时间线上下文限制（默认100） */
     TimelineItemLimit?: number
@@ -105,7 +107,8 @@ export enum AIInputEventHotPatchTypeEnum {
     HotPatchType_AllowRequireForUserInteract = "AllowRequireForUserInteract",
     HotPatchType_AgreePolicy = "AgreePolicy",
     HotPatchType_AIService = "AIService",
-    HotPatchType_RiskControlScore = "RiskControlScore"
+    HotPatchType_RiskControlScore = "RiskControlScore",
+    HotPatchType_AIModelName = "ModelName"
 }
 
 /** AIInputEvent-SyncType 的可选值 */

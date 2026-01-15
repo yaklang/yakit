@@ -152,11 +152,20 @@ const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedReso
                 Value: mention.mentionName
             }
         case "knowledgeBase":
-            return {
-                Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
-                Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-                Value: mention.mentionName
+            if (mention.mentionId === "@所有知识库") {
+                return {
+                    Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
+                    Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_SYSTEM_FLAG,
+                    Value: "all_knowledge_base"
+                }
+            } else {
+                return {
+                    Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
+                    Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
+                    Value: mention.mentionName
+                }
             }
+
         default:
             return null
     }

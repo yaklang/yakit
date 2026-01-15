@@ -45,7 +45,7 @@
             .drag-sort-icon {
                 opacity: 1;
             }
-            .ai-online-model-list-item-edit {
+            .ai-online-model-list-item-extra-edit {
                 display: flex;
             }
             .ai-online-model-list-item-model {
@@ -68,7 +68,7 @@
         .drag-sort-icon {
             opacity: 1;
         }
-        .ai-online-model-list-item-edit {
+        .ai-online-model-list-item-extra-edit {
             display: flex;
         }
         .ai-online-model-list-item-model {
@@ -111,6 +111,7 @@
             height: 16px;
             font-size: 11px;
             overflow: hidden;
+            flex-shrink: 0;
             &-text {
                 white-space: nowrap;
                 text-overflow: ellipsis;
@@ -124,11 +125,14 @@
                 }
             }
         }
-
-        &-edit {
-            @extend %display-flex-center;
-            display: none;
-            gap: 4px;
+        &-extra {
+            display: flex;
+            align-items: center;
+            &-edit {
+                @extend %display-flex-center;
+                display: none;
+                gap: 4px;
+            }
         }
         .trash-icon {
             svg {
@@ -308,3 +312,7 @@
 }
 
 /**************** ai-local-model-icon end ****************/
+
+.check-icon {
+    color: var(--Colors-Use-Main-Primary);
+}

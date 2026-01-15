@@ -969,6 +969,7 @@ service Yak {
 
   rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
   rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc GenerateQuestionIndexForKnowledgeBase(GenerateQuestionIndexForKnowledgeBaseRequest) returns(stream GenerateQuestionIndexForKnowledgeBaseResponse);
 
   // Entity Repository
   rpc ListEntityRepository(Empty) returns(ListEntityRepositoryResponse);
@@ -1323,6 +1324,19 @@ message IsThirdPartyBinaryReadyResponse {
 message StartThirdPartyBinaryRequest {
   string Name = 1;
   repeated string Args = 2;
+}
+
+message GenerateQuestionIndexForKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string KnowledgeBaseName = 2;
+  bool Force = 3;
+  string HiddenIndex = 4;
+}
+
+message GenerateQuestionIndexForKnowledgeBaseResponse {
+  double Percent = 1;
+  string Message = 2;
+  string MessageType = 3;
 }
 
 message BuildVectorIndexForKnowledgeBaseEntryRequest {
@@ -1844,6 +1858,7 @@ message AIStartParams {
 
   // 选择 AI 服务
   string AIService = 26;
+  string AIModelName = 33;
 
   int64 ReActMaxIteration = 27;
 
@@ -1871,16 +1886,20 @@ message AIEventFilter {
   repeated string CoordinatorId = 3;
   repeated string TaskIndex = 4;
   repeated string TaskUUID = 5;
+  string SessionID = 6;
+  string ProcessID = 7;
 }
-
 
 message AIEventQueryRequest {
   AIEventFilter Filter = 1;
   string  ProcessID = 2;
+  Paging Pagination = 3;
 }
 
 message AIEventQueryResponse {
   repeated AIOutputEvent Events = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
 }
 
 message AITaskQueryRequest {
@@ -1972,7 +1991,7 @@ message ExportAILogsRequest {
 }
 
 message ExportAILogsResponse {
-  string FilePath = 1;  
+  string FilePath = 1;
 }
 
 message StartMcpServerRequest {
@@ -8336,6 +8355,13 @@ message MITMV2Request{
   // runtime change system proxy enable/disable
   bool SetDisableSystemProxy = 50;
 
+  // SNI (Server Name Indication) configuration
+  // 使用两个字段精确控制 SNI 行为：
+  // 1. 自动模式（默认）：OverwriteSNI=false，根据 Host 自动推断
+  // 2. 强制模式：OverwriteSNI=true, SNI="custom.domain.com"，使用指定值
+  // 3. 清空模式：OverwriteSNI=true, SNI=""，不发送 SNI
+  string SNI = 51;           // SNI 值
+  bool OverwriteSNI = 52;    // 是否覆盖自动推断的 SNI
 }
 
 message MITMV2Response {

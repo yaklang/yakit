@@ -266,3 +266,22 @@ export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest, null> = (par
             .catch(reject)
     })
 }
+
+export interface ListAiModelResponse {
+    ModelName: string[]
+}
+export interface ListAiModelRequest {
+    Config: string
+}
+/**获取模型名称列表 */
+export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("ListAiModel", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcListAiModel 失败:" + err)
+                reject(err)
+            })
+    })
+}

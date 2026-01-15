@@ -22,7 +22,7 @@ import {AIAgentGrpcApi} from "../../../ai-re-act/hooks/grpcApi"
 import classNames from "classnames"
 import styles from "./AIReActChatReview.module.scss"
 import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {OutlineHandleColorsIcon, OutlineWarpColorsIcon} from "@/assets/icon/colors"
+import {OutlineHandleColorsIcon, ColorsOutlineWarpIcon} from "@/assets/icon/colors"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {AIReviewType} from "../../../ai-re-act/hooks/aiRender"
 import {AIForge} from "@/pages/ai-agent/type/forge"
@@ -467,7 +467,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                     )}
                     <button className={styles["continue-btn"]} onClick={handleContinue}>
                         立即执行
-                        <OutlineWarpColorsIcon />
+                        <ColorsOutlineWarpIcon />
                     </button>
                 </>
             )
