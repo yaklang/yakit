@@ -179,6 +179,21 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
+    // #region 专注模式状态相关逻辑
+    const focusOfTaskID = useRef("")
+    const [focusMode, setFocusMode] = useState<string>("")
+    const handleFocusModeChange = useMemoizedFn((id: string, mode: string) => {
+        if (focusOfTaskID.current && focusOfTaskID.current !== id) return
+        focusOfTaskID.current = id
+        setFocusMode(mode)
+    })
+
+    const handleResetFocusMode = useMemoizedFn(() => {
+        focusOfTaskID.current = ""
+        setFocusMode("")
+    })
+    // #endregion
+
     // #region 单次流执行时的输出展示数据
     // 日志
     const logEvents = useAIChatLog()
@@ -257,6 +272,11 @@ function useChatIPC(params?: UseChatIPCParams) {
             const {Type, NodeId, NodeIdVerbose, Timestamp} = res
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+            if (NodeId === "react_task_dequeue" && data.focus_mode) {
+                // 记录专注模式状态
+                handleFocusModeChange(data.react_task_id, data.focus_mode)
+            }
+
             handleNotifyMessage({
                 Type,
                 NodeId,
@@ -341,6 +361,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetMemoryList()
         handleResetReActTimelines()
         handleResetSystemStream()
+        handleResetFocusMode()
         handleResetCasualChatLoading()
         handleResetTaskChatLoading()
 
@@ -381,8 +402,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
             }).reverse()
             setReActTimelines((old) => [...timelineItems, ...old])
-        } catch (error) {}  
-
+        } catch (error) {}
     })
     const savaHistoryChats = useMemoizedFn(() => {
         const answer: AIChatData = {
@@ -598,6 +618,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                         }
 
                         if (react_task_now_status === "completed") {
+                            if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
                             handleResetCasualChatLoading()
                         }
                         return
@@ -781,7 +802,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             memoryList,
             taskStatus,
             systemStream,
-            coordinatorIDs
+            coordinatorIDs,
+            focusMode
         }
     }, [
         execute,
@@ -797,7 +819,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         memoryList,
         taskStatus,
         systemStream,
-        coordinatorIDs
+        coordinatorIDs,
+        focusMode
     ])
 
     const event: UseChatIPCEvents = useCreation(() => {

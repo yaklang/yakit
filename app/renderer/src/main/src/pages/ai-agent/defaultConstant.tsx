@@ -262,7 +262,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     memoryList: {...DefaultMemoryList},
     taskStatus: {loading: false, plan: "", task: ""},
     systemStream: "",
-    coordinatorIDs: []
+    coordinatorIDs: [],
+    focusMode: ""
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},
@@ -296,7 +297,7 @@ export const iconMap = {
     forge: <OutlineBotIcon />,
     tool: <OutlineWrenchIcon />,
     knowledgeBase: <OutlineBookOpenTextIcon />,
-    focusMode: <OutlineBookOpenTextIcon />,
+    focusMode: <OutlineBookOpenTextIcon />
 }
 
 export enum AttachedResourceTypeEnum {

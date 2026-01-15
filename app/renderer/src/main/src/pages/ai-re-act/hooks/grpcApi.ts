@@ -501,6 +501,8 @@ export declare namespace AIAgentGrpcApi {
 
     /** 问题队列状态变化 */
     export interface QuestionQueueStatusChange {
+        /** 专注模式 */
+        focus_mode: string
         /** 问题ID */
         react_task_id: string
         /** 问题内容 */
@@ -510,6 +512,7 @@ export declare namespace AIAgentGrpcApi {
     }
     export interface QuestionQueueItem {
         created_at: string
+        focus_mode: string
         id: string
         status: AITaskStatus
         user_input: string

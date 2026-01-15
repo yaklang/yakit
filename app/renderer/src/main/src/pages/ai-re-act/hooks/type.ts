@@ -11,7 +11,7 @@ import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpc
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {Dispatch, MutableRefObject, SetStateAction} from "react"
-import { AIChatData } from "@/pages/ai-agent/type/aiChat"
+import {AIChatData} from "@/pages/ai-agent/type/aiChat"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -189,6 +189,8 @@ export interface UseChatIPCState {
     taskStatus: PlanLoadingStatus
     /** 系统流信息(isSystem=true&type=stream) */
     systemStream: string
+    /** 专注模式状态(仅供自由对话[reAct])使用 */
+    focusMode: string
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
