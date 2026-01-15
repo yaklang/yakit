@@ -7,12 +7,3 @@ export enum RemoteAIReActGV {
     /** AI-ReAct 聊天历史记录 */
     AIReActChatHistory = "ai-re-act-chat-history"
 }
-
-/**
- * @deprecated
- * AI-ReAct 标签页枚举
- * */
-// export enum AITabsEnum {
-//     answer = "answer",
-//     log = "log"
-// }

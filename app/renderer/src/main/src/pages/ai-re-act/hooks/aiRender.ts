@@ -9,8 +9,6 @@ interface AIOutputBaseInfo {
 }
 // #endregion
 
-export type UIAIOutputLog = AIAgentGrpcApi.Log & AIOutputBaseInfo
-
 /** AI Token 消耗量(上传/下载) */
 export interface AITokenConsumption {
     [key: string]: AIAgentGrpcApi.Consumption
@@ -121,8 +119,6 @@ export type ChatReferenceMaterialPayload = AIAgentGrpcApi.ReferenceMaterialPaylo
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
-    /**日志 */
-    LOG = "log",
     /**流 */
     STREAM = "stream",
     /**思考 */
@@ -181,8 +177,6 @@ interface AIChatQSDataBase<T extends string, U> {
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, {qs: string; setting: AIInputEvent}>
-/** @deprecated 日志类型已无用，迁移成一个新页面 */
-type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
@@ -208,7 +202,6 @@ type ChatReferenceMaterial = AIChatQSDataBase<
 
 export type AIChatQSData =
     | ChatQuestion
-    | ChatLog
     | ChatStream
     | ChatThought
     | ChatResult
