@@ -116,36 +116,6 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         }
     }
 
-/** 填充必填字段为 undefined，用于让校验失败 */
-const fillRequiredEmpty = (schema, data) => {
-    if (!schema || schema.type !== "object") return data;
-    const result = { ...data };
-
-    const requiredFields = schema.required || [];
-    for (const key of requiredFields) {
-        // 若当前必填字段不存在，则填充 undefined
-        if (!(key in result)) {
-            result[key] = undefined;
-        }
-    }
-
-    // 递归处理子对象
-    for (const key in schema.properties || {}) {
-        const prop = schema.properties?.[key];
-        if (prop && prop.type === "object") {
-            result[key] = fillRequiredEmpty(prop as RJSFSchema, result[key] || {});
-        }
-    }
-
-    return result;
-};
-
-    useEffect(() => {
-        // 初始化时填充必填字段的默认值（否则默认值为{}校验通过）
-        const initFormData = fillRequiredEmpty(schema, getFormData())
-        setFormData(initFormData)
-    }, [])
-
     useUpdateEffect(() => {
         // 当外部 value 变化时更新内部状态
         value && setFormData(value)
