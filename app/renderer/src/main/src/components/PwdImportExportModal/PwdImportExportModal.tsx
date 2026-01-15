@@ -54,6 +54,7 @@ interface PwdImportExportModalProps<T, D, P> {
     getContainer?: HTMLElement
     extra: PwdImportExportModalExtra
     yakitFormDraggerProps?: YakitFormDraggerProps
+    outputName?: ExportFormValues["OutputName"]
     exportRequest?: ExportRequest<T>
     ImportRequest?: ImportRequest<D>
     initialProgress: P
@@ -66,6 +67,7 @@ const PwdImportExportModalInner = <T, D, P>(props: PwdImportExportModalProps<T, 
         getContainer,
         extra,
         yakitFormDraggerProps = {},
+        outputName = "",
         exportRequest,
         ImportRequest,
         initialProgress,
@@ -104,11 +106,18 @@ const PwdImportExportModalInner = <T, D, P>(props: PwdImportExportModalProps<T, 
                 .invoke("GenerateProjectsFilePath", name)
                 .then((res) => {
                     exportPath.current = res
-                    ipcRenderer.invoke(extra.apiKey, request, token).then(() => {
-                        setShowProgressStream(true)
-                    })
+                    ipcRenderer
+                        .invoke(extra.apiKey, request, token)
+                        .then(() => {
+                            setShowProgressStream(true)
+                        })
+                        .catch((e) => {
+                            yakitNotify("error", `[${extra.apiKey}] error:  ${e}`)
+                        })
                 })
-                .catch(() => {})
+                .catch((error) => {
+                    yakitNotify("error", `${error}`)
+                })
         }
 
         if (extra.type === "import") {
@@ -117,9 +126,14 @@ const PwdImportExportModalInner = <T, D, P>(props: PwdImportExportModalProps<T, 
                 return
             }
             const params = ImportRequest ? ImportRequest(formValue) : formValue
-            ipcRenderer.invoke(extra.apiKey, params, token).then(() => {
-                setShowProgressStream(true)
-            })
+            ipcRenderer
+                .invoke(extra.apiKey, params, token)
+                .then(() => {
+                    setShowProgressStream(true)
+                })
+                .catch((e) => {
+                    yakitNotify("error", `[${extra.apiKey}] error:  ${e}`)
+                })
         }
     })
 
@@ -294,6 +308,9 @@ const PwdImportExportModalInner = <T, D, P>(props: PwdImportExportModalProps<T, 
                         <Form
                             form={form}
                             layout={"horizontal"}
+                            initialValues={{
+                                OutputName: extra.type === "export" ? outputName : ""
+                            }}
                             labelCol={{span: ImportExportModalSize[extra.type].labelCol}}
                             wrapperCol={{span: ImportExportModalSize[extra.type].wrapperCol}}
                             onSubmitCapture={(e) => {

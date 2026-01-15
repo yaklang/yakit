@@ -1,6 +1,8 @@
 const {ipcMain, shell} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
 const {yakProjects} = require("../filePath")
+const fs = require("fs")
+
 module.exports = (win, getClient) => {
     // #region AI-Task
     let aiChatTaskPool = new Map()

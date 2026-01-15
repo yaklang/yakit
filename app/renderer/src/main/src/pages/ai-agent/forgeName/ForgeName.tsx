@@ -268,6 +268,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         apiKey: "ExportAIForge"
     })
     const forgeNamesRef = useRef<string[]>([])
+    const outputNameRef = useRef<string>("")
     const handleOpenImportExportHint = useMemoizedFn((extra: Omit<PwdImportExportModalExtra, "hint">) => {
         if (importExportExtra.hint) return
         setImportExportExtra({...extra, hint: true})
@@ -403,6 +404,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             forgeNamesRef.current = [ForgeName]
+                                                            outputNameRef.current = ForgeVerboseName || ForgeName || ""
                                                             handleOpenImportExportHint({
                                                                 title: "导出Forge",
                                                                 type: "export",
@@ -473,6 +475,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             <PwdImportExportModal<ExportAIForgeRequest, ImportAIForgeRequest, ExportImportAIForgeProgress>
                 getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
                 extra={importExportExtra}
+                outputName={outputNameRef.current || ""}
                 exportRequest={(formValue) => ({
                     ForgeNames: forgeNamesRef.current,
                     OutputName: formValue.OutputName,
