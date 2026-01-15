@@ -42,7 +42,12 @@ module.exports = (win, getClient) => {
             stream.write({...params})
             const qs = params?.Params?.UserQuery
             if (!!qs) {
-                stream.write({IsFreeInput: true, FreeInput: qs, AttachedResourceInfo: params?.AttachedResourceInfo})
+                stream.write({
+                    IsFreeInput: true,
+                    FreeInput: qs,
+                    AttachedResourceInfo: params?.AttachedResourceInfo,
+                    FocusModeLoop: params?.FocusModeLoop
+                })
             }
         } catch (error) {
             throw new Error(error)
