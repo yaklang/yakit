@@ -12,7 +12,6 @@ export interface ChatIPCContextStore {
     reviewInfo?: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
-    timelineMessage?: string
 }
 
 export interface AIChatIPCSendParams {
@@ -33,14 +32,20 @@ export interface AISendConfigHotpatchParams {
     params: MakeOptional<AIStartParams, "UserQuery">
 }
 export interface ChatIPCContextDispatcher {
+    /** useChatIPC的各种事件 */
     chatIPCEvents: UseChatIPCEvents
+    /** 发送自由对话 */
     handleSendCasual: (params: AIChatIPCSendParams) => void
+    /** 任务规划 */
     handleSendTask: (params: AIChatIPCSendParams) => void
+    /** 开始 */
     handleStart: (data: HandleStartParams) => void
+    /** 停止ai */
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void
-    setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
+    /**发送 Sync-Type */
     handleSendSyncMessage: (params: AISendSyncMessageParams) => void
+    /**发送 Config-Hotpatch */
     handleSendConfigHotpatch: (params: AISendConfigHotpatchParams) => void
 }
 
@@ -48,33 +53,31 @@ export interface ChatIPCContextValue {
     store: ChatIPCContextStore
     dispatcher: ChatIPCContextDispatcher
 }
-
+export const defaultDispatcherOfChatIPC = {
+    chatIPCEvents: {
+        fetchToken: () => "",
+        fetchTaskChatID: () => "",
+        onStart: () => {},
+        onSend: () => {},
+        onClose: () => {},
+        onReset: () => {},
+        handleTaskReviewRelease: () => {},
+        getChatContentMap: () => undefined
+    },
+    handleSendCasual: () => {},
+    handleSendTask: () => {},
+    handleSend: () => {},
+    handleStart: () => {},
+    handleStop: () => {},
+    handleSendSyncMessage: () => {},
+    handleSendConfigHotpatch: () => {}
+}
 export default createContext<ChatIPCContextValue>({
     store: {
         chatIPCData: cloneDeep(defaultChatIPCData),
         reviewInfo: undefined,
         planReviewTreeKeywordsMap: new Map(),
-        reviewExpand: false,
-        timelineMessage: undefined
+        reviewExpand: false
     },
-    dispatcher: {
-        chatIPCEvents: {
-            fetchToken: () => "",
-            fetchTaskChatID: () => "",
-            onStart: () => {},
-            onSend: () => {},
-            onClose: () => {},
-            onReset: () => {},
-            handleTaskReviewRelease: () => {},
-            getChatContentMap: () => undefined
-        },
-        handleSendCasual: () => {},
-        handleSendTask: () => {},
-        handleSend: () => {},
-        handleStart: () => {},
-        handleStop: () => {},
-        setTimelineMessage: () => {},
-        handleSendSyncMessage: () => {},
-        handleSendConfigHotpatch: () => {}
-    }
+    dispatcher: defaultDispatcherOfChatIPC
 })

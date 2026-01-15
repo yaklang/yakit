@@ -112,26 +112,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const handleSwitchShowFreeChat = useMemoizedFn((v) => {
         setShowFreeChat(v)
     })
-    // const onViewContext = useDebounceFn(
-    //     useMemoizedFn(() => {
-    //         setTimelineVisible(true)
 
-    //         if (!execute) return
-    //         if (!activeChat?.id) return
-    //         if (!timelineVisibleLoading) {
-    //             setTimelineVisibleLoading(true)
-    //         }
-    //         const info: AISendSyncMessageParams = {
-    //             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
-    //             params: {}
-    //         }
-    //         handleSendSyncMessage(info)
-    //     }),
-    //     {wait: 300, leading: true}
-    // ).run
-    const onClose = useMemoizedFn(() => {
-        setTimelineVisible(false)
-    })
     const onSetQuestion = useMemoizedFn((value: string) => {
         aiChatTextareaRef.current?.setValue(value ?? "")
     })
@@ -199,9 +180,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                                 <React.Suspense fallback={<div>loading...</div>}>
                                                     <AIReviewRuleSelect />
                                                 </React.Suspense>
-                                                {/* <YakitButton type='text' onClick={onViewContext}>
-                                                    查看上下文
-                                                </YakitButton> */}
                                             </>
                                         }
                                     />
@@ -215,45 +193,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                     <div className={styles["text"]}>自由对话</div>
                 </div>
             </div>
-            <YakitDrawer
-                title='上下文信息'
-                visible={timelineVisible}
-                onClose={onClose}
-                destroyOnClose
-                bodyStyle={{padding: 0}}
-                width={720}
-            >
-                <AIReActTimelineMessage
-                    message={timelineMessage}
-                    loading={timelineVisibleLoading}
-                    setLoading={setTimelineVisibleLoading}
-                />
-            </YakitDrawer>
         </>
-    )
-})
-
-const AIReActTimelineMessage: React.FC<AIReActTimelineMessageProps> = React.memo((props) => {
-    const {message} = props
-    const [loading, setLoading] = useControllableValue<boolean>(props, {
-        defaultValue: false,
-        valuePropName: "loading",
-        trigger: "setLoading"
-    })
-    useEffect(() => {
-        if (!!message) setLoading(false)
-    }, [message])
-    return (
-        <YakitSpin spinning={loading}>
-            {!!message ? (
-                <>
-                    <pre className={styles["timeline-message"]}>
-                        <code>{message}</code>
-                    </pre>
-                </>
-            ) : (
-                <YakitEmpty />
-            )}
-        </YakitSpin>
     )
 })

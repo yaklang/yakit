@@ -124,7 +124,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
     const [reviewExpand, setReviewExpand] = useState<boolean>(true)
 
-    const [timelineMessage, setTimelineMessage] = useState<string>()
 
     const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
         setReviewExpand(true)
@@ -140,12 +139,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStopAfterChangeState()
         }
     })
-    const handleTimelineMessage = useDebounceFn(
-        useMemoizedFn((value: string) => {
-            setTimelineMessage(value)
-        }),
-        {wait: 300, leading: true}
-    ).run
+
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
         return activeChat?.session
@@ -155,14 +149,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleSaveChatInfo()
         handleStopAfterChangeState()
     })
-    const onNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
-        const {NodeIdVerbose, Content} = message
-        const verbose = getLabelByParams(NodeIdVerbose)
-        yakitNotify("info", {
-            message: verbose,
-            description: Content
-        })
-    })
 
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
@@ -170,9 +156,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskReviewExtra: handleShowReviewExtra,
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
-        onTimelineMessage: handleTimelineMessage,
         getRequest: getSetting,
-        onNotifyMessage
     })
     const {
         execute,
@@ -601,9 +585,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             planReviewTreeKeywordsMap,
             reviewInfo,
             reviewExpand,
-            timelineMessage
         }
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, ])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -613,7 +596,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStart,
             handleStop: onStop,
             handleSend,
-            setTimelineMessage,
             handleSendSyncMessage,
             handleSendConfigHotpatch
         }
