@@ -22,6 +22,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {getAIReActRequestParams} from "@/pages/ai-agent/utils"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -31,6 +32,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {chatIPCData} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
+    const focusMode = useCreation(() => chatIPCData.focusMode, [chatIPCData.focusMode])
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -130,6 +132,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                             <div className={styles["chat-header-title"]}>
                                 <ColorsChatIcon />
                                 {title}
+                                {focusMode && <YakitTag fullRadius={true}>专注模式:{focusMode}</YakitTag>}
                             </div>
                             <div className={styles["chat-header-extra"]}>
                                 {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}

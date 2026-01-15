@@ -72,7 +72,8 @@
                 &:hover {
                     background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 }
-                .chat-icon {
+                .chat-icon,
+                .info-icon {
                     svg {
                         width: 16px;
                         height: 16px;
