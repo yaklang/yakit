@@ -10,6 +10,7 @@ import {useCustomFolder} from "../store/useCustomFolder"
 import styles from "./FileTreeSystem.module.scss"
 import FileTreeDrop from "@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop"
 import emiter from "@/utils/eventBus/eventBus"
+import {Divider} from "antd"
 
 const FileTreeSystem = () => {
     // 单选
@@ -32,7 +33,7 @@ const FileTreeSystem = () => {
 
     const hasEmittedRef = useRef(false)
 
-    const [firstRatio, setFirstRatio] = useState('50%')
+    const [firstRatio, setFirstRatio] = useState("50%")
 
     useEffect(() => {
         if (!filePreviewData) return
@@ -40,7 +41,7 @@ const FileTreeSystem = () => {
         if (hasEmittedRef.current) return
 
         emiter.emit("filePreviewReady", "")
-        setFirstRatio('30%')
+        setFirstRatio("30%")
         hasEmittedRef.current = true
     }, [filePreviewData])
 
@@ -63,7 +64,7 @@ const FileTreeSystem = () => {
                             isOpen={false}
                         />
                     </div>
-
+                    <Divider style={{margin: 0}} />
                     <div className={styles.bottomPanel}>
                         <FileTreeDrop>
                             {({setDragSource}) => (

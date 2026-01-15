@@ -14,9 +14,8 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {yakitNotify} from "@/utils/notification"
-import { FileInfo } from "../type"
-
-
+import {FileInfo} from "../type"
+import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
     const path = data?.path ?? ""
@@ -44,7 +43,8 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
             }
             setIsBinary(!isPlainText)
             const content = await getCodeByPath(path)
-            setFileInfo({path, size, isPlainText, content, language: monacaLanguageType(path)})
+            const file = await getLocalFileName(path)
+            setFileInfo({path, size, isPlainText, content, language: monacaLanguageType(file.suffix)})
         } catch (err) {
             yakitNotify("error", `Failed to load file:${err}`)
         } finally {
@@ -63,7 +63,6 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
     if (!data) {
         return <YakitEmpty style={{paddingTop: 48}} title='请在左侧选择文件打开' />
     }
-
     return (
         <div className={styles["file-preview"]}>
             <div className={styles["file-preview-title"]}>
@@ -105,7 +104,7 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
                             value={fileInfo?.content}
                             readOnly
                             editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
-                            type={fileInfo?.language || "yak"}
+                            type={fileInfo?.language === "yak" ? "yak" : "plaintext"}
                         />
                     )}
                 </YakitSpin>
