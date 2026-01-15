@@ -395,7 +395,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
-        getRequest: getSetting
+        getRequest: getSetting,
+        saveChatDataStore: knowledgeBaseDataStore.set
     })
 
     const {
@@ -421,7 +422,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const handleStart = useMemoizedFn(({qs, extraValue}: HandleStartParams) => {
         const name = knowledgeBases.find((it) => it.ID === knowledgeBaseID)?.KnowledgeBaseName
-
+        const sessionID = activeChat?.session || ""
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: `请使用知识库${name}回答:` + qs,
@@ -432,18 +433,24 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         const session: string = request.TimelineSessionID
             ? request.TimelineSessionID
             : uuidv4().replace(/-/g, "").substring(0, 16)
-        if (!request.TimelineSessionID) request.TimelineSessionID = session
-        // 创建新的聊天记录
-        const newChat: AIChatInfo = {
-            id: knowledgeBaseID,
-            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            time: new Date().getTime(),
-            request,
-            session: session
+        let newChat: AIChatInfo
+        if (!sessionID) {
+            if (!request.TimelineSessionID) request.TimelineSessionID = session
+            // 创建新的聊天记录
+            newChat = {
+                id: knowledgeBaseID,
+                name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+                question: qs,
+                time: new Date().getTime(),
+                request,
+                session: session
+            }
+            setActiveChat && setActiveChat(newChat)
+            setChats && setChats((old) => [...old, newChat])
+        } else {
+            newChat = activeChat as AIChatInfo
+            knowledgeBaseDataStore.remove(newChat.session)
         }
-        setActiveChat && setActiveChat(newChat)
-        setChats && setChats((old) => [...old, newChat])
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -540,7 +547,9 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat
+            setActiveChat: setActiveChat,
+
+            getChatData: knowledgeBaseDataStore.get
         }
     }, [])
 

@@ -29,6 +29,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import { aiChatDataStore } from "./store/ChatDataStore"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20260113"
@@ -94,6 +95,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setChats: setChats,
             getChats: getChats,
             setActiveChat: setActiveChat,
+
+            getChatData: aiChatDataStore.get
         }
     }, [])
 
