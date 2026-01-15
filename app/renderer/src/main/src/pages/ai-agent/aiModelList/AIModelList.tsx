@@ -1059,14 +1059,15 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     )
 })
 export const OutlineAtomIconByStatus: React.FC<OutlineAtomIconByStatusProps> = React.memo((props) => {
-    const {isReady, isRunning, iconClassName} = props
+    const {isReady, isRunning, iconClassName, size} = props
     return (
         <div
             className={classNames(
                 styles["ai-local-model-icon"],
                 {
                     [styles["ai-local-model-icon-ready"]]: isReady,
-                    [styles["ai-local-model-icon-running"]]: isRunning
+                    [styles["ai-local-model-icon-running"]]: isRunning,
+                    [styles["ai-local-model-icon-small"]]: size==='small',
                 },
                 iconClassName
             )}

@@ -329,14 +329,14 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                 value={nodeItem.value}
                                 label={
                                     <div className={styles["select-option"]}>
-                                        {getIconByAI(nodeItem.Type)}
+                                        {getIconByAI(setting?.AIService)}
                                         {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
                                         <span
                                             data-label='true'
                                             className={styles["select-option-text"]}
-                                            title={`${nodeItem.Type}`}
+                                            title={`${nodeItem.value}`}
                                         >
-                                            {nodeItem.Type}
+                                            {nodeItem.value}
                                         </span>
                                     </div>
                                 }
@@ -403,15 +403,14 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const getIconByAI = (value) => {
-    return (
-        AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
-    )
+    return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus isRunning={true} size='small' />
 }
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     const {value, aiService} = props
     const icon = useCreation(() => {
-        return getIconByAI(value)
-    }, [value])
+        if (!aiService) return <></>
+        return getIconByAI(aiService)
+    }, [aiService])
     // const onEdit = useMemoizedFn((e) => {
     //     e.stopPropagation()
     //     apiGetGlobalNetworkConfig().then((obj) => {

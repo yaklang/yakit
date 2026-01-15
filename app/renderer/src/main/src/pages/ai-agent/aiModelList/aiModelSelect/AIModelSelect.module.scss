@@ -55,11 +55,6 @@
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
     }
 }
-%icon {
-    width: 16px;
-    height: 16px;
-    color: var(--Colors-Use-Neutral-Text-2-Primary);
-}
 
 .select-option {
     display: flex;
@@ -79,7 +74,8 @@
         word-break: break-all;
     }
     svg {
-        @extend %icon;
+        width: 16px;
+        height: 16px;
     }
 }
 .icon-small {
