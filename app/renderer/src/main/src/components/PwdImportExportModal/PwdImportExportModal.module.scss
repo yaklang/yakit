@@ -1,0 +1,14 @@
+.import-export-modal {
+    .export-hint {
+        background: var(--Colors-Use-Green-Bg);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding: 8px 16px;
+        margin-bottom: 15px;
+    }
+    .import-hint {
+        background: var(--Colors-Use-Error-Bg);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding: 8px 16px;
+        margin-bottom: 16px;
+    }
+}
