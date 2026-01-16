@@ -1,8 +1,17 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
+import {
+    AIChatQSData,
+    AIStreamOutput,
+    AITaskInfoProps,
+    AITokenConsumption,
+    AIYakExecFileRecord,
+    ReActChatElement
+} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {Dispatch, MutableRefObject, SetStateAction} from "react"
+import {AIChatData} from "@/pages/ai-agent/type/aiChat"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -49,21 +58,16 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
-    /** 接口里返回文件夹路径时的回调事件 */
-    onGrpcFolder?: (path: AIFileSystemPin) => void
-    /** 向接口发送消息 */
-    sendRequest?: (request: AIInputEvent) => void
-    /** 通知消息回调 */
-    onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
-    /** 系统消息的收集(isSystem=true&type=stream) */
-    onSystemStream?: (uuid: string, content: string) => void
 }
 
 export interface UseCasualChatState {
-    contents: AIChatQSData[]
+    elements: ReActChatElement[]
+    contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
     handleSend: handleSendFunc
+    /** 通过 mapKey 获取数据的详情 */
+    handleGetContentMap: (mapKey: string) => AIChatQSData | undefined
 }
 // #endregion
 
@@ -79,29 +83,24 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onReviewRelease?: (id: string) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
-    /** 接口里返回文件夹路径时的回调事件 */
-    onGrpcFolder?: (path: AIFileSystemPin) => void
-    /** 通知消息回调 */
-    onNotifyMessage?: UseChatIPCParams["onNotifyMessage"]
-    onTaskStart: UseChatIPCParams["onTaskStart"]
-    /** 系统消息的收集(isSystem=true&type=stream) */
-    onSystemStream?: (uuid: string, content: string) => void
 }
 
 export interface UseTaskChatState {
     /** 正在执行的任务列表 */
     plan: AITaskInfoProps[]
-    /** 流式输出 */
-    streams: AIChatQSData[]
+    elements: ReActChatElement[]
+    contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSend: handleSendFunc
-    /** 获取原始任务列表树 */
+    /** 获取树结构的任务树 */
     fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
-    /** 接口关闭后的后续执行逻辑 */
+    /** grpc接口关闭后的后续处理逻辑 */
     handleCloseGrpc: () => void
-    /** 任务规划结束的触发回调 */
+    /** 当前任务规划结束-触发UI展示结束标识 */
     handlePlanExecEnd: (res: AIOutputEvent) => void
+    /** 通过 mapKey 获取数据的详情 */
+    handleGetContentMap: (mapKey: string) => AIChatQSData | undefined
 }
 // #endregion
 
@@ -128,12 +127,12 @@ export interface UseChatIPCParams {
     onTaskReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
-    /** timeline 时间线消息回调事件 */
-    onTimelineMessage?: (message: string) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
-    /** 通知消息的回调 */
-    onNotifyMessage?: (message: AIChatIPCNotifyMessage) => void
+    /** 设置会话的名字 */
+    setSessionChatName?: (session: string, name: string) => void
+    /** 保存历史数据 */
+    saveChatDataStore?: (session: string, data: AIChatData) => void
 }
 
 /** 会话文件系统-pin */
@@ -164,6 +163,8 @@ export interface PlanLoadingStatus {
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
+    /** 所有的 coordinatorID */
+    coordinatorIDs: string[]
     /** 运行时的runtimeid合集 */
     runTimeIDs: string[]
     /** 插件输出的卡片数据 */
@@ -180,7 +181,7 @@ export interface UseChatIPCState {
     questionQueue: AIQuestionQueues
     /** 自由对话的loading状态信息 */
     casualStatus: CasualLoadingStatus
-    /** 实时时间线 */
+    /** 时间线 */
     reActTimelines: AIAgentGrpcApi.TimelineItem[]
     /** 记忆列表 */
     memoryList: AIAgentGrpcApi.MemoryEntryList
@@ -188,8 +189,8 @@ export interface UseChatIPCState {
     taskStatus: PlanLoadingStatus
     /** 系统流信息(isSystem=true&type=stream) */
     systemStream: string
-    /** 所有的 coordinatorID */
-    coordinatorIDs: string[]
+    /** 专注模式状态(仅供自由对话[reAct])使用 */
+    focusMode: string
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -213,9 +214,7 @@ export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
     /** 获取当前执行任务规划的问题id */
-    fetchReactTaskToAsync: () => string
-    /** 清空当前执行任务规划的问题id */
-    clearReactTaskToAsync: () => void
+    fetchTaskChatID: () => string
     /** 开始执行接口流 */
     onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
@@ -231,6 +230,8 @@ export interface UseChatIPCEvents {
     onReset: () => void
     /** 取消任务规划当前的Review */
     handleTaskReviewRelease: (id: string) => void
+    /** 获取[自由对话(ReAct)|任务规划]指定mapKey的详情数据 */
+    getChatContentMap: (chatType: ReActChatElement["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 // #endregion
 
@@ -258,4 +259,27 @@ export interface UseAIChatLogEvents {
     /** 关闭展示日志的页面窗口 */
     cancelLogsWin: () => void
 }
+// #endregion
+
+// #region useChatContent相关定义
+export interface UseChatContentParams {
+    chatType: ReActChatElement["chatType"]
+    getContentMap: (token: string) => AIChatQSData | undefined
+    setContentMap: (token: string, content: AIChatQSData) => void
+    deleteContentMap: (token: string) => void
+    setElements: Dispatch<SetStateAction<ReActChatElement[]>>
+    getElements: () => ReActChatElement[]
+    /** 获取当前执行接口流的唯一标识符 */
+    pushLog: (log: AIChatLogData) => void
+    /** 未识别的类型数据, 由外界自主识别处理 */
+    handleUnkData: (res: AIOutputEvent) => void
+}
+
+export interface UseChatContentEvents extends UseHookBaseEvents {}
+// #endregion
+
+// #region useHistoryChat相关定义
+export interface UseHistoryChatParams {}
+
+export interface UseHistoryChatEvents {}
 // #endregion

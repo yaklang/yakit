@@ -20,7 +20,7 @@ import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1017,54 +1017,84 @@ export const loadFolderDetail = (path) => {
 export const monacaLanguageType = (suffix?: string) => {
     switch ((suffix || "").toLowerCase()) {
         case "yak":
+        case ".yak":
             return YaklangMonacoSpec
         case "sf":
+        case ".sf":
             return SyntaxFlowMonacoSpec
         case "json":
+        case ".json":
             return "json"
         case "html":
+        case ".html":
         case "htm":
+        case ".htm":
             return "html"
         case "css":
+        case ".css":
             return "css"
         case "md":
+        case ".md":
         case "markdown":
+        case ".markdown":
             return "markdown"
         case "svg":
+        case ".svg":
         case "xml":
+        case ".xml":
             return "xml"
         case "yml":
+        case ".yml":
         case "yaml":
+        case ".yaml":
             return "yaml"
         case "sh":
+        case ".sh":
         case "shell":
+        case ".shell":
         case "bash":
+        case ".bash":
             return "shell"
         case "cmd":
+        case ".cmd":
         case "bat":
+        case ".bat":
             return "bat"
         case "ini":
+        case ".ini":
             return "ini"
         case "sql":
+        case ".sql":
             return "sql"
         case "dockerfile":
+        case ".dockerfile":
             return "dockerfile"
         case "js":
+        case ".js":
             return "javascript"
         case "java":
+        case ".java":
             return "java"
         case "go":
+        case ".go":
             return "go"
         case "php":
+        case ".php":
             return "php"
         case "c":
+        case ".c":
             return "c"
         case "cpp":
+        case ".cpp":
         case "cc":
+        case ".cc":
         case "cxx":
+        case ".cxx":
         case "c++":
+        case ".c++":
             return "cpp"
         case "txt":
+        case ".txt":
             return "plaintext"
         default:
             return undefined

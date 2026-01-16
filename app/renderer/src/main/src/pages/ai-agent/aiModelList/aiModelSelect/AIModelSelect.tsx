@@ -324,7 +324,23 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 return (
                     <>
                         {modelNames?.map((nodeItem) => (
-                            <YakitSelect.Option key={nodeItem.value} value={nodeItem.value}>
+                            <YakitSelect.Option
+                                key={nodeItem.value}
+                                value={nodeItem.value}
+                                label={
+                                    <div className={styles["select-option"]}>
+                                        {getIconByAI(setting?.AIService)}
+                                        {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
+                                        <span
+                                            data-label='true'
+                                            className={styles["select-option-text"]}
+                                            title={`${nodeItem.value}`}
+                                        >
+                                            {nodeItem.value}
+                                        </span>
+                                    </div>
+                                }
+                            >
                                 <AIModelItem value={`${nodeItem.value}`} aiService={setting?.AIService} />
                             </YakitSelect.Option>
                         ))}
@@ -346,8 +362,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         }
     })
     return (
-        <>
-            <div ref={refRef} />
+        <div ref={refRef}>
             {isHaveData ? (
                 <AIChatSelect
                     value={modelValue}
@@ -376,36 +391,47 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     getList={() => getAIModelListOption()}
                     open={open}
                     setOpen={onSetOpen}
+                    optionLabelProp='label'
                 >
                     {renderContent()}
                 </AIChatSelect>
             ) : (
                 <></>
             )}
-        </>
+        </div>
     )
 })
 
+const getIconByAI = (value) => {
+    return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus isRunning={true} size='small' />
+}
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     const {value, aiService} = props
     const icon = useCreation(() => {
         if (!aiService) return <></>
-        return (
-            AIOnlineModelIconMap[aiService] || (
-                <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
-            )
-        )
+        return getIconByAI(aiService)
     }, [aiService])
+    // const onEdit = useMemoizedFn((e) => {
+    //     e.stopPropagation()
+    //     apiGetGlobalNetworkConfig().then((obj) => {
+    //         const item = obj.AppConfigs.find((it) => it.Type === value)
+    //         setAIModal({
+    //             config: obj,
+    //             item,
+    //             onSuccess: () => {}
+    //         })
+    //     })
+    // })
 
     return (
         <div className={classNames(styles["select-option-wrapper"])}>
             {icon}
             <div className={styles["option-text"]}>{value}</div>
-            {aiService && (
+            {/* {aiService && (
                 <Tooltip title={aiService}>
                     <OutlineInformationcircleIcon className={styles["icon-info"]} />
                 </Tooltip>
-            )}
+            )} */}
         </div>
     )
 })

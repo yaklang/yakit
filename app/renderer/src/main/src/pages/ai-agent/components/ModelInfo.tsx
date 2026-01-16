@@ -26,7 +26,7 @@ const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr})
     const iconSvg = useCreation(() => {
         return (
             AIOnlineModelIconMap[icon || ""] || (
-                <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
+                <OutlineAtomIconByStatus isRunning={true} size='small' />
             )
         )
     }, [icon])

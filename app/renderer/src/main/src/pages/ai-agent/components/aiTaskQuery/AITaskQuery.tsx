@@ -4,8 +4,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowupIcon,
     OutlineChatIcon,
+    OutlineInformationcircleIcon,
     OutlineListTodoIcon,
-    OutlineQuestionmarkcircleIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -15,6 +15,7 @@ import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
+import {Tooltip} from "antd"
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
     const {chatIPCData} = useChatIPCStore()
@@ -144,6 +145,11 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
                 </span>
             </div>
             <div className={styles["item-right"]}>
+                {item.focus_mode && (
+                    <Tooltip title={`专注模式: ${item.focus_mode}`}>
+                        <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                    </Tooltip>
+                )}
                 <YakitButton type='text2' icon={<OutlineArrowupIcon />} onClick={onTaskUp} loading={upLoading} />
                 <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onTaskRemove} loading={removeLoading} />
             </div>

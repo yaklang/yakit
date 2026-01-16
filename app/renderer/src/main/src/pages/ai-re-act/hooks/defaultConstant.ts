@@ -1,10 +1,12 @@
 import {AIToolResult} from "./aiRender"
 import {AIAgentGrpcApi, AIOutputI18n} from "./grpcApi"
-import {AIQuestionQueues} from "./type"
+import {AIQuestionQueues, CasualLoadingStatus, PlanLoadingStatus} from "./type"
 
+/** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
     callToolId: "",
     toolName: "-",
+    toolDescription: "",
     status: "default",
     summary: "",
     toolStdoutContent: {
@@ -12,6 +14,12 @@ export const DefaultAIToolResult: AIToolResult = {
         isShowAll: false
     },
     execError: ""
+}
+/** 工作执行结果总结-不同阶段的默认展示内容 */
+export const DefaultToolResultSummary: Record<string, {wait: string; result: string}> = {
+    failed: {wait: "获取失败原因中...", result: "执行失败"},
+    success: {wait: "执行结果正在总结中...", result: "执行成功"},
+    user_cancelled: {wait: "工具调用取消中...", result: "用户取消"}
 }
 
 /** AI 流式输出中, NodeId 对应展示的内容 */
@@ -56,17 +64,6 @@ export const AIReviewJudgeLevelMap: Record<string, {label: string}> = {
     high: {label: "需人工确认"}
 }
 
-export const CasualDefaultToolResultSummary: Record<string, {label: string}> = {
-    failed: {label: "执行失败"},
-    success: {label: "执行成功"},
-    user_cancelled: {label: "用户取消"}
-}
-
-export const TaskDefaultReToolResultSummary: Record<string, {label: string}> = {
-    failed: {label: "获取失败原因中..."},
-    success: {label: "执行结果正在总结中..."},
-    user_cancelled: {label: "工具调用取消中..."}
-}
 /**流内容的展示类型枚举 */
 export enum AIStreamContentType {
     /**默认 */
@@ -85,6 +82,7 @@ export enum AIStreamContentType {
     LOG_TOOL_ERROR_OUTPUT = "log/tool-error-output"
 }
 
+/** 问题队列-默认值 */
 export const DeafultAIQuestionQueues: AIQuestionQueues = {
     total: 0,
     data: []
@@ -106,4 +104,16 @@ export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
         R_total: 0,
         T_total: 0
     }
+}
+
+/** 自由对话(ReAct)loading-默认值 */
+export const DefaultCasualLoadingStatus: CasualLoadingStatus = {
+    loading: false,
+    title: "thinking..."
+}
+/** 任务规划loading-默认值 */
+export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
+    loading: false,
+    plan: "加载中...",
+    task: "加载中..."
 }

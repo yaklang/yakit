@@ -62,3 +62,14 @@ export interface GetAIForgeRequest {
     ID?: number
     ForgeName?: string
 }
+
+export interface AIFocus {
+    Name: string
+    Description: string
+    OutputExamplePrompt: string
+    UsagePrompt: string
+}
+export interface QueryAIFocusRequest {}
+export interface QueryAIFocusResponse {
+    Data: AIFocus[]
+}

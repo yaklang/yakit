@@ -169,8 +169,16 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <Form.Item label={<>时间线上下文限制</>} name='TimelineItemLimit'>
                     <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
                 </Form.Item>
-                <Form.Item label={<>时间线上下文大小</>} name='TimelineContentSizeLimit'>
-                    <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
+                <Form.Item
+                    label={<>时间线上下文大小</>}
+                    name='TimelineContentSizeLimit'
+                    normalize={(value) => {
+                        const num = Number(value.replace(/\D/g, ""))
+                        if (isNaN(num)) return ""
+                        return `${num}`
+                    }}
+                >
+                    <YakitInput suffix='KB' size='small' className={styles["input-kb-suffix"]} />
                 </Form.Item>
                 <Form.Item
                     label={
@@ -206,9 +214,9 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                         <YakitInputNumber type='horizontal' size='small' min={0} max={20} />
                     </Form.Item>
                 )}
-                <Form.Item label={<>会话ID</>} name='TimelineSessionID'>
+                {/* <Form.Item label={<>会话ID</>} name='TimelineSessionID'>
                     <YakitInput size='small' />
-                </Form.Item>
+                </Form.Item> */}
             </Form>
         </div>
     )

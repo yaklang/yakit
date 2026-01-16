@@ -3,6 +3,7 @@ import {useCreation} from "ahooks"
 import {useRef, useState} from "react"
 import {AITabsEnumType} from "../../aiAgentType"
 import {AITabsEnum} from "../../defaultConstant"
+import type {UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 
 type ResizeBoxProps = Omit<YakitResizeBoxProps, "firstNode" | "secondNode">
 
@@ -12,9 +13,7 @@ interface Params {
     activeKey?: AITabsEnumType
     showFreeChat: boolean
     timeLine: boolean
-    taskChat: {
-        streams: unknown[]
-    }
+    taskChat: UseTaskChatState
 }
 
 export function useAIChatResizeBox(params: Params) {
@@ -40,27 +39,27 @@ export function useAIChatResizeBox(params: Params) {
                 ...override
             }
         }
-        const isFileSystemKey = activeKey === AITabsEnum.File_System
-        const isTaskContentKey = activeKey === AITabsEnum.Task_Content
-        const isTaskStreamsEmpty = taskChat.streams.length <= 0
+        // const isFileSystemKey = activeKey === AITabsEnum.File_System
+        // const isTaskContentKey = activeKey === AITabsEnum.Task_Content
+        const isTaskStreamsEmpty = taskChat.elements?.length <= 0
 
         let secondRatio: ResizeBoxProps["secondRatio"]
         let firstRatio: ResizeBoxProps["firstRatio"]
 
         if (showFreeChat) {
-            if (isFileSystemKey) {
-                secondRatio = "60%"
-            } else if (isTaskContentKey && isTaskStreamsEmpty) {
-                secondRatio = "80%"
-            } else {
-                secondRatio = "432px"
-            }
+            // if (isFileSystemKey) {
+            //     secondRatio = "60%"
+            // } else if (isTaskContentKey && isTaskStreamsEmpty) {
+            //     secondRatio = "80%"
+            // } else {
+            secondRatio = "432px"
+            // }
         }
 
-        if (isTaskContentKey && isTaskStreamsEmpty) {
-            firstRatio = timeLine ? "30%" : "30"
-            firstRatio = undefined
-        }
+        // if (isTaskContentKey && isTaskStreamsEmpty) {
+        //     firstRatio = timeLine ? "30%" : "30"
+        //     firstRatio = undefined
+        // }
 
         const computed: ResizeBoxProps = {
             freeze: showFreeChat,
@@ -89,7 +88,7 @@ export function useAIChatResizeBox(params: Params) {
             ...computed,
             ...override
         }
-    }, [params.activeKey, params.showFreeChat, params.timeLine, params.taskChat.streams.length, version])
+    }, [params.activeKey, params.showFreeChat, params.timeLine, params.taskChat.elements?.length, version])
 
     return {
         resizeBoxProps,

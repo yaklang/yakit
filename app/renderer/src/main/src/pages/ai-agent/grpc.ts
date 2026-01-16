@@ -1,4 +1,4 @@
-import {APIFunc} from "@/apiUtils/type"
+import {APIFunc, APIOptionalFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
     AIEventQueryRequest,
@@ -8,7 +8,15 @@ import {
     GetRandomAIMaterialsRequest,
     GetRandomAIMaterialsResponse
 } from "../ai-re-act/hooks/grpcApi"
-import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/forge"
+import {
+    AIForge,
+    AIForgeFilter,
+    GetAIForgeRequest,
+    QueryAIFocusRequest,
+    QueryAIFocusResponse,
+    QueryAIForgeRequest,
+    QueryAIForgeResponse
+} from "./type/forge"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 
@@ -132,6 +140,18 @@ export const grpcExportAILogs: APIFunc<ExportAILogsRequest, ExportAILogsResponse
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "导出 AI 日志失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocusResponse> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryAIFocus", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "QueryAIFocus 查询详情失败:" + e)
                 reject(e)
             })
     })

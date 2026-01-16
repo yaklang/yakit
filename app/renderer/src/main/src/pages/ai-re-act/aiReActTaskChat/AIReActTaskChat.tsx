@@ -43,7 +43,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     return (
         <div className={styles["ai-re-act-task-chat"]}>
             <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
-            {!!taskChat?.streams?.length && (
+            {!!taskChat?.elements?.length && (
                 <div className={styles["chat-content-wrapper"]}>
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>
@@ -73,15 +73,15 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const {handleSendSyncMessage, chatIPCEvents} = useChatIPCDispatcher()
 
     const streams = useCreation(() => {
-        return taskChat.streams
-    }, [taskChat.streams])
+        return taskChat.elements
+    }, [taskChat.elements])
 
     const [scrollToBottom, setScrollToBottom] = useState(false)
     const onScrollToBottom = useMemoizedFn(() => {
         setScrollToBottom((v) => !v)
     })
     const getTaskId = useMemoizedFn(() => {
-        return chatIPCEvents.fetchReactTaskToAsync()
+        return chatIPCEvents.fetchTaskChatID()
     })
     /**取消当前指定任务 */
     const onStopTask = useMemoizedFn(() => {
@@ -91,7 +91,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
             SyncJsonInput: JSON.stringify({task_id: taskId})
         })
-        chatIPCEvents.clearReactTaskToAsync()
         if (!!reviewInfo) {
             chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
         }
@@ -120,6 +119,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             <div className={styles["tab-content"]}>
                 <AIAgentChatStream
                     streams={streams}
+                    getChatContentMap={chatIPCEvents.getChatContentMap}
                     scrollToBottom={scrollToBottom}
                     taskStatus={chatIPCData.taskStatus}
                 />
@@ -196,8 +196,8 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         trigger: "setLeftExpand"
     })
     const hasStreams = useMemo(() => {
-        return (taskChat?.streams?.length ?? 0) > 0
-    }, [taskChat?.streams?.length])
+        return (taskChat?.elements?.length ?? 0) > 0
+    }, [taskChat?.elements?.length])
 
     return (
         <div

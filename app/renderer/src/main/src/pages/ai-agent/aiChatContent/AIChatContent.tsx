@@ -214,7 +214,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             tab.push(AITabs[AITabsEnum.Risk])
         }
         return tab
-    }, [tempRiskTotal, tempHTTPTotal, taskChat?.streams?.length])
+    }, [tempRiskTotal, tempHTTPTotal, taskChat?.elements?.length])
 
     const [showHot, setShowHot] = useState(false)
     const prevRef = useRef<{
@@ -366,17 +366,17 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         taskChat
     })
 
-    useMount(() => {
-        const onFilePreviewReady = () => {
-            emitResizeBox({
-                secondRatio: "432px"
-            })
-        }
-        emiter.on("filePreviewReady", onFilePreviewReady)
-        return () => {
-            emiter.off("filePreviewReady", onFilePreviewReady)
-        }
-    })
+    // useMount(() => {
+    //     const onFilePreviewReady = () => {
+    //         emitResizeBox({
+    //             secondRatio: "432px"
+    //         })
+    //     }
+    //     emiter.on("filePreviewReady", onFilePreviewReady)
+    //     return () => {
+    //         emiter.off("filePreviewReady", onFilePreviewReady)
+    //     }
+    // })
 
     return (
         <div className={styles["ai-chat-content-wrapper"]}>

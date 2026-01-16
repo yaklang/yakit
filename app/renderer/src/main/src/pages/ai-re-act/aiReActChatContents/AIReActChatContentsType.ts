@@ -1,8 +1,8 @@
-import {AIMarkdownProps} from "@/pages/ai-agent/components/aiMarkdown/type"
-import {AIChatQSData, AIStreamOutput, ChatStream} from "../hooks/aiRender"
+import type {ChatReferenceMaterialPayload, ChatStream} from "../hooks/aiRender"
+import type {UseCasualChatState} from "../hooks/type"
 
 export interface AIReActChatContentsPProps {
-    chats: AIChatQSData[]
+    chats: UseCasualChatState
 }
 
 export interface AIStreamNodeProps {
@@ -11,6 +11,6 @@ export interface AIStreamNodeProps {
 }
 
 export interface AIReferenceNodeProps {
-    referenceList: Required<AIStreamOutput>["reference"]
+    referenceList: ChatReferenceMaterialPayload
     className?: string
 }

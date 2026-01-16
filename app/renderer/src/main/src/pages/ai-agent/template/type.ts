@@ -11,6 +11,7 @@ export interface AIChatTextareaSubmit {
     /**前端展示的md格式 */
     showQS?: string
     mentionList?: AIMentionCommandParams[]
+    focusMode?: string
 }
 export interface AIChatTextareaRefProps {
     setMention: (v: AIMentionCommandParams) => void

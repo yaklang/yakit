@@ -1,6 +1,6 @@
 import {Dispatch, SetStateAction, createContext} from "react"
 import {AIAgentSetting} from "../aiAgentType"
-import {AIChatInfo} from "../type/aiChat"
+import {AIChatData, AIChatInfo} from "../type/aiChat"
 
 export interface AIAgentContextStore {
     /** 全局配置 */
@@ -9,8 +9,6 @@ export interface AIAgentContextStore {
     chats: AIChatInfo[]
     /** 当前展示对话 */
     activeChat?: AIChatInfo
-    /**当前会话选择的 ai 模型 */
-    activeAIModel?: string
 }
 
 export interface AIAgentContextDispatcher {
@@ -19,6 +17,8 @@ export interface AIAgentContextDispatcher {
     setChats?: Dispatch<SetStateAction<AIChatInfo[]>>
     getChats?: () => AIChatInfo[]
     setActiveChat?: Dispatch<SetStateAction<AIChatInfo | undefined>>
+
+    getChatData?: (session: string) => AIChatData | undefined
 }
 
 export interface AIAgentContextValue {
@@ -29,11 +29,8 @@ export interface AIAgentContextValue {
 export default createContext<AIAgentContextValue>({
     store: {
         setting: {},
-
         chats: [],
-        activeChat: undefined,
-
-        activeAIModel: ""
+        activeChat: undefined
     },
     dispatcher: {
         setSetting: undefined,

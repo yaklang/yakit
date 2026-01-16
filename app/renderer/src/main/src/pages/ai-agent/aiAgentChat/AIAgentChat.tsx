@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams} from "./type"
 import {useCreation, useDebounceFn, useMap, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
-import {AIChatInfo} from "../type/aiChat"
+import {AIChatData, AIChatInfo} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useAIAgentStore from "../useContext/useStore"
@@ -45,21 +45,21 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {AIForge} from "../type/forge"
 import {AITool} from "../type/aiTool"
-
-import classNames from "classnames"
-import styles from "./AIAgentChat.module.scss"
+import {v4 as uuidv4} from "uuid"
 import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum, ReActChatEventEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {AIChatMentionSelectItem} from "../components/aiChatMention/type"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {Tooltip} from "antd"
+import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
+import classNames from "classnames"
+import styles from "./AIAgentChat.module.scss"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -67,7 +67,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
     if (!taskChat) return false
 
     const isHavePlan = !!taskChat.plan.length
-    const isHaveStreams = !!taskChat.streams.length
+    const isHaveStreams = !!taskChat.elements?.length
     return isHavePlan || isHaveStreams
 }
 
@@ -75,7 +75,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
     const {getLabelByParams} = useAINodeLabel()
     const {activeChat, setting} = useAIAgentStore()
-    const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
+    const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
 
     // 插件并发构建流 hooks
     const [streams, api] = useMultipleHoldGRPCStream()
@@ -88,7 +88,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
 
     useEffect(() => {
-        if (taskChatIsEmpty(activeChat?.answer?.taskChat)) {
+        const chatData = aiChatDataStore.get(activeChat?.session || "")
+        if (taskChatIsEmpty(chatData?.taskChat)) {
             onSetKeyTask()
         } else if (!!activeChat?.id) {
             onSetReAct()
@@ -123,8 +124,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
     const [reviewExpand, setReviewExpand] = useState<boolean>(true)
 
-    const [timelineMessage, setTimelineMessage] = useState<string>()
-
     const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
         setReviewExpand(true)
         setReviewInfo(cloneDeep(info))
@@ -139,29 +138,37 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStopAfterChangeState()
         }
     })
-    const handleTimelineMessage = useDebounceFn(
-        useMemoizedFn((value: string) => {
-            setTimelineMessage(value)
-        }),
-        {wait: 300, leading: true}
-    ).run
+
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.id
+        return activeChat?.session
     }, [activeChat])
+
+    // 是否在断开接口后清空接口数据 (新开聊天对话窗时需要清空)
+    const isClear = useRef(false)
     // 提问结束后缓存数据
     const handleChatingEnd = useMemoizedFn(() => {
-        handleSaveChatInfo()
+        if (isClear.current) {
+            events.onReset()
+            isClear.current = false
+        }
         handleStopAfterChangeState()
     })
-    const onNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
-        const {NodeIdVerbose, Content} = message
-        const verbose = getLabelByParams(NodeIdVerbose)
-        yakitNotify("info", {
-            message: verbose,
-            description: Content
+
+    const setSessionChatName = (session: string, name: string) => {
+        setActiveChat?.((prev) => {
+            if (!prev) return prev
+            if (prev.session !== session) return prev
+            return {...prev, name}
         })
-    })
+        setChats?.((prev) => {
+            const chatIndex = prev.findIndex((item) => item.session === session)
+            if (chatIndex === -1) return prev
+            const newChats = [...prev]
+            newChats[chatIndex] = {...newChats[chatIndex], name}
+            return newChats
+        })
+    }
 
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
@@ -169,62 +176,48 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskReviewExtra: handleShowReviewExtra,
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
-        onTimelineMessage: handleTimelineMessage,
         getRequest: getSetting,
-        onNotifyMessage
+        setSessionChatName,
+        saveChatDataStore: aiChatDataStore.set
     })
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders, reActTimelines, coordinatorIDs} =
-        chatIPCData
+    const {execute} = chatIPCData
 
-    // 保存上次对话信息
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const showID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatInfo["answer"] = {
-                runTimeIDs: cloneDeep(runTimeIDs),
-                taskChat: cloneDeep(taskChat),
-                aiPerfData: cloneDeep(aiPerfData),
-                casualChat: cloneDeep(casualChat),
-                yakExecResult: cloneDeep({
-                    ...yakExecResult,
-                    execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
-                }),
-                grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines),
-                coordinatorIDs: cloneDeep(coordinatorIDs)
-            }
-            setChats &&
-                setChats((old) => {
-                    const newValue = cloneDeep(old)
-                    const findIndex = newValue.findIndex((item) => item.id === showID)
-                    if (findIndex !== -1) {
-                        newValue[findIndex].answer = {...(answer || {})}
-                    }
-                    return newValue
-                })
-        }
-    })
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
         const {qs} = value
+        const sessionID = activeChat?.session || ""
+
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
             CoordinatorId: "",
             Sequence: 1
         }
-        // 创建新的聊天记录
-        const newChat: AIChatInfo = {
-            id: randomString(16),
-            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            time: new Date().getTime(),
-            request
-        }
+        request.TimelineSessionID = activeChat?.session || request.TimelineSessionID
+        // 设置会话的session
+        const session: string = request.TimelineSessionID
+            ? request.TimelineSessionID
+            : uuidv4().replace(/-/g, "").substring(0, 16)
+        if (!request.TimelineSessionID) request.TimelineSessionID = session
 
-        setActiveChat && setActiveChat(newChat)
-        setChats && setChats((old) => [...old, newChat])
-        onSetReAct()
+        let newChat: AIChatInfo
+        if (!sessionID) {
+            // 创建新的聊天记录
+            newChat = {
+                id: session,
+                name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+                question: qs,
+                time: new Date().getTime(),
+                request,
+                session: session
+            }
+
+            setActiveChat && setActiveChat(newChat)
+            setChats && setChats((old) => [...old, newChat])
+            onSetReAct()
+        } else {
+            newChat = activeChat as AIChatInfo
+            aiChatDataStore.remove(newChat.session)
+        }
         const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
         // 发送初始化参数
         const startParams: AIInputEvent = {
@@ -232,9 +225,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             Params: {
                 ...request
             },
-            AttachedResourceInfo: attachedResourceInfo
+            AttachedResourceInfo: attachedResourceInfo,
+            FocusModeLoop: value.focusMode
         }
-        events.onStart({token: newChat.id, params: startParams, extraValue: extra})
+        events.onStart({token: newChat.session, params: startParams, extraValue: extra})
     })
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
@@ -324,8 +318,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     // 新开聊天对话窗
                     case ReActChatEventEnum.NEW_CHAT:
                         onStop()
-                        handleSaveChatInfo()
-                        events.onReset()
+                        isClear.current = true
+                        // events.onReset()
                         setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
@@ -335,7 +329,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     case ReActChatEventEnum.OPEN_FORGE_FORM:
                         const {value: forgeValue} = data.params || {}
                         handleClearActiveTool()
-                        handleTriggerExecForge(forgeValue,data.useForge)
+                        handleTriggerExecForge(forgeValue, data.useForge)
                         break
                     // 替换当前使用的 ai tool
                     case ReActChatEventEnum.USE_AI_TOOL:
@@ -363,7 +357,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onHistoryAfter = useMemoizedFn(() => {
         const token = events.fetchToken()
         if (mode === "welcome") setMode("re-act")
-        if (execute && activeChat?.id !== token) {
+        if (execute && activeChat?.session !== token) {
             events.onClose(token)
         }
     })
@@ -388,13 +382,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const replaceToolNoPromptCache = useRef(false)
 
     /** 从别的元素上触发使用 forge 模板的功能 */
-    const handleTriggerExecForge = useMemoizedFn((forge: AIForge,useForge?: boolean) => {
+    const handleTriggerExecForge = useMemoizedFn((forge: AIForge, useForge?: boolean) => {
         if (!forge || !forge.Id) {
             yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
             return
         }
         if (!chatIPCData.execute) {
-            handleReplaceActiveForge(forge,useForge)
+            handleReplaceActiveForge(forge, useForge)
         } else {
             const m = YakitModalConfirm({
                 title: "切换forge模板",
@@ -413,7 +407,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 onOk: () => {
                     m.destroy()
                     onStop()
-                    handleReplaceActiveForge(forge,useForge)
+                    handleReplaceActiveForge(forge, useForge)
                 },
                 onCancel: () => {
                     m.destroy()
@@ -505,7 +499,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleClearActiveTool()
     })
 
-    const handleReplaceActiveForge = useMemoizedFn(async(forge: AIForge, useForge?: boolean) => {
+    const handleReplaceActiveForge = useMemoizedFn(async (forge: AIForge, useForge?: boolean) => {
         try {
             const forgeID = Number(forge.Id) || 0
             if (!forgeID) {
@@ -513,7 +507,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 return
             }
             let forgeInfo = cloneDeep(forge)
-            if(!useForge){
+            if (!useForge) {
                 let res = await grpcGetAIForge({ID: forgeID})
                 forgeInfo = cloneDeep(res)
             }
@@ -535,7 +529,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     }
                 }
             }
-
         } catch (error) {}
     })
     const handleReplaceActiveTool = useMemoizedFn((id: number) => {
@@ -596,20 +589,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             chatIPCData,
             planReviewTreeKeywordsMap,
             reviewInfo,
-            reviewExpand,
-            timelineMessage
+            reviewExpand
         }
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
             handleSendCasual,
             handleSendTask,
-            handleSaveChatInfo,
             handleStart,
             handleStop: onStop,
             handleSend,
-            setTimelineMessage,
             handleSendSyncMessage,
             handleSendConfigHotpatch
         }

@@ -40,6 +40,7 @@ export interface OutlineAtomIconByStatusProps {
     isReady?: boolean
     isRunning?: boolean
     iconClassName?: string
+    size?: YakitSizeType
 }
 export interface AILocalModelListItemPromptHintProps {
     title: string

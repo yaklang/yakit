@@ -61,20 +61,23 @@ export const AiAgentTabList: YakitTabsProps[] = [
     {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
 ]
 export enum AIMentionTabsEnum {
-    /**forge 智能体 */
+    /** forge 智能体 */
     Forge_Name = "forgeName",
-    /**工具 */
+    /** 工具 */
     Tool = "tool",
-    /**知识库 */
+    /** 知识库 */
     KnowledgeBase = "knowledgeBase",
-    /**文件系统 */
-    File_System = "fileSystem"
+    /** 文件系统 */
+    File_System = "fileSystem",
+    /** 专注模式 */
+    FocusMode = "focusMode"
 }
 export const AIMentionTabs: YakitSideTabProps["yakitTabs"] = [
     {value: AIMentionTabsEnum.Forge_Name, label: "技能"},
     {value: AIMentionTabsEnum.Tool, label: "工具"},
     {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"},
-    {value: AIMentionTabsEnum.File_System, label: "文件系统"}
+    {value: AIMentionTabsEnum.File_System, label: "文件系统"},
+    {value: AIMentionTabsEnum.FocusMode, label: "专注模式"}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -96,9 +99,9 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     AIService: "",
     ReActMaxIteration: 100,
     TimelineItemLimit: 100,
-    TimelineContentSizeLimit: 20 * 1024,
+    TimelineContentSizeLimit: 20,
     UserInteractLimit: 0,
-    TimelineSessionID: "default"
+    TimelineSessionID: ""
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -236,7 +239,8 @@ export const defaultChatIPCData: UseChatIPCState = {
         totalCost: []
     },
     casualChat: {
-        contents: []
+        elements: [],
+        contents: {current: new Map()}
     },
     yakExecResult: {
         card: [],
@@ -245,7 +249,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     },
     taskChat: {
         plan: [],
-        streams: []
+        elements: [],
+        contents: {current: new Map()}
     },
     grpcFolders: [],
     questionQueue: {
@@ -257,7 +262,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     memoryList: {...DefaultMemoryList},
     taskStatus: {loading: false, plan: "", task: ""},
     systemStream: "",
-    coordinatorIDs: []
+    coordinatorIDs: [],
+    focusMode: ""
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},
@@ -290,7 +296,8 @@ export const iconMap = {
     folder: <OutlineFolderopenIcon />,
     forge: <OutlineBotIcon />,
     tool: <OutlineWrenchIcon />,
-    knowledgeBase: <OutlineBookOpenTextIcon />
+    knowledgeBase: <OutlineBookOpenTextIcon />,
+    focusMode: <OutlineBookOpenTextIcon />
 }
 
 export enum AttachedResourceTypeEnum {

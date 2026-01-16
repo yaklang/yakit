@@ -9,8 +9,6 @@ interface AIOutputBaseInfo {
 }
 // #endregion
 
-export type UIAIOutputLog = AIAgentGrpcApi.Log & AIOutputBaseInfo
-
 /** AI Token 消耗量(上传/下载) */
 export interface AITokenConsumption {
     [key: string]: AIAgentGrpcApi.Consumption
@@ -32,7 +30,6 @@ export interface AIStreamOutput extends AIOutputBaseInfo {
     content: string
     ContentType: AIOutputEvent["ContentType"]
     selectors?: ToolStreamSelectors
-    reference?: AIAgentGrpcApi.ReferenceMaterialPayload[]
 }
 
 /** 工具结果的信息内容 */
@@ -41,6 +38,8 @@ export interface AIToolResult {
     callToolId: string
     /**工具名称 */
     toolName: string
+    /** 工具介绍 */
+    toolDescription: string
     /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
     status: "default" | "success" | "failed" | "user_cancelled"
     /**执行完后的总结 */
@@ -101,7 +100,7 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
 }
 
 /** 任务规划-执行崩溃后的错误信息展示 */
-export interface FailPlanAndExecutionError {
+export interface FailTaskChatError {
     NodeId: AIOutputEvent["NodeId"]
     NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
     content: string
@@ -114,11 +113,12 @@ export interface FailReactError {
     content: string
 }
 
+/** 会话参参考资料 */
+export type ChatReferenceMaterialPayload = AIAgentGrpcApi.ReferenceMaterialPayload[]
+
 export enum AIChatQSDataTypeEnum {
     /**用户的自由输入 */
     QUESTION = "question",
-    /**日志 */
-    LOG = "log",
     /**流 */
     STREAM = "stream",
     /**思考 */
@@ -148,8 +148,20 @@ export enum AIChatQSDataTypeEnum {
     /** ReAct任务崩溃的错误信息 */
     FAIL_REACT = "fail_react_task",
     /** 工具结果 */
-    TOOL_CALL_RESULT = "tool_call_result"
+    TOOL_CALL_RESULT = "tool_call_result",
+    /** 参考资料 */
+    Reference_Material = "reference_material"
 }
+
+/** 控制UI渲染的数据数组元素 */
+export interface ReActChatElement {
+    chatType: "reAct" | "task"
+    token: string
+    type: AIChatQSDataTypeEnum
+    /** 触发渲染的次数, 无实际逻辑意义 */
+    renderNum: number
+}
+
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
     type: T
@@ -160,11 +172,11 @@ interface AIChatQSDataBase<T extends string, U> {
     Timestamp: AIOutputEvent["Timestamp"]
     /** 前端专属数据，供前端逻辑和UI处理使用 */
     extraValue?: AIChatIPCStartParams["extraValue"]
+    /** 参考资料 */
+    reference?: ChatReferenceMaterialPayload
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, {qs: string; setting: AIInputEvent}>
-/** @deprecated 日志类型已无用，迁移成一个新页面 */
-type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
@@ -181,15 +193,15 @@ type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_
 type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
-type ChatFailPlanAndExecution = AIChatQSDataBase<
-    AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
-    FailPlanAndExecutionError
->
+type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
 type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
+type ChatReferenceMaterial = AIChatQSDataBase<
+    AIChatQSDataTypeEnum.Reference_Material,
+    {NodeId: AIOutputEvent["NodeId"]; NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]}
+>
 
 export type AIChatQSData =
     | ChatQuestion
-    | ChatLog
     | ChatStream
     | ChatThought
     | ChatResult
@@ -205,4 +217,5 @@ export type AIChatQSData =
     | ChatFailPlanAndExecution
     | ChatFailReact
     | ChatToolCallResult
+    | ChatReferenceMaterial
 // #endregion

@@ -4,6 +4,7 @@ import {
     AIChatMentionProps,
     AIMentionSelectItemProps,
     FileSystemTreeOfMentionProps,
+    FocusModeOfMentionProps,
     ForgeNameListOfMentionProps,
     KnowledgeBaseListOfMentionProps,
     ToolListOfMentionProps
@@ -14,8 +15,8 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {useCreation, useDebounceFn, useInViewport, useKeyPress, useMemoizedFn, useSafeState} from "ahooks"
 import {AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs} from "../../defaultConstant"
 import {RollingLoadList, RollingLoadListRef} from "@/components/RollingLoadList/RollingLoadList"
-import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../../type/forge"
-import {grpcQueryAIForge} from "../../grpc"
+import {AIFocus, AIForge, QueryAIFocusResponse, QueryAIForgeRequest, QueryAIForgeResponse} from "../../type/forge"
+import {grpcQueryAIFocus, grpcQueryAIForge} from "../../grpc"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AITool, GetAIToolListRequest, GetAIToolListResponse} from "../../type/aiTool"
 import {genDefaultPagination} from "@/pages/invoker/schema"
@@ -41,6 +42,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     const forgeRef = useRef<AIChatMentionListRefProps>(defaultRef)
     const toolRef = useRef<AIChatMentionListRefProps>(defaultRef)
     const knowledgeBaseRef = useRef<AIChatMentionListRefProps>(defaultRef)
+    const focusModeRef = useRef<AIChatMentionListRefProps>(defaultRef)
 
     const mentionRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(mentionRef)
@@ -129,6 +131,12 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             name: path
         })
     })
+    const onSelectFocusMode = useMemoizedFn((focusMode: AIFocus) => {
+        onSelect("focusMode", {
+            id: `${focusMode.Name}`,
+            name: focusMode.Name || ""
+        })
+    })
     const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
         switch (key) {
             case AIMentionTabsEnum.Forge_Name:
@@ -160,6 +168,15 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 )
             case AIMentionTabsEnum.File_System:
                 return <FileSystemTreeOfMention onSelect={onSelectFile} />
+            case AIMentionTabsEnum.FocusMode:
+                return (
+                    <FocusModeOfMention
+                        ref={focusModeRef}
+                        keyWord={keyWord}
+                        onSelect={onSelectFocusMode}
+                        getContainer={getContainer}
+                    />
+                )
             default:
                 return null
         }
@@ -175,6 +192,9 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 break
             case AIMentionTabsEnum.KnowledgeBase:
                 knowledgeBaseRef.current.onRefresh()
+                break
+            case AIMentionTabsEnum.FocusMode:
+                focusModeRef.current.onRefresh()
                 break
             default:
                 return null
@@ -664,3 +684,97 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
         </div>
     )
 })
+
+const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {keyWord, onSelect, getContainer} = props
+        const [spinning, setSpinning] = useState<boolean>(false)
+        const [response, setResponse] = useState<QueryAIFocusResponse>({
+            Data: []
+        })
+        const [selected, setSelected] = useState<AIFocus>()
+        const toolListRef = useRef<HTMLDivElement>(null)
+        const [inViewport = true] = useInViewport(toolListRef)
+
+        const listRef = useRef<RollingLoadListRef>({
+            containerRef: null,
+            scrollTo: () => {}
+        })
+
+        useImperativeHandle(
+            ref,
+            () => ({
+                onRefresh: () => {
+                    getList()
+                }
+            }),
+            []
+        )
+        useEffect(() => {
+            getList()
+        }, [])
+        const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
+            if (value >= 0 && value < response.Data.length) {
+                setSelected(response.Data[value])
+                if (isScroll) {
+                    listRef.current.scrollTo(value)
+                }
+            }
+        })
+        useSwitchSelectByKeyboard<AIFocus>(listRef.current.containerRef, {
+            data: response.Data,
+            selected,
+            rowKey: (item) => `AIMentionSelectItem-${item.Name}`,
+            onSelectNumber: onKeyboardSelect,
+            onEnter: () => onEnter(),
+            getContainer
+        })
+
+        const onEnter = useMemoizedFn(() => {
+            if (selected && inViewport) onSelect(selected)
+        })
+        const getList = useMemoizedFn(async (page?: number) => {
+            setSpinning(true)
+            try {
+                const res = await grpcQueryAIFocus()
+                let newRes: QueryAIFocusResponse = {
+                    Data: (res?.Data || []).filter((it) => it?.Name?.toLowerCase().includes(keyWord.toLowerCase()))
+                }
+                setResponse(newRes)
+            } catch (error) {}
+            setTimeout(() => {
+                setSpinning(false)
+            }, 300)
+        })
+        return (
+            <div className={styles["focus-mode-list-of-mention"]} ref={toolListRef}>
+                <YakitSpin spinning={spinning}>
+                    <RollingLoadList<AIFocus>
+                        ref={listRef}
+                        data={response.Data}
+                        loadMoreData={() => {}}
+                        renderRow={(rowData: AIFocus, index: number) => {
+                            return (
+                                <AIMentionSelectItem
+                                    item={{
+                                        id: `${rowData.Name}`,
+                                        name: rowData.Name || ""
+                                    }}
+                                    onSelect={() => onSelect(rowData)}
+                                    isActive={selected?.Name === rowData.Name}
+                                />
+                            )
+                        }}
+                        classNameRow={styles["ai-focus-mode-list-row"]}
+                        classNameList={styles["ai-focus-mode-list"]}
+                        page={1}
+                        hasMore={false}
+                        loading={false}
+                        defItemHeight={24}
+                        rowKey='Name'
+                    />
+                </YakitSpin>
+            </div>
+        )
+    })
+)

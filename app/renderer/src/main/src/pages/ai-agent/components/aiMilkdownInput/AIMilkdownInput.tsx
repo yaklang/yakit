@@ -25,12 +25,13 @@ import {
 } from "./aiMilkdownMention/aiMentionPlugin"
 import directive from "remark-directive"
 import {useMemoizedFn} from "ahooks"
+import {aiCustomPlugin} from "./customPlugin"
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
 export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper} = props
+        const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper, onMemfitExtra} = props
         const nodeViewFactory = useNodeViewFactory()
         const pluginViewFactory = usePluginViewFactory()
         useImperativeHandle(
@@ -55,7 +56,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                     (ctx: Ctx) => () => {
                         ctx.set(aiMentionFactory.key, {
                             view: pluginViewFactory({
-                                component: () => <AIMilkdownMention />
+                                component: () => <AIMilkdownMention onMemfitExtra={onMemfitExtra} />
                             })
                         })
                     }
@@ -70,6 +71,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                         }))
                     }
                 ]
+
+                const customPlugin = [...aiCustomPlugin()]
 
                 return (
                     Editor.make()
@@ -101,6 +104,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                         .use(listener)
                         // mention 提及@
                         .use(mentionPlugin)
+                        // 自定义
+                        .use(customPlugin)
                 )
             },
             [readonly, defaultValue]

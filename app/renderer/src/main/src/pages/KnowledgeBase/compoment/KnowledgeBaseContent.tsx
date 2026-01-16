@@ -5,16 +5,7 @@ import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 import styles from "../knowledgeBase.module.scss"
 import KnowledgeBaseContainer from "./KnowledgeBaseContainer"
 import {KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
-import {
-    useAsyncEffect,
-    useCreation,
-    useDebounceFn,
-    useDeepCompareEffect,
-    useMap,
-    useMemoizedFn,
-    useSafeState,
-    useUpdateEffect
-} from "ahooks"
+import {useAsyncEffect, useCreation, useDeepCompareEffect, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
 import {
     BuildingKnowledgeBase,
     BuildingKnowledgeBaseEntry,
@@ -24,7 +15,7 @@ import {
     findChangedObjects
 } from "../utils"
 import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
-import {failed, success, yakitNotify} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -38,18 +29,17 @@ import ChatIPCContent, {
     AISendConfigHotpatchParams,
     AISendSyncMessageParams,
     ChatIPCContextDispatcher,
-    ChatIPCContextStore
+    ChatIPCContextStore,
+    defaultDispatcherOfChatIPC
 } from "../../ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {AIChatIPCNotifyMessage, ChatIPCSendType} from "../../ai-re-act/hooks/type"
-import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
+import {ChatIPCSendType} from "../../ai-re-act/hooks/type"
+import {AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
-import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
-import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
-import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
+import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
+import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
 import {cloneDeep} from "lodash"
-import {AIAgentSettingDefault, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
-import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
@@ -64,8 +54,9 @@ import {ImportModal} from "./ImportModal"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {AIChatMentionSelectItem} from "@/pages/ai-agent/components/aiChatMention/type"
 import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
+import {v4 as uuidv4} from "uuid"
+import {knowledgeBaseDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -351,84 +342,38 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     })
 
     // TODO  AI 召回逻辑
-    const [reviewInfo, setReviewInfo] = useSafeState<AIChatQSData>()
 
     // #region 问题相关逻辑
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
 
-    const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
-        string,
-        AIAgentGrpcApi.PlanReviewRequireExtra
-    >(new Map())
-    const [reviewExpand, setReviewExpand] = useSafeState<boolean>(true)
-    const [timelineMessage, setTimelineMessage] = useSafeState<string>()
-    const [selectForges, setSelectForges] = useSafeState<AIChatMentionSelectItem[]>([])
-    const [selectTools, setSelectTools] = useSafeState<AIChatMentionSelectItem[]>([])
-    const [selectKnowledgeBases, setSelectKnowledgeBases] = useSafeState<AIChatMentionSelectItem[]>([])
-    const [mode, setMode] = useSafeState<AIAgentChatMode>("welcome")
-
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+
 
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
-    const {getLabelByParams} = useAINodeLabel()
-
     const handleSaveChatInfo = useMemoizedFn(() => {
         const showID = activeID
         // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
         if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatInfo["answer"] = {
-                runTimeIDs: cloneDeep(runTimeIDs) || [],
-                taskChat: cloneDeep(taskChat),
+            const answer: AIChatData = {
+                runTimeIDs: cloneDeep(runTimeIDs),
+                coordinatorIDs: cloneDeep(coordinatorIDs),
+                yakExecResult: cloneDeep(yakExecResult),
                 aiPerfData: cloneDeep(aiPerfData),
                 casualChat: cloneDeep(casualChat),
-                yakExecResult: cloneDeep({
-                    ...yakExecResult,
-                    execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
-                }),
+                taskChat: cloneDeep(taskChat),
                 grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines),
-                coordinatorIDs: []
+                reActTimelines: cloneDeep(reActTimelines)
             }
-            setChats &&
-                setChats((old) => {
-                    const newValue = cloneDeep(old)
-                    const findIndex = newValue.findIndex((item) => item.id === showID)
-                    if (findIndex !== -1) {
-                        newValue[findIndex].answer = {...(answer || {})}
-                    }
-                    return newValue
-                })
+            knowledgeBaseDataStore.set(showID, answer)
         }
     })
 
     const handleChatingEnd = useMemoizedFn(() => {
         handleSaveChatInfo()
-        handleStopAfterChangeState()
-    })
-
-    const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
-        setPlanReviewTreeKeywords(info.index, info)
-    })
-    const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
-        setReviewExpand(true)
-        setReviewInfo(cloneDeep(info))
-    })
-
-    const handleReleaseReview = useMemoizedFn((type: ChatIPCSendType, id: string) => {
-        if (!reviewInfo) return
-        if ((reviewInfo.data as AIReviewType).id === id) {
-            // if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
-            handleStopAfterChangeState()
-        }
-    })
-
-    /**自由对话中触发任务开始 */
-    const handleTaskStart = useMemoizedFn(() => {
-        onSetKeyTask()
     })
 
     useEffect(() => {
@@ -448,87 +393,64 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         return () => {}
     }, [inViewport])
 
-    const onSetKeyTask = useMemoizedFn(() => {
-        setMode("task")
-        setTimeout(() => {
-            emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.Task_Content}))
-        }, 100)
-    })
-
-    const handleTimelineMessage = useDebounceFn(
-        useMemoizedFn((value: string) => {
-            setTimelineMessage(value)
-        }),
-        {wait: 300, leading: true}
-    ).run
-
-    const onNotifyMessage = useMemoizedFn((message: AIChatIPCNotifyMessage) => {
-        const {NodeIdVerbose, Content} = message
-        const verbose = getLabelByParams(NodeIdVerbose)
-        yakitNotify("info", {
-            message: verbose,
-            description: Content
-        })
-    })
-
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
-        onTaskReview: handleShowReview,
-        onTaskReviewExtra: handleShowReviewExtra,
-        onReviewRelease: handleReleaseReview,
-        onTaskStart: handleTaskStart,
-        onTimelineMessage: handleTimelineMessage,
         getRequest: getSetting,
-        onNotifyMessage
+        saveChatDataStore: knowledgeBaseDataStore.set
     })
 
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders, reActTimelines} =
-        chatIPCData
-
-    /** 停止回答后的状态调整||清空Review状态 */
-    const handleStopAfterChangeState = useMemoizedFn(() => {
-        // 清空review信息
-        setReviewInfo(undefined)
-        resetPlanReviewTreeKeywords()
-        setReviewExpand(true)
-    })
+    const {
+        execute,
+        runTimeIDs,
+        aiPerfData,
+        casualChat,
+        taskChat,
+        yakExecResult,
+        grpcFolders,
+        reActTimelines,
+        coordinatorIDs
+    } = chatIPCData
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.id
+        return activeChat?.session
     }, [activeChat])
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
         handleSendInteractiveMessage(params, "casual")
     })
 
-    const onSetReAct = useMemoizedFn(() => {
-        setMode("re-act")
-        setTimeout(() => {
-            emiter.emit("switchAIActTab")
-        }, 100)
-    })
-
     const handleStart = useMemoizedFn(({qs, extraValue}: HandleStartParams) => {
         const name = knowledgeBases.find((it) => it.ID === knowledgeBaseID)?.KnowledgeBaseName
-
+        const sessionID = activeChat?.session || ""
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: `请使用知识库${name}回答:` + qs,
             CoordinatorId: "",
             Sequence: 1
         }
-        // 创建新的聊天记录
-        const newChat: AIChatInfo = {
-            id: knowledgeBaseID,
-            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            time: new Date().getTime(),
-            request
+        // 设置会话的session
+        const session: string = request.TimelineSessionID
+            ? request.TimelineSessionID
+            : uuidv4().replace(/-/g, "").substring(0, 16)
+        let newChat: AIChatInfo
+        if (!sessionID) {
+            if (!request.TimelineSessionID) request.TimelineSessionID = session
+            // 创建新的聊天记录
+            newChat = {
+                id: knowledgeBaseID,
+                name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+                question: qs,
+                time: new Date().getTime(),
+                request,
+                session: session
+            }
+            setActiveChat && setActiveChat(newChat)
+            setChats && setChats((old) => [...old, newChat])
+        } else {
+            newChat = activeChat as AIChatInfo
+            knowledgeBaseDataStore.remove(newChat.session)
         }
-        setActiveChat && setActiveChat(newChat)
-        setChats && setChats((old) => [...old, newChat])
-        onSetReAct()
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -536,13 +458,13 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 ...request
             }
         }
-        events.onStart({token: newChat.id, params: startParams, extraValue})
+        events.onStart({token: newChat.session, params: startParams, extraValue})
     })
 
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
             events.onClose(activeID)
-            handleStopAfterChangeState()
+            knowledgeBaseDataStore.set(activeID, chatIPCData)
         }
     })
 
@@ -558,11 +480,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             InteractiveJSONInput: value
         }
         events.onSend({token: activeID, type, params: info, optionValue})
-        handleStopAfterChangeState()
-    })
-
-    const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
-        handleSendInteractiveMessage(params, "task")
     })
 
     const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
@@ -597,41 +514,22 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const store: ChatIPCContextStore = useCreation(() => {
         return {
             chatIPCData,
-            planReviewTreeKeywordsMap,
-            reviewInfo,
-            reviewExpand,
-            timelineMessage,
-            selectForges,
-            selectTools,
-            selectKnowledgeBases
+            planReviewTreeKeywordsMap: new Map(),
+            reviewExpand: false
         }
-    }, [
-        chatIPCData,
-        planReviewTreeKeywordsMap,
-        reviewInfo,
-        reviewExpand,
-        timelineMessage,
-        selectForges,
-        selectTools,
-        selectKnowledgeBases,
-        mode
-    ])
+    }, [chatIPCData])
 
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
+            ...defaultDispatcherOfChatIPC,
             chatIPCEvents: events,
             handleSendCasual,
-            handleSendTask,
             handleSaveChatInfo,
             handleStart,
             handleStop: onStop,
             handleSend,
-            setTimelineMessage,
             handleSendSyncMessage,
-            handleSendConfigHotpatch,
-            setSelectForges,
-            setSelectTools,
-            setSelectKnowledgeBases
+            handleSendConfigHotpatch
         }
     }, [events])
 
@@ -649,7 +547,9 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat
+            setActiveChat: setActiveChat,
+
+            getChatData: knowledgeBaseDataStore.get
         }
     }, [])
 
