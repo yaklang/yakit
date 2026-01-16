@@ -287,7 +287,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     useDebounceEffect(
         () => {
             if (treeExtraQueryparams) {
-                console.log(111, treeExtraQueryparams)
                 if (selectedKeys.length) {
                     if (refreshTreeFlag) {
                         refreshTree()
