@@ -27,7 +27,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { JSONParseLog } from "@/utils/tool"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RemoteMitmGV} from "@/enums/mitm"
-import {isEqual} from "lodash"
+import {cloneDeep, isEqual} from "lodash"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -86,7 +86,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [certs, setCerts] = useState<ClientCertificate[]>([])
 
         // 保存初始默认值
-        const defFieldsRef = useRef<AdvancedConfigurationFromValue>(DefFieldsVal)
+        const defFieldsRef = useRef<AdvancedConfigurationFromValue>(cloneDeep(DefFieldsVal))
         const [etcHosts, setEtcHosts] = useState<any[]>([])
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -131,7 +131,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         )
 
         useEffect(() => {
-            defFieldsRef.current = DefFieldsVal
+            defFieldsRef.current = cloneDeep(DefFieldsVal)
             // 证书
             getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then((e) => {
                 if (!!e) {
