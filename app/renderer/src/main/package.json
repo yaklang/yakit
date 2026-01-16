@@ -109,6 +109,7 @@
         "video-react": "^0.16.0",
         "web-vitals": "^1.0.1",
         "xlsx": "^0.18.5",
+        "xml-formatter": "^3.6.7",
         "xlsx-style": "^0.8.13",
         "xterm-addon-search": "^0.11.0",
         "xterm-addon-search-bar": "^0.2.0",
