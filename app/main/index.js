@@ -138,7 +138,8 @@ function createWindow() {
         },
         titleBarStyle: "hidden",
         show: false,
-        skipTaskbar: true
+        skipTaskbar: true,
+        paintWhenInitiallyHidden: false
     })
 
     if (isDev) win.loadURL("http://127.0.0.1:3000")
@@ -217,9 +218,39 @@ function winHide(targetWin) {
 // 窗口显示
 function winShow(targetWin) {
     if (targetWin && !targetWin.isDestroyed()) {
-        targetWin.show()
-        targetWin.focus()
-        targetWin.setSkipTaskbar(false)
+        let shown = false
+
+        const show = () => {
+            if (shown) return
+            shown = true
+            targetWin.show()
+            targetWin.focus()
+            targetWin.setSkipTaskbar(false)
+        }
+
+        /**
+         * 情况 1：大多数时候
+         * renderer 已经可绘制了
+         */
+        if (!targetWin.webContents.isLoadingMainFrame()) {
+            show()
+            return
+        }
+
+        /**
+         * 情况 2：GPU / renderer 较慢
+         * 尝试等 ready-to-show
+         */
+        targetWin.once("ready-to-show", () => {
+            show()
+        })
+
+        /**
+         * 情况 3：ready-to-show 太晚
+         */
+        setTimeout(() => {
+            show()
+        }, 500)
     }
 }
 // 窗口关闭
