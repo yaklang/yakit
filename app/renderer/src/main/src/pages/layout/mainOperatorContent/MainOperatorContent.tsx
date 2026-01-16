@@ -177,6 +177,7 @@ import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useProxy } from "@/hook/useProxy"
 import { JSONParseLog } from "@/utils/tool"
+import { debugToPrintLogs } from "@/utils/logCollection"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -565,6 +566,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 openMenuPage({route: currentTabKey as YakitRoute})
             }
         }
+
+        debugToPrintLogs({
+            status: "INFO",
+            title: "切换标签页",
+            content: currentTabKey
+        })
     }, [currentTabKey])
 
     // 发送到专项漏洞检测modal-show变量
