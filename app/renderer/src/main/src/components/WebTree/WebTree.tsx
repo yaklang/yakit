@@ -1,7 +1,7 @@
 import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 import YakitTree, {TreeKey} from "../yakitUI/YakitTree/YakitTree"
 import type {DataNode} from "antd/es/tree"
-import {useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     OutlineChevrondownIcon,
     OutlineDocumentIcon,
@@ -63,7 +63,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         onGetUrl,
         resetTableAndEditorShow,
         runTimeId = "",
-        multiple = false,
+        multiple = false
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
@@ -109,32 +109,44 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         }
     })
 
-    const getTreeData = useMemoizedFn((yakurl: string) => {
+    const getTreeData = useMemoizedFn((searchKeyword: string) => {
         if (treeLoading) return
 
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
-            const urlObj = buildYakURL(yakurl)
-            const query = [...urlObj.Query]
-            if (treeExtraQueryparams) {
-                query.push({Key: "params", Value: treeExtraQueryparams})
-            }
-
+            let urlObj: YakURL
+            const query: Array<{Key: string; Value: string}> = []
             if (searchTreeFlag.current) {
                 setSearchWebTreeData([])
                 query.push({Key: "search", Value: "1"})
+                urlObj = {
+                    FromRaw: "",
+                    Schema: "website",
+                    User: "",
+                    Pass: "",
+                    Location: searchKeyword.replace(/^\/+/, ""),
+                    Path: "/",
+                    Query: []
+                }
             } else {
                 setWebTreeData([])
+                const yakurl = searchKeyword !== undefined ? `website://${searchKeyword}` : "website:///"
+                urlObj = buildYakURL(yakurl)
+            }
+
+            if (treeExtraQueryparams) {
+                query.push({Key: "params", Value: treeExtraQueryparams})
             }
 
             if (runTimeId) {
                 query.push({Key: "runtime_id", Value: runTimeId})
             }
+
             requestYakURLList(
                 {
                     ...urlObj,
-                    Query: query
+                    Query: [...urlObj.Query, ...query]
                 },
                 (res) => {
                     // 判断是否是搜索树
@@ -147,11 +159,10 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         setTreeLoading(false)
                     }, 50)
                 }
-            )
-                .catch((error) => {
-                    setTreeLoading(false)
-                    yakitFailed(`${t("YakitNotification.loadFailed", {colon: true})}${error}`)
-                })
+            ).catch((error) => {
+                setTreeLoading(false)
+                yakitFailed(`${t("YakitNotification.loadFailed", {colon: true})}${error}`)
+            })
         }, 30)
     })
 
@@ -266,60 +277,64 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             resetTableAndEditorShow && resetTableAndEditorShow(true, false)
         }
         setSearchValue(val)
-        getTreeData("website://" + `${val ? val : "/"}`)
+        getTreeData(val || "/")
     })
 
     useEffect(() => {
         searchVal && onSearchTree(searchVal)
     }, [searchVal])
 
-    useEffect(() => {
-        if (treeExtraQueryparams) {
-            if (selectedKeys.length) {
-                if (refreshTreeFlag) {
-                    if (searchTreeFlag.current) {
-                        setSelectedKeys([])
-                        setSelectedNodes([])
-                        setExpandedKeys([])
-                        getTreeData("website://" + searchValue)
-                    } else {
+    useDebounceEffect(
+        () => {
+            if (treeExtraQueryparams) {
+                if (selectedKeys.length) {
+                    if (refreshTreeFlag) {
                         refreshTree()
                     }
-                }
-            } else {
-                if (searchTreeFlag.current) {
-                    setExpandedKeys([])
-                    setSelectedNodes([])
-                    getTreeData("website://" + searchValue)
                 } else {
-                    refreshTree()
+                    if (refreshTreeFlag) {
+                        refreshTree()
+                    } else {
+                        if (searchTreeFlag.current) {
+                            setExpandedKeys([])
+                            setSelectedNodes([])
+                            getTreeData(searchValue)
+                        } else {
+                            refreshTree()
+                        }
+                    }
                 }
             }
-        }
-    }, [treeExtraQueryparams, refreshTreeFlag, inViewport])
+        },
+        [treeExtraQueryparams, refreshTreeFlag, inViewport],
+        {wait: 500}
+    )
 
     // 刷新网站树
-    const refreshTree = useMemoizedFn(() => {
-        // 当表格查询参数带搜索条件时
-        if (selectedNodes.length) {
-            resetTableAndEditorShow && resetTableAndEditorShow(true, false)
-        }
-        if (!refreshTreeWithSearchVal) {
-            setSearchValue("")
-            searchTreeFlag.current = false
-        }
-        setExpandedKeys([])
-        setSelectedKeys([])
-        setSelectedNodes([])
-        getTreeData("website://" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : "/"}` : "/"}`)
-    })
+    const refreshTree = useDebounceFn(
+        () => {
+            // 当表格查询参数带搜索条件时
+            if (selectedNodes.length) {
+                resetTableAndEditorShow && resetTableAndEditorShow(true, false)
+            }
+            if (!refreshTreeWithSearchVal) {
+                setSearchValue("")
+                searchTreeFlag.current = false
+            }
+            setExpandedKeys([])
+            setSelectedKeys([])
+            setSelectedNodes([])
+            getTreeData(refreshTreeWithSearchVal ? searchValue || "/" : "/")
+        },
+        {wait: 300}
+    ).run
 
     // 网站树跳转 -> 带到搜索框查询
     const onJumpWebTree = (value: string) => {
         searchTreeFlag.current = true
         setSelectedKeys([])
         setSearchValue(value)
-        getTreeData("website://" + value)
+        getTreeData(value)
     }
 
     // 点击Select选中树
