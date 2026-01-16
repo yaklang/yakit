@@ -114,10 +114,10 @@ import {minWinSendToChildWin, openPacketNewWindow, openRiskNewWindow} from "@/ut
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
-import MDEditor from "@uiw/react-md-editor"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -2158,7 +2158,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <>
                     <Descriptions.Item label={t("AuditResultDescribe.vulnerability_description")} span={column}>
                         {info.Description ? (
-                            <MDEditor.Markdown
+                            <SafeMarkdown
                                 className={classNames(styles["md-content"])}
                                 source={info.Description}
                                 style={{whiteSpace: "normal"}}
@@ -2169,7 +2169,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                     </Descriptions.Item>
                     <Descriptions.Item label={t("AuditResultDescribe.solution")} span={column}>
                         {info.Solution ? (
-                            <MDEditor.Markdown
+                            <SafeMarkdown
                                 className={classNames(styles["md-content"])}
                                 source={info.Solution}
                                 style={{whiteSpace: "normal"}}

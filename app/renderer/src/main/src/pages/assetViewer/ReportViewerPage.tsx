@@ -28,7 +28,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {ReportMarkdownBlock} from "./reportRenders/markdownRender"
+import {SafeMarkdown} from "./reportRenders/markdownRender"
 import {FoldTable, JSONTableRender, ReportMergeTable, RiskTable} from "./reportRenders/jsonTableRender"
 import {PieGraph} from "../graph/PieGraph"
 import {BarGraph} from "../graph/BarGraph"
@@ -733,7 +733,7 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
     const {type, content} = props.item
     switch (type) {
         case "markdown":
-            return <ReportMarkdownBlock item={props.item} />
+            return <SafeMarkdown source={props.item.content} />
         case "json-table":
             return <JSONTableRender item={props.item} />
         case "pie-graph":
