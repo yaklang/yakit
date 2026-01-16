@@ -306,6 +306,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
     onSetHasNewData?: (f: boolean) => void
+    showHistoryAnalysisBtn?: boolean
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -649,7 +650,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         filterTagDom,
         onSetTableTotal,
         onSetTableSelectNum,
-        onSetHasNewData
+        onSetHasNewData,
+        showHistoryAnalysisBtn = false
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history"])
 
@@ -4262,21 +4264,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 )}
                                             </>
                                         )}
-                                        <Tooltip title={t("YakitRoute.trafficAnalysis")} placement='top'>
-                                            <YakitButton
-                                                type='outline2'
-                                                icon={<PublicHTTPHistoryIcon />}
-                                                onClick={() => {
-                                                    emiter.emit(
-                                                        "openPage",
-                                                        JSON.stringify({
-                                                            route: YakitRoute.DB_HTTPHistoryAnalysis,
-                                                            params: {}
-                                                        })
-                                                    )
-                                                }}
-                                            />
-                                        </Tooltip>
+                                        {showHistoryAnalysisBtn && (
+                                            <Tooltip title={t("YakitRoute.trafficAnalysis")} placement='top'>
+                                                <YakitButton
+                                                    type='outline2'
+                                                    icon={<PublicHTTPHistoryIcon />}
+                                                    onClick={() => {
+                                                        emiter.emit(
+                                                            "openPage",
+                                                            JSON.stringify({
+                                                                route: YakitRoute.DB_HTTPHistoryAnalysis,
+                                                                params: {}
+                                                            })
+                                                        )
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        )}
                                         {showDelAll && (
                                             <YakitDropdownMenu
                                                 menu={{

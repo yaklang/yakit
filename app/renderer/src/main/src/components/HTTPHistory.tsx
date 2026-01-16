@@ -301,6 +301,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             onQueryParams={onQueryParams}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
                             setSecondNodeVisible={setSecondNodeVisible}
+                            showHistoryAnalysisBtn
                             {...props}
                         />
                     </div>
@@ -336,6 +337,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
     selectedKeys?:  string[]
+    showHistoryAnalysisBtn?: boolean
 }
 /**
  * 此组件用于实时流量表和编辑器
@@ -369,6 +371,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showSetting = true,
         showRefresh = true,
         showFlod = true,
+        showHistoryAnalysisBtn = false,
         selectedKeys: propsSelectedKeys
     } = props
 
@@ -512,6 +515,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             onSetHasNewData={onSetHasNewData}
                             httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
                             titleHeight={titleHeight}
+                            showHistoryAnalysisBtn={showHistoryAnalysisBtn}
                         />
                     </div>
                 )}

@@ -47,6 +47,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {handleAIConfig} from "@/pages/spaceEngine/utils"
+import { isIRify } from "@/utils/envfile"
 
 export interface ConfigNetworkPageProp {}
 
@@ -693,6 +694,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             console.error("error:", error)
         }
     })
+    const hideRules = useMemo(() => isIRify(), []);
 
     return (
         <>
@@ -1096,15 +1098,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }
                                     />
                                 </Form.Item>
-                                <Form.Item label={t("ProxyConfig.title")}>
+                                <Form.Item label={t(hideRules ? "AgentConfigModal.proxy_configuration" : "ProxyConfig.title")}>
                                     <div className={styles["form-rule-body"]}>
                                         <div
                                             className={styles["form-rule"]}
                                             onClick={onClickDownstreamProxy}
                                         >
                                             <div className={styles["form-rule-text"]}>
-                                                {t("ProxyConfig.recordPointsCount", {i: Endpoints.length})},
-                                                {t("ProxyConfig.recordRoutesCount", {i: Routes.length})}
+                                                {t("ProxyConfig.recordPointsCount", {i: Endpoints.length})}
+                                                {!hideRules ? `,${t("ProxyConfig.recordRoutesCount", {i: Routes.length})}`: null}
                                             </div>
                                             <div className={styles["form-rule-icon"]}>
                                                 <OutlineCogIcon />
@@ -1113,6 +1115,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     </div>
                                 </Form.Item>
                                 <ProxyRulesConfig
+                                    hideRules={hideRules}
                                     visible={proxyDrawerVisible}
                                     onClose={() => setProxyDrawerVisible(false)}
                                 />
