@@ -1,6 +1,6 @@
-import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import React from "react"
 import styles from "./FingerprintManage.module.scss"
+import { StreamMarkdown } from "../assetViewer/reportRenders/markdownRender"
 
 interface FingerprintRuleDomProp {}
 export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
@@ -250,11 +250,11 @@ body = "ThinkPHP"
                 }}
             >
                 <div className={styles["toc-list"]}>
-                    <ChatMarkdown content={toc} />
+                    <StreamMarkdown content={toc} />
                 </div>
             </div>
             <div style={{flex: 1, padding: 24, overflowY: "auto"}}>
-                <ChatMarkdown content={mdContent} />
+                <StreamMarkdown content={mdContent} />
             </div>
         </div>
     )
