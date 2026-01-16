@@ -5,6 +5,7 @@ import {
     ListVectorStoreEntriesRequest,
     QueryEntityRequest,
     QueryEntityResponse,
+    ResponseRagsLatest,
     SearchKnowledgeBaseEntryRequest,
     SearchKnowledgeBaseEntryResponse,
     TClearKnowledgeResponse,
@@ -38,6 +39,9 @@ import {
     RobotIcon
 } from "./icon/sidebarIcon"
 import {YakitSideTabProps} from "../../components/yakitSideTab/YakitSideTabType"
+import {APIFunc} from "@/apiUtils/type"
+import {API} from "@/services/swagger/resposeType"
+import {NetWorkApi} from "@/services/fetch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -435,20 +439,25 @@ const findChangedObjects = (before, after) => {
 const BuildingKnowledgeBase = async (targetKnowledgeBase: KnowledgeBaseItem) => {
     const plugin = await grpcFetchLocalPluginDetail({Name: "构建知识库"}, true)
     const files = (targetKnowledgeBase.KnowledgeBaseFile?.map((it) => it.path) || []).join(",")
+    const ExecParams = [
+        {Key: "files", Value: files},
+        {Key: "kbName", Value: targetKnowledgeBase.KnowledgeBaseName || "default"},
+        {Key: "prompt", Value: targetKnowledgeBase.prompt ?? ""},
+        {Key: "entrylen", Value: `${targetKnowledgeBase.KnowledgeBaseLength ?? 1000}`},
+        {Key: "k", Value: "0"},
+        {Key: "kmin", Value: "2"},
+        {Key: "kmax", Value: "4"}
+    ]
+    const disableERM = {
+        Key: "disableERM",
+        Value: `${targetKnowledgeBase.disableERM}`
+    }
     const executeParams: DebugPluginRequest = {
         Code: "",
         PluginType: plugin.Type,
         Input: "",
         HTTPRequestTemplate: {...defPluginExecuteFormValue, IsHttpFlowId: false, HTTPFlowId: []},
-        ExecParams: [
-            {Key: "files", Value: files},
-            {Key: "kbName", Value: targetKnowledgeBase.KnowledgeBaseName || "default"},
-            {Key: "prompt", Value: targetKnowledgeBase.prompt ?? ""},
-            {Key: "entrylen", Value: `${targetKnowledgeBase.KnowledgeBaseLength ?? 1000}`},
-            {Key: "k", Value: "0"},
-            {Key: "kmin", Value: "2"},
-            {Key: "kmax", Value: "4"}
-        ],
+        ExecParams: targetKnowledgeBase.disableERM ? ExecParams.concat(disableERM) : ExecParams,
         PluginName: plugin.ScriptName
     }
 
@@ -529,6 +538,36 @@ const ClearAllKnowledgeBase = (params: TClearKnowledgeResponse) => async (stream
             {
                 Key: "confirm",
                 Value: "true"
+            }
+        ]
+    }
+    await apiDebugPlugin({
+        params: executeParams,
+        token: streamToken,
+        pluginCustomParams: params.Params,
+        isShowStartInfo: false
+    })
+}
+
+const BuildingOnlineKnowledgeBase = async (params: any, streamToken: string) => {
+    const executeParams: DebugPluginRequest = {
+        Code: "",
+        PluginType: params.Type,
+        Input: "",
+        HTTPRequestTemplate: {...defPluginExecuteFormValue, IsHttpFlowId: false, HTTPFlowId: []},
+        PluginName: params.ScriptName,
+        ExecParams: [
+            {
+                Key: "rag-file-path",
+                Value: params.rag_file_path
+            },
+            {
+                Key: "rag-name",
+                Value: params.rag_name
+            },
+            {
+                Key: "rag-serial-version-uid",
+                Value: params.rag_serial_version_uid
             }
         ]
     }
@@ -809,6 +848,58 @@ const mergeKnowledgeBaseList = (list1: KnowledgeBaseItem[], list2: KnowledgeBase
     })
 }
 
+/** 获取消息中心数据 */
+export const apiFetchQueryMessage: () => Promise<any> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<{}, API.MessageLogResponse>({
+                method: "get",
+                url: "https://oss-qn.yaklang.com/rag/rags-latest.json"
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+                .finally(() => {})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+export interface OnlieRageLatestResponse {
+    name: string
+    name_zh: string
+    version: string
+    file: string
+    hashfile: string
+    hashtype: string
+    hash: string
+}
+
+// 获取线上知识库数据
+export const apiFetchQueryOnlieRageLatest: () => Promise<any> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<{}, OnlieRageLatestResponse[]>({
+                method: "get",
+                url: "https://oss-qn.yaklang.com/rag/rags-latest.json"
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+                .finally(() => {})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 export {
     targetInstallList,
     getFileInfoList,
@@ -836,5 +927,6 @@ export {
     insertModaOptions,
     checkAIModelAvailability,
     mergeKnowledgeBaseList,
-    totalKeyMap
+    totalKeyMap,
+    BuildingOnlineKnowledgeBase
 }

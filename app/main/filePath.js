@@ -62,6 +62,9 @@ const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
 /** yakit安装包路径 */
 const yakitInstallDir = path.join(os.homedir(), "Downloads")
 
+// 线上知识库安装路径
+const yakOnlineRagLastest = path.join(YakitProjectPath, "projects/libs/rag_files")
+
 /** 引擎文件路径 */
 const getLocalYaklangEngine = () => {
     switch (process.platform) {
@@ -145,5 +148,7 @@ module.exports = {
 
     htmlTemplateDir,
     windowStatePatch,
-    yakProjects
+    yakProjects,
+
+    yakOnlineRagLastest
 }

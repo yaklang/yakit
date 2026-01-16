@@ -87,6 +87,7 @@
         "react-hotkeys-hook": "^4.4.1",
         "react-i18next": "^15.6.1",
         "react-infinite-scroll-component": "^6.1.0",
+        "react-joyride": "2.9.3",
         "react-markdown": "^8.0.7",
         "react-monaco-editor": "0.50.1",
         "react-resizable": "^3.0.4",

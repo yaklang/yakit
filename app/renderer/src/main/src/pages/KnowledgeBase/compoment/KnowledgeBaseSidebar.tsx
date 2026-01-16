@@ -1,5 +1,5 @@
 import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, type FC} from "react"
-import {useMemoizedFn, useSafeState} from "ahooks"
+import {useAsyncEffect, useMemoizedFn, useRequest, useSafeState} from "ahooks"
 
 import {OutlineAiChatIcon, OutlineFolderopenIcon, OutlineLoadingIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -7,10 +7,13 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
 import {
+    apiFetchQueryOnlieRageLatest,
+    BuildingOnlineKnowledgeBase,
     ClearAllKnowledgeBase,
     insertModaOptions,
     KnowledgeTabList,
     KnowledgeTabListEnum,
+    OnlieRageLatestResponse,
     prioritizeProcessingItems,
     targetIcon
 } from "../utils"
@@ -40,6 +43,11 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {randomString} from "@/utils/randomUtil"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {API} from "@/services/swagger/resposeType"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+
+const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
@@ -60,6 +68,9 @@ export interface TKnowledgeBaseSidebarProps {
     setIsAIModelAvailable: Dispatch<SetStateAction<boolean>>
     aIModelAvailableTokens: string
     progress: number
+    loading?: boolean
+    refreshOlineRag?: boolean
+    setRefreshOlineRag?: Dispatch<SetStateAction<boolean>>
 }
 
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
@@ -75,7 +86,10 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     setAddMode,
     handleValidateAIModelUsable,
     setIsAIModelAvailable,
-    progress
+    progress,
+    loading,
+    refreshOlineRag,
+    setRefreshOlineRag
 }) => {
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
     const [expand, setExpand] = useSafeState<boolean>(true)
@@ -102,7 +116,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                 return prev
             })
 
-            await installWithEvents({Name: binary.Name}, binary.installToken)
+            await installWithEvents({Name: binary.Name, Force: true}, binary.installToken)
 
             success(`${binary.Name} 下载完成`)
             await binariesToInstallRefreshAsync?.()
@@ -227,10 +241,148 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                     api.removeStream && api.removeStream(clearAllContent.clearAllStreamToken)
                 }
             })
+            try {
+                for (const kb of knowledgeBases) {
+                    await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
+                        name: kb.KnowledgeBaseName
+                    })
+                }
+
+                setRefreshOlineRag?.((preValue) => !preValue)
+            } catch (e) {}
         } catch (error) {
             failed(error + "")
         }
     })
+
+    // 本地已下载线上知识库
+    const [downloadedOnlineRags, setDownloadedOnlineRags] = useSafeState<OnlieRageLatestResponse[]>([])
+    // 线上知识库下载中状态
+    const [onlineRagDownloading, setOnlineRagDownloading] = useSafeState<Record<string, boolean>>({})
+
+    // 拉取本地已下载线上知识库
+    const refreshDownloadedOnlineRags = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("read-previous-online-rag")
+            .then(setDownloadedOnlineRags)
+            .catch(() => setDownloadedOnlineRags([]))
+    })
+
+    useEffect(() => {
+        refreshDownloadedOnlineRags()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // 线上知识库列表 State
+    const [onlineRagList, setOnlineRagList] = useSafeState<OnlieRageLatestResponse[]>([])
+
+    // 获取线上知识库并存入onlineRagList
+    const fetchAndSetOnlineRagList = useMemoizedFn(async () => {
+        try {
+            const res = await apiFetchQueryOnlieRageLatest()
+            setOnlineRagList(res)
+        } catch (err) {
+            failed("获取线上知识库失败: " + err)
+            setOnlineRagList([])
+        }
+    })
+
+    // 下载线上知识库
+    const onDownloadOnlineRag = async (ragItem: OnlieRageLatestResponse) => {
+        setOnlineRagDownloading((prev) => ({...prev, [ragItem.hash]: true}))
+        const newToken = randomString(40)
+        let localFilePath: string | undefined
+        try {
+            localFilePath = await ipcRenderer.invoke("download-latest-online-rag", ragItem)
+
+            await handleBuildingOnlineKnowledge(
+                {
+                    ...ragItem,
+                    file_address: localFilePath
+                },
+                newToken
+            )
+
+            await refreshDownloadedOnlineRags()
+        } catch (err) {
+            // 1. 删除已下载的文件
+            if (localFilePath) {
+                try {
+                    await ipcRenderer.invoke("delete-local-file", localFilePath)
+                } catch (e) {}
+            }
+            try {
+                await ipcRenderer.invoke("remove-previous-online-rag", {
+                    hash: ragItem.hash,
+                    file: localFilePath
+                })
+            } catch (e) {}
+            await refreshDownloadedOnlineRags()
+        } finally {
+            setOnlineRagDownloading((prev) => ({...prev, [ragItem.hash]: false}))
+        }
+    }
+
+    const handleBuildingOnlineKnowledge = useMemoizedFn(
+        async (ragItem: OnlieRageLatestResponse & {file_address?: string}, newToken: string) => {
+            const rag_file_path = ragItem.file_address
+            const rag_name = ragItem.name
+            const rag_serial_version_uid = ragItem.hash
+            try {
+                const plugin: TClearKnowledgeResponse = await grpcFetchLocalPluginDetail({Name: "导入默认知识库"}, true)
+                // 先构建知识库
+                await BuildingOnlineKnowledgeBase(
+                    {...plugin, rag_file_path, rag_name, rag_serial_version_uid},
+                    newToken
+                )
+                // 返回一个 Promise，只有 onEnd 触发后 resolve，否则 onError reject
+                return await new Promise<void>((resolve, reject) => {
+                    api?.createStream(newToken, {
+                        taskName: "debug-plugin",
+                        apiKey: "DebugPlugin",
+                        token: newToken,
+                        onEnd: async () => {
+                            try {
+                                setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
+                                await refreshAsync?.()
+                            } catch (e) {}
+                            resolve()
+                        },
+                        onError: (e) => {
+                            api.removeStream && api.removeStream(newToken)
+                            reject(e)
+                        }
+                    })
+                })
+            } catch (error) {
+                throw error
+            }
+        }
+    )
+
+    const [onlineRagRefreshing, setOnlineRagRefreshing] = useSafeState<boolean>(false)
+    // 刷新线上知识库列表和本地已下载列表
+    const onRefreshOnlineRag = useMemoizedFn(async () => {
+        try {
+            setOnlineRagRefreshing(true)
+            await Promise.all([fetchAndSetOnlineRagList(), refreshDownloadedOnlineRags()])
+        } catch (err) {
+            failed("刷新失败: " + err)
+        } finally {
+            setOnlineRagRefreshing(false)
+        }
+    })
+
+    // 首次加载时拉取线上知识库和本地快照
+    useEffect(() => {
+        fetchAndSetOnlineRagList()
+        refreshDownloadedOnlineRags()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useAsyncEffect(async () => {
+        await onRefreshOnlineRag()
+    }, [refreshOlineRag])
 
     const renderTabContent = useMemoizedFn((key: KnowledgeTabListEnum) => {
         let content: ReactNode = <></>
@@ -343,98 +495,198 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                     </YakitButton>
                                 )}
                             </div>
-
-                            <div className={styles["knowledge-base-info-body"]}>
-                                {knowledgeBase.length > 0 ? (
-                                    knowledgeBase.map((items, index) => {
-                                        const Icon = targetIcon(index)
-                                        return (
-                                            <div
-                                                className={classNames(styles["knowledge-base-info-card"], {
-                                                    [styles["base-info-card-selected"]]: knowledgeBaseID === items.ID
-                                                })}
-                                                key={items.ID}
-                                                onClick={() => {
-                                                    setOpenQA(false)
-                                                    setKnowledgeBaseID(items.ID)
-                                                }}
-                                            >
+                            <YakitSpin spinning={loading} wrapperClassName={styles["knowledge-base-info-spin"]}>
+                                <div className={styles["knowledge-base-info-body"]}>
+                                    {knowledgeBase.length > 0 ? (
+                                        knowledgeBase.map((items, index) => {
+                                            const Icon = targetIcon(index)
+                                            return (
                                                 <div
-                                                    className={classNames({
-                                                        [styles["initial"]]: items.streamstep === 1,
-                                                        [styles["content"]]: items.streamstep !== 1
+                                                    className={classNames(styles["knowledge-base-info-card"], {
+                                                        [styles["base-info-card-selected"]]:
+                                                            knowledgeBaseID === items.ID
                                                     })}
+                                                    key={items.ID}
+                                                    onClick={() => {
+                                                        setOpenQA(false)
+                                                        setKnowledgeBaseID(items.ID)
+                                                    }}
                                                 >
                                                     <div
-                                                        className={classNames([styles["header"]], {
-                                                            [styles["operate-dropdown-menu-open"]]:
-                                                                menuSelectedId === items.ID
+                                                        className={classNames({
+                                                            [styles["initial"]]: items.streamstep === 1,
+                                                            [styles["content"]]: items.streamstep !== 1
                                                         })}
                                                     >
-                                                        <Icon className={styles["icon"]} />
-                                                        <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
-                                                        {api?.tokens?.includes(items.streamToken) &&
-                                                        items.streamstep === 1 ? (
-                                                            <div className={styles["tag"]}>
-                                                                <OutlineLoadingIcon
-                                                                    className={styles["loading-icon"]}
-                                                                />
-                                                                生成中
-                                                            </div>
-                                                        ) : items.IsDefault ? (
-                                                            <div className={styles["default-tag"]}>默认知识库</div>
-                                                        ) : (
-                                                            <div className={styles["type-tag"]}>
-                                                                {items.CreatedFromUI
-                                                                    ? "手动创建"
-                                                                    : items.IsImported
-                                                                    ? "外部导入"
-                                                                    : "其他"}
-                                                            </div>
-                                                        )}
-
                                                         <div
-                                                            className={classNames([styles["operate"]])}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                            }}
+                                                            className={classNames([styles["header"]], {
+                                                                [styles["operate-dropdown-menu-open"]]:
+                                                                    menuSelectedId === items.ID
+                                                            })}
                                                         >
-                                                            <Tooltip title='AI 召回'>
-                                                                <SolidLightningBoltIcon
-                                                                    className={styles["lightning-bolt-icon"]}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation()
-                                                                        setKnowledgeBaseID(items.ID)
-                                                                        setOpenQA(true)
-                                                                    }}
-                                                                />
-                                                            </Tooltip>
+                                                            <Icon className={styles["icon"]} />
+                                                            <div className={styles["title"]}>
+                                                                {items.KnowledgeBaseName}
+                                                            </div>
+                                                            {api?.tokens?.includes(items.streamToken) &&
+                                                            items.streamstep === 1 ? (
+                                                                <div className={styles["tag"]}>
+                                                                    <OutlineLoadingIcon
+                                                                        className={styles["loading-icon"]}
+                                                                    />
+                                                                    生成中
+                                                                </div>
+                                                            ) : items.IsDefault ? (
+                                                                <div className={styles["default-tag"]}>默认知识库</div>
+                                                            ) : (
+                                                                <div className={styles["type-tag"]}>
+                                                                    {items.CreatedFromUI
+                                                                        ? "手动创建"
+                                                                        : items.IsImported
+                                                                        ? "外部导入"
+                                                                        : "其他"}
+                                                                </div>
+                                                            )}
 
-                                                            <OperateKnowledgenBaseItem
-                                                                items={items}
-                                                                setMenuSelectedId={setMenuSelectedId}
-                                                                setKnowledgeBaseID={setKnowledgeBaseID}
-                                                                knowledgeBase={knowledgeBase}
-                                                                api={api}
-                                                                addMode={addMode}
-                                                            />
+                                                            <div
+                                                                className={classNames([styles["operate"]])}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                }}
+                                                            >
+                                                                <Tooltip title='AI 召回'>
+                                                                    <SolidLightningBoltIcon
+                                                                        className={styles["lightning-bolt-icon"]}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            setKnowledgeBaseID(items.ID)
+                                                                            setOpenQA(true)
+                                                                        }}
+                                                                    />
+                                                                </Tooltip>
+
+                                                                <OperateKnowledgenBaseItem
+                                                                    items={items}
+                                                                    setMenuSelectedId={setMenuSelectedId}
+                                                                    setKnowledgeBaseID={setKnowledgeBaseID}
+                                                                    knowledgeBase={knowledgeBase}
+                                                                    api={api}
+                                                                    addMode={addMode}
+                                                                    setRefreshOlineRag={setRefreshOlineRag}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className={styles["description"]}>
+                                                            {api?.tokens?.includes(items.streamToken) &&
+                                                            items.streamstep === 1
+                                                                ? "知识库生成中，可以随时回来点击查看进度"
+                                                                : items.KnowledgeBaseDescription?.trim() || "-"}
                                                         </div>
                                                     </div>
-
-                                                    <div className={styles["description"]}>
-                                                        {api?.tokens?.includes(items.streamToken) &&
-                                                        items.streamstep === 1
-                                                            ? "知识库生成中，可以随时回来点击查看进度"
-                                                            : items.KnowledgeBaseDescription?.trim() || "-"}
-                                                    </div>
                                                 </div>
-                                            </div>
-                                        )
-                                    })
-                                ) : (
-                                    <YakitEmpty style={{width: "100%"}} />
-                                )}
-                            </div>
+                                            )
+                                        })
+                                    ) : (
+                                        <YakitEmpty style={{width: "100%"}} />
+                                    )}
+                                </div>
+                            </YakitSpin>
+                        </div>
+                        <div className={styles["knowledge-base-collapse"]}>
+                            <YakitCollapse defaultActiveKey={["online-knowledge"]}>
+                                <YakitPanel
+                                    header='线上知识库'
+                                    key='online-knowledge'
+                                    extra={
+                                        <Tooltip title='刷新线上知识库'>
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlineRefreshIcon />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onRefreshOnlineRag()
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    }
+                                >
+                                    <YakitSpin spinning={onlineRagRefreshing}>
+                                        <div className={styles["knowledge-base-collapse-panel"]}>
+                                            {onlineRagList.length > 0 ? (
+                                                (() => {
+                                                    const localMap = new Map(
+                                                        downloadedOnlineRags.map((it) => [it.file, it])
+                                                    )
+
+                                                    return onlineRagList?.map((items) => {
+                                                        const local = localMap.get(items.file)
+                                                        const isDownloadedLatest = !!local && local.hash === items.hash
+                                                        const downloading = !!onlineRagDownloading[items.hash]
+                                                        return (
+                                                            <div
+                                                                className={classNames(
+                                                                    styles["knowledge-base-info-card"]
+                                                                )}
+                                                                key={items.hash}
+                                                            >
+                                                                <div className={styles["content"]}>
+                                                                    <div className={classNames([styles["header"]])}>
+                                                                        <div className={styles["title"]}>
+                                                                            {items.name_zh?.trim() || "-"}
+                                                                        </div>
+                                                                        {!isDownloadedLatest ? (
+                                                                            <YakitButton
+                                                                                type='outline1'
+                                                                                loading={downloading}
+                                                                                disabled={downloading}
+                                                                                onClick={() =>
+                                                                                    onDownloadOnlineRag(items)
+                                                                                }
+                                                                            >
+                                                                                {!local
+                                                                                    ? "下载"
+                                                                                    : local.hash !== items.hash
+                                                                                    ? "更新"
+                                                                                    : "已下载"}
+                                                                            </YakitButton>
+                                                                        ) : (
+                                                                            <div
+                                                                                style={{
+                                                                                    color: "var(--Colors-Use-Neutral-Disable)",
+                                                                                    fontSize: "12px"
+                                                                                }}
+                                                                            >
+                                                                                已是最新
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className={styles["description"]}>
+                                                                        {items.version || "-"}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })
+                                                })()
+                                            ) : (
+                                                <YakitEmpty>
+                                                    <YakitButton
+                                                        icon={<OutlineRefreshIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            onRefreshOnlineRag()
+                                                        }}
+                                                    >
+                                                        刷新
+                                                    </YakitButton>
+                                                </YakitEmpty>
+                                            )}
+                                        </div>
+                                    </YakitSpin>
+                                </YakitPanel>
+                            </YakitCollapse>
                         </div>
                     </div>
                 )

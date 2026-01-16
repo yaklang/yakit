@@ -29,7 +29,7 @@ import {getAIReActRequestParams} from "@/pages/ai-agent/utils"
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话"} = props
+    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话", aiChatTextareaRef} = props
     const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
@@ -49,8 +49,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {activeChat, setting} = useAIAgentStore()
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
-    // #region 问题相关逻辑
-    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
+    // // #region 问题相关逻辑
+    // const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
     // #endregion
 
     // #region 问题相关逻辑
@@ -185,7 +185,12 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                                 </OpenFileDropdown>
 
                                                 <div className={styles["extra-footer-right-divider"]} />
-                                                {execute && <RoundedStopButton onClick={handleStop} />}
+                                                {execute && (
+                                                    <RoundedStopButton
+                                                        onClick={handleStop}
+                                                        style={{width: 24, height: 24}}
+                                                    />
+                                                )}
                                             </div>
                                         }
                                         extraFooterLeft={

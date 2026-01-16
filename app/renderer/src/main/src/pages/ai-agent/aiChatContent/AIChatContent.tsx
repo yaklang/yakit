@@ -45,6 +45,7 @@ import useAIAgentStore from "../useContext/useStore"
 import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
 import {ExportAILogsModal} from "../components/ExportAILogsModal/ExportAILogsModal"
 import {failed, yakitNotify} from "@/utils/notification"
+import {AIChatTextareaRefProps} from "../template/type"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
     const {
@@ -73,6 +74,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
 
     const [exportModalVisible, setExportModalVisible] = useState(false)
     const [exportLoading, setExportLoading] = useState(false)
+
+    // #region 问题相关逻辑
+    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
 
     const onOpenExportModal = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -489,6 +493,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                     mode={!!activeKey ? "task" : "welcome"}
                                     showFreeChat={showFreeChat}
                                     setShowFreeChat={setShowFreeChat}
+                                    aiChatTextareaRef={aiChatTextareaRef}
                                 />
                             }
                             {...resizeBoxProps}
