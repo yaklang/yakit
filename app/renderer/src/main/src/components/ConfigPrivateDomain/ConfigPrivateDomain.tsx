@@ -18,6 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/utils/envfile"
 import {useUploadInfoByEnpriTrace} from "../layout/utils"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -191,7 +192,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const getHttpSetting = useMemoizedFn(() => {
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) return
-            const value = JSON.parse(setting)
+            const value = JSONParseLog(setting,{page:"ConfigPrivateDomain", fun:"getHttpSetting"})
             setDefaultHttpUrl(value.BaseUrl)
             if (value?.pwd && value.pwd.length > 0) {
                 // 解密

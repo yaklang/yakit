@@ -15,6 +15,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {ExecResult} from "@/pages/invoker/schema"
 import {ExecResultMessage} from "@/components/yakitLogSchema"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 declare type getContainerFunc = () => HTMLElement
@@ -53,7 +54,7 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
                 }, 200)
 
                 ipcRenderer.on("export-yak-script-data", (e, data: ExecResult) => {
-                    let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString())
+                    let obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {page: "PluginLocalExportProps", fun: "export-yak-script-data"})
                     if (obj.type === "log" && obj.content.level === "file") {
                         locallogListInfoRef.current.unshift({
                             message: obj.content.data,
@@ -66,7 +67,7 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
                         if (obj.content.progress === 1) {
                             const logMsg = locallogListInfoRef.current[locallogListInfoRef.current.length - 1].message
                             try {
-                                const logObj = JSON.parse(logMsg) || {}
+                                const logObj = JSONParseLog(logMsg, {page: "PluginLocalExportProps", fun: "progress"}) || {}
                                 ipcRenderer.invoke("is-file-exists", logObj.path).then((flag: boolean) => {
                                     if (flag) {
                                         openABSFileLocated(logObj.path)

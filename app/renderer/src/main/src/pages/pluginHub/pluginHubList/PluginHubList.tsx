@@ -17,6 +17,7 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
 import { HubSideBarList } from "../defaultConstant"
+import { JSONParseLog } from "@/utils/tool"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -154,7 +155,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
      */
     const handleOpenHubListAndDetail = useMemoizedFn((info: string) => {
         try {
-            const data = JSON.parse(info) as unknown as PluginHubPageInfoProps
+            const data = JSONParseLog(info, {page: "PluginHubList", fun: "handleOpenHubListAndDetail"}) as unknown as PluginHubPageInfoProps
             if (!data) return
             handleSpecifiedPageAndDetail(data)
         } catch (error) {}

@@ -41,6 +41,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {apiQuerySSAPrograms} from "./utils"
 import {getGroupNamesTotal} from "../yakRunnerCodeScan/utils"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 export interface GenerateSSAReportResponse {
     Success: boolean
@@ -74,7 +75,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
 
     const onYakRunnerScanHistoryPageInfo = useMemoizedFn((info) => {
         try {
-            const data = JSON.parse(info) as unknown as YakRunnerScanHistoryPageInfoProps
+            const data = JSONParseLog(info,{page: "yakRunnerScanHistory", fun: "onYakRunnerScanHistoryPageInfo"}) as unknown as YakRunnerScanHistoryPageInfoProps
             if (!data) return
             isInitRequestRef.current = true
             setQuery((prev) => ({

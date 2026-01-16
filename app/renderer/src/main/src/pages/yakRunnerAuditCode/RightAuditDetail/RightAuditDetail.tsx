@@ -28,6 +28,7 @@ import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./Re
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {getNameByPath} from "@/pages/yakRunner/utils"
+import { JSONParseLog } from "@/utils/tool"
 
 export interface JumpSourceDataProps {
     title: string
@@ -179,7 +180,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
 
     const onExpendRightPathFun = useMemoizedFn((value: string) => {
         try {
-            const data: JumpSourceDataProps = JSON.parse(value)
+            const data: JumpSourceDataProps = JSONParseLog(value, {page: "RightAuditDetail", fun: "onExpendRightPathFun"})
             const index = getMapResultDetail(data.title).findIndex((item) => item.node_id === data.node_id)
             setActiveKey([data.title])
             setResultKey([`${data.title}-${index}`])
@@ -662,7 +663,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     }
                     if (item.Key === "graph_info") {
                         try {
-                            let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
+                            let graph_info: GraphInfoProps[] = JSONParseLog(item.Value, {page: "RightAuditDetail", fun: "graph_info"})
                             graph_info.forEach((item) => {
                                 setMapGraphInfoDetail(item.node_id, item)
                             })
@@ -676,7 +677,8 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     }
                     if (item.Key === "graph_line") {
                         try {
-                            let graph_info: string[][] = JSON.parse(item.Value)
+                            let graph_info: string[][] = JSONParseLog(item.Value, {page: "RightAuditDetail", fun: "graph_line"})
+
                             // 当数量小于等于10条时默认第一级展开
                             if (graph_info.length > 0 && graph_info.length <= 10) {
                                 const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)

@@ -101,6 +101,7 @@ import styles from "./HTTPHistoryFilter.module.scss"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPHistoryFilterProps {
@@ -141,7 +142,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         getRemoteValue(RemoteHistoryGV.HTTPHistoryFilterLeftTabs).then((setting: string) => {
             if (setting) {
                 try {
-                    const tabs = JSON.parse(setting)
+                    const tabs = JSONParseLog(setting, {page: "HTTPHistoryFilter", fun: "HTTPHistoryFilterLeftTabs"})
                     if (toWebFuzzer) {
                         setOpenTabsFlag(false)
                     } else {
@@ -200,12 +201,12 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         onSetHTTPFlowFilter(queryParams)
         try {
-            const treeQuery = JSON.parse(queryParams) || {}
+            const treeQuery = JSONParseLog(queryParams, {page: "HTTPHistoryFilter", fun: "treeQuery"}) || {}
             delete treeQuery.Pagination
             setTreeQueryparams(JSON.stringify(treeQuery))
             setRefreshFlag(!!execFlag)
 
-            const processQuery = JSON.parse(queryParams) || {}
+            const processQuery = JSONParseLog(queryParams, {page: "HTTPHistoryFilter", fun: "processQuery"}) || {}
             delete processQuery.Pagination
             delete processQuery.ProcessName
             setProcessQueryparams(JSON.stringify(processQuery))
@@ -751,7 +752,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
                 if (res[1].status === "fulfilled") {
                     try {
-                        const arr = JSON.parse(res[1].value) || []
+                        const arr = JSONParseLog(res[1].value, {page: "HTTPHistoryFilter", fun: "fulfilled"}) || []
                         // 确保顺序缓存里面的key一定在默认所有列中存在
                         const arr2 = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
                         // 按照 defalutColumnsOrderRef.current 顺序补充新增列

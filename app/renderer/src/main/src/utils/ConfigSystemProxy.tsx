@@ -13,6 +13,7 @@ import {RemoteGV} from "@/yakitGV"
 import styles from "./ConfigSystemProxy.module.scss"
 import emiter from "./eventBus/eventBus"
 import {APINoRequestFunc} from "@/apiUtils/type"
+import { JSONParseLog } from "./tool"
 
 export interface ConfigSystemProxyProp {
     defaultProxy?: string
@@ -170,7 +171,7 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
         getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
             setLoading(false)
             if (!setting) return
-            const values: string = JSON.parse(setting)
+            const values: string = JSONParseLog(setting,{page: "ConfigSystemProxy"})
             setChromePath(values)
         })
     }, [])

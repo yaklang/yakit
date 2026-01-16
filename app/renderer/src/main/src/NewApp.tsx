@@ -20,6 +20,7 @@ import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalSho
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
 import {useUploadInfoByEnpriTrace} from "./components/layout/utils"
 import emiter from "./utils/eventBus/eventBus"
+import { JSONParseLog } from "./utils/tool"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -129,7 +130,7 @@ function NewApp() {
                         failed(`获取失败:${e}`)
                     })
             } else {
-                const values = JSON.parse(setting)
+                const values = JSONParseLog(setting, {page: "NewApp", fun: "testYak"})
                 ipcRenderer
                     .invoke("SetOnlineProfile", {
                         ...values,

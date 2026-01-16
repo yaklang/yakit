@@ -45,6 +45,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {usePluginToId} from "@/store/publicMenu"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {isMemfit} from "@/utils/envfile"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -178,7 +179,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         if (val !== "{}") {
                             let filters: string[] = []
                             try {
-                                filters = (JSON.parse(val) || {})["public"] || []
+                                filters = (JSONParseLog(val, {page: "PublicMenu", fun: "UserDeleteMenu"}) || {})["public"] || []
                             } catch (error) {}
                             for (let item of PublicCommonPlugins) {
                                 if (filters.includes(item.label)) continue

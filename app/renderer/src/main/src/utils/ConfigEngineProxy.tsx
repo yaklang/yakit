@@ -7,6 +7,7 @@ import {showModal} from "@/utils/showModal";
 import {InputItem} from "@/utils/inputUtil";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 import {removeRepeatedElement} from "@/utils/str";
+import { JSONParseLog } from "./tool";
 
 export interface ConfigEngineProxyProp {
 
@@ -31,7 +32,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
 
         getRemoteValue(HISTORY_ENGINE_PROXY).then(e => {
             try {
-                const arr: string[] = JSON.parse(e);
+                const arr: string[] = JSONParseLog(e,{page: "ConfigEngineProxy"});
                 setHistoryProxy(removeRepeatedElement(arr))
             } catch (e) {
 

@@ -23,6 +23,7 @@ import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomF
 import {PluginExecuteLogFile} from "./PluginExecuteResultType"
 import {isPluginExecuteLogFileItem} from "@/pages/invoker/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 interface LocalPluginLogList extends StreamResult.Log {}
 interface LocalPluginLogProps {
@@ -48,7 +49,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
         let key = item.level
         if (key === "file") {
             try {
-                const fileItem = JSON.parse(item.data) as PluginExecuteLogFile.FileItem | FileLogShowDataProps
+                const fileItem = JSONParseLog(item.data, {page: "LocalPluginLog", fun: "logLevelToDot"}) as PluginExecuteLogFile.FileItem | FileLogShowDataProps
                 if (isPluginExecuteLogFileItem(fileItem)) {
                     const newFileIte = {...fileItem} as PluginExecuteLogFile.FileItem
                     if (newFileIte.is_dir) {

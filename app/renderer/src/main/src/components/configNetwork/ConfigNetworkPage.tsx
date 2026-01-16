@@ -48,6 +48,7 @@ import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {handleAIConfig} from "@/pages/spaceEngine/utils"
 import { isIRify } from "@/utils/envfile"
+import { JSONParseLog } from "@/utils/tool"
 
 export interface ConfigNetworkPageProp {}
 
@@ -602,7 +603,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     onSetChromePath(chromePath)
                 })
             } else {
-                const values: string = JSON.parse(setting)
+                const values: string = JSONParseLog(setting,{page:"ConfigNetworkPage", fun:"GlobalChromePath"})
                 setChromePath(values)
             }
         })

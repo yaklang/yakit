@@ -63,6 +63,7 @@ import {RemoteGV} from "@/yakitGV"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import { JSONParseLog } from "@/utils/tool"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 const HybridScanTaskListDrawer = React.lazy(() => import("./HybridScanTaskListDrawer"))
@@ -238,7 +239,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         getRemoteValue(RemoteGV.PluginBatchExecTabs).then((setting: string) => {
             if (setting) {
                 try {
-                    const tabs = JSON.parse(setting)
+                    const tabs = JSONParseLog(setting, {page: "PluginBatchExecutor", fun: "PluginBatchExecTabs"})
                     setShow(tabs.contShow)
                     onActiveKey(tabs.curTabKey)
                 } catch (error) {}
@@ -613,7 +614,7 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
         /**切换任务状态 */
         const onSwitchTaskStatus = useMemoizedFn((res) => {
             try {
-                const value = JSON.parse(res)
+                const value = JSONParseLog(res, {page: "PluginBatchExecutor", fun: "onSwitchTaskStatus"})
                 const {runtimeId, hybridScanMode, pageId: pId} = value
                 if (pageId !== pId) return
                 if (!runtimeId) {

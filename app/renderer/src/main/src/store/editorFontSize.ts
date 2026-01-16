@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 import { HTTP_PACKET_EDITOR_FONT_SIZE } from "@/utils/editors"
 import { yakitFailed } from "@/utils/notification"
+import { JSONParseLog } from "@/utils/tool"
 
 
 interface EditorFontSizeStore {
@@ -25,7 +26,7 @@ export const useEditorFontSize = create<EditorFontSizeStore>((set, get) => ({
         try {
             const data = await getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
             if (data) {
-                const obj = JSON.parse(data)
+                const obj = JSONParseLog(data, { page: "editorFontSize", fun: "initFontSize" })
                 if (obj?.fontSize && obj.fontSize >= 12 && obj.fontSize <= 20) {
                     set({ fontSize: obj.fontSize })
                 }

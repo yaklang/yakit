@@ -24,6 +24,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -122,7 +123,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then((e) => {
                 if (!!e) {
                     try {
-                        const certsRaw = JSON.parse(e) as ClientCertificate[]
+                        const certsRaw = JSONParseLog(e, {page: "MITMFormAdvancedConfiguration", fun: "MITMDefaultClientCertificates"}) as ClientCertificate[]
                         setCertsDef(certsRaw)
                     } catch (e) {
                         setCerts([])

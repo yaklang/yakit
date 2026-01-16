@@ -28,6 +28,7 @@ import {Badge} from "antd"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -67,7 +68,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     }, [])
     const onGetMITMShieldData = useMemoizedFn((str: string) => {
         try {
-            const value = JSON.parse(str)
+            const value = JSONParseLog(str, {page: "MITMLog", fun: "onGetMITMShieldData"})
             const {shieldData, version} = value
             if (version !== mitmVersion) return
             setShieldData(shieldData)
@@ -85,7 +86,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     // #region SourceType
     const onHistorySourceTypeToMitm = useMemoizedFn((data) => {
         try {
-            const value = JSON.parse(data)
+            const value = JSONParseLog(data, {page: "MITMLog", fun: "onHistorySourceTypeToMitm"})
             const {sourceType, version} = value
             if (version !== mitmVersion) return
             onSetSourceType(sourceType)
@@ -135,7 +136,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     ).run
     const onMITMLogProcessQuery = useMemoizedFn((data: string) => {
         try {
-            const value = JSON.parse(data)
+            const value = JSONParseLog(data, {page: "MITMLog", fun: "onMITMLogProcessQuery"})
             const {queryStr, version} = value
             if (version !== mitmVersion) return
             setQueryparamsStr(queryStr)
@@ -151,7 +152,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         if (processVisible) {
             setProcessLoading(true)
             try {
-                const query = JSON.parse(queryparamsStr)
+                const query = JSONParseLog(queryparamsStr, {page: "MITMLog", fun: "QueryHTTPFlowsProcessNames"})
                 ipcRenderer
                     .invoke("QueryHTTPFlowsProcessNames", query)
                     .then((res) => {
@@ -230,7 +231,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     }, [])
     const onGetAdvancedSearchData = useMemoizedFn((str: string) => {
         try {
-            const value = JSON.parse(str)
+            const value = JSONParseLog(str, {page: "MITMLog", fun: "onGetAdvancedSearchData"})
             const {advancedSearchData} = value
             setFilterMode(advancedSearchData.filterMode)
             setHostName(advancedSearchData.hostName)

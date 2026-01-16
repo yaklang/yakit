@@ -22,6 +22,7 @@ import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./YakitWindow.module.scss"
+import { JSONParseLog } from "@/utils/tool"
 
 const DefaultCacheSize: YakitWindowCacheSizes = {
     shrink: {width: 0, height: 0},
@@ -97,7 +98,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                     .then((value: string) => {
                         if (value) {
                             try {
-                                cacheSize.current = JSON.parse(value)
+                                cacheSize.current = JSONParseLog(value, {page: "YakitWindow"})
                                 const {width, height} = cacheSize.current["shrink"] || {}
                                 if (shrinkRef && shrinkRef.current) {
                                     shrinkRef.current.updateSize({

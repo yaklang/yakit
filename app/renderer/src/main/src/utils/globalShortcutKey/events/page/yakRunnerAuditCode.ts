@@ -2,6 +2,7 @@ import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
+import { JSONParseLog } from "@/utils/tool"
 
 /** 代码审计快捷键 */
 export enum AuditCodeShortcutKey {
@@ -62,7 +63,7 @@ export const getStorageAuditCodeShortcutKeyEvents = () => {
         .then((res) => {
             if (!res) return
             try {
-                const data: EventsType = JSON.parse(res)
+                const data: EventsType = JSONParseLog(res,{page: "yakRunnerAuditCode", fun: "getStorageAuditCodeShortcutKeyEvents"})
                 currentKeyEvents = addScopeShow(data,AuditCodeShortcutKeyEvents)
             } catch (error) {}
         })

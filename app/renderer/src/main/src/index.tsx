@@ -18,6 +18,7 @@ import i18n from "@/i18n/i18n"
 import {Theme, useTheme} from "./hook/useTheme"
 import {generateAllThemeColors} from "./yakit-colors-generator"
 import {getReleaseEditionName} from "./utils/envfile"
+import { debugToPrintLogs } from "./utils/logCollection"
 
 // 根据 edition 返回对应颜色
 const getMainColorByEdition = (edition: ReturnType<typeof getReleaseEditionName>, themeMode: Theme) => {
@@ -90,7 +91,32 @@ const App = () => {
         }
 
         window.addEventListener("popstate", onPopState)
-        return () => window.removeEventListener("popstate", onPopState)
+
+
+        // 捕获运行中的JS 语法错误及异常
+        const onErrorLog = (event: ErrorEvent) => {
+            debugToPrintLogs({
+                page: "index",
+                fun: "addEventListener error",
+                content: event
+            })
+        }
+        window.addEventListener('error', onErrorLog)
+
+        // 捕获运行中的Promise未处理的异常
+        const onUnhandledrejectionLog = (event: PromiseRejectionEvent) => {
+            debugToPrintLogs({
+                page: "index",
+                fun: "addEventListener unhandledrejection",
+                content: event
+            })
+        }
+        window.addEventListener('unhandledrejection',onUnhandledrejectionLog)
+        return () => {
+            window.removeEventListener("popstate", onPopState)
+            window.removeEventListener('error', onErrorLog)
+            window.removeEventListener('unhandledrejection', onUnhandledrejectionLog)
+        }
     }, [])
 
     const {theme} = useTheme()

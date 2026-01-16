@@ -91,6 +91,7 @@ import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {onSetSelectedSearchVal} from "../AuditSearchModal/AuditSearch"
 import {ConvertAuditStaticAnalyzeErrorToMarker, IMonacoEditorMarker} from "@/utils/editorMarkers"
 import {getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType} from "@/pages/yakRunner/utils"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1141,7 +1142,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 选中光标位置
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
         try {
-            const obj: JumpToAuditEditorProps = JSON.parse(data)
+            const obj: JumpToAuditEditorProps = JSONParseLog(data, {page: "RunnerTabs", fun: "onJumpEditorDetailFun"})
             const {path, isSelect = true, selections} = obj
 
             if (editor && editorInfo?.path === path) {
@@ -1267,7 +1268,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onRefreshWidgetFun = useMemoizedFn((value) => {
         try {
             if (!editorInfo) return
-            const source: JumpSourceDataProps = JSON.parse(value)
+            const source: JumpSourceDataProps = JSONParseLog(value, {page: "RunnerTabs", fun: "onRefreshWidgetFun"})
             const {highLightRange} = editorInfo
             // 判断是否需要初始化 当关闭右侧审计结果重新打开时 无需重新恢复为第一项
             if (

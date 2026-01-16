@@ -49,6 +49,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { formatTimestamp } from "@/utils/timeUtil"
+import { JSONParseLog } from "@/utils/tool"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -716,7 +717,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             getRemoteValue("HISTORY_FOLD").then((result: string) => {
                 if (!result) setFold(true)
                 try {
-                    const foldResult: boolean = JSON.parse(result)
+                    const foldResult: boolean = JSONParseLog(result,{page:"HTTPFlowDetail", fun:"useEffect-inViewport"} )
                     setFold(foldResult)
                 } catch (e) {
                     setFold(true)
@@ -736,7 +737,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             if (!data) {
                 return
             }
-            const parseData = JSON.parse(data)
+            const parseData = JSONParseLog(data,{page: "httpFlowDetail", fun: "update"})
             if (parseData.id == lastIdRef.current) {
                 setFold(parseData.is)
             }

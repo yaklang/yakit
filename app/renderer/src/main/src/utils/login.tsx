@@ -6,6 +6,7 @@ import {globalUserLogout, isEnpriTraceAgent, isEnpriTrace, getRemoteHttpSettingG
 import {NowProjectDescription} from "@/pages/globalVariable"
 import emiter from "./eventBus/eventBus"
 import {LocalGVS} from "@/enums/localGlobal"
+import { JSONParseLog } from "./tool"
 const {ipcRenderer} = window.require("electron")
 
 export const loginOut = async (userInfo: UserInfoProps) => {
@@ -30,7 +31,7 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
     getRemoteValue(getRemoteHttpSettingGV()).then(async (setting) => {
         if (!setting) return
-        const values = JSON.parse(setting)
+        const values = JSONParseLog(setting,{page: "login", fun: "loginOutLocal"})
         const OnlineBaseUrl: string = values.BaseUrl
 
         let isDelPrivate: boolean = false

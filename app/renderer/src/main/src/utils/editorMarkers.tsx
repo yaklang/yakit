@@ -4,6 +4,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {SeverityMapTag} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import { JSONParseLog } from "./tool"
 
 export interface IMonacoEditorMarker {
     message: string
@@ -55,7 +56,7 @@ function getAuditMarkerSeverity(name: string): MarkerSeverity {
 
 export const ConvertAuditStaticAnalyzeErrorToMarker = (i: SSARisk): IMonacoEditorMarker | null => {
     try {
-        const code_range: CodeRangeProps = JSON.parse(i.CodeRange)
+        const code_range: CodeRangeProps = JSONParseLog(i.CodeRange, {page: "editorMarkers", fun: "ConvertAuditStaticAnalyzeErrorToMarker"})
         const title = SeverityMapTag.filter((item) => item.key.includes(i.Severity || ""))[0]
         let Severity = ""
         switch (title.name) {

@@ -2,6 +2,7 @@ import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
+import { JSONParseLog } from "@/utils/tool"
 
 export enum YakitMultipleShortcutKey {
     /** 多页面快捷键 */
@@ -26,7 +27,7 @@ export const getStorageYakitMultipleShortcutKeyEvents = () => {
         .then((res) => {
             if (!res) return
             try {
-                const data: EventsType = JSON.parse(res)
+                const data: EventsType = JSONParseLog(res,{page: "yakitMultiple", fun: "getStorageYakitMultipleShortcutKeyEvents"})
                 currentKeyEvents = addScopeShow(data,YakitMultipleShortcutKeyEvents)
             } catch (error) {}
         })

@@ -66,6 +66,7 @@ import {apiQuerySSAPrograms} from "./yakRunnerScanHistory/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import { IRifyUpdateProjectManagerModal } from "./YakRunnerProjectManager/YakRunnerProjectManager"
 import {parseUrl} from "@/hook/useProxy"
+import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -398,7 +399,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
-                const total = JSON.parse(completionJson) as CompletionTotal
+                const total = JSONParseLog(completionJson, {page:"MainOperator", fun:"GetYakitCompletionRaw"}) as CompletionTotal
                 setYaklangCompletions(total)
                 setUpYaklangMonaco()
                 setUpSyntaxFlowMonaco()
@@ -516,7 +517,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
             if (!result) setDefaultExpand(true)
             try {
-                const expandResult: boolean = JSON.parse(result)
+                const expandResult: boolean = JSONParseLog(result, {page:"MainOperator", fun:"MenuExpand"})
                 setDefaultExpand(expandResult)
             } catch (e) {
                 setDefaultExpand(true)

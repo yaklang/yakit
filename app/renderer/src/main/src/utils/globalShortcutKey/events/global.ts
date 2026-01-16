@@ -2,6 +2,7 @@ import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../keyboard"
 import {ShortcutKeyEventInfo} from "./pageMaps"
 import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
+import { JSONParseLog } from "@/utils/tool"
 
 /** 控件级焦点(子页面焦点暂不用做标记)  */
 export enum ShortcutKeyFocusType {
@@ -92,7 +93,7 @@ export const getStorageGlobalShortcutKeyEvents = () => {
         .then((res) => {
             if (!res) return
             try {
-                const data: EventsType = JSON.parse(res)
+                const data: EventsType = JSONParseLog(res,{page: "global", fun: "getStorageGlobalShortcutKeyEvents"})
                 currentKeyEvents = addScopeShow(data,globalShortcutKeyEvents)
             } catch (error) {}
         })

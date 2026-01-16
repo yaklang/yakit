@@ -1,4 +1,5 @@
 import isNil from "lodash/isNil"
+import {debugToPrintLogs} from "./logCollection"
 
 /** @name 将传入对象中值为null或undefined的键值对删除 */
 export const toolDelInvalidKV = (data: any) => {
@@ -51,3 +52,26 @@ export const isValidURL = (url: string) => {
 
 /**将 CSS 变量名转换为对应的值 */
 export const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+
+/**JSON.parse安全记录 */
+export function JSONParseLog(
+    text: string,
+    option?: {
+        page?: string
+        fun?: string
+        reviver?: (key: string, value: any) => any
+    }
+) {
+    try {
+        const result = JSON.parse(text, option?.reviver)
+        return result
+    } catch (err) {
+        debugToPrintLogs({
+            page: option?.page || "tool",
+            fun: option?.fun || "safeJSONParse",
+            title: text,
+            content: err
+        })
+        throw err
+    }
+}
