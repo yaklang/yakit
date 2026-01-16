@@ -1,5 +1,7 @@
 const {ipcMain, shell} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
+const {yakProjects} = require("../filePath")
+const fs = require("fs")
 
 module.exports = (win, getClient) => {
     // #region AI-Task
@@ -157,6 +159,27 @@ module.exports = (win, getClient) => {
     // 查询 AI-Forge 单个详情
     ipcMain.handle("GetAIForge", async (e, params) => {
         return await asyncGetAIForge(params)
+    })
+
+    // 单个导入AIForge
+    const importImportAIForgeMap = new Map()
+    ipcMain.handle("cancel-ImportAIForge", handlerHelper.cancelHandler(importImportAIForgeMap))
+    ipcMain.handle("ImportAIForge", (_, params, token) => {
+        let stream = getClient().ImportAIForge(params)
+        handlerHelper.registerHandler(win, stream, importImportAIForgeMap, token)
+    })
+
+    // 单个导出AIForge
+    const exportAIForgeMap = new Map()
+    ipcMain.handle("cancel-ExportAIForge", handlerHelper.cancelHandler(exportAIForgeMap))
+    ipcMain.handle("ExportAIForge", (_, params, token) => {
+        if (!fs.existsSync(yakProjects)) {
+            try {
+                fs.mkdirSync(yakProjects, {recursive: true})
+            } catch (error) {}
+        }
+        let stream = getClient().ExportAIForge(params)
+        handlerHelper.registerHandler(win, stream, exportAIForgeMap, token)
     })
     // #endregion
 

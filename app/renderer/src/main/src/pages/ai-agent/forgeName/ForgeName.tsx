@@ -1,7 +1,14 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {ForgeNameProps} from "./type"
+import {ExportAIForgeRequest, ExportImportAIForgeProgress, ForgeNameProps, ImportAIForgeRequest} from "./type"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineExportIcon,
+    OutlineImportIcon,
+    OutlinePencilaltIcon,
+    OutlinePlussmIcon,
+    OutlineSearchIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     useDebounceEffect,
@@ -26,6 +33,7 @@ import {yakitNotify} from "@/utils/notification"
 import {AIForgeListDefaultPagination, ReActChatEventEnum} from "../defaultConstant"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/forge"
+import PwdImportExportModal, {PwdImportExportModalExtra} from "@/components/PwdImportExportModal/PwdImportExportModal"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
@@ -252,6 +260,37 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     ).run
     // #endregion
 
+    // #region AIForge单个导入导出
+    const [importExportExtra, setImportExportExtra] = useState<PwdImportExportModalExtra>({
+        hint: false,
+        title: "导出Forge",
+        type: "export",
+        apiKey: "ExportAIForge"
+    })
+    const forgeNamesRef = useRef<string[]>([])
+    const outputNameRef = useRef<string>("")
+    const handleOpenImportExportHint = useMemoizedFn((extra: Omit<PwdImportExportModalExtra, "hint">) => {
+        if (importExportExtra.hint) return
+        setImportExportExtra({...extra, hint: true})
+    })
+    const handleCallbackImportExportHint = useMemoizedFn((result: boolean) => {
+        if (result) {
+            const type = importExportExtra.type
+            if (type === "import") {
+                // 刷新列表
+                handleEmiterTriggerRefresh()
+            }
+            yakitNotify("success", importExportExtra.type + "成功")
+        }
+        setImportExportExtra((prev) => {
+            return {
+                ...prev,
+                hint: false
+            }
+        })
+    })
+    // #endregion
+
     return (
         <div ref={wrapper} className={styles["forge-name"]}>
             <div className={styles["header-wrapper"]}>
@@ -260,7 +299,19 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                         技能库
                         <YakitRoundCornerTag>{total}</YakitRoundCornerTag>
                     </div>
-                    <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
+                    <div className={styles["first-btns"]}>
+                        <YakitButton
+                            icon={<OutlineImportIcon />}
+                            onClick={() =>
+                                handleOpenImportExportHint({
+                                    title: "导入Forge",
+                                    type: "import",
+                                    apiKey: "ImportAIForge"
+                                })
+                            }
+                        />
+                        <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
+                    </div>
                 </div>
 
                 <div className={styles["header-second"]}>
@@ -343,6 +394,26 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
                                             <div className={styles["item-extra"]}>
                                                 <Tooltip
+                                                    title={"导出Forge"}
+                                                    placement='topRight'
+                                                    overlayClassName={styles["item-extra-tooltip"]}
+                                                >
+                                                    <YakitButton
+                                                        type='text2'
+                                                        icon={<OutlineExportIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            forgeNamesRef.current = [ForgeName]
+                                                            outputNameRef.current = ForgeVerboseName || ForgeName || ""
+                                                            handleOpenImportExportHint({
+                                                                title: "导出Forge",
+                                                                type: "export",
+                                                                apiKey: "ExportAIForge"
+                                                            })
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip
                                                     title={"编辑Forge"}
                                                     placement='topRight'
                                                     overlayClassName={styles["item-extra-tooltip"]}
@@ -401,6 +472,29 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                     </div>
                 </div>
             </div>
+            <PwdImportExportModal<ExportAIForgeRequest, ImportAIForgeRequest, ExportImportAIForgeProgress>
+                getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
+                extra={importExportExtra}
+                outputName={outputNameRef.current || ""}
+                exportRequest={(formValue) => ({
+                    ForgeNames: forgeNamesRef.current,
+                    OutputName: formValue.OutputName,
+                    Password: formValue.Password
+                })}
+                ImportRequest={(formValue) => ({
+                    Overwrite: true,
+                    InputPath: formValue.InputPath,
+                    Password: formValue.Password
+                })}
+                initialProgress={{
+                    Percent: 0,
+                    Message: "",
+                    MessageType: ""
+                }}
+                getProgressValue={(p) => p.Percent / 100}
+                isProgressFinished={(p) => p.Percent === 100}
+                onCallback={handleCallbackImportExportHint}
+            />
         </div>
     )
 })

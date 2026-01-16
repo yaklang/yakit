@@ -904,6 +904,8 @@ service Yak {
   rpc DeleteAIForge(AIForgeFilter) returns (DbOperateMessage);
   rpc QueryAIForge(QueryAIForgeRequest) returns (QueryAIForgeResponse);
   rpc GetAIForge(GetAIForgeRequest) returns (AIForge);
+  rpc ExportAIForge(ExportAIForgeRequest) returns (stream GeneralProgress);
+  rpc ImportAIForge(ImportAIForgeRequest) returns (stream GeneralProgress);
 
   // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
@@ -1964,6 +1966,7 @@ message AIForge {
   string PlanPrompt = 15; // 计划提示语
   string ResultPrompt = 16; // 结果提示语
   string ForgeVerboseName = 17; // 给用户看的展示名称
+  string Author = 18;
 }
 
 message QueryAIForgeRequest {
@@ -1975,6 +1978,20 @@ message QueryAIForgeResponse {
   Paging Pagination = 1;
   repeated AIForge Data = 2;
   int64 Total = 3;
+}
+
+message ExportAIForgeRequest {
+  repeated string ForgeNames = 1;
+  string TargetPath = 2;
+  string OutputName = 3;
+  string Password = 4;
+}
+
+message ImportAIForgeRequest {
+  string InputPath = 1;
+  bool Overwrite = 2;
+  string NewForgeName = 3;
+  string Password = 4;
 }
 
 message GetAIForgeRequest {
