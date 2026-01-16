@@ -269,9 +269,7 @@ const DeleteConfirm: FC<
                             name: deleteOnlineRagName
                         })
                         setRefreshOlineRag?.((preValue) => !preValue)
-                    } catch (e) {
-                        console.warn("删除线上知识库失败：", e)
-                    }
+                    } catch (e) {}
 
                     success("删除知识库成功")
                 } catch (error) {
@@ -336,9 +334,7 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
                     form.resetFields()
                     setVisible(false)
                     setRefreshOlineRag?.((preValue) => !preValue)
-                } catch (e) {
-                    console.warn("删除线上知识库失败：", e)
-                }
+                } catch (e) {}
             },
             onError: (error) => {
                 failed(`编辑知识库失败: ${error}`)
