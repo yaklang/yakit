@@ -439,7 +439,6 @@ const findChangedObjects = (before, after) => {
 const BuildingKnowledgeBase = async (targetKnowledgeBase: KnowledgeBaseItem) => {
     const plugin = await grpcFetchLocalPluginDetail({Name: "构建知识库"}, true)
     const files = (targetKnowledgeBase.KnowledgeBaseFile?.map((it) => it.path) || []).join(",")
-    console.log(targetKnowledgeBase, "targetKnowledgeBase")
     const ExecParams = [
         {Key: "files", Value: files},
         {Key: "kbName", Value: targetKnowledgeBase.KnowledgeBaseName || "default"},
