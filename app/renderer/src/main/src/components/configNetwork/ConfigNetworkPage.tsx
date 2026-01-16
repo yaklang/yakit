@@ -47,7 +47,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {handleAIConfig} from "@/pages/spaceEngine/utils"
-import { getReleaseEditionName } from "@/utils/envfile"
+import { isIRify } from "@/utils/envfile"
 
 export interface ConfigNetworkPageProp {}
 
@@ -694,7 +694,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             console.error("error:", error)
         }
     })
-    const hideRules = useMemo(()=> getReleaseEditionName() !== "Yakit", []);
+    const hideRules = useMemo(() => isIRify(), []);
 
     return (
         <>
@@ -1106,7 +1106,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         >
                                             <div className={styles["form-rule-text"]}>
                                                 {t("ProxyConfig.recordPointsCount", {i: Endpoints.length})}
-                                                {!hideRules ? `,${t("ProxyConfig.recordPointsCount", {i: Endpoints.length})}`: null}
+                                                {!hideRules ? `,${t("ProxyConfig.recordRoutesCount", {i: Routes.length})}`: null}
                                             </div>
                                             <div className={styles["form-rule-icon"]}>
                                                 <OutlineCogIcon />
