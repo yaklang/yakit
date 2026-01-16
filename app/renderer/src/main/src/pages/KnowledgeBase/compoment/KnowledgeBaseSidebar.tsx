@@ -13,6 +13,7 @@ import {
     insertModaOptions,
     KnowledgeTabList,
     KnowledgeTabListEnum,
+    OnlieRageLatestResponse,
     prioritizeProcessingItems,
     targetIcon
 } from "../utils"
@@ -255,7 +256,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     // 本地已下载线上知识库
-    const [downloadedOnlineRags, setDownloadedOnlineRags] = useSafeState<API.OnlieRageLatest[]>([])
+    const [downloadedOnlineRags, setDownloadedOnlineRags] = useSafeState<OnlieRageLatestResponse[]>([])
     // 线上知识库下载中状态
     const [onlineRagDownloading, setOnlineRagDownloading] = useSafeState<Record<string, boolean>>({})
 
@@ -273,7 +274,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     }, [])
 
     // 线上知识库列表 State
-    const [onlineRagList, setOnlineRagList] = useSafeState<API.OnlieRageLatest[]>([])
+    const [onlineRagList, setOnlineRagList] = useSafeState<OnlieRageLatestResponse[]>([])
 
     // 获取线上知识库并存入onlineRagList
     const fetchAndSetOnlineRagList = useMemoizedFn(async () => {
@@ -287,7 +288,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     // 下载线上知识库
-    const onDownloadOnlineRag = async (ragItem: API.OnlieRageLatest) => {
+    const onDownloadOnlineRag = async (ragItem: OnlieRageLatestResponse) => {
         setOnlineRagDownloading((prev) => ({...prev, [ragItem.hash]: true}))
         const newToken = randomString(40)
         let localFilePath: string | undefined
@@ -323,7 +324,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     }
 
     const handleBuildingOnlineKnowledge = useMemoizedFn(
-        async (ragItem: API.OnlieRageLatest & {file_address?: string}, newToken: string) => {
+        async (ragItem: OnlieRageLatestResponse & {file_address?: string}, newToken: string) => {
             const rag_file_path = ragItem.file_address
             const rag_name = ragItem.name
             const rag_serial_version_uid = ragItem.hash

@@ -870,11 +870,21 @@ export const apiFetchQueryMessage: () => Promise<any> = () => {
     })
 }
 
+export interface OnlieRageLatestResponse {
+    name: string
+    name_zh: string
+    version: string
+    file: string
+    hashfile: string
+    hashtype: string
+    hash: string
+}
+
 // 获取线上知识库数据
 export const apiFetchQueryOnlieRageLatest: () => Promise<any> = () => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<{}, API.OnlieRageLatest[]>({
+            NetWorkApi<{}, OnlieRageLatestResponse[]>({
                 method: "get",
                 url: "https://oss-qn.yaklang.com/rag/rags-latest.json"
             })
