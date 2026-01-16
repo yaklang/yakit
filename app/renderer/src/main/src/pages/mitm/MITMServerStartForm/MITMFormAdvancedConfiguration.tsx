@@ -63,29 +63,30 @@ export interface AdvancedConfigurationFromValue {
     OverwriteSNI: string
     SNI: string
 }
+const DefFieldsVal: AdvancedConfigurationFromValue = {
+    certs: [],
+    preferGMTLS: false,
+    onlyEnableGMTLS: false,
+    enableProxyAuth: false,
+    proxyUsername: "",
+    proxyPassword: "",
+    dnsServers: ["8.8.8.8", "114.114.114.114"],
+    etcHosts: [],
+    filterWebsocket: false,
+    disableCACertPage: false,
+    DisableSystemProxy: false,
+    DisableWebsocketCompression: false,
+    PluginConcurrency: 20,
+    OverwriteSNI: "auto",
+    SNI: ""
+}
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {visible, setVisible, onSave, enableGMTLS} = props
         const [certs, setCerts] = useState<ClientCertificate[]>([])
 
         // 保存初始默认值
-        const defFieldsRef = useRef<AdvancedConfigurationFromValue>({
-            certs: [],
-            preferGMTLS: false,
-            onlyEnableGMTLS: false,
-            enableProxyAuth: false,
-            proxyUsername: "",
-            proxyPassword: "",
-            dnsServers: ["8.8.8.8", "114.114.114.114"],
-            etcHosts: [],
-            filterWebsocket: false,
-            disableCACertPage: false,
-            DisableSystemProxy: false,
-            DisableWebsocketCompression: false,
-            PluginConcurrency: 20,
-            OverwriteSNI: "auto",
-            SNI: ""
-        })
+        const defFieldsRef = useRef<AdvancedConfigurationFromValue>(DefFieldsVal)
         const [etcHosts, setEtcHosts] = useState<any[]>([])
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -130,6 +131,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         )
 
         useEffect(() => {
+            defFieldsRef.current = DefFieldsVal
             // 证书
             getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then((e) => {
                 if (!!e) {
