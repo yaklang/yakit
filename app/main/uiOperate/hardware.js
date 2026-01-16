@@ -6,12 +6,15 @@ const process = require("process")
 const {yaklangEngineDir, remoteLinkDir, yakitInstallDir} = require("../filePath")
 const zip = require("node-stream-zip")
 const {exec} = require("child_process")
+const {printLogOutputFile} = require("../logFile")
 
 module.exports = (win, getClient) => {
     // CPU瞬时使用均值
     const cpuData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     // CPU监听计时器变量
     var time = null
+    // 实时CPU写入日志
+    var timeLog = null
 
     const cpuAverage = () => {
         //Initialise sum of idle and time of cores and fetch CPU info
@@ -75,6 +78,7 @@ module.exports = (win, getClient) => {
     // 开始进行CPU和内存使用率计算
     ipcMain.handle("start-compute-percent", () => {
         if (time) clearInterval(time)
+        if (timeLog) clearInterval(timeLog)
         time = setInterval(() => {
             //cpu
             getCPULoadAVG(400, 200).then((avg) => {
@@ -90,6 +94,18 @@ module.exports = (win, getClient) => {
              * 但是使用该库将会导致功能明显卡顿(因为该库调用电脑命令或本地文件获取系统信息)
              */
         }, 400)
+
+        // 实时CPU使用率写入日志
+        timeLog = setInterval(()=>{
+            try {
+                let percent = cpuData[cpuData.length - 1] || 0
+                if (percent > 80) {
+                    printLogOutputFile(
+                        `[CPU WARNING] => ${percent}%`
+                    )
+                }
+            } catch (error) {}
+        }, 5*1000)
     })
     // 获取CPU和内存使用率
     ipcMain.handle("fetch-compute-percent", () => {
@@ -98,6 +114,7 @@ module.exports = (win, getClient) => {
     // 销毁计算CPU和内存使用率的计数器
     ipcMain.handle("clear-compute-percent", () => {
         if (time) clearInterval(time)
+        if (timeLog) clearInterval(timeLog)
     })
 
     /** 获取操作系统类型 */

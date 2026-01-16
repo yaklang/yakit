@@ -21,6 +21,7 @@ import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/event
 import {useUploadInfoByEnpriTrace} from "./components/layout/utils"
 import emiter from "./utils/eventBus/eventBus"
 import { JSONParseLog } from "./utils/tool"
+import { debugToPrintLogs } from "./utils/logCollection"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -36,12 +37,46 @@ function NewApp() {
     const {userInfo} = useStore()
     const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
 
+
+    const onWriteLog = useMemoizedFn((event: MouseEvent) => {
+        try {
+            // 获取点击元素的关键信息
+            const target = event.target as HTMLElement
+            if (!(target)) return;
+            const log = {
+                tag: target.tagName,
+                className:
+                    typeof target.className === "string"
+                    ? target.className
+                    : undefined,
+                text: target.innerText
+                    ? target.innerText.slice(0, 80)
+                    : undefined,
+            }
+            debugToPrintLogs({
+                status: "INFO",
+                title: "用户点击事件",
+                content: JSON.stringify(log)
+            })
+        } catch (error) {}
+    })
+
+    const startClickMonitor = useMemoizedFn(() => {
+        document.addEventListener('click', onWriteLog)
+    })
+
+    const stopClickMonitor = useMemoizedFn(() => {
+        document.removeEventListener("click", onWriteLog)
+    })
+
     // 快捷键注册+获取全局快捷键事件集合缓存
     useEffect(() => {
         getStorageGlobalShortcutKeyEvents()
         startShortcutKeyMonitor()
+        startClickMonitor()
         return () => {
             stopShortcutKeyMonitor()
+            stopClickMonitor()
         }
     }, [])
 
