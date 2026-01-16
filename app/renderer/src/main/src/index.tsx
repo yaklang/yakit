@@ -28,6 +28,8 @@ const getMainColorByEdition = (edition: ReturnType<typeof getReleaseEditionName>
             return themeMode === "dark" ? "#5E9DEA" : "#2E63B3"
         case "IRify":
             return themeMode === "dark" ? "#B081FF" : "#6A44A9"
+        case "IRify-EnpriTrace":
+            return themeMode === "dark" ? "#B081FF" : "#6A44A9"
         default:
             return "#F17F30"
     }
