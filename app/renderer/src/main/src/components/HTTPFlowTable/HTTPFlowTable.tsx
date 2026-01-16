@@ -1149,7 +1149,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         },
         [queryParams, inViewport],
-        {wait: 200}
+        {wait: 1000}
     )
     const updateQueryParams = (query) => {
         const copyQuery = structuredClone(query)

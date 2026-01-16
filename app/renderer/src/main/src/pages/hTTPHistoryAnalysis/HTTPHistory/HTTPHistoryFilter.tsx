@@ -2088,7 +2088,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             }
         },
         [queryParams],
-        {wait: 200}
+        {wait: 500}
     )
 
     const update = useMemoizedFn((page: number) => {
