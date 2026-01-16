@@ -49,7 +49,6 @@ try {
  * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
 const YakitProjectPath = project_path || osHomeProjectPath
-console.log(YakitProjectPath, "YakitProjectPath")
 
 console.log(`---------- Global-Path Start ----------`)
 console.log(`software-path: ${appPath}`)

@@ -45,7 +45,6 @@ import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {API} from "@/services/swagger/resposeType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import console from "console"
 
 const {YakitPanel} = YakitCollapse
 
@@ -241,6 +240,15 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                     api.removeStream && api.removeStream(clearAllContent.clearAllStreamToken)
                 }
             })
+            try {
+                for (const kb of knowledgeBases) {
+                    await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
+                        name: kb.KnowledgeBaseName
+                    })
+                }
+
+                setRefreshOlineRag?.((preValue) => !preValue)
+            } catch (e) {}
         } catch (error) {
             failed(error + "")
         }
@@ -609,6 +617,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                     const localMap = new Map(
                                                         downloadedOnlineRags.map((it) => [it.file, it])
                                                     )
+
                                                     return onlineRagList?.map((items) => {
                                                         const local = localMap.get(items.file)
                                                         const isDownloadedLatest = !!local && local.hash === items.hash
