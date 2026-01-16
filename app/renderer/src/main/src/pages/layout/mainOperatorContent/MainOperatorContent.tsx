@@ -172,8 +172,8 @@ import {
 import {keepSearchNameMapStore} from "@/store/keepSearchName"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { useProxy } from "@/hook/useProxy"
-import { JSONParseLog } from "@/utils/tool"
+import {useProxy} from "@/hook/useProxy"
+import {JSONParseLog} from "@/utils/tool"
 import {SoftMode, useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {RemoteSoftModeGV} from "@/enums/softMode"
 
@@ -1453,7 +1453,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             let newRequest = request || defaultPostTemplate
             // 有分享内容，数据以分享内容为准
             if (res.hasOwnProperty("shareContent")) {
-                const shareContent: ShareValueProps = JSONParseLog(res.shareContent, {page: "MainOperatorContent", fun: "addFuzzer"})
+                const shareContent: ShareValueProps = JSONParseLog(res.shareContent, {
+                    page: "MainOperatorContent",
+                    fun: "addFuzzer"
+                })
                 newIsHttps = shareContent.advancedConfiguration.isHttps
                 newRequest = shareContent.request || defaultPostTemplate
 
@@ -1576,7 +1579,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 Targets: {
                                     HTTPRequestTemplate: cloneDeep(defPluginBatchExecuteExtraFormValue),
                                     InputFile: [],
-                                    Input: bugUrl ? JSONParseLog(bugUrl, {page: "MainOperatorContent", fun: "addBugTest"}).join(",") : ""
+                                    Input: bugUrl
+                                        ? JSONParseLog(bugUrl, {page: "MainOperatorContent", fun: "addBugTest"}).join(
+                                              ","
+                                          )
+                                        : ""
                                 } as HybridScanInputTarget
                             }
                         }
@@ -2406,12 +2413,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     onRestoreHistory(YakitRoute.HTTPFuzzer)
                 } finally {
                     setTimeout(() => {
-                        const i = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
-                        const len = getPageCache()[i].multipleNode.length
-                        if (isSecurityExpert && newOpen && len === 0) {
-                            addFuzzer({openFlag: false, selectSubItem: true})
+                        try {
+                            const i = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
+                            if (i >= 0) {
+                                const len = getPageCache()[i].multipleNode.length
+                                if (isSecurityExpert && newOpen && len === 0) {
+                                    addFuzzer({openFlag: false, selectSubItem: true})
+                                }
+                            }
+                        } catch (error) {
+                        } finally {
+                            setLoading(false)
                         }
-                        setLoading(false)
                     }, 300)
                 }
             }
@@ -2611,7 +2624,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
     const onFuzzerSequenceImportUpdateMenu = useMemoizedFn((data: string) => {
         try {
-            const newGroupItem: MultipleNodeInfo = JSONParseLog(data, {page: "MainOperatorContent", fun: "onFuzzerSequenceImportUpdateMenu"})
+            const newGroupItem: MultipleNodeInfo = JSONParseLog(data, {
+                page: "MainOperatorContent",
+                fun: "onFuzzerSequenceImportUpdateMenu"
+            })
             const index = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
             if (index === -1) return
             const fuzzerMenuItem = structuredClone(pageCache[index])
@@ -2907,7 +2923,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         // FuzzerSequence
                         const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList)
                         if (!!resSequence) {
-                            const listSequence = JSONParseLog(resSequence, {page: "MainOperatorContent", fun: "onRestoreHTTPFuzzer"})
+                            const listSequence = JSONParseLog(resSequence, {
+                                page: "MainOperatorContent",
+                                fun: "onRestoreHTTPFuzzer"
+                            })
                             if (listSequence?.length > 0) {
                                 const itemSequence = listSequence[0]
                                 await onSetFuzzerSequenceCacheData(itemSequence)
@@ -2951,7 +2970,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             .then(async () => {
                 // FuzzerSequence
                 const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCache)
-                const cacheSequence = JSONParseLog(resSequence || "[]", {page: "MainOperatorContent", fun: "onSaveHTTPFuzzer"})
+                const cacheSequence = JSONParseLog(resSequence || "[]", {
+                    page: "MainOperatorContent",
+                    fun: "onSaveHTTPFuzzer"
+                })
                 if (cacheSequence.length > 0) {
                     const historySequenceList = [cacheSequence]
                     setRemoteProjectValue(
@@ -3567,7 +3589,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((resVal) => {
         try {
-            const res: SwitchSubMenuItemProps = JSONParseLog(resVal, {page: "MainOperatorContent", fun: "onSelectSubMenuById"})
+            const res: SwitchSubMenuItemProps = JSONParseLog(resVal, {
+                page: "MainOperatorContent",
+                fun: "onSelectSubMenuById"
+            })
             if (res.forceRefresh !== true && !inViewport) return
             const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
             if (index === -1) return
@@ -4395,7 +4420,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
         const onCloseSubPageByInfoFun = useMemoizedFn((res) => {
             try {
-                const data: MultipleNodeInfo = JSONParseLog(res, {page: "MainOperatorContent", fun: "onCloseSubPageByInfoFun"})
+                const data: MultipleNodeInfo = JSONParseLog(res, {
+                    page: "MainOperatorContent",
+                    fun: "onCloseSubPageByInfoFun"
+                })
                 if (data.id === selectSubMenu.id) {
                     onRemoveSubPageFun(data)
                 }
