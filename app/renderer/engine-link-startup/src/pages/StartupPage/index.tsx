@@ -775,26 +775,31 @@ export const StartupPage: React.FC = () => {
         }
         if (getKeepalive()) {
             setCheckLog([])
-            // 先设置倒计时状态
-            safeSetYakitStatus("link_countdown")
-            setCountdown(3)
-            // 清除之前的定时器
-            clearCountDownTime()
-            // 开始倒计时
-            let currentCount = 3
-            countdownTimerRef.current = setInterval(() => {
-                currentCount -= 1
-                setCountdown(currentCount)
+            if (getEngineMode() === "local") {
+                // 先设置倒计时状态
+                safeSetYakitStatus("link_countdown")
+                setCountdown(3)
+                // 清除之前的定时器
+                clearCountDownTime()
+                // 开始倒计时
+                let currentCount = 3
+                countdownTimerRef.current = setInterval(() => {
+                    currentCount -= 1
+                    setCountdown(currentCount)
 
-                if (currentCount <= 0) {
-                    clearCountDownTime()
-                    // 倒计时结束，正式进入
-                    if (getYakitStatus() === "link_countdown") {
-                        safeSetYakitStatus("link")
-                        setEngineLink(true)
+                    if (currentCount <= 0) {
+                        clearCountDownTime()
+                        // 倒计时结束，正式进入
+                        if (getYakitStatus() === "link_countdown") {
+                            safeSetYakitStatus("link")
+                            setEngineLink(true)
+                        }
                     }
-                }
-            }, 1000)
+                }, 1000)
+            } else {
+                safeSetYakitStatus("link")
+                setEngineLink(true)
+            }
         }
     })
 
