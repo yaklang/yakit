@@ -69,22 +69,24 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [certs, setCerts] = useState<ClientCertificate[]>([])
 
         // 保存初始默认值
-        const [certsDef, setCertsDef] = useState<ClientCertificate[]>([]) // 用来判断是否修改了 certs 这个值
-        const [preferGMTLSDef, setPreferGMTLSDef] = useState<boolean>(false)
-        const [onlyEnableGMTLSDef, setOnlyEnableGMTLSDef] = useState<boolean>(false)
-        const [enableProxyAuthDef, setEnableProxyAuthDef] = useState<boolean>(false)
-        const [proxyUsernameDef, setProxyUsernameDef] = useState<string>()
-        const [proxyPasswordDef, setProxyPasswordDef] = useState<string>()
-        const [dnsServersDef, setDnsServersDef] = useState<string[]>(["8.8.8.8", "114.114.114.114"])
-        const [etcHostsDef, setEtcHostsDef] = useState<any[]>([])
+        const defFieldsRef = useRef<AdvancedConfigurationFromValue>({
+            certs: [],
+            preferGMTLS: false,
+            onlyEnableGMTLS: false,
+            enableProxyAuth: false,
+            proxyUsername: "",
+            proxyPassword: "",
+            dnsServers: ["8.8.8.8", "114.114.114.114"],
+            etcHosts: [],
+            filterWebsocket: false,
+            disableCACertPage: false,
+            DisableSystemProxy: false,
+            DisableWebsocketCompression: false,
+            PluginConcurrency: 20,
+            OverwriteSNI: "auto",
+            SNI: ""
+        })
         const [etcHosts, setEtcHosts] = useState<any[]>([])
-        const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
-        const [disableCACertPageDef, setDisableCACertPageDef] = useState<boolean>(false)
-        const [disableSystemProxyDef, setDisableSystemProxyDef] = useState<boolean>(false)
-        const [disableWebsocketCompressionDef, setDisableWebsocketCompressionDef] = useState<boolean>(false)
-        const [pluginConcurrencyDef, setPluginConcurrencyDef] = useState<number>(20)
-        const [overwriteSNIDef, setOverwriteSNIDef] = useState<string>("auto")
-        const [sNIDef, setSNIDef] = useState<string>("")
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
@@ -100,21 +102,21 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 return {...v, etcHosts}
             } else {
                 return {
-                    certs: certsDef,
-                    etcHosts: etcHostsDef,
-                    preferGMTLS: preferGMTLSDef,
-                    onlyEnableGMTLS: onlyEnableGMTLSDef,
-                    enableProxyAuth: enableProxyAuthDef,
-                    dnsServers: dnsServersDef,
-                    proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
-                    proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
-                    filterWebsocket: filterWebsocketDef,
-                    disableCACertPage: disableCACertPageDef,
-                    DisableSystemProxy: disableSystemProxyDef,
-                    DisableWebsocketCompression: disableWebsocketCompressionDef,
-                    PluginConcurrency: pluginConcurrencyDef,
-                    OverwriteSNI: overwriteSNIDef,
-                    SNI: sNIDef
+                    certs: defFieldsRef.current.certs,
+                    etcHosts: defFieldsRef.current.etcHosts,
+                    preferGMTLS: defFieldsRef.current.preferGMTLS,
+                    onlyEnableGMTLS: defFieldsRef.current.onlyEnableGMTLS,
+                    enableProxyAuth: defFieldsRef.current.enableProxyAuth,
+                    dnsServers: defFieldsRef.current.dnsServers,
+                    proxyUsername: defFieldsRef.current.enableProxyAuth ? defFieldsRef.current.proxyUsername : "",
+                    proxyPassword: defFieldsRef.current.enableProxyAuth ? defFieldsRef.current.proxyPassword : "",
+                    filterWebsocket: defFieldsRef.current.filterWebsocket,
+                    disableCACertPage: defFieldsRef.current.disableCACertPage,
+                    DisableSystemProxy: defFieldsRef.current.DisableSystemProxy,
+                    DisableWebsocketCompression: defFieldsRef.current.DisableWebsocketCompression,
+                    PluginConcurrency: defFieldsRef.current.PluginConcurrency,
+                    OverwriteSNI: defFieldsRef.current.OverwriteSNI,
+                    SNI: defFieldsRef.current.SNI
                 }
             }
         })
@@ -133,7 +135,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 if (!!e) {
                     try {
                         const certsRaw = JSONParseLog(e, {page: "MITMFormAdvancedConfiguration", fun: "MITMDefaultClientCertificates"}) as ClientCertificate[]
-                        setCertsDef(certsRaw)
+                        defFieldsRef.current.certs = certsRaw
                     } catch (e) {
                         setCerts([])
                     }
@@ -144,36 +146,36 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             // 国密TLS优先
             getRemoteValue(MITMConsts.MITMDefaultPreferGMTLS).then((e) => {
                 const v = e === "true" ? true : false
-                setPreferGMTLSDef(v)
+                defFieldsRef.current.preferGMTLS = v
                 form.setFieldsValue({preferGMTLS: v})
             })
             // 仅国密 TLS
             getRemoteValue(MITMConsts.MITMDefaultOnlyEnableGMTLS).then((e) => {
                 const v = e === "true" ? true : false
-                setOnlyEnableGMTLSDef(v)
+                defFieldsRef.current.onlyEnableGMTLS = v
                 form.setFieldsValue({onlyEnableGMTLS: v})
             })
             // 代理认证
             getRemoteValue(MITMConsts.MITMDefaultEnableProxyAuth).then((e) => {
                 const v = e === "true" ? true : false
-                setEnableProxyAuthDef(v)
+                defFieldsRef.current.enableProxyAuth = v
                 form.setFieldsValue({enableProxyAuth: v})
             })
             // 代理认证用户名
             getRemoteValue(MITMConsts.MITMDefaultProxyUsername).then((e) => {
-                setProxyUsernameDef(e)
+                defFieldsRef.current.proxyUsername = e
                 form.setFieldsValue({proxyUsername: e})
             })
             // 代理认证用户密码
             getRemoteValue(MITMConsts.MITMDefaultProxyPassword).then((e) => {
-                setProxyPasswordDef(e)
+                defFieldsRef.current.proxyPassword = e
                 form.setFieldsValue({proxyPassword: e})
             })
             // DNS服务器
             getRemoteValue(MITMConsts.MITMDefaultDnsServers).then((e) => {
                 if (!!e) {
                     const dnsServers = JSON.parse(e)
-                    setDnsServersDef(dnsServers)
+                    defFieldsRef.current.dnsServers = dnsServers
                     form.setFieldsValue({dnsServers})
                 }
             })
@@ -181,7 +183,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             getRemoteValue(MITMConsts.MITMDefaultEtcHosts).then((e) => {
                 if (!!e) {
                     const etcHosts = JSON.parse(e)
-                    setEtcHostsDef(etcHosts)
+                    defFieldsRef.current.etcHosts = etcHosts
                     setEtcHosts(etcHosts)
                     form.setFieldsValue({etcHosts})
                 }
@@ -189,19 +191,19 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             // 过滤WebSocket
             getRemoteValue(MITMConsts.MITMDefaultFilterWebsocket).then((e) => {
                 const v = e === "true" ? true : false
-                setFilterWebsocketDef(v)
+                defFieldsRef.current.filterWebsocket = v
                 form.setFieldsValue({filterWebsocket: v})
             })
             // 禁用初始页
             getRemoteValue(RemoteGV.MITMDisableCACertPage).then((e) => {
                 const v = e === "true" ? true : false
-                setDisableCACertPageDef(v)
+                defFieldsRef.current.disableCACertPage = v
                 form.setFieldsValue({disableCACertPage: v})
             })
             // 禁用系统代理
             getRemoteValue(RemoteGV.MITMDisableSystemProxy).then((e) => {
                 const v = e === "true" ? true : false
-                setDisableSystemProxyDef(v)
+                defFieldsRef.current.DisableSystemProxy = v
                 form.setFieldsValue({DisableSystemProxy: v})
             })
             // 启用webSocket压缩
@@ -210,7 +212,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 if (e) {
                     v = e === "true" ? true : false
                 }
-                setDisableWebsocketCompressionDef(v)
+                defFieldsRef.current.DisableWebsocketCompression = v
                 form.setFieldsValue({DisableWebsocketCompression: v})
             })
             // 插件并发进程
@@ -219,7 +221,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 if (e) {
                     v = Number(e)
                 }
-                setPluginConcurrencyDef(v)
+                defFieldsRef.current.PluginConcurrency = v
                 form.setFieldsValue({PluginConcurrency: v})
             })
             // SNI
@@ -236,9 +238,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     }
                 } catch {
                 } finally {
-                    setOverwriteSNIDef(v)
+                    defFieldsRef.current.OverwriteSNI = v
                     form.setFieldsValue({OverwriteSNI: v})
-                    setSNIDef(v2)
+                    defFieldsRef.current.SNI = v2
                     form.setFieldsValue({SNI: v2})
                 }
             })
@@ -339,23 +341,23 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const onClose = useMemoizedFn((jumpPage?: boolean) => {
             const formValue = form.getFieldsValue()
             const oldValue: any = {
-                certs: certsDef,
-                dnsServers: dnsServersDef,
-                etcHosts: etcHostsDef,
-                enableProxyAuth: enableProxyAuthDef,
-                filterWebsocket: filterWebsocketDef,
-                disableCACertPage: disableCACertPageDef,
-                DisableSystemProxy: disableSystemProxyDef,
-                DisableWebsocketCompression: disableWebsocketCompressionDef,
-                PluginConcurrency: pluginConcurrencyDef,
-                proxyUsername: proxyUsernameDef,
-                proxyPassword: proxyPasswordDef,
-                OverwriteSNI: overwriteSNIDef,
-                SNI: sNIDef
+                certs: defFieldsRef.current.certs,
+                dnsServers: defFieldsRef.current.dnsServers,
+                etcHosts: defFieldsRef.current.etcHosts,
+                enableProxyAuth: defFieldsRef.current.enableProxyAuth,
+                filterWebsocket: defFieldsRef.current.filterWebsocket,
+                disableCACertPage: defFieldsRef.current.disableCACertPage,
+                DisableSystemProxy: defFieldsRef.current.DisableSystemProxy,
+                DisableWebsocketCompression: defFieldsRef.current.DisableWebsocketCompression,
+                PluginConcurrency: defFieldsRef.current.PluginConcurrency,
+                proxyUsername: defFieldsRef.current.proxyUsername,
+                proxyPassword: defFieldsRef.current.proxyPassword,
+                OverwriteSNI: defFieldsRef.current.OverwriteSNI,
+                SNI: defFieldsRef.current.SNI
             }
             if (enableGMTLS) {
-                oldValue.preferGMTLS = preferGMTLSDef
-                oldValue.onlyEnableGMTLS = onlyEnableGMTLSDef
+                oldValue.preferGMTLS = defFieldsRef.current.preferGMTLS
+                oldValue.onlyEnableGMTLS = defFieldsRef.current.onlyEnableGMTLS
             }
             const newValue = {
                 certs,
