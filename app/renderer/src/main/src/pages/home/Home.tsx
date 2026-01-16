@@ -1,16 +1,27 @@
 import React, {useEffect, useMemo, useRef, useState, ReactElement, CSSProperties} from "react"
 import classNames from "classnames"
 import {
+    PublicBasicCrawlerIcon,
+    PublicBatchExecutorIcon,
     PublicBlastingIcon,
     PublicBruteIcon,
     PublicCodecIcon,
     PublicDNSLogIcon,
     PublicDirectoryScanningIcon,
+    PublicInformationGatheringIcon,
     PublicMitmIcon,
+    PublicNotepadManagerIcon,
     PublicPayloadGeneraterIcon,
+    PublicPayloadManagerIcon,
+    PublicPluginLocalIcon,
+    PublicPluginMineIcon,
+    PublicPluginStoreIcon,
+    PublicPocIcon,
     PublicPublicToolLightbulbIcon,
     PublicScanPortIcon,
     PublicSequenceAnimationIcon,
+    PublicSpaceEngineIcon,
+    PublicSubDomainCollectionIcon,
     PublicToolBasicCrawlerIcon,
     PublicToolCVEIcon,
     PublicToolDBDomainIcon,
@@ -56,7 +67,7 @@ import {RouteToPageProps} from "../layout/publicMenu/PublicMenu"
 import {usePluginToId} from "@/store/publicMenu"
 import {ResidentPluginName} from "@/routes/newRoute"
 import {Form, Tooltip} from "antd"
-import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -77,7 +88,7 @@ import {apiQueryYakScriptTotal} from "../plugins/utils"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {apiQueryPortsBase} from "../assetViewer/PortTable/utils"
 import {QueryPortsRequest} from "../assetViewer/PortAssetPage"
-import {getReleaseEditionName, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityYakit, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import ReactResizeDetector from "react-resize-detector"
@@ -88,6 +99,8 @@ import {WebsiteGV} from "@/enums/website"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {toMITMHacker} from "../hacker/httpHacker"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {useSoftMode, YakitModeEnum} from "@/store/softMode"
+import {getNotepadNameByEdition} from "../layout/NotepadMenu/utils"
 import styles from "./home.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -115,6 +128,7 @@ interface ToolInfo {
 interface HomeProp {}
 const Home: React.FC<HomeProp> = (props) => {
     const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "home"])
+    const {softMode} = useSoftMode()
     const homeRef = useRef(null)
     const [inViewport] = useInViewport(homeRef)
     const {pluginToId} = usePluginToId()
@@ -319,6 +333,10 @@ const Home: React.FC<HomeProp> = (props) => {
     const [localPluginTotal, setLocalPluginTotal] = useState<number>(0)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
+    const isScanMode = useMemo(() => {
+        return isCommunityYakit() && softMode === YakitModeEnum.Scan
+    }, [softMode])
+
     useEffect(() => {
         showMitmDropdownRef.current = showMitmDropdown
     }, [showMitmDropdown])
@@ -408,7 +426,7 @@ const Home: React.FC<HomeProp> = (props) => {
             updatePortTotal()
             updateLocalPluginTotal()
         },
-        [inViewport],
+        [inViewport, softMode],
         {wait: 200}
     )
 
@@ -472,28 +490,32 @@ const Home: React.FC<HomeProp> = (props) => {
     })
     const showManualInstallGuide = useMemoizedFn(() => {
         const m = showYakitModal({
-            type: "white",
-            title: t("Home.generateAutoInstallScript"),
+            title: t("Home.cert.manualInstallTitle"),
             width: "600px",
             centered: true,
             content: (
-                <div style={{padding: 15}}>
-                    {t("Home.pleaseFollowSteps")}
+                <div
+                    style={{
+                        padding: 15,
+                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                    }}
+                >
+                    {t("Home.cert.manualInstallSteps")}
                     <br />
                     <br />
-                    1. {t("Home.openScriptDir")}
+                    1. {t("Home.cert.manualInstallStep1")}
                     <br />
-                    2. {t("Home.runAutoInstallScript")}
+                    2. {t("Home.cert.manualInstallStep2")}
                     <br />
-                    3. {t("Home.installSuccessMessage")}
-                    <br />
-                    <br />
-                    {t("Home.closeAppsBeforeRun")}
-                    <br />
-                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
+                    3. {t("Home.cert.manualInstallStep3")}
                     <br />
                     <br />
-                    {t("Home.contactForHelp")}
+                    {t("Home.cert.manualInstallSafeHint")}
+                    <br />
+                    {t("Home.cert.manualInstallReadyHint", {name: t("YakitRoute.MITM")})}
+                    <br />
+                    <br />
+                    {t("Home.cert.contactForHelp")}
                 </div>
             ),
             onOk: () => {
@@ -503,7 +525,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         if (p) {
                             openABSFileLocated(p)
                         } else {
-                            yakitNotify("error", t("YakitNotification.generationFailed"))
+                            yakitNotify("error", t("YakitNotification.generationFailed", {colon: false}))
                         }
                     })
                     .catch(() => {})
@@ -519,7 +541,7 @@ const Home: React.FC<HomeProp> = (props) => {
             return (
                 <>
                     <br />
-                    {t("home.cert.autoInstallPkexecHint")}
+                    {t("Home.cert.autoInstallPkexecHint")}
                 </>
             )
         }
@@ -527,7 +549,7 @@ const Home: React.FC<HomeProp> = (props) => {
             return (
                 <>
                     <br />
-                    {t("home.cert.autoInstallAuthAgentHint")}
+                    {t("Home.cert.autoInstallAuthAgentHint")}
                 </>
             )
         }
@@ -537,19 +559,19 @@ const Home: React.FC<HomeProp> = (props) => {
     const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
         const modal = showYakitModal({
             type: "white",
-            title: t("home.cert.autoInstallFailedTitle"),
+            title: t("Home.cert.autoInstallFailedTitle"),
             width: "520px",
             centered: true,
-            okText: t("home.cert.autoInstallFailedManualBtn"),
-            cancelText: t("common.cancel"),
+            okText: t("Home.cert.autoInstallFailedManualBtn"),
+            cancelText: t("YakitButton.cancel"),
             content: (
                 <div style={{padding: 15}}>
-                    <div style={{marginBottom: 10}}>{t("home.cert.autoInstallFailedDesc")}</div>
+                    <div style={{marginBottom: 10}}>{t("Home.cert.autoInstallFailedDesc")}</div>
                     <div style={{color: "var(--Colors-Use-Danger-Text)"}}>
-                        {reason || t("home.cert.autoInstallUnknownError")}
+                        {reason || t("YakitNotification.unknown_error")}
                     </div>
                     {renderAutoInstallSuggestion(reason)}
-                    <div style={{marginTop: 16}}>{t("home.cert.autoInstallGuideHint")}</div>
+                    <div style={{marginTop: 16}}>{t("Home.cert.autoInstallGuideHint")}</div>
                 </div>
             ),
             onOk: () => {
@@ -562,22 +584,22 @@ const Home: React.FC<HomeProp> = (props) => {
     // 下载安装MITM证书
     const handleAutoInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
         e?.stopPropagation()
-        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求")
+        yakitNotify("info", t("Home.cert.mitmCertInstallPermissionNotice"))
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
                 if (res?.Ok) {
-                    yakitNotify("success", "MITM 证书安装成功")
+                    yakitNotify("success", t("Home.cert.mitmCertInstallSuccess"))
                     updateMITMCert()
                 } else {
-                    const reason = res?.Reason || "未知错误"
-                    yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                    const reason = res?.Reason || t("YakitNotification.unknown_error")
+                    yakitNotify("error", `${t("Home.cert.mitmCertInstallFailed")}${reason}`)
                     showAutoInstallFailure(reason)
                 }
             })
             .catch((err) => {
                 const reason = `${err}`
-                yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                yakitNotify("error", `${t("Home.cert.mitmCertInstallFailed")}${reason}`)
                 showAutoInstallFailure(reason)
             })
     })
@@ -586,7 +608,6 @@ const Home: React.FC<HomeProp> = (props) => {
         e?.stopPropagation()
         showManualInstallGuide()
     })
-
 
     // 爆破示例
     const handleBlastingExample = (animationType: string) => {
@@ -769,10 +790,15 @@ const Home: React.FC<HomeProp> = (props) => {
     }
 
     // 计算各个块的高度
-    const mitmRef = useRef<any>(null)
-    const webFuzzerRef = useRef<any>(null)
-    const signlejumpRef = useRef<any>(null)
-    const vulnerabilityRef = useRef<any>(null)
+    const mitmRef = useRef<HTMLDivElement>(null)
+    const webFuzzerRef = useRef<HTMLDivElement>(null)
+    const signlejumpRef = useRef<HTMLDivElement>(null)
+    const vulnerabilityRef = useRef<HTMLDivElement>(null)
+    const informationGatheringRef = useRef<HTMLDivElement>(null)
+    const scanningRef = useRef<HTMLDivElement>(null)
+    const scanningSize = useSize(scanningRef)
+    const pluginHubRef = useRef<HTMLDivElement>(null)
+    const smallToolsRef = useRef<HTMLDivElement>(null)
     const [watchWidth, setWatchWidth] = useState<number>(0)
     const adjustHeight = (container, wRadio: number, hRadio: number, minHeight: number, maxHeight: number) => {
         if (!container) return
@@ -812,30 +838,91 @@ const Home: React.FC<HomeProp> = (props) => {
         if (screenWidth <= 1920) return 290
         return 450
     }
+    const calcInformationGatheringAndScanningMinHeight = () => {
+        const screenWidth = document.body.getBoundingClientRect().width
+        if (screenWidth <= 1220) return 350
+        if (screenWidth <= 1920) return 400
+        return 500
+    }
+    const calcInformationGatheringAndScanningMaxHeight = () => {
+        const screenWidth = document.body.getBoundingClientRect().width
+        if (screenWidth <= 1220) return 450
+        if (screenWidth <= 1920) return 600
+        return 650
+    }
+    const calcSignlejumpAndSmallToolsMinHeight = () => {
+        const screenWidth = document.body.getBoundingClientRect().width
+        if (screenWidth <= 1220) return 260
+        if (screenWidth <= 1920) return 275
+        return 300
+    }
+    const calcSignlejumpAndSmallToolsMaxHeight = () => {
+        const screenWidth = document.body.getBoundingClientRect().width
+        if (screenWidth <= 1220) return 275
+        if (screenWidth <= 1920) return 290
+        return 450
+    }
     const resizeAdjustHeight = useThrottleFn(
         () => {
-            adjustHeight(mitmRef.current, 16, 9, calcMitmAndwebFuzzerMinHeight(), calcMitmAndwebFuzzerMaxHeight())
-            adjustHeight(webFuzzerRef.current, 16, 9, calcMitmAndwebFuzzerMinHeight(), calcMitmAndwebFuzzerMaxHeight())
-            adjustHeight(
-                signlejumpRef.current,
-                16,
-                9,
-                calcSignlejumpAndVulnerabilityMinHeight(),
-                calcSignlejumpAndVulnerabilityMaxHeight()
-            )
-            adjustHeight(
-                vulnerabilityRef.current,
-                16,
-                9,
-                calcSignlejumpAndVulnerabilityMinHeight(),
-                calcSignlejumpAndVulnerabilityMaxHeight()
-            )
+            if (isScanMode) {
+                adjustHeight(
+                    informationGatheringRef.current,
+                    16,
+                    9,
+                    calcInformationGatheringAndScanningMinHeight(),
+                    calcInformationGatheringAndScanningMaxHeight()
+                )
+                adjustHeight(
+                    scanningRef.current,
+                    16,
+                    9,
+                    calcInformationGatheringAndScanningMinHeight(),
+                    calcInformationGatheringAndScanningMaxHeight()
+                )
+                adjustHeight(
+                    pluginHubRef.current,
+                    16,
+                    9,
+                    calcSignlejumpAndSmallToolsMinHeight(),
+                    calcSignlejumpAndSmallToolsMaxHeight()
+                )
+                adjustHeight(
+                    smallToolsRef.current,
+                    16,
+                    9,
+                    calcSignlejumpAndSmallToolsMinHeight(),
+                    calcSignlejumpAndSmallToolsMaxHeight()
+                )
+            } else {
+                adjustHeight(mitmRef.current, 16, 9, calcMitmAndwebFuzzerMinHeight(), calcMitmAndwebFuzzerMaxHeight())
+                adjustHeight(
+                    webFuzzerRef.current,
+                    16,
+                    9,
+                    calcMitmAndwebFuzzerMinHeight(),
+                    calcMitmAndwebFuzzerMaxHeight()
+                )
+                adjustHeight(
+                    signlejumpRef.current,
+                    16,
+                    9,
+                    calcSignlejumpAndVulnerabilityMinHeight(),
+                    calcSignlejumpAndVulnerabilityMaxHeight()
+                )
+                adjustHeight(
+                    vulnerabilityRef.current,
+                    16,
+                    9,
+                    calcSignlejumpAndVulnerabilityMinHeight(),
+                    calcSignlejumpAndVulnerabilityMaxHeight()
+                )
+            }
         },
         {wait: 100}
     ).run
     useEffect(() => {
         resizeAdjustHeight()
-    }, [watchWidth])
+    }, [watchWidth, softMode])
 
     return (
         <div className={styles["home-page-wrapper"]} ref={homeRef}>
@@ -854,164 +941,411 @@ const Home: React.FC<HomeProp> = (props) => {
                             handleHeight={true}
                         />
                         <div className={styles["left-row-wrapper"]}>
-                            <div
-                                ref={mitmRef}
-                                className={classNames(styles["mitm-card"], styles["home-card"])}
-                                onClick={() => {
-                                    if (showMitmDropdown) return
-                                    onMenu({route: YakitRoute.MITMHacker})
-                                }}
-                            >
-                                <div className={styles["home-card-header"]}>
-                                    <div className={styles["home-card-header-title"]}>
-                                        <PublicMitmIcon className={styles["title-icon"]} />
-                                        <span className={styles["title-text"]}>
-                                            {t("YakitRoute.MITM Interactive Hijacking")}
-                                        </span>
-                                        <YakitButton
-                                            type='outline1'
-                                            style={{marginLeft: 8}}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onMenu({route: YakitRoute.HTTPHacker})
-                                            }}
-                                        >
-                                            {t("Home.MITMHijackV1")}
-                                        </YakitButton>
-                                    </div>
-                                    <div className={styles["home-card-header-desc"]}>
-                                        {t("YakitRoute.mitmSslHijack")}
-                                    </div>
-                                </div>
-                                {showMITMCertWarn && (
-                                    <div className={styles["home-card-config-detection"]}>
-                                        <div className={styles["config-detection-left"]}>
-                                            <SolidExclamationIcon className={styles["exclamation-icon"]} />
-                                            {t("Home.certNotConfigured")}
+                            {isScanMode ? (
+                                <>
+                                    <div
+                                        ref={informationGatheringRef}
+                                        className={classNames(styles["informationGathering-card"], styles["home-card"])}
+                                    >
+                                        <div className={styles["home-card-header"]}>
+                                            <div className={styles["home-card-header-title"]}>
+                                                <PublicInformationGatheringIcon className={styles["title-icon"]} />
+                                                <span className={styles["title-text"]}>
+                                                    {t("Home.informationGathering")}
+                                                </span>
+                                            </div>
+                                            <div className={styles["home-card-header-desc"]}>
+                                                {t("Home.assetReconDescription")}
+                                            </div>
                                         </div>
-                                        <div style={{display: "flex", alignItems: "center", gap: 8}}>
-                                            <YakitButton
-                                                type='text'
-                                                className={styles["config-detection-btn"]}
-                                                onClick={handleAutoInstall}
-                                            >
-                                                {t("home.cert.autoInstallButton")}
-                                            </YakitButton>
-                                            <YakitButton
-                                                type='text'
-                                                className={styles["config-detection-btn"]}
-                                                onClick={handleManualInstall}
-                                            >
-                                                {t("home.cert.manualInstallButton")}
-                                            </YakitButton>
-                                        </div>
-                                    </div>
-                                )}
-                                <div
-                                    className={styles["mitm-cont-wrapper"]}
-                                    // style={{backgroundImage: `url(${mitmBg})`}}
-                                >
-                                    <div className={styles["mitm-glass-effect"]}>
-                                        <div className={styles["mitm-operation"]}>
+                                        <div className={styles["informationGathering-items-wrapper"]}>
                                             <div
-                                                className={styles["mitm-operation-border"]}
-                                                style={{border: "1px solid var(--Colors-Use-Main-Bg)", padding: 8}}
+                                                className={styles["informationGathering-item"]}
+                                                onClick={() => onMenu({route: YakitRoute.Mod_ScanPort})}
                                             >
+                                                <PublicScanPortIcon className={styles["item-icon"]} />
+                                                <span className={styles["item-text"]} title={t("YakitRoute.portScan")}>
+                                                    {t("YakitRoute.portScan")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["informationGathering-item"]}
+                                                onClick={() =>
+                                                    onMenu({
+                                                        route: YakitRoute.Plugin_OP,
+                                                        pluginId: pluginToId[ResidentPluginName.DirectoryScanning],
+                                                        pluginName: ResidentPluginName.DirectoryScanning
+                                                    })
+                                                }
+                                            >
+                                                <PublicDirectoryScanningIcon className={styles["item-icon"]} />
+                                                <span
+                                                    className={styles["item-text"]}
+                                                    title={t("YakitRoute.directoryScan")}
+                                                >
+                                                    {t("YakitRoute.directoryScan")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["informationGathering-item"]}
+                                                onClick={() => onMenu({route: YakitRoute.Space_Engine})}
+                                            >
+                                                <PublicSpaceEngineIcon className={styles["item-icon"]} />
+                                                <span
+                                                    className={styles["item-text"]}
+                                                    title={t("YakitRoute.spaceEngine")}
+                                                >
+                                                    {t("YakitRoute.spaceEngine")}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className={styles["informationGathering-items-wrapper"]}>
+                                            <div
+                                                className={styles["informationGathering-item"]}
+                                                onClick={() =>
+                                                    onMenu({
+                                                        route: YakitRoute.Plugin_OP,
+                                                        pluginId: pluginToId[ResidentPluginName.SubDomainCollection],
+                                                        pluginName: ResidentPluginName.SubDomainCollection
+                                                    })
+                                                }
+                                            >
+                                                <PublicSubDomainCollectionIcon className={styles["item-icon"]} />
+                                                <span
+                                                    className={styles["item-text"]}
+                                                    title={t("YakitRoute.subdomainCollection")}
+                                                >
+                                                    {t("YakitRoute.subdomainCollection")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["informationGathering-item"]}
+                                                onClick={() =>
+                                                    onMenu({
+                                                        route: YakitRoute.Plugin_OP,
+                                                        pluginId: pluginToId[ResidentPluginName.BasicCrawler],
+                                                        pluginName: ResidentPluginName.BasicCrawler
+                                                    })
+                                                }
+                                            >
+                                                <PublicBasicCrawlerIcon className={styles["item-icon"]} />
+                                                <span
+                                                    className={styles["item-text"]}
+                                                    title={t("YakitRoute.basicCrawler")}
+                                                >
+                                                    {t("YakitRoute.basicCrawler")}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        ref={scanningRef}
+                                        className={classNames(
+                                            styles["vulnerability-scanning-card"],
+                                            styles["home-card"]
+                                        )}
+                                    >
+                                        <div className={styles["home-card-header"]}>
+                                            <div className={styles["home-card-header-title"]}>
+                                                <PublicPocIcon className={styles["title-icon"]} />
+                                                <span className={styles["title-text"]}>{t("YakitRoute.vulnScan")}</span>
+                                            </div>
+                                            <div className={styles["home-card-header-desc"]}>
+                                                {t("Home.vulnBatchScan")}
+                                            </div>
+                                        </div>
+                                        <div className={styles["home-card-operation-btn-wrapper"]}>
+                                            <div className={styles["operation-btn-wrapper"]} ref={scanningdropdownRef}>
                                                 <div
-                                                    className={styles["mitm-operation-border"]}
+                                                    className={styles["operation-btn-left"]}
                                                     style={{
-                                                        border: "1px solid var(--Colors-Use-Main-Focus)",
-                                                        padding: 6
+                                                        borderRadius: "40px 0 0 40px",
+                                                        width: scanningSize?.width
+                                                            ? scanningSize?.width > 600
+                                                                ? (scanningSize?.width - 200) / 3
+                                                                : undefined
+                                                            : undefined
+                                                    }}
+                                                    onClick={handleOpenScanning}
+                                                >
+                                                    <SolidPlayIcon className={styles["open-icon"]} />
+                                                    {t("YakitButton.startScan")}
+                                                </div>
+                                                <div
+                                                    className={styles["operation-btn-right"]}
+                                                    style={{
+                                                        borderRadius: "0 40px 40px 0"
+                                                    }}
+                                                    onClick={() => setShowScanningDropdown(!showScanningDropdown)}
+                                                >
+                                                    <OutlineChevronupIcon
+                                                        className={classNames(styles["title-icon"], {
+                                                            [styles["rotate-180"]]: !showScanningDropdown
+                                                        })}
+                                                    />
+                                                </div>
+                                                <div
+                                                    className={styles["operation-dropdown-wrapper"]}
+                                                    style={{display: showScanningDropdown ? "block" : "none"}}
+                                                >
+                                                    {[
+                                                        {
+                                                            label: t("YakitRoute.vulnTargetedScan"),
+                                                            key: "specialVulnerabilityDetection"
+                                                        },
+                                                        {label: t("Home.vulnCustomScan"), key: "customDetection"}
+                                                    ].map((item) => (
+                                                        <div
+                                                            className={classNames(
+                                                                styles["operation-dropdown-list-item"],
+                                                                {
+                                                                    [styles["active"]]: scanningCheck === item.key
+                                                                }
+                                                            )}
+                                                            onClick={() => {
+                                                                setScanningCheck(item.key)
+                                                                setShowScanningDropdown(!showScanningDropdown)
+                                                            }}
+                                                            key={item.key}
+                                                        >
+                                                            <span>{item.label}</span>
+                                                            {scanningCheck === item.key && (
+                                                                <SolidCheckIcon className={styles["check-icon"]} />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {!pcap.IsPrivileged && system !== "Windows_NT" && (
+                                            <div className={styles["home-card-config-detection"]}>
+                                                <div className={styles["config-detection-left"]}>
+                                                    <SolidExclamationIcon className={styles["exclamation-icon"]} />
+                                                    {t("Home.netcardPermissionNotFixed")}
+                                                </div>
+                                                <YakitButton
+                                                    type='text'
+                                                    className={styles["config-detection-btn"]}
+                                                    onClick={() => {
+                                                        if (pcapHintShow) return
+                                                        setPcapHintShow(true)
                                                     }}
                                                 >
+                                                    {t("YakitButton.actionFixNow")}
+                                                </YakitButton>
+                                            </div>
+                                        )}
+                                        <div className={styles["security-tools"]}>
+                                            <div
+                                                className={styles["security-tools-item"]}
+                                                onClick={() => onMenu({route: YakitRoute.PoC})}
+                                            >
+                                                <PublicPocIcon className={styles["title-icon"]} />
+                                                <span
+                                                    className={styles["tools-text"]}
+                                                    title={t("YakitRoute.vulnTargetedScan")}
+                                                >
+                                                    {t("YakitRoute.vulnTargetedScan")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["security-tools-item"]}
+                                                onClick={() =>
+                                                    onMenu({
+                                                        route: YakitRoute.BatchExecutorPage
+                                                    })
+                                                }
+                                            >
+                                                <PublicBatchExecutorIcon className={styles["tools-icon"]} />
+                                                <span className={styles["tools-text"]} title={t("Home.vulnCustomScan")}>
+                                                    {t("Home.vulnCustomScan")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["security-tools-item"]}
+                                                onClick={() => onMenu({route: YakitRoute.Mod_Brute})}
+                                            >
+                                                <PublicBruteIcon className={styles["tools-icon"]} />
+                                                <span
+                                                    className={styles["tools-text"]}
+                                                    title={t("YakitRoute.weakPasswordCheck")}
+                                                >
+                                                    {t("YakitRoute.weakPasswordCheck")}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div
+                                        ref={mitmRef}
+                                        className={classNames(styles["mitm-card"], styles["home-card"])}
+                                        onClick={() => {
+                                            if (showMitmDropdown) return
+                                            onMenu({route: YakitRoute.MITMHacker})
+                                        }}
+                                    >
+                                        <div className={styles["home-card-header"]}>
+                                            <div className={styles["home-card-header-title"]}>
+                                                <PublicMitmIcon className={styles["title-icon"]} />
+                                                <span className={styles["title-text"]}>
+                                                    {t("YakitRoute.MITM Interactive Hijacking")}
+                                                </span>
+                                                <YakitButton
+                                                    type='outline1'
+                                                    style={{marginLeft: 8}}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onMenu({route: YakitRoute.HTTPHacker})
+                                                    }}
+                                                >
+                                                    {t("Home.MITMHijackV1")}
+                                                </YakitButton>
+                                            </div>
+                                            <div className={styles["home-card-header-desc"]}>
+                                                {t("YakitRoute.mitmSslHijack")}
+                                            </div>
+                                        </div>
+                                        {showMITMCertWarn && (
+                                            <div className={styles["home-card-config-detection"]}>
+                                                <div className={styles["config-detection-left"]}>
+                                                    <SolidExclamationIcon className={styles["exclamation-icon"]} />
+                                                    {t("Home.certNotConfigured")}
+                                                </div>
+                                                <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                                    <YakitButton
+                                                        type='text'
+                                                        className={styles["config-detection-btn"]}
+                                                        onClick={handleAutoInstall}
+                                                    >
+                                                        {t("Home.cert.autoInstallButton")}
+                                                    </YakitButton>
+                                                    <YakitButton
+                                                        type='text'
+                                                        className={styles["config-detection-btn"]}
+                                                        onClick={handleManualInstall}
+                                                    >
+                                                        {t("Home.cert.manualInstallButton")}
+                                                    </YakitButton>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className={styles["mitm-cont-wrapper"]}>
+                                            <div className={styles["mitm-glass-effect"]}>
+                                                <div className={styles["mitm-operation"]}>
                                                     <div
                                                         className={styles["mitm-operation-border"]}
                                                         style={{
-                                                            border: "1px solid var(--Colors-Use-Main-Border)",
-                                                            padding: 4
+                                                            border: "1px solid var(--Colors-Use-Main-Bg)",
+                                                            padding: 8
                                                         }}
                                                     >
                                                         <div
-                                                            className={styles["operation-btn-wrapper"]}
-                                                            ref={mitmDropdownRef}
+                                                            className={styles["mitm-operation-border"]}
+                                                            style={{
+                                                                border: "1px solid var(--Colors-Use-Main-Focus)",
+                                                                padding: 6
+                                                            }}
                                                         >
                                                             <div
-                                                                className={styles["operation-btn-left"]}
-                                                                style={{borderRadius: "40px 0 0 40px"}}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    toMITMHacker({
-                                                                        immediatelyLaunchedInfo: {
-                                                                            host: hostWatch || "127.0.0.1",
-                                                                            port: portWatch || "8083",
-                                                                            enableInitialPlugin:
-                                                                                form.getFieldValue(
-                                                                                    "enableInitialPlugin"
-                                                                                ) === true
-                                                                        }
-                                                                    })
+                                                                className={styles["mitm-operation-border"]}
+                                                                style={{
+                                                                    border: "1px solid var(--Colors-Use-Main-Border)",
+                                                                    padding: 4
                                                                 }}
                                                             >
-                                                                <SolidPlayIcon className={styles["open-icon"]} />
-                                                                {t("Home.hijackStart")}
-                                                            </div>
-                                                            <div
-                                                                className={styles["operation-btn-right"]}
-                                                                style={{borderRadius: "0 40px 40px 0"}}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    setShowMitmDropdown(!showMitmDropdown)
-                                                                }}
-                                                            >
-                                                                <OutlineChevronupIcon
-                                                                    className={classNames(styles["title-icon"], {
-                                                                        [styles["rotate-180"]]: !showMitmDropdown
-                                                                    })}
-                                                                />
-                                                            </div>
-                                                            <div
-                                                                className={styles["operation-dropdown-wrapper"]}
-                                                                style={{display: showMitmDropdown ? "block" : "none"}}
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            >
-                                                                <Form
-                                                                    form={form}
-                                                                    layout={"horizontal"}
-                                                                    labelCol={{span: 8}}
-                                                                    wrapperCol={{span: 16}}
+                                                                <div
+                                                                    className={styles["operation-btn-wrapper"]}
+                                                                    ref={mitmDropdownRef}
                                                                 >
-                                                                    <Form.Item
-                                                                        label={t("Home.hostListen")}
-                                                                        rules={[
-                                                                            {
-                                                                                required: true,
-                                                                                message: t("Home.hostListen")
-                                                                            }
-                                                                        ]}
-                                                                        name={"host"}
+                                                                    <div
+                                                                        className={styles["operation-btn-left"]}
+                                                                        style={{borderRadius: "40px 0 0 40px"}}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            toMITMHacker({
+                                                                                immediatelyLaunchedInfo: {
+                                                                                    host: hostWatch || "127.0.0.1",
+                                                                                    port: portWatch || "8083",
+                                                                                    enableInitialPlugin:
+                                                                                        form.getFieldValue(
+                                                                                            "enableInitialPlugin"
+                                                                                        ) === true
+                                                                                }
+                                                                            })
+                                                                        }}
                                                                     >
-                                                                        <YakitInput />
-                                                                    </Form.Item>
-                                                                    <Form.Item
-                                                                        label={t("Home.portListen")}
-                                                                        rules={[
-                                                                            {
-                                                                                required: true,
-                                                                                message: t("Home.portListen")
-                                                                            }
-                                                                        ]}
-                                                                        name={"port"}
+                                                                        <SolidPlayIcon
+                                                                            className={styles["open-icon"]}
+                                                                        />
+                                                                        {t("Home.hijackStart")}
+                                                                    </div>
+                                                                    <div
+                                                                        className={styles["operation-btn-right"]}
+                                                                        style={{borderRadius: "0 40px 40px 0"}}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            setShowMitmDropdown(!showMitmDropdown)
+                                                                        }}
                                                                     >
-                                                                        <YakitInput />
-                                                                    </Form.Item>
-                                                                    <Form.Item
-                                                                        label={t("Home.pluginEnable")}
-                                                                        name='enableInitialPlugin'
-                                                                        valuePropName='checked'
+                                                                        <OutlineChevronupIcon
+                                                                            className={classNames(
+                                                                                styles["title-icon"],
+                                                                                {
+                                                                                    [styles["rotate-180"]]:
+                                                                                        !showMitmDropdown
+                                                                                }
+                                                                            )}
+                                                                        />
+                                                                    </div>
+                                                                    <div
+                                                                        className={styles["operation-dropdown-wrapper"]}
+                                                                        style={{
+                                                                            display: showMitmDropdown ? "block" : "none"
+                                                                        }}
+                                                                        onClick={(e) => e.stopPropagation()}
                                                                     >
-                                                                        <YakitSwitch />
-                                                                    </Form.Item>
-                                                                </Form>
+                                                                        <Form
+                                                                            form={form}
+                                                                            layout={"horizontal"}
+                                                                            labelCol={{span: 8}}
+                                                                            wrapperCol={{span: 16}}
+                                                                        >
+                                                                            <Form.Item
+                                                                                label={t("Home.hostListen")}
+                                                                                rules={[
+                                                                                    {
+                                                                                        required: true,
+                                                                                        message: t("Home.hostListen")
+                                                                                    }
+                                                                                ]}
+                                                                                name={"host"}
+                                                                            >
+                                                                                <YakitInput />
+                                                                            </Form.Item>
+                                                                            <Form.Item
+                                                                                label={t("Home.portListen")}
+                                                                                rules={[
+                                                                                    {
+                                                                                        required: true,
+                                                                                        message: t("Home.portListen")
+                                                                                    }
+                                                                                ]}
+                                                                                name={"port"}
+                                                                            >
+                                                                                <YakitInput />
+                                                                            </Form.Item>
+                                                                            <Form.Item
+                                                                                label={t("Home.pluginEnable")}
+                                                                                name='enableInitialPlugin'
+                                                                                valuePropName='checked'
+                                                                            >
+                                                                                <YakitSwitch />
+                                                                            </Form.Item>
+                                                                        </Form>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1019,317 +1353,461 @@ const Home: React.FC<HomeProp> = (props) => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div
-                                ref={webFuzzerRef}
-                                className={classNames(styles["webFuzzer-card"], styles["home-card"])}
-                                onClick={() => onMenu({route: YakitRoute.HTTPFuzzer})}
-                            >
-                                <div className={styles["home-card-header"]}>
-                                    <div className={styles["home-card-header-title"]}>
-                                        <PublicWebFuzzerIcon className={styles["title-icon"]} />
-                                        <span className={styles["title-text"]}>{t("YakitRoute.WebFuzzer")}</span>
-                                    </div>
-                                    <div className={styles["home-card-header-desc"]}>
-                                        {t("YakitRoute.fuzzBurpIntegration")}
-                                    </div>
-                                </div>
-                                <div className={styles["example-blasting-wrapper"]}>
-                                    <div className={styles["example-blasting-title"]}>
-                                        <PublicBlastingIcon className={styles["example-blasting-icon"]} />
-                                        <span className={styles["title-text"]}>{t("Home.exampleBruteforce")}</span>
-                                    </div>
-                                    <div className={styles["example-blasting-video-wrapper"]}>
-                                        <div
-                                            className={styles["example-blasting-video"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleBlastingExample("id")
-                                            }}
-                                        >
-                                            {t("Home.bruteforceId")}
+                                    <div
+                                        ref={webFuzzerRef}
+                                        className={classNames(styles["webFuzzer-card"], styles["home-card"])}
+                                        onClick={() => onMenu({route: YakitRoute.HTTPFuzzer})}
+                                    >
+                                        <div className={styles["home-card-header"]}>
+                                            <div className={styles["home-card-header-title"]}>
+                                                <PublicWebFuzzerIcon className={styles["title-icon"]} />
+                                                <span className={styles["title-text"]}>
+                                                    {t("YakitRoute.WebFuzzer")}
+                                                </span>
+                                            </div>
+                                            <div className={styles["home-card-header-desc"]}>
+                                                {t("YakitRoute.fuzzBurpIntegration")}
+                                            </div>
                                         </div>
-                                        <div
-                                            className={styles["example-blasting-video"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleBlastingExample("pwd")
-                                            }}
-                                        >
-                                            {t("Home.bruteforcePassword")}
+                                        <div className={styles["example-blasting-wrapper"]}>
+                                            <div className={styles["example-blasting-title"]}>
+                                                <PublicBlastingIcon className={styles["example-blasting-icon"]} />
+                                                <span className={styles["title-text"]}>
+                                                    {t("Home.exampleBruteforce")}
+                                                </span>
+                                            </div>
+                                            <div className={styles["example-blasting-video-wrapper"]}>
+                                                <div
+                                                    className={styles["example-blasting-video"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleBlastingExample("id")
+                                                    }}
+                                                >
+                                                    {t("Home.bruteforceId")}
+                                                </div>
+                                                <div
+                                                    className={styles["example-blasting-video"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleBlastingExample("pwd")
+                                                    }}
+                                                >
+                                                    {t("Home.bruteforcePassword")}
+                                                </div>
+                                                <div
+                                                    className={styles["example-blasting-video"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleBlastingExample("count")
+                                                    }}
+                                                >
+                                                    {t("Home.bruteforceAccount")}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div
-                                            className={styles["example-blasting-video"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleBlastingExample("count")
-                                            }}
-                                        >
-                                            {t("Home.bruteforceAccount")}
+                                        <div className={styles["sequence-animation-wrapper"]}>
+                                            <div className={styles["sequence-animation-title"]}>
+                                                <PublicSequenceAnimationIcon
+                                                    className={styles["sequence-animation-icon"]}
+                                                />
+                                                <span className={styles["title-text"]}>
+                                                    {t("Home.fuzzSequenceDemo")}
+                                                </span>
+                                            </div>
+                                            <div className={styles["sequence-animation-desc"]}>
+                                                {t("Home.fuzzWebNodeChain", {name: t("YakitRoute.WebFuzzer")})}
+                                            </div>
+                                            <div className={styles["sequence-animation-btn-wrapper"]}>
+                                                <YakitButton
+                                                    icon={<SolidPlayIcon className={styles["animation-play-icon"]} />}
+                                                    className={styles["animation-btn"]}
+                                                    type='outline1'
+                                                    onClick={handleSequenceAnimation}
+                                                >
+                                                    {t("Home.animationDemo")}
+                                                </YakitButton>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className={styles["sequence-animation-wrapper"]}>
-                                    <div className={styles["sequence-animation-title"]}>
-                                        <PublicSequenceAnimationIcon className={styles["sequence-animation-icon"]} />
-                                        <span className={styles["title-text"]}>{t("Home.fuzzSequenceDemo")}</span>
-                                    </div>
-                                    <div className={styles["sequence-animation-desc"]}>
-                                        {t("Home.fuzzWebNodeChain", {name: t("YakitRoute.WebFuzzer")})}
-                                    </div>
-                                    <div className={styles["sequence-animation-btn-wrapper"]}>
-                                        <YakitButton
-                                            icon={<SolidPlayIcon className={styles["animation-play-icon"]} />}
-                                            className={styles["animation-btn"]}
-                                            type='outline1'
-                                            onClick={handleSequenceAnimation}
-                                        >
-                                            {t("Home.animationDemo")}
-                                        </YakitButton>
-                                    </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
                         <div className={styles["left-row-wrapper"]}>
-                            <div ref={signlejumpRef} className={styles["signle-jump-wrapper"]}>
-                                <div
-                                    className={styles["signle-jump-item"]}
-                                    onClick={() => onMenu({route: YakitRoute.PayloadGenerater_New})}
-                                >
-                                    <div className={styles["signle-jump-item-cont"]}>
-                                        <PublicPayloadGeneraterIcon className={styles["signle-jump-item-icon"]} />
-                                        <div className={styles["signle-jump-item-cont-right"]}>
-                                            <div className={styles["single-jump-cont-title"]}>
-                                                {t("YakitRoute.Yso-Java Hack")}
+                            {isScanMode ? (
+                                <>
+                                    <div
+                                        ref={pluginHubRef}
+                                        className={classNames(styles["pluginHub-card"], styles["home-card"])}
+                                    >
+                                        <div className={styles["home-card-header"]}>
+                                            <div className={styles["home-card-header-title"]}>
+                                                <PublicPluginStoreIcon className={styles["title-icon"]} />
+                                                <span className={styles["title-text"]}>
+                                                    {t("YakitRoute.pluginHub")}
+                                                </span>
                                             </div>
-                                            <div className={styles["single-jump-cont-desc"]}>
-                                                {t("YakitRoute.fuzzPayLoadDeserialization")}
+                                            <div className={styles["home-card-header-desc"]}>
+                                                {t("Home.pluginCoverageDescription")}
+                                            </div>
+                                        </div>
+                                        <div className={styles["pluginHub-tabs"]}>
+                                            <div
+                                                className={styles["pluginHub-tabs-item"]}
+                                                onClick={() =>
+                                                    onMenuParams({
+                                                        route: YakitRoute.Plugin_Hub,
+                                                        params: {tabActive: "online"} as PluginHubPageInfoProps
+                                                    })
+                                                }
+                                            >
+                                                <PublicPluginStoreIcon className={styles["tabs-icon"]} />
+                                                <span className={styles["tabs-text"]} title={t("Home.pluginStore")}>
+                                                    {t("Home.pluginStore")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["pluginHub-tabs-item"]}
+                                                onClick={() =>
+                                                    onMenuParams({
+                                                        route: YakitRoute.Plugin_Hub,
+                                                        params: {tabActive: "own"} as PluginHubPageInfoProps
+                                                    })
+                                                }
+                                            >
+                                                <PublicPluginMineIcon className={styles["tabs-icon"]} />
+                                                <span className={styles["tabs-text"]} title={t("Home.pluginsMine")}>
+                                                    {t("Home.pluginsMine")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["pluginHub-tabs-item"]}
+                                                onClick={() =>
+                                                    onMenuParams({
+                                                        route: YakitRoute.Plugin_Hub,
+                                                        params: {tabActive: "local"} as PluginHubPageInfoProps
+                                                    })
+                                                }
+                                            >
+                                                <PublicPluginLocalIcon className={styles["tabs-icon"]} />
+                                                <span className={styles["tabs-text"]} title={t("Home.pluginLocal")}>
+                                                    {t("Home.pluginLocal")}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div
-                                    className={styles["signle-jump-item"]}
-                                    onClick={() => onMenu({route: YakitRoute.DNSLog})}
-                                >
-                                    <div className={styles["signle-jump-item-cont"]}>
-                                        <PublicDNSLogIcon />
-                                        <div className={styles["signle-jump-item-cont-right"]}>
-                                            <div className={styles["single-jump-cont-title"]}>
-                                                {t("YakitRoute.DNSLog")}
-                                            </div>
-                                            <div className={styles["single-jump-cont-desc"]}>
-                                                {t("YakitRoute.subdomainAutoGenerate")}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div
-                                    className={styles["signle-jump-item"]}
-                                    onClick={() => onMenu({route: YakitRoute.Codec})}
-                                >
-                                    <div className={styles["signle-jump-item-cont"]}>
-                                        <PublicCodecIcon />
-                                        <div className={styles["signle-jump-item-cont-right"]}>
-                                            <div className={styles["single-jump-cont-title"]}>
-                                                {t("YakitRoute.Codec")}
-                                            </div>
-                                            <div className={styles["single-jump-cont-desc"]}>
-                                                {t("Home.codecPluginCustom")}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div
-                                ref={vulnerabilityRef}
-                                className={classNames(styles["vulnerability-scanning-card"], styles["home-card"])}
-                            >
-                                <div className={styles["home-card-header"]}>
-                                    <div className={styles["home-card-header-title"]}>
-                                        <PublicCodecIcon className={styles["title-icon"]} />
-                                        <span className={styles["title-text"]}>{t("YakitRoute.vulnScan")}</span>
-                                    </div>
-                                    <div className={styles["home-card-header-desc"]}>{t("Home.vulnBatchScan")}</div>
-                                </div>
-                                <div className={styles["home-card-operation-btn-wrapper"]}>
-                                    <div className={styles["operation-btn-wrapper"]} ref={scanningdropdownRef}>
+
+                                    <div ref={smallToolsRef} className={styles["small-tools-wrapper"]}>
                                         <div
-                                            className={styles["operation-btn-left"]}
-                                            style={{borderRadius: "40px 0 0 40px"}}
-                                            onClick={handleOpenScanning}
+                                            className={styles["small-tools-item"]}
+                                            onClick={() => onMenu({route: YakitRoute.Codec})}
                                         >
-                                            <SolidPlayIcon className={styles["open-icon"]} />
-                                            {t("YakitButton.startScan")}
-                                        </div>
-                                        <div
-                                            className={styles["operation-btn-right"]}
-                                            style={{borderRadius: "0 40px 40px 0"}}
-                                            onClick={() => setShowScanningDropdown(!showScanningDropdown)}
-                                        >
-                                            <OutlineChevronupIcon
-                                                className={classNames(styles["title-icon"], {
-                                                    [styles["rotate-180"]]: !showScanningDropdown
-                                                })}
-                                            />
-                                        </div>
-                                        <div
-                                            className={styles["operation-dropdown-wrapper"]}
-                                            style={{display: showScanningDropdown ? "block" : "none"}}
-                                        >
-                                            {[
-                                                {
-                                                    label: t("YakitRoute.vulnTargetedScan"),
-                                                    key: "specialVulnerabilityDetection"
-                                                },
-                                                {label: t("Home.vulnCustomScan"), key: "customDetection"}
-                                            ].map((item) => (
-                                                <div
-                                                    className={classNames(styles["operation-dropdown-list-item"], {
-                                                        [styles["active"]]: scanningCheck === item.key
-                                                    })}
-                                                    onClick={() => {
-                                                        setScanningCheck(item.key)
-                                                        setShowScanningDropdown(!showScanningDropdown)
-                                                    }}
-                                                    key={item.key}
-                                                >
-                                                    <span>{item.label}</span>
-                                                    {scanningCheck === item.key && (
-                                                        <SolidCheckIcon className={styles["check-icon"]} />
-                                                    )}
+                                            <div className={styles["small-tools-item-cont"]}>
+                                                <PublicCodecIcon className={styles["small-tools-item-icon"]} />
+                                                <div className={styles["small-tools-item-cont-right"]}>
+                                                    <div className={styles["small-tools-cont-title"]}>
+                                                        {t("YakitRoute.Codec")}
+                                                    </div>
+                                                    <div className={styles["small-tools-cont-desc"]}>
+                                                        {t("Home.codecDesc")}
+                                                    </div>
                                                 </div>
-                                            ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                {!pcap.IsPrivileged && system !== "Windows_NT" && (
-                                    <div className={styles["home-card-config-detection"]}>
-                                        <div className={styles["config-detection-left"]}>
-                                            <SolidExclamationIcon className={styles["exclamation-icon"]} />
-                                            {t("Home.netcardPermissionNotFixed")}
-                                        </div>
-                                        <YakitButton
-                                            type='text'
-                                            className={styles["config-detection-btn"]}
-                                            onClick={() => {
-                                                if (pcapHintShow) return
-                                                setPcapHintShow(true)
-                                            }}
-                                        >
-                                            {t("YakitButton.actionFixNow")}
-                                        </YakitButton>
-                                    </div>
-                                )}
-                                <YakitHint
-                                    visible={pcapHintShow}
-                                    heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
-                                    title={pcapResult ? t("Home.netcardAccessGranted") : t("Home.netcardNoAccess")}
-                                    width={600}
-                                    content={
-                                        pcapResult ? (
-                                            <>{t("Home.netcardRepairWaiting")}</>
-                                        ) : (
-                                            <>
-                                                {t("Home.linuxMacosPermission")}{" "}
-                                                <YakitTag
-                                                    enableCopy={true}
-                                                    color='yellow'
-                                                    copyText={`chmod +rw /dev/bpf*`}
-                                                ></YakitTag>
-                                                {t("Home.or")}{" "}
-                                                <YakitTag
-                                                    enableCopy={true}
-                                                    color='purple'
-                                                    copyText={`sudo chmod +rw /dev/bpf*`}
-                                                ></YakitTag>
-                                                {t("Home.rwPermissionAvailable")}
-                                            </>
-                                        )
-                                    }
-                                    okButtonText={t("Home.pcapEnablePermission")}
-                                    cancelButtonText={pcapResult ? t("YakitButton.ok") : t("YakitButton.remindMeLater")}
-                                    okButtonProps={{
-                                        loading: pcapHintLoading,
-                                        style: pcapResult ? {display: "none"} : undefined
-                                    }}
-                                    cancelButtonProps={{loading: !pcapResult && pcapHintLoading}}
-                                    onOk={openPcapPower}
-                                    onCancel={() => {
-                                        setPcapResult(false)
-                                        setPcapHintShow(false)
-                                    }}
-                                    footerExtra={
-                                        pcapResult ? undefined : (
-                                            <Tooltip title={`${pcap.AdviceVerbose}: ${pcap.Advice}`}>
-                                                <YakitButton className={styles["btn-style"]} type='text' size='max'>
-                                                    {t("YakitButton.manualFix")}
-                                                </YakitButton>
-                                            </Tooltip>
-                                        )
-                                    }
-                                ></YakitHint>
-                                <div className={styles["security-tools"]}>
-                                    {isEnpriTrace() && (
                                         <div
-                                            className={styles["security-tools-item"]}
-                                            onClick={() =>
-                                                onMenuParams({
-                                                    route: YakitRoute.PoC,
-                                                    params: {
-                                                        type: 2,
-                                                        defGroupKeywords: "两高一弱",
-                                                        selectGroupListByKeyWord: ["两高一弱"]
-                                                    }
-                                                })
-                                            }
+                                            className={styles["small-tools-item"]}
+                                            onClick={() => onMenu({route: YakitRoute.PayloadManager})}
                                         >
-                                            <PublicBruteIcon className={styles["tools-icon"]} />
-                                            <span className={styles["tools-text"]} title={t("Home.highHighLow")}>
-                                                {t("Home.highHighLow")}
-                                            </span>
+                                            <div className={styles["small-tools-item-cont"]}>
+                                                <PublicPayloadManagerIcon className={styles["small-tools-item-icon"]} />
+                                                <div className={styles["small-tools-item-cont-right"]}>
+                                                    <div className={styles["small-tools-cont-title"]}>
+                                                        {t("YakitRoute.Payload")}
+                                                    </div>
+                                                    <div className={styles["small-tools-cont-desc"]}>
+                                                        {t("Home.payloadDesc")}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
-                                    <div
-                                        className={styles["security-tools-item"]}
-                                        onClick={() => onMenu({route: YakitRoute.Mod_ScanPort})}
-                                    >
-                                        <PublicScanPortIcon className={styles["tools-icon"]} />
-                                        <span className={styles["tools-text"]} title={t("YakitRoute.portScan")}>
-                                            {t("YakitRoute.portScan")}
-                                        </span>
-                                    </div>
-                                    <div
-                                        className={styles["security-tools-item"]}
-                                        onClick={() => onMenu({route: YakitRoute.Mod_Brute})}
-                                    >
-                                        <PublicBruteIcon className={styles["tools-icon"]} />
-                                        <span
-                                            className={styles["tools-text"]}
-                                            title={t("YakitRoute.weakPasswordCheck")}
+                                        <div
+                                            className={styles["small-tools-item"]}
+                                            onClick={() => onMenu({route: YakitRoute.Notepad_Manage})}
                                         >
-                                            {t("YakitRoute.weakPasswordCheck")}
-                                        </span>
+                                            <div className={styles["small-tools-item-cont"]}>
+                                                <PublicNotepadManagerIcon className={styles["small-tools-item-icon"]} />
+                                                <div className={styles["small-tools-item-cont-right"]}>
+                                                    <div className={styles["small-tools-cont-title"]}>
+                                                        {i18n.language === "en"
+                                                            ? `${getNotepadNameByEdition()} Manage`
+                                                            : `${getNotepadNameByEdition()}管理`}
+                                                    </div>
+                                                    <div className={styles["small-tools-cont-desc"]}>
+                                                        {t("YakitRoute.penetrationRecordDescription")}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div ref={signlejumpRef} className={styles["signle-jump-wrapper"]}>
+                                        <div
+                                            className={styles["signle-jump-item"]}
+                                            onClick={() => onMenu({route: YakitRoute.PayloadGenerater_New})}
+                                        >
+                                            <div className={styles["signle-jump-item-cont"]}>
+                                                <PublicPayloadGeneraterIcon
+                                                    className={styles["signle-jump-item-icon"]}
+                                                />
+                                                <div className={styles["signle-jump-item-cont-right"]}>
+                                                    <div className={styles["single-jump-cont-title"]}>
+                                                        {t("YakitRoute.Yso-Java Hack")}
+                                                    </div>
+                                                    <div className={styles["single-jump-cont-desc"]}>
+                                                        {t("YakitRoute.fuzzPayLoadDeserialization")}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className={styles["signle-jump-item"]}
+                                            onClick={() => onMenu({route: YakitRoute.DNSLog})}
+                                        >
+                                            <div className={styles["signle-jump-item-cont"]}>
+                                                <PublicDNSLogIcon className={styles["signle-jump-item-icon"]} />
+                                                <div className={styles["signle-jump-item-cont-right"]}>
+                                                    <div className={styles["single-jump-cont-title"]}>
+                                                        {t("YakitRoute.DNSLog")}
+                                                    </div>
+                                                    <div className={styles["single-jump-cont-desc"]}>
+                                                        {t("YakitRoute.subdomainAutoGenerate")}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className={styles["signle-jump-item"]}
+                                            onClick={() => onMenu({route: YakitRoute.Codec})}
+                                        >
+                                            <div className={styles["signle-jump-item-cont"]}>
+                                                <PublicCodecIcon className={styles["signle-jump-item-icon"]} />
+                                                <div className={styles["signle-jump-item-cont-right"]}>
+                                                    <div className={styles["single-jump-cont-title"]}>
+                                                        {t("YakitRoute.Codec")}
+                                                    </div>
+                                                    <div className={styles["single-jump-cont-desc"]}>
+                                                        {t("Home.codecPluginCustom")}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div
-                                        className={styles["security-tools-item"]}
-                                        onClick={() =>
-                                            onMenu({
-                                                route: YakitRoute.Plugin_OP,
-                                                pluginId: pluginToId[ResidentPluginName.DirectoryScanning],
-                                                pluginName: ResidentPluginName.DirectoryScanning
-                                            })
-                                        }
+                                        ref={vulnerabilityRef}
+                                        className={classNames(
+                                            styles["vulnerability-scanning-card"],
+                                            styles["home-card"]
+                                        )}
                                     >
-                                        <PublicDirectoryScanningIcon className={styles["tools-icon"]} />
-                                        <span className={styles["tools-text"]} title={t("YakitRoute.dirBruteForce")}>
-                                            {t("YakitRoute.dirBruteForce")}
-                                        </span>
+                                        <div className={styles["home-card-header"]}>
+                                            <div className={styles["home-card-header-title"]}>
+                                                <PublicPocIcon className={styles["title-icon"]} />
+                                                <span className={styles["title-text"]}>{t("YakitRoute.vulnScan")}</span>
+                                            </div>
+                                            <div className={styles["home-card-header-desc"]}>
+                                                {t("Home.vulnBatchScan")}
+                                            </div>
+                                        </div>
+                                        <div className={styles["home-card-operation-btn-wrapper"]}>
+                                            <div className={styles["operation-btn-wrapper"]} ref={scanningdropdownRef}>
+                                                <div
+                                                    className={styles["operation-btn-left"]}
+                                                    style={{borderRadius: "40px 0 0 40px"}}
+                                                    onClick={handleOpenScanning}
+                                                >
+                                                    <SolidPlayIcon className={styles["open-icon"]} />
+                                                    {t("YakitButton.startScan")}
+                                                </div>
+                                                <div
+                                                    className={styles["operation-btn-right"]}
+                                                    style={{borderRadius: "0 40px 40px 0"}}
+                                                    onClick={() => setShowScanningDropdown(!showScanningDropdown)}
+                                                >
+                                                    <OutlineChevronupIcon
+                                                        className={classNames(styles["title-icon"], {
+                                                            [styles["rotate-180"]]: !showScanningDropdown
+                                                        })}
+                                                    />
+                                                </div>
+                                                <div
+                                                    className={styles["operation-dropdown-wrapper"]}
+                                                    style={{display: showScanningDropdown ? "block" : "none"}}
+                                                >
+                                                    {[
+                                                        {
+                                                            label: t("YakitRoute.vulnTargetedScan"),
+                                                            key: "specialVulnerabilityDetection"
+                                                        },
+                                                        {label: t("Home.vulnCustomScan"), key: "customDetection"}
+                                                    ].map((item) => (
+                                                        <div
+                                                            className={classNames(
+                                                                styles["operation-dropdown-list-item"],
+                                                                {
+                                                                    [styles["active"]]: scanningCheck === item.key
+                                                                }
+                                                            )}
+                                                            onClick={() => {
+                                                                setScanningCheck(item.key)
+                                                                setShowScanningDropdown(!showScanningDropdown)
+                                                            }}
+                                                            key={item.key}
+                                                        >
+                                                            <span>{item.label}</span>
+                                                            {scanningCheck === item.key && (
+                                                                <SolidCheckIcon className={styles["check-icon"]} />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {!pcap.IsPrivileged && system !== "Windows_NT" && (
+                                            <div className={styles["home-card-config-detection"]}>
+                                                <div className={styles["config-detection-left"]}>
+                                                    <SolidExclamationIcon className={styles["exclamation-icon"]} />
+                                                    {t("Home.netcardPermissionNotFixed")}
+                                                </div>
+                                                <YakitButton
+                                                    type='text'
+                                                    className={styles["config-detection-btn"]}
+                                                    onClick={() => {
+                                                        if (pcapHintShow) return
+                                                        setPcapHintShow(true)
+                                                    }}
+                                                >
+                                                    {t("YakitButton.actionFixNow")}
+                                                </YakitButton>
+                                            </div>
+                                        )}
+                                        <div className={styles["security-tools"]}>
+                                            {isEnpriTrace() && (
+                                                <div
+                                                    className={styles["security-tools-item"]}
+                                                    onClick={() =>
+                                                        onMenuParams({
+                                                            route: YakitRoute.PoC,
+                                                            params: {
+                                                                type: 2,
+                                                                defGroupKeywords: "两高一弱",
+                                                                selectGroupListByKeyWord: ["两高一弱"]
+                                                            }
+                                                        })
+                                                    }
+                                                >
+                                                    <PublicBruteIcon className={styles["tools-icon"]} />
+                                                    <span
+                                                        className={styles["tools-text"]}
+                                                        title={t("Home.highHighLow")}
+                                                    >
+                                                        {t("Home.highHighLow")}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div
+                                                className={styles["security-tools-item"]}
+                                                onClick={() => onMenu({route: YakitRoute.Mod_ScanPort})}
+                                            >
+                                                <PublicScanPortIcon className={styles["tools-icon"]} />
+                                                <span className={styles["tools-text"]} title={t("YakitRoute.portScan")}>
+                                                    {t("YakitRoute.portScan")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["security-tools-item"]}
+                                                onClick={() => onMenu({route: YakitRoute.Mod_Brute})}
+                                            >
+                                                <PublicBruteIcon className={styles["tools-icon"]} />
+                                                <span
+                                                    className={styles["tools-text"]}
+                                                    title={t("YakitRoute.weakPasswordCheck")}
+                                                >
+                                                    {t("YakitRoute.weakPasswordCheck")}
+                                                </span>
+                                            </div>
+                                            <div
+                                                className={styles["security-tools-item"]}
+                                                onClick={() =>
+                                                    onMenu({
+                                                        route: YakitRoute.Plugin_OP,
+                                                        pluginId: pluginToId[ResidentPluginName.DirectoryScanning],
+                                                        pluginName: ResidentPluginName.DirectoryScanning
+                                                    })
+                                                }
+                                            >
+                                                <PublicDirectoryScanningIcon className={styles["tools-icon"]} />
+                                                <span
+                                                    className={styles["tools-text"]}
+                                                    title={t("YakitRoute.dirBruteForce")}
+                                                >
+                                                    {t("YakitRoute.dirBruteForce")}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
+                        <YakitHint
+                            visible={pcapHintShow}
+                            heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
+                            title={pcapResult ? t("Home.netcardAccessGranted") : t("Home.netcardNoAccess")}
+                            width={600}
+                            content={
+                                pcapResult ? (
+                                    <>{t("Home.netcardRepairWaiting")}</>
+                                ) : (
+                                    <>
+                                        {t("Home.linuxMacosPermission")}{" "}
+                                        <YakitTag
+                                            enableCopy={true}
+                                            color='yellow'
+                                            copyText={`chmod +rw /dev/bpf*`}
+                                        ></YakitTag>
+                                        {t("Home.or")}{" "}
+                                        <YakitTag
+                                            enableCopy={true}
+                                            color='purple'
+                                            copyText={`sudo chmod +rw /dev/bpf*`}
+                                        ></YakitTag>
+                                        {t("Home.rwPermissionAvailable")}
+                                    </>
+                                )
+                            }
+                            okButtonText={t("Home.pcapEnablePermission")}
+                            cancelButtonText={pcapResult ? t("YakitButton.ok") : t("YakitButton.remindMeLater")}
+                            okButtonProps={{
+                                loading: pcapHintLoading,
+                                style: pcapResult ? {display: "none"} : undefined
+                            }}
+                            cancelButtonProps={{loading: !pcapResult && pcapHintLoading}}
+                            onOk={openPcapPower}
+                            onCancel={() => {
+                                setPcapResult(false)
+                                setPcapHintShow(false)
+                            }}
+                            footerExtra={
+                                pcapResult ? undefined : (
+                                    <Tooltip title={`${pcap.AdviceVerbose}: ${pcap.Advice}`}>
+                                        <YakitButton className={styles["btn-style"]} type='text' size='max'>
+                                            {t("YakitButton.manualFix")}
+                                        </YakitButton>
+                                    </Tooltip>
+                                )
+                            }
+                        ></YakitHint>
                     </div>
                 }
                 firstRatio='90%'

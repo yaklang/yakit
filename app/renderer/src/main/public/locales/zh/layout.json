@@ -52,10 +52,6 @@
       "importSharedData": "导入分享数据",
       "importHARHistoryData": "导入HAR流量数据"
     },
-    "NotepadMenu": {
-      "list": "{name}管理",
-      "add": "新建{name}"
-    },
     "HeardMenu": {
       "editMenu": "编辑菜单",
       "importJsonConfig": "导入 JSON 配置",

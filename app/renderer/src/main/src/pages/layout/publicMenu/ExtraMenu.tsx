@@ -1,13 +1,12 @@
-import React, {useMemo, useState} from "react"
+import React, {useMemo, useRef, useState} from "react"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
-import {OutlineSaveIcon} from "@/assets/icon/outline"
-import {SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon} from "@/assets/icon/solid"
+import {OutlineChevrondownIcon, OutlineChevronupIcon, OutlineSaveIcon} from "@/assets/icon/outline"
 import {ImportLocalPlugin, LoadPluginMode} from "@/pages/mitm/MITMPage"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {Form} from "antd"
@@ -17,9 +16,11 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
-import {isMemfit, isIRify} from "@/utils/envfile"
-import {NotepadMenu} from "../NotepadMenu/NotepadMenu"
+import {isYakit} from "@/utils/envfile"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import classNames from "classnames"
+import {ExtraMenuItem, getExtraMenu} from "@/routes/newRoute"
+import {useSoftMode} from "@/store/softMode"
 
 const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {
@@ -28,7 +29,8 @@ interface ExtraMenuProps {
 
 export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
     const {onMenuSelect} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "layout"])
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "yakitUi", "layout"])
+    const {softMode} = useSoftMode()
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>("giturl")
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
@@ -123,7 +125,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             <YakitMenu
                 width={142}
                 selectedKeys={[]}
-                // triggerSubMenuAction="click"
                 data={[
                     {
                         key: "import-plugin",
@@ -152,111 +153,149 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         ),
         [i18n.language]
     )
+
     const renderContent = useMemoizedFn(() => {
-        if (isIRify()) {
-            return (
-                <YakitButton
-                    type='secondary2'
-                    onClick={() => {
-                        onMenuSelect({route: YakitRoute.YakScript})
-                    }}
-                    className={styles["yak-runner-button"]}
-                    icon={<SolidTerminalIcon />}
-                >
-                    {t("YakitRoute.YakRunner")}
-                </YakitButton>
-            )
-        }
-        if (isMemfit()) {
-            return (
-                <>
-                    <YakitButton
-                        type='secondary2'
-                        onClick={() => {
-                            onMenuSelect({route: YakitRoute.YakScript})
-                        }}
-                        icon={<SolidTerminalIcon />}
-                    >
-                        {t("YakitRoute.YakRunner")}
-                    </YakitButton>
-                    <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
-                </>
-            )
-        }
         return (
             <>
-                <YakitPopover
-                    overlayClassName={styles["import-resource-popover"]}
-                    overlayStyle={{paddingTop: 2}}
-                    placement={"bottom"}
-                    trigger={"click"}
-                    content={importMenu}
-                    visible={importMenuShow}
-                    onVisibleChange={(visible) => setImportMenuShow(visible)}
-                >
-                    <YakitButton
-                        type='text'
-                        style={{fontWeight: 500}}
-                        onClick={(e) => e.preventDefault()}
-                        icon={<OutlineSaveIcon />}
-                    >
-                        {t("YakitButton.importResources")}
-                    </YakitButton>
-                </YakitPopover>
-                <YakitButton
-                    type='secondary2'
-                    onClick={() => {
-                        onMenuSelect({route: YakitRoute.Codec})
-                    }}
-                    icon={<SolidCodecIcon />}
-                >
-                    {t("YakitRoute.Codec")}
-                </YakitButton>
-                <YakitButton
-                    type='secondary2'
-                    onClick={() => {
-                        onMenuSelect({route: YakitRoute.PayloadManager})
-                    }}
-                    icon={<SolidPayloadIcon />}
-                >
-                    {t("YakitRoute.Payload")}
-                </YakitButton>
-                <YakitButton
-                    type='secondary2'
-                    onClick={() => {
-                        onMenuSelect({route: YakitRoute.YakScript})
-                    }}
-                    icon={<SolidTerminalIcon />}
-                >
-                    {t("YakitRoute.YakRunner")}
-                </YakitButton>
-                <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
-                <ImportLocalPlugin
-                    visible={visibleImport}
-                    setVisible={(v) => {
-                        setVisibleImport(v)
-                    }}
-                    loadPluginMode={loadPluginMode}
-                    sendPluginLocal={true}
-                />
-                {percentVisible && (
-                    <ImportExportProgress
-                        visible={percentVisible}
-                        title={t("Layout.ExtraMenu.importHARHistoryData")}
-                        token={importHistoryharToken}
-                        apiKey='ImportHTTPFlowStream'
-                        onClose={(finish) => {
-                            setPercentVisible(false)
-                            if (finish) {
-                                yakitNotify("success", t("YakitNotification.imported"))
-                                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_HTTPHistory}))
-                                emiter.emit("onRefreshImportHistoryTable")
-                            }
-                        }}
-                    />
+                {isYakit() && (
+                    <>
+                        <YakitPopover
+                            overlayClassName={styles["menu-popover"]}
+                            overlayStyle={{paddingTop: 2}}
+                            placement={"bottom"}
+                            trigger={"click"}
+                            content={importMenu}
+                            visible={importMenuShow}
+                            onVisibleChange={(visible) => setImportMenuShow(visible)}
+                        >
+                            <YakitButton
+                                type='text'
+                                style={{fontWeight: 500}}
+                                onClick={(e) => e.preventDefault()}
+                                icon={<OutlineSaveIcon />}
+                            >
+                                {t("YakitButton.importResources")}
+                            </YakitButton>
+                        </YakitPopover>
+                        <ImportLocalPlugin
+                            visible={visibleImport}
+                            setVisible={(v) => {
+                                setVisibleImport(v)
+                            }}
+                            loadPluginMode={loadPluginMode}
+                            sendPluginLocal={true}
+                        />
+                        {percentVisible && (
+                            <ImportExportProgress
+                                visible={percentVisible}
+                                title={t("Layout.ExtraMenu.importHARHistoryData")}
+                                token={importHistoryharToken}
+                                apiKey='ImportHTTPFlowStream'
+                                onClose={(finish) => {
+                                    setPercentVisible(false)
+                                    if (finish) {
+                                        yakitNotify("success", t("YakitNotification.imported"))
+                                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_HTTPHistory}))
+                                        emiter.emit("onRefreshImportHistoryTable")
+                                    }
+                                }}
+                            />
+                        )}
+                    </>
                 )}
+                <OrdinaryMenu menuList={getExtraMenu(softMode)} onMenuSelect={onMenuSelect} />
             </>
         )
     })
+
     return <div className={styles["extra-menu-wrapper"]}>{renderContent()}</div>
+})
+
+interface OrdinaryMenuProps extends Pick<ExtraMenuProps, "onMenuSelect"> {
+    menuList: ExtraMenuItem[]
+}
+export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
+    const {onMenuSelect, menuList} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "yakitUi"])
+    const [activePopoverKey, setActivePopoverKey] = useState<string | null>(null)
+    const pageMapRef = useRef(new Map<string, YakitRoute>())
+    const pluginNameMapRef = useRef(new Map<string, string>())
+
+    const mapMenuData = useMemoizedFn((list: ExtraMenuItem[]) => {
+        return list.map((item) => {
+            const key = item.page + "_" + Math.random() * 5
+            if (item.page) {
+                pageMapRef.current.set(key, item.page)
+                pluginNameMapRef.current.set(key, item.yakScripName || "")
+            }
+            return {
+                key,
+                label: item.i18n === false ? item.label : t(item.labelUi!),
+                children: item.children?.length ? mapMenuData(item.children) : undefined
+            }
+        })
+    })
+    const renderExtraMenuItem = useMemoizedFn((item: ExtraMenuItem) => {
+        if (item.children?.length) {
+            const itemKey = item.label || item.labelUi || item.page
+            return (
+                <YakitPopover
+                    key={itemKey}
+                    overlayClassName={classNames(styles["menu-popover"], styles["menu-popover-no-arrow"])}
+                    overlayStyle={{paddingTop: 2}}
+                    placement='bottomRight'
+                    trigger='click'
+                    content={
+                        <YakitMenu
+                            selectedKeys={[]}
+                            data={mapMenuData(item.children)}
+                            onClick={({key}) => {
+                                setActivePopoverKey(null)
+                                const page = pageMapRef.current.get(key)
+                                if (!page) return
+                                if (page === YakitRoute.Plugin_OP) {
+                                    const pluginName = pluginNameMapRef.current.get(key)
+                                    onMenuSelect({route: page, pluginName: pluginName})
+                                } else {
+                                    onMenuSelect({route: page})
+                                }
+                            }}
+                        />
+                    }
+                    visible={activePopoverKey === itemKey}
+                    onVisibleChange={(visible) => {
+                        setActivePopoverKey(visible ? itemKey! : null)
+                    }}
+                >
+                    <YakitButton
+                        type='secondary2'
+                        icon={item.icon}
+                        className={classNames(styles["heard-menu-customize"], styles["button-border"], {
+                            [styles["heard-menu-customize-menu"]]: activePopoverKey === itemKey
+                        })}
+                        onClick={(e) => e.preventDefault()}
+                    >
+                        {item.i18n === false ? item.label : t(item.labelUi!)}
+                        {activePopoverKey === itemKey ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                    </YakitButton>
+                </YakitPopover>
+            )
+        }
+
+        return (
+            <YakitButton
+                key={item.page}
+                type='secondary2'
+                icon={item.icon}
+                className={styles["button-border"]}
+                onClick={() => {
+                    onMenuSelect({route: item.page!})
+                }}
+            >
+                {item.i18n === false ? item.label : t(item.labelUi!)}
+            </YakitButton>
+        )
+    })
+
+    return <>{menuList.map(renderExtraMenuItem)}</>
 })

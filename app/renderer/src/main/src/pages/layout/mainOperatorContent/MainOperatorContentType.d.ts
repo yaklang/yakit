@@ -65,6 +65,7 @@ export interface PageCache {
     hideAdd?: boolean
     pageParams?: ComponentParams
     openFlag?: boolean
+    selectSubItem?: boolean
 }
 
 // 页面的唯一标识属性
@@ -88,6 +89,7 @@ export interface MainOperatorContentProps {
  * @function onRemove 删除一级tab
  */
 export interface TabContentProps {
+    softMode: SoftMode
     pageCache: PageCache[]
     setPageCache: (p: PageCache[]) => void
     currentTabKey: YakitRoute | string
@@ -105,6 +107,7 @@ export interface TabContentProps {
  * @description Tab Children 展示
  */
 export interface TabChildrenProps {
+    softMode: SoftMode
     pageCache: PageCache[]
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
@@ -125,6 +128,7 @@ export interface TabChildrenProps {
  * @function onContextMenu 右键操作
  */
 export interface TabItemProps {
+    softMode: SoftMode
     item: PageCache
     index: number
     currentTabKey: YakitRoute | string
@@ -139,6 +143,7 @@ export interface TabItemProps {
  * @function onRemove 删除一级tab
  */
 export interface TabListProps {
+    softMode: SoftMode
     pageCache: PageCache[]
     setPageCache: (p: PageCache[]) => void
     currentTabKey: YakitRoute | string
@@ -153,6 +158,7 @@ export interface TabListProps {
  * @property index
  */
 export interface SubTabListProps {
+    softMode: SoftMode
     pageCache: PageCache[]
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
@@ -166,6 +172,7 @@ export interface SubTabListProps {
 }
 
 export interface SubTabsProps {
+    softMode: SoftMode
     currentTabKey: YakitRoute | string
     ref: ?any
     pageItem: PageCache
@@ -196,6 +203,9 @@ export interface SubTabsProps {
  * @property combineColor 当前组合的颜色
  */
 export interface SubTabItemProps {
+    subPageLen: number
+    groupChildrenLen: number
+    softMode: SoftMode
     subItem: MultipleNodeInfo
     index: number
     selectSubMenu: MultipleNodeInfo

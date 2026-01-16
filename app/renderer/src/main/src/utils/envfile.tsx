@@ -70,7 +70,7 @@ export const isCommunityEdition = () => {
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition() && !isCommunityIRify() && !isCommunityMemfit()
+    return !isCommunityYakit() && !isCommunityIRify() && !isCommunityMemfit()
 }
 
 /** CE IRify Scan  */
@@ -99,6 +99,11 @@ export const isCommunityMemfit = () => {
 /** Memfit 独立于Yakit企业版社区版之外  */
 export const isMemfit = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.MEMFIT
+}
+
+/** CE Yakit  */
+export const isCommunityYakit = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
 }
 
 export const isYakit = () => {

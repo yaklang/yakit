@@ -23,16 +23,16 @@ import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import {ExecResult, genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
+import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
 import {
     getReleaseEditionName,
-    getRemoteHttpSettingGV,
     getRemoteI18nGV,
     isCommunityEdition,
+    isCommunityYakit,
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnpriTraceIRify,
@@ -41,8 +41,8 @@ import {
 } from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {LocalGV, RemoteGV} from "@/yakitGV"
-import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {LocalGV} from "@/yakitGV"
+import {getLocalValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {GithubSvgIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -125,6 +125,7 @@ import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder
 import {useDownloadYakit} from "./update/DownloadYakit"
 import i18n from "@/i18n/i18n"
 import { JSONParseLog } from "@/utils/tool"
+import {useSoftMode, YakitModeEnum} from "@/store/softMode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -637,7 +638,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                                 }
                                                             },
                                                             onCancel() {},
-                                                            cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                                                            cancelButtonProps: {
+                                                                size: "small",
+                                                                className: "modal-cancel-button"
+                                                            },
                                                             okButtonProps: {size: "small", className: "modal-ok-button"}
                                                         })
                                                     } else {
@@ -923,6 +927,31 @@ interface UIOpSettingProp {
     mcp: mcpStreamHooks
 }
 
+/** @name 菜单模式切换 目前只有Yakit 社区版有 */
+const ModeSwitch = () => {
+    if (isCommunityYakit()) {
+        return {
+            key: "modeSwitching",
+            label: "模式切换",
+            children: [
+                {
+                    key: YakitModeEnum.Classic,
+                    label: "经典模式"
+                },
+                {
+                    key: YakitModeEnum.SecurityExpert,
+                    label: "安全专家模式"
+                },
+                {
+                    key: YakitModeEnum.Scan,
+                    label: "扫描模式"
+                }
+            ]
+        }
+    }
+
+    return null
+}
 const GetUIOpSettingMenu = () => {
     // 便携版
     if (isEnpriTraceAgent()) {
@@ -1029,9 +1058,10 @@ const GetUIOpSettingMenu = () => {
                 {key: "ssa-compile-history", label: "SSA项目编译历史"}
             ]
         },
+        ModeSwitch(),
         {
-            key: "modeSwitching",
-            label: "模式切换",
+            key: "themeSwitching",
+            label: "主题切换",
             children: [
                 {
                     key: "light",
@@ -1112,7 +1142,7 @@ const GetUIOpSettingMenu = () => {
                 {label: "引擎日志", key: "engineLog"}
             ]
         }
-    ]
+    ].filter((item) => item)
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
@@ -1128,6 +1158,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
     /** 当前主题 */
     const {setTheme} = useTheme()
+    const {softMode, setSoftMode} = useSoftMode()
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1281,6 +1312,15 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "ssa-compile-history":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.SSA_Compile_History}))
+                return
+            case YakitModeEnum.Classic:
+            case YakitModeEnum.SecurityExpert:
+            case YakitModeEnum.Scan:
+                if (softMode === type) {
+                    yakitNotify("info", "当前模式已设置")
+                } else {
+                    setSoftMode(type)
+                }
                 return
             case "light":
                 setTheme("light")
@@ -1510,7 +1550,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
                 <div className={styles["header-btn"]}>
                     {isUpdateWait ? (
-                        <YakitButton onClick={handleOpenPath}>{`安装 `}</YakitButton> 
+                        <YakitButton onClick={handleOpenPath}>{`安装 `}</YakitButton>
                     ) : lastVersion === "" ? (
                         "获取失败"
                     ) : isUpdate ? (

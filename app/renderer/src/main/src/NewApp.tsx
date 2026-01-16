@@ -8,7 +8,13 @@ import {API} from "./services/swagger/resposeType"
 import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit} from "@/utils/envfile"
+import {
+    getReleaseEditionName,
+    getRemoteHttpSettingGV,
+    isCommunityEdition,
+    isIRify,
+    isMemfit
+} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {coordinate, setChartsColorList} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
