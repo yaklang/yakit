@@ -48,7 +48,7 @@ const FileTreeSystem = () => {
     return (
         <YakitResizeBox
             firstRatio={firstRatio}
-            firstNodeStyle={{padding: "4px", overflow: "hidden"}}
+            firstNodeStyle={{width:'30%',padding: "4px", overflow: "hidden"}}
             lineDirection='right'
             firstMinSize={200}
             lineStyle={{width: 4}}
