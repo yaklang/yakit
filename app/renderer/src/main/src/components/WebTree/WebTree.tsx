@@ -324,7 +324,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             setExpandedKeys([])
             setSelectedKeys([])
             setSelectedNodes([])
-            console.log("刷新")
             getTreeData(refreshTreeWithSearchVal ? searchValue || "/" : "/")
         },
         {wait: 300}
