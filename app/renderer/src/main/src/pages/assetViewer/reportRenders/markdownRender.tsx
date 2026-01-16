@@ -28,7 +28,7 @@ export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
                 source={source}
                 // 防止 XSS 攻击
                 rehypePlugins={[rehypeSanitize]}
-                className={className}
+                className={classNames(styles["markdown-block"], className)}
                 style={style}
                 warpperElement={{"data-color-mode": theme}}
             />
