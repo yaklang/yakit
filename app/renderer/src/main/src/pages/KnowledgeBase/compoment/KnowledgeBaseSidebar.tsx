@@ -613,7 +613,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 >
                                     <YakitSpin spinning={onlineRagRefreshing}>
                                         <div className={styles["knowledge-base-collapse-panel"]}>
-                                            {onlineRagList.length > 0 ? (
+                                            {onlineRagList?.length > 0 ? (
                                                 (() => {
                                                     const localMap = new Map(
                                                         downloadedOnlineRags.map((it) => [it.file, it])
