@@ -284,6 +284,7 @@ function useChatContent(params: UseChatContentParams) {
 
         const toolResult = getContentMap(call_tool_id)
         if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+            // 工具执行结果卡片UI没有展示时
             errorResult.status = "end"
             streamToToolResultError.current.set(call_tool_id, {...errorResult})
             return
@@ -324,6 +325,7 @@ function useChatContent(params: UseChatContentParams) {
 
             setContentMap(call_tool_id, {
                 ...genBaseAIChatData(res),
+                id: call_tool_id,
                 type: AIChatQSDataTypeEnum.TOOL_RESULT,
                 data: toolResult
             })
