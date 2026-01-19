@@ -27,7 +27,14 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话", aiChatTextareaRef} = props
+    const {
+        mode,
+        chatContainerClassName,
+        chatContainerHeaderClassName,
+        title = "自由对话",
+        aiChatTextareaRef,
+        handleSendAfter
+    } = props
     const {casualChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
@@ -66,7 +73,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     /**自由对话 */
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
-        if (!activeChat?.id) return
+        if (!activeChat?.session) return
         try {
             const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
             const chatMessage: AIInputEvent = {
@@ -77,10 +84,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             }
             // 发送到服务端
             chatIPCEvents.onSend({
-                token: activeChat.id,
+                token: activeChat.session,
                 type: "casual",
                 params: chatMessage,
                 extraValue: extra
+            })
+
+            Promise.resolve().then(() => {
+                handleSendAfter?.()
             })
         } catch (error) {}
     })

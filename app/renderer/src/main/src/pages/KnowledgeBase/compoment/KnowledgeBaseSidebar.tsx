@@ -280,7 +280,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     const fetchAndSetOnlineRagList = useMemoizedFn(async () => {
         try {
             const res = await apiFetchQueryOnlieRageLatest()
-            setOnlineRagList(res)
+            setOnlineRagList(Array.isArray(res) ? res : [])
         } catch (err) {
             failed("获取线上知识库失败: " + err)
             setOnlineRagList([])
@@ -613,7 +613,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 >
                                     <YakitSpin spinning={onlineRagRefreshing}>
                                         <div className={styles["knowledge-base-collapse-panel"]}>
-                                            {onlineRagList.length > 0 ? (
+                                            {onlineRagList?.length > 0 ? (
                                                 (() => {
                                                     const localMap = new Map(
                                                         downloadedOnlineRags.map((it) => [it.file, it])
