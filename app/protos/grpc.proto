@@ -6342,6 +6342,9 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
+
+  // 高级配置的hostname过滤（模糊匹配）
+  repeated string HostnameFilter = 49;
 }
 
 message HTTPFlowsToOnlineRequest {
