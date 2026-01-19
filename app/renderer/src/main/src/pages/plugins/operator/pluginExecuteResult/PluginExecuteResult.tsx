@@ -58,6 +58,7 @@ import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 import {ErrorBoundary} from "react-error-boundary"
 import moment from "moment"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {JSONParseLog} from "@/utils/tool"
 
 const {TabPane} = PluginTabs
 
@@ -243,23 +244,16 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
     const webTreeRef = useRef<any>()
-    // 被点击的树节点
-    const [searchURL, setSearchURL] = useState<string>("")
     // 被点击的树节点URL参数
-    const [includeInUrl, setIncludeInUrl] = useState<string>("")
-    // 是否只展示表格
-    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
-    // 表格里详情是否显示
-    const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
-    useEffect(() => {
-        setSecondNodeVisible(!onlyShowFirstNode)
-    }, [onlyShowFirstNode])
-
+    const [includeInUrl, setIncludeInUrl] = useState<string[]>([])
     const [treeQueryparams, setTreeQueryparams] = useState<string>("")
     const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
     // 流量表筛选条件 改变 控制webtree刷新
     const onQueryParams = useMemoizedFn((queryParams: string, execFlag?: boolean) => {
-        setTreeQueryparams(queryParams)
+        const treeQuery =
+            JSONParseLog(queryParams, {page: "PluginExecuteHttpFlow", fun: "onQueryParams-treeQuery"}) || {}
+        delete treeQuery.IncludeInUrl
+        setTreeQueryparams(JSON.stringify(treeQuery))
         setRefreshTreeFlag(!!execFlag)
     })
 
@@ -293,14 +287,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                             searchPlaceholder='请输入域名进行搜索,例baidu.com'
                             treeExtraQueryparams={treeQueryparams}
                             refreshTreeFlag={refreshTreeFlag}
-                            onGetUrl={(searchURL, includeInUrl) => {
-                                setSearchURL(searchURL)
-                                setIncludeInUrl(includeInUrl)
-                            }}
-                            resetTableAndEditorShow={(table, editor) => {
-                                setOnlyShowFirstNode(table)
-                                setSecondNodeVisible(editor)
-                            }}
+                            onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ""))}
                             runTimeId={runtimeId}
                         />
                     </div>
@@ -309,11 +296,8 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                     <HTTPFlowRealTimeTableAndEditor
                         wrapperStyle={{padding: 0}}
                         containerClassName={styles["current-http-table-container"]}
-                        searchURL={searchURL}
                         includeInUrl={includeInUrl}
                         onQueryParams={onQueryParams}
-                        setOnlyShowFirstNode={setOnlyShowFirstNode}
-                        setSecondNodeVisible={setSecondNodeVisible}
                         pageType='Plugin'
                         runtimeId={runtimeId}
                         filterTagDom={filterTagDom}
