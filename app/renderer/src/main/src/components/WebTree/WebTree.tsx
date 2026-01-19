@@ -80,20 +80,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         return iconsEle[treeNodeType] || <></>
     }
 
-    const buildYakURL = useMemoizedFn((raw: string): YakURL => {
-        const parsed = new URL(raw)
-        const query = Array.from(parsed.searchParams.entries()).map(([Key, Value]) => ({Key, Value}))
-        return {
-            FromRaw: "",
-            Schema: parsed.protocol.replace(":", "").toLowerCase(),
-            User: parsed.username,
-            Pass: parsed.password,
-            Location: parsed.host,
-            Path: parsed.pathname || "/",
-            Query: query
-        }
-    })
-
     const getTreeData = useMemoizedFn((searchKeyword = "") => {
         if (treeLoading) return
 
