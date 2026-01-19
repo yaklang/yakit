@@ -9,6 +9,7 @@ export interface AIReActChatProps {
     setShowFreeChat: (show: boolean) => void
     title?: React.ReactNode
     aiChatTextareaRef: ForwardedRef<AIChatTextareaRefProps>
+    handleSendAfter?: () => void
 }
 
 export interface AIReActLogProps {

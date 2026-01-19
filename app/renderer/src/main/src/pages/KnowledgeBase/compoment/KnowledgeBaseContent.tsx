@@ -37,7 +37,7 @@ import {AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
-import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
+import {formatAIAgentSetting, getAIReActRequestParams} from "@/pages/ai-agent/utils"
 import {cloneDeep} from "lodash"
 import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
@@ -348,50 +348,14 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
-
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const showID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatData = {
-                runTimeIDs: cloneDeep(runTimeIDs),
-                coordinatorIDs: cloneDeep(coordinatorIDs),
-                yakExecResult: cloneDeep(yakExecResult),
-                aiPerfData: cloneDeep(aiPerfData),
-                casualChat: cloneDeep(casualChat),
-                taskChat: cloneDeep(taskChat),
-                grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines)
-            }
-            knowledgeBaseDataStore.set(showID, answer)
-        }
-    })
-
     const handleChatingEnd = useMemoizedFn(() => {
         handleSaveChatInfo()
     })
-
-    useEffect(() => {
-        if (inViewport) {
-            // 获取缓存的全局配置数据
-            getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-                .then((res) => {
-                    if (!res) return
-                    try {
-                        const cache = JSON.parse(res) as AIAgentSetting
-                        if (typeof cache !== "object") return
-                        setSetting(cache)
-                    } catch (error) {}
-                })
-                .catch(() => {})
-        }
-        return () => {}
-    }, [inViewport])
 
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
@@ -411,6 +375,41 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         coordinatorIDs
     } = chatIPCData
 
+    const handleSaveChatInfo = useMemoizedFn(() => {
+        const showID = activeID
+        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
+        if (showID && events.fetchToken() && showID === events.fetchToken()) {
+            const answer: AIChatData = {
+                runTimeIDs: cloneDeep(runTimeIDs),
+                coordinatorIDs: cloneDeep(coordinatorIDs),
+                yakExecResult: cloneDeep(yakExecResult),
+                aiPerfData: cloneDeep(aiPerfData),
+                casualChat: cloneDeep(casualChat),
+                taskChat: cloneDeep(taskChat),
+                grpcFolders: cloneDeep(grpcFolders),
+                reActTimelines: cloneDeep(reActTimelines)
+            }
+            knowledgeBaseDataStore.set(showID, answer)
+        }
+    })
+
+    useEffect(() => {
+        if (inViewport) {
+            // 获取缓存的全局配置数据
+            getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+                .then((res) => {
+                    if (!res) return
+                    try {
+                        const cache = JSON.parse(res) as AIAgentSetting
+                        if (typeof cache !== "object") return
+                        setSetting(cache)
+                    } catch (error) {}
+                })
+                .catch(() => {})
+        }
+        return () => {}
+    }, [inViewport])
+
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
         return activeChat?.session
@@ -420,12 +419,12 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         handleSendInteractiveMessage(params, "casual")
     })
 
-    const handleStart = useMemoizedFn(({qs, extraValue}: HandleStartParams) => {
-        const name = knowledgeBases.find((it) => it.ID === knowledgeBaseID)?.KnowledgeBaseName
+    const handleStart = useMemoizedFn((data: HandleStartParams) => {
+        const {qs} = data
         const sessionID = activeChat?.session || ""
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
-            UserQuery: `请使用知识库${name}回答:` + qs,
+            UserQuery: qs,
             CoordinatorId: "",
             Sequence: 1
         }
@@ -451,14 +450,22 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             newChat = activeChat as AIChatInfo
             knowledgeBaseDataStore.remove(newChat.session)
         }
+        const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
+
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
             Params: {
                 ...request
-            }
+            },
+            AttachedResourceInfo: attachedResourceInfo,
+            FocusModeLoop: data.focusMode
         }
-        events.onStart({token: newChat.session, params: startParams, extraValue})
+        events.onStart({token: newChat.session, params: startParams, extraValue: extra})
+
+        Promise.resolve().then(() => {
+            handleSendAfter()
+        })
     })
 
     const onStop = useMemoizedFn(() => {
@@ -568,20 +575,24 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     useUpdateEffect(() => {
         if (showFreeChat) {
-            const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
-            if (typeof targetKnowledgeBase === "object") {
-                setTimeout(() => {
-                    aiChatTextareaRef.current?.setMention({
-                        mentionId: targetKnowledgeBase.ID,
-                        mentionType: "knowledgeBase",
-                        mentionName: targetKnowledgeBase.KnowledgeBaseName
-                    })
-                })
-            }
+            handleSendAfter()
         }
     }, [showFreeChat, knowledgeBaseID])
 
     const [refreshOlineRag, setRefreshOlineRag] = useSafeState(false)
+
+    const handleSendAfter = () => {
+        const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
+        if (!!targetKnowledgeBase) {
+            setTimeout(() => {
+                aiChatTextareaRef.current?.setMention({
+                    mentionId: targetKnowledgeBase.ID,
+                    mentionType: "knowledgeBase",
+                    mentionName: targetKnowledgeBase.KnowledgeBaseName
+                })
+            })
+        }
+    }
 
     return (
         <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
@@ -645,6 +656,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                 setShowFreeChat={setShowFreeChat}
                                 title='AI 召回'
                                 aiChatTextareaRef={aiChatTextareaRef}
+                                handleSendAfter={handleSendAfter}
                             />
                         </div>
                     ) : null}

@@ -27,7 +27,14 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, chatContainerClassName, chatContainerHeaderClassName, title = "自由对话", aiChatTextareaRef} = props
+    const {
+        mode,
+        chatContainerClassName,
+        chatContainerHeaderClassName,
+        title = "自由对话",
+        aiChatTextareaRef,
+        handleSendAfter
+    } = props
     const {casualChat} = useAIChatUIData()
     const {chatIPCData} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
@@ -81,6 +88,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 type: "casual",
                 params: chatMessage,
                 extraValue: extra
+            })
+
+            Promise.resolve().then(() => {
+                handleSendAfter?.()
             })
         } catch (error) {}
     })
