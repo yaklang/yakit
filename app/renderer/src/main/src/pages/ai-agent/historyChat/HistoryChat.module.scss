@@ -25,6 +25,18 @@
                 font-size: 12px;
                 font-weight: 500;
             }
+
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .clear-icon {
+                svg {
+                    color: var(--Colors-Use-Error-Primary);
+                }
+            }
         }
 
         .header-second {

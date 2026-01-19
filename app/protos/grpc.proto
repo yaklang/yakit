@@ -893,6 +893,7 @@ service Yak {
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
   rpc QueryAIEvent(AIEventQueryRequest) returns (AIEventQueryResponse);
+   rpc DeleteAIEvent(AIEventDeleteRequest) returns (DbOperateMessage);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
@@ -1910,6 +1911,11 @@ message AIEventQueryResponse {
   repeated AIOutputEvent Events = 1;
   Paging Pagination = 2;
   int64 Total = 3;
+}
+
+message AIEventDeleteRequest {
+  AIEventFilter Filter = 1;
+  bool ClearAll = 2;
 }
 
 message AITaskQueryRequest {
