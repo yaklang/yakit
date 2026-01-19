@@ -99,14 +99,15 @@ textarea.qs-input-textarea {
     }
     @container textareaFooterLeftBtnsDefault (min-width: 301px) and (max-width: 400px) {
         .footer-left-btns-default {
-            & > :nth-last-child(1) {
+            & > :nth-child(3),
+            & > :nth-child(4) {
                 span[data-label="true"] {
                     max-width: 0;
                 }
             }
-            & > :nth-last-child(3) {
+            & > :nth-child(1) {
                 span[data-label="true"] {
-                    max-width: 30px;
+                    max-width: 40px;
                 }
             }
         }
