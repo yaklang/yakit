@@ -67,7 +67,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MultipleNodeInfo} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {useTheme} from "@/hook/useTheme"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -876,15 +877,17 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
             <div className={styles["header"]}>
                 <div className={styles["title"]}>历史存储</div>
                 {mitmSaveData.length !== 0 && (
-                    <YakitButton
-                        type='text'
-                        colors='danger'
-                        onClick={() => {
+                    <YakitPopconfirm
+                        title={"确定要清空历史存储吗？"}
+                        onConfirm={() => {
                             removeItem("", true)
                         }}
+                        placement="right"
                     >
-                        清空
-                    </YakitButton>
+                        <YakitButton type='text' colors='danger'>
+                            清空
+                        </YakitButton>
+                    </YakitPopconfirm>
                 )}
             </div>
 
