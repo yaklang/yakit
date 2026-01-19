@@ -101,6 +101,9 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
             SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", skip_current_task: true})
         })
+        if (!!reviewInfo) {
+            chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+        }
     })
     const onExtraAction: AIReActTaskChatReviewProps["onExtraAction"] = useMemoizedFn((type) => {
         switch (type) {
