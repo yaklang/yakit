@@ -13,11 +13,14 @@ import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 import classNames from "classnames"
 import styles from "./HistoryChat.module.scss"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
+import {grpcDeleteAIEvent} from "../grpc"
+import {aiChatDataStore} from "../store/ChatDataStore"
 
 /** 向对话框组件进行事件触发的通信 */
 export const onNewChat = () => {
@@ -38,6 +41,25 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         if (!search) return chats
         return chats.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
     }, [chats, searchDebounce])
+
+    const [clearLoading, setClearLoading] = useState(false)
+    const handleClearAllChat = useMemoizedFn(async () => {
+        if (clearLoading) return
+        setClearLoading(true)
+        try {
+            onNewChat()
+            await grpcDeleteAIEvent({ClearAll: true}, true)
+            aiChatDataStore.clear()
+            setActiveChat?.(undefined)
+            setChats?.([])
+            setSearch("")
+            yakitNotify("success", "已清除全部会话")
+        } catch (e) {
+            yakitNotify("error", "清除会话失败:" + e)
+        } finally {
+            setClearLoading(false)
+        }
+    })
 
     const handleSetActiveChat = useMemoizedFn((info: AIChatInfo) => {
         // 暂时性逻辑，因为老版本的对话信息里没有请求参数，导致在新版本无法使用对话里的重新执行功能
@@ -100,7 +122,23 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                         历史会话
                         <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
                     </div>
-                    <YakitButton icon={<OutlinePlussmIcon />} onClick={() => onNewChat()} />
+                    <div className={styles["header-actions"]}>
+                        <YakitPopconfirm
+                            placement='bottomRight'
+                            title='确定要清除全部会话吗？此操作不可恢复'
+                            onConfirm={handleClearAllChat}
+                        >
+                            <Tooltip title='清除会话' placement='topRight'>
+                                <YakitButton
+                                    loading={clearLoading}
+                                    icon={<OutlineTrashIcon className={styles["clear-icon"]} />}
+                                />
+                            </Tooltip>
+                        </YakitPopconfirm>
+                        <Tooltip title='新建会话' placement='topRight'>
+                            <YakitButton icon={<OutlinePlussmIcon />} onClick={() => onNewChat()} />
+                        </Tooltip>
+                    </div>
                 </div>
 
                 <div className={styles["header-second"]}>

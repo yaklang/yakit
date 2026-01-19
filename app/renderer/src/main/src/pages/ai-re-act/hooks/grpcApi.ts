@@ -628,6 +628,12 @@ export interface AIEventQueryResponse {
     Total: number
 }
 
+/** DeleteAIEvent 接口请求 */
+export interface AIEventDeleteRequest {
+    Filter?: AIEventFilter
+    ClearAll?: boolean
+}
+
 /** GetRandomAIMaterials 接口请求 */
 export interface GetRandomAIMaterialsRequest {
     Limit: number

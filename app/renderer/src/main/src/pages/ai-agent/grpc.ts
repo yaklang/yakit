@@ -1,6 +1,7 @@
 import {APIFunc, APIOptionalFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
+    AIEventDeleteRequest,
     AIEventQueryRequest,
     AIEventQueryResponse,
     ExportAILogsRequest,
@@ -8,6 +9,7 @@ import {
     GetRandomAIMaterialsRequest,
     GetRandomAIMaterialsResponse
 } from "../ai-re-act/hooks/grpcApi"
+import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {
     AIForge,
     AIForgeFilter,
@@ -33,6 +35,19 @@ export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询QueryAIEvent失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 删除 AI 事件（支持 ClearAll） */
+export const grpcDeleteAIEvent: APIFunc<AIEventDeleteRequest, DbOperateMessage> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteAIEvent", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "删除DeleteAIEvent失败:" + e)
                 reject(e)
             })
     })
