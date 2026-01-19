@@ -461,6 +461,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             AttachedResourceInfo: attachedResourceInfo,
             FocusModeLoop: data.focusMode
         }
+
         events.onStart({token: newChat.session, params: startParams, extraValue: extra})
 
         Promise.resolve().then(() => {
