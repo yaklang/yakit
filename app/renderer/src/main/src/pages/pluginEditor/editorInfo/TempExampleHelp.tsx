@@ -1,6 +1,6 @@
 import React from "react"
 import styles from "./EditorInfo.module.scss"
-import { StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
+import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 export interface TempExampleInfo {
   label: string
   desc: string
@@ -340,7 +340,7 @@ export const TempExampleHelp: React.FC<TempExampleHelpProps> = React.memo((props
     return (
         <div className={styles["temp-example-help-body"]}>
             <h1>{tempExampleItem.label}</h1>
-            <StreamMarkdown content={tempExampleItem.code} />
+            <SafeMarkdown source={tempExampleItem.code} />
         </div>
     )
 })

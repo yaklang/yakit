@@ -25,7 +25,7 @@ const renderItem = (info: DataProps) => {
             if (item.length > 0) {
                 return (
                     <div className={styles["render"]}>
-                        <StreamMarkdown content={item[0].Value} />
+                        <StreamMarkdown content={item[0].Value} isShowTheme={false} />
                     </div>
                 )
             } else {

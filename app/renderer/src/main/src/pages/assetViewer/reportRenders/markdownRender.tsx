@@ -1,90 +1,32 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import MDEditor from "@uiw/react-md-editor"
 import rehypeSanitize from "rehype-sanitize"
 import {useTheme} from "@/hook/useTheme"
 import {ErrorBoundary} from "react-error-boundary"
-import {StreamdownProps, Streamdown} from "streamdown"
+import {StreamdownProps, Streamdown, MathPlugin} from "streamdown"
 import styles from "./markdownRender.module.scss"
 import classNames from "classnames"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
-import mermaid from "mermaid"
+// 代码高亮
+import {code} from "@streamdown/code"
+// 渲染美人鱼图，包括流程图、序列图等
+import {mermaid} from "@streamdown/mermaid"
+// 使用 KaTeX 呈现数学表达式。
+import {math} from "@streamdown/math"
+// 给所有标题（h1–h6）自动生成 id，用于锚点跳转
+import rehypeSlug from "rehype-slug"
+import {useMemoizedFn} from "ahooks"
+// import { cjk } from "@streamdown/cjk";
 const {ipcRenderer} = window.require("electron")
 const {Markdown} = MDEditor
 
-interface SafeMarkdownProp {
-    source?: string
-    className?: string
-    style?: React.CSSProperties
-}
-
-export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
-    const {source, className, style} = props
-    const {theme} = useTheme()
-    return (
-        <ErrorBoundary
-            FallbackComponent={() => {
-                return <div>{source}</div>
-            }}
-        >
-            <Markdown
-                source={source}
-                // 防止 XSS 攻击
-                rehypePlugins={[rehypeSanitize]}
-                className={classNames(styles["markdown-block"], className)}
-                style={style}
-                warpperElement={{"data-color-mode": theme}}
-            />
-        </ErrorBoundary>
-    )
-}
-
-function Mermaid(props: {code: string; onError: () => void}) {
-    const ref = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        if (props.code && ref.current) {
-            mermaid
-                .run({
-                    nodes: [ref.current]
-                })
-                .catch((e) => {
-                    props.onError()
-                    console.error("[Mermaid] ", e.message)
-                })
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.code])
-
-    function viewSvgInNewWindow() {
-        const svg = ref.current?.querySelector("svg")
-        if (!svg) return
-        const text = new XMLSerializer().serializeToString(svg)
-        const blob = new Blob([text], {type: "image/svg+xml"})
-        const url = URL.createObjectURL(blob)
-        const win = window.open(url)
-        if (win) {
-            win.onload = () => URL.revokeObjectURL(url)
-        }
-    }
-
-    return (
-        <div
-            className='no-dark'
-            style={{cursor: "pointer", overflow: "auto"}}
-            ref={ref}
-            onClick={() => viewSvgInNewWindow()}
-        >
-            {props.code}
-        </div>
-    )
-}
-
 function PreCode(props: {children?: React.ReactNode}) {
     const ref = useRef<HTMLPreElement>(null)
-    const [mermaidCode, setMermaidCode] = useState("")
     const [copyStr, setCopyStr] = useState("")
     useEffect(() => {
         if (ref.current) {
+            console.log("ref.current---", ref.current)
+
             // 初始赋值
             setCopyStr(ref.current.textContent || "")
             // 监听后续变化
@@ -98,9 +40,90 @@ function PreCode(props: {children?: React.ReactNode}) {
         }
     }, [props.children])
 
-    if (mermaidCode) {
-        return <Mermaid code={mermaidCode} onError={() => setMermaidCode("")} />
-    }
+    return (
+        <pre ref={ref}>
+            <CopyComponents
+                className='copy-code-button'
+                copyText={copyStr || ""}
+                iconColor={"var(--Colors-Use-Neutral-Text-1-Title)"}
+            />
+            {props.children}
+        </pre>
+    )
+}
+
+interface SafeMarkdownProp {
+    source?: string
+    className?: string
+    style?: React.CSSProperties
+}
+
+// 目前非流式优先使用此SafeMarkdown，流式使用 StreamMarkdown
+export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
+    const {source, className, style} = props
+    const {theme} = useTheme()
+    return (
+        <ErrorBoundary
+            FallbackComponent={() => {
+                return <div>{source}</div>
+            }}
+        >
+            <Markdown
+                source={source}
+                // rehypeSanitize 防止 XSS 攻击
+                // rehypeSlug 用于生成锚点 此处带前缀user-content-
+                rehypePlugins={[rehypeSlug, rehypeSanitize]}
+                className={classNames(styles["safe-markdown"], className)}
+                style={style}
+                warpperElement={{"data-color-mode": theme}}
+                components={{
+                    pre: PreCode,
+                    a: (aProps) => {
+                        return (
+                            <a
+                                {...aProps}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    ipcRenderer.invoke("open-url", aProps.href || "")
+                                }}
+                            />
+                        )
+                    }
+                }}
+            />
+        </ErrorBoundary>
+    )
+}
+
+// StreamMarkdown复制结构略有不同
+function StreamPreCode(props: {children?: React.ReactNode}) {
+    const ref = useRef<HTMLPreElement>(null)
+    const [copyStr, setCopyStr] = useState("")
+
+    const onSetCopyStr = useMemoizedFn((ele: HTMLPreElement) => {
+        const pres = ele.querySelectorAll("pre")
+        let result = ""
+
+        pres.forEach((pre) => {
+            result += pre.textContent ?? ""
+        })
+        setCopyStr(result)
+    })
+
+    useEffect(() => {
+        if (ref.current) {
+            // 初始赋值
+            onSetCopyStr(ref.current)
+            // 监听后续变化
+            const observer = new MutationObserver(() => {
+                if (ref.current) {
+                    onSetCopyStr(ref.current)
+                }
+            })
+            observer.observe(ref.current, {childList: true, subtree: true})
+            return () => observer.disconnect()
+        }
+    }, [props.children])
 
     return (
         <pre ref={ref}>
@@ -109,7 +132,6 @@ function PreCode(props: {children?: React.ReactNode}) {
                 copyText={copyStr || ""}
                 iconColor={"var(--Colors-Use-Neutral-Text-1-Title)"}
             />
-
             {props.children}
         </pre>
     )
@@ -118,23 +140,39 @@ function PreCode(props: {children?: React.ReactNode}) {
 interface StreamMarkdownProps extends StreamdownProps {
     content?: string
     wrapperClassName?: string
+    isStreaming?: boolean
+    // 是否显示主题
+    isShowTheme?: boolean
 }
 
-// react-markdown的平替
+// react-markdown的平替（注：xss传入的markdown中不可包含html元素 ）
+// 由于Streamdown的样式引入需Tailwind / UnoCSS / WindiCSS 的语法，故自己写样式
+// 在 Streamdown 中，代码块内容都会被压平成一行文本是由于其流式解析器的设计决定的
 export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) => {
-    const {content, wrapperClassName, ...restProps} = props
-
+    const {content, wrapperClassName, isStreaming, isShowTheme = true, ...restProps} = props
+    const {theme} = useTheme()
+    const plugins = useMemo(() => {
+        if (theme === "dark" || !isShowTheme) {
+            return {
+                mermaid,
+                math: math as MathPlugin
+            }
+        }
+        return {code, mermaid, math: math as MathPlugin}
+    }, [theme, isShowTheme])
     return (
         <>
-            <div className={classNames(styles["markdown-body"], wrapperClassName)}>
+            <div className={classNames(styles["stream-markdown"], wrapperClassName)}>
                 <Streamdown
+                    plugins={plugins}
+                    controls={props.controls || false}
                     // Streamdown官网文档中内置了一些常用插件 https://streamdown.ai/docs/configuration#core-props
                     rehypePlugins={[
-                        // 防止 XSS 攻击
-                        rehypeSanitize
+                        // rehypeSanitize 防止 XSS 攻击 官方文档已内置
+                        rehypeSlug as any
                     ]}
                     components={{
-                        pre: PreCode,
+                        pre: StreamPreCode,
                         a: (aProps) => {
                             return (
                                 <a
@@ -147,12 +185,12 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
                             )
                         }
                     }}
+                    isAnimating={isStreaming}
                     {...restProps}
                 >
                     {content}
                 </Streamdown>
             </div>
-            <SafeMarkdown source={content} />
         </>
     )
 })

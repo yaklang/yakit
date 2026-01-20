@@ -1,4 +1,50 @@
-.markdown-body {
+.safe-markdown {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: transparent;
+    font-size: 14px;
+    :global {
+        pre {
+            position: relative;
+            overflow: hidden;
+            &:hover .copy-code-button {
+                pointer-events: all;
+                transform: translateX(0px);
+                opacity: 0.5;
+            }
+
+            .copy-code-button {
+                position: absolute;
+                right: 4px;
+                top: 4px;
+                cursor: pointer;
+                height: 16px;
+                margin: 0px;
+                transform: translateX(16px);
+                pointer-events: none;
+                opacity: 0;
+                transition: all ease 0.3s;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                &:hover {
+                    opacity: 1;
+                }
+            }
+        }
+        code {
+            background: var(--Colors-Use-Neutral-Bg);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-radius: 4px;
+        }
+        pre > code {
+            font-size: 14px;
+        }
+    }
+}
+
+.stream-markdown {
     height: auto;
     -webkit-text-size-adjust: 100%;
     margin: 0;
@@ -155,8 +201,9 @@
 
             .copy-code-button {
                 position: absolute;
+                z-index: 1;
                 right: 4px;
-                top: 4px;
+                top: 25px;
                 cursor: pointer;
                 height: 16px;
                 margin: 0px;
@@ -173,6 +220,16 @@
                     opacity: 1;
                 }
             }
+        }
+
+        table {
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th,
+        td {
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            padding: 4px;
         }
     }
 }
