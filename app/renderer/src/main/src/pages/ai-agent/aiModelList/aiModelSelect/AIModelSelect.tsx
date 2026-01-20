@@ -110,8 +110,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     }, [inViewport])
 
     useEffect(() => {
-        if (open || (modelNames?.length === 0 && setting?.AIService)) getModelNameOption()
-    }, [open, setting?.AIService])
+        if (setting?.AIService) getModelNameOption()
+    }, [setting?.AIService])
 
     const getModelNameOption = useDebounceFn(
         useMemoizedFn(async () => {
