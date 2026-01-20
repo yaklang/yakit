@@ -1,6 +1,6 @@
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {FC, useMemo} from "react"
+import {FC, useEffect, useMemo} from "react"
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
 import {success} from "@/utils/notification"
@@ -38,7 +38,12 @@ const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) =>
                     defaultActiveKey='日志'
                 />
             )
-        } else {
+        }
+        return null
+    }, [buildingDrawer.streamToken, streams])
+
+    useEffect(() => {
+        if (buildingDrawer.streamToken && (!streams || !streams[buildingDrawer.streamToken])) {
             props.onCloseViewBuildProcess()
         }
     }, [buildingDrawer.streamToken, streams])

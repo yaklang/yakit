@@ -217,6 +217,7 @@ const KnowledgeBaseContainer: FC<
                             </div>
                         ))}
                     </div>
+
                     <PluginExecuteResult
                         streamInfo={streams[findKnowledgeBaseItems.streamToken]}
                         runtimeId={streams[findKnowledgeBaseItems.streamToken]?.runtimeId ?? ""}

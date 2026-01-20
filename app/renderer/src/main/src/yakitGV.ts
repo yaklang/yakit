@@ -150,3 +150,10 @@ export enum CacheDropDownGV {
     /** @name WebFuzzer 插入文件 */
     WebFuzzerInsertFileFuzzTag = "web_fuzzer_insert_file_fuzz_tag"
 }
+
+export enum KnowledgeBaseGV {
+    /** @name 知识库引导弹窗是否显示 */
+    KnowledgeBaseJoyrideVisible = "knowledge-base-joyride-visible",
+    /** @name 知识库引导标签是否显示 */
+    KnowledgeBaseJoyrideStep = "knowledge-base-joyride-step"
+}

@@ -138,6 +138,7 @@ $keyColor: map-keys($colors);
 
         overflow-x: auto;
         overflow-y: hidden;
+        flex-shrink: 0;
 
         // 下面是滚动条的样式
         &::-webkit-scrollbar {

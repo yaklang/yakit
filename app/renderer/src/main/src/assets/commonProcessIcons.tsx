@@ -1658,8 +1658,8 @@ const CursorIconSvg = () => (
                 y2='122'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#2A2F70' />
-                <stop offset='1' stop-color='#010101' />
+                <stop stopColor='#2A2F70' />
+                <stop offset='1' stopColor='#010101' />
             </linearGradient>
             <linearGradient
                 id='paint1_linear_38727_27045'
@@ -1669,8 +1669,8 @@ const CursorIconSvg = () => (
                 y2='-17.0007'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#38306E' stop-opacity='0' />
-                <stop offset='1' stop-color='#38306E' />
+                <stop stopColor='#38306E' stop-opacity='0' />
+                <stop offset='1' stopColor='#38306E' />
             </linearGradient>
             <linearGradient
                 id='paint2_linear_38727_27045'
@@ -1680,8 +1680,8 @@ const CursorIconSvg = () => (
                 y2='171'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#7ACAF1' />
-                <stop offset='1' stop-color='#3571A6' />
+                <stop stopColor='#7ACAF1' />
+                <stop offset='1' stopColor='#3571A6' />
             </linearGradient>
             <linearGradient
                 id='paint3_linear_38727_27045'
@@ -1691,8 +1691,8 @@ const CursorIconSvg = () => (
                 y2='112.003'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#7F75C8' stop-opacity='0' />
-                <stop offset='1' stop-color='#7F75C8' />
+                <stop stopColor='#7F75C8' stop-opacity='0' />
+                <stop offset='1' stopColor='#7F75C8' />
             </linearGradient>
             <linearGradient
                 id='paint4_linear_38727_27045'
@@ -1702,8 +1702,8 @@ const CursorIconSvg = () => (
                 y2='367.5'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#D5E3A0' />
-                <stop offset='1' stop-color='#DEE5F3' />
+                <stop stopColor='#D5E3A0' />
+                <stop offset='1' stopColor='#DEE5F3' />
             </linearGradient>
             <linearGradient
                 id='paint5_linear_38727_27045'
@@ -1713,8 +1713,8 @@ const CursorIconSvg = () => (
                 y2='190'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#DEC6EF' stop-opacity='0' />
-                <stop offset='1' stop-color='#DEC6EF' />
+                <stop stopColor='#DEC6EF' stop-opacity='0' />
+                <stop offset='1' stopColor='#DEC6EF' />
             </linearGradient>
             <linearGradient
                 id='paint6_linear_38727_27045'
@@ -1724,8 +1724,8 @@ const CursorIconSvg = () => (
                 y2='261.5'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#936A26' />
-                <stop offset='1' stop-color='#733991' />
+                <stop stopColor='#936A26' />
+                <stop offset='1' stopColor='#733991' />
             </linearGradient>
             <linearGradient
                 id='paint7_linear_38727_27045'
@@ -1735,8 +1735,8 @@ const CursorIconSvg = () => (
                 y2='177.5'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#210C2D' stop-opacity='0' />
-                <stop offset='1' stop-color='#210C2D' />
+                <stop stopColor='#210C2D' stop-opacity='0' />
+                <stop offset='1' stopColor='#210C2D' />
             </linearGradient>
             <linearGradient
                 id='paint8_linear_38727_27045'
@@ -1746,8 +1746,8 @@ const CursorIconSvg = () => (
                 y2='432'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#69683F' stop-opacity='0' />
-                <stop offset='1' stop-color='#69683F' />
+                <stop stopColor='#69683F' stop-opacity='0' />
+                <stop offset='1' stopColor='#69683F' />
             </linearGradient>
             <linearGradient
                 id='paint9_linear_38727_27045'
@@ -1757,8 +1757,8 @@ const CursorIconSvg = () => (
                 y2='546'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#F4D353' />
-                <stop offset='1' stop-color='#69942C' />
+                <stop stopColor='#F4D353' />
+                <stop offset='1' stopColor='#69942C' />
             </linearGradient>
             <linearGradient
                 id='paint10_linear_38727_27045'
@@ -1768,8 +1768,8 @@ const CursorIconSvg = () => (
                 y2='562.973'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#0B190B' />
-                <stop offset='1' stop-color='#0B190B' stop-opacity='0' />
+                <stop stopColor='#0B190B' />
+                <stop offset='1' stopColor='#0B190B' stop-opacity='0' />
             </linearGradient>
             <linearGradient
                 id='paint11_linear_38727_27045'
@@ -1779,8 +1779,8 @@ const CursorIconSvg = () => (
                 y2='343'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#568EA4' stop-opacity='0' />
-                <stop offset='1' stop-color='#568EA4' />
+                <stop stopColor='#568EA4' stop-opacity='0' />
+                <stop offset='1' stopColor='#568EA4' />
             </linearGradient>
             <linearGradient
                 id='paint12_linear_38727_27045'
@@ -1790,8 +1790,8 @@ const CursorIconSvg = () => (
                 y2='271.194'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#449AC8' />
-                <stop offset='1' stop-color='#010101' />
+                <stop stopColor='#449AC8' />
+                <stop offset='1' stopColor='#010101' />
             </linearGradient>
             <linearGradient
                 id='paint13_linear_38727_27045'
@@ -1801,8 +1801,8 @@ const CursorIconSvg = () => (
                 y2='343'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#2F546B' stop-opacity='0' />
-                <stop offset='1' stop-color='#51A1D3' />
+                <stop stopColor='#2F546B' stop-opacity='0' />
+                <stop offset='1' stopColor='#51A1D3' />
             </linearGradient>
         </defs>
     </svg>
@@ -1840,8 +1840,8 @@ const ProxifierIconSvg = () => (
                 gradientUnits='userSpaceOnUse'
                 gradientTransform='translate(40 40) rotate(-180) scale(26)'
             >
-                <stop stop-color='#60A3E5' />
-                <stop offset='1' stop-color='#1A529D' />
+                <stop stopColor='#60A3E5' />
+                <stop offset='1' stopColor='#1A529D' />
             </radialGradient>
         </defs>
     </svg>

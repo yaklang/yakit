@@ -1,7 +1,13 @@
 import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, type FC} from "react"
-import {useAsyncEffect, useMemoizedFn, useRequest, useSafeState} from "ahooks"
+import {useAsyncEffect, useMemoizedFn, useSafeState} from "ahooks"
 
-import {OutlineAiChatIcon, OutlineFolderopenIcon, OutlineLoadingIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {
+    OutlineFolderopenIcon,
+    OutlineLoadingIcon,
+    OutlinePaintbrushIcon,
+    OutlineRefreshIcon,
+    OutlineStethoscopeIcon
+} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import styles from "../knowledgeBase.module.scss"
@@ -27,7 +33,7 @@ import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
 
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
-import {Tooltip} from "antd"
+import {Divider, Tooltip} from "antd"
 import {BinaryInfo} from "./AllInstallPluginsProps"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
@@ -44,8 +50,8 @@ import {randomString} from "@/utils/randomUtil"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {API} from "@/services/swagger/resposeType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {OutlineBotIcon} from "@/assets/icon/colors"
 
 const {YakitPanel} = YakitCollapse
 
@@ -395,9 +401,27 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 <div className={styles["knowledge-base-info-header-button"]}>
                                     <div className={styles["header-title"]}>知识库管理</div>
                                     <div className={styles["knowledge-size"]}>{knowledgeBases.length ?? 0}</div>
+                                </div>
+                                <div className={styles["header-operate"]}>
+                                    <AddKnowledgenBaseDropdownMenu
+                                        setKnowledgeBaseID={setKnowledgeBaseID}
+                                        setAddMode={setAddMode}
+                                    />
+                                    <Tooltip title={progress < 100 ? "知识库可用诊断进行中" : "知识库可用诊断"}>
+                                        <YakitButton
+                                            loading={progress < 100}
+                                            type='text2'
+                                            icon={<OutlineStethoscopeIcon />}
+                                            className='second-step'
+                                            onClick={() => {
+                                                setIsAIModelAvailable(true)
+                                                handleValidateAIModelUsable()
+                                            }}
+                                        />
+                                    </Tooltip>
                                     <Tooltip title='刷新知识库列表'>
                                         <YakitButton
-                                            type='text'
+                                            type='text2'
                                             icon={<OutlineRefreshIcon />}
                                             onClick={(e) => {
                                                 e.stopPropagation()
@@ -405,39 +429,14 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                             }}
                                         />
                                     </Tooltip>
-                                </div>
-                                <div className={styles["header-operate"]}>
-                                    <div
-                                        className={styles["ai-button"]}
-                                        onClick={() => {
-                                            emiter.emit(
-                                                "openPage",
-                                                JSON.stringify({
-                                                    route: YakitRoute.AI_Agent,
-                                                    params: {
-                                                        inputString: "使用知识库回答:"
-                                                    }
-                                                })
-                                            )
-                                        }}
-                                    >
-                                        <OutlineAiChatIcon />
-                                        AI 问答
-                                    </div>
-
-                                    <AddKnowledgenBaseDropdownMenu
-                                        setKnowledgeBaseID={setKnowledgeBaseID}
-                                        setAddMode={setAddMode}
-                                    />
-                                    <YakitButton
-                                        loading={clearAllContent.loading}
-                                        type='text'
-                                        colors='danger'
-                                        style={{height: 27}}
-                                        onClick={handleCancelAll}
-                                    >
-                                        清空
-                                    </YakitButton>
+                                    <Divider style={{margin: 0}} type='vertical'></Divider>
+                                    <Tooltip title='重置知识库列表'>
+                                        <YakitButton
+                                            icon={<OutlinePaintbrushIcon />}
+                                            type='text2'
+                                            onClick={handleCancelAll}
+                                        />
+                                    </Tooltip>
                                 </div>
                             </div>
                             <div className={styles["repository-manage-search"]}>
@@ -463,7 +462,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
                             <div className={styles["repository-manage-options"]}>
                                 <div>
-                                    {insertModaOptions.map((tag) => (
+                                    {insertModaOptions?.map((tag) => (
                                         <YakitCheckableTag
                                             key={tag.value}
                                             checked={addMode.includes(tag.value)}
@@ -477,23 +476,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                         </YakitCheckableTag>
                                     ))}
                                 </div>
-
-                                {progress !== 100 ? (
-                                    <div className={styles["tag"]} onClick={() => setIsAIModelAvailable(true)}>
-                                        <OutlineLoadingIcon className={styles["loading-icon"]} />
-                                        知识库可用诊断中
-                                    </div>
-                                ) : (
-                                    <YakitButton
-                                        type='outline2'
-                                        onClick={() => {
-                                            setIsAIModelAvailable(true)
-                                            handleValidateAIModelUsable()
-                                        }}
-                                    >
-                                        知识库可用诊断
-                                    </YakitButton>
-                                )}
                             </div>
                             <YakitSpin spinning={loading} wrapperClassName={styles["knowledge-base-info-spin"]}>
                                 <div className={styles["knowledge-base-info-body"]}>
@@ -564,7 +546,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                                         }}
                                                                     />
                                                                 </Tooltip>
-
                                                                 <OperateKnowledgenBaseItem
                                                                     items={items}
                                                                     setMenuSelectedId={setMenuSelectedId}
@@ -772,29 +753,49 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     return (
-        <YakitSideTab
-            type='vertical'
-            yakitTabs={KnowledgeTabList}
-            activeKey={active}
-            onActiveKey={(v) => handleSetActive(v as KnowledgeTabListEnum)}
-            show={expand}
-            setShow={setExpand}
-        >
+        <div className={styles["knowledge-base-sidebar-container"]}>
             <div
-                className={classNames(styles["tab-content"], {
-                    [styles["tab-content-hidden"]]: !expand
-                })}
+                className={styles["knowledge-base-sidebar-ai-button"]}
+                onClick={() => {
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.AI_Agent,
+                            params: {
+                                inputString: "使用知识库回答:"
+                            }
+                        })
+                    )
+                }}
             >
-                {renderTabContent(active)}
+                <OutlineBotIcon />
+                <span>AI Agent</span>
             </div>
-            <YakitHint
-                visible={clearAllVisible}
-                title={clearAllContent.scriptName}
-                content={clearAllContent.help}
-                onOk={handleCancelAllOk}
-                onCancel={handleCancelAllClose}
-            />
-        </YakitSideTab>
+
+            <YakitSideTab
+                type='vertical'
+                yakitTabs={KnowledgeTabList}
+                activeKey={active}
+                onActiveKey={(v) => handleSetActive(v as KnowledgeTabListEnum)}
+                show={expand}
+                setShow={setExpand}
+            >
+                <div
+                    className={classNames(styles["tab-content"], {
+                        [styles["tab-content-hidden"]]: !expand
+                    })}
+                >
+                    {renderTabContent(active)}
+                </div>
+                <YakitHint
+                    visible={clearAllVisible}
+                    title={clearAllContent.scriptName}
+                    content={clearAllContent.help}
+                    onOk={handleCancelAllOk}
+                    onCancel={handleCancelAllClose}
+                />
+            </YakitSideTab>
+        </div>
     )
 }
 

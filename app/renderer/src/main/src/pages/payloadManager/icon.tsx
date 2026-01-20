@@ -135,8 +135,8 @@ const PropertyNoAdd = () => (
                 y2='54.644'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#FFD869' />
-                <stop offset='1' stop-color='#FEC52B' />
+                <stop stopColor='#FFD869' />
+                <stop offset='1' stopColor='#FEC52B' />
             </linearGradient>
         </defs>
     </svg>

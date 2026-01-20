@@ -25,6 +25,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {PluginExecuteDetailDrawer} from "./PluginExecuteDetailDrawer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {CheckboxOptionType, Tooltip} from "antd"
+import console from "console"
 
 export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     setTableProps: Dispatch<

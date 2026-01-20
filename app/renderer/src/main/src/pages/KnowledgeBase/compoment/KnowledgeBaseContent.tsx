@@ -5,14 +5,25 @@ import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 import styles from "../knowledgeBase.module.scss"
 import KnowledgeBaseContainer from "./KnowledgeBaseContainer"
 import {KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
-import {useAsyncEffect, useCreation, useDeepCompareEffect, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
+import {
+    useAsyncEffect,
+    useCreation,
+    useDeepCompareEffect,
+    useInViewport,
+    useMemoizedFn,
+    useSafeState,
+    useUpdateEffect
+} from "ahooks"
 import {
     BuildingKnowledgeBase,
     BuildingKnowledgeBaseEntry,
     checkAIModelAvailability,
     compareKnowledgeBaseChange,
     extractAddedHistory,
-    findChangedObjects
+    extractStreamTokenChangedItem,
+    findChangedObjects,
+    joyrideSteps,
+    stopList
 } from "../utils"
 import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
 import {failed, success} from "@/utils/notification"
@@ -37,12 +48,12 @@ import {AIInputEvent} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {cloneDeep} from "lodash"
-import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
+import {AIAgentSettingDefault, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {AIAgentSetting, AITabsEnumType} from "@/pages/ai-agent/aiAgentType"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
-import {getRemoteValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -61,6 +72,12 @@ import {
     AISendParams,
     AISendResProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
+import Joyride, {ACTIONS, CallBackProps, STATUS} from "react-joyride"
+import {CustomJoyrideTooltip} from "./CustomJoyrideTooltip/CustomJoyrideTooltip"
+import {KnowledgeBaseGV} from "@/yakitGV"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {GuideFooter} from "./GuideFooter"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -182,12 +199,15 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
                     const target = knowledgeBases.find((it) => it.streamToken === info?.requestToken)
                     if (!target) return
-
-                    editKnowledgeBase(target.ID, {
-                        ...target,
-                        streamstep: 2,
-                        streamToken: randomString(50)
-                    })
+                    if (target.disableERM === "true") {
+                        editKnowledgeBase(target.ID, {...target, streamstep: "success"})
+                    } else {
+                        editKnowledgeBase(target.ID, {
+                            ...target,
+                            streamstep: 2,
+                            streamToken: randomString(50)
+                        })
+                    }
                 },
                 onError: (e) => {
                     buildingSetRef.current.delete(key)
@@ -208,23 +228,11 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         buildingSetRef.current.add(key)
 
         try {
-            // 仅在未禁用 ERM 时才执行构建
-            if (!kb.disableERM) {
-                await BuildingKnowledgeBaseEntry({
-                    ...kb,
-                    ...history,
-                    streamToken: history.token
-                })
-            } else {
-                // editKnowledgeBase(kb.ID, {
-                //     ...kb,
-                //     historyGenerateKnowledgeList: kb.historyGenerateKnowledgeList.filter(
-                //         (it) => it.token !== history.token
-                //     )
-                // })
-                return
-            }
-
+            await BuildingKnowledgeBaseEntry({
+                ...kb,
+                ...history,
+                streamToken: history.token
+            })
             if (!api?.createStream) return
 
             api.createStream(history.token, {
@@ -238,6 +246,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
                     editKnowledgeBase(kb.ID, {
                         ...kb,
+                        streamstep: "success",
                         historyGenerateKnowledgeList: kb.historyGenerateKnowledgeList.filter(
                             (it) => it.token !== history.token
                         )
@@ -253,6 +262,29 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             failed(`启动知识库条目构建失败: ${e + ""}`)
         }
     })
+
+    useAsyncEffect(async () => {
+        if (!previousKnowledgeBases) return
+
+        for (const kb of knowledgeBases) {
+            const prev = previousKnowledgeBases.find((it) => it.ID === kb.ID)
+            if (!prev) continue
+
+            const added = extractAddedHistory(kb, prev)
+            if (added) {
+                await buildKnowledgeEntry(kb, added)
+            }
+
+            if (prev.streamToken !== undefined && kb.streamToken !== prev.streamToken) {
+                const extractStreamItem = extractStreamTokenChangedItem(knowledgeBases, previousKnowledgeBases)
+                await buildKnowledgeEntry(kb, {
+                    ...extractStreamItem,
+                    token: extractStreamItem.streamToken,
+                    name: extractStreamItem.KnowledgeBaseName
+                })
+            }
+        }
+    }, [knowledgeBases, previousKnowledgeBases])
 
     //  新增 / 手动新增知识库
     useAsyncEffect(async () => {
@@ -274,20 +306,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             await buildKnowledgeBase(kb)
         } catch (error) {
             failed(error + "")
-        }
-    }, [knowledgeBases, previousKnowledgeBases])
-
-    useAsyncEffect(async () => {
-        if (!previousKnowledgeBases) return
-
-        for (const kb of knowledgeBases) {
-            const prev = previousKnowledgeBases.find((it) => it.ID === kb.ID)
-            if (!prev) continue
-
-            const added = extractAddedHistory(kb, prev)
-            if (added) {
-                await buildKnowledgeEntry(kb, added)
-            }
         }
     }, [knowledgeBases, previousKnowledgeBases])
 
@@ -578,10 +596,91 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         })
     })
 
+    const refRef = useRef<HTMLDivElement>(null)
+    const [run, setRun] = useSafeState(false)
+    const [knowledgeBaseContentViewport = false] = useInViewport(refRef)
+    const [joyrideStep, setJoyrideStep] = useSafeState({
+        step: 1,
+        visible: false
+    })
+
+    const [spinning, setSpinning] = useSafeState(true)
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSpinning(false)
+        }, 2000)
+
+        return () => clearTimeout(timer)
+    }, [])
+
+    useEffect(() => {
+        getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible).then((res) => {
+            if (knowledgeBaseContentViewport && inViewport && !res) {
+                setJoyrideStep({step: 1, visible: true})
+            }
+        })
+    }, [knowledgeBaseContentViewport, inViewport])
+
+    // Joyride 回调
+    const handleJoyrideCallback = (data: CallBackProps) => {
+        const {status, action} = data
+        if (action === ACTIONS.CLOSE) {
+            setRun(false)
+            setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep, true)
+            return
+        }
+
+        if (status === STATUS.SKIPPED) {
+            setRun(true)
+        }
+        if (status === STATUS.READY || status === STATUS.FINISHED) {
+            setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep, true)
+        }
+    }
+
+    useAsyncEffect(async () => {
+        const visible = await getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible)
+        const step = await getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep)
+        if (knowledgeBaseContentViewport && inViewport) {
+            if (!visible && !step) {
+                return setRun(false)
+            } else if (visible && !step) {
+                return setRun(true)
+            } else {
+                return setRun(false)
+            }
+        }
+    }, [knowledgeBaseContentViewport, joyrideStep.visible, inViewport])
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "calc(100% - 432px)",
+            secondRatio: "432px"
+        }
+        if (!showFreeChat) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [showFreeChat])
     return (
         <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
             <ChatIPCContent.Provider value={{store, dispatcher}}>
-                <div className={styles["knowledge-base-body"]}>
+                <div className={styles["knowledge-base-body"]} ref={refRef}>
+                    <Joyride
+                        steps={joyrideSteps}
+                        run={run}
+                        continuous={true}
+                        disableCloseOnEsc={true}
+                        disableOverlayClose
+                        showSkipButton={false}
+                        showProgress={false}
+                        disableScrolling
+                        callback={handleJoyrideCallback}
+                        disableScrollParentFix={true}
+                        tooltipComponent={CustomJoyrideTooltip}
+                    />
                     <KnowledgeBaseSidebar
                         knowledgeBases={knowledgeBases}
                         knowledgeBaseID={knowledgeBaseID}
@@ -603,49 +702,72 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         refreshOlineRag={refreshOlineRag}
                         setRefreshOlineRag={setRefreshOlineRag}
                     />
-                    {knowledgeBaseID ? (
-                        <KnowledgeBaseContainer
-                            knowledgeBases={knowledgeBases}
-                            knowledgeBaseID={knowledgeBaseID}
-                            setKnowledgeBaseID={(id) => createNewEvents(id)}
-                            streams={streams}
-                            api={api}
-                            setOpenQA={setShowFreeChat}
-                            addMode={addMode}
-                            setRefreshOlineRag={setRefreshOlineRag}
-                        />
-                    ) : (
-                        <div className={styles["knowledge-base-container-empty"]}>
-                            <YakitEmpty />
-                            <div className={styles["empty-button"]}>
-                                <YakitButton onClick={() => handleCreateKnowledgeBase()}>创建知识库</YakitButton>
-                                <YakitButton
-                                    type='outline2'
-                                    onClick={() => {
-                                        setImportVisible((prevalue) => !prevalue)
-                                    }}
-                                >
-                                    导入知识库
-                                </YakitButton>
-                            </div>
-                        </div>
-                    )}
 
-                    {showFreeChat ? (
-                        <div style={{width: 520, borderRight: "1px solid var(--Colors-Use-Neutral-Border)"}}>
-                            <AIReActChat
-                                key={knowledgeBaseID}
-                                mode={"task"}
-                                showFreeChat={showFreeChat}
-                                setShowFreeChat={setShowFreeChat}
-                                title='AI 召回'
-                                ref={aiReActChatRef}
-                                startRequest={onStartRequest}
-                                sendRequest={onSendRequest}
-                            />
-                        </div>
-                    ) : null}
+                    <YakitResizeBox
+                        lineStyle={{
+                            backgroundColor: !!showFreeChat ? "var(--Colors-Use-Neutral-Bg)" : "none",
+                            display: !!showFreeChat ? "" : "none"
+                        }}
+                        secondMinSize={0}
+                        style={{display: "flex"}}
+                        lineDirection='left'
+                        secondNodeStyle={{
+                            width: showFreeChat ? "432px" : "0%",
+                            padding: "0"
+                        }}
+                        firstNode={
+                            knowledgeBaseID ? (
+                                <div className={styles["knowledge-base-table-container"]}>
+                                    <KnowledgeBaseContainer
+                                        knowledgeBases={knowledgeBases}
+                                        knowledgeBaseID={knowledgeBaseID}
+                                        setKnowledgeBaseID={(id) => createNewEvents(id)}
+                                        streams={streams}
+                                        api={api}
+                                        setOpenQA={setShowFreeChat}
+                                        addMode={addMode}
+                                        setRefreshOlineRag={setRefreshOlineRag}
+                                    />
+                                </div>
+                            ) : (
+                                <div className={styles["knowledge-base-container-empty"]}>
+                                    <YakitEmpty />
+                                    <div className={styles["empty-button"]}>
+                                        <YakitButton onClick={() => handleCreateKnowledgeBase()}>
+                                            创建知识库
+                                        </YakitButton>
+                                        <YakitButton
+                                            type='outline2'
+                                            onClick={() => {
+                                                setImportVisible((prevalue) => !prevalue)
+                                            }}
+                                        >
+                                            导入知识库
+                                        </YakitButton>
+                                    </div>
+                                </div>
+                            )
+                        }
+                        secondNode={
+                            showFreeChat ? (
+                                <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
+                                    <AIReActChat
+                                        key={knowledgeBaseID}
+                                        mode={"task"}
+                                        showFreeChat={showFreeChat}
+                                        setShowFreeChat={setShowFreeChat}
+                                        title='AI 召回'
+                                        ref={aiReActChatRef}
+                                        startRequest={onStartRequest}
+                                        sendRequest={onSendRequest}
+                                    />
+                                </div>
+                            ) : null
+                        }
+                        {...ResizeBoxProps}
+                    />
                 </div>
+
                 <KnowledgeBaseFormModal
                     visible={createVisible}
                     title='新增知识库'
@@ -695,6 +817,22 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         </div>
                     </YakitModal>
                 ) : null}
+                <YakitModal hiddenHeader footer={null} visible={joyrideStep.visible} centered>
+                    <YakitSpin spinning={spinning}>
+                        <GuideFooter
+                            step={joyrideStep.step}
+                            onPrev={() => setJoyrideStep((s) => ({...s, step: s.step - 1}))}
+                            onNext={() => setJoyrideStep((s) => ({...s, step: s.step + 1}))}
+                            onFinish={() =>
+                                setJoyrideStep((s) => {
+                                    setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible, true)
+                                    return {...s, visible: false}
+                                })
+                            }
+                            stopList={stopList}
+                        />
+                    </YakitSpin>
+                </YakitModal>
             </ChatIPCContent.Provider>
         </AIAgentContext.Provider>
     )

@@ -616,7 +616,9 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
                 PotentialQuestions: [],
                 PotentialQuestionsVector: [],
                 RelatedEntityUUIDS: "",
-                disableERM: false
+                disableERM: "false",
+                concurrency: 10,
+                chunk: "Medium"
             }
             return [value, ...(knowledgeBaseList || [])]
         }, [knowledgeBaseList])

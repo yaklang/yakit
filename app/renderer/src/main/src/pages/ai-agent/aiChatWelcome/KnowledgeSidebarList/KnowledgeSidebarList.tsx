@@ -41,7 +41,7 @@ interface KnowledgeSidebarListProps {
 const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => {
     const [installPlug, setInstallPlug] = useSafeState(false)
 
-    const {knowledgeBases, previousKnowledgeBases, addKnowledgeBase, editKnowledgeBase} = useKnowledgeBase()
+    const {knowledgeBases, addKnowledgeBase, editKnowledgeBase} = useKnowledgeBase()
 
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
@@ -199,7 +199,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
 
                 try {
                     setAddMode([])
-                    await BuildingKnowledgeBase(kb)
+                    await BuildingKnowledgeBase({...kb, chunk: "Medium", concurrency: 10})
 
                     api?.createStream?.(kb.streamToken, {
                         taskName: "debug-plugin",
