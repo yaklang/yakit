@@ -1,6 +1,8 @@
-import {Theme} from "@/hooks/useTheme"
 import {monaco} from "react-monaco-editor"
+import {Theme} from "@/hooks/useTheme"
+import {isYakit} from "./envfile"
 type CssVars = Record<string, string>
+type TGeneratorColor = (vars: CssVars, theme: Theme) => Record<string, string>
 
 let currentAppliedTheme: Theme | null = null
 /**
@@ -17,7 +19,26 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
     })
 }
 
+const generatorColor: TGeneratorColor = (vars, theme) => {
+    if (!isYakit()) {
+        if (theme === "dark") {
+            return {
+                selectionBackground: vars["--Colors-Use-Main-Border"]
+            }
+        } else {
+            return {
+                selectionBackground: vars["--Colors-Use-Main-Focus"]
+            }
+        }
+    } else {
+        return {
+            selectionBackground: vars["--Colors-Use-Warning-Border"]
+        }
+    }
+}
+
 const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
+    const result = generatorColor(vars, themeGlobal)
     const editorIndentGuideSetting: Record<Theme, Record<string, string>> = {
         dark: {
             background: "#f6a317",
@@ -32,6 +53,7 @@ const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
             scrollbarShadow: "#17171714"
         }
     }
+
     monaco.editor.defineTheme("kurior", {
         base: "vs",
         inherit: true,
@@ -673,16 +695,20 @@ const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
         colors: {
             "editor.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
             "editor.background": vars["--Colors-Use-Neutral-Bg-Hover"],
-            "editor.selectionBackground": vars["--Colors-Use-Warning-Border"],
-            "editor.inactiveSelectionBackground": vars["--Colors-Use-Warning-Border"],
+            "editor.selectionBackground": result.selectionBackground,
+            // vars["--Colors-Use-Warning-Border"],
+            "editor.inactiveSelectionBackground": result.selectionBackground,
+            // vars["--Colors-Use-Warning-Border"],
             "editor.lineHighlightBackground": editorIndentGuideSetting[themeGlobal].lineHighlightBackground,
             "editorCursor.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
             "editorWhitespace.foreground": vars["--Colors-Use-Neutral-Text-4-Help-text"],
 
-            "editorIndentGuide.background": editorIndentGuideSetting[themeGlobal].background,
-            "editorIndentGuide.activeBackground": editorIndentGuideSetting[themeGlobal].activeBackground,
-            "editorLineNumber.foreground": vars["--yakit-colors-Lake-blue-80"],
-            "editorLineNumber.activeForeground": "#f6a317",
+            "editorIndentGuide.background": vars["--Colors-Use-Neutral-Disable"],
+            // editorIndentGuideSetting[themeGlobal].background,
+            "editorIndentGuide.activeBackground": vars["--Colors-Use-Main-Primary"],
+            // editorIndentGuideSetting[themeGlobal].activeBackground,
+            "editorLineNumber.foreground": vars["--Colors-Use-Neutral-Text-4-Help-text"],
+            "editorLineNumber.activeForeground": vars["--Colors-Use-Main-Primary"],
 
             "minimap.background": vars["--Colors-Use-Neutral-Bg-Hover"],
             "minimap.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
@@ -695,7 +721,8 @@ const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
             "editorOverviewRuler.background": vars["--Colors-Use-Neutral-Bg-Hover"],
             "editorGutter.foldingControlForeground": vars["--Colors-Use-Neutral-Text-3-Secondary"],
 
-            "editorLink.activeForeground": "#F28C45",
+            "editorLink.activeForeground": vars["--Colors-Use-Main-Border"],
+            // "#F28C45",
 
             "editorBracketHighlight.foreground1": vars["--Colors-Use-Blue-Primary"],
             "editorBracketHighlight.foreground2": vars["--Colors-Use-Blue-Primary"],

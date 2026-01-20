@@ -1,0 +1,126 @@
+$white-background-color: #ffffff;
+$black-background-color: #171717;
+
+// 混合比例和方向
+$yakit-light-mix-steps: (
+    10: (92%, light),
+    20: (88%, light),
+    30: (80%, light),
+    40: (55%, light),
+    50: (25%, light),
+    60: (10%, light),
+    70: (10%, dark),
+    80: (25%, dark),
+    90: (55%, dark),
+    100: (80%, dark)
+);
+
+$yakit-dark-mix-steps: (
+    10: (92%, dark),
+    20: (80%, dark),
+    30: (70%, dark),
+    40: (55%, dark),
+    50: (30%, dark),
+    60: (10%, dark),
+    70: (5%, light),
+    80: (25%, light),
+    90: (55%, light),
+    100: (80%, light)
+);
+
+$yakit-theme-colors: (
+    Main: #F17F30,
+    Success: #10B981,
+    Warning: #F59E0B,
+    Error: #EF4444,
+    Neutral: #ABB3C2,
+    Purple: #7B51F7,
+    Magenta: #D84ADB,
+    Blue: #2F87FF,
+    Lake-blue: #18B5CB,
+    Cyan: #26D4EB,
+    Green: #41C484,
+    Red: #F36259,
+    Orange: #FFAE4E,
+    Yellow: #FFC905
+);
+
+/// 混合主色和背景色的函数
+@function mix-color($main, $bg, $percentage) {
+    @return mix($bg, $main, $percentage);
+}
+
+/// 获取混合百分比（支持覆盖）
+@function get-mix-percent($name, $mode, $level, $default-percent) {
+    @if $name == Neutral and $mode == dark and $level == 10 {
+        @return 88%;
+    }
+    @if $name == Neutral and $mode == light and $level == 20 {
+        @return 80%;
+    }
+    @if $name == Neutral and $mode == light and $level == 30 {
+        @return 70%;
+    }
+    @return $default-percent;
+}
+
+/// 生成单个基础色变量
+@mixin generate-single-theme-color($name, $mode: light) {
+    // 默认从映射中取基础色
+    $color: map-get($yakit-theme-colors, $name);
+
+    // 对特定 name + mode 进行基色覆盖
+    @if $name == Neutral and $mode == dark {
+        $color: #B6C0D2;
+    } @else if $name == Yellow and $mode == dark {
+        $color: #FFD230;
+    } @else if $name == Neutral and $mode == light {
+        $color: #ABB3C2;
+    } @else if $name == Yellow and $mode == light {
+        $color: #FFC905;
+    }
+
+    @if $color == null {
+        @error "Color `#{$name}` not found in \$yakit-theme-colors.";
+    }
+
+    // 根据模式选择混色步骤
+    $steps: if($mode == light, $yakit-light-mix-steps, $yakit-dark-mix-steps);
+    $prefix: --yakit-colors-#{$name}-;
+
+    // 遍历每个混合步骤
+    @each $level, $info in $steps {
+        $default-percent: nth($info, 1);
+        $direction: nth($info, 2);
+        $percent: get-mix-percent($name, $mode, $level, $default-percent);
+        $target-bg: if($direction == light, $white-background-color, $black-background-color);
+
+        // 输出 CSS 变量
+        #{$prefix}#{$level}: #{mix-color($color, $target-bg, $percent)};
+    }
+
+    // Neutral 的特殊极端值设置
+    @if $name == Neutral {
+        @if $mode == light {
+        #{$prefix}0: #{$white-background-color};
+        #{$prefix}110: #{$black-background-color};
+        } @else if $mode == dark {
+        #{$prefix}0: #{$black-background-color};
+        #{$prefix}110: #{$white-background-color};
+        }
+    }
+    @if $name == Main {
+        @if $mode == light {
+            #{$prefix}0: #{unquote("#F28C4514")};
+        } @else if $mode == dark {
+            #{$prefix}0: #{unquote("#F2853A14")};
+        }
+    }
+}
+
+// 一次性生成所有主题基础色变量
+@mixin generate-all-theme-colors($mode: light) {
+    @each $name, $_ in $yakit-theme-colors {
+        @include generate-single-theme-color($name, $mode);
+    }
+}

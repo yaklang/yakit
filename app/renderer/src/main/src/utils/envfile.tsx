@@ -3,6 +3,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {RemotePrivateDomainGV} from "@/enums/privateDomain"
 import {RemoteI18nGV} from "@/enums/i18n"
+import { Theme } from "@/hook/useTheme"
 
 export enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
@@ -255,5 +256,19 @@ export const GetConnectPort = () => {
             return 9016
         default:
             return 9011
+    }
+}
+
+export const GetMainColor = (themeMode: Theme) => {
+    switch (fetchEnv()) {
+        case "irify":
+        case "irify-enterprise":
+            return themeMode === "dark" ? "#B081FF" : "#6A44A9"
+        case "memfit":
+            return themeMode === "dark" ? "#5E9DEA" : "#2E63B3"
+        case "enterprise":
+        case "simple-enterprise":
+        case "yakit":
+            return "#F17F30"
     }
 }

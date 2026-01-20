@@ -1,3 +1,5 @@
+import {Theme} from "@/hooks/useTheme"
+
 export const __PLATFORM__ = import.meta.env.VITE_PLATFORM
 
 export enum PRODUCT_RELEASE_EDITION {
@@ -142,5 +144,19 @@ export const FetchSoftwareVersion: () => SoftwareVersion = () => {
         //     return "memfit"
         default:
             return "yakit"
+    }
+}
+
+export const GetMainColor = (themeMode: Theme) => {
+    switch (__PLATFORM__) {
+        case "irify":
+        case "irify-enterprise":
+            return themeMode === "dark" ? "#B081FF" : "#6A44A9"
+        case "memfit":
+            return themeMode === "dark" ? "#5E9DEA" : "#2E63B3"
+        case "enterprise":
+        case "simple-enterprise":
+        case "yakit":
+            return "#F17F30"
     }
 }
