@@ -176,6 +176,7 @@ import {useProxy} from "@/hook/useProxy"
 import {JSONParseLog} from "@/utils/tool"
 import {SoftMode, useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {RemoteSoftModeGV} from "@/enums/softMode"
+import { debugToPrintLogs } from "@/utils/logCollection"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -651,6 +652,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
     useEffect(() => {
         setCurrentPageTabRouteKey(currentTabKey)
+        debugToPrintLogs({
+            status: "INFO",
+            title: "切换标签页",
+            content: currentTabKey
+        })
     }, [currentTabKey])
 
     // 发送到专项漏洞检测modal-show变量

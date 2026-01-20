@@ -1139,7 +1139,8 @@ const GetUIOpSettingMenu = () => {
             label: " 日志收集",
             children: [
                 {label: "渲染端日志", key: "renderLog"},
-                {label: "引擎日志", key: "engineLog"}
+                {label: "引擎日志", key: "engineLog"},
+                {label: "调试信息日志", key: "printLog"}
             ]
         }
     ].filter((item) => item)
