@@ -10,9 +10,9 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {Form} from "antd"
+import {Divider, Form} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {OutlineArrowcirclerightIcon, OutlineQuestionmarkcircleIcon} from "@/assets/outline"
+import {OutlineArrowcirclerightIcon, OutlineExitIcon, OutlineQuestionmarkcircleIcon} from "@/assets/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {EngineModeVerbose} from "../../utils"
 import {Editor} from "@/components/Editor"
@@ -272,6 +272,14 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                     </Form>
                 </div>
                 <div className={styles["footer-btn"]}>
+                    <span
+                        className={styles["exit-btn"]}
+                        onClick={() => ipcRenderer.invoke(ipcEventPre + "UIOperate", "close")}
+                    >
+                        <OutlineExitIcon className={styles["exit-icon"]} />
+                        退出
+                    </span>
+                    <Divider type='vertical'></Divider>
                     <span
                         className={classNames(styles["go-local"], {
                             [styles["go-local-disable"]]: loading

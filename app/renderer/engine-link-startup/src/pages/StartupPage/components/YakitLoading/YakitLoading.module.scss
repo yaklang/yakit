@@ -106,37 +106,68 @@
     color: var(--Colors-Use-Main-Primary);
   }
 
-  .footer-btn {
+  .footer-wrapper {
     display: flex;
     align-items: center;
-    font-size: 12px;
 
-    .open-engine-path {
-      cursor: pointer;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      &:hover {
-        color: var(--Colors-Use-Main-Primary);
-      }
-    }
-
-    .go-remote {
+    .exit-btn {
       display: flex;
       align-items: center;
       gap: 4px;
       cursor: pointer;
-      color: var(--Colors-Use-Main-Primary);
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
-      .arrow-circle-right-icon {
+      .exit-icon {
         svg {
           width: 16px;
           height: 16px;
         }
       }
+
+      &:hover {
+        color: var(--Colors-Use-Error-Primary);
+
+        .exit-icon {
+          svg {
+            color: var(--Colors-Use-Error-Primary);
+          }
+        }
+      }
     }
 
-    .go-remote-disable {
-      color: var(--Colors-Use-Neutral-Disable);
-      cursor: not-allowed;
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+
+      .open-engine-path {
+        cursor: pointer;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+        &:hover {
+          color: var(--Colors-Use-Main-Primary);
+        }
+      }
+
+      .go-remote {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        color: var(--Colors-Use-Main-Primary);
+
+        .arrow-circle-right-icon {
+          svg {
+            width: 16px;
+            height: 16px;
+          }
+        }
+      }
+
+      .go-remote-disable {
+        color: var(--Colors-Use-Neutral-Disable);
+        cursor: not-allowed;
+      }
     }
   }
 }
@@ -189,6 +220,7 @@
 .menuWrapper {
   display: block;
 }
+
 .menuItemTitle {
   justify-content: center;
 }

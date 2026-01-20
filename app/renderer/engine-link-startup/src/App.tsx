@@ -1,4 +1,4 @@
-import {memo, useEffect} from "react"
+import {memo, useEffect, useState} from "react"
 import {StartupPage} from "./pages/StartupPage"
 import "./theme/ThemeClass.scss"
 import "./theme/yakit.scss"
@@ -21,6 +21,9 @@ function applyThemeColors(theme: "light" | "dark", colors: Record<string, string
 }
 
 const App: React.FC = memo(() => {
+    const {theme} = useTheme()
+    const [ready, setReady] = useState(false)
+
     useEffect(() => {
         const titleElement = document.getElementById("app-html-title")
         if (titleElement) {
@@ -41,18 +44,15 @@ const App: React.FC = memo(() => {
         }
     }, [])
 
-    const {theme} = useTheme()
+    // 主题色处理
     useEffect(() => {
         const targetEditionColor = GetMainColor(theme)
-        const generateAllThemeColor: Record<string, string> = generateAllThemeColors(theme, targetEditionColor)
-        applyThemeColors(theme, generateAllThemeColor)
+        const colors = generateAllThemeColors(theme, targetEditionColor)
+        applyThemeColors(theme, colors)
+        setReady(true)
     }, [theme])
 
-    return (
-        <div className={styles["app"]}>
-            <StartupPage />
-        </div>
-    )
+    return <div className={styles["app"]}>{ready && <StartupPage />}</div>
 })
 
 export default App
