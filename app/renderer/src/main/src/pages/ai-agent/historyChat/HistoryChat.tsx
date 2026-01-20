@@ -19,7 +19,7 @@ import classNames from "classnames"
 import styles from "./HistoryChat.module.scss"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
-import {grpcDeleteAIEvent} from "../grpc"
+import {grpcDeleteAIEvent, grpcDeleteAITask} from "../grpc"
 import {aiChatDataStore} from "../store/ChatDataStore"
 
 /** 向对话框组件进行事件触发的通信 */
@@ -49,6 +49,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         try {
             onNewChat()
             await grpcDeleteAIEvent({ClearAll: true}, true)
+            await grpcDeleteAITask({})
             aiChatDataStore.clear()
             setActiveChat?.(undefined)
             setChats?.([])
@@ -94,8 +95,8 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     })
 
     const [delLoading, setDelLoading] = useState<string[]>([])
-    const handleDeleteChat = useMemoizedFn((info: AIChatInfo) => {
-        const {id} = info
+    const handleDeleteChat = useMemoizedFn(async (info: AIChatInfo) => {
+        const {id, session} = info
         const isLoading = delLoading.includes(id)
         if (isLoading) return
         const findIndex = chats.findIndex((item) => item.id === id)
@@ -110,9 +111,21 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
 
         if (activeID !== id) active = undefined
         active && handleSetActiveChat(active)
-        setTimeout(() => {
+
+        try {
+            await grpcDeleteAIEvent(
+                {
+                    Filter: {
+                        SessionID: session
+                    }
+                },
+                true
+            )
+        } catch (error) {
+            yakitNotify("error", "删除会话失败:" + error)
+        } finally {
             setDelLoading((old) => old.filter((el) => el !== id))
-        }, 200)
+        }
     })
     return (
         <div className={styles["history-chat"]}>
@@ -129,10 +142,9 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                             onConfirm={handleClearAllChat}
                         >
                             <Tooltip title='清除会话' placement='topRight'>
-                                <YakitButton
-                                    loading={clearLoading}
-                                    icon={<OutlineTrashIcon className={styles["clear-icon"]} />}
-                                />
+                                <YakitButton colors='danger' type='outline1' loading={clearLoading}>
+                                    清空
+                                </YakitButton>
                             </Tooltip>
                         </YakitPopconfirm>
                         <Tooltip title='新建会话' placement='topRight'>

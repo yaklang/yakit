@@ -634,6 +634,10 @@ export interface AIEventDeleteRequest {
     ClearAll?: boolean
 }
 
+export interface AITaskDeleteRequest{
+    Filter?: AIEventFilter
+}
+
 /** GetRandomAIMaterials 接口请求 */
 export interface GetRandomAIMaterialsRequest {
     Limit: number
