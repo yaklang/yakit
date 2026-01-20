@@ -1,0 +1,48 @@
+@use "../yakit-colors-generator.scss" as generator;
+@use "../yakit-colors-component.scss" as components;
+
+$color-names: Main, Error, Warning, Success, "Blue";
+$color-tag-names: "Purple", "Magenta",  "Lake-blue", "Cyan", "Green", "Red", "Orange", "Yellow", "Grey";
+
+html[data-theme="light"] {
+    // @include generator.generate-all-theme-colors(light);
+    @include components.generate-neutral-semantic-colors(light);
+    @include components.generate-basic-semantic-colors(light);
+    @include components.generate-status-semantic-colors(light);
+
+    @each $color in $color-names {
+        @include components.generate-semantic-colors($color, light);
+    }
+    @each $color in $color-tag-names {
+        @include components.generate-tag-semantic-colors($color, light);
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #353639
+    }
+}
+html[data-theme="dark"] {
+    // @include generator.generate-all-theme-colors(dark);
+    @include components.generate-neutral-semantic-colors(dark);
+    @include components.generate-basic-semantic-colors(dark);
+    @include components.generate-status-semantic-colors(dark);
+
+    @each $color in $color-names {
+        @include components.generate-semantic-colors($color, dark);
+    }
+    @each $color in $color-tag-names {
+        @include components.generate-tag-semantic-colors($color, dark);
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #C8D0DD
+    }
+}

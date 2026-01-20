@@ -13,28 +13,11 @@ import "./assets/global.scss"
 import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
 import {getRemoteValue} from "./utils/kv"
-import {getRemoteI18nGV} from "./utils/envfile"
+import {GetMainColor, getRemoteI18nGV} from "./utils/envfile"
 import i18n from "@/i18n/i18n"
-import {Theme, useTheme} from "./hook/useTheme"
+import {useTheme} from "./hook/useTheme"
 import {generateAllThemeColors} from "./yakit-colors-generator"
-import {getReleaseEditionName} from "./utils/envfile"
 import { debugToPrintLogs } from "./utils/logCollection"
-
-// 根据 edition 返回对应颜色
-const getMainColorByEdition = (edition: ReturnType<typeof getReleaseEditionName>, themeMode: Theme) => {
-    switch (edition) {
-        case "Yakit":
-            return "#F17F30"
-        case "Memfit AI":
-            return themeMode === "dark" ? "#5E9DEA" : "#2E63B3"
-        case "IRify":
-            return themeMode === "dark" ? "#B081FF" : "#6A44A9"
-        case "IRify-EnpriTrace":
-            return themeMode === "dark" ? "#B081FF" : "#6A44A9"
-        default:
-            return "#F17F30"
-    }
-}
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -121,7 +104,7 @@ const App = () => {
 
     const {theme} = useTheme()
     useEffect(() => {
-        const targetEditionColor = getMainColorByEdition(getReleaseEditionName(), theme)
+        const targetEditionColor = GetMainColor(theme)
         const generateAllThemeColor: Record<string, string> = generateAllThemeColors(theme, targetEditionColor)
         applyThemeColors(theme, generateAllThemeColor)
     }, [theme])

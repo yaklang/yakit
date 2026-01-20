@@ -1,11 +1,24 @@
 import {memo, useEffect} from "react"
 import {StartupPage} from "./pages/StartupPage"
 import "./theme/ThemeClass.scss"
-import {getReleaseEditionName, isCommunityEdition, isIRify, isMemfit} from "./utils/envfile"
+import "./theme/yakit.scss"
+import {GetMainColor, getReleaseEditionName, isCommunityEdition, isIRify, isMemfit} from "./utils/envfile"
 import {ipcEventPre} from "./utils/ipcEventPre"
-
+import {useTheme} from "./hooks/useTheme"
+import {generateAllThemeColors} from "./yakit-colors-generator"
 import styles from "./App.module.scss"
+
 const {ipcRenderer} = window.require("electron")
+
+function applyThemeColors(theme: "light" | "dark", colors: Record<string, string>) {
+    const html = document.documentElement
+
+    html.setAttribute("data-theme", theme)
+
+    Object.entries(colors).forEach(([key, value]) => {
+        html.style.setProperty(`${key}`, value)
+    })
+}
 
 const App: React.FC = memo(() => {
     useEffect(() => {
@@ -27,6 +40,13 @@ const App: React.FC = memo(() => {
             ipcRenderer.removeAllListeners("close-engineLinkWin-renderer")
         }
     }, [])
+
+    const {theme} = useTheme()
+    useEffect(() => {
+        const targetEditionColor = GetMainColor(theme)
+        const generateAllThemeColor: Record<string, string> = generateAllThemeColors(theme, targetEditionColor)
+        applyThemeColors(theme, generateAllThemeColor)
+    }, [theme])
 
     return (
         <div className={styles["app"]}>

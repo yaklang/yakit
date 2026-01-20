@@ -1,12 +1,8 @@
 import type {Theme} from "@/hook/useTheme"
 import {monaco} from "react-monaco-editor"
-import {getReleaseEditionName} from "../envfile"
+import {isYakit} from "../envfile"
 type CssVars = Record<string, string>
-type TGeneratorColor = (
-    vars: CssVars,
-    theme: Theme,
-    releaseEditionName: ReturnType<typeof getReleaseEditionName>
-) => Record<string, string>
+type TGeneratorColor = (vars: CssVars, theme: Theme) => Record<string, string>
 
 let currentAppliedTheme: Theme | null = null
 /**
@@ -23,10 +19,8 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
     })
 }
 
-const tartgetEditionName = ["IRify", "IRify-EnpriTrace", "Memfit AI"]
-
-const generatorColor: TGeneratorColor = (vars, theme, releaseEditionName) => {
-    if (tartgetEditionName.includes(releaseEditionName)) {
+const generatorColor: TGeneratorColor = (vars, theme) => {
+    if (!isYakit()) {
         if (theme === "dark") {
             return {
                 selectionBackground: vars["--Colors-Use-Main-Border"]
@@ -44,7 +38,7 @@ const generatorColor: TGeneratorColor = (vars, theme, releaseEditionName) => {
 }
 
 const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
-    const result = generatorColor(vars, themeGlobal, getReleaseEditionName())
+    const result = generatorColor(vars, themeGlobal)
     const editorIndentGuideSetting: Record<Theme, Record<string, string>> = {
         dark: {
             background: "#f6a317",
