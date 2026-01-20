@@ -187,6 +187,10 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
     const [form] = Form.useForm()
 
     useEffect(() => {
+        setQuestion("")
+    }, [info.Id])
+
+    useEffect(() => {
         if (!params) return
         initRequiredFormValue()
     }, [params])
