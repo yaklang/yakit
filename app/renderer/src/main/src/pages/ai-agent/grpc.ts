@@ -4,6 +4,7 @@ import {
     AIEventDeleteRequest,
     AIEventQueryRequest,
     AIEventQueryResponse,
+    AITaskDeleteRequest,
     ExportAILogsRequest,
     ExportAILogsResponse,
     GetRandomAIMaterialsRequest,
@@ -48,6 +49,18 @@ export const grpcDeleteAIEvent: APIFunc<AIEventDeleteRequest, DbOperateMessage> 
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "删除DeleteAIEvent失败:" + e)
+                reject(e)
+            })
+    })
+}
+/** @name 删除 AI 任务（支持 ClearAll） */
+export const grpcDeleteAITask: APIFunc<AITaskDeleteRequest, DbOperateMessage> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteAITask", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "删除DeleteAITask失败:" + e)
                 reject(e)
             })
     })

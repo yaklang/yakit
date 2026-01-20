@@ -29,7 +29,9 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
-import { aiChatDataStore } from "./store/ChatDataStore"
+import {aiChatDataStore} from "./store/ChatDataStore"
+import {grpcDeleteAIEvent, grpcDeleteAITask} from "./grpc"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20260113"
@@ -57,7 +59,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region 新版本删除缓存提示框
     const [delCacheVisible, setDelCacheVisible] = useState(false)
     const [delCacheLoading, setDelCacheLoading] = useState(false)
-    const handleDelCache = useMemoizedFn(() => {
+    const [isDelCache, setIsDelCache] = useState(false)
+    const handleDelCache = useMemoizedFn(async () => {
         setDelCacheLoading(true)
         // 清空无效的用户缓存数据-全局配置数据
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
@@ -65,10 +68,19 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
         // 设置清空标志位
         setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
-        setDelCacheVisible(false)
-        setTimeout(() => {
+
+        try {
+            if (isDelCache) {
+                // 删除数据库历史记录
+                await grpcDeleteAIEvent({ClearAll: true}, true)
+                await grpcDeleteAITask({})
+            }
+            setDelCacheVisible(false)
+        } catch {
+            
+        } finally {
             setDelCacheLoading(false)
-        }, 300)
+        }
     })
     // #endregion
 
@@ -107,7 +119,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const initToCacheData = useMemoizedFn(async () => {
         try {
             const res = await getRemoteValue(RemoteAIAgentGV.AIAgentCacheClear)
-            if (!res) return
+            if (!res) return setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
 
             if (res >= AIAgentCacheClearValue) {
                 // 获取缓存的历史对话数据
@@ -247,7 +259,18 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                     getContainer={welcomeRef.current || undefined}
                     visible={delCacheVisible}
                     title='提示'
-                    content='Memfit会话数据升级，会删除系统内的所有历史会话记录'
+                    content={
+                        <>
+                            Memfit会话数据升级，会删除系统内的所有历史会话记录
+                            <br />
+                            <br />
+                            <YakitCheckbox checked={isDelCache} onChange={(e) => setIsDelCache(e.target.checked)}>
+                                <span style={{color: "var(--Colors-Use-Neutral-Text-4-Help-text)"}}>
+                                    是否清除数据库历史记录
+                                </span>
+                            </YakitCheckbox>
+                        </>
+                    }
                     cancelButtonProps={{style: {display: "none"}}}
                     okButtonProps={{loading: delCacheLoading}}
                     onOk={handleDelCache}

@@ -31,12 +31,6 @@
                 align-items: center;
                 gap: 8px;
             }
-
-            .clear-icon {
-                svg {
-                    color: var(--Colors-Use-Error-Primary);
-                }
-            }
         }
 
         .header-second {
@@ -129,7 +123,7 @@
         }
     }
     .history-item:hover.history-item-active {
-background: var(--Colors-Use-Main-Bg);
+        background: var(--Colors-Use-Main-Bg);
         border-color: var(--Colors-Use-Main-Border);
         .item-info {
             .item-icon {
@@ -138,7 +132,7 @@ background: var(--Colors-Use-Main-Bg);
                 }
             }
             .info-title {
-                    color: var(--Colors-Use-Main-Primary);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }

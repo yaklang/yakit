@@ -161,6 +161,21 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    const asyncDeleteAITask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAITask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除 AI Task
+    ipcMain.handle("DeleteAITask", async (e, params) => {
+        return await asyncDeleteAITask(params)
+    })
     // 查询 AI-Forge 列表
     ipcMain.handle("QueryAIForge", async (e, params) => {
         return await asyncQueryAIForge(params)
