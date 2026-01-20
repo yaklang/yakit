@@ -12,7 +12,15 @@ import {
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import styles from "./AIChatMention.module.scss"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {useCreation, useDebounceFn, useInViewport, useKeyPress, useMemoizedFn, useSafeState} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useInViewport,
+    useKeyPress,
+    useMemoizedFn,
+    useSafeState
+} from "ahooks"
 import {AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs} from "../../defaultConstant"
 import {RollingLoadList, RollingLoadListRef} from "@/components/RollingLoadList/RollingLoadList"
 import {AIFocus, AIForge, QueryAIFocusResponse, QueryAIForgeRequest, QueryAIForgeResponse} from "../../type/forge"
@@ -29,26 +37,45 @@ import {useCustomFolder} from "../aiFileSystemList/store/useCustomFolder"
 import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
+import {InputRef} from "antd"
 
 const defaultRef: AIChatMentionListRefProps = {
     onRefresh: () => {}
 }
+// 所有字母和数字的键代码
+const alphanumericKeys = [
+    ...Array.from({length: 26}, (_, i) => `${String.fromCharCode(65 + i)}`),
+    ...Array.from({length: 10}, (_, i) => `${i}`),
+    ...Array.from({length: 10}, (_, i) => `numpad${i}`) //小键盘数字键
+]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
     const {onSelect, defaultActiveTab} = props
     const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
         defaultActiveTab || AIMentionTabsEnum.Forge_Name
     )
     const [keyWord, setKeyWord] = useState<string>("")
+    const [focus, setFocus] = useState<boolean>(false)
+
     const forgeRef = useRef<AIChatMentionListRefProps>(defaultRef)
     const toolRef = useRef<AIChatMentionListRefProps>(defaultRef)
     const knowledgeBaseRef = useRef<AIChatMentionListRefProps>(defaultRef)
     const focusModeRef = useRef<AIChatMentionListRefProps>(defaultRef)
 
+    const searchRef = useRef<InputRef>(null)
+
     const mentionRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(mentionRef)
+
     useEffect(() => {
         if (inViewport) mentionRef.current?.focus()
     }, [inViewport])
+    useDebounceEffect(
+        () => {
+            onSearch()
+        },
+        [keyWord],
+        {wait: 300}
+    )
     useKeyPress(
         "leftarrow",
         (e) => {
@@ -68,6 +95,19 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             e.stopPropagation()
             e.preventDefault()
             onRightArrow()
+        },
+        {
+            target: mentionRef,
+            exactMatch: true,
+            useCapture: true
+        }
+    )
+    useKeyPress(
+        focus ? () => false : alphanumericKeys, //A-Z 0-9
+        (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            onFocusSearchInput()
         },
         {
             target: mentionRef,
@@ -181,8 +221,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 return null
         }
     })
-    const onSearch = useMemoizedFn((value) => {
-        setKeyWord(value)
+    const onSearch = useMemoizedFn(() => {
         switch (activeKey) {
             case AIMentionTabsEnum.Forge_Name:
                 forgeRef.current.onRefresh()
@@ -200,10 +239,27 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 return null
         }
     })
-    const onPressEnter = useMemoizedFn((e) => {
-        onSearch(e.target.value)
+    const onSearchInputChange = useMemoizedFn((value: string) => {
+        setKeyWord(value)
+        onSearch()
+    })
+    const onFocusSearchInput = useMemoizedFn(() => {
+        if (!focus) {
+            searchRef.current?.focus()
+        }
+        setFocus(true)
     })
 
+    const onSearchBlur = useMemoizedFn((e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        setFocus(false)
+    })
+    const onSearchFocus = useMemoizedFn((e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        setFocus(true)
+    })
     const getContainer = useMemoizedFn(() => {
         return mentionRef.current
     })
@@ -217,7 +273,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         return AIMentionTabs
     }, [customFolder.length])
     return (
-        <div className={styles["ai-chat-mention"]} tabIndex={0} ref={mentionRef}>
+        <div className={styles["ai-chat-mention"]} tabIndex={0} ref={mentionRef} onClick={(e) => e.stopPropagation()}>
             <YakitSideTab
                 className={styles["tab-wrapper"]}
                 type='horizontal'
@@ -227,20 +283,14 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             >
                 {activeKey !== AIMentionTabsEnum.File_System && (
                     <YakitInput.Search
+                        ref={searchRef}
                         wrapperClassName={styles["mention-search"]}
                         value={keyWord}
                         onChange={(e) => setKeyWord(e.target.value)}
-                        onSearch={onSearch}
-                        // onPressEnter={onPressEnter}//与select选中enter快捷键冲突，暂时屏蔽搜索的enter快捷键
+                        onSearch={onSearchInputChange}
                         allowClear={true}
-                        onFocus={(e) => {
-                            e.stopPropagation()
-                            e.preventDefault()
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            e.preventDefault()
-                        }}
+                        onFocus={onSearchFocus}
+                        onBlur={onSearchBlur}
                     />
                 )}
                 <div className={styles["list-body"]}>{renderTabContent(activeKey)}</div>
