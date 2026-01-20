@@ -144,14 +144,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         return activeChat?.session
     }, [activeChat])
 
-    // 是否在断开接口后清空接口数据 (新开聊天对话窗时需要清空)
-    const isClear = useRef(false)
     // 提问结束后缓存数据
     const handleChatingEnd = useMemoizedFn(() => {
-        if (isClear.current) {
-            events.onReset()
-            isClear.current = false
-        }
         handleStopAfterChangeState()
     })
 
@@ -318,8 +312,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     // 新开聊天对话窗
                     case ReActChatEventEnum.NEW_CHAT:
                         onStop()
-                        isClear.current = true
-                        // events.onReset()
                         setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
