@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {Checkbox, Divider, Form, Tooltip} from "antd"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
-import {OutlineArrowcirclerightIcon, OutlineQuestionmarkcircleIcon} from "@/assets/outline"
+import {OutlineArrowcirclerightIcon, OutlineExitIcon, OutlineQuestionmarkcircleIcon} from "@/assets/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {LoadingClickExtra, ModalIsTop, System, YakitStatusType, YaklangEngineMode} from "../../types"
@@ -13,9 +13,11 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import {EngineModeVerbose} from "../../utils"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {ipcEventPre} from "@/utils/ipcEventPre"
 
 import classNames from "classnames"
 import styles from "./YakitLoading.module.scss"
+const {ipcRenderer} = window.require("electron")
 export interface YakitLoadingProp {
     /** loading 文案 */
     yakitLoadingTip: string
@@ -601,56 +603,69 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     </Form>
                     {btns}
                 </div>
-                {["install", "installNetWork"].includes(yakitStatus) ? (
-                    <>{agreement()}</>
-                ) : (
-                    <div className={styles["footer-btn"]}>
-                        {/* 倒计时状态时不显示底部按钮 */}
-                        {yakitStatus !== "link_countdown" && (
-                            <>
-                                <span className={styles["open-engine-path"]} onClick={() => grpcOpenYaklangPath()}>
-                                    打开引擎文件
-                                </span>
-                                {/* 中断连接按钮：在空状态或连接状态成功 时显示 */}
-                                {(!yakitStatus || ["link", "ready"].includes(yakitStatus)) && (
-                                    <>
-                                        <Divider type='vertical'></Divider>
-                                        <span
-                                            className={classNames(styles["go-remote"])}
-                                            onClick={() => {
-                                                btnClickCallback("break")
-                                            }}
-                                        >
-                                            中断连接
-                                        </span>
-                                    </>
-                                )}
-                                {/* 远程连接按钮：在非连接状态时显示 */}
-                                {yakitStatus && !["link", "ready", "init"].includes(yakitStatus) && (
-                                    <>
-                                        <Divider type='vertical'></Divider>
-                                        <span
-                                            className={classNames(styles["go-remote"], {
-                                                [styles["go-remote-disable"]]: restartLoading
-                                            })}
-                                            onClick={() => {
-                                                if (restartLoading) {
-                                                    return
-                                                }
-                                                btnClickCallback("remote")
-                                            }}
-                                        >
-                                            {EngineModeVerbose("remote")}{" "}
-                                            <OutlineArrowcirclerightIcon
-                                                className={styles["arrow-circle-right-icon"]}
-                                            />
-                                        </span>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </div>
-                )}
+                <div className={styles["footer-wrapper"]}>
+                    <span
+                        className={styles["exit-btn"]}
+                        onClick={() => ipcRenderer.invoke(ipcEventPre + "UIOperate", "close")}
+                    >
+                        <OutlineExitIcon className={styles["exit-icon"]} />
+                        退出
+                    </span>
+                    {["install", "installNetWork"].includes(yakitStatus) ? (
+                        <>
+                            <Divider type='vertical'></Divider>
+                            {agreement()}
+                        </>
+                    ) : (
+                        <div className={styles["footer-btn"]}>
+                            {/* 倒计时状态时不显示底部按钮 */}
+                            {yakitStatus !== "link_countdown" && (
+                                <>
+                                    <Divider type='vertical'></Divider>
+                                    <span className={styles["open-engine-path"]} onClick={() => grpcOpenYaklangPath()}>
+                                        打开引擎文件
+                                    </span>
+                                    {/* 中断连接按钮：在空状态或连接状态成功 时显示 */}
+                                    {(!yakitStatus || ["link", "ready"].includes(yakitStatus)) && (
+                                        <>
+                                            <Divider type='vertical'></Divider>
+                                            <span
+                                                className={classNames(styles["go-remote"])}
+                                                onClick={() => {
+                                                    btnClickCallback("break")
+                                                }}
+                                            >
+                                                中断连接
+                                            </span>
+                                        </>
+                                    )}
+                                    {/* 远程连接按钮：在非连接状态时显示 */}
+                                    {yakitStatus && !["link", "ready", "init"].includes(yakitStatus) && (
+                                        <>
+                                            <Divider type='vertical'></Divider>
+                                            <span
+                                                className={classNames(styles["go-remote"], {
+                                                    [styles["go-remote-disable"]]: restartLoading
+                                                })}
+                                                onClick={() => {
+                                                    if (restartLoading) {
+                                                        return
+                                                    }
+                                                    btnClickCallback("remote")
+                                                }}
+                                            >
+                                                {EngineModeVerbose("remote")}{" "}
+                                                <OutlineArrowcirclerightIcon
+                                                    className={styles["arrow-circle-right-icon"]}
+                                                />
+                                            </span>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             <AgreementContentModal
                 isTop={isTop}

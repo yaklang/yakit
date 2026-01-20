@@ -140,6 +140,31 @@
         align-items: center;
         font-size: 12px;
 
+        .exit-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+            .exit-icon {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+
+            &:hover {
+                color: var(--Colors-Use-Error-Primary);
+
+                .exit-icon {
+                    svg {
+                        color: var(--Colors-Use-Error-Primary);
+                    }
+                }
+            }
+        }
+
         .go-local {
             display: flex;
             align-items: center;

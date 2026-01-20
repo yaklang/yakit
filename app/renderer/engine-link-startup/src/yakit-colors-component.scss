@@ -1,5 +1,3 @@
-@use "./yakit-colors-generator.scss" as generatorColors;
-
 // 生成语义化 neutral 变量
 @mixin generate-neutral-semantic-colors($mode: light) {
     $prefix: --Colors-Use-Neutral-;
