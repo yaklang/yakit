@@ -1479,13 +1479,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     return val
                 })
             }
-            if (res.enableGMTLS) {
-                newAdvancedConfigValue.isGmTLS = true
+            // 来自于MITM
+            if(res.hasOwnProperty("MITMData")){
+                const { enableGMTLS, randomJA3, noSystemProxy } = JSONParseLog(res.MITMData)
+                if (enableGMTLS) {
+                    newAdvancedConfigValue.isGmTLS = true
+                }
+                if (randomJA3) {
+                    newAdvancedConfigValue.randomJA3 = true
+                }
+                newAdvancedConfigValue.noSystemProxy = noSystemProxy
             }
-            if (res.randomJA3) {
-                newAdvancedConfigValue.randomJA3 = true
-            }
-            newAdvancedConfigValue.noSystemProxy = !!res.noSystemProxy
 
             // 获取全局热加载缓存信息
             const hotPatchCode = await getHotPatchCodeInfo()

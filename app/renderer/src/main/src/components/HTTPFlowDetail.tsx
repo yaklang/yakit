@@ -222,6 +222,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
+    const fromMITM = useMemo(()=> props.pageType === 'MITM', [props.pageType])
+
     const sendCodeCompareMenuItem = (type: string) => {
         return {
             codeCompare: {
@@ -443,6 +445,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             />
                                         ) : (
                                             <NewHTTPPacketEditor
+                                                fromMITM={fromMITM}
                                                 readOnly={true}
                                                 noHeader={true}
                                                 originValue={flow.RequestString}
@@ -499,6 +502,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             />
                                         ) : (
                                             <NewHTTPPacketEditor
+                                                fromMITM={fromMITM}
                                                 readOnly={true}
                                                 noHeader={true}
                                                 originValue={flow.ResponseString}
@@ -1011,6 +1015,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                         {infoType !== "rules" &&
                                             existedInfoType.filter((i) => i !== "rules").length > 0 && (
                                                 <NewHTTPPacketEditor
+                                                    fromMITM={props.pageType === 'MITM'}
                                                     title={
                                                         <Button.Group size={"small"}>
                                                             {existedInfoType.map((i) => {
@@ -1602,6 +1607,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             }
         })
     }
+    const fromMITM = useMemo(()=> props.pageType === 'MITM', [props.pageType])
 
     return (
         <YakitResizeBox
@@ -1625,6 +1631,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
+                        fromMITM={fromMITM}
                         keepSearchName={`${pageType}-request`}
                         title={(() => {
                             let titleEle: ReactNode[] = []
@@ -1756,6 +1763,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
+                        fromMITM={fromMITM}
                         downstreamProxyStr={props.downstreamProxyStr}
                         keepSearchName={`${pageType}-response`}
                         language={flow?.DisableRenderStyles ? "text" : undefined}

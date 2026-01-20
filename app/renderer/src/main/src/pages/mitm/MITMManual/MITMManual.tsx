@@ -431,14 +431,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         useShortcutKeyTrigger("sendAndJump*common", (focus) => {
             let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
             if (inViewport && !item) {
-                onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr)
+                onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr, true)
             }
         })
 
         useShortcutKeyTrigger("send*common", (focus) => {
             let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
             if (inViewport && !item) {
-                onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
+                onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr, true)
             }
         })
 
@@ -485,10 +485,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                             onDiscardData(rowData)
                             break
                         case "send-and-jump-to-webFuzzer":
-                            onSendToTab(rowData, true, downstreamProxyStr)
+                            onSendToTab(rowData, true, downstreamProxyStr, true)
                             break
                         case "send-to-webFuzzer":
-                            onSendToTab(rowData, false, downstreamProxyStr)
+                            onSendToTab(rowData, false, downstreamProxyStr, true)
                             break
                         case "remove-color":
                             onRemoveColor(rowData)
@@ -1357,6 +1357,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             isResponse={isResponse}
             titleStyle={{overflow: "hidden"}}
             isShowBeautifyRender={false}
+            fromMITM={true}
             title={
                 isOnlyLookResponse ? (
                     <div className={styles["mitm-v2-manual-editor-title"]}>
