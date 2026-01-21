@@ -139,12 +139,12 @@ function useChatContent(params: UseChatContentParams) {
 
             const lastRender = renderList[renderList.length - 1]
             const lastRenderData = getContentMap(lastRender.token)
-            if (!lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
+            if (lastRender.token === mapKey || !lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
                 // 最后一个渲染数据不是stream类型, 直接渲染
                 updateElements({mapKey, type})
                 return
             }
-
+            
             if (lastRender.type === AIChatQSDataTypeEnum.STREAM && !lastRender.isGroup) {
                 // 单项的stream数据
                 if (lastRenderData.data.NodeId === nodeID) {
