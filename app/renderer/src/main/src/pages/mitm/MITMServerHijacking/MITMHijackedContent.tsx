@@ -166,8 +166,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
 
     /** 黄色提示 start */
+    const moreRuleLimitFlagRef = useRef<boolean>(true)
     const [moreRuleLimit, setMoreRuleLimit] = useState<boolean>(false)
-    const timerRef = useRef<NodeJS.Timeout | null>(null)
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
     const [whiteFilter, setWhiteFilter] = useState<{
         baseFilter: MITMFilterSchema
@@ -290,7 +290,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         emiter.on("onRefreshRuleEvent", onRefreshRuleEvent)
         emiter.on("onMitmRuleMoreLimt", onMitmRuleMoreLimt)
         return () => {
-            if (timerRef.current) clearTimeout(timerRef.current)
             emiter.off("onRefFilterWhiteListEvent", onRefFilterWhiteListEvent)
             emiter.off("onRefreshRuleEvent", onRefreshRuleEvent)
             emiter.off("onMitmRuleMoreLimt", onMitmRuleMoreLimt)
@@ -309,15 +308,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         getRules()
     })
     const onMitmRuleMoreLimt = useMemoizedFn(() => {
-        if (timerRef.current) clearTimeout(timerRef.current)
-        if (!moreRuleLimit) {
+        if (!moreRuleLimit && moreRuleLimitFlagRef.current) {
             setMoreRuleLimit(true)
             setAlertVisible(true)
             yakitNotify("info", "开启染色/匹配规则会导致性能下降，如遇风险，请谨慎操作")
         }
-        timerRef.current = setTimeout(() => {
-            setMoreRuleLimit(false)
-        }, 10000)
     })
     const clearLoadedPlugins = () => {
         return (
@@ -1091,7 +1086,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         type='text2'
                         size={"middle"}
                         icon={<OutlineXIcon />}
-                        onClick={() => setAlertVisible(false)}
+                        onClick={() => {
+                            if (moreRuleLimit) {
+                                moreRuleLimitFlagRef.current = false
+                            }
+                            setAlertVisible(false)
+                        }}
                     />
                 </div>
             </div>
