@@ -655,7 +655,7 @@ export const HubGridOpt: React.FC<HubGridOptProps> = memo((props) => {
     }, [prImgs])
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type].icon} />
+            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type]?.icon} />
         }
         return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
@@ -883,7 +883,7 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
     })
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType].icon} />
+            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType]?.icon} />
         }
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, headImg, pluginType, official])

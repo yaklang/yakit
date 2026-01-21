@@ -988,7 +988,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
     })
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType].icon} />
+            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType]?.icon} />
         }
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, headImg, pluginType, official])
