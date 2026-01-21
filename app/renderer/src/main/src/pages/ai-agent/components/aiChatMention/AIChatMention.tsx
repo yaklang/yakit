@@ -246,8 +246,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
                 return null
         }
     })
-    const onSearchInputChange = useMemoizedFn((value: string) => {
-        setKeyWord(value)
+    const onSearchInputChange = useMemoizedFn(() => {
         onSearch()
     })
     const onFocusSearchInput = useMemoizedFn(() => {
