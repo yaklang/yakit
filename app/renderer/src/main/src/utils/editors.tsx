@@ -496,6 +496,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     refreshTrigger?: boolean | any
     noHeader?: boolean
     loading?: boolean
+    /** @description 当内容频繁更新（如 SSE/流式输出）时，避免每次更新都把光标/选择重置到开头导致闪烁 */
+    keepSelectionOnValueChange?: boolean
 
     noPacketModifier?: boolean
     noOpenPacketNewWindow?: boolean
@@ -612,6 +614,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [showValue, setShowValue] = useState<string>(originValue)
+    // When streaming (e.g. SSE), keep the MonacoEditor `value` stable to avoid full model reset on every tick.
+    // We then append deltas via editor APIs.
+    const [stableEditorValue, setStableEditorValue] = useState<string>(originValue)
+    const streamingAppendMode = !!props.readOnly && !!props.keepSelectionOnValueChange
+    const prevOriginValueRef = useRef<string>(originValue)
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
     // const [typeLoading, setTypeLoading] = useState<boolean>(false)
     const {theme} = useTheme()
@@ -741,7 +748,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     useEffect(() => {
         if (monacoEditor) {
             props.onEditor && props.onEditor(monacoEditor)
-            monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+            if (!props.keepSelectionOnValueChange) {
+                monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+            }
         }
     }, [monacoEditor])
     useEffect(() => {
@@ -754,7 +763,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         if (props.readOnly) {
             setStrValue(showValue)
             if (monacoEditor) {
-                monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+                if (!props.keepSelectionOnValueChange) {
+                    monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+                }
             }
         }
     }, [
@@ -766,7 +777,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         if (!props.readOnly) {
             setStrValue(originValue)
             if (monacoEditor) {
-                monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+                if (!props.keepSelectionOnValueChange) {
+                    monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+                }
             }
         }
     }, [props.refreshTrigger, props.readOnly])
@@ -892,10 +905,55 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     })
 
     useEffect(() => {
-        setRenderHTML(undefined)
+        // Default (non-streaming) behavior: treat originValue as the source of truth.
+        if (!streamingAppendMode) {
+            prevOriginValueRef.current = originValue
+            setRenderHTML(undefined)
+            setShowValue(originValue)
+            setStableEditorValue(originValue)
+            setTypeOptionFn()
+            return
+        }
+
+        const prev = prevOriginValueRef.current || ""
+        const isAppendOnly = prev.length > 0 && originValue.startsWith(prev)
+
+        // If editor is not ready yet, or originValue isn't append-only, fallback to full reset.
+        if (!monacoEditor || !isAppendOnly) {
+            prevOriginValueRef.current = originValue
+            setRenderHTML(undefined)
+            setShowValue(originValue)
+            setStableEditorValue(originValue)
+            setTypeOptionFn()
+            return
+        }
+
+        const delta = originValue.slice(prev.length)
+        if (!delta) {
+            return
+        }
+
+        // Update menu/copy/curl sources; keep Monaco `value` stable to avoid full setValue resets.
+        prevOriginValueRef.current = originValue
         setShowValue(originValue)
-        setTypeOptionFn()
-    }, [originValue, setTypeOptionFn])
+
+        try {
+            const model = monacoEditor.getModel()
+            if (!model) return
+            const lastLine = model.getLineCount()
+            const lastCol = model.getLineMaxColumn(lastLine)
+            monacoEditor.executeEdits("stream-append", [
+                {
+                    range: new monaco.Range(lastLine, lastCol, lastLine, lastCol),
+                    text: delta,
+                    forceMoveMarkers: true
+                }
+            ])
+        } catch (e) {
+            // Fallback to full reset on any unexpected editor error.
+            setStableEditorValue(originValue)
+        }
+    }, [originValue, setTypeOptionFn, streamingAppendMode, monacoEditor])
 
     const isShowBeautifyRenderRef = useRef<boolean>()
     useEffect(() => {
@@ -1157,10 +1215,16 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             noMiniMap={props.noMinimap}
                             type={props.language || "http"}
                             originValue={showValue}
-                            value={props.readOnly && showValue.length > 0 ? showValue : strValue}
+                            value={
+                                props.readOnly && showValue.length > 0
+                                    ? streamingAppendMode
+                                        ? stableEditorValue
+                                        : showValue
+                                    : strValue
+                            }
                             readOnly={props.readOnly}
                             disabled={props.disabled}
-                            setValue={setStrValue}
+                            setValue={streamingAppendMode ? () => {} : setStrValue}
                             noWordWrap={noWordwrap}
                             fontSize={fontSize}
                             showLineBreaks={showLineBreaks}

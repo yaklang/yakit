@@ -750,6 +750,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
         initWebFuzzerPageInfo().advancedConfigValue
     ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
+    const advancedConfigValueRef = useRef<AdvancedConfigValueProps>(advancedConfigValue)
+    useEffect(() => {
+        advancedConfigValueRef.current = advancedConfigValue
+    }, [advancedConfigValue])
 
     // 高级配置的隐藏/显示
     const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
@@ -1387,6 +1391,58 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         const updateDataThrottle = throttle(updateData, 500, { leading: false, trailing: true })
 
+        const startsWithHTTP = (raw?: Uint8Array): boolean => {
+            if (!raw || raw.length < 5) return false
+            return (
+                raw[0] === 0x48 && // H
+                raw[1] === 0x54 && // T
+                raw[2] === 0x54 && // T
+                raw[3] === 0x50 && // P
+                raw[4] === 0x2f // /
+            )
+        }
+
+        const concatBytes = (a: Uint8Array, b: Uint8Array): Uint8Array => {
+            if (a.length === 0) return b
+            if (b.length === 0) return a
+            const out = new Uint8Array(a.length + b.length)
+            out.set(a, 0)
+            out.set(b, a.length)
+            return out
+        }
+
+        // returns index right after \r\n\r\n; -1 if not found
+        const findHeaderEnd = (raw: Uint8Array): number => {
+            if (!raw || raw.length < 4) return -1
+            for (let i = 0; i <= raw.length - 4; i++) {
+                if (raw[i] === 0x0d && raw[i + 1] === 0x0a && raw[i + 2] === 0x0d && raw[i + 3] === 0x0a) {
+                    return i + 4
+                }
+            }
+            return -1
+        }
+
+        // Merge delta-only SSE chunks into an existing HTTP packet (header + accumulated body).
+        // Keep body size bounded to avoid unbounded memory growth on long-lived streams.
+        const mergeSSEDeltaIntoHTTPPacket = (prevPacket: Uint8Array, deltaBody: Uint8Array, maxBodyBytes: number) => {
+            if (prevPacket.length === 0) return deltaBody
+            if (deltaBody.length === 0) return prevPacket
+            const headerEnd = findHeaderEnd(prevPacket)
+            if (headerEnd < 0) {
+                return concatBytes(prevPacket, deltaBody)
+            }
+            const header = prevPacket.subarray(0, headerEnd)
+            const prevBody = prevPacket.subarray(headerEnd)
+            const combinedBody = concatBytes(prevBody, deltaBody)
+            if (maxBodyBytes > 0 && combinedBody.length > maxBodyBytes) {
+                const tail = combinedBody.subarray(combinedBody.length - maxBodyBytes)
+                return concatBytes(header, tail)
+            }
+            return concatBytes(header, combinedBody)
+        }
+
+        const getMaxBodyBytes = () => (advancedConfigValueRef.current?.maxBodySize || 5) * 1024 * 1024
+
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             taskIDRef.current = data.TaskId
 
@@ -1430,6 +1486,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const existedChunks = existed.RandomChunkedData || []
                 const nextChunks = item.RandomChunkedData || []
 
+                const prevResponseRaw = existed.ResponseRaw || new Uint8Array()
+                const prevHeaders = existed.Headers || []
+                const prevContentType = existed.ContentType
+                const prevStatusCode = existed.StatusCode
+
                 Object.assign(existed, item)
                 existed.Count = keepCount
 
@@ -1445,6 +1506,39 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         if (Number.isFinite(id)) existedIndexes.add(id)
                     })
                     existed.RandomChunkedData = merged.length > 2048 ? merged.slice(merged.length - 2048) : merged
+                }
+
+                // SSE incremental updates:
+                // - first update carries a synthetic HTTP header + first delta body
+                // - later updates may only contain delta body bytes (no header)
+                //
+                // For the UI, we keep `existed.ResponseRaw` as an accumulated HTTP packet (header + body),
+                // so the response editor won't flicker by repeatedly rendering a "new full packet" or a "delta-only packet".
+                if (
+                    nextChunks.length > 0 &&
+                    item.ResponseRaw?.length > 0 &&
+                    !startsWithHTTP(item.ResponseRaw) &&
+                    startsWithHTTP(prevResponseRaw)
+                ) {
+                    existed.ResponseRaw = mergeSSEDeltaIntoHTTPPacket(prevResponseRaw, item.ResponseRaw, getMaxBodyBytes())
+
+                    // When delta-only updates arrive, keep previously parsed headers/meta as-is.
+                    if (!existed.Headers || existed.Headers.length === 0) {
+                        existed.Headers = prevHeaders
+                    }
+                    if (!existed.ContentType) {
+                        existed.ContentType = prevContentType
+                    }
+                    if (!existed.StatusCode) {
+                        existed.StatusCode = prevStatusCode
+                    }
+
+                    const headerEnd = findHeaderEnd(existed.ResponseRaw)
+                    if (headerEnd >= 0) {
+                        existed.BodyLength = existed.ResponseRaw.length - headerEnd
+                    } else {
+                        existed.BodyLength = (existed.BodyLength || 0) + (item.ResponseRaw?.length || 0)
+                    }
                 }
 
                 const first = getFirstResponse()
@@ -3992,6 +4086,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
                             isResponse={true}
+                            keepSelectionOnValueChange={loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0}
                             loading={codeLoading}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}
