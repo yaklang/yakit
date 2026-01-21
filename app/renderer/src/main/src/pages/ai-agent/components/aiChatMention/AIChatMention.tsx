@@ -67,8 +67,15 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     const [inViewport = true] = useInViewport(mentionRef)
 
     useEffect(() => {
-        if (inViewport) mentionRef.current?.focus()
+        if (inViewport) mentionFocus()
     }, [inViewport])
+    useEffect(() => {
+        if (activeKey === AIMentionTabsEnum.File_System) {
+            // 文件系统没有输入框 当焦点聚焦在输入框中的时候切换tab，在这个情况下需要把焦点聚焦在提及的容器上
+            setFocus(false)
+            mentionFocus()
+        }
+    }, [activeKey])
     useDebounceEffect(
         () => {
             onSearch()
@@ -262,6 +269,10 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     })
     const getContainer = useMemoizedFn(() => {
         return mentionRef.current
+    })
+
+    const mentionFocus = useMemoizedFn(() => {
+        mentionRef.current?.focus()
     })
 
     // 用户文件夹
