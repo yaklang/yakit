@@ -39,7 +39,7 @@ export interface ChatIPCContextDispatcher {
     /** 任务规划 */
     handleSendTask: (params: AIChatIPCSendParams) => void
     /** 开始 */
-    handleStart: (data: HandleStartParams) => void
+    // handleStart: (data: HandleStartParams) => void
     /** 停止ai */
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void

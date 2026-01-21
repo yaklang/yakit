@@ -1,0 +1,43 @@
+import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
+import {AIChatQSData} from "../hooks/aiRender"
+import {AIInputEvent} from "../hooks/grpcApi"
+import React from "react"
+import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
+
+export interface AIReActChatRefProps extends AIChatTextareaRefProps {
+    handleStart: (value: HandleStartParams) => void
+}
+export interface AIHandleStartParams {
+    params: AIInputEvent
+}
+export interface AIHandleStartExtraProps {
+    chatId?: string
+}
+export interface AIHandleStartResProps {
+    params: AIInputEvent
+    extraParams?: AIHandleStartExtraProps
+    onChat?: () => void
+    onChatFromHistory?: (sessionID: string) => void
+}
+export interface AIReActChatProps {
+    mode: AIAgentChatMode
+    chatContainerClassName?: string
+    chatContainerHeaderClassName?: string
+    showFreeChat: boolean
+    setShowFreeChat: (show: boolean) => void
+    title?: React.ReactNode
+    ref?: React.ForwardedRef<AIReActChatRefProps>
+    handleSendAfter?: () => void
+    startRequest?: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
+}
+
+export interface AIReActLogProps {
+    logs: AIChatQSData[]
+    setLogVisible: (visible: boolean) => void
+}
+
+export interface AIReActTimelineMessageProps {
+    message?: string
+    loading: boolean
+    setLoading: (loading: boolean) => void
+}
