@@ -1089,6 +1089,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         onClick={() => {
                             if (moreRuleLimit) {
                                 moreRuleLimitFlagRef.current = false
+                                setMoreRuleLimit(false)
                             }
                             setAlertVisible(false)
                         }}
