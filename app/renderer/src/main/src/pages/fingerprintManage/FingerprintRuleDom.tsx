@@ -1,24 +1,24 @@
 import React from "react"
 import styles from "./FingerprintManage.module.scss"
-import { SafeMarkdown } from "../assetViewer/reportRenders/markdownRender"
+import { SafeMarkdown, StreamMarkdown } from "../assetViewer/reportRenders/markdownRender"
 
 interface FingerprintRuleDomProp {}
 export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
     // 目录内容单独提取
     const toc = `
-- [介绍](#user-content-介绍)
-- [运算符](#user-content-运算符)
-  - [关系运算符](#user-content-关系运算符)
-    - [包含 =](#user-content-包含)
-    - [不包含 !=](#user-content-不包含)
-    - [等于 ==](#user-content-等于)
-    - [不等于 !==](#user-content-不等于)
-    - [正则 ~=](#user-content-正则)
-  - [逻辑运算符](#user-content-逻辑运算符)
-  - [括号](#user-content-括号)
-- [内置变量](#user-content-内置变量)
-  - [预制变量](#user-content-预制变量)
-  - [运行时变量](#user-content-运行时变量)
+- [介绍](#介绍)
+- [运算符](#运算符)
+  - [关系运算符](#关系运算符)
+    - [包含 =](#包含)
+    - [不包含 !=](#不包含)
+    - [等于 ==](#等于)
+    - [不等于 !==](#不等于)
+    - [正则 ~=](#正则)
+  - [逻辑运算符](#逻辑运算符)
+  - [括号](#括号)
+- [内置变量](#内置变量)
+  - [预制变量](#预制变量)
+  - [运行时变量](#运行时变量)
     `.trim()
 
     const mdContent = `
@@ -143,11 +143,11 @@ body = "ThinkPHP"
                 }}
             >
                 <div className={styles["toc-list"]}>
-                    <SafeMarkdown source={toc} />
+                    <StreamMarkdown content={toc} />
                 </div>
             </div>
             <div style={{flex: 1, padding: 24, overflowY: "auto"}}>
-                <SafeMarkdown source={mdContent} />
+                <StreamMarkdown content={mdContent} />
             </div>
         </div>
     )

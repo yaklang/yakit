@@ -11,7 +11,7 @@ import {Tooltip} from "antd"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {WebsiteGV} from "@/enums/website"
-import { StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
+import { SafeMarkdown, StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 
 const titleRender = (info: DataProps) => {
     return <div className={styles["title-render"]}>{info.data.ResourceName}</div>
@@ -25,7 +25,7 @@ const renderItem = (info: DataProps) => {
             if (item.length > 0) {
                 return (
                     <div className={styles["render"]}>
-                        <StreamMarkdown content={item[0].Value} isShowTheme={false} />
+                        <SafeMarkdown source={item[0].Value} />
                     </div>
                 )
             } else {

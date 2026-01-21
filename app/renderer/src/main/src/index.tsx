@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom"
 import reportWebVitals from "./reportWebVitals"
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
+import './styles/output.css';
 import "./index.css"
 import NewApp from "./NewApp"
 import {HTML5Backend} from "react-dnd-html5-backend"

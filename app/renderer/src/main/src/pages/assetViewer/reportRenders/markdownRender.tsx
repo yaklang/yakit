@@ -95,50 +95,39 @@ export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
 interface StreamMarkdownProps extends StreamdownProps {
     content?: string
     wrapperClassName?: string
-    // 是否显示主题
-    isShowTheme?: boolean
 }
 
 // react-markdown的平替（注：xss传入的markdown中不可包含html元素 ）
-// 由于Streamdown的样式引入需Tailwind / UnoCSS / WindiCSS 的语法，故自己写样式
-// 在 Streamdown 中，代码块内容都会被压平成一行文本是由于其流式解析器的设计决定的
+// 现存问题 暗黑模式下代码块不高亮
 export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) => {
-    const {content, wrapperClassName, isShowTheme = true, ...restProps} = props
+    const {content, wrapperClassName, ...restProps} = props
     const {theme} = useTheme()
     const plugins = useMemo(() => {
-        if (theme === "dark" || !isShowTheme) {
+        if (theme === "dark") {
             return {
                 mermaid,
                 math: math as MathPlugin
             }
         }
         return {code, mermaid, math: math as MathPlugin}
-    }, [theme, isShowTheme])
+    }, [theme])
     return (
         <>
             {/* caret="block"|"circle" isAnimating={true} */}
-            {/* wmde-markdown为复用SafeMarkdown样式  data-color-mode为平替SafeMarkdown样式的日夜间模式*/}
-            <div
-                className={classNames(
-                    styles["stream-markdown"],
-                    wrapperClassName
-                    // "wmde-markdown"
-                )}
-                // data-color-mode={theme}
-            >
+            <div className={classNames(styles["stream-markdown"], wrapperClassName)}>
                 <Streamdown
                     plugins={plugins}
                     shikiTheme={["github-light", "github-dark"]}
-                    controls={{
-                        mermaid: {
-                            // 全屏不展示
-                            fullscreen: false,
-                            download: true,
-                            copy: true,
-                            // 平移缩放不展示
-                            panZoom: false
-                        }
-                    }}
+                    // controls={{
+                    // mermaid: {
+                    //     // 全屏不展示
+                    //     fullscreen: false,
+                    //     download: true,
+                    //     copy: true,
+                    //     // 平移缩放不展示
+                    //     panZoom: false
+                    // }
+                    // }}
                     mermaid={{
                         config: {
                             theme: theme === "dark" ? "dark" : "default"
@@ -160,7 +149,7 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
                                     }}
                                 />
                             )
-                        }       
+                        }
                     }}
                     {...restProps}
                 >
