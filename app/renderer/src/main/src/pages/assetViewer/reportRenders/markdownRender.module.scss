@@ -79,12 +79,13 @@
             padding: 16px;
             word-break: keep-all;
             white-space: break-spaces;
+            // font-size: 14px;
         }
 
         code {
             padding: 3px 5px;
             background: var(--Colors-Use-Neutral-Bg);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            // color: var(--Colors-Use-Neutral-Text-1-Title);
             border-radius: 4px;
         }
 
@@ -92,144 +93,316 @@
             cursor: pointer;
         }
 
-        .hljs,
         pre {
-            background: var(--Colors-Use-Basic-Background);
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            // background: var(--Colors-Use-Basic-Background);
+            // color: var(--Colors-Use-Neutral-Text-3-Secondary);
             border-radius: 4px;
             margin: 0;
             width: 100%;
             overflow: hidden;
         }
+    }
+}
 
-        /*!
-    Theme: Tokyo-night-Dark
-    origin: https://github.com/enkia/tokyo-night-vscode-theme
-    Description: Original highlight.js style
-    Author: (c) Henri Vandersleyen <hvandersleyen@gmail.com>
-    License: see project LICENSE
-    Touched: 2022
-  */
-        .hljs-comment,
-        .hljs-meta {
-            color: var(--Colors-Use-Blue-On-Primary);
+/** UnoCSS 原子类样式 */
+.stream-markdown {
+    :global {
+        /* Flexbox 布局 */
+        .flex {
+            display: flex;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .justify-center {
+            justify-content: center;
+        }
+        .justify-between {
+            justify-content: space-between;
         }
 
-        .hljs-deletion,
-        .hljs-doctag,
-        .hljs-regexp,
-        .hljs-selector-attr,
-        .hljs-selector-class,
-        .hljs-selector-id,
-        .hljs-selector-pseudo,
-        .hljs-tag,
-        .hljs-template-tag,
-        .hljs-variable.language_ {
-            color: #f7768e;
+        /* 间距 */
+        .gap-1 {
+            gap: 0.25rem;
+        }
+        .gap-2 {
+            gap: 0.5rem;
+        }
+        .gap-4 {
+            gap: 1rem;
+        }
+        .gap-8 {
+            gap: 2rem;
         }
 
-        .hljs-link,
-        .hljs-literal,
-        .hljs-number,
-        .hljs-params,
-        .hljs-template-variable,
-        .hljs-type,
-        .hljs-variable {
-            color: #ff9e64;
+        /* 内边距 */
+        .p-1 {
+            padding: 0.25rem;
+        }
+        .p-2 {
+            padding: 0.5rem;
+        }
+        .p-4 {
+            padding: 1rem;
+        }
+        .px-1 {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        .px-2 {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .py-1 {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        .py-4 {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .pb-4 {
+            padding-bottom: 1rem;
         }
 
-        .hljs-attribute,
-        .hljs-built_in {
-            color: #e0af68;
+        /* 外边距 */
+        .m-1 {
+            margin: 0.25rem;
+        }
+        .m-2 {
+            margin: 0.5rem;
+        }
+        .m-4 {
+            margin: 1rem;
+        }
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .hljs-keyword,
-        .hljs-property,
-        .hljs-subst,
-        .hljs-title,
-        .hljs-title.class_,
-        .hljs-title.class_.inherited__,
-        .hljs-title.function_ {
-            color: #7dcfff;
+        /* 边框 */
+        .border {
+            border-width: 1px;
+        }
+        .border-0 {
+            border-width: 0;
+        }
+        .border-2 {
+            border-width: 2px;
+        }
+        .border-t {
+            border-top-width: 1px;
+        }
+        .border-r {
+            border-right-width: 1px;
+        }
+        .border-b {
+            border-bottom-width: 1px;
+        }
+        .border-l {
+            border-left-width: 1px;
+        }
+        .border-solid {
+            border-style: solid;
+        }
+        .border-dashed {
+            border-style: dashed;
+        }
+        .border-dotted {
+            border-style: dotted;
         }
 
-        .hljs-selector-tag {
-            color: #73daca;
+        /* 边框样式修饰符 */
+        .border-b-solid {
+            border-bottom-style: solid;
         }
 
-        .hljs-addition,
-        .hljs-bullet,
-        .hljs-quote,
-        .hljs-string,
-        .hljs-symbol {
-            color: #9ece6a;
+        /* 任意值边框 */
+        .border-\[1px\] {
+            border-width: 1px;
         }
 
-        .hljs-code,
-        .hljs-formula,
-        .hljs-section {
-            color: #7aa2f7;
+        /* 边框颜色 */
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+        .border-gray-300 {
+            border-color: #d1d5db;
+        }
+        .border-gray-400 {
+            border-color: #9ca3af;
+        }
+        .border-gray-500 {
+            border-color: #6b7280;
         }
 
-        .hljs-attr,
-        .hljs-char.escape_,
-        .hljs-keyword,
-        .hljs-name,
-        .hljs-operator {
-            color: #bb9af7;
+        /* 边框圆角 */
+        /* .rounded { border-radius: 0.25rem; }
+.rounded-md { border-radius: 0.375rem; }
+.rounded-lg { border-radius: 0.5rem; }
+.rounded-xl { border-radius: 0.75rem; } */
+
+        /* 宽度 */
+        .w-full {
+            width: 100%;
+        }
+        .w-auto {
+            width: auto;
+        }
+        .w-fit {
+            width: fit-content;
         }
 
-        .hljs-punctuation {
-            color: #c0caf5;
+        /* 高度 */
+        .h-full {
+            height: 100%;
+        }
+        .h-auto {
+            height: auto;
         }
 
-        .hljs-emphasis {
-            font-style: italic;
+        /* 文本对齐 */
+        .text-left {
+            text-align: left;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right;
         }
 
-        .hljs-strong {
+        /* 字体大小 */
+        .text-xs {
+            font-size: 0.75rem;
+        }
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        .text-base {
+            font-size: 1rem;
+        }
+        .text-lg {
+            font-size: 1.125rem;
+        }
+        .text-xl {
+            font-size: 1.25rem;
+        }
+
+        /* 字体粗细 */
+        .font-normal {
+            font-weight: 400;
+        }
+        .font-medium {
+            font-weight: 500;
+        }
+        .font-semibold {
+            font-weight: 600;
+        }
+        .font-bold {
             font-weight: 700;
         }
-        pre {
+
+        /* 颜色 */
+        .text-gray-500 {
+            color: #6b7280;
+        }
+        .text-gray-600 {
+            color: #4b5563;
+        }
+        .text-gray-700 {
+            color: #374151;
+        }
+        .text-gray-800 {
+            color: #1f2937;
+        }
+        .text-gray-900 {
+            color: #111827;
+        }
+
+        /* 背景色 */
+        .bg-white {
+            background-color: #ffffff;
+        }
+        .bg-gray-50 {
+            background-color: #f9fafb;
+        }
+        .bg-gray-100 {
+            background-color: #f3f4f6;
+        }
+        .bg-gray-200 {
+            background-color: #e5e7eb;
+        }
+
+        /* 阴影 */
+        .shadow {
+            box-shadow:
+                0 1px 3px 0 rgba(0, 0, 0, 0.1),
+                0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .shadow-md {
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 显示/隐藏 */
+        .hidden {
+            display: none;
+        }
+        .block {
+            display: block;
+        }
+        .inline {
+            display: inline;
+        }
+        .inline-block {
+            display: inline-block;
+        }
+
+        /* 位置 */
+        .relative {
             position: relative;
-
-            &:hover .copy-code-button {
-                pointer-events: all;
-                transform: translateX(0px);
-                opacity: 0.5;
-            }
-
-            .copy-code-button {
-                position: absolute;
-                z-index: 1;
-                right: 4px;
-                top: 25px;
-                cursor: pointer;
-                height: 16px;
-                margin: 0px;
-                transform: translateX(16px);
-                pointer-events: none;
-                opacity: 0;
-                transition: all ease 0.3s;
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-
-                &:hover {
-                    opacity: 1;
-                }
-            }
+        }
+        .absolute {
+            position: absolute;
+        }
+        .fixed {
+            position: fixed;
         }
 
-        table {
-            border-collapse: collapse;
-            font-size: 14px;
+        /* 光标 */
+        .cursor-pointer {
+            cursor: pointer;
         }
-        th,
-        td {
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-            padding: 4px;
+        .cursor-default {
+            cursor: default;
+        }
+
+        /* 溢出 */
+        .overflow-hidden {
+            overflow: hidden;
+        }
+        .overflow-auto {
+            overflow: auto;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 640px) {
+            .sm\:text-sm {
+                font-size: 0.875rem;
+            }
+            .sm\:p-2 {
+                padding: 0.5rem;
+            }
         }
     }
 }

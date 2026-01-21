@@ -15,7 +15,6 @@ import {mermaid} from "@streamdown/mermaid"
 import {math} from "@streamdown/math"
 // 给所有标题（h1–h6）自动生成 id，用于锚点跳转
 import rehypeSlug from "rehype-slug"
-import {useMemoizedFn} from "ahooks"
 // import { cjk } from "@streamdown/cjk";
 const {ipcRenderer} = window.require("electron")
 const {Markdown} = MDEditor
@@ -25,8 +24,6 @@ function PreCode(props: {children?: React.ReactNode}) {
     const [copyStr, setCopyStr] = useState("")
     useEffect(() => {
         if (ref.current) {
-            console.log("ref.current---", ref.current)
-
             // 初始赋值
             setCopyStr(ref.current.textContent || "")
             // 监听后续变化
@@ -95,52 +92,9 @@ export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
     )
 }
 
-// StreamMarkdown复制结构略有不同
-function StreamPreCode(props: {children?: React.ReactNode}) {
-    const ref = useRef<HTMLPreElement>(null)
-    const [copyStr, setCopyStr] = useState("")
-
-    const onSetCopyStr = useMemoizedFn((ele: HTMLPreElement) => {
-        const pres = ele.querySelectorAll("pre")
-        let result = ""
-
-        pres.forEach((pre) => {
-            result += pre.textContent ?? ""
-        })
-        setCopyStr(result)
-    })
-
-    useEffect(() => {
-        if (ref.current) {
-            // 初始赋值
-            onSetCopyStr(ref.current)
-            // 监听后续变化
-            const observer = new MutationObserver(() => {
-                if (ref.current) {
-                    onSetCopyStr(ref.current)
-                }
-            })
-            observer.observe(ref.current, {childList: true, subtree: true})
-            return () => observer.disconnect()
-        }
-    }, [props.children])
-
-    return (
-        <pre ref={ref}>
-            <CopyComponents
-                className='copy-code-button'
-                copyText={copyStr || ""}
-                iconColor={"var(--Colors-Use-Neutral-Text-1-Title)"}
-            />
-            {props.children}
-        </pre>
-    )
-}
-
 interface StreamMarkdownProps extends StreamdownProps {
     content?: string
     wrapperClassName?: string
-    isStreaming?: boolean
     // 是否显示主题
     isShowTheme?: boolean
 }
@@ -149,7 +103,7 @@ interface StreamMarkdownProps extends StreamdownProps {
 // 由于Streamdown的样式引入需Tailwind / UnoCSS / WindiCSS 的语法，故自己写样式
 // 在 Streamdown 中，代码块内容都会被压平成一行文本是由于其流式解析器的设计决定的
 export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) => {
-    const {content, wrapperClassName, isStreaming, isShowTheme = true, ...restProps} = props
+    const {content, wrapperClassName, isShowTheme = true, ...restProps} = props
     const {theme} = useTheme()
     const plugins = useMemo(() => {
         if (theme === "dark" || !isShowTheme) {
@@ -162,17 +116,40 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
     }, [theme, isShowTheme])
     return (
         <>
-            <div className={classNames(styles["stream-markdown"], wrapperClassName)}>
+            {/* caret="block"|"circle" isAnimating={true} */}
+            {/* wmde-markdown为复用SafeMarkdown样式  data-color-mode为平替SafeMarkdown样式的日夜间模式*/}
+            <div
+                className={classNames(
+                    styles["stream-markdown"],
+                    wrapperClassName
+                    // "wmde-markdown"
+                )}
+                // data-color-mode={theme}
+            >
                 <Streamdown
                     plugins={plugins}
-                    controls={props.controls || false}
+                    shikiTheme={["github-light", "github-dark"]}
+                    controls={{
+                        mermaid: {
+                            // 全屏不展示
+                            fullscreen: false,
+                            download: true,
+                            copy: true,
+                            // 平移缩放不展示
+                            panZoom: false
+                        }
+                    }}
+                    mermaid={{
+                        config: {
+                            theme: theme === "dark" ? "dark" : "default"
+                        }
+                    }}
                     // Streamdown官网文档中内置了一些常用插件 https://streamdown.ai/docs/configuration#core-props
                     rehypePlugins={[
                         // rehypeSanitize 防止 XSS 攻击 官方文档已内置
                         rehypeSlug as any
                     ]}
                     components={{
-                        pre: StreamPreCode,
                         a: (aProps) => {
                             return (
                                 <a
@@ -183,9 +160,8 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
                                     }}
                                 />
                             )
-                        }
+                        }       
                     }}
-                    isAnimating={isStreaming}
                     {...restProps}
                 >
                     {content}
