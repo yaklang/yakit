@@ -57,7 +57,9 @@ import {
     AIHandleStartExtraProps,
     AIHandleStartParams,
     AIHandleStartResProps,
-    AIReActChatRefProps
+    AIReActChatRefProps,
+    AISendParams,
+    AISendResProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
 
 interface KnowledgeBaseContentProps {
@@ -566,6 +568,16 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         }
     }
 
+    const onSendRequest = useMemoizedFn((data: AISendParams) => {
+        return new Promise<AISendResProps>((resolve) => {
+            resolve({
+                params: data.params
+            })
+        }).finally(() => {
+            handleSendAfter()
+        })
+    })
+
     return (
         <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
             <ChatIPCContent.Provider value={{store, dispatcher}}>
@@ -628,8 +640,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                 setShowFreeChat={setShowFreeChat}
                                 title='AI 召回'
                                 ref={aiReActChatRef}
-                                handleSendAfter={handleSendAfter}
                                 startRequest={onStartRequest}
+                                sendRequest={onSendRequest}
                             />
                         </div>
                     ) : null}

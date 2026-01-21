@@ -1,7 +1,7 @@
 import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react"
 
 import styles from "./AIReActChat.module.scss"
-import {AIReActChatProps} from "./AIReActChatType"
+import {AIHandleStartResProps, AIReActChatProps, AISendResProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
@@ -33,7 +33,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             chatContainerClassName,
             chatContainerHeaderClassName,
             title = "自由对话",
-            handleSendAfter,
+            sendRequest,
             startRequest
         } = props
         const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
@@ -116,35 +116,46 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 AttachedResourceInfo: attachedResourceInfo,
                 FocusModeLoop: value.focusMode
             }
-            startRequest?.({
-                params: aiInputEvent
-            })
-                .then((res) => {
-                    const {params, extraParams, onChat, onChatFromHistory} = res
-                    if (!sessionID) {
-                        // 创建新的聊天记录
-                        const newChat: AIChatInfo = {
-                            id: extraParams?.chatId || session,
-                            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-                            question: qs,
-                            time: new Date().getTime(),
-                            request,
-                            session
-                        }
-
-                        setActiveChat && setActiveChat(newChat)
-                        setChats && setChats((old) => [...old, newChat])
-                        // 新建的额外操作
-                        onChat?.()
-                    } else {
-                        // 历史中的额外操作
-                        onChatFromHistory?.(sessionID)
+            const onStart = (res: AIHandleStartResProps) => {
+                const {params, extraParams, onChat, onChatFromHistory} = res
+                if (!sessionID) {
+                    // 创建新的聊天记录
+                    const newChat: AIChatInfo = {
+                        id: extraParams?.chatId || session,
+                        name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+                        question: qs,
+                        time: new Date().getTime(),
+                        request,
+                        session
                     }
-                    chatIPCEvents.onStart({token: request.TimelineSessionID!, params, extraValue: extra})
+
+                    setActiveChat && setActiveChat(newChat)
+                    setChats && setChats((old) => [...old, newChat])
+                    // 新建的额外操作
+                    onChat?.()
+                } else {
+                    // 历史中的额外操作
+                    onChatFromHistory?.(sessionID)
+                }
+                chatIPCEvents.onStart({token: request.TimelineSessionID!, params, extraValue: extra})
+            }
+            if (!!startRequest) {
+                startRequest({
+                    params: aiInputEvent
                 })
-                .finally(() => {
-                    chatIPCEvents.onStart({token: request.TimelineSessionID!, params: aiInputEvent, extraValue: extra})
+                    .then((res) => {
+                        onStart(res)
+                    })
+                    .catch(() => {
+                        onStart({
+                            params: aiInputEvent
+                        })
+                    })
+            } else {
+                onStart({
+                    params: aiInputEvent
                 })
+            }
         })
 
         /**自由对话 */
@@ -158,17 +169,37 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     AttachedResourceInfo: attachedResourceInfo,
                     FocusModeLoop: data.focusMode
                 }
-                // 发送到服务端
-                chatIPCEvents.onSend({
-                    token: activeChat.session,
-                    type: "casual",
-                    params: chatMessage,
-                    extraValue: extra
-                })
-
-                Promise.resolve().then(() => {
-                    handleSendAfter?.()
-                })
+                const onSend = (res: AISendResProps) => {
+                    const {params} = res
+                    chatIPCEvents.onSend({
+                        token: activeChat.session,
+                        type: "casual",
+                        params: {
+                            IsFreeInput: true,
+                            ...params
+                        },
+                        extraValue: extra
+                    })
+                }
+                if (!!sendRequest) {
+                    sendRequest?.({params: chatMessage})
+                        .then((res) => {
+                            const {params} = res
+                            // 发送到服务端
+                            onSend({
+                                params
+                            })
+                        })
+                        .catch(() => {
+                            onSend({
+                                params: chatMessage
+                            })
+                        })
+                } else {
+                    onSend({
+                        params: chatMessage
+                    })
+                }
             } catch (error) {}
         })
 

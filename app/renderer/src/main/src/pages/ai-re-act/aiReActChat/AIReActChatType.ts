@@ -19,6 +19,12 @@ export interface AIHandleStartResProps {
     onChat?: () => void
     onChatFromHistory?: (sessionID: string) => void
 }
+export interface AISendParams {
+    params: AIInputEvent
+}
+export interface AISendResProps {
+    params: AIInputEvent
+}
 export interface AIReActChatProps {
     mode: AIAgentChatMode
     chatContainerClassName?: string
@@ -27,8 +33,8 @@ export interface AIReActChatProps {
     setShowFreeChat: (show: boolean) => void
     title?: React.ReactNode
     ref?: React.ForwardedRef<AIReActChatRefProps>
-    handleSendAfter?: () => void
-    startRequest?: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
+    startRequest: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
+    sendRequest?: (v: AISendParams) => Promise<AISendResProps>
 }
 
 export interface AIReActLogProps {
