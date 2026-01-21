@@ -13,7 +13,7 @@ import {
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent, AITaskStatus} from "./grpcApi"
-import {AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, AITaskInfoProps, ReActChatElement} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, AITaskInfoProps, ReActChatRenderItem} from "./aiRender"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useChatContent from "./useChatContent"
 
@@ -26,7 +26,7 @@ function useTaskChat(params?: UseTaskChatParams) {
         pushLog && pushLog(logInfo)
     })
 
-    const [elements, setElements, getElements] = useGetSetState<ReActChatElement[]>([])
+    const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
     const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
     const getContentMap = useMemoizedFn((mapKey: string) => {
         return contentMap.current.get(mapKey)

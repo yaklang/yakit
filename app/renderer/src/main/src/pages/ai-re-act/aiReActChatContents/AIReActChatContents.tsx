@@ -15,7 +15,7 @@ import {ModalInfoProps} from "@/pages/ai-agent/components/ModelInfo"
 import {AIStreamContentType} from "../hooks/defaultConstant"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
-import {ReActChatElement} from "../hooks/aiRender"
+import {ReActChatRenderItem} from "../hooks/aiRender"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import classNames from "classnames"
 import {PreWrapper} from "@/pages/ai-agent/components/ToolInvokerCard"
@@ -110,7 +110,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     } = useChatIPCStore().chatIPCData
     const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
 
-    const renderItem = (item?: ReActChatElement) => {
+    const renderItem = (item?: ReActChatRenderItem) => {
         if (!item?.token) return null
         return <AIChatListItem key={item.token} item={item} type='re-act' />
     }

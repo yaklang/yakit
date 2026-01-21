@@ -1,10 +1,9 @@
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
-import type {ChatStream, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
+import type {ChatStream, ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {useRafInterval} from "ahooks"
 import {useCallback, useRef, useState, type FC} from "react"
-
-interface StreamingChatContentProps extends ReActChatElement {
+interface StreamingChatContentProps extends ReActChatRenderItem { 
     streamClassName?: {className: string} | {aiMarkdownProps?: {className: string}}
 }
 

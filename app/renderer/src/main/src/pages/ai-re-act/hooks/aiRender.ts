@@ -150,17 +150,30 @@ export enum AIChatQSDataTypeEnum {
     /** 工具结果 */
     TOOL_CALL_RESULT = "tool_call_result",
     /** 参考资料 */
-    Reference_Material = "reference_material"
+    Reference_Material = "reference_material",
+    /** stream数据集合组 */
+    STREAM_GROUP = "stream_group"
 }
 
 /** 控制UI渲染的数据数组元素 */
-export interface ReActChatElement {
+interface ReActChatBaseInfo {
     chatType: "reAct" | "task"
     token: string
     type: AIChatQSDataTypeEnum
     /** 触发渲染的次数, 无实际逻辑意义 */
     renderNum: number
 }
+export interface ReActChatElement extends ReActChatBaseInfo {
+    /** 标记不是组 */
+    isGroup?: false
+}
+export interface ReActChatGroupElement extends ReActChatBaseInfo {
+    /** 标记是组 */
+    isGroup: true
+    children: ReActChatElement[]
+}
+
+export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
@@ -174,6 +187,8 @@ interface AIChatQSDataBase<T extends string, U> {
     extraValue?: AIChatIPCStartParams["extraValue"]
     /** 参考资料 */
     reference?: ChatReferenceMaterialPayload
+    /** 父集合组的key(如果被收集到集合组中, 则存在该字段) */
+    parentGroupKey?: string
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, {qs: string; setting: AIInputEvent}>
@@ -199,6 +214,8 @@ type ChatReferenceMaterial = AIChatQSDataBase<
     AIChatQSDataTypeEnum.Reference_Material,
     {NodeId: AIOutputEvent["NodeId"]; NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]}
 >
+/** 用于渲染State定义使用, 无实际逻辑意义 */
+type ChatStreamGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM_GROUP, undefined>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -218,4 +235,5 @@ export type AIChatQSData =
     | ChatFailReact
     | ChatToolCallResult
     | ChatReferenceMaterial
+    | ChatStreamGroup
 // #endregion

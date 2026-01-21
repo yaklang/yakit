@@ -10,9 +10,15 @@ import {
     isToolStdoutStream
 } from "./utils"
 import {UseChatContentEvents, UseChatContentParams} from "./type"
-import {convertNodeIdToVerbose, DefaultAIToolResult, DefaultToolResultSummary} from "./defaultConstant"
+import {
+    AIStreamContentType,
+    convertNodeIdToVerbose,
+    DefaultAIToolResult,
+    DefaultToolResultSummary
+} from "./defaultConstant"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ToolStreamSelectors} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement, ToolStreamSelectors} from "./aiRender"
+import cloneDeep from "lodash/cloneDeep"
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
 
@@ -21,20 +27,56 @@ function useChatContent(params: UseChatContentParams) {
         params
 
     /** 更新触发渲染的UI数据项 */
-    const updateElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
-        // 先判断该项是否存在
-        const target = getElements().findIndex((item) => item.token === token && item.type === type)
+    const updateElements = useMemoizedFn(
+        (main: {mapKey: string; type: AIChatQSDataTypeEnum}, sub?: {mapKey: string; type: AIChatQSDataTypeEnum}) => {
+            // 先判断该项是否存在
+            const target = getElements().findIndex((item) => item.token === main.mapKey && item.type === main.type)
+            try {
+                if (target >= 0) {
+                    setElements((old) => {
+                        const newArr = [...old]
+                        const item = newArr[target]
+                        item.renderNum += 1
 
-        if (target >= 0) {
-            setElements((old) => {
-                const newArr = [...old]
-                newArr[target].renderNum += 1
-                return newArr
-            })
-        } else {
-            setElements((old) => old.concat([{token: token, type: type, renderNum: 1, chatType: chatType}]))
+                        if (!sub || !item.isGroup) return newArr
+                        const subIndex = item.children.findIndex(
+                            (item) => item.token === sub.mapKey && item.type === sub.type
+                        )
+                        if (subIndex >= 0) {
+                            item.children[subIndex].renderNum += 1
+                        } else {
+                            item.children.push({
+                                chatType: chatType,
+                                token: sub.mapKey,
+                                type: sub.type,
+                                renderNum: 1
+                            })
+                        }
+                        return newArr
+                    })
+                } else {
+                    if (sub) {
+                        setElements((old) =>
+                            old.concat([
+                                {
+                                    chatType: chatType,
+                                    token: main.mapKey,
+                                    type: main.type,
+                                    renderNum: 1,
+                                    isGroup: true,
+                                    children: [{chatType: chatType, token: sub.mapKey, type: sub.type, renderNum: 1}]
+                                }
+                            ])
+                        )
+                    } else {
+                        setElements((old) =>
+                            old.concat([{chatType: chatType, token: main.mapKey, type: main.type, renderNum: 1}])
+                        )
+                    }
+                }
+            } catch (error) {}
         }
-    })
+    )
     /** 删除触发渲染的UI数据项 */
     const deleteElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
         // 先判断该项是否存在
@@ -78,6 +120,76 @@ function useChatContent(params: UseChatContentParams) {
     )
 
     // #region stream类型数据处理(OK)
+    /** 判断流式数据(type==='stream')在UI中是单项展示还是集合组展示 */
+    const handleIsGroupDisplay = useMemoizedFn(
+        (params: {
+            mapKey: string
+            type: AIChatQSDataTypeEnum
+            nodeID: AIOutputEvent["NodeId"]
+            contentType: AIOutputEvent["ContentType"]
+        }) => {
+            const {mapKey, type, nodeID, contentType} = params
+
+            const renderList = getElements()
+            if (contentType !== AIStreamContentType.DEFAULT || renderList.length === 0) {
+                // 非默认内容类型, 直接渲染 || 没有任何渲染数据, 直接渲染
+                updateElements({mapKey, type})
+                return
+            }
+
+            const lastRender = renderList[renderList.length - 1]
+            const lastRenderData = getContentMap(lastRender.token)
+            if (!lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
+                // 最后一个渲染数据不是stream类型, 直接渲染
+                updateElements({mapKey, type})
+                return
+            }
+
+            if (lastRender.type === AIChatQSDataTypeEnum.STREAM && !lastRender.isGroup) {
+                // 单项的stream数据
+                if (lastRenderData.data.NodeId === nodeID) {
+                    // 命中单项，准备整合成组数据，将原有单项的token当成组token
+                    deleteElements(lastRender.token, AIChatQSDataTypeEnum.STREAM)
+                    const groupInfo: ReActChatGroupElement = {
+                        chatType: chatType,
+                        token: lastRender.token,
+                        type: AIChatQSDataTypeEnum.STREAM_GROUP,
+                        renderNum: 1,
+                        isGroup: true,
+                        children: [
+                            cloneDeep(lastRender),
+                            {chatType: chatType, token: mapKey, type: AIChatQSDataTypeEnum.STREAM, renderNum: 1}
+                        ]
+                    }
+                    const arr = groupInfo.children.map((item) => item.token)
+                    for (let el of arr) {
+                        const info = getContentMap(el)
+                        if (info) setContentMap(el, {...info, parentGroupKey: lastRender.token})
+                    }
+                    setElements((old) => old.concat([groupInfo]))
+                } else {
+                    // 未命中
+                    updateElements({mapKey, type})
+                }
+            } else if (lastRender.type === AIChatQSDataTypeEnum.STREAM_GROUP && lastRender.isGroup) {
+                // 组的stream数据
+                if (lastRenderData.data.NodeId === nodeID) {
+                    // 命中组内数据，追加到组内
+                    const subData = getContentMap(mapKey)
+                    if (subData) {
+                        setContentMap(mapKey, {...subData, parentGroupKey: lastRender.token})
+                    }
+                    updateElements({mapKey: lastRender.token, type: lastRender.type}, {mapKey: mapKey, type: type})
+                } else {
+                    // 未命中
+                    updateElements({mapKey, type})
+                }
+            } else {
+                updateElements({mapKey, type})
+            }
+        }
+    )
+
     /** stream类型数据初始化 */
     const handleInitStream = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -229,7 +341,14 @@ function useChatContent(params: UseChatContentParams) {
 
             setContentMap(EventUUID, newStream)
             if (isRender) {
-                updateElements(EventUUID, newStream.type)
+                // 如果折叠写不完，则打开注释，然后将注释的下一个方法调用注释
+                // updateElements({mapKey: EventUUID, type: newStream.type})
+                handleIsGroupDisplay({
+                    mapKey: EventUUID,
+                    type: newStream.type,
+                    nodeID: NodeId,
+                    contentType: res.ContentType
+                })
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -267,7 +386,14 @@ function useChatContent(params: UseChatContentParams) {
                     status: "end"
                 }
             })
-            updateElements(event_writer_id, AIChatQSDataTypeEnum.STREAM)
+            if (streamData.parentGroupKey) {
+                updateElements(
+                    {mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM},
+                    {mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM}
+                )
+            } else {
+                updateElements({mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM})
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -298,7 +424,7 @@ function useChatContent(params: UseChatContentParams) {
                 ...toolResult,
                 data: {...toolResult.data}
             })
-            if (showUI) updateElements(toolResult.id, toolResult.type)
+            if (showUI) updateElements({mapKey: toolResult.id, type: toolResult.type})
             streamToToolResultError.current.delete(call_tool_id)
             toolResultErrorUUIDToCallToolID.current.delete(uuid)
         }
@@ -383,7 +509,7 @@ function useChatContent(params: UseChatContentParams) {
                     getElements().findIndex(
                         (item) => item.token === idFind.eventUUID && item.type === streamData.type
                     ) >= 0
-                showUI && updateElements(idFind.eventUUID, streamData.type)
+                showUI && updateElements({mapKey: idFind.eventUUID, type: streamData.type})
             } else {
                 // 对应的stream类型数据还未输出
                 streamStdOutSelectors.current.set(call_tool_id, list)
@@ -456,7 +582,7 @@ function useChatContent(params: UseChatContentParams) {
                 ...toolResult,
                 data: toolResult.data
             })
-            updateElements(toolResult.id, toolResult.type)
+            updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -506,7 +632,7 @@ function useChatContent(params: UseChatContentParams) {
                 ...toolResult,
                 data: toolResult.data
             })
-            if (statusInfo !== "default") updateElements(toolResult.id, toolResult.type)
+            if (statusInfo !== "default") updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -527,7 +653,14 @@ function useChatContent(params: UseChatContentParams) {
             if (chatData) {
                 const references = (chatData.reference || []).concat([data])
                 setContentMap(data.event_uuid, {...chatData, reference: references})
-                updateElements(data.event_uuid, chatData.type)
+                if (chatData.parentGroupKey) {
+                    updateElements(
+                        {mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM},
+                        {mapKey: data.event_uuid, type: chatData.type}
+                    )
+                } else {
+                    updateElements({mapKey: data.event_uuid, type: chatData.type})
+                }
             } else {
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
@@ -540,7 +673,7 @@ function useChatContent(params: UseChatContentParams) {
                     reference: [data]
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, AIChatQSDataTypeEnum.Reference_Material)
+                updateElements({mapKey: chatData.id, type: AIChatQSDataTypeEnum.Reference_Material})
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -567,7 +700,7 @@ function useChatContent(params: UseChatContentParams) {
                     data: thought || ""
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
@@ -582,7 +715,7 @@ function useChatContent(params: UseChatContentParams) {
                     data: result || ""
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
@@ -598,7 +731,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
             // #endregion
@@ -676,7 +809,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
@@ -692,7 +825,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
