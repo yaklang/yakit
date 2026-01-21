@@ -110,6 +110,24 @@ textarea.qs-input-textarea {
                     max-width: 40px;
                 }
             }
+            // 仅仅只有一个元素时
+            &:has(> :only-child) {
+                span[data-label="true"] {
+                    max-width: 120px;
+                }
+            }
+            // 元素大于2且选中第一个元素
+            &:has(> :nth-child(2)) > :nth-child(1) {
+                span[data-label="true"] {
+                    max-width: 100px;
+                }
+            }
+            // 元素大于3且选中第一个元素
+            &:has(> :nth-child(3)) > :nth-child(1) {
+                span[data-label="true"] {
+                    max-width: 40px;
+                }
+            }
         }
     }
     @container textareaFooterLeftBtnsDefault (max-width: 300px) {
