@@ -1517,10 +1517,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 if (
                     nextChunks.length > 0 &&
                     item.ResponseRaw?.length > 0 &&
-                    !startsWithHTTP(item.ResponseRaw) &&
-                    startsWithHTTP(prevResponseRaw)
+                    !startsWithHTTP(item.ResponseRaw)
                 ) {
-                    existed.ResponseRaw = mergeSSEDeltaIntoHTTPPacket(prevResponseRaw, item.ResponseRaw, getMaxBodyBytes())
+                    const maxBodyBytes = getMaxBodyBytes()
+                    if (startsWithHTTP(prevResponseRaw)) {
+                        // Normal case: we already have a valid HTTP header, so append delta into body only.
+                        existed.ResponseRaw = mergeSSEDeltaIntoHTTPPacket(prevResponseRaw, item.ResponseRaw, maxBodyBytes)
+                    } else {
+                        // Fallback: some engines/paths may push delta-only body chunks from the beginning.
+                        // In that case, we still want the UI to show an ever-growing body (append-only),
+                        // instead of repeatedly replacing it with the latest delta chunk.
+                        const combined = concatBytes(prevResponseRaw, item.ResponseRaw)
+                        if (maxBodyBytes > 0 && combined.length > maxBodyBytes) {
+                            existed.ResponseRaw = combined.subarray(combined.length - maxBodyBytes)
+                        } else {
+                            existed.ResponseRaw = combined
+                        }
+                    }
 
                     // When delta-only updates arrive, keep previously parsed headers/meta as-is.
                     if (!existed.Headers || existed.Headers.length === 0) {
@@ -1537,13 +1550,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     if (headerEnd >= 0) {
                         existed.BodyLength = existed.ResponseRaw.length - headerEnd
                     } else {
-                        existed.BodyLength = (existed.BodyLength || 0) + (item.ResponseRaw?.length || 0)
+                        // body-only mode (no header in buffer)
+                        existed.BodyLength = existed.ResponseRaw.length
                     }
                 }
 
                 const first = getFirstResponse()
                 if (first?.UUID && first.UUID === existed.UUID) {
-                    setFirstResponse(existed)
+                    // `existed` is mutated in-place for performance, but React state updates require a new reference
+                    // to trigger re-render. This is critical for SSE/streaming updates, otherwise the response viewer
+                    // only refreshes at the end (appearing as "no incremental append").
+                    setFirstResponse({
+                        ...existed,
+                        Headers: existed.Headers ? existed.Headers.slice() : [],
+                        RandomChunkedData: existed.RandomChunkedData ? existed.RandomChunkedData.slice() : []
+                    })
                 }
                 return true
             }
