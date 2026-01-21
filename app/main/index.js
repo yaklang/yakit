@@ -118,20 +118,24 @@ function createEngineLinkWindow() {
  * ---------------- 创建主窗口 ----------------
  */
 function createWindow() {
+    const minWidth = 900
+    const minHeight = 650
     const state = windowStateKeeper({
-        defaultWidth: 900,
-        defaultHeight: 650,
+        defaultWidth: minWidth,
+        defaultHeight: minHeight,
         path: windowStatePatch,
         file: "yakit-window-state.json"
     })
+    const width = Math.max(state.width ?? minWidth, minWidth)
+    const height = Math.max(state.height ?? minHeight, minHeight)
 
     win = new BrowserWindow({
         x: state.x,
         y: state.y,
-        width: state.width,
-        height: state.height,
-        minWidth: 900,
-        minHeight: 650,
+        width: width,
+        height: height,
+        minWidth: minWidth,
+        minHeight: minHeight,
         frame: false,
         autoHideMenuBar: true,
         webPreferences: {
@@ -171,7 +175,10 @@ function createWindow() {
 
     win.on("close", (e) => {
         e.preventDefault()
-        state.saveState(win)
+        const bounds = win.getBounds()
+        if (bounds.width >= minWidth && bounds.height >= minHeight) {
+            state.saveState(win)
+        }
         if (win.isVisible()) {
             win.webContents.send("close-windows-renderer")
         }
