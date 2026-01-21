@@ -25,11 +25,7 @@ import {
     OutlineExitIcon,
     RedoDotIcon
 } from "@/assets/icon/outline"
-import {
-    AIChatIPCStartParams,
-    ChatIPCSendType,
-    UseTaskChatState
-} from "@/pages/ai-re-act/hooks/type"
+import {AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -92,6 +88,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             onSetReAct()
         }
     }, [activeChat])
+
+    useEffect(() => {
+        if (mode === "welcome") {
+            events.onReset()
+        }
+    }, [mode])
 
     /**自由对话中触发任务开始 */
     const handleTaskStart = useMemoizedFn(() => {
@@ -176,7 +178,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
         setTimeout(() => {
             aiReActChatRef.current?.handleStart(value) // 等自由对话渲染出来再发送
-        }, 10)
+        })
     })
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
