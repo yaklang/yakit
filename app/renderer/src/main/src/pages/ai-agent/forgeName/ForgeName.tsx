@@ -582,6 +582,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                     showSearch
                                     placeholder='请选择工具'
                                     optionFilterProp='children'
+                                    filterOption={false}
                                     onSearch={debouncedSearch}
                                     onPopupScroll={(e) => {
                                         const {target} = e
