@@ -282,6 +282,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         apiKey: "ExportAIForge"
     })
     const forgeNamesRef = useRef<string[]>([])
+    const toolNames = useRef<string[]>([])
     const outputNameRef = useRef<string>("")
     const handleOpenImportExportHint = useMemoizedFn((extra: Omit<ImportExportModalExtra, "hint">) => {
         if (importExportExtra.hint) return
@@ -498,6 +499,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             forgeNamesRef.current = [ForgeName]
+                                                            toolNames.current = tools
                                                             outputNameRef.current = ForgeVerboseName || ForgeName || ""
                                                             handleOpenImportExportHint({
                                                                 title: "导出Forge",
@@ -570,7 +572,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                 <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
                     {...commonImportExportProps}
                     formProps={{
-                        initialValues: {OutputName: outputNameRef.current || ""}
+                        initialValues: {OutputName: outputNameRef.current || "", ToolNames: toolNames.current}
                     }}
                     renderForm={() => (
                         <>
@@ -605,7 +607,6 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                             setSearchKeyword("")
                                         }
                                     }}
-                                    maxTagCount={10}
                                 >
                                     {aiTool.map((item) => (
                                         <YakitSelect.Option key={item.Name} value={item.Name}>
