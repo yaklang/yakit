@@ -316,6 +316,8 @@ export interface RandomChunkedResponse {
     CurrentChunkedDelayTime: number
     /**@name 总的发送耗时 */
     TotalDelayTime: number
+    /**@name 是否结束 （结束标记事件；Data 可能为空） */
+    IsFinal?: boolean
 }
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -3969,8 +3971,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
         const { handleEditorMount } = useAutoScrollToBottom({
-            enabled: loading,
-            content: currentOriginValue,
+            loading,
+            chunkedData: fuzzerResponse.RandomChunkedData,
             resetDep: fuzzerResponse,
             onEditorMount: onSetOnlyOneResEditor
         })
