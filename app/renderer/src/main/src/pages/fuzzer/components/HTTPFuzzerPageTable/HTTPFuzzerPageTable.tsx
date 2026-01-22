@@ -1015,13 +1015,44 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [currentSelectItem, currentSelectShowType])
 
         const originReqOrResValue = useMemo(() => {
-            const value =
-                currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
-            return (value && Uint8ArrayToString(value)) || ""
-        }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
+            if (!currentSelectItem) return ""
+
+            if (currentSelectShowType === "request") {
+                return (currentSelectItem?.RequestRaw && Uint8ArrayToString(currentSelectItem?.RequestRaw)) || ""
+            }
+
+            const headerText =
+                (currentSelectItem?.ResponseRaw && Uint8ArrayToString(currentSelectItem?.ResponseRaw)) || ""
+            const chunks = currentSelectItem?.RandomChunkedData || []
+            if (chunks.length === 0) return headerText
+
+            const bodyText = chunks
+                .slice()
+                .sort((a, b) => (Number(a?.Index) || 0) - (Number(b?.Index) || 0))
+                .map((c) => Uint8ArrayToString(c?.Data || new Uint8Array()))
+                .join("")
+
+            const combined = headerText + bodyText
+            const maxChars = 5 * 1024 * 1024
+            if (combined.length > maxChars) return combined.slice(combined.length - maxChars)
+            return combined
+        }, [
+            currentSelectShowType,
+            currentSelectItem,
+            currentSelectItem?.RequestRaw,
+            currentSelectItem?.ResponseRaw,
+            currentSelectItem?.BodyLength,
+            currentSelectItem?.DurationMs,
+            currentSelectItem?.RandomChunkedData?.length
+        ])
+
+        const hasFinalChunkSelect = useMemo(() => {
+            return (currentSelectItem?.RandomChunkedData || []).some((c) => !!c?.IsFinal)
+        }, [currentSelectItem?.RandomChunkedData, currentSelectItem?.BodyLength, currentSelectItem?.DurationMs])
 
         const isStreamingSelect =
             !isEnd &&
+            !hasFinalChunkSelect &&
             currentSelectShowType === "response" &&
             (currentSelectItem?.RandomChunkedData?.length || 0) > 0 &&
             !!currentSelectItem?.UUID
@@ -1031,6 +1062,45 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             : codeKey === "utf-8"
               ? originReqOrResValue
               : codeValue || originReqOrResValue
+
+        const assembledResponsePackage = useMemo(() => {
+            if (!currentSelectItem) return new Uint8Array()
+            if (currentSelectShowType !== "response") return currentSelectItem?.ResponseRaw || new Uint8Array()
+
+            const header = currentSelectItem?.ResponseRaw || new Uint8Array()
+            const chunks = (currentSelectItem?.RandomChunkedData || []).slice()
+            if (chunks.length === 0) return header
+
+            const bodyParts = chunks
+                .slice()
+                .sort((a, b) => (Number(a?.Index) || 0) - (Number(b?.Index) || 0))
+                .map((c) => c?.Data || new Uint8Array())
+                .filter((d) => d.length > 0)
+            if (bodyParts.length === 0) return header
+
+            const bodyLen = bodyParts.reduce((acc, cur) => acc + cur.length, 0)
+            const body = new Uint8Array(bodyLen)
+            let offset = 0
+            bodyParts.forEach((p) => {
+                body.set(p, offset)
+                offset += p.length
+            })
+
+            const maxBodyBytes = 5 * 1024 * 1024
+            const boundedBody = body.length > maxBodyBytes ? body.subarray(body.length - maxBodyBytes) : body
+
+            const out = new Uint8Array(header.length + boundedBody.length)
+            out.set(header, 0)
+            out.set(boundedBody, header.length)
+            return out
+        }, [
+            currentSelectItem,
+            currentSelectShowType,
+            currentSelectItem?.ResponseRaw,
+            currentSelectItem?.RandomChunkedData?.length,
+            currentSelectItem?.BodyLength,
+            currentSelectItem?.DurationMs
+        ])
 
         const copyUrl = useMemoizedFn(() => {
             if (currentSelectItem?.RequestRaw) {
@@ -1172,7 +1242,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 originalPackage={
                                     currentSelectShowType === "request"
                                         ? currentSelectItem?.RequestRaw
-                                        : currentSelectItem?.ResponseRaw
+                                        : assembledResponsePackage
                                 }
                                 onAddOverlayWidget={(editor) => {
                                     setEditor(editor)
@@ -1253,7 +1323,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         originValue={
                                             (currentSelectShowType === "request"
                                                 ? currentSelectItem?.RequestRaw
-                                                : currentSelectItem?.ResponseRaw) || new Uint8Array()
+                                                : assembledResponsePackage) || new Uint8Array()
                                         }
                                         onSetCodeLoading={setCodeLoading}
                                         codeKey={codeKey}
@@ -1290,7 +1360,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         },
                                         response: {
                                             originValue: currentEditorOriginValue,
-                                            originalPackage: currentSelectItem?.ResponseRaw
+                                            originalPackage: assembledResponsePackage
                                         }
                                     })
                                 }}

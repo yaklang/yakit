@@ -316,6 +316,8 @@ export interface RandomChunkedResponse {
     CurrentChunkedDelayTime: number
     /**@name 总的发送耗时 */
     TotalDelayTime: number
+    /**@name 是否结束（结束标记事件；Data 可能为空） */
+    IsFinal?: boolean
 }
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -1391,58 +1393,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         const updateDataThrottle = throttle(updateData, 500, { leading: false, trailing: true })
 
-        const startsWithHTTP = (raw?: Uint8Array): boolean => {
-            if (!raw || raw.length < 5) return false
-            return (
-                raw[0] === 0x48 && // H
-                raw[1] === 0x54 && // T
-                raw[2] === 0x54 && // T
-                raw[3] === 0x50 && // P
-                raw[4] === 0x2f // /
-            )
-        }
-
-        const concatBytes = (a: Uint8Array, b: Uint8Array): Uint8Array => {
-            if (a.length === 0) return b
-            if (b.length === 0) return a
-            const out = new Uint8Array(a.length + b.length)
-            out.set(a, 0)
-            out.set(b, a.length)
-            return out
-        }
-
-        // returns index right after \r\n\r\n; -1 if not found
-        const findHeaderEnd = (raw: Uint8Array): number => {
-            if (!raw || raw.length < 4) return -1
-            for (let i = 0; i <= raw.length - 4; i++) {
-                if (raw[i] === 0x0d && raw[i + 1] === 0x0a && raw[i + 2] === 0x0d && raw[i + 3] === 0x0a) {
-                    return i + 4
-                }
-            }
-            return -1
-        }
-
-        // Merge delta-only SSE chunks into an existing HTTP packet (header + accumulated body).
-        // Keep body size bounded to avoid unbounded memory growth on long-lived streams.
-        const mergeSSEDeltaIntoHTTPPacket = (prevPacket: Uint8Array, deltaBody: Uint8Array, maxBodyBytes: number) => {
-            if (prevPacket.length === 0) return deltaBody
-            if (deltaBody.length === 0) return prevPacket
-            const headerEnd = findHeaderEnd(prevPacket)
-            if (headerEnd < 0) {
-                return concatBytes(prevPacket, deltaBody)
-            }
-            const header = prevPacket.subarray(0, headerEnd)
-            const prevBody = prevPacket.subarray(headerEnd)
-            const combinedBody = concatBytes(prevBody, deltaBody)
-            if (maxBodyBytes > 0 && combinedBody.length > maxBodyBytes) {
-                const tail = combinedBody.subarray(combinedBody.length - maxBodyBytes)
-                return concatBytes(header, tail)
-            }
-            return concatBytes(header, combinedBody)
-        }
-
-        const getMaxBodyBytes = () => (advancedConfigValueRef.current?.maxBodySize || 5) * 1024 * 1024
-
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             taskIDRef.current = data.TaskId
 
@@ -1508,51 +1458,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     existed.RandomChunkedData = merged.length > 2048 ? merged.slice(merged.length - 2048) : merged
                 }
 
-                // SSE incremental updates:
-                // - first update carries a synthetic HTTP header + first delta body
-                // - later updates may only contain delta body bytes (no header)
-                //
-                // For the UI, we keep `existed.ResponseRaw` as an accumulated HTTP packet (header + body),
-                // so the response editor won't flicker by repeatedly rendering a "new full packet" or a "delta-only packet".
-                if (
-                    nextChunks.length > 0 &&
-                    item.ResponseRaw?.length > 0 &&
-                    !startsWithHTTP(item.ResponseRaw)
-                ) {
-                    const maxBodyBytes = getMaxBodyBytes()
-                    if (startsWithHTTP(prevResponseRaw)) {
-                        // Normal case: we already have a valid HTTP header, so append delta into body only.
-                        existed.ResponseRaw = mergeSSEDeltaIntoHTTPPacket(prevResponseRaw, item.ResponseRaw, maxBodyBytes)
-                    } else {
-                        // Fallback: some engines/paths may push delta-only body chunks from the beginning.
-                        // In that case, we still want the UI to show an ever-growing body (append-only),
-                        // instead of repeatedly replacing it with the latest delta chunk.
-                        const combined = concatBytes(prevResponseRaw, item.ResponseRaw)
-                        if (maxBodyBytes > 0 && combined.length > maxBodyBytes) {
-                            existed.ResponseRaw = combined.subarray(combined.length - maxBodyBytes)
-                        } else {
-                            existed.ResponseRaw = combined
-                        }
-                    }
-
-                    // When delta-only updates arrive, keep previously parsed headers/meta as-is.
-                    if (!existed.Headers || existed.Headers.length === 0) {
-                        existed.Headers = prevHeaders
-                    }
-                    if (!existed.ContentType) {
-                        existed.ContentType = prevContentType
-                    }
-                    if (!existed.StatusCode) {
-                        existed.StatusCode = prevStatusCode
-                    }
-
-                    const headerEnd = findHeaderEnd(existed.ResponseRaw)
-                    if (headerEnd >= 0) {
-                        existed.BodyLength = existed.ResponseRaw.length - headerEnd
-                    } else {
-                        // body-only mode (no header in buffer)
-                        existed.BodyLength = existed.ResponseRaw.length
-                    }
+                // SSE streaming: the response body is delivered via `RandomChunkedData` (delta-only).
+                // Back-end only sends `ResponseRaw` (header) in the first update; later updates keep it empty.
+                // Keep the cached header/meta when the update carries no `ResponseRaw` bytes.
+                if (nextChunks.length > 0 && (!item.ResponseRaw || item.ResponseRaw.length === 0)) {
+                    existed.ResponseRaw = prevResponseRaw
+                    if (!existed.Headers || existed.Headers.length === 0) existed.Headers = prevHeaders
+                    if (!existed.ContentType) existed.ContentType = prevContentType
+                    if (!existed.StatusCode) existed.StatusCode = prevStatusCode
                 }
 
                 const first = getFirstResponse()
@@ -4067,12 +3980,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const [streamedResponseText, setStreamedResponseText] = useState<string>("")
         const streamedMetaRef = useRef<{ uuid: string; lastIndex: number }>({ uuid: "", lastIndex: 0 })
         useEffect(() => {
-            if (!loading) {
-                streamedMetaRef.current = { uuid: "", lastIndex: 0 }
-                setStreamedResponseText("")
-                return
-            }
-
             const uuid = fuzzerResponse?.UUID || ""
             const chunks = (fuzzerResponse?.RandomChunkedData || []).slice()
             if (!uuid || chunks.length === 0) {
@@ -4088,8 +3995,14 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
 
             const maxIndex = chunks.reduce((acc, c) => Math.max(acc, Number(c?.Index) || 0), 0)
             if (streamedMetaRef.current.lastIndex === 0) {
-                // First time: decode the current snapshot once (may include header + first chunk).
-                setStreamedResponseText(Uint8ArrayToString(fuzzerResponse.ResponseRaw))
+                // First time: build a snapshot from header + all currently known body chunks.
+                const headerText = Uint8ArrayToString(fuzzerResponse.ResponseRaw)
+                const bodyText = chunks
+                    .slice()
+                    .sort((a, b) => (Number(a?.Index) || 0) - (Number(b?.Index) || 0))
+                    .map((c) => Uint8ArrayToString(c?.Data || new Uint8Array()))
+                    .join("")
+                setStreamedResponseText(headerText + bodyText)
                 streamedMetaRef.current.lastIndex = maxIndex
                 return
             }
@@ -4121,11 +4034,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         }, [loading, fuzzerResponse?.UUID, fuzzerResponse?.ResponseRaw, fuzzerResponse?.RandomChunkedData])
 
         const responseRawString = useCreation(() => {
-            if (loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0 && streamedResponseText) {
+            if ((fuzzerResponse?.RandomChunkedData?.length || 0) > 0 && streamedResponseText) {
                 return streamedResponseText
             }
             return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
-        }, [fuzzerResponse.ResponseRaw, streamedResponseText, loading, fuzzerResponse?.RandomChunkedData?.length])
+        }, [fuzzerResponse.ResponseRaw, streamedResponseText, fuzzerResponse?.RandomChunkedData?.length])
 
         const copyUrl = useMemoizedFn(() => {
             copyAsUrl({ Request: request, IsHTTPS: !!isHttps })
@@ -4145,8 +4058,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return { RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false }
         }, [fuzzerResponse.RuntimeID])
 
+        const hasFinalChunk = useCreation(() => {
+            return (fuzzerResponse?.RandomChunkedData || []).some((c) => !!c?.IsFinal)
+        }, [fuzzerResponse?.RandomChunkedData, fuzzerResponse?.BodyLength, fuzzerResponse?.DurationMs])
+
         const isStreamingResponse =
-            loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0 && !!fuzzerResponse?.UUID
+            loading && !hasFinalChunk && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0 && !!fuzzerResponse?.UUID
 
         // 计算当前显示的值
         // - 流式更新时：始终展示原始增量内容（避免被 codeKey/codeValue 以及 loading skeleton 阻断）
@@ -4156,6 +4073,35 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             : codeKey === "utf-8"
               ? responseRawString
               : codeValue || responseRawString
+
+        const assembledResponsePackage = useCreation(() => {
+            const header = fuzzerResponse?.ResponseRaw || new Uint8Array()
+            const chunks = (fuzzerResponse?.RandomChunkedData || []).slice()
+            if (chunks.length === 0) return header
+
+            const bodyParts = chunks
+                .slice()
+                .sort((a, b) => (Number(a?.Index) || 0) - (Number(b?.Index) || 0))
+                .map((c) => c?.Data || new Uint8Array())
+                .filter((d) => d.length > 0)
+            if (bodyParts.length === 0) return header
+
+            const bodyLen = bodyParts.reduce((acc, cur) => acc + cur.length, 0)
+            const body = new Uint8Array(bodyLen)
+            let offset = 0
+            bodyParts.forEach((p) => {
+                body.set(p, offset)
+                offset += p.length
+            })
+
+            const maxBodyBytes = 5 * 1024 * 1024
+            const boundedBody = body.length > maxBodyBytes ? body.subarray(body.length - maxBodyBytes) : body
+
+            const out = new Uint8Array(header.length + boundedBody.length)
+            out.set(header, 0)
+            out.set(boundedBody, header.length)
+            return out
+        }, [fuzzerResponse?.ResponseRaw, fuzzerResponse?.RandomChunkedData, fuzzerResponse?.BodyLength, fuzzerResponse?.DurationMs])
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
         const { handleEditorMount } = useAutoScrollToBottom({
@@ -4179,7 +4125,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             originValue={currentOriginValue}
-                            originalPackage={fuzzerResponse.ResponseRaw}
+                            originalPackage={assembledResponsePackage}
                             readOnly={true}
                             isResponse={true}
                             keepSelectionOnValueChange={isStreamingResponse}
@@ -4189,7 +4135,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             AfterBeautifyRenderBtn={
                                 <CodingPopover
                                     key='coding'
-                                    originValue={fuzzerResponse.ResponseRaw}
+                                    originValue={assembledResponsePackage}
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     disableAutoDecode={isStreamingResponse}
@@ -4267,7 +4213,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     },
                                     response: {
                                         originValue: currentOriginValue,
-                                        originalPackage: fuzzerResponse.ResponseRaw
+                                        originalPackage: assembledResponsePackage
                                     }
                                 })
                             }}
@@ -4288,7 +4234,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     ref={ref}
                                     onClose={onClose}
                                     onSave={onSaveMatcherAndExtraction}
-                                    httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                    httpResponse={Uint8ArrayToString(assembledResponsePackage)}
                                     httpRequest={request}
                                     isHttps={isHttps}
                                     matcherValue={matcherValue}
