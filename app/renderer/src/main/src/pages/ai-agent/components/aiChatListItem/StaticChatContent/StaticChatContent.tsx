@@ -2,15 +2,15 @@ import type {AIChatQSData, ReActChatRenderItem} from "@/pages/ai-re-act/hooks/ai
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import type {FC, ReactNode} from "react"
 
-interface StaticChatContentProps extends ReActChatRenderItem {
-    children?: (contentItem: AIChatQSData) => ReactNode
+type StaticChatContentProps = ReActChatRenderItem & {
+    render?: (contentItem: AIChatQSData) => ReactNode
 }
 
-const StaticChatContent: FC<StaticChatContentProps> = ({chatType, token, children}) => {
+const StaticChatContent: FC<StaticChatContentProps> = ({chatType, token, render}) => {
     const {getChatContentMap} = useAIChatUIData()
 
     const chatItem = getChatContentMap?.(chatType, token)
     if (!chatItem) return null
-    return <>{children?.(chatItem)}</>
+    return <>{render?.(chatItem)}</>
 }
 export default StaticChatContent

@@ -33,27 +33,26 @@ function useChatContent(params: UseChatContentParams) {
             const target = getElements().findIndex((item) => item.token === main.mapKey && item.type === main.type)
             try {
                 if (target >= 0) {
-                    setElements((old) => {
-                        const newArr = [...old]
-                        const item = newArr[target]
-                        item.renderNum += 1
+                    const newArr = [...getElements()]
 
-                        if (!sub || !item.isGroup) return newArr
-                        const subIndex = item.children.findIndex(
-                            (item) => item.token === sub.mapKey && item.type === sub.type
-                        )
-                        if (subIndex >= 0) {
-                            item.children[subIndex].renderNum += 1
-                        } else {
-                            item.children.push({
-                                chatType: chatType,
-                                token: sub.mapKey,
-                                type: sub.type,
-                                renderNum: 1
-                            })
-                        }
-                        return newArr
-                    })
+                    const item = newArr[target]
+                    item.renderNum += 1
+
+                    if (!sub || !item.isGroup) return newArr
+                    const subIndex = item.children.findIndex(
+                        (item) => item.token === sub.mapKey && item.type === sub.type
+                    )
+                    if (subIndex >= 0) {
+                        item.children[subIndex].renderNum += 1
+                    } else {
+                        item.children.push({
+                            chatType: chatType,
+                            token: sub.mapKey,
+                            type: sub.type,
+                            renderNum: 1
+                        })
+                    }
+                    setElements([...newArr])
                 } else {
                     if (sub) {
                         setElements((old) =>
@@ -141,13 +140,18 @@ function useChatContent(params: UseChatContentParams) {
             const lastRenderData = getContentMap(lastRender.token)
             if (lastRender.token === mapKey || !lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
                 // 最后一个渲染数据不是stream类型, 直接渲染
-                updateElements({mapKey, type})
+                if (lastRender.type === AIChatQSDataTypeEnum.STREAM_GROUP) {
+                    updateElements({mapKey, type: AIChatQSDataTypeEnum.STREAM_GROUP}, {mapKey, type})
+                } else {
+                    updateElements({mapKey, type})
+                }
                 return
             }
-            
+
             if (lastRender.type === AIChatQSDataTypeEnum.STREAM && !lastRender.isGroup) {
                 // 单项的stream数据
                 if (lastRenderData.data.NodeId === nodeID) {
+                    console.log("6666666-", lastRender.token, mapKey)
                     // 命中单项，准备整合成组数据，将原有单项的token当成组token
                     deleteElements(lastRender.token, AIChatQSDataTypeEnum.STREAM)
                     const groupInfo: ReActChatGroupElement = {
@@ -179,6 +183,7 @@ function useChatContent(params: UseChatContentParams) {
                     if (subData) {
                         setContentMap(mapKey, {...subData, parentGroupKey: lastRender.token})
                     }
+                    console.log("6666666+", lastRender.token, mapKey)
                     updateElements({mapKey: lastRender.token, type: lastRender.type}, {mapKey: mapKey, type: type})
                 } else {
                     // 未命中

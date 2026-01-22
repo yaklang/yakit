@@ -1,0 +1,16 @@
+.container {
+    width: 100%;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    padding: 8px 12px;
+    border-radius: 8px;
+    .title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        white-space: nowrap;
+        overflow: hidden;
+        direction: rtl;
+        text-align: right;
+    }
+}

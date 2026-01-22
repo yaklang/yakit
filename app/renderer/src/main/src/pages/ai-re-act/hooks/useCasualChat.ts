@@ -1,4 +1,4 @@
-import {useRef} from "react"
+import {useEffect, useRef} from "react"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
@@ -22,6 +22,9 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
+    useEffect(() => {
+        console.log("666666%", JSON.stringify(elements))
+    }, [elements])
     const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
     const getContentMap = useMemoizedFn((mapKey: string) => {
         return contentMap.current.get(mapKey)

@@ -1,39 +1,34 @@
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
-import type {ChatStream, ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
-import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
-import {useRafInterval} from "ahooks"
-import {useCallback, useRef, useState, type FC} from "react"
-interface StreamingChatContentProps extends ReActChatRenderItem { 
-    streamClassName?: {className: string} | {aiMarkdownProps?: {className: string}}
+import type {ReActChatElement, ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
+import {memo, type FC} from "react"
+import {useStreamingChatContent} from "./hooks/useStreamingChatContent"
+import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
+
+type StreamCls = {className: string} | {aiMarkdownProps?: {className: string}}
+
+type StreamingChatContentProps = ReActChatRenderItem & {
+    streamClassName?: StreamCls
 }
 
-const StreamingChatContent: FC<StreamingChatContentProps> = ({streamClassName, chatType, token}) => {
-    const {getChatContentMap} = useAIChatUIData()
+type SingleStreamProps = {
+    chatType: ReActChatElement["chatType"]
+    token: string
+    streamClassName?: StreamCls
+}
 
-    const getChatContent = useCallback(() => {
-        return getChatContentMap?.(chatType, token) as ChatStream
-    }, [chatType, getChatContentMap, token])
-
-    const [renderData, setRenderData] = useState<ChatStream>(getChatContent())
-    const isRunningRef = useRef(true)
-
-    useRafInterval(
-        () => {
-            const chatItem = getChatContent()
-            if (!chatItem) return
-
-            if (chatItem.data.status === "start") {
-                isRunningRef.current = true
-                setRenderData(chatItem)
-            } else if (chatItem.data.status === "end") {
-                setRenderData(chatItem)
-                isRunningRef.current = false
-            }
-        },
-        isRunningRef.current ? 200 : undefined
-    )
-
+const AIStreamCard: FC<SingleStreamProps> = ({chatType, token, streamClassName}) => {
+    const renderData = useStreamingChatContent({chatType, token})
     if (!renderData) return null
     return <AIStreamNode {...streamClassName} stream={renderData} />
 }
-export default StreamingChatContent
+
+const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
+    const {streamClassName, chatType, token} = props
+    console.log("StreamingChatContent props:", props)
+
+    if (props.isGroup === true) {
+        return <AIGroupStreamCard elements={props.children} />
+    }
+    return <AIStreamCard chatType={chatType} token={token} streamClassName={streamClassName} />
+}
+export default memo(StreamingChatContent)
