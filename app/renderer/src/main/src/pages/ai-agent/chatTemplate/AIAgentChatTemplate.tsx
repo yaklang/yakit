@@ -202,6 +202,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         }
     })
 
+    useMount(() => {
+        scrollToIndex("LAST", "auto")
+    })
+
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso<ReActChatElement>
@@ -213,7 +217,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
                 atBottomThreshold={100}
-                initialTopMostItemIndex={{index: "LAST"}}
+                // initialTopMostItemIndex={{index: "LAST"}}
                 skipAnimationFrameInResizeObserver
                 increaseViewportBy={{top: 300, bottom: 300}}
                 components={components}

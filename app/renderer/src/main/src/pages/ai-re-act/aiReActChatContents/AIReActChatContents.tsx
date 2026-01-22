@@ -1,7 +1,7 @@
 import React, {useCallback, useMemo, useState} from "react"
 import {AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps} from "./AIReActChatContentsType"
 import styles from "./AIReActChatContents.module.scss"
-import {useCreation} from "ahooks"
+import {useCreation, useMount} from "ahooks"
 import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
 import {AIMarkdown} from "@/pages/ai-agent/components/aiMarkdown/AIMarkdown"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
@@ -108,7 +108,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         casualStatus: {loading, title},
         systemStream
     } = useChatIPCStore().chatIPCData
-    const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
+    const {virtuosoRef, setIsAtBottomRef, followOutput, scrollToIndex} = useVirtuosoAutoScroll()
 
     const renderItem = (item?: ReActChatElement) => {
         if (!item?.token) return null
@@ -154,6 +154,11 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         }),
         [Footer, Item]
     )
+
+    useMount(() => {
+        scrollToIndex("LAST", "auto")
+    })
+
     return (
         <div className={styles["ai-re-act-chat-contents"]}>
             <Virtuoso
@@ -162,7 +167,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 data={chats.elements}
                 followOutput={followOutput}
                 itemContent={(_, item) => renderItem(item)}
-                initialTopMostItemIndex={{index: "LAST"}}
+                // initialTopMostItemIndex={{index: "LAST"}}
                 components={components}
                 atBottomThreshold={50}
                 increaseViewportBy={{top: 300, bottom: 300}}
