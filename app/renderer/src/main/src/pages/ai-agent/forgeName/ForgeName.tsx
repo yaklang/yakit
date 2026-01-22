@@ -46,6 +46,10 @@ import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {AITool, GetAIToolListRequest} from "../type/aiTool"
+import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
+import {grpcGetAIToolList} from "../aiToolList/utils"
 const {ipcRenderer} = window.require("electron")
 
 const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
@@ -325,66 +329,50 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             onFinished: handleFinishedImportExportHint
         }
     }, [importExportExtra])
-    const ExportAIForgeModal = () => {
-        return (
-            <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
-                {...commonImportExportProps}
-                formProps={{
-                    initialValues: {OutputName: outputNameRef.current || ""}
-                }}
-                renderForm={() => (
-                    <>
-                        <Form.Item label='文件名' name='OutputName' rules={[{required: true}]}>
-                            <YakitInput />
-                        </Form.Item>
-                        <Form.Item label='密码' name='Password'>
-                            <YakitInput />
-                        </Form.Item>
-                    </>
-                )}
-                onBeforeSubmit={async (values) => {
-                    let name = values.OutputName + ".zip"
-                    if (values.Password) name += ".enc"
-                    try {
-                        exportPath.current = await ipcRenderer.invoke("GenerateProjectsFilePath", name)
-                    } catch (error) {}
-                }}
-                onSubmitForm={(values) => ({
-                    ForgeNames: forgeNamesRef.current,
-                    OutputName: values.OutputName,
-                    Password: values.Password
-                })}
-            />
-        )
+
+    // aiTools下拉列表
+    const [selectLoading, setSelectLoading] = useState<boolean>(false)
+    const filterOption = (input: string, option) => {
+        return (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
     }
-    const ImportAIForgeModal = () => {
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
-            <ImportExportModal<ImportAIForgeFormValues, ImportAIForgeRequest, ExportImportAIForgeProgress>
-                {...commonImportExportProps}
-                renderForm={() => (
-                    <>
-                        <YakitFormDragger
-                            formItemProps={{
-                                name: "InputPath",
-                                label: "本地路径",
-                                rules: [{required: true, message: "请输入本地路径"}]
-                            }}
-                            multiple={false}
-                            selectType='file'
-                            fileExtensionIsExist={false}
-                        />
-                        <Form.Item label='密码' name='Password'>
-                            <YakitInput />
-                        </Form.Item>
-                    </>
-                )}
-                onSubmitForm={(values) => ({
-                    Overwrite: true,
-                    InputPath: values.InputPath,
-                    Password: values.Password
-                })}
-            />
+            <div>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
+            </div>
         )
+    })
+    const [aiTool, setAiTool] = useState<AITool[]>([])
+    const [aiToolPagination, setAiToolPagination] = useState<PaginationSchema>({
+        ...genDefaultPagination(20),
+        OrderBy: "created_at",
+        Page: 1
+    })
+    const getAiToolData = async (page: number) => {
+        setSelectLoading(true)
+        const paginationProps = {
+            ...aiToolPagination,
+            page: page
+        }
+        const newQuery: GetAIToolListRequest = {
+            Query: "",
+            ToolName: "",
+            Pagination: paginationProps,
+            OnlyFavorites: false
+        }
+        const isInit = page === 1
+        try {
+            const res = await grpcGetAIToolList(newQuery)
+            if (!res.Tools) res.Tools = []
+            if (res.Tools.length > 0) {
+                setAiToolPagination((v) => ({...v, Page: paginationProps.page}))
+            }
+            const newData = res.Tools.map((item) => ({...item}))
+            const opsd = isInit ? newData : aiTool.concat(newData)
+            setAiTool(opsd)
+        } finally {
+            setSelectLoading(false)
+        }
     }
     // #endregion
 
@@ -569,7 +557,95 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                     </div>
                 </div>
             </div>
-            {importExportExtra.type === "export" ? <ExportAIForgeModal /> : <ImportAIForgeModal />}
+            {importExportExtra.type === "export" && (
+                <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
+                    {...commonImportExportProps}
+                    formProps={{
+                        initialValues: {OutputName: outputNameRef.current || ""}
+                    }}
+                    renderForm={() => (
+                        <>
+                            <Form.Item label='文件名' name='OutputName' rules={[{required: true}]}>
+                                <YakitInput />
+                            </Form.Item>
+                            <Form.Item label='工具' name='ToolNames'>
+                                <YakitSelect
+                                    showSearch
+                                    placeholder='请选择工具'
+                                    optionFilterProp='children'
+                                    filterOption={filterOption}
+                                    onPopupScroll={(e) => {
+                                        const {target} = e
+                                        const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                                        if (
+                                            ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight &&
+                                            !selectLoading
+                                        ) {
+                                            getAiToolData(aiToolPagination.Page + 1)
+                                        }
+                                    }}
+                                    dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                                    mode='multiple'
+                                    onDropdownVisibleChange={(open) => {
+                                        if (open) {
+                                            getAiToolData(1)
+                                        } else {
+                                            setAiToolPagination((v) => ({...v, Page: 1}))
+                                            setAiTool([])
+                                        }
+                                    }}
+                                >
+                                    {aiTool.map((item) => (
+                                        <YakitSelect.Option key={item.Name} value={item.Name}>
+                                            {item.VerboseName || item.Name}
+                                        </YakitSelect.Option>
+                                    ))}
+                                </YakitSelect>
+                            </Form.Item>
+                            <Form.Item label='密码' name='Password'>
+                                <YakitInput />
+                            </Form.Item>
+                        </>
+                    )}
+                    onBeforeSubmit={async (values) => {
+                        let name = values.OutputName + ".zip"
+                        if (values.Password) name += ".enc"
+                        try {
+                            exportPath.current = await ipcRenderer.invoke("GenerateProjectsFilePath", name)
+                        } catch (error) {}
+                    }}
+                    onSubmitForm={(values) => ({
+                        ForgeNames: forgeNamesRef.current,
+                        ...values
+                    })}
+                />
+            )}
+            {importExportExtra.type === "import" && (
+                <ImportExportModal<ImportAIForgeFormValues, ImportAIForgeRequest, ExportImportAIForgeProgress>
+                    {...commonImportExportProps}
+                    renderForm={() => (
+                        <>
+                            <YakitFormDragger
+                                formItemProps={{
+                                    name: "InputPath",
+                                    label: "本地路径",
+                                    rules: [{required: true, message: "请输入本地路径"}]
+                                }}
+                                multiple={false}
+                                selectType='file'
+                                fileExtensionIsExist={false}
+                            />
+                            <Form.Item label='密码' name='Password'>
+                                <YakitInput />
+                            </Form.Item>
+                        </>
+                    )}
+                    onSubmitForm={(values) => ({
+                        Overwrite: true,
+                        ...values
+                    })}
+                />
+            )}
         </div>
     )
 })
