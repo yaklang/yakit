@@ -24,7 +24,6 @@ const AIStreamCard: FC<SingleStreamProps> = ({chatType, token, streamClassName})
 
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
     const {streamClassName, chatType, token} = props
-    console.log("StreamingChatContent props:", props)
 
     if (props.isGroup === true) {
         return <AIGroupStreamCard elements={props.children} />
