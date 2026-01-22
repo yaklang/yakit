@@ -30,7 +30,9 @@ function useChatContent(params: UseChatContentParams) {
     const updateElements = useMemoizedFn(
         (main: {mapKey: string; type: AIChatQSDataTypeEnum}, sub?: {mapKey: string; type: AIChatQSDataTypeEnum}) => {
             // 先判断该项是否存在
-            const target = getElements().findIndex((item) => item.token === main.mapKey && item.type === main.type)
+            const target = getElements().findIndex(
+                (item) => item.token === main.mapKey && item.type === main.type && (sub ? item.isGroup : true)
+            )
             try {
                 if (target >= 0) {
                     const newArr = [...getElements()]
@@ -130,20 +132,24 @@ function useChatContent(params: UseChatContentParams) {
             const {mapKey, type, nodeID, contentType} = params
 
             const renderList = getElements()
-            if (contentType !== AIStreamContentType.DEFAULT || renderList.length === 0) {
+            if (contentType !== AIStreamContentType.DEFAULT || renderList.length <= 0) {
                 // 非默认内容类型, 直接渲染 || 没有任何渲染数据, 直接渲染
                 updateElements({mapKey, type})
                 return
             }
 
             const lastRender = renderList[renderList.length - 1]
+            if (lastRender.token === mapKey) {
+                // 最后一项渲染数据就是当前数据，直接更新渲染次数
+                updateElements({mapKey, type: lastRender.type}, lastRender.isGroup ? {mapKey, type} : undefined)
+            }
             const lastRenderData = getContentMap(lastRender.token)
-            if (lastRender.token === mapKey || !lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
+            if (!lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
                 // 最后一个渲染数据不是stream类型, 直接渲染
                 if (lastRender.type === AIChatQSDataTypeEnum.STREAM_GROUP) {
-                    updateElements({mapKey, type: AIChatQSDataTypeEnum.STREAM_GROUP}, {mapKey, type})
+                    updateElements({mapKey, type: lastRender.type}, {mapKey, type})
                 } else {
-                    updateElements({mapKey, type})
+                    updateElements({mapKey, type: lastRender.type})
                 }
                 return
             }
@@ -151,9 +157,7 @@ function useChatContent(params: UseChatContentParams) {
             if (lastRender.type === AIChatQSDataTypeEnum.STREAM && !lastRender.isGroup) {
                 // 单项的stream数据
                 if (lastRenderData.data.NodeId === nodeID) {
-                    console.log("6666666-", lastRender.token, mapKey)
                     // 命中单项，准备整合成组数据，将原有单项的token当成组token
-                    deleteElements(lastRender.token, AIChatQSDataTypeEnum.STREAM)
                     const groupInfo: ReActChatGroupElement = {
                         chatType: chatType,
                         token: lastRender.token,
@@ -170,7 +174,12 @@ function useChatContent(params: UseChatContentParams) {
                         const info = getContentMap(el)
                         if (info) setContentMap(el, {...info, parentGroupKey: lastRender.token})
                     }
-                    setElements((old) => old.concat([groupInfo]))
+                    setElements((old) => {
+                        const newArr = [...old]
+                        newArr.pop()
+                        newArr.push(groupInfo)
+                        return newArr
+                    })
                 } else {
                     // 未命中
                     updateElements({mapKey, type})
@@ -183,7 +192,6 @@ function useChatContent(params: UseChatContentParams) {
                     if (subData) {
                         setContentMap(mapKey, {...subData, parentGroupKey: lastRender.token})
                     }
-                    console.log("6666666+", lastRender.token, mapKey)
                     updateElements({mapKey: lastRender.token, type: lastRender.type}, {mapKey: mapKey, type: type})
                 } else {
                     // 未命中
@@ -393,7 +401,7 @@ function useChatContent(params: UseChatContentParams) {
             })
             if (streamData.parentGroupKey) {
                 updateElements(
-                    {mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM},
+                    {mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP},
                     {mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM}
                 )
             } else {
@@ -660,7 +668,7 @@ function useChatContent(params: UseChatContentParams) {
                 setContentMap(data.event_uuid, {...chatData, reference: references})
                 if (chatData.parentGroupKey) {
                     updateElements(
-                        {mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM},
+                        {mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP},
                         {mapKey: data.event_uuid, type: chatData.type}
                     )
                 } else {

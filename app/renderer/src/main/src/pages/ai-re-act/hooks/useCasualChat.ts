@@ -22,9 +22,6 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
-    useEffect(() => {
-        console.log("666666%", JSON.stringify(elements))
-    }, [elements])
     const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
     const getContentMap = useMemoizedFn((mapKey: string) => {
         return contentMap.current.get(mapKey)
