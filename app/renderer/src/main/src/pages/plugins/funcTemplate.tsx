@@ -100,6 +100,7 @@ import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
+import {debugToPrintLogs} from "@/utils/logCollection"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -869,7 +870,20 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
 
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type]?.icon} />
+            if (!pluginTypeToName[type]) {
+                debugToPrintLogs({
+                    page: "ListLayoutOpt",
+                    fun: "authorImgNode",
+                    content: {data: JSON.stringify(data), type},
+                    status: "INFO"
+                })
+            }
+            return (
+                <AuthorImg
+                    src={YakitLogo}
+                    icon={<>{pluginTypeToName[type]?.icon || <img src={YakitLogo} width={"100%"} height={"100%"} />}</>}
+                />
+            )
         }
         return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
@@ -1113,7 +1127,20 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     }, [prImgs])
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type]?.icon} />
+            if (!pluginTypeToName[type]) {
+                debugToPrintLogs({
+                    page: "GridLayoutOpt",
+                    fun: "authorImgNode",
+                    content: {data: JSON.stringify(data), type},
+                    status: "INFO"
+                })
+            }
+            return (
+                <AuthorImg
+                    src={YakitLogo}
+                    icon={<>{pluginTypeToName[type]?.icon || <img src={YakitLogo} width={"100%"} height={"100%"} />}</>}
+                />
+            )
         }
         return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])

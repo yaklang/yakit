@@ -1404,7 +1404,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                             title={info.index + data.script_name}
                                             help={data.help || ""}
                                             time={data.updated_at}
-                                            type={""}
+                                            type={data.type}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={data.official}
                                             subTitle={optSubTitle}

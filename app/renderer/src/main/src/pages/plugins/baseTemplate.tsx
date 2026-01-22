@@ -54,6 +54,7 @@ import cloneDeep from "lodash/cloneDeep"
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
+import {debugToPrintLogs} from "@/utils/logCollection"
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -988,7 +989,26 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
     })
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType]?.icon} />
+            if (!pluginTypeToName[pluginType]) {
+                debugToPrintLogs({
+                    page: "PluginDetailsListItem",
+                    fun: "authorImgNode",
+                    content: {data: JSON.stringify(plugin), pluginType},
+                    status: "INFO"
+                })
+            }
+            return (
+                <AuthorImg
+                    src={YakitLogo}
+                    icon={
+                        <>
+                            {pluginTypeToName[pluginType]?.icon || (
+                                <img src={YakitLogo} width={"100%"} height={"100%"} />
+                            )}
+                        </>
+                    }
+                />
+            )
         }
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, headImg, pluginType, official])
