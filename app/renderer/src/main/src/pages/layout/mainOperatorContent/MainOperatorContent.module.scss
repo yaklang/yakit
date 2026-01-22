@@ -86,7 +86,7 @@ $keyColor: map-keys($colors);
     &::before {
         @extend .white-link;
         bottom: -1px;
-        border-width: 2px;
+        border-top-width: 2px;
     }
     &::after {
         border-color: var(--Colors-Use-Neutral-Border);
