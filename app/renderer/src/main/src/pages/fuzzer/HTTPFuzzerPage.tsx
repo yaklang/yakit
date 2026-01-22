@@ -1854,9 +1854,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setAdvancedConfigValue(newValue)
     })
 
+    // NOTE:
+    // `getFirstResponse()` is a stable getter function from `useGetState`, so using it as a dependency
+    // will NOT re-run this memo when `_firstResponse` changes. This breaks streaming/SSE rendering:
+    // the bytes grow, but UI doesn't update until some other state changes.
     const httpResponse: FuzzerResponse = useMemo(() => {
-        return redirectedResponse ? redirectedResponse : getFirstResponse()
-    }, [redirectedResponse, getFirstResponse()])
+        return redirectedResponse ? redirectedResponse : _firstResponse
+    }, [redirectedResponse, _firstResponse])
     /**多条数据返回的第一条数据 */
     const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
         return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
@@ -4057,9 +4061,71 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
         }, [fuzzerResponse])
 
+        // Streaming-friendly response text:
+        // - avoid decoding the entire `ResponseRaw` on every SSE tick
+        // - decode full packet only once, then append new chunk data incrementally
+        const [streamedResponseText, setStreamedResponseText] = useState<string>("")
+        const streamedMetaRef = useRef<{ uuid: string; lastIndex: number }>({ uuid: "", lastIndex: 0 })
+        useEffect(() => {
+            if (!loading) {
+                streamedMetaRef.current = { uuid: "", lastIndex: 0 }
+                setStreamedResponseText("")
+                return
+            }
+
+            const uuid = fuzzerResponse?.UUID || ""
+            const chunks = (fuzzerResponse?.RandomChunkedData || []).slice()
+            if (!uuid || chunks.length === 0) {
+                streamedMetaRef.current = { uuid: "", lastIndex: 0 }
+                setStreamedResponseText("")
+                return
+            }
+
+            if (streamedMetaRef.current.uuid !== uuid) {
+                streamedMetaRef.current = { uuid, lastIndex: 0 }
+                setStreamedResponseText("")
+            }
+
+            const maxIndex = chunks.reduce((acc, c) => Math.max(acc, Number(c?.Index) || 0), 0)
+            if (streamedMetaRef.current.lastIndex === 0) {
+                // First time: decode the current snapshot once (may include header + first chunk).
+                setStreamedResponseText(Uint8ArrayToString(fuzzerResponse.ResponseRaw))
+                streamedMetaRef.current.lastIndex = maxIndex
+                return
+            }
+            if (maxIndex <= streamedMetaRef.current.lastIndex) {
+                return
+            }
+
+            const newChunks = chunks
+                .filter((c) => (Number(c?.Index) || 0) > streamedMetaRef.current.lastIndex)
+                .sort((a, b) => (Number(a?.Index) || 0) - (Number(b?.Index) || 0))
+            if (newChunks.length === 0) {
+                return
+            }
+
+            const deltaText = newChunks.map((c) => Uint8ArrayToString(c?.Data || new Uint8Array())).join("")
+            streamedMetaRef.current.lastIndex = maxIndex
+            if (!deltaText) return
+
+            setStreamedResponseText((prev) => {
+                const next = prev + deltaText
+                // keep memory bounded using advancedConfigValue.maxBodySize (defaults to 5MB)
+                // NOTE: we don't have maxBodySize here, so just apply a conservative bound (5MB).
+                const maxChars = 5 * 1024 * 1024
+                if (next.length > maxChars) {
+                    return next.slice(next.length - maxChars)
+                }
+                return next
+            })
+        }, [loading, fuzzerResponse?.UUID, fuzzerResponse?.ResponseRaw, fuzzerResponse?.RandomChunkedData])
+
         const responseRawString = useCreation(() => {
+            if (loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0 && streamedResponseText) {
+                return streamedResponseText
+            }
             return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
-        }, [fuzzerResponse.ResponseRaw])
+        }, [fuzzerResponse.ResponseRaw, streamedResponseText, loading, fuzzerResponse?.RandomChunkedData?.length])
 
         const copyUrl = useMemoizedFn(() => {
             copyAsUrl({ Request: request, IsHTTPS: !!isHttps })
