@@ -43,8 +43,9 @@ import UnLogin from "@/assets/unLogin.png"
 import {pluginTypeToName} from "../plugins/builtInData"
 import MITMContext from "./Context/MITMContext"
 import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
-import { JSONParseLog } from "@/utils/tool"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {JSONParseLog} from "@/utils/tool"
+import {debugToPrintLogs} from "@/utils/logCollection"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -301,10 +302,18 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const authorImgNode = useMemo(() => {
         const {IsCorePlugin, Type, HeadImg, OnlineOfficial} = i
         if (IsCorePlugin) {
+            if (!pluginTypeToName[Type]) {
+                debugToPrintLogs({
+                    page: "MITMYakScriptLoader",
+                    fun: "authorImgNode",
+                    content: {data: JSON.stringify(script), Type},
+                    status: "INFO"
+                })
+            }
             return (
                 <AuthorImg
                     src={YakitLogo}
-                    icon={pluginTypeToName[Type].icon}
+                    icon={<>{pluginTypeToName[Type]?.icon || <img src={YakitLogo} width={"100%"} height={"100%"} />}</>}
                     wrapperClassName={style["plugin-local-headImg"]}
                 />
             )

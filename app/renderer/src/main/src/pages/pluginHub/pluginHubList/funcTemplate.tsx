@@ -62,6 +62,7 @@ import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./PluginHubList.module.scss"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {debugToPrintLogs} from "@/utils/logCollection"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -655,7 +656,20 @@ export const HubGridOpt: React.FC<HubGridOptProps> = memo((props) => {
     }, [prImgs])
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type].icon} />
+            if (!pluginTypeToName[type]) {
+                debugToPrintLogs({
+                    page: "HubGridOpt",
+                    fun: "authorImgNode",
+                    content: {data: JSON.stringify(info), type},
+                    status: "INFO"
+                })
+            }
+            return (
+                <AuthorImg
+                    src={YakitLogo}
+                    icon={<>{pluginTypeToName[type]?.icon || <img src={YakitLogo} width={"100%"} height={"100%"} />}</>}
+                />
+            )
         }
         return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
@@ -883,7 +897,26 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
     })
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType].icon} />
+            if (!pluginTypeToName[pluginType]) {
+                debugToPrintLogs({
+                    page: "HubDetailListOpt",
+                    fun: "authorImgNode",
+                    content: {data: JSON.stringify(plugin), pluginType},
+                    status: "INFO"
+                })
+            }
+            return (
+                <AuthorImg
+                    src={YakitLogo}
+                    icon={
+                        <>
+                            {pluginTypeToName[pluginType]?.icon || (
+                                <img src={YakitLogo} width={"100%"} height={"100%"} />
+                            )}
+                        </>
+                    }
+                />
+            )
         }
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, headImg, pluginType, official])
