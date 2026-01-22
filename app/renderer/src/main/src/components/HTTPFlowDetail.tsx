@@ -1891,17 +1891,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 interface CodingPopoverProps {
     originValue: Uint8Array
     codeKey: string
+    disableAutoDecode?: boolean
     onSetCodeLoading: (loading: boolean) => void
     onSetCodeKey: (codeKey: string) => void
     onSetCodeValue: (codeValue: string) => void
 }
 export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
-    const {originValue, codeKey, onSetCodeKey, onSetCodeValue, onSetCodeLoading} = props
+    const {originValue, codeKey, disableAutoDecode, onSetCodeKey, onSetCodeValue, onSetCodeLoading} = props
     const {t, i18n} = useI18nNamespaces(["history"])
     const [codeShow, setCodeShow] = useState<boolean>(false)
 
     useDebounceEffect(
         () => {
+            if (disableAutoDecode) return
             if (codeKey) {
                 if (codeKey === "utf-8") {
                     onSetCodeValue(Uint8ArrayToString(originValue))
@@ -1910,7 +1912,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
                 }
             }
         },
-        [originValue],
+        [originValue, codeKey, disableAutoDecode],
         {
             wait: 500
         }

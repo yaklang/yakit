@@ -1020,6 +1020,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             return (value && Uint8ArrayToString(value)) || ""
         }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
 
+        const isStreamingSelect =
+            !isEnd &&
+            currentSelectShowType === "response" &&
+            (currentSelectItem?.RandomChunkedData?.length || 0) > 0 &&
+            !!currentSelectItem?.UUID
+
+        const currentEditorOriginValue = isStreamingSelect
+            ? originReqOrResValue
+            : codeKey === "utf-8"
+              ? originReqOrResValue
+              : codeValue || originReqOrResValue
+
         const copyUrl = useMemoizedFn(() => {
             if (currentSelectItem?.RequestRaw) {
                 copyAsUrl({
@@ -1114,7 +1126,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         currentSelectItem && (
                             <NewHTTPPacketEditor
                                 language={currentSelectItem?.DisableRenderStyles ? "text" : undefined}
-                                isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
+                                isShowBeautifyRender={!isStreamingSelect && !currentSelectItem?.IsTooLargeResponse}
                                 title={
                                     <div className={styles["second-node-title-wrapper"]}>
                                         <span className={styles["second-node-title-text"]}>{t("HTTPFuzzerPageTable.quickPreview")}</span>
@@ -1153,9 +1165,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 defaultHttps={currentSelectItem?.IsHTTPS}
                                 isResponse={true}
                                 readOnly={true}
-                                loading={codeLoading}
+                                keepSelectionOnValueChange={isStreamingSelect}
+                                loading={codeLoading && !isStreamingSelect}
                                 // noHeader={true}
-                                originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
+                                originValue={currentEditorOriginValue}
                                 originalPackage={
                                     currentSelectShowType === "request"
                                         ? currentSelectItem?.RequestRaw
@@ -1244,13 +1257,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         }
                                         onSetCodeLoading={setCodeLoading}
                                         codeKey={codeKey}
+                                        disableAutoDecode={isStreamingSelect}
                                         onSetCodeKey={(codeKey) => {
                                             setCodeKey(codeKey)
                                         }}
                                         onSetCodeValue={setCodeValue}
                                     />
                                 }
-                                typeOptionVal={typeOptionVal}
+                                typeOptionVal={isStreamingSelect ? undefined : typeOptionVal}
                                 onTypeOptionVal={(typeOptionVal) => {
                                     if (typeOptionVal !== undefined) {
                                         setTypeOptionVal(typeOptionVal)
@@ -1275,12 +1289,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                             originalPackage: currentSelectItem?.RequestRaw
                                         },
                                         response: {
-                                            originValue:
-                                                codeKey === "utf-8"
-                                                    ? currentSelectItem?.ResponseRaw
-                                                        ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
-                                                        : new Uint8Array()
-                                                    : codeValue,
+                                            originValue: currentEditorOriginValue,
                                             originalPackage: currentSelectItem?.ResponseRaw
                                         }
                                     })

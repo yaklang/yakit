@@ -4145,8 +4145,17 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return { RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false }
         }, [fuzzerResponse.RuntimeID])
 
+        const isStreamingResponse =
+            loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0 && !!fuzzerResponse?.UUID
+
         // 计算当前显示的值
-        const currentOriginValue = codeKey === "utf-8" ? responseRawString : codeValue
+        // - 流式更新时：始终展示原始增量内容（避免被 codeKey/codeValue 以及 loading skeleton 阻断）
+        // - 非流式时：尊重编码选择；但在 codeValue 还没准备好时兜底展示原始内容
+        const currentOriginValue = isStreamingResponse
+            ? responseRawString
+            : codeKey === "utf-8"
+              ? responseRawString
+              : codeValue || responseRawString
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
         const { handleEditorMount } = useAutoScrollToBottom({
@@ -4166,15 +4175,15 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         <NewHTTPPacketEditor
                             keepSearchName={keepSearchName}
                             language={fuzzerResponse?.DisableRenderStyles ? "text" : undefined}
-                            isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
+                            isShowBeautifyRender={!isStreamingResponse && !fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             originValue={currentOriginValue}
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
                             isResponse={true}
-                            keepSelectionOnValueChange={loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0}
-                            loading={codeLoading}
+                            keepSelectionOnValueChange={isStreamingResponse}
+                            loading={codeLoading && !isStreamingResponse}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}
                             AfterBeautifyRenderBtn={
@@ -4183,6 +4192,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     originValue={fuzzerResponse.ResponseRaw}
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
+                                    disableAutoDecode={isStreamingResponse}
                                     onSetCodeKey={(codeKey) => {
                                         setCodeKey(codeKey)
                                         setRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding, codeKey)
@@ -4236,7 +4246,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
                             }}
-                            typeOptionVal={resTypeOptionVal}
+                            typeOptionVal={isStreamingResponse ? undefined : resTypeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal !== undefined) {
                                     setResTypeOptionVal(typeOptionVal)
@@ -4256,7 +4266,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                         originValue: request
                                     },
                                     response: {
-                                        originValue: codeKey === "utf-8" ? responseRawString : codeValue,
+                                        originValue: currentOriginValue,
                                         originalPackage: fuzzerResponse.ResponseRaw
                                     }
                                 })
