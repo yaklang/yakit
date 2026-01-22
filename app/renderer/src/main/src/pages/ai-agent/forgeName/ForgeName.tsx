@@ -332,9 +332,6 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
     // aiTools下拉列表
     const [selectLoading, setSelectLoading] = useState<boolean>(false)
-    const filterOption = (input: string, option) => {
-        return (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
-    }
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
@@ -342,20 +339,32 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             </div>
         )
     })
+    const [searchKeyword, setSearchKeyword] = useState("")
     const [aiTool, setAiTool] = useState<AITool[]>([])
     const [aiToolPagination, setAiToolPagination] = useState<PaginationSchema>({
         ...genDefaultPagination(20),
         OrderBy: "created_at",
         Page: 1
     })
-    const getAiToolData = async (page: number) => {
+    const {run: debouncedSearch} = useDebounceFn(
+        (value: string) => {
+            setAiTool([])
+            setAiToolPagination((v) => ({...v, Page: 1}))
+            setSearchKeyword(value)
+            getAiToolData(1, value)
+        },
+        {
+            wait: 300
+        }
+    )
+    const getAiToolData = async (page: number, keyword = searchKeyword) => {
         setSelectLoading(true)
         const paginationProps = {
             ...aiToolPagination,
             page: page
         }
         const newQuery: GetAIToolListRequest = {
-            Query: "",
+            Query: keyword,
             ToolName: "",
             Pagination: paginationProps,
             OnlyFavorites: false
@@ -573,7 +582,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                     showSearch
                                     placeholder='请选择工具'
                                     optionFilterProp='children'
-                                    filterOption={filterOption}
+                                    onSearch={debouncedSearch}
                                     onPopupScroll={(e) => {
                                         const {target} = e
                                         const ref: HTMLDivElement = target as unknown as HTMLDivElement
@@ -581,19 +590,21 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                             ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight &&
                                             !selectLoading
                                         ) {
-                                            getAiToolData(aiToolPagination.Page + 1)
+                                            getAiToolData(aiToolPagination.Page + 1, searchKeyword)
                                         }
                                     }}
                                     dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                                     mode='multiple'
                                     onDropdownVisibleChange={(open) => {
                                         if (open) {
-                                            getAiToolData(1)
+                                            getAiToolData(1, searchKeyword)
                                         } else {
                                             setAiToolPagination((v) => ({...v, Page: 1}))
                                             setAiTool([])
+                                            setSearchKeyword("")
                                         }
                                     }}
+                                    maxTagCount={10}
                                 >
                                     {aiTool.map((item) => (
                                         <YakitSelect.Option key={item.Name} value={item.Name}>
