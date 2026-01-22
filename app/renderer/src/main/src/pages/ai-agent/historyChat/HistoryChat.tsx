@@ -204,21 +204,21 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                                             }}
                                         />
                                     </Tooltip>
-                                    <Tooltip
-                                        title={"删除任务"}
-                                        placement='topRight'
-                                        overlayClassName={styles["history-item-extra-tooltip"]}
+                                    <YakitPopconfirm
+                                        title='是否确认删除该历史对话，删除后将无法恢复'
+                                        placement='bottom'
+                                        onConfirm={(e) => {
+                                            e?.stopPropagation()
+                                            handleDeleteChat(item)
+                                        }}
                                     >
                                         <YakitButton
                                             loading={delStatus}
                                             type='text2'
                                             icon={<OutlineTrashIcon className={styles["del-icon"]} />}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleDeleteChat(item)
-                                            }}
+                                            onClick={(e) => e.stopPropagation()}
                                         />
-                                    </Tooltip>
+                                    </YakitPopconfirm>
                                 </div>
                             </div>
                         )
