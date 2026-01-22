@@ -1083,17 +1083,11 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
     if (isMemfit())
         return [
             {
-                page: undefined,
-                label: "AI",
-                labelUi: "YakitRoute.ai",
-                children: [
-                    {
-                        page: YakitRoute.AI_Agent,
-                        ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
-                    },
-                    {page: YakitRoute.AI_REPOSITORY, ...YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY]}
-                ]
+                page: YakitRoute.AI_Agent,
+                ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
             },
+            {page: YakitRoute.AI_REPOSITORY, ...YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY]},
+
             {
                 page: undefined,
                 label: "数据库",

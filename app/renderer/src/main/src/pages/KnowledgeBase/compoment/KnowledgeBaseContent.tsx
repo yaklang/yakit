@@ -33,11 +33,9 @@ import ChatIPCContent, {
     defaultDispatcherOfChatIPC
 } from "../../ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {ChatIPCSendType} from "../../ai-re-act/hooks/type"
-import {AIInputEvent, AIStartParams} from "../../ai-re-act/hooks/grpcApi"
+import {AIInputEvent} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
-import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
-import {formatAIAgentSetting, getAIReActRequestParams} from "@/pages/ai-agent/utils"
 import {cloneDeep} from "lodash"
 import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
@@ -54,9 +52,15 @@ import {ImportModal} from "./ImportModal"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
-import {v4 as uuidv4} from "uuid"
 import {knowledgeBaseDataStore} from "@/pages/ai-agent/store/ChatDataStore"
+import {
+    AIHandleStartExtraProps,
+    AIHandleStartParams,
+    AIHandleStartResProps,
+    AIReActChatRefProps,
+    AISendParams,
+    AISendResProps
+} from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -344,7 +348,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     // TODO  AI 召回逻辑
 
     // #region 问题相关逻辑
-    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
+    const aiReActChatRef = useRef<AIReActChatRefProps>(null)
 
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
@@ -419,54 +423,24 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         handleSendInteractiveMessage(params, "casual")
     })
 
-    const handleStart = useMemoizedFn((data: HandleStartParams) => {
-        const {qs} = data
-        const sessionID = activeChat?.session || ""
-        const request: AIStartParams = {
-            ...formatAIAgentSetting(setting),
-            UserQuery: qs,
-            CoordinatorId: "",
-            Sequence: 1
+    const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
+        const newChat: AIHandleStartExtraProps = {
+            chatId: knowledgeBaseID
         }
-        // 设置会话的session
-        const session: string = request.TimelineSessionID
-            ? request.TimelineSessionID
-            : uuidv4().replace(/-/g, "").substring(0, 16)
-        let newChat: AIChatInfo
-        if (!sessionID) {
-            if (!request.TimelineSessionID) request.TimelineSessionID = session
-            // 创建新的聊天记录
-            newChat = {
-                id: knowledgeBaseID,
-                name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-                question: qs,
-                time: new Date().getTime(),
-                request,
-                session: session
-            }
-            setActiveChat && setActiveChat(newChat)
-            setChats && setChats((old) => [...old, newChat])
-        } else {
-            newChat = activeChat as AIChatInfo
-            knowledgeBaseDataStore.remove(newChat.session)
-        }
-        const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
-
-        // 发送初始化参数
-        const startParams: AIInputEvent = {
-            IsStart: true,
-            Params: {
-                ...request
-            },
-            AttachedResourceInfo: attachedResourceInfo,
-            FocusModeLoop: data.focusMode
-        }
-
-        events.onStart({token: newChat.session, params: startParams, extraValue: extra})
-
-        Promise.resolve().then(() => {
-            handleSendAfter()
+        return new Promise<AIHandleStartResProps>((resolve) => {
+            resolve({
+                params: data.params,
+                extraParams: newChat,
+                onChatFromHistory
+            })
+        }).finally(() => {
+            Promise.resolve().then(() => {
+                handleSendAfter()
+            })
         })
+    })
+    const onChatFromHistory = useMemoizedFn((session: string) => {
+        knowledgeBaseDataStore.remove(session)
     })
 
     const onStop = useMemoizedFn(() => {
@@ -533,7 +507,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             chatIPCEvents: events,
             handleSendCasual,
             handleSaveChatInfo,
-            handleStart,
             handleStop: onStop,
             handleSend,
             handleSendSyncMessage,
@@ -586,7 +559,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
         if (!!targetKnowledgeBase) {
             setTimeout(() => {
-                aiChatTextareaRef.current?.setMention({
+                aiReActChatRef.current?.setMention({
                     mentionId: targetKnowledgeBase.ID,
                     mentionType: "knowledgeBase",
                     mentionName: targetKnowledgeBase.KnowledgeBaseName
@@ -594,6 +567,16 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             })
         }
     }
+
+    const onSendRequest = useMemoizedFn((data: AISendParams) => {
+        return new Promise<AISendResProps>((resolve) => {
+            resolve({
+                params: data.params
+            })
+        }).finally(() => {
+            handleSendAfter()
+        })
+    })
 
     return (
         <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
@@ -656,8 +639,9 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                 showFreeChat={showFreeChat}
                                 setShowFreeChat={setShowFreeChat}
                                 title='AI 召回'
-                                aiChatTextareaRef={aiChatTextareaRef}
-                                handleSendAfter={handleSendAfter}
+                                ref={aiReActChatRef}
+                                startRequest={onStartRequest}
+                                sendRequest={onSendRequest}
                             />
                         </div>
                     ) : null}

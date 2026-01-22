@@ -1,7 +1,6 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams} from "./type"
-import {useCreation, useDebounceFn, useMap, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
-import {AIChatData, AIChatInfo} from "../type/aiChat"
+import {useCreation, useMap, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useAIAgentStore from "../useContext/useStore"
@@ -11,7 +10,6 @@ import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
 import cloneDeep from "lodash/cloneDeep"
 import {randomString} from "@/utils/randomUtil"
-import {formatAIAgentSetting, getAIReActRequestParams} from "../utils"
 import ChatIPCContent, {
     AIChatIPCSendParams,
     AISendConfigHotpatchParams,
@@ -27,12 +25,7 @@ import {
     OutlineExitIcon,
     RedoDotIcon
 } from "@/assets/icon/outline"
-import {
-    AIChatIPCNotifyMessage,
-    AIChatIPCStartParams,
-    ChatIPCSendType,
-    UseTaskChatState
-} from "@/pages/ai-re-act/hooks/type"
+import {AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -45,12 +38,10 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {AIForge} from "../type/forge"
 import {AITool} from "../type/aiTool"
-import {v4 as uuidv4} from "uuid"
 import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum, ReActChatEventEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
-import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
@@ -60,6 +51,7 @@ import {Tooltip} from "antd"
 import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
+import {AIChatContentRefProps} from "../aiChatContent/type"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -73,9 +65,10 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
-    const {getLabelByParams} = useAINodeLabel()
     const {activeChat, setting} = useAIAgentStore()
     const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
+
+    const aiReActChatRef = useRef<AIChatContentRefProps>(null)
 
     // 插件并发构建流 hooks
     const [streams, api] = useMultipleHoldGRPCStream()
@@ -95,6 +88,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             onSetReAct()
         }
     }, [activeChat])
+
+    useEffect(() => {
+        if (mode === "welcome") {
+            events.onReset()
+        }
+    }, [mode])
 
     /**自由对话中触发任务开始 */
     const handleTaskStart = useMemoizedFn(() => {
@@ -144,14 +143,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         return activeChat?.session
     }, [activeChat])
 
-    // 是否在断开接口后清空接口数据 (新开聊天对话窗时需要清空)
-    const isClear = useRef(false)
     // 提问结束后缓存数据
     const handleChatingEnd = useMemoizedFn(() => {
-        if (isClear.current) {
-            events.onReset()
-            isClear.current = false
-        }
         handleStopAfterChangeState()
     })
 
@@ -183,52 +176,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {execute} = chatIPCData
 
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
-        const {qs} = value
-        const sessionID = activeChat?.session || ""
-
-        const request: AIStartParams = {
-            ...formatAIAgentSetting(setting),
-            UserQuery: qs,
-            CoordinatorId: "",
-            Sequence: 1
-        }
-        request.TimelineSessionID = activeChat?.session || request.TimelineSessionID
-        // 设置会话的session
-        const session: string = request.TimelineSessionID
-            ? request.TimelineSessionID
-            : uuidv4().replace(/-/g, "").substring(0, 16)
-        if (!request.TimelineSessionID) request.TimelineSessionID = session
-
-        let newChat: AIChatInfo
-        if (!sessionID) {
-            // 创建新的聊天记录
-            newChat = {
-                id: session,
-                name: qs || `AI Agent - ${new Date().toLocaleString()}`,
-                question: qs,
-                time: new Date().getTime(),
-                request,
-                session: session
-            }
-
-            setActiveChat && setActiveChat(newChat)
-            setChats && setChats((old) => [...old, newChat])
-            onSetReAct()
-        } else {
-            newChat = activeChat as AIChatInfo
-            aiChatDataStore.remove(newChat.session)
-        }
-        const {extra, attachedResourceInfo} = getAIReActRequestParams(value)
-        // 发送初始化参数
-        const startParams: AIInputEvent = {
-            IsStart: true,
-            Params: {
-                ...request
-            },
-            AttachedResourceInfo: attachedResourceInfo,
-            FocusModeLoop: value.focusMode
-        }
-        events.onStart({token: newChat.session, params: startParams, extraValue: extra})
+        setTimeout(() => {
+            aiReActChatRef.current?.handleStart(value) // 等自由对话渲染出来再发送
+        })
     })
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
@@ -318,8 +268,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     // 新开聊天对话窗
                     case ReActChatEventEnum.NEW_CHAT:
                         onStop()
-                        isClear.current = true
-                        // events.onReset()
                         setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
@@ -597,7 +545,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             chatIPCEvents: events,
             handleSendCasual,
             handleSendTask,
-            handleStart,
             handleStop: onStop,
             handleSend,
             handleSendSyncMessage,
@@ -640,6 +587,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setVisible(false)
     }
 
+    const onChat = useMemoizedFn(() => {
+        onSetReAct()
+    })
+    const onChatFromHistory = useMemoizedFn((session: string) => {
+        aiChatDataStore.remove(session)
+    })
+
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
             <ChatIPCContent.Provider value={{store, dispatcher}}>
@@ -654,7 +608,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                             />
                         </React.Suspense>
                     ) : (
-                        <AIChatContent />
+                        <AIChatContent ref={aiReActChatRef} onChat={onChat} onChatFromHistory={onChatFromHistory} />
                     )}
                     <div className={styles["footer-forge-form"]}>
                         {activeForge && (

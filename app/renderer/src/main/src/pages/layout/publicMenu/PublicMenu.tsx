@@ -31,7 +31,8 @@ import {
     publicUnionMenus,
     menusConvertKey,
     DownloadOnlinePluginByScriptNamesResponse,
-    routeConvertKey
+    routeConvertKey,
+    routeInfoToKey
 } from "./utils"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {YakScript} from "@/pages/invoker/schema"
@@ -463,7 +464,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                   t
                               )
                             : routeToMenu(item.children || [], t)
-
+                    const isOnlyFirst = !item.children && item.page
                     return (
                         <YakitPopover
                             key={`${item.label}-${index}`}
@@ -481,13 +482,18 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                     onClick={({key, keyPath}) => onNoExpandClickMenu(key, keyPath)}
                                 />
                             }
-                            onVisibleChange={(visible) => setNoExpandMenu(visible ? index : -1)}
+                            onVisibleChange={(visible) => !isOnlyFirst && setNoExpandMenu(visible ? index : -1)}
                         >
                             <div
                                 key={`${item.label}-${index}`}
                                 className={classNames(styles["menu-opt"], {
                                     [styles["active-menu-opt"]]: noExpandMenu === index
                                 })}
+                                onClick={() => {
+                                    if (!item.children && item.page) {
+                                        onNoExpandClickMenu(routeInfoToKey(item), [item.page])
+                                    }
+                                }}
                             >
                                 {item.labelUi ? t(item.labelUi) : item.label}
                             </div>

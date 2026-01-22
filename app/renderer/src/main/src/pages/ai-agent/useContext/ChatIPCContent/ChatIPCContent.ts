@@ -39,7 +39,7 @@ export interface ChatIPCContextDispatcher {
     /** 任务规划 */
     handleSendTask: (params: AIChatIPCSendParams) => void
     /** 开始 */
-    handleStart: (data: HandleStartParams) => void
+    // handleStart: (data: HandleStartParams) => void
     /** 停止ai */
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void
@@ -53,7 +53,7 @@ export interface ChatIPCContextValue {
     store: ChatIPCContextStore
     dispatcher: ChatIPCContextDispatcher
 }
-export const defaultDispatcherOfChatIPC = {
+export const defaultDispatcherOfChatIPC:ChatIPCContextDispatcher = {
     chatIPCEvents: {
         fetchToken: () => "",
         fetchTaskChatID: () => "",
@@ -67,7 +67,7 @@ export const defaultDispatcherOfChatIPC = {
     handleSendCasual: () => {},
     handleSendTask: () => {},
     handleSend: () => {},
-    handleStart: () => {},
+    // handleStart: () => {},
     handleStop: () => {},
     handleSendSyncMessage: () => {},
     handleSendConfigHotpatch: () => {}
