@@ -128,7 +128,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     const onSetHTTPFlowFilter = useMemoizedFn((filterStr) => {
         try {
             const filter = JSONParseLog(filterStr, {page: "HTTPHistoryAnalysis", fun: "onSetHTTPFlowFilter"}) || {}
-            delete filter.Pagination
             setHTTPFlowFilter(filter)
         } catch (error) {}
     })

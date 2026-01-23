@@ -157,9 +157,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
     const webTreeRef = useRef<any>()
     const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
-    const [searchURL, setSearchURL] = useState<string>("")
-    const [includeInUrl, setIncludeInUrl] = useState<string>("")
-    const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+    const [includeInUrl, setIncludeInUrl] = useState<string[]>([])
     const [treeQueryparams, setTreeQueryparams] = useState<string>("")
 
     const [curProcess, setCurProcess] = useState<string[]>([])
@@ -174,17 +172,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         try {
-            const treeQuery = JSONParseLog(queryParams,{page:"HTTPHistory", fun:"onQueryParams-treeQuery"}) || {}
-            delete treeQuery.Pagination
-            delete treeQuery.AfterId
-            delete treeQuery.BeforeId
+            const treeQuery = JSONParseLog(queryParams, {page: "HTTPHistory", fun: "onQueryParams-treeQuery"}) || {}
+            delete treeQuery.IncludeInUrl
             setTreeQueryparams(JSON.stringify(treeQuery))
             setRefreshFlag(!!execFlag)
 
-            const processQuery = JSONParseLog(queryParams,{page:"HTTPHistory", fun:"onQueryParams-processQuery"}) || {}
-            delete processQuery.Pagination
-            delete processQuery.AfterId
-            delete processQuery.BeforeId
+            const processQuery =
+                JSONParseLog(queryParams, {page: "HTTPHistory", fun: "onQueryParams-processQuery"}) || {}
             delete processQuery.ProcessName
             setProcessQueryparams(JSON.stringify(processQuery))
             if (pageType === "MITM") {
@@ -219,7 +213,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
     // #endregion
-    const compareUrl = useMemo(()=> [...selectedKeys, ...includeInUrl ? [includeInUrl]:[]],[selectedKeys, includeInUrl]) 
 
     return (
         <div className={styles.hTTPHistory}>
@@ -259,16 +252,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
                                     treeExtraQueryparams={treeQueryparams}
                                     refreshTreeFlag={refreshFlag}
-                                    onGetUrl={(searchURL, includeInUrl) => {
-                                        setSearchURL(searchURL)
-                                        setIncludeInUrl(includeInUrl)
-                                    }}
-                                    resetTableAndEditorShow={(table, editor) => {
-                                        setOnlyShowFirstNode(table)
-                                        setSecondNodeVisible(editor)
-                                    }}
                                     multiple
-                                    onSelectKeys={(selectKeys)=> setSelectedKeys(selectKeys.map(i => i +''))}
+                                    onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ""))}
                                 ></WebTree>
                             </div>
                             <div
@@ -295,9 +280,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 secondNode={
                     <div className={styles["hTTPHistory-right"]}>
                         <HTTPFlowRealTimeTableAndEditor
-                            searchURL={searchURL}
                             includeInUrl={includeInUrl}
-                            selectedKeys={selectedKeys}
                             curProcess={curProcess}
                             onQueryParams={onQueryParams}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
@@ -327,8 +310,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     wrapperStyle?: CSSProperties
     showFlod?: boolean
     params?: YakQueryHTTPFlowRequest
-    searchURL?: string
-    includeInUrl?: string | string[]
+    includeInUrl?: string[]
     curProcess?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     downstreamProxyStr?: string
@@ -337,8 +319,6 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     onSetHasNewData?: (f: boolean) => void
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
-    selectedKeys?:  string[]
-    showHistoryAnalysisBtn?: boolean
 }
 /**
  * 此组件用于实时流量表和编辑器
@@ -352,7 +332,6 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         titleHeight,
         containerClassName,
         params,
-        searchURL,
         includeInUrl,
         filterTagDom,
         curProcess,
@@ -372,12 +351,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showSetting = true,
         showRefresh = true,
         showFlod = true,
-        showHistoryAnalysisBtn = false,
-        selectedKeys: propsSelectedKeys
+        showHistoryAnalysisBtn = false
     } = props
-
-    // 稳定 selectedKeys 引用，避免频繁触发子组件更新
-    const selectedKeys = useMemo(() => propsSelectedKeys || [], [propsSelectedKeys])
 
     const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
@@ -493,9 +468,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             showSetting={showSetting}
                             showRefresh={showRefresh}
                             params={params}
-                            searchURL={searchURL}
                             includeInUrl={includeInUrl}
-                            selectedKeys={selectedKeys}
                             onSelected={(i) => {
                                 setSelectedHTTPFlow(i)
                             }}

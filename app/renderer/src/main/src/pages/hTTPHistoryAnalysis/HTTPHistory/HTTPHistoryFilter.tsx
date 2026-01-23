@@ -68,7 +68,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {HistoryProcess, HistoryTab} from "@/components/HTTPHistory"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {v4 as uuidv4} from "uuid"
-import {isEqual} from "lodash"
+import {cloneDeep, isEqual} from "lodash"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
@@ -189,8 +189,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
 
     // #region 网站树、进程
     const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
-    const [searchURL, setSearchURL] = useState<string>("")
-    const [includeInUrl, setIncludeInUrl] = useState<string>("")
+    const [includeInUrl, setIncludeInUrl] = useState<string[]>([])
     const [treeQueryparams, setTreeQueryparams] = useState<string>("")
     const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
 
@@ -202,12 +201,11 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         onSetHTTPFlowFilter(queryParams)
         try {
             const treeQuery = JSONParseLog(queryParams, {page: "HTTPHistoryFilter", fun: "treeQuery"}) || {}
-            delete treeQuery.Pagination
+            delete treeQuery.IncludeInUrl
             setTreeQueryparams(JSON.stringify(treeQuery))
             setRefreshFlag(!!execFlag)
 
             const processQuery = JSONParseLog(queryParams, {page: "HTTPHistoryFilter", fun: "processQuery"}) || {}
-            delete processQuery.Pagination
             delete processQuery.ProcessName
             setProcessQueryparams(JSON.stringify(processQuery))
         } catch (error) {}
@@ -251,10 +249,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                                     searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
                                     treeExtraQueryparams={treeQueryparams}
                                     refreshTreeFlag={refreshFlag}
-                                    onGetUrl={(searchURL, includeInUrl) => {
-                                        setSearchURL(searchURL)
-                                        setIncludeInUrl(includeInUrl)
-                                    }}
+                                    onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ""))}
                                 ></WebTree>
                             </div>
                             <div
@@ -278,7 +273,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                     <div className={styles["HTTPHistoryFilter-right"]}>
                         <HTTPFlowFilterTable
                             onQueryParams={onQueryParams}
-                            searchURL={searchURL}
                             includeInUrl={includeInUrl}
                             ProcessName={curProcess}
                             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
@@ -325,8 +319,7 @@ export const defalutColumnsOrder = [
     "RequestSizeVerbose"
 ]
 interface HTTPFlowTableProps {
-    searchURL?: string
-    includeInUrl?: string
+    includeInUrl?: string[]
     ProcessName?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
@@ -344,7 +337,6 @@ interface HTTPFlowTableProps {
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
-        searchURL,
         includeInUrl,
         ProcessName,
         onQueryParams,
@@ -399,23 +391,18 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     // #region 网站树、进程
     const refreshTabsContRef = useRef<boolean>(false)
     const campareProcessName = useCampare(ProcessName)
+    const campareIncludeInUrl = useCampare(includeInUrl)
     useDebounceEffect(
         () => {
-            const treeArr = includeInUrl ? (Array.isArray(includeInUrl) ? includeInUrl : [includeInUrl]) : []
-            // 当高级筛选为展示状态，同时host有值的时候
-            if (getFilterMode() === "show" && getHostName().length) {
-                treeArr.push(...getHostName())
-            }
             setQuery((prev) => {
                 return {
                     ...prev,
-                    SearchURL: searchURL,
-                    IncludeInUrl: treeArr,
+                    IncludeInUrl: includeInUrl ? includeInUrl : [],
                     ProcessName: ProcessName
                 }
             })
         },
-        [searchURL, includeInUrl, campareProcessName],
+        [campareIncludeInUrl, campareProcessName],
         {wait: 500}
     )
     // #endregion
@@ -492,7 +479,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         ...prev,
                         SearchContentType: "",
                         ExcludeContentType: searchContentType.length === 0 ? [] : searchContentType.split(","),
-                        IncludeInUrl: [],
+                        HostnameFilter: [],
                         ExcludeInUrl: hostName,
                         IncludePath: [],
                         ExcludePath: urlPath,
@@ -508,7 +495,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         ...prev,
                         SearchContentType: searchContentType,
                         ExcludeContentType: [],
-                        IncludeInUrl: hostName,
+                        HostnameFilter: hostName,
                         ExcludeInUrl: [],
                         IncludePath: urlPath,
                         ExcludePath: [],
@@ -675,6 +662,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         queyChangeUpdateData()
     })
     /** ---- 响应长度 end ----*/
+
+    // url 清空网站树需要刷新
+    useUpdateEffect(() => {
+        if (query.SearchURL === "") {
+            refreshTabsContRef.current = true
+        }
+    }, [query.SearchURL])
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         if (!getBodyLengthSort() || newSort.orderBy !== "") {
@@ -2075,7 +2069,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         queyChangeUpdateData()
     }, [query, refresh])
 
-
     const [queryParams, setQueryParams] = useState<string>("")
     useDebounceEffect(
         () => {
@@ -2100,6 +2093,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
         const params = {
             ...query,
+            Methods: Array.isArray(query.Methods) ? query.Methods.join(",") : "",
             Pagination: {
                 ...pagination,
                 Page: page,
@@ -2111,17 +2105,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         delete params["UpdatedAt"]
         delete params["UpdatedAt-time"]
         delete params["ContentType"]
-        delete params['bodyLength']
+        delete params["bodyLength"]
 
-        const copyParams = {...params}
-        copyParams.Color = copyParams.Color ? copyParams.Color : []
-        copyParams.StatusCode = copyParams.StatusCode ? copyParams.StatusCode : ""
-        if (Array.isArray(copyParams.Methods)) {
-            copyParams.Methods = copyParams.Methods.filter((item) => item).join(",")
-        }
-        if (copyParams.SearchURL === "") {
-            refreshTabsContRef.current = true
-        }
+        const copyParams = cloneDeep(params)
+        // @ts-ignore
+        delete copyParams.Pagination
         setQueryParams(JSON.stringify(copyParams))
         ipcRenderer
             .invoke("QueryHTTPFlows", params)
@@ -2162,6 +2150,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
 
     const onDeleteToUpdateHTTPHistoryFilter = useMemoizedFn(() => {
+        refreshTabsContRef.current = true
         update(1)
     })
     useEffect(() => {

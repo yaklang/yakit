@@ -20,6 +20,7 @@ export interface YakQueryHTTPFlowRequest {
     OnlyWebsocket?: boolean
     IncludeInUrl?: string[]
     ExcludeInUrl?: string[]
+    HostnameFilter?: string[]
     IncludePath?: string[]
     ExcludePath?: string[]
     IncludeSuffix?: string[]

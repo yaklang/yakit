@@ -276,6 +276,8 @@ export interface HistoryTableTitleShow {
     showSetting?: boolean
     /** 是否显示刷新 */
     showRefresh?: boolean
+    /** 是否显示流量分析器 */
+    showHistoryAnalysisBtn?: boolean
 }
 
 export interface HTTPFlowTableProp extends HistoryTableTitleShow {
@@ -293,9 +295,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     historyId?: string
     // 使用此组件页面类型
     pageType?: HTTPHistorySourcePageType
-    searchURL?: string
-    includeInUrl?: string | string[]
-    selectedKeys?: string[]
+    includeInUrl?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     titleHeight?: number
     containerClassName?: string
@@ -310,7 +310,6 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
     onSetHasNewData?: (f: boolean) => void
-    showHistoryAnalysisBtn?: boolean
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -902,7 +901,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         ...newParams,
                         SearchContentType: "",
                         ExcludeContentType: searchContentType.length === 0 ? [] : searchContentType.split(","),
-                        IncludeInUrl: [],
+                        HostnameFilter: [],
                         ExcludeInUrl: [...new Set(urlArr)],
                         IncludePath: [],
                         ExcludePath: urlPath,
@@ -918,7 +917,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         ...newParams,
                         SearchContentType: searchContentType,
                         ExcludeContentType: [],
-                        IncludeInUrl: hostName,
+                        HostnameFilter: hostName,
                         ExcludeInUrl: urlArr,
                         IncludePath: urlPath,
                         ExcludePath: [],
@@ -1124,26 +1123,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     /**
      * 网站树部分
      */
-    const campareSelectedKeys = useCampare(props.selectedKeys)
+    const campareIncludeInUrl = useCampare(props.includeInUrl)
     useDebounceEffect(
         () => {
             if (["History", "Plugin"].includes(pageType || "")) {
                 const url = props.includeInUrl
-                const includeInUrlArr = url ? (Array.isArray(url) ? url : [url]) : []
-                const treeArr = props.selectedKeys ? [...includeInUrlArr, ...props.selectedKeys] : includeInUrlArr
-                // 当高级筛选为展示状态，同时host有值的时候
-                if (getFilterMode() === "show" && getHostName().length) {
-                    treeArr.push(...getHostName())
-                }
+                const includeInUrlArr = url ? url : []
                 setParams((prev) => ({
                     ...prev,
-                    IncludeInUrl: [...new Set(treeArr)]
+                    IncludeInUrl: [...new Set(includeInUrlArr)]
                 }))
             }
         },
-        [props.includeInUrl, campareSelectedKeys, pageType],
+        [campareIncludeInUrl, pageType],
         {
-            wait: 200
+            wait: 300
         }
     )
     useUpdateEffect(() => {
@@ -1161,22 +1155,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     refreshTabsContRef.current = false
                     refreshFlag = true
                 }
-                props.onQueryParams && props.onQueryParams(queryParams, refreshFlag)
+                props.onQueryParams?.(queryParams, refreshFlag)
             }
         },
         [queryParams, inViewport],
-        {wait: 1000}
+        {wait: 500}
     )
     const updateQueryParams = (query) => {
-        const copyQuery = structuredClone(query)
-        copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
-        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode : ""
-        if (Array.isArray(copyQuery.Methods)) {
-            copyQuery.Methods = copyQuery.Methods.filter((item) => item).join(",")
-        }
-        if ("bodyLength" in copyQuery) {
-            delete copyQuery.bodyLength
-        }
+        const copyQuery = cloneDeep(query)
+        delete copyQuery.Pagination
+        delete copyQuery.AfterId
+        delete copyQuery.BeforeId
         setQueryParams(JSON.stringify(copyQuery))
     }
 
@@ -1234,6 +1223,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
+
+        query.Methods = Array.isArray(query.Methods) ? query.Methods.join(",") : ""
+        if ("bodyLength" in query) {
+            delete query.bodyLength
+        }
 
         // 真正需要传给后端的查询数据
         const realQuery = cloneDeep(query)
@@ -2442,7 +2436,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 updateData()
             }
         } catch (error) {}
-        
     })
 
     useEffect(() => {
@@ -3630,7 +3623,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             // 高级筛选里面的参数，没有放开高级筛选按钮的一开始就不会获取下面的值，传进去也没有关系
             SearchContentType: params.SearchContentType,
             ExcludeContentType: params.ExcludeContentType,
-            IncludeInUrl: params.IncludeInUrl, // 网站树也有用到此参数
+            HostnameFilter: params.HostnameFilter,
             IncludePath: params.IncludePath,
             ExcludePath: params.ExcludePath,
             IncludeSuffix: params.IncludeSuffix,

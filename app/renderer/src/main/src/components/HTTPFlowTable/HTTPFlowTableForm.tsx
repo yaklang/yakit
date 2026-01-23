@@ -16,6 +16,7 @@ import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {RemoteHistoryGV} from "@/enums/history"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {isEqual} from "lodash"
 
 export interface HTTPFlowTableFormConfigurationProps {
     pageType?: HTTPHistorySourcePageType
