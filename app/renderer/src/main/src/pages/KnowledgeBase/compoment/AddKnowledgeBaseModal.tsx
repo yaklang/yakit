@@ -2,7 +2,7 @@ import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Form, Tooltip} from "antd"
+import {Collapse, Form} from "antd"
 import {Dispatch, FC, SetStateAction} from "react"
 import {getFileInfoList} from "../utils"
 import {randomString} from "@/utils/randomUtil"
@@ -11,6 +11,7 @@ import {success} from "@/utils/notification"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import styles from "../knowledgeBase.module.scss"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 
 interface AddKnowledgeBaseModalProps {
     addModalData: {visible: boolean; KnowledgeBaseName: string}
@@ -70,7 +71,12 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
             onOk={onOk}
             className={styles["create-knowledge-from"]}
         >
-            <Form form={form} layout='vertical' initialValues={{disableERM: "true"}}>
+            <Form
+                form={form}
+                layout='vertical'
+                initialValues={{disableERM: "true"}}
+                className={styles["create-knowledge-from-container"]}
+            >
                 <YakitFormDragger
                     formItemProps={{
                         name: "KnowledgeBaseFile",
@@ -136,46 +142,50 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
                     />
                 </Form.Item>
 
-                <Form.Item label='补充提示词：' name='prompt'>
-                    <YakitInput placeholder='请输入补充提示词' />
-                </Form.Item>
-                <Form.Item
-                    label='描述：'
-                    name='KnowledgeBaseDescription'
-                    rules={[{max: 500, message: "描述最多 500 个字符"}]}
-                >
-                    <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
-                </Form.Item>
+                <YakitCollapse bordered={false} className={styles["create-knowledge-configuration"]}>
+                    <Collapse.Panel header='高级配置' key='1'>
+                        <Form.Item label='补充提示词：' name='prompt'>
+                            <YakitInput placeholder='请输入补充提示词' />
+                        </Form.Item>
+                        <Form.Item
+                            label='描述：'
+                            name='KnowledgeBaseDescription'
+                            rules={[{max: 500, message: "描述最多 500 个字符"}]}
+                        >
+                            <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={2} showCount />
+                        </Form.Item>
 
-                <Form.Item label='知识条目长度限制：' name='KnowledgeBaseLength' initialValue={300}>
-                    <YakitInputNumber />
-                </Form.Item>
-                <Form.Item label='分析并发数：' name='concurrency' initialValue={10}>
-                    <YakitInputNumber />
-                </Form.Item>
+                        <Form.Item label='知识条目长度限制：' name='KnowledgeBaseLength' initialValue={300}>
+                            <YakitInputNumber />
+                        </Form.Item>
+                        <Form.Item label='分析并发数：' name='concurrency' initialValue={10}>
+                            <YakitInputNumber />
+                        </Form.Item>
 
-                <Form.Item label='切片粒度：' name='chunk' initialValue={"Medium"}>
-                    <YakitSelect
-                        options={[
-                            {
-                                label: "超细粒度 4k",
-                                value: "UltraFine"
-                            },
-                            {
-                                label: "细粒度 10k",
-                                value: "Fine"
-                            },
-                            {
-                                label: "中粒度 20k",
-                                value: "Medium"
-                            },
-                            {
-                                label: "粗粒度 40k",
-                                value: "Coarse"
-                            }
-                        ]}
-                    />
-                </Form.Item>
+                        <Form.Item label='切片粒度：' name='chunk' initialValue={"Medium"}>
+                            <YakitSelect
+                                options={[
+                                    {
+                                        label: "超细粒度 4k",
+                                        value: "UltraFine"
+                                    },
+                                    {
+                                        label: "细粒度 10k",
+                                        value: "Fine"
+                                    },
+                                    {
+                                        label: "中粒度 20k",
+                                        value: "Medium"
+                                    },
+                                    {
+                                        label: "粗粒度 40k",
+                                        value: "Coarse"
+                                    }
+                                ]}
+                            />
+                        </Form.Item>
+                    </Collapse.Panel>
+                </YakitCollapse>
             </Form>
         </YakitModal>
     )

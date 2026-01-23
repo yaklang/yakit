@@ -2215,6 +2215,11 @@
     }
 }
 
+.create-knowledge-from-container {
+    max-height: 50vh;
+    overflow: auto;
+}
+
 .create-knowledge-from {
     :global {
         .ant-form-item {

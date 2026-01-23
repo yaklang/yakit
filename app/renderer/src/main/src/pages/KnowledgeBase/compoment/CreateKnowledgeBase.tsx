@@ -15,6 +15,7 @@ import styles from "../knowledgeBase.module.scss"
 import {extractFileName, knowledgeTypeOptions} from "../utils"
 import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import classNames from "classnames"
 
 const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form, type}) => {
     const {knowledgeBases} = useKnowledgeBase()
@@ -37,7 +38,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
         <Form
             form={form}
             layout='vertical'
-            className={styles["create-knowledge-from"]}
+            className={classNames(styles["create-knowledge-from"], styles["create-knowledge-from-container"])}
             initialValues={{disableERM: "true"}}
             onValuesChange={(changedValues) => {
                 if (changedValues.importPath) {
@@ -150,7 +151,7 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                         name='KnowledgeBaseDescription'
                         rules={[{max: 500, message: "描述最多 500 个字符"}]}
                     >
-                        <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
+                        <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={2} showCount />
                     </Form.Item>
 
                     <Form.Item label='知识条目长度限制：' name='KnowledgeBaseLength' initialValue={300}>
