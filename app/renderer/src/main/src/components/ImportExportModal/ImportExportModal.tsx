@@ -42,7 +42,6 @@ interface ImportExportModalProps<F, R, P> {
     renderForm: (form: FormInstance) => React.ReactNode
     onBeforeSubmit?: (values: F) => Promise<void> | void
     onSubmitForm: (values: F) => R
-    initialProgress: P[]
     getProgressValue: GetProgressValue<P>
     isProgressFinished: IsProgressFinished<P>
     getlogListInfo?: (stream: P[]) => LogListInfo[]
@@ -61,7 +60,6 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         renderForm,
         onBeforeSubmit,
         onSubmitForm,
-        initialProgress,
         getProgressValue,
         isProgressFinished,
         getlogListInfo,
@@ -73,15 +71,15 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     const token = useRef("")
     const [showProgressStream, setShowProgressStream] = useSafeState(false)
     const timeRef = useRef<ReturnType<typeof setTimeout>>()
-    const importExportStreamRef = useRef<P[]>(initialProgress)
-    const [progressStream, setProgressStream] = useSafeState<P[]>(initialProgress)
+    const importExportStreamRef = useRef<P[]>([])
+    const [progressStream, setProgressStream] = useSafeState<P[]>([])
 
     const handleReset = useMemoizedFn(() => {
         token.current = ""
         setShowProgressStream(false)
         timeRef.current = undefined
-        importExportStreamRef.current = initialProgress
-        setProgressStream(initialProgress)
+        importExportStreamRef.current = []
+        setProgressStream([])
     })
 
     const onSubmit = useMemoizedFn(async () => {
@@ -109,18 +107,31 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     })
 
     useEffect(() => {
-        if (isProgressFinished(progressStream[0])) {
+        if (progressStream.length && isProgressFinished(progressStream[0])) {
             onFinished(true)
         }
-    }, [JSON.stringify(progressStream)])
+    }, [progressStream.length])
     const streamData = useMemo(() => {
         return {
-            Progress: getProgressValue(progressStream[0])
+            Progress: progressStream.length ? getProgressValue(progressStream[0]) : 0
         }
-    }, [JSON.stringify(progressStream)])
+    }, [progressStream.length])
     const logListInfo = useMemo(() => {
         return getlogListInfo?.(progressStream) || []
-    }, [JSON.stringify(progressStream)])
+    }, [progressStream.length])
+    const progressTitle = useMemo(() => {
+        return extra.type === "export"
+            ? progressStream.length
+                ? isProgressFinished(progressStream[0])
+                    ? "导出完成"
+                    : "导出中..."
+                : "导出中..."
+            : progressStream.length
+            ? isProgressFinished(progressStream[0])
+                ? "导入完成"
+                : "导入中..."
+            : "导入中..."
+    }, [extra.type, progressStream.length])
 
     const handleListeners = useMemoizedFn(() => {
         if (!token.current) {
@@ -220,7 +231,11 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
                                     onCancel()
                                 }}
                             >
-                                {isProgressFinished(progressStream[0]) ? "完成" : "取消"}
+                                {progressStream.length
+                                    ? isProgressFinished(progressStream[0])
+                                        ? "完成"
+                                        : "取消"
+                                    : "取消"}
                             </YakitButton>
                         )}
                     </>
@@ -245,15 +260,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
                 ) : (
                     <div style={{padding: "0 16px"}}>
                         <ImportAndExportStatusInfo
-                            title={
-                                extra.type === "export"
-                                    ? isProgressFinished(progressStream[0])
-                                        ? "导出完成"
-                                        : "导出中..."
-                                    : isProgressFinished(progressStream[0])
-                                    ? "导入完成"
-                                    : "导入中..."
-                            }
+                            title={progressTitle}
                             showDownloadDetail={false}
                             streamData={streamData}
                             logListInfo={logListInfo}

@@ -323,24 +323,15 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         return {
             getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined,
             extra: importExportExtra,
-            initialProgress: [
-                {
-                    Percent: 0,
-                    Message: "",
-                    MessageType: ""
-                }
-            ],
             getProgressValue: (p: ExportImportAIForgeProgress) => {
                 return p.Percent / 100
             },
             getlogListInfo: (stream: ExportImportAIForgeProgress[]) => {
-                logListRef.current = stream
-                    .filter((item1) => !(item1.Percent === 0 && item1.Message === "" && item1.MessageType === ""))
-                    .map((item) => ({
-                        message: item.Message,
-                        isError: item.MessageType === "error",
-                        key: Math.random() * 5 + ""
-                    }))
+                logListRef.current = stream.map((item) => ({
+                    message: item.Message,
+                    isError: item.MessageType === "error",
+                    key: Math.random() * 5 + ""
+                }))
                 return logListRef.current
             },
             onFinished: handleFinishedImportExportHint
