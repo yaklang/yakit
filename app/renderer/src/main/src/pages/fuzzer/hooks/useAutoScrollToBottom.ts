@@ -81,8 +81,6 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
                 // 如果不在底部，说明用户向上滚动了
                 const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10
                 if (!isAtBottom) {
-                    console.log("用户手动滚动，停止自动滚动");
-                    
                     userHasScrolledRef.current = true
                 }
             }
