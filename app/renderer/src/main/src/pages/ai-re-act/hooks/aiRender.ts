@@ -52,6 +52,8 @@ export interface AIToolResult {
     }
     /** 执行错误相关信息 */
     execError: string
+    /** 执行涉及的文件目录 */
+    dirPath: string
 }
 
 /** 任务开始节点的信息 */

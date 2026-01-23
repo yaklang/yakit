@@ -461,6 +461,12 @@ export declare namespace AIAgentGrpcApi {
         tool_description: string
     }
 
+    /** 工具执行时的更新文件目录路径 */
+    export interface AIToolCallDirPath {
+        call_tool_id: string
+        dir_path: string
+    }
+
     /** 插件结果输出信息(yak_exec_result) */
     export interface AIPluginExecResult extends Partial<Omit<ExecResult, "Message">> {
         Message: string

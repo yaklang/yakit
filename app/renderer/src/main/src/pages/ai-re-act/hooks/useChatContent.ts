@@ -212,7 +212,7 @@ function useChatContent(params: UseChatContentParams) {
             const {event_writer_id} = JSON.parse(ipcContent) as {event_writer_id: string}
             // event_writer_id为空
             if (!event_writer_id) {
-                pushLog(genErrorLogData(res.Timestamp, `stream_start数据(NodeId: ${NodeId}), event_writer_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据(NodeId: ${NodeId}), event_writer_id 为空`))
                 return
             }
 
@@ -239,7 +239,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `异常 stream_start 类型, NodeId: ${NodeId}, eventuuid: (${event_writer_id}), 已存在对应的数据`
+                        `异常 ${res.Type} 类型, NodeId: ${NodeId}, eventuuid: (${event_writer_id}), 已存在对应的数据`
                     )
                 )
                 return
@@ -448,7 +448,7 @@ function useChatContent(params: UseChatContentParams) {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const {call_tool_id, tool} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
             if (!call_tool_id) {
-                pushLog(genErrorLogData(res.Timestamp, `tool_call_start数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
             }
 
@@ -483,7 +483,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `tool_call_watcher数据, call_tool_id: ${call_tool_id || "为空"} | id: ${id || "为空"}`
+                        `${res.Type}数据, call_tool_id: ${call_tool_id || "为空"} | id: ${id || "为空"}`
                     )
                 )
                 return
@@ -505,7 +505,7 @@ function useChatContent(params: UseChatContentParams) {
                     pushLog(
                         genErrorLogData(
                             res.Timestamp,
-                            `tool_call_watcher数据中, 对应的stream数据不存在(call_tool_id:${call_tool_id})`
+                            `${res.Type}数据中, 对应的stream数据不存在(call_tool_id:${call_tool_id})`
                         )
                     )
                     return
@@ -532,14 +532,13 @@ function useChatContent(params: UseChatContentParams) {
         }
     })
 
-    /** 工具执行的结果 */
-    const handleToolResult = useMemoizedFn((res: AIOutputEvent, status: "success" | "failed" | "user_cancelled") => {
+    /** 工具执行中的工作文件目录路径 */
+    const handleToolDirPath = useMemoizedFn((res: AIOutputEvent) => {
         try {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
-            const {call_tool_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-
+            const {call_tool_id, dir_path} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallDirPath
             if (!call_tool_id) {
-                pushLog(genErrorLogData(res.Timestamp, `tool_call(user_cancel/done/error)数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
             }
 
@@ -548,7 +547,52 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `tool_call(user_cancel/done/error)数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                    )
+                )
+                return
+            }
+
+            if (toolResult.data.dirPath) {
+                pushLog(
+                    genErrorLogData(
+                        res.Timestamp,
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), dir_path已存在，不能重复设置`
+                    )
+                )
+                return
+            }
+
+            setContentMap(call_tool_id, {
+                ...toolResult,
+                data: {...toolResult.data, dirPath: dir_path || ""}
+            })
+            if (toolResult.data.status !== "default") updateElements({mapKey: toolResult.id, type: toolResult.type})
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: pushLog
+            })
+        }
+    })
+
+    /** 工具执行的结果 */
+    const handleToolResult = useMemoizedFn((res: AIOutputEvent, status: "success" | "failed" | "user_cancelled") => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const {call_tool_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+
+            if (!call_tool_id) {
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
+                return
+            }
+
+            const toolResult = getContentMap(call_tool_id)
+            if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+                pushLog(
+                    genErrorLogData(
+                        res.Timestamp,
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
                     )
                 )
                 return
@@ -608,7 +652,7 @@ function useChatContent(params: UseChatContentParams) {
             const {call_tool_id, summary} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
             if (!call_tool_id) {
-                pushLog(genErrorLogData(res.Timestamp, `tool_call_summary数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
             }
 
@@ -617,7 +661,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `tool_call_summary数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
                     )
                 )
                 return
@@ -783,6 +827,12 @@ function useChatContent(params: UseChatContentParams) {
             // 工具执行中-可操作选项
             if (res.Type === "tool_call_watcher") {
                 handleExceTool(res)
+                return
+            }
+
+            // 工具执行-工作目录路径
+            if (res.Type === "tool_call_log_dir") {
+                handleToolDirPath(res)
                 return
             }
 
