@@ -16,8 +16,6 @@ export interface AIChatTextareaSubmit {
 export interface AIChatTextareaRefProps {
     setMention: (v: AIMentionCommandParams) => void
     setValue: (v: string) => void
-    // TODO 临时添加，下周处理
-    onMemfitExtra?: (v) => void
     getValue: () => void
 }
 export interface AIChatTextareaProps {

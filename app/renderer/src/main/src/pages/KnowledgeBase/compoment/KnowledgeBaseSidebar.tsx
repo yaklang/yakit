@@ -754,7 +754,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     return (
         <div className={styles["knowledge-base-sidebar-container"]}>
-            <div
+            {/* <div
                 className={styles["knowledge-base-sidebar-ai-button"]}
                 onClick={() => {
                     emiter.emit(
@@ -770,7 +770,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             >
                 <OutlineBotIcon />
                 <span>AI Agent</span>
-            </div>
+            </div> */}
 
             <YakitSideTab
                 type='vertical'
