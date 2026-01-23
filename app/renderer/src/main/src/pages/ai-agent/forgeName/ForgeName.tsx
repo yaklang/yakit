@@ -43,13 +43,14 @@ import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/forge"
 import ImportExportModal, {ImportExportModalExtra} from "@/components/ImportExportModal/ImportExportModal"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-
-import classNames from "classnames"
-import styles from "./ForgeName.module.scss"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {AITool, GetAIToolListRequest} from "../type/aiTool"
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
 import {grpcGetAIToolList} from "../aiToolList/utils"
+import {LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+
+import classNames from "classnames"
+import styles from "./ForgeName.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
@@ -281,6 +282,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         type: "export",
         apiKey: "ExportAIForge"
     })
+    const logListRef = useRef<LogListInfo[]>([])
     const forgeNamesRef = useRef<string[]>([])
     const toolNames = useRef<string[]>([])
     const outputNameRef = useRef<string>("")
@@ -299,34 +301,48 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             } else {
                 if (exportPath.current) {
                     openABSFileLocated(exportPath.current)
-                    exportPath.current = ""
                 }
             }
             yakitNotify("success", (importExportExtra.type === "export" ? "导出" : "导入") + "成功")
-        } else {
-            exportPath.current = ""
         }
-        setImportExportExtra((prev) => {
-            return {
-                ...prev,
-                hint: false
-            }
-        })
+        exportPath.current = ""
+
+        const index = logListRef.current.findIndex((i) => i.isError)
+        if (index === -1) {
+            setImportExportExtra((prev) => {
+                return {
+                    ...prev,
+                    hint: false
+                }
+            })
+        }
+        logListRef.current = []
     })
 
     const commonImportExportProps = useMemo(() => {
         return {
             getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined,
             extra: importExportExtra,
-            initialProgress: {
-                Percent: 0,
-                Message: "",
-                MessageType: ""
-            },
+            initialProgress: [
+                {
+                    Percent: 0,
+                    Message: "",
+                    MessageType: ""
+                }
+            ],
             getProgressValue: (p: ExportImportAIForgeProgress) => {
                 return p.Percent / 100
             },
-            isProgressFinished: (p: ExportImportAIForgeProgress) => p.Percent === 100,
+            getlogListInfo: (stream: ExportImportAIForgeProgress[]) => {
+                logListRef.current = stream
+                    .filter((item1) => !(item1.Percent === 0 && item1.Message === "" && item1.MessageType === ""))
+                    .map((item) => ({
+                        message: item.Message,
+                        isError: item.MessageType === "error",
+                        key: Math.random() * 5 + ""
+                    }))
+                return logListRef.current
+            },
             onFinished: handleFinishedImportExportHint
         }
     }, [importExportExtra])
@@ -399,7 +415,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                             icon={<OutlineImportIcon />}
                             onClick={() =>
                                 handleOpenImportExportHint({
-                                    title: "导入Forge",
+                                    title: "导入技能",
                                     type: "import",
                                     apiKey: "ImportAIForge"
                                 })
@@ -489,7 +505,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
                                             <div className={styles["item-extra"]}>
                                                 <Tooltip
-                                                    title={"导出Forge"}
+                                                    title={"导出技能"}
                                                     placement='topRight'
                                                     overlayClassName={styles["item-extra-tooltip"]}
                                                 >
@@ -502,7 +518,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                                             toolNames.current = tools
                                                             outputNameRef.current = ForgeVerboseName || ForgeName || ""
                                                             handleOpenImportExportHint({
-                                                                title: "导出Forge",
+                                                                title: "导出技能",
                                                                 type: "export",
                                                                 apiKey: "ExportAIForge"
                                                             })
@@ -631,6 +647,9 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                         ForgeNames: forgeNamesRef.current,
                         ...values
                     })}
+                    isProgressFinished={(p: ExportImportAIForgeProgress) =>
+                        p.Percent === 100 && p.MessageType === "success"
+                    }
                 />
             )}
             {importExportExtra.type === "import" && (
@@ -657,6 +676,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                         Overwrite: true,
                         ...values
                     })}
+                    isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100}
                 />
             )}
         </div>

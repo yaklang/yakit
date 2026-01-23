@@ -1,12 +1,11 @@
-import {memo, useEffect, useRef} from "react"
+import {memo, useEffect, useMemo, useRef} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitModal, YakitModalProp} from "@/components/yakitUI/YakitModal/YakitModal"
-import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {ImportAndExportStatusInfo, LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {useMemoizedFn, useSafeState} from "ahooks"
 import {Form, FormInstance, FormProps} from "antd"
-import {useCampare} from "@/hook/useCompare/useCompare"
 import styles from "./ImportExportModal.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -37,20 +36,26 @@ export type ImportExportModalExtra = {
 interface ImportExportModalProps<F, R, P> {
     getContainer?: HTMLElement
     extra: ImportExportModalExtra
+    hasDesc?: boolean
     modelProps?: YakitModalProp
     formProps?: FormProps
     renderForm: (form: FormInstance) => React.ReactNode
     onBeforeSubmit?: (values: F) => Promise<void> | void
     onSubmitForm: (values: F) => R
-    initialProgress: P
+    initialProgress: P[]
     getProgressValue: GetProgressValue<P>
     isProgressFinished: IsProgressFinished<P>
+    getlogListInfo?: (stream: P[]) => LogListInfo[]
     onFinished: (result: boolean) => void
 }
+/**
+ * 通用导入导出组件，参考ForgeName组件
+ */
 const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>) => {
     const {
         getContainer,
         extra,
+        hasDesc = true,
         modelProps = {},
         formProps = {},
         renderForm,
@@ -59,6 +64,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         initialProgress,
         getProgressValue,
         isProgressFinished,
+        getlogListInfo,
         onFinished
     } = props
 
@@ -67,8 +73,8 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     const [token, setToken] = useSafeState("")
     const [showProgressStream, setShowProgressStream] = useSafeState(false)
     const timeRef = useRef<ReturnType<typeof setTimeout>>()
-    const importExportStreamRef = useRef<P>(initialProgress)
-    const [progressStream, setProgressStream] = useSafeState<P>(initialProgress)
+    const importExportStreamRef = useRef<P[]>(initialProgress)
+    const [progressStream, setProgressStream] = useSafeState<P[]>(initialProgress)
 
     const onSubmit = useMemoizedFn(async () => {
         try {
@@ -92,12 +98,19 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         clearInterval(timeRef.current)
     })
 
-    const progressStreamCom = useCampare(progressStream)
     useEffect(() => {
-        if (isProgressFinished(progressStream)) {
+        if (isProgressFinished(progressStream[0])) {
             onFinished(true)
         }
-    }, [progressStreamCom])
+    }, [JSON.stringify(progressStream)])
+    const streamData = useMemo(() => {
+        return {
+            Progress: getProgressValue(progressStream[0])
+        }
+    }, [JSON.stringify(progressStream)])
+    const logListInfo = useMemo(() => {
+        return getlogListInfo?.(progressStream) || []
+    }, [JSON.stringify(progressStream)])
 
     useEffect(() => {
         if (!token) {
@@ -105,11 +118,11 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         }
         const typeTitle = extra.apiKey
         const updateImportExportHTTPFlowStream = () => {
-            setProgressStream({...importExportStreamRef.current})
+            setProgressStream([...importExportStreamRef.current])
         }
         timeRef.current = setInterval(updateImportExportHTTPFlowStream, 500)
         ipcRenderer.on(`${token}-data`, async (_, data: P) => {
-            importExportStreamRef.current = data
+            importExportStreamRef.current.unshift(data)
         })
         ipcRenderer.on(`${token}-error`, (_, error) => {
             yakitNotify("error", `[${typeTitle}] error:  ${error}`)
@@ -130,6 +143,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
 
     // modal header 描述文字
     const exportDescribeMemoizedFn = useMemoizedFn((type) => {
+        if (!hasDesc) return null
         switch (type) {
             case "export":
                 return (
@@ -204,7 +218,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
                                     onCancel()
                                 }}
                             >
-                                取消
+                                {isProgressFinished(progressStream[0]) ? "完成" : "取消"}
                             </YakitButton>
                         )}
                     </>
@@ -229,12 +243,18 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
                 ) : (
                     <div style={{padding: "0 16px"}}>
                         <ImportAndExportStatusInfo
-                            title={extra.type === "export" ? "导出中" : "导入中"}
+                            title={
+                                extra.type === "export"
+                                    ? isProgressFinished(progressStream[0])
+                                        ? "导出完成"
+                                        : "导出中..."
+                                    : isProgressFinished(progressStream[0])
+                                    ? "导入完成"
+                                    : "导入中..."
+                            }
                             showDownloadDetail={false}
-                            streamData={{
-                                Progress: getProgressValue(progressStream)
-                            }}
-                            logListInfo={[]}
+                            streamData={streamData}
+                            logListInfo={logListInfo}
                         />
                     </div>
                 )}

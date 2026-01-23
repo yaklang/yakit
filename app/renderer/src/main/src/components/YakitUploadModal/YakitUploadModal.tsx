@@ -27,8 +27,6 @@ export interface ImportAndExportStatusInfo {
 export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = memo((props) => {
     const {title, streamData, logListInfo, showDownloadDetail} = props
 
-    console.log(streamData.Progress);
-
     return (
         <div className={styles["yaklang-engine-hint-wrapper"]}>
             <div className={styles["hint-left-wrapper"]}>
