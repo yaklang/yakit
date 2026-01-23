@@ -43,6 +43,7 @@ interface CreateKnowledgeBaseData extends Omit<Entity, "ID">, Omit<KnowledgeBase
     disableERM: "true" | "false"
     chunk: string
     concurrency: number
+    SerialVersionID: string
     // 从实体生成知识 流数据收集
     historyGenerateKnowledgeList: Array<{
         date: string

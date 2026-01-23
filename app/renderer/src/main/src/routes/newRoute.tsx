@@ -180,6 +180,7 @@ import {AIAgent} from "@/pages/ai-agent/AIAgent"
 import {SolidClipboardlistIcon, SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon} from "@/assets/icon/solid"
 import {PublicToolDataCompareIcon} from "./publicIcon"
 import {SoftMode, YakitModeEnum} from "@/store/softMode"
+import {AIMentionCommandParams} from "@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -668,7 +669,7 @@ export interface ComponentParams {
     ruleManagementPageInfo?: RuleManagementPageInfoProps
 
     // TODO  后续补充
-    AIRepository?: {inputString: string}
+    AIRepository?: {defualtAIMentionCommandParams: AIMentionCommandParams[]}
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {

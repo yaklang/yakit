@@ -1,4 +1,4 @@
-import {ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon } from "@/assets/newIcon"
+import {ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon} from "@/assets/newIcon"
 import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -40,9 +40,9 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { ExportDataType } from "@/utils/exporter"
-import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from "./extractedFilter"
-import { useChunkAutoScrollToBottom } from "../../hooks/useAutoScrollToBottom"
+import {ExportDataType} from "@/utils/exporter"
+import {ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter} from "./extractedFilter"
+import {useChunkAutoScrollToBottom} from "../../hooks/useAutoScrollToBottom"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -81,22 +81,22 @@ interface HTTPFuzzerPageTableProps {
 
 /**
  * @description B转为kB M
- * @returns {string}
+ * @returns {number}
  */
-const convertBodyLength = (val: string) => {
-    const limit = parseInt(val)
-    let size = ""
-    if (limit < 0.1 * 1024) {
-        //小于0.1KB，则转化成B
-        size = limit.toFixed(2) + "B"
-    } else if (limit < 0.1 * 1024 * 1024) {
-        //小于0.1MB，则转化成KB
-        size = (limit / 1024).toFixed(2) + "KB"
-    } else if (limit < 0.1 * 1024 * 1024 * 1024) {
-        //小于0.1GB，则转化成MB
-        size = (limit / (1024 * 1024)).toFixed(2) + "MB"
+export const convertBodyLength = (val: number) => {
+    const size = Number(val)
+    if (!Number.isFinite(size) || size < 0) return "0B"
+
+    const units = ["B", "KB", "MB", "GB", "TB"]
+    let idx = 0
+    let cur = size
+
+    while (cur >= 1024 && idx < units.length - 1) {
+        cur /= 1024
+        idx++
     }
-    return size
+
+    return idx === 0 ? `${cur}${units[idx]}` : `${cur.toFixed(2)}${units[idx]}`
 }
 
 export interface HTTPFuzzerPageTableQuery {
@@ -264,13 +264,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     ),
                     filterRender: () => (
                         <ExtractedFilter
-                            onSearch={(ExtractedParams)=>{
-                                setQuery({ 
+                            onSearch={(ExtractedParams) => {
+                                setQuery({
                                     ...query,
-                                    ...ExtractedParams, 
-                                 })
+                                    ...ExtractedParams
+                                })
                                 setTimeout(() => update(), 100)
-                            }} 
+                            }}
                         />
                     )
                 },
@@ -281,15 +281,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         <div className={styles["table-item-extracted-results"]}>
                             <span className={styles["extracted-results-text"]}>
                                 {/* 匹配项只有一个时 只显示值 多个用 Divider 分割 */}
-                                {item.length === 1 
-                                    ? `${item[0].Value}` 
+                                {item.length === 1
+                                    ? `${item[0].Value}`
                                     : item.map((i, index) => (
-                                        <>
-                                            {!!index && <Divider type='vertical' style={{margin: '0 4px'}} />}
-                                            {`${i.Key}: ${i.Value}`}
-                                        </>
-                                    ))
-                                }
+                                          <>
+                                              {!!index && <Divider type='vertical' style={{margin: "0 4px"}} />}
+                                              {`${i.Key}: ${i.Value}`}
+                                          </>
+                                      ))}
                             </span>
                             {item?.length > 1 && (
                                 <YakitButton
@@ -300,9 +299,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         onViewExecResults(item)
                                     }}
                                     style={{
-                                        color: !isCellRedSingleColor(record.cellClassName)
-                                            ? undefined
-                                            : "#fff"
+                                        color: !isCellRedSingleColor(record.cellClassName) ? undefined : "#fff"
                                     }}
                                 >
                                     {t("YakitButton.detail")}
@@ -335,7 +332,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           width: 93,
                           sorterProps: {
                               sorter: true
-                          },
+                          }
                       },
                       {
                           title: t("HTTPFuzzerPageTable.status"),
@@ -359,9 +356,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               filterIcon: (
                                   <OutlineSelectorIcon
                                       className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]: 
-                                              !!query?.StatusCode?.length ||
-                                              sorterTable?.orderBy === "StatusCode"
+                                          [styles["active-icon"]]:
+                                              !!query?.StatusCode?.length || sorterTable?.orderBy === "StatusCode"
                                       })}
                                   />
                               ),
@@ -369,14 +365,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <TableFilterAndSorter
                                       sortStatus={sorterTable?.orderBy === "StatusCode" ? sorterTable?.order : "none"}
                                       handleSort={(status) => {
-                                          setIsResetSort(pre => !pre)
+                                          setIsResetSort((pre) => !pre)
                                           setSorterTable(
-                                              status === "none" 
-                                                  ? undefined 
-                                                  : {orderBy: "StatusCode", order: status}
+                                              status === "none" ? undefined : {orderBy: "StatusCode", order: status}
                                           )
                                       }}
-                                      filterType={'search'}
+                                      filterType={"search"}
                                       filterActive={!!query?.StatusCode}
                                       filterNode={
                                           <StatusCodeInputFilter
@@ -406,8 +400,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               filterIcon: (
                                   <OutlineSelectorIcon
                                       className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]: 
-                                              query?.afterBodyLength || 
+                                          [styles["active-icon"]]:
+                                              query?.afterBodyLength ||
                                               query?.beforeBodyLength ||
                                               sorterTable?.orderBy === "BodyLength"
                                       })}
@@ -417,17 +411,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <TableFilterAndSorter
                                       sortStatus={sorterTable?.orderBy === "BodyLength" ? sorterTable?.order : "none"}
                                       handleSort={(status) => {
-                                          setIsResetSort(pre => !pre)
+                                          setIsResetSort((pre) => !pre)
                                           setSorterTable(
-                                              status === "none" 
-                                                  ? undefined 
-                                                  : {orderBy: "BodyLength", order: status}
+                                              status === "none" ? undefined : {orderBy: "BodyLength", order: status}
                                           )
                                       }}
                                       filterActive={!!(query?.afterBodyLength || query?.beforeBodyLength)}
                                       filterNode={
-                                        <BodyLengthInputNumber
-                                             ref={bodyLengthRef}
+                                          <BodyLengthInputNumber
+                                              ref={bodyLengthRef}
                                               query={query}
                                               setQuery={(q) => {
                                                   setQuery({
@@ -455,8 +447,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               filterIcon: (
                                   <OutlineSelectorIcon
                                       className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]: 
-                                              query?.afterDurationMs || 
+                                          [styles["active-icon"]]:
+                                              query?.afterDurationMs ||
                                               query?.beforeDurationMs ||
                                               sorterTable?.orderBy === "DurationMs"
                                       })}
@@ -466,11 +458,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <TableFilterAndSorter
                                       sortStatus={sorterTable?.orderBy === "DurationMs" ? sorterTable?.order : "none"}
                                       handleSort={(status) => {
-                                          setIsResetSort(pre => !pre)
+                                          setIsResetSort((pre) => !pre)
                                           setSorterTable(
-                                              status === "none" 
-                                                  ? undefined 
-                                                  : {orderBy: "DurationMs", order: status}
+                                              status === "none" ? undefined : {orderBy: "DurationMs", order: status}
                                           )
                                       }}
                                       filterActive={!!(query?.afterDurationMs || query?.beforeDurationMs)}
@@ -542,7 +532,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           },
                           sorterProps: {
                               sorter: true
-                          },
+                          }
                       },
                       {
                           title: t("HTTPFuzzerPageTable.httpHeaderSimilarity"),
@@ -551,7 +541,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           width: 140,
                           sorterProps: {
                               sorter: true
-                          },
+                          }
                       },
 
                       {
@@ -566,8 +556,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           render: (text) => (text ? formatTimestamp(text) : "-"),
                           sorterProps: {
                               sorter: true
-                          },
-
+                          }
                       },
                       {
                           title: t("YakitTable.action"),
@@ -635,7 +624,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           width: 100,
                           sorterProps: {
                               sorter: true
-                          },
+                          }
                       },
                       {
                           title: t("HTTPFuzzerPageTable.failureReason"),
@@ -860,22 +849,21 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     .map((item) => `${item.Key}: ${item.Value}`)
                                     .join("")
                             }
-                            
+
                             // 不为空判断
                             if (query?.ExtractedResultsNotEmpty) {
                                 isHaveDataIsPush = extractedResultsString.trim().length > 0
                             }
-                            
+
                             // 关键字匹配判断（如果有关键字）
                             if (query?.ExtractedResults && query.ExtractedResults.length > 0) {
                                 const keyword = query.ExtractedResults.trim().toLocaleLowerCase()
                                 const content = extractedResultsString.toLocaleLowerCase()
                                 const matchType = query?.ExtractedResultsMatchType || "includes"
-                                
-                                const matchResult = matchType === "includes" 
-                                    ? content.includes(keyword)
-                                    : !content.includes(keyword)
-                                
+
+                                const matchResult =
+                                    matchType === "includes" ? content.includes(keyword) : !content.includes(keyword)
+
                                 // 如果同时有不为空和关键字条件，需要同时满足
                                 if (query?.ExtractedResultsNotEmpty) {
                                     isHaveDataIsPush = isHaveDataIsPush && matchResult
@@ -977,7 +965,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     menu: [
                         {
                             key: "is-show-add-overlay-widgetv",
-                            label: showResponseInfoSecondEditor ? t("HTTPFuzzerPageTable.hideResponseInfo") : t("HTTPFuzzerPageTable.showResponseInfo")
+                            label: showResponseInfoSecondEditor
+                                ? t("HTTPFuzzerPageTable.hideResponseInfo")
+                                : t("HTTPFuzzerPageTable.showResponseInfo")
                         }
                     ],
                     onRun: () => {
@@ -1050,9 +1040,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data, fuzzerTableMaxData])
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
-        const { handleEditorMount } = useChunkAutoScrollToBottom({
+        const {handleEditorMount} = useChunkAutoScrollToBottom({
             chunkedData: currentSelectItem?.RandomChunkedData || [],
-            id: currentSelectItem?.UUID,
+            id: currentSelectItem?.UUID
         })
 
         return (
@@ -1063,7 +1053,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     lineStyle={{display: firstFull ? "none" : ""}}
                     secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
                     //隐藏详情框 只需要清除选中项
-                    onClickHiddenBox={()=> onRowClick(undefined)}
+                    onClickHiddenBox={() => onRowClick(undefined)}
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
                             {showAlertFlag && (
@@ -1124,7 +1114,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
                                 title={
                                     <div className={styles["second-node-title-wrapper"]}>
-                                        <span className={styles["second-node-title-text"]}>{t("HTTPFuzzerPageTable.quickPreview")}</span>
+                                        <span className={styles["second-node-title-text"]}>
+                                            {t("HTTPFuzzerPageTable.quickPreview")}
+                                        </span>
                                         <div className={styles["second-node-title-btns"]}>
                                             <YakitRadioButtons
                                                 size='small'
@@ -1183,8 +1175,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                             key='allRes'
                                             menu={{
                                                 data: [
-                                                    {key: "tooLargeResponseHeaderFile", label: t("HTTPFuzzerPageTable.viewHeader")},
-                                                    {key: "tooLargeResponseBodyFile", label: t("HTTPFuzzerPageTable.viewBody")}
+                                                    {
+                                                        key: "tooLargeResponseHeaderFile",
+                                                        label: t("HTTPFuzzerPageTable.viewHeader")
+                                                    },
+                                                    {
+                                                        key: "tooLargeResponseBodyFile",
+                                                        label: t("HTTPFuzzerPageTable.viewBody")
+                                                    }
                                                 ],
                                                 onClick: ({key}) => {
                                                     switch (key) {
@@ -1200,7 +1198,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                                             currentSelectItem.TooLargeResponseHeaderFile
                                                                         )
                                                                     } else {
-                                                                        failed(t("HTTPFuzzerPageTable.targetFileNotExist"))
+                                                                        failed(
+                                                                            t("HTTPFuzzerPageTable.targetFileNotExist")
+                                                                        )
                                                                     }
                                                                 })
                                                                 .catch(() => {})
@@ -1217,7 +1217,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                                             currentSelectItem.TooLargeResponseBodyFile
                                                                         )
                                                                     } else {
-                                                                        failed(t("HTTPFuzzerPageTable.targetFileNotExist"))
+                                                                        failed(
+                                                                            t("HTTPFuzzerPageTable.targetFileNotExist")
+                                                                        )
                                                                     }
                                                                 })
                                                                 .catch(() => {})

@@ -17,6 +17,7 @@ import {ConcurrencyAdvancedConfigValue} from "@/pages/fuzzer/FuzzerSequence/Fuzz
 import {FilterLibRuleKind} from "@/pages/ruleManagement/RuleManagementType"
 import { JSONParseLog } from "@/utils/tool"
 import { configManagementTabType } from "."
+import {AIMentionCommandParams} from "@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 /**
  * @description 页面暂存数据
@@ -126,7 +127,7 @@ export interface SimpleDetectPageInfoProps {
 }
 
 export interface AIRepositoryProps {
-    inputString: string
+    defualtAIMentionCommandParams: AIMentionCommandParams[]
 }
 
 export interface WebsocketFuzzerPageInfoProps {
@@ -238,7 +239,7 @@ export interface HTTPHackerPageInfoProps {
 }
 
 export interface MITMHackerPageInfoProps {
-    // 传空对象直接启动mitm 不传表示打开mitm 
+    // 传空对象直接启动mitm 不传表示打开mitm
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
@@ -575,7 +576,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                         try {
                             const str = sessionStorage.getItem(name)
                             if (!str) return null
-                            const {state} = JSONParseLog(str,{page:"pageInfo"})
+                            const {state} = JSONParseLog(str, {page: "pageInfo"})
                             return {
                                 state: {
                                     ...state,

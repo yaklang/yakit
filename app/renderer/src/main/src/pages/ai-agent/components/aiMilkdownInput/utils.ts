@@ -6,21 +6,22 @@ import {AIMentionCommandParams, aiMentionCustomId} from "./aiMilkdownMention/aiM
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
     const mentions: AIMentionCommandParams[] = []
     let plainText = ""
-    editor.action((ctx) => {
-        const view = ctx.get(editorViewCtx)
-        const state = view.state
-        const doc = state.doc
+    editor?.action &&
+        editor.action((ctx) => {
+            const view = ctx.get(editorViewCtx)
+            const state = view.state
+            const doc = state.doc
 
-        // 遍历文档树
-        doc.descendants((node) => {
-            if (node.type.name === aiMentionCustomId) {
-                mentions.push({
-                    ...(node.attrs as AIMentionCommandParams)
-                })
-            }
+            // 遍历文档树
+            doc.descendants((node) => {
+                if (node.type.name === aiMentionCustomId) {
+                    mentions.push({
+                        ...(node.attrs as AIMentionCommandParams)
+                    })
+                }
+            })
+            plainText = doc.textBetween(0, doc.content.size, "\n\n")
         })
-        plainText = doc.textBetween(0, doc.content.size, "\n\n")
-    })
     return {mentions, plainText}
 }
 

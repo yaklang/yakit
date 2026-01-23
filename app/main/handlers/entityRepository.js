@@ -160,4 +160,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteRelationship", async (e, params) => {
         return await asyncDeleteRelationship(params)
     })
+
+    // DownloadRAGs
+    const asyncDownloadRAGs = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteRelationship(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadRAGs", async (e, params) => {
+        return await asyncDownloadRAGs(params)
+    })
 }

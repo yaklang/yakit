@@ -11,6 +11,7 @@ import {KnowledgeBaseContentProps} from "../TKnowledgeBase"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {extractFileName} from "../utils"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {randomString} from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -42,7 +43,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
 
     useEffect(() => {
         if (visible) {
-            const newToken = `import-kb-${Date.now()}`
+            const newToken = `import-kb-${randomString(50)}`
             setToken(newToken)
             setHasError(false)
         }
@@ -79,53 +80,52 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
         }
     )
 
-    useEffect(() => {
-        if (!token) return
-
-        const handleData = (e: any, data: GeneralProgress) => {
-            setProgress(data)
-        }
-
-        const handleError = (e: any, error: any) => {
-            setImportLoading(false)
-            setHasError(true)
-            failed(`${error}`)
-        }
-
-        const handleEnd = async () => {
-            try {
-                setImportLoading(false)
-                // 失败时不显示成功提示，但仍然刷新和关闭
-                if (!getHasError()) {
-                    success("导入知识库成功")
-                    await existsKnowledgeBaseAsync()
-                    onVisible(false)
-                    form.resetFields()
-                    setAddMode((it) => [...it, "external"])
-                }
-                setProgress({Percent: 0, Message: "", MessageType: ""})
-            } catch (error) {
-                failed(error + "")
-            }
-        }
-
-        ipcRenderer.on(`${token}-data`, handleData)
-        ipcRenderer.on(`${token}-error`, handleError)
-        ipcRenderer.on(`${token}-end`, handleEnd)
-
-        return () => {
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        }
-    }, [token])
-
     const handleImport = useMemoizedFn(async () => {
+        let cleanup = () => {}
         try {
             setHasError(false)
             const values = await form.validateFields()
             setImportLoading(true)
             setProgress({Percent: 0, Message: "开始导入...", MessageType: "info"})
+
+            const handleData = (_: any, data: GeneralProgress) => {
+                setProgress(data)
+            }
+
+            const handleError = (_: any, error: any) => {
+                cleanup()
+                setImportLoading(false)
+                setHasError(true)
+                failed(`${error}`)
+            }
+
+            const handleEnd = async () => {
+                try {
+                    setImportLoading(false)
+                    if (!getHasError()) {
+                        success("导入知识库成功")
+                        await existsKnowledgeBaseAsync()
+                        onVisible(false)
+                        form.resetFields()
+                        setAddMode((it) => [...it, "external"])
+                    }
+                    setProgress({Percent: 0, Message: "", MessageType: ""})
+                } catch (error) {
+                    failed(error + "")
+                } finally {
+                    cleanup()
+                }
+            }
+
+            cleanup = () => {
+                ipcRenderer.removeListener(`${token}-data`, handleData)
+                ipcRenderer.removeListener(`${token}-error`, handleError)
+                ipcRenderer.removeListener(`${token}-end`, handleEnd)
+            }
+
+            ipcRenderer.on(`${token}-data`, handleData)
+            ipcRenderer.on(`${token}-error`, handleError)
+            ipcRenderer.on(`${token}-end`, handleEnd)
 
             const knowledgeBaseName = values.knowledgeBaseName
                 ? values.knowledgeBaseName
@@ -144,6 +144,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                 token
             )
         } catch (error: any) {
+            cleanup()
             if (error?.errorFields) {
                 return
             }

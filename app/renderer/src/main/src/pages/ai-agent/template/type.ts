@@ -1,7 +1,7 @@
 import {ReactNode} from "react"
 import {TextAreaProps} from "antd/lib/input"
 import {AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
-import {AIChatIPCStartParams} from "@/pages/ai-re-act/hooks/type"
+import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, "bordered" | "autoSize"> {}
 
@@ -17,6 +17,7 @@ export interface AIChatTextareaRefProps {
     setMention: (v: AIMentionCommandParams) => void
     setValue: (v: string) => void
     getValue: () => void
+    editorMilkdown?: EditorMilkdownProps
 }
 export interface AIChatTextareaProps {
     ref?: React.ForwardedRef<AIChatTextareaRefProps>

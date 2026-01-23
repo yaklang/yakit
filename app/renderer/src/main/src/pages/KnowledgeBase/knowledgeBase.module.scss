@@ -390,16 +390,43 @@
                                     border-radius: 4px;
                                 }
                             }
-                            .title {
-                                line-height: 24px;
-                                color: var(--Colors-Use-Neutral-Text-1-Title);
-                                font-size: 14px;
-                                font-style: normal;
+                            .downloading {
+                                display: flex;
+                                padding: 4px 8px;
+                                align-items: center;
+                                gap: 4px;
+                                border-radius: 4px;
+                                background: var(--Colors-Use-Main-Bg);
+                                color: var(--Colors-Use-Main-Primary);
+                                font-size: 12px;
                                 font-weight: 500;
-                                width: calc(100% - 52px);
+                                line-height: 16px;
                                 white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
+                            }
+                            .title-left {
+                                width: calc(100% - 52px);
+                                max-width: calc(100% - 150px);
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                                .size {
+                                    line-height: 24px;
+                                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                                    font-size: 12px;
+                                    font-style: normal;
+                                    font-weight: 500;
+                                    white-space: nowrap;
+                                }
+                                .title {
+                                    line-height: 24px;
+                                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                                    font-size: 14px;
+                                    font-style: normal;
+                                    font-weight: 500;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
                             }
 
                             .default-tag {
@@ -700,6 +727,7 @@
                     align-items: center;
                     justify-content: space-between;
                     gap: 4px;
+
                     .icon {
                         svg {
                             width: 24px;

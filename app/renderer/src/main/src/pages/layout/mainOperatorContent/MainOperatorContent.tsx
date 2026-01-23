@@ -176,7 +176,7 @@ import {useProxy} from "@/hook/useProxy"
 import {JSONParseLog} from "@/utils/tool"
 import {SoftMode, useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {RemoteSoftModeGV} from "@/enums/softMode"
-import { debugToPrintLogs } from "@/utils/logCollection"
+import {debugToPrintLogs} from "@/utils/logCollection"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -1136,7 +1136,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const addAIREPOSITORY = useMemoizedFn((data) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AI_Agent).length
         if (isExist) {
-            emiter.emit("konwledgeInputString", JSON.stringify(data))
+            emiter.emit("defualtAIMentionCommandParams", JSON.stringify(data))
         }
         openMenuPage(
             {route: YakitRoute.AI_Agent},
@@ -1503,8 +1503,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 })
             }
             // 来自于MITM
-            if(res.hasOwnProperty("MITMData")){
-                const { enableGMTLS, randomJA3, noSystemProxy } = JSONParseLog(res.MITMData)
+            if (res.hasOwnProperty("MITMData")) {
+                const {enableGMTLS, randomJA3, noSystemProxy} = JSONParseLog(res.MITMData)
                 if (enableGMTLS) {
                     newAdvancedConfigValue.isGmTLS = true
                 }

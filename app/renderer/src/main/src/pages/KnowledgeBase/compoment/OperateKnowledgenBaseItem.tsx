@@ -262,12 +262,6 @@ const DeleteConfirm: FC<
                     setVisible(false)
 
                     try {
-                        const deleteOnlineRagName =
-                            items?.KnowledgeBaseName ??
-                            knowledgeBase?.find((it) => it.ID === KnowledgeBaseId)?.KnowledgeBaseName
-                        await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
-                            name: deleteOnlineRagName
-                        })
                         setRefreshOlineRag?.((preValue) => !preValue)
                     } catch (e) {}
 
@@ -328,9 +322,6 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
             onSuccess: async () => {
                 success("编辑知识库成功")
                 try {
-                    await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
-                        name: items.KnowledgeBaseName
-                    })
                     form.resetFields()
                     setVisible(false)
                     setRefreshOlineRag?.((preValue) => !preValue)

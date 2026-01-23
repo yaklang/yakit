@@ -66,4 +66,12 @@ module.exports = (win, getClient) => {
         let stream = getClient().StartThirdPartyBinary(params)
         handlerHelper.registerHandler(win, stream, streamStartMap, token)
     })
-} 
+
+    // DownloadRAGs - 安装x线上知识库 (流式接口)
+    const streamInstallOnlineRagMap = new Map()
+    ipcMain.handle("cancel-DownloadRAGs", handlerHelper.cancelHandler(streamInstallOnlineRagMap))
+    ipcMain.handle("DownloadRAGs", (e, params, token) => {
+        let stream = getClient().DownloadRAGs(params)
+        handlerHelper.registerHandler(win, stream, streamInstallOnlineRagMap, token)
+    })
+}

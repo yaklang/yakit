@@ -1,5 +1,5 @@
-import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, type FC} from "react"
-import {useAsyncEffect, useMemoizedFn, useSafeState} from "ahooks"
+import React, {Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useRef, type FC} from "react"
+import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useSafeState} from "ahooks"
 
 import {
     OutlineFolderopenIcon,
@@ -16,6 +16,7 @@ import {
     apiFetchQueryOnlieRageLatest,
     BuildingOnlineKnowledgeBase,
     ClearAllKnowledgeBase,
+    downloadWithEvents,
     insertModaOptions,
     KnowledgeTabList,
     KnowledgeTabListEnum,
@@ -52,10 +53,16 @@ import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OutlineBotIcon} from "@/assets/icon/colors"
+import {convertBodyLength} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import loading from "@/alibaba/ali-react-table-dist/dist/base-table/loading"
 
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
+
+export const installOnlineRagWithEvents = (url: string, binary: {RagName: string; Force: boolean}, token: string) => {
+    return downloadWithEvents(url, binary, token)
+}
 
 export interface TKnowledgeBaseSidebarProps {
     knowledgeBases: Array<KnowledgeBaseItem & {CreatedFromUI?: boolean}>
@@ -122,7 +129,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                 return prev
             })
 
-            await installWithEvents({Name: binary.Name, Force: true}, binary.installToken)
+            await installWithEvents("InstallThirdPartyBinary", {Name: binary.Name, Force: true}, binary.installToken)
 
             success(`${binary.Name} 下载完成`)
             await binariesToInstallRefreshAsync?.()
@@ -147,9 +154,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                 }
             }
 
-            const onError = (_, error) => {
-                failed(`下载失败: ${error}`)
-            }
+            const onError = () => {}
 
             const onEnd = () => {}
 
@@ -160,6 +165,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
         return () => {
             installTokens.forEach((token) => {
+                ipcRenderer.invoke("cancel-InstallThirdPartyBinary", token)
                 ipcRenderer.removeAllListeners(`${token}-data`)
                 ipcRenderer.removeAllListeners(`${token}-error`)
                 ipcRenderer.removeAllListeners(`${token}-end`)
@@ -188,7 +194,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)
-        setKnowledgeBaseID(processed?.[0]?.ID ?? "")
+        // setKnowledgeBaseID(processed?.[0]?.ID ?? "")
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases, addMode])
 
@@ -248,12 +254,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                 }
             })
             try {
-                for (const kb of knowledgeBases) {
-                    await ipcRenderer.invoke("remove-previous-online-rag-by-name", {
-                        name: kb.KnowledgeBaseName
-                    })
-                }
-
                 setRefreshOlineRag?.((preValue) => !preValue)
             } catch (e) {}
         } catch (error) {
@@ -263,21 +263,10 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     // 本地已下载线上知识库
     const [downloadedOnlineRags, setDownloadedOnlineRags] = useSafeState<OnlieRageLatestResponse[]>([])
-    // 线上知识库下载中状态
-    const [onlineRagDownloading, setOnlineRagDownloading] = useSafeState<Record<string, boolean>>({})
 
-    // 拉取本地已下载线上知识库
-    const refreshDownloadedOnlineRags = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("read-previous-online-rag")
-            .then(setDownloadedOnlineRags)
-            .catch(() => setDownloadedOnlineRags([]))
-    })
+    const [installOnlineRagsTokens, setInstallOnlineRagsTokens] = useSafeState<string[]>([])
 
-    useEffect(() => {
-        refreshDownloadedOnlineRags()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    const [onlineRagProgress, setOnlineRagProgress] = useSafeState<Record<string, number>>({})
 
     // 线上知识库列表 State
     const [onlineRagList, setOnlineRagList] = useSafeState<OnlieRageLatestResponse[]>([])
@@ -286,7 +275,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     const fetchAndSetOnlineRagList = useMemoizedFn(async () => {
         try {
             const res = await apiFetchQueryOnlieRageLatest()
-            setOnlineRagList(Array.isArray(res) ? res : [])
+            setOnlineRagList(Array.isArray(res) ? res.map((it) => ({...it, installToken: randomString(50)})) : [])
         } catch (err) {
             failed("获取线上知识库失败: " + err)
             setOnlineRagList([])
@@ -295,83 +284,62 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     // 下载线上知识库
     const onDownloadOnlineRag = async (ragItem: OnlieRageLatestResponse) => {
-        setOnlineRagDownloading((prev) => ({...prev, [ragItem.hash]: true}))
-        const newToken = randomString(40)
-        let localFilePath: string | undefined
         try {
-            localFilePath = await ipcRenderer.invoke("download-latest-online-rag", ragItem)
-
-            await handleBuildingOnlineKnowledge(
-                {
-                    ...ragItem,
-                    file_address: localFilePath
-                },
-                newToken
+            setInstallOnlineRagsTokens((prev) =>
+                prev.includes(ragItem.installToken) ? prev : [...prev, ragItem.installToken]
             )
 
-            await refreshDownloadedOnlineRags()
+            await installOnlineRagWithEvents("DownloadRAGs", {RagName: ragItem.name, Force: true}, ragItem.installToken)
+            await binariesToInstallRefreshAsync?.()
+
+            setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
+            setKnowledgeBaseID(knowledgeBase?.[0]?.ID ?? "")
+
+            success(`${ragItem.name_zh || ragItem.name} 下载完成`)
         } catch (err) {
-            // 1. 删除已下载的文件
-            if (localFilePath) {
-                try {
-                    await ipcRenderer.invoke("delete-local-file", localFilePath)
-                } catch (e) {}
-            }
-            try {
-                await ipcRenderer.invoke("remove-previous-online-rag", {
-                    hash: ragItem.hash,
-                    file: localFilePath
-                })
-            } catch (e) {}
-            await refreshDownloadedOnlineRags()
+            failed(`${ragItem.name_zh || ragItem.name} 下载失败: ${err}`)
         } finally {
-            setOnlineRagDownloading((prev) => ({...prev, [ragItem.hash]: false}))
+            setInstallOnlineRagsTokens((prev) => prev.filter((t) => t !== ragItem.installToken))
         }
     }
+    useEffect(() => {
+        if (!installOnlineRagsTokens || installOnlineRagsTokens.length === 0) return
 
-    const handleBuildingOnlineKnowledge = useMemoizedFn(
-        async (ragItem: OnlieRageLatestResponse & {file_address?: string}, newToken: string) => {
-            const rag_file_path = ragItem.file_address
-            const rag_name = ragItem.name
-            const rag_serial_version_uid = ragItem.hash
-            try {
-                const plugin: TClearKnowledgeResponse = await grpcFetchLocalPluginDetail({Name: "导入默认知识库"}, true)
-                // 先构建知识库
-                await BuildingOnlineKnowledgeBase(
-                    {...plugin, rag_file_path, rag_name, rag_serial_version_uid},
-                    newToken
-                )
-                // 返回一个 Promise，只有 onEnd 触发后 resolve，否则 onError reject
-                return await new Promise<void>((resolve, reject) => {
-                    api?.createStream(newToken, {
-                        taskName: "debug-plugin",
-                        apiKey: "DebugPlugin",
-                        token: newToken,
-                        onEnd: async () => {
-                            try {
-                                setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
-                                await refreshAsync?.()
-                            } catch (e) {}
-                            resolve()
-                        },
-                        onError: (e) => {
-                            api.removeStream && api.removeStream(newToken)
-                            reject(e)
-                        }
-                    })
-                })
-            } catch (error) {
-                throw error
+        installOnlineRagsTokens.forEach((token) => {
+            const onData = (_, data) => {
+                if (data?.Progress > 0) {
+                    const progressValue = Math.ceil(data.Progress)
+                    setOnlineRagProgress((prev) => ({
+                        ...prev,
+                        [token]: progressValue
+                    }))
+                }
             }
+
+            const onError = () => {}
+
+            const onEnd = async () => {}
+
+            ipcRenderer.on(`${token}-data`, onData)
+            ipcRenderer.on(`${token}-error`, onError)
+            ipcRenderer.on(`${token}-end`, onEnd)
+        })
+
+        return () => {
+            installOnlineRagsTokens.forEach((token) => {
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            })
         }
-    )
+    }, [installOnlineRagsTokens])
 
     const [onlineRagRefreshing, setOnlineRagRefreshing] = useSafeState<boolean>(false)
     // 刷新线上知识库列表和本地已下载列表
     const onRefreshOnlineRag = useMemoizedFn(async () => {
         try {
             setOnlineRagRefreshing(true)
-            await Promise.all([fetchAndSetOnlineRagList(), refreshDownloadedOnlineRags()])
+            await fetchAndSetOnlineRagList()
         } catch (err) {
             failed("刷新失败: " + err)
         } finally {
@@ -382,7 +350,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     // 首次加载时拉取线上知识库和本地快照
     useEffect(() => {
         fetchAndSetOnlineRagList()
-        refreshDownloadedOnlineRags()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -392,6 +359,32 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     const renderTabContent = useMemoizedFn((key: KnowledgeTabListEnum) => {
         let content: ReactNode = <></>
+
+        const generateInsertModaOptions = () => {
+            const countMap = knowledgeBases.reduce(
+                (acc, it) => {
+                    if (it.CreatedFromUI) {
+                        acc.manual++
+                    } else if (it.IsImported) {
+                        acc.external++
+                    } else {
+                        acc.other++
+                    }
+                    return acc
+                },
+                {
+                    manual: 0,
+                    external: 0,
+                    other: 0
+                }
+            )
+
+            return insertModaOptions.map((it) => {
+                const count = countMap[it.value as keyof typeof countMap]
+                return count !== undefined ? {...it, label: `${it.label}(${count})`} : it
+            })
+        }
+
         switch (key) {
             case KnowledgeTabListEnum.Knowledge:
                 content = (
@@ -462,7 +455,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
                             <div className={styles["repository-manage-options"]}>
                                 <div>
-                                    {insertModaOptions?.map((tag) => (
+                                    {generateInsertModaOptions()?.map((tag) => (
                                         <YakitCheckableTag
                                             key={tag.value}
                                             checked={addMode.includes(tag.value)}
@@ -596,14 +589,28 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                         <div className={styles["knowledge-base-collapse-panel"]}>
                                             {onlineRagList?.length > 0 ? (
                                                 (() => {
+                                                    // 本地已安装知识库：用 KnowledgeBaseName 做 key
                                                     const localMap = new Map(
-                                                        downloadedOnlineRags.map((it) => [it.file, it])
+                                                        knowledgeBases.map((it) => [it.KnowledgeBaseName, it])
                                                     )
 
                                                     return onlineRagList?.map((items) => {
-                                                        const local = localMap.get(items.file)
-                                                        const isDownloadedLatest = !!local && local.hash === items.hash
-                                                        const downloading = !!onlineRagDownloading[items.hash]
+                                                        const local = localMap.get(items.name)
+
+                                                        // 是否已下载（同名即认为已下载）
+                                                        const isDownloaded = !!local
+
+                                                        // 是否已是最新（版本 hash 对齐）
+                                                        const isLatest =
+                                                            isDownloaded && local.SerialVersionID === items.hash
+
+                                                        // 是否正在下载
+                                                        const downloadingProgress =
+                                                            onlineRagProgress?.[items.installToken]
+                                                        const isDownloading =
+                                                            downloadingProgress !== undefined &&
+                                                            downloadingProgress < 100
+
                                                         return (
                                                             <div
                                                                 className={classNames(
@@ -613,23 +620,39 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                             >
                                                                 <div className={styles["content"]}>
                                                                     <div className={classNames([styles["header"]])}>
-                                                                        <div className={styles["title"]}>
-                                                                            {items.name_zh?.trim() || "-"}
+                                                                        <div className={styles["title-left"]}>
+                                                                            <div className={styles["title"]}>
+                                                                                {items.name_zh?.trim() || "-"}
+                                                                            </div>
+                                                                            <div className={styles["size"]}>
+                                                                                {items.file_size && items.file_size > 0
+                                                                                    ? convertBodyLength(items.file_size)
+                                                                                    : "未知"}
+                                                                            </div>
                                                                         </div>
-                                                                        {!isDownloadedLatest ? (
+
+                                                                        {/* 右侧状态区 */}
+                                                                        {isDownloading ? (
+                                                                            <div className={styles["downloading"]}>
+                                                                                正在下载..（{downloadingProgress}%）
+                                                                            </div>
+                                                                        ) : !isDownloaded ? (
                                                                             <YakitButton
                                                                                 type='outline1'
-                                                                                loading={downloading}
-                                                                                disabled={downloading}
                                                                                 onClick={() =>
                                                                                     onDownloadOnlineRag(items)
                                                                                 }
                                                                             >
-                                                                                {!local
-                                                                                    ? "下载"
-                                                                                    : local.hash !== items.hash
-                                                                                    ? "更新"
-                                                                                    : "已下载"}
+                                                                                下载
+                                                                            </YakitButton>
+                                                                        ) : !isLatest ? (
+                                                                            <YakitButton
+                                                                                type='outline1'
+                                                                                onClick={() =>
+                                                                                    onDownloadOnlineRag(items)
+                                                                                }
+                                                                            >
+                                                                                更新
                                                                             </YakitButton>
                                                                         ) : (
                                                                             <div
@@ -754,7 +777,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     return (
         <div className={styles["knowledge-base-sidebar-container"]}>
-            {/* <div
+            <div
                 className={styles["knowledge-base-sidebar-ai-button"]}
                 onClick={() => {
                     emiter.emit(
@@ -762,7 +785,13 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         JSON.stringify({
                             route: YakitRoute.AI_Agent,
                             params: {
-                                inputString: "使用知识库回答:"
+                                defualtAIMentionCommandParams: [
+                                    {
+                                        mentionId: "@所有知识库",
+                                        mentionType: "knowledgeBase",
+                                        mentionName: "@所有知识库"
+                                    }
+                                ]
                             }
                         })
                     )
@@ -770,7 +799,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             >
                 <OutlineBotIcon />
                 <span>AI Agent</span>
-            </div> */}
+            </div>
 
             <YakitSideTab
                 type='vertical'
