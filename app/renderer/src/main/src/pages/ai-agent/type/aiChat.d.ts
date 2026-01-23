@@ -1,5 +1,7 @@
 import {UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import {ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData} from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIChatData {
     coordinatorIDs: UseChatIPCState["coordinatorIDs"]
@@ -10,7 +12,7 @@ export interface AIChatData {
     taskChat: UseChatIPCState["taskChat"]
     grpcFolders: UseChatIPCState["grpcFolders"]
     reActTimelines: UseChatIPCState["reActTimelines"]
-    getChatContentMap?: (chatType: ReActChatElement["chatType"], mapKey: string) => AIChatQSData | undefined
+    getChatContentMap?: (chatType: ReActChatRenderItem["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 
 /** UI-chat 信息 */

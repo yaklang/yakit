@@ -3,15 +3,18 @@ import {useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEff
 import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-
-import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
-import {AIChatQSData, AIChatQSDataTypeEnum, AITaskStartInfo, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
+import {
+    AIChatQSData,
+    AIChatQSDataTypeEnum,
+    AITaskStartInfo,
+    ReActChatRenderItem
+} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
@@ -154,8 +157,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         chatIPCData: {systemStream}
     } = useChatIPCStore()
 
-    const renderItem = (stream: ReActChatElement) => {
-        if(!stream.token) return null 
+    const renderItem = (stream: ReActChatRenderItem) => {
+        if (!stream.token) return null
         return <AIChatListItem key={stream.token} item={stream} type='task-agent' />
     }
 
@@ -204,7 +207,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     return (
         <div className={styles["ai-agent-chat-stream"]}>
-            <Virtuoso<ReActChatElement>
+            <Virtuoso<ReActChatRenderItem>
                 ref={virtuosoRef}
                 atBottomStateChange={setIsAtBottomRef}
                 style={{height: "100%", width: "100%"}}

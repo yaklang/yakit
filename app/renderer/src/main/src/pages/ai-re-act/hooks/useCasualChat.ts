@@ -1,4 +1,4 @@
-import {useRef} from "react"
+import {useEffect, useRef} from "react"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
@@ -8,7 +8,7 @@ import {AIChatLogData, handleSendFunc, UseCasualChatEvents, UseCasualChatParams,
 import {AIReviewJudgeLevelMap} from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, ReActChatElement} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, ReActChatRenderItem} from "./aiRender"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useChatContent from "./useChatContent"
 
@@ -21,7 +21,7 @@ function useCasualChat(params?: UseCasualChatParams) {
         pushLog && pushLog(logInfo)
     })
 
-    const [elements, setElements, getElements] = useGetSetState<ReActChatElement[]>([])
+    const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
     const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
     const getContentMap = useMemoizedFn((mapKey: string) => {
         return contentMap.current.get(mapKey)

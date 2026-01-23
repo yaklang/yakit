@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import {AIChatListItemProps} from "./type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
@@ -84,7 +84,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     const getTask = useMemoizedFn((id) => taskChat.plan.find((item) => item.index === id))
 
     const isStream = useCreation(() => {
-        return item.type === AIChatQSDataTypeEnum.STREAM
+        return item.type === AIChatQSDataTypeEnum.STREAM || item.type === AIChatQSDataTypeEnum.STREAM_GROUP
     }, [item.type])
 
     const ChatItemRenderer = useMemoizedFn((item: AIChatQSData) => {
@@ -179,9 +179,14 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         }
     })
 
-    const renderContent = useCreation(() => {
+    const renderContent = useMemoizedFn(() => {
         if (isStream) return <StreamingChatContent {...item} streamClassName={aiStreamNodeProps} />
-        return <StaticChatContent {...item}>{(contentItem) => ChatItemRenderer(contentItem)}</StaticChatContent>
-    },  [])
-    return <React.Fragment key={item.token}>{renderContent}</React.Fragment>
+        return (
+            <StaticChatContent
+                {...item}
+                render={(contentItem) => ChatItemRenderer(contentItem)}
+            />
+        )
+    })
+    return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

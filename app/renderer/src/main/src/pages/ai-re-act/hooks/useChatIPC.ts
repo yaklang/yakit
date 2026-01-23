@@ -43,13 +43,13 @@ function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEven
 function useChatIPC(params?: UseChatIPCParams) {
     const {
         getRequest,
+        setSessionChatName,
         onTaskStart,
         onTaskReview,
         onTaskReviewExtra,
         onReviewRelease,
-        onEnd,
-        setSessionChatName,
-        saveChatDataStore
+        saveChatDataStore,
+        onEnd
     } = params || {}
 
     const {getLabelByParams} = useAINodeLabel()

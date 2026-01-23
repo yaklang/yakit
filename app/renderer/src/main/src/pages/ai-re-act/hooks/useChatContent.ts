@@ -10,9 +10,15 @@ import {
     isToolStdoutStream
 } from "./utils"
 import {UseChatContentEvents, UseChatContentParams} from "./type"
-import {convertNodeIdToVerbose, DefaultAIToolResult, DefaultToolResultSummary} from "./defaultConstant"
+import {
+    AIStreamContentType,
+    convertNodeIdToVerbose,
+    DefaultAIToolResult,
+    DefaultToolResultSummary
+} from "./defaultConstant"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ToolStreamSelectors} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement, ToolStreamSelectors} from "./aiRender"
+import cloneDeep from "lodash/cloneDeep"
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
 
@@ -21,20 +27,57 @@ function useChatContent(params: UseChatContentParams) {
         params
 
     /** 更新触发渲染的UI数据项 */
-    const updateElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
-        // 先判断该项是否存在
-        const target = getElements().findIndex((item) => item.token === token && item.type === type)
+    const updateElements = useMemoizedFn(
+        (main: {mapKey: string; type: AIChatQSDataTypeEnum}, sub?: {mapKey: string; type: AIChatQSDataTypeEnum}) => {
+            // 先判断该项是否存在
+            const target = getElements().findIndex(
+                (item) => item.token === main.mapKey && item.type === main.type && (sub ? item.isGroup : true)
+            )
+            try {
+                if (target >= 0) {
+                    const newArr = [...getElements()]
 
-        if (target >= 0) {
-            setElements((old) => {
-                const newArr = [...old]
-                newArr[target].renderNum += 1
-                return newArr
-            })
-        } else {
-            setElements((old) => old.concat([{token: token, type: type, renderNum: 1, chatType: chatType}]))
+                    const item = newArr[target]
+                    item.renderNum += 1
+
+                    if (!sub || !item.isGroup) return newArr
+                    const subIndex = item.children.findIndex(
+                        (item) => item.token === sub.mapKey && item.type === sub.type
+                    )
+                    if (subIndex >= 0) {
+                        item.children[subIndex].renderNum += 1
+                    } else {
+                        item.children.push({
+                            chatType: chatType,
+                            token: sub.mapKey,
+                            type: sub.type,
+                            renderNum: 1
+                        })
+                    }
+                    setElements([...newArr])
+                } else {
+                    if (sub) {
+                        setElements((old) =>
+                            old.concat([
+                                {
+                                    chatType: chatType,
+                                    token: main.mapKey,
+                                    type: main.type,
+                                    renderNum: 1,
+                                    isGroup: true,
+                                    children: [{chatType: chatType, token: sub.mapKey, type: sub.type, renderNum: 1}]
+                                }
+                            ])
+                        )
+                    } else {
+                        setElements((old) =>
+                            old.concat([{chatType: chatType, token: main.mapKey, type: main.type, renderNum: 1}])
+                        )
+                    }
+                }
+            } catch (error) {}
         }
-    })
+    )
     /** 删除触发渲染的UI数据项 */
     const deleteElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
         // 先判断该项是否存在
@@ -78,6 +121,84 @@ function useChatContent(params: UseChatContentParams) {
     )
 
     // #region stream类型数据处理(OK)
+    /** 判断流式数据(type==='stream')在UI中是单项展示还是集合组展示 */
+    const handleIsGroupDisplay = useMemoizedFn(
+        (params: {
+            mapKey: string
+            type: AIChatQSDataTypeEnum
+            nodeID: AIOutputEvent["NodeId"]
+            contentType: AIOutputEvent["ContentType"]
+        }) => {
+            const {mapKey, type, nodeID, contentType} = params
+
+            const renderList = getElements()
+            if (contentType !== AIStreamContentType.DEFAULT || renderList.length === 0) {
+                // 非默认内容类型, 直接渲染 || 没有任何渲染数据, 直接渲染
+                updateElements({mapKey, type})
+                return
+            }
+
+            const lastRender = renderList[renderList.length - 1]
+            if (lastRender.token === mapKey) {
+                // 最后一项渲染数据就是当前数据，直接更新渲染次数
+                updateElements({mapKey, type: lastRender.type}, lastRender.isGroup ? {mapKey, type} : undefined)
+                return
+            }
+            const lastRenderData = getContentMap(lastRender.token)
+            if (!lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
+                updateElements({mapKey, type})
+                return
+            }
+
+            if (lastRender.type === AIChatQSDataTypeEnum.STREAM && !lastRender.isGroup) {
+                // 单项的stream数据
+                if (lastRenderData.data.NodeId === nodeID) {
+                    // 命中单项，准备整合成组数据，将原有单项的token当成组token
+                    const groupInfo: ReActChatGroupElement = {
+                        chatType: chatType,
+                        token: lastRender.token,
+                        type: AIChatQSDataTypeEnum.STREAM_GROUP,
+                        renderNum: 1,
+                        isGroup: true,
+                        children: [
+                            cloneDeep(lastRender),
+                            {chatType: chatType, token: mapKey, type: AIChatQSDataTypeEnum.STREAM, renderNum: 1}
+                        ]
+                    }
+                    const arr = groupInfo.children.map((item) => item.token)
+                    for (let el of arr) {
+                        const info = getContentMap(el)
+                        if (info) setContentMap(el, {...info, parentGroupKey: lastRender.token})
+                    }
+                    setElements((old) => {
+                        const newArr = [...old]
+                        newArr.pop()
+                        newArr.push(groupInfo)
+                        return newArr
+                    })
+                } else {
+                    // 未命中
+                    updateElements({mapKey, type})
+                }
+            } else if (lastRender.type === AIChatQSDataTypeEnum.STREAM_GROUP && lastRender.isGroup) {
+                // 组的stream数据
+                if (lastRenderData.data.NodeId === nodeID) {
+                    // 命中组内数据，追加到组内
+                    const subData = getContentMap(mapKey)
+                    if (subData) {
+                        setContentMap(mapKey, {...subData, parentGroupKey: lastRender.token})
+                    }
+                    updateElements({mapKey: lastRender.token, type: lastRender.type}, {mapKey: mapKey, type: type})
+                } else {
+                    // 未命中
+                    updateElements({mapKey, type})
+                }
+            } else {
+                updateElements({mapKey, type})
+            }
+        }
+    )
+
     /** stream类型数据初始化 */
     const handleInitStream = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -91,7 +212,7 @@ function useChatContent(params: UseChatContentParams) {
             const {event_writer_id} = JSON.parse(ipcContent) as {event_writer_id: string}
             // event_writer_id为空
             if (!event_writer_id) {
-                pushLog(genErrorLogData(res.Timestamp, `stream_start数据(NodeId: ${NodeId}), event_writer_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据(NodeId: ${NodeId}), event_writer_id 为空`))
                 return
             }
 
@@ -118,7 +239,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `异常 stream_start 类型, NodeId: ${NodeId}, eventuuid: (${event_writer_id}), 已存在对应的数据`
+                        `异常 ${res.Type} 类型, NodeId: ${NodeId}, eventuuid: (${event_writer_id}), 已存在对应的数据`
                     )
                 )
                 return
@@ -137,6 +258,7 @@ function useChatContent(params: UseChatContentParams) {
 
             setContentMap(event_writer_id, {
                 ...genBaseAIChatData(res),
+                id: event_writer_id,
                 type: AIChatQSDataTypeEnum.STREAM,
                 data: {
                     NodeId,
@@ -229,7 +351,14 @@ function useChatContent(params: UseChatContentParams) {
 
             setContentMap(EventUUID, newStream)
             if (isRender) {
-                updateElements(EventUUID, newStream.type)
+                // 如果折叠写不完，则打开注释，然后将注释的下一个方法调用注释
+                // updateElements({mapKey: EventUUID, type: newStream.type})
+                handleIsGroupDisplay({
+                    mapKey: EventUUID,
+                    type: newStream.type,
+                    nodeID: NodeId,
+                    contentType: res.ContentType
+                })
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -267,7 +396,14 @@ function useChatContent(params: UseChatContentParams) {
                     status: "end"
                 }
             })
-            updateElements(event_writer_id, AIChatQSDataTypeEnum.STREAM)
+            if (streamData.parentGroupKey) {
+                updateElements(
+                    {mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP},
+                    {mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM}
+                )
+            } else {
+                updateElements({mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM})
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -298,7 +434,7 @@ function useChatContent(params: UseChatContentParams) {
                 ...toolResult,
                 data: {...toolResult.data}
             })
-            if (showUI) updateElements(toolResult.id, toolResult.type)
+            if (showUI) updateElements({mapKey: toolResult.id, type: toolResult.type})
             streamToToolResultError.current.delete(call_tool_id)
             toolResultErrorUUIDToCallToolID.current.delete(uuid)
         }
@@ -312,7 +448,7 @@ function useChatContent(params: UseChatContentParams) {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const {call_tool_id, tool} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
             if (!call_tool_id) {
-                pushLog(genErrorLogData(res.Timestamp, `tool_call_start数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
             }
 
@@ -347,7 +483,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `tool_call_watcher数据, call_tool_id: ${call_tool_id || "为空"} | id: ${id || "为空"}`
+                        `${res.Type}数据, call_tool_id: ${call_tool_id || "为空"} | id: ${id || "为空"}`
                     )
                 )
                 return
@@ -369,7 +505,7 @@ function useChatContent(params: UseChatContentParams) {
                     pushLog(
                         genErrorLogData(
                             res.Timestamp,
-                            `tool_call_watcher数据中, 对应的stream数据不存在(call_tool_id:${call_tool_id})`
+                            `${res.Type}数据中, 对应的stream数据不存在(call_tool_id:${call_tool_id})`
                         )
                     )
                     return
@@ -383,11 +519,55 @@ function useChatContent(params: UseChatContentParams) {
                     getElements().findIndex(
                         (item) => item.token === idFind.eventUUID && item.type === streamData.type
                     ) >= 0
-                showUI && updateElements(idFind.eventUUID, streamData.type)
+                showUI && updateElements({mapKey: idFind.eventUUID, type: streamData.type})
             } else {
                 // 对应的stream类型数据还未输出
                 streamStdOutSelectors.current.set(call_tool_id, list)
             }
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: pushLog
+            })
+        }
+    })
+
+    /** 工具执行中的工作文件目录路径 */
+    const handleToolDirPath = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const {call_tool_id, dir_path} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallDirPath
+            if (!call_tool_id) {
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
+                return
+            }
+
+            const toolResult = getContentMap(call_tool_id)
+            if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+                pushLog(
+                    genErrorLogData(
+                        res.Timestamp,
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                    )
+                )
+                return
+            }
+
+            if (toolResult.data.dirPath) {
+                pushLog(
+                    genErrorLogData(
+                        res.Timestamp,
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), dir_path已存在，不能重复设置`
+                    )
+                )
+                return
+            }
+
+            setContentMap(call_tool_id, {
+                ...toolResult,
+                data: {...toolResult.data, dirPath: dir_path || ""}
+            })
+            if (toolResult.data.status !== "default") updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -403,7 +583,7 @@ function useChatContent(params: UseChatContentParams) {
             const {call_tool_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
             if (!call_tool_id) {
-                pushLog(genErrorLogData(res.Timestamp, `tool_call(user_cancel/done/error)数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
             }
 
@@ -412,7 +592,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `tool_call(user_cancel/done/error)数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
                     )
                 )
                 return
@@ -456,7 +636,7 @@ function useChatContent(params: UseChatContentParams) {
                 ...toolResult,
                 data: toolResult.data
             })
-            updateElements(toolResult.id, toolResult.type)
+            updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -472,7 +652,7 @@ function useChatContent(params: UseChatContentParams) {
             const {call_tool_id, summary} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
             if (!call_tool_id) {
-                pushLog(genErrorLogData(res.Timestamp, `tool_call_summary数据, call_tool_id 为空`))
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
             }
 
@@ -481,7 +661,7 @@ function useChatContent(params: UseChatContentParams) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
-                        `tool_call_summary数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
                     )
                 )
                 return
@@ -506,7 +686,7 @@ function useChatContent(params: UseChatContentParams) {
                 ...toolResult,
                 data: toolResult.data
             })
-            if (statusInfo !== "default") updateElements(toolResult.id, toolResult.type)
+            if (statusInfo !== "default") updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -527,7 +707,21 @@ function useChatContent(params: UseChatContentParams) {
             if (chatData) {
                 const references = (chatData.reference || []).concat([data])
                 setContentMap(data.event_uuid, {...chatData, reference: references})
-                updateElements(data.event_uuid, chatData.type)
+                if (chatData.parentGroupKey) {
+                    updateElements(
+                        {mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP},
+                        {mapKey: data.event_uuid, type: chatData.type}
+                    )
+                } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
+                    handleIsGroupDisplay({
+                        mapKey: chatData.id,
+                        type: chatData.type,
+                        nodeID: chatData.data.NodeId,
+                        contentType: chatData.data.ContentType
+                    })
+                } else {
+                    updateElements({mapKey: data.event_uuid, type: chatData.type})
+                }
             } else {
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
@@ -540,7 +734,7 @@ function useChatContent(params: UseChatContentParams) {
                     reference: [data]
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, AIChatQSDataTypeEnum.Reference_Material)
+                updateElements({mapKey: chatData.id, type: AIChatQSDataTypeEnum.Reference_Material})
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -567,7 +761,7 @@ function useChatContent(params: UseChatContentParams) {
                     data: thought || ""
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
@@ -582,7 +776,7 @@ function useChatContent(params: UseChatContentParams) {
                     data: result || ""
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
@@ -598,7 +792,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
             // #endregion
@@ -633,6 +827,12 @@ function useChatContent(params: UseChatContentParams) {
             // 工具执行中-可操作选项
             if (res.Type === "tool_call_watcher") {
                 handleExceTool(res)
+                return
+            }
+
+            // 工具执行-工作目录路径
+            if (res.Type === "tool_call_log_dir") {
+                handleToolDirPath(res)
                 return
             }
 
@@ -676,7 +876,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 
@@ -692,7 +892,7 @@ function useChatContent(params: UseChatContentParams) {
                     }
                 }
                 setContentMap(chatData.id, chatData)
-                updateElements(chatData.id, chatData.type)
+                updateElements({mapKey: chatData.id, type: chatData.type})
                 return
             }
 

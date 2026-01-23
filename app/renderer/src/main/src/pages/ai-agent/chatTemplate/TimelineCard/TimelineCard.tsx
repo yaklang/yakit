@@ -141,7 +141,6 @@ const TimelineCard: FC = () => {
 
     const displayTimelines = useMemo<AIAgentGrpcApi.TimelineItem[]>(() => {
         if (!Array.isArray(timelines)) return []
-        console.log('timelines:', timelines);
         if (timelines.length <= MAX_TIMELINE_COUNT) return timelines
         return timelines.slice(-MAX_TIMELINE_COUNT)
     }, [timelines])
@@ -154,7 +153,6 @@ const TimelineCard: FC = () => {
         }),
         [displayTimelines.length]
     )
-    console.log('displayTimelines:', displayTimelines);
     return (
         <div className={styles["timeline-card-wrapper"]} ref={containerRef}>
             <Virtuoso

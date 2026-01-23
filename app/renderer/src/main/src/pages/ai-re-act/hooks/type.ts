@@ -5,7 +5,7 @@ import {
     AITaskInfoProps,
     AITokenConsumption,
     AIYakExecFileRecord,
-    ReActChatElement
+    ReActChatRenderItem
 } from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
@@ -61,7 +61,7 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 }
 
 export interface UseCasualChatState {
-    elements: ReActChatElement[]
+    elements: ReActChatRenderItem[]
     contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
@@ -88,7 +88,7 @@ export interface UseTaskChatParams extends UseHookBaseParams {
 export interface UseTaskChatState {
     /** 正在执行的任务列表 */
     plan: AITaskInfoProps[]
-    elements: ReActChatElement[]
+    elements: ReActChatRenderItem[]
     contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
@@ -119,20 +119,23 @@ export interface AIChatIPCNotifyMessage {
 export interface UseChatIPCParams {
     /** 获取流接口请求参数 */
     getRequest?: () => AIAgentSetting | undefined
+    /** 设置会话的名字 */
+    setSessionChatName?: (session: string, name: string) => void
+
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: () => void
     /** 任务规划的 review 事件 */
     onTaskReview?: (data: AIChatQSData) => void
     /** 任务规划中 plan_review 事件的补充数据 */
     onTaskReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
+
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
-    /** 接口结束断开的回调事件 */
-    onEnd?: () => void
-    /** 设置会话的名字 */
-    setSessionChatName?: (session: string, name: string) => void
+
     /** 保存历史数据 */
     saveChatDataStore?: (session: string, data: AIChatData) => void
+    /** 接口结束断开的回调事件 */
+    onEnd?: () => void
 }
 
 /** 会话文件系统-pin */
@@ -231,7 +234,7 @@ export interface UseChatIPCEvents {
     /** 取消任务规划当前的Review */
     handleTaskReviewRelease: (id: string) => void
     /** 获取[自由对话(ReAct)|任务规划]指定mapKey的详情数据 */
-    getChatContentMap: (chatType: ReActChatElement["chatType"], mapKey: string) => AIChatQSData | undefined
+    getChatContentMap: (chatType: ReActChatRenderItem["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 // #endregion
 
@@ -263,12 +266,12 @@ export interface UseAIChatLogEvents {
 
 // #region useChatContent相关定义
 export interface UseChatContentParams {
-    chatType: ReActChatElement["chatType"]
+    chatType: ReActChatRenderItem["chatType"]
     getContentMap: (token: string) => AIChatQSData | undefined
     setContentMap: (token: string, content: AIChatQSData) => void
     deleteContentMap: (token: string) => void
-    setElements: Dispatch<SetStateAction<ReActChatElement[]>>
-    getElements: () => ReActChatElement[]
+    setElements: Dispatch<SetStateAction<ReActChatRenderItem[]>>
+    getElements: () => ReActChatRenderItem[]
     /** 获取当前执行接口流的唯一标识符 */
     pushLog: (log: AIChatLogData) => void
     /** 未识别的类型数据, 由外界自主识别处理 */
