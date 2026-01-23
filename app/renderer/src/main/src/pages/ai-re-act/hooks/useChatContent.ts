@@ -132,7 +132,7 @@ function useChatContent(params: UseChatContentParams) {
             const {mapKey, type, nodeID, contentType} = params
 
             const renderList = getElements()
-            if (contentType !== AIStreamContentType.DEFAULT || renderList.length <= 0) {
+            if (contentType !== AIStreamContentType.DEFAULT || renderList.length === 0) {
                 // 非默认内容类型, 直接渲染 || 没有任何渲染数据, 直接渲染
                 updateElements({mapKey, type})
                 return
@@ -142,15 +142,11 @@ function useChatContent(params: UseChatContentParams) {
             if (lastRender.token === mapKey) {
                 // 最后一项渲染数据就是当前数据，直接更新渲染次数
                 updateElements({mapKey, type: lastRender.type}, lastRender.isGroup ? {mapKey, type} : undefined)
+                return
             }
             const lastRenderData = getContentMap(lastRender.token)
             if (!lastRenderData || lastRenderData.type !== AIChatQSDataTypeEnum.STREAM) {
-                // 最后一个渲染数据不是stream类型, 直接渲染
-                if (lastRender.type === AIChatQSDataTypeEnum.STREAM_GROUP) {
-                    updateElements({mapKey, type: lastRender.type}, {mapKey, type})
-                } else {
-                    updateElements({mapKey, type: lastRender.type})
-                }
+                updateElements({mapKey, type})
                 return
             }
 
@@ -262,6 +258,7 @@ function useChatContent(params: UseChatContentParams) {
 
             setContentMap(event_writer_id, {
                 ...genBaseAIChatData(res),
+                id: event_writer_id,
                 type: AIChatQSDataTypeEnum.STREAM,
                 data: {
                     NodeId,
@@ -671,6 +668,13 @@ function useChatContent(params: UseChatContentParams) {
                         {mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP},
                         {mapKey: data.event_uuid, type: chatData.type}
                     )
+                } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
+                    handleIsGroupDisplay({
+                        mapKey: chatData.id,
+                        type: chatData.type,
+                        nodeID: chatData.data.NodeId,
+                        contentType: chatData.data.ContentType
+                    })
                 } else {
                     updateElements({mapKey: data.event_uuid, type: chatData.type})
                 }
