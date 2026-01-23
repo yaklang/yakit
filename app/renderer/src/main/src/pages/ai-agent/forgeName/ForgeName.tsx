@@ -277,7 +277,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     // #region AIForge单个导入导出
     const [importExportExtra, setImportExportExtra] = useState<ImportExportModalExtra>({
         hint: false,
-        title: "导出Forge",
+        title: "导出技能",
         type: "export",
         apiKey: "ExportAIForge"
     })
