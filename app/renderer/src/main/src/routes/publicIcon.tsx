@@ -3655,3 +3655,24 @@ const PublicKnowledgeBase = () => (
 export const PublicKnowledgeBaseIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PublicKnowledgeBase} {...props} />
 }
+
+const PublicNotepad = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M20 7.5V5.5C20 4.39543 19.1046 3.5 18 3.5H5C3.89543 3.5 3 4.39543 3 5.5V19.5C3 20.6046 3.89543 21.5 5 21.5H18C19.1046 21.5 20 20.6046 20 19.5V18M7 2V5M10 2V5M13 2V5M16 2V5M6 9.5H16M6 13.5H12M6 17.5H11'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M22.6095 9.89052C22.0888 9.36983 21.2446 9.36983 20.7239 9.89052L15 15.6144L15 17.5H16.8856L22.6095 11.7761C23.1302 11.2554 23.1302 10.4112 22.6095 9.89052Z'
+            stroke='var(--Colors-Use-Main-Primary)'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+export const PublicNotepadIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicNotepad} {...props} />
+}
