@@ -584,11 +584,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     mentionType: "knowledgeBase",
                     mentionName: targetKnowledgeBase.KnowledgeBaseName
                 })
-                aiReActChatRef.current?.onMemfitExtra?.({
-                    mentionId: "",
-                    mentionType: "focusMode",
-                    mentionName: "knowledge_enhance"
-                })
             })
         }
     }
