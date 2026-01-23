@@ -4042,9 +4042,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
         const { handleEditorMount } = useAutoScrollToBottom({
-            loading,
             chunkedData: fuzzerResponse.RandomChunkedData,
-            resetDep: fuzzerResponse,
+            id: fuzzerResponse?.UUID,
             onEditorMount: onSetOnlyOneResEditor
         })
 

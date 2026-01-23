@@ -1,5 +1,5 @@
-import { useRef, useEffect } from "react"
-import { useMemoizedFn, useThrottleEffect } from "ahooks"
+import { useRef, useEffect, useMemo } from "react"
+import { useMemoizedFn, useThrottleEffect, useUpdateEffect } from "ahooks"
 import { IMonacoEditor } from "@/utils/editors"
 import { IDisposable } from "monaco-editor"
 import {monaco} from "react-monaco-editor"
@@ -7,12 +7,10 @@ import { RandomChunkedResponse } from "../HTTPFuzzerPage"
 import { Uint8ArrayToString } from "@/utils/str"
 
 interface UseAutoScrollToBottomOptions {
-    /** 是否还在加载中，默认 false */
-    loading?: boolean
     /** 需要流式加载的内容 */
     chunkedData: RandomChunkedResponse[]
-    /** 重置滚动状态的依赖值（如切换到新数据时） */
-    resetDep?: unknown
+    /** 可选的唯一标识符，用于重置滚动状态 */
+    id?: string
     /** 编辑器挂载后的额外回调 */
     onEditorMount?: (editor: IMonacoEditor) => void
 }
@@ -32,18 +30,22 @@ interface UseAutoScrollToBottomReturn {
  * 自动滚动到底部的 hook
  * - 内容变化时自动滚动到底部
  * - 用户手动向上滚动后，停止自动滚动
- * - resetDep 变化时，重置滚动状态
  */
 export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): UseAutoScrollToBottomReturn => {
-    const { loading = false, chunkedData, resetDep, onEditorMount } = options
+    const { chunkedData, id, onEditorMount } = options
     // 编辑器引用
     const editorRef = useRef<IMonacoEditor>()
     // 用户是否手动滚动过
     const userHasScrolledRef = useRef<boolean>(false)
     // 滚动事件监听器的清理函数
     const scrollDisposableRef = useRef<IDisposable>()
-    // 完整Chunk编辑器数据
-    const fullChunkContentRef = useRef<string>("")
+
+    // 流是否加载中
+    const isStreamLoad = useMemo(()=>{
+        if(chunkedData.length ===0) return true
+        const lastChunk = chunkedData[chunkedData.length -1]
+        return !lastChunk.IsFinal
+    },[chunkedData])
 
     // 滚动到底部
     const scrollToBottom = useMemoizedFn(() => {
@@ -65,9 +67,10 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
         // 清理之前的监听器
         if (scrollDisposableRef.current) {
             scrollDisposableRef.current.dispose()
+            scrollDisposableRef.current = undefined
         }
         // 未启用时不监听
-        if (!loading) return
+        if (!isStreamLoad) return
         
         scrollDisposableRef.current = editor.onDidScrollChange((e) => {
             // 只有当滚动是由用户触发时才标记
@@ -78,6 +81,8 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
                 // 如果不在底部，说明用户向上滚动了
                 const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10
                 if (!isAtBottom) {
+                    console.log("用户手动滚动，停止自动滚动");
+                    
                     userHasScrolledRef.current = true
                 }
             }
@@ -91,20 +96,18 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
         onEditorMount?.(editor)
     })
 
-    // resetDep 变化时，重置滚动状态
+    // id 变化时，重置滚动状态
     useEffect(() => {
-        if (!loading) return
+        if (!isStreamLoad) return
         resetScrollState()
-    }, [resetDep, loading])
+    }, [id, isStreamLoad])
 
-    // loading 变化时，重新设置/清理监听器
+    // isStreamLoad 变化时，重新设置/清理监听器
     useEffect(() => {
         const editor = editorRef.current
         if (!editor) return
-        if (loading) {
+        if (isStreamLoad) {
             setupScrollListener(editor)
-            // 重置完整内容
-            fullChunkContentRef.current = ""
         } else {
             // 禁用时清理监听器
             if (scrollDisposableRef.current) {
@@ -112,7 +115,7 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
                 scrollDisposableRef.current = undefined
             }
         }
-    }, [loading])
+    }, [isStreamLoad])
 
     // 组件卸载时清理监听器
     useEffect(() => {
@@ -146,8 +149,6 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
                 text
             }
         ])
-        // 记录流式加载的总内容
-        fullChunkContentRef.current += text
         // 清空待追加内容
         addStreamContentRef.current = []
         if (!userHasScrolledRef.current) {
@@ -160,7 +161,6 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
 
     // chunkedData 变化时，追加内容
     useThrottleEffect(() => {
-        if (!loading) return
         if (!editorRef.current || chunkedData.length === 0) return
         // 初次加载时，记录位置并加载内容
         if(!addStreamIndexRef.current){
@@ -173,7 +173,7 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
             addStreamContentRef.current =[...addStreamContentRef.current,...chunkedData.slice(addStreamIndexRef.current)]
             addStreamIndexRef.current = chunkedData.length
         }
-    },[chunkedData,loading],{
+    },[chunkedData],{
       wait: 500,
     })
 
@@ -193,12 +193,21 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
             }
             addStreamIndexRef.current = undefined
         }
-    },[loading])
+    },[isStreamLoad])
+
+    // id 变化时，重新加载增量数据
+    useUpdateEffect(()=>{
+        addStreamIndexRef.current = chunkedData.length
+        addStreamContentRef.current = chunkedData
+        // 延迟执行，等待编辑器内容更新完成
+        setTimeout(() => {
+            scrollToBottom()
+        }, 100)
+    },[id])
 
     return {
         handleEditorMount,
         scrollToBottom,
         resetScrollState,
-        // getfullChunkContent: () => fullChunkContentRef.current
     }
 }
