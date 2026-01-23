@@ -1535,6 +1535,49 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
     }
 
     if (isYakit()) {
+        if (isEnpriTrace()) {
+            return [
+                {
+                    page: YakitRoute.Codec,
+                    icon: <SolidCodecIcon />,
+                    ...YakitRouteToPageInfo[YakitRoute.Codec]
+                },
+                {
+                    page: YakitRoute.PayloadManager,
+                    icon: <SolidPayloadIcon />,
+                    ...YakitRouteToPageInfo[YakitRoute.PayloadManager]
+                },
+                {
+                    page: YakitRoute.YakScript,
+                    icon: <SolidTerminalIcon />,
+                    ...YakitRouteToPageInfo[YakitRoute.YakScript]
+                },
+                {
+                    page: undefined,
+                    icon: <SolidClipboardlistIcon />,
+                    i18n: false,
+                    label: getNotepadNameByEdition(),
+                    children: [
+                        {
+                            page: YakitRoute.Notepad_Manage,
+                            i18n: false,
+                            label:
+                                i18n.language === "en"
+                                    ? `${getNotepadNameByEdition()} Manage`
+                                    : `${getNotepadNameByEdition()}管理`
+                        },
+                        {
+                            page: YakitRoute.Modify_Notepad,
+                            i18n: false,
+                            label:
+                                i18n.language === "en"
+                                    ? `Add ${getNotepadNameByEdition()}`
+                                    : `新建${getNotepadNameByEdition()}`
+                        }
+                    ]
+                }
+            ]
+        }
         if (isCommunityYakit()) {
             // 经典模式
             if (softMode === YakitModeEnum.Classic) {
@@ -1750,6 +1793,29 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                             {
                                 page: YakitRoute.YakScript,
                                 ...YakitRouteToPageInfo[YakitRoute.YakScript]
+                            },
+                            {
+                                page: undefined,
+                                i18n: false,
+                                label: getNotepadNameByEdition(),
+                                children: [
+                                    {
+                                        page: YakitRoute.Notepad_Manage,
+                                        i18n: false,
+                                        label:
+                                            i18n.language === "en"
+                                                ? `${getNotepadNameByEdition()} Manage`
+                                                : `${getNotepadNameByEdition()}管理`
+                                    },
+                                    {
+                                        page: YakitRoute.Modify_Notepad,
+                                        i18n: false,
+                                        label:
+                                            i18n.language === "en"
+                                                ? `Add ${getNotepadNameByEdition()}`
+                                                : `新建${getNotepadNameByEdition()}`
+                                    }
+                                ]
                             }
                         ]
                     }
