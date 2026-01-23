@@ -241,7 +241,8 @@ export const onExpandHTTPFlow = (
     flow: HTTPFlow | undefined,
     onClosed: () => any,
     downstreamProxyStr: string,
-    t?: (keys: string) => string // 部分调用位置不确认，暂时为可选参数
+    t?: (keys: string) => string, // 部分调用位置不确认，暂时为可选参数
+    pageType?: HTTPHistorySourcePageType
 ) => {
     if (!flow) {
         return <YakitEmpty title={t?.("HTTPFlowTable.requestDetailsNotFound") || "找不到该请求详情"}></YakitEmpty>
@@ -249,7 +250,7 @@ export const onExpandHTTPFlow = (
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed} downstreamProxyStr={downstreamProxyStr} />
+            <HTTPFlowDetail pageType={pageType} id={flow.Id} onClose={onClosed} downstreamProxyStr={downstreamProxyStr} />
         </div>
     )
 }
@@ -753,6 +754,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const ref = useRef(null)
 
     const refreshTabsContRef = useRef<boolean>(false)
+    
+    const fromMITM = useMemo(()=> props.pageType === 'MITM', [props.pageType])
 
     useShortcutKeyTrigger("sendAndJump*common", (focus) => {
         let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
@@ -763,7 +766,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (selected) {
                 selected.IsWebsocket
                     ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
-                    : onSendToTab(selected, true, downstreamProxyStr)
+                    : onSendToTab(selected, true, downstreamProxyStr, fromMITM)
             }
         }
     })
@@ -775,7 +778,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (selected) {
                 selected.IsWebsocket
                     ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
-                    : onSendToTab(selected, false, downstreamProxyStr)
+                    : onSendToTab(selected, false, downstreamProxyStr, fromMITM)
             }
         }
     })
@@ -2260,7 +2263,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     e.stopPropagation()
                                     let m = showYakitDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t),
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t, pageType),
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
@@ -3525,10 +3528,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             })
                             break
                         case "sendAndJumpToWebFuzzer":
-                            onSendToTab(rowData, true, downstreamProxyStr)
+                            onSendToTab(rowData, true, downstreamProxyStr, fromMITM)
                             break
                         case "sendToWebFuzzer":
-                            onSendToTab(rowData, false, downstreamProxyStr)
+                            onSendToTab(rowData, false, downstreamProxyStr, fromMITM)
                             break
                         case "sendAndJumpToWS":
                             newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
@@ -3867,7 +3870,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
                 if (!currentItemJumpToFuzzer) return
                 onBatch(
-                    (el) => onSendToTab(el, true, downstreamProxyStr),
+                    (el) => onSendToTab(el, true, downstreamProxyStr, fromMITM),
                     currentItemJumpToFuzzer?.number || 0,
                     selectedRowKeys.length === total
                 )
@@ -3877,7 +3880,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
                 if (!currentItemToFuzzer) return
                 onBatch(
-                    (el) => onSendToTab(el, false, downstreamProxyStr),
+                    (el) => onSendToTab(el, false, downstreamProxyStr, fromMITM),
                     currentItemToFuzzer?.number || 0,
                     selectedRowKeys.length === total
                 )
@@ -5098,32 +5101,36 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 })
 
 // 发送web fuzzer const
-export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string) => {
+export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string, fromMITM?: boolean) => {
     let params = {}
-    try {
-        const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
-            getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
-            getRemoteValue(RemoteGV.MITMDisableSystemProxy)
-        ])
-        const stateSecretHijacking =
-            stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
-        const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
+    // 只有从 MITM 页面调用时才获取HTTPS 配置&禁用系统代理
+    if (fromMITM) {
+        try {
+            const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
+                getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
+                getRemoteValue(RemoteGV.MITMDisableSystemProxy)
+            ])
+            const stateSecretHijacking =
+                stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
+            const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
+            const MITMData = {noSystemProxy: disableSystemProxy === "true"}
 
-        if (stateSecretHijacking) {
-            if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
-                Object.assign(params, {enableGMTLS: true})
-            } else if (stateSecretHijacking === "randomJA3") {
-                Object.assign(params, {randomJA3: true})
+            if (stateSecretHijacking) {
+                if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
+                    Object.assign(MITMData, {enableGMTLS: true})
+                } else if (stateSecretHijacking === "randomJA3") {
+                    Object.assign(MITMData, {randomJA3: true})
+                }
             }
+            Object.assign(params, { MITMData: JSON.stringify(MITMData) })
+        } catch (e) {
+            debugToPrintLogs({
+                page: "HTTPFlowTable",
+                fun: "onSendToTab",
+                content: e
+            })
+            console.error(e)
         }
-        Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
-    } catch (e) {
-        debugToPrintLogs({
-            page: "HTTPFlowTable",
-            fun: "onSendToTab",
-            content: e
-        })
-        console.error(e)
     }
     ipcRenderer
         .invoke("send-to-tab", {

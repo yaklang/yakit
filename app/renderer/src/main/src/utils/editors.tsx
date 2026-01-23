@@ -561,6 +561,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     keepSearchName?: string
     noSendToComparer?: boolean
+    /** 是否来自 MITM 页面 */
+    fromMITM?: boolean
 }
 
 export type RenderTypeOptionVal = "beautify" | "render" | "hex"
@@ -1044,7 +1046,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             isHttps: props.defaultHttps || false,
                                             request: props.defaultPacket ? props.defaultPacket : originValue,
                                             downstreamProxyStr,
-                                            openFlag: true
+                                            openFlag: true,
+                                            fromMITM: props.fromMITM
                                         })
                                     }
                                 >
@@ -1150,6 +1153,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     {props.renderHtml || renderHtml}
                     {type !== "hex" && noShowHex && !empty && !renderHtml && !props.renderHtml && (
                         <HTTPPacketYakitEditor
+                            fromMITM={props.fromMITM}
                             keepSearchName={keepSearchName}
                             theme={props.theme}
                             noLineNumber={props.noLineNumber}

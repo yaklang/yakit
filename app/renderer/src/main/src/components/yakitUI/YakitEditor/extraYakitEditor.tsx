@@ -59,6 +59,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     onClickUrlMenu?: () => void
     onClickOpenBrowserMenu?: () => void
     onClickOpenPacketNewWindowMenu?: () => void
+    fromMITM?: boolean // 是否来自 MITM 页面
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -86,6 +87,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         onClickOpenBrowserMenu,
         onClickOpenPacketNewWindowMenu,
         onlyBasicMenu = false,
+        fromMITM = false,
         ...restProps
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "history"])
@@ -541,7 +543,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     isHttps: defaultHttps || false,
                                     request: text,
                                     downstreamProxyStr,
-                                    openFlag: true
+                                    openFlag: true,
+                                    fromMITM
                                 }).finally(() => {
                                     webFuzzerCallBack && webFuzzerCallBack()
                                 })
@@ -550,7 +553,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     isHttps: defaultHttps || false,
                                     request: text,
                                     downstreamProxyStr,
-                                    openFlag: false
+                                    openFlag: false,
+                                    fromMITM
                                 }).finally(() => {
                                     info(t("YakitNotification.sendSuccess"))
                                     webFuzzerCallBack && webFuzzerCallBack()

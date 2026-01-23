@@ -591,25 +591,31 @@ export const newWebFuzzerTab = async (params: {
     downstreamProxyStr?: string
     shareContent?: string
     openFlag: boolean
+    fromMITM?: boolean
 }) => {
-    try {
-        const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
-            getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
-            getRemoteValue(RemoteGV.MITMDisableSystemProxy)
-        ])
-        const stateSecretHijacking =
-            stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
-        const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
+    // 只有从 MITM 页面调用时才获取HTTPS 配置&禁用系统代理
+    if (params.fromMITM) {
+        try {
+            const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
+                getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
+                getRemoteValue(RemoteGV.MITMDisableSystemProxy)
+            ])
+            const stateSecretHijacking =
+                stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
+            const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
 
-        if (stateSecretHijacking) {
-            if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
-                Object.assign(params, {enableGMTLS: true})
-            } else if (stateSecretHijacking === "randomJA3") {
-                Object.assign(params, {randomJA3: true})
+            const MITMData = {noSystemProxy: disableSystemProxy === "true"}
+
+            if (stateSecretHijacking) {
+                if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {
+                    Object.assign(MITMData, {enableGMTLS: true})
+                } else if (stateSecretHijacking === "randomJA3") {
+                    Object.assign(MITMData, {randomJA3: true})
+                }
             }
-        }
-        Object.assign(params, {noSystemProxy: disableSystemProxy === "true"})
-    } catch (e) {}
+            Object.assign(params, { MITMData: JSON.stringify(MITMData) })
+        } catch (e) {}
+    }
 
     return ipcRenderer
         .invoke("send-to-tab", {
@@ -2541,6 +2547,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
                                 {onlyOneResponse ? (
                                     <ResponseViewer
+                                        pageId={props.id}
                                         keepSearchName='fuzzer-response'
                                         isHttps={advancedConfigValue.isHttps}
                                         ref={responseViewerRef}
@@ -3780,6 +3787,7 @@ interface ResponseViewerProps {
     loading?: boolean
 
     keepSearchName?: string
+    pageId?: string
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -3804,7 +3812,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             request,
             keepSearchName,
             onSetOnlyOneResEditor,
-            loading
+            loading,
+            pageId
         } = props
         const { t, i18n } = useI18nNamespaces(["webFuzzer"])
 
@@ -4052,7 +4061,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={webFuzzerValue}
                             extraEditorProps={{
-                                isShowSelectRangeMenu: true
+                                isShowSelectRangeMenu: true,
+                                pageId
                             }}
                             typeOptionVal={resTypeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
