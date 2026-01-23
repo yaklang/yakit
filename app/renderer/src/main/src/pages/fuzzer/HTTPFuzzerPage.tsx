@@ -316,6 +316,8 @@ export interface RandomChunkedResponse {
     CurrentChunkedDelayTime: number
     /**@name 总的发送耗时 */
     TotalDelayTime: number
+    /**@name 是否结束 （结束标记事件；Data 可能为空） */
+    IsFinal?: boolean
 }
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -812,7 +814,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
     const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
     const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
-    
+
     // first Node
     const firstNodeRef = useRef(null)
     const firstNodeSize = useSize(firstNodeRef)
@@ -1436,8 +1438,28 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const existedChunks = existed.RandomChunkedData || []
                 const nextChunks = item.RandomChunkedData || []
 
+                // Streaming updates may send `ResponseRaw` only on the first packet (header),
+                // and keep it empty afterwards. Preserve the first header to avoid UI losing it.
+                const prevResponseRaw = existed.ResponseRaw
+                const prevHeaders = existed.Headers
+                const prevContentType = existed.ContentType
+                const prevStatusCode = existed.StatusCode
+
                 Object.assign(existed, item)
                 existed.Count = keepCount
+
+                if ((!existed.ResponseRaw || existed.ResponseRaw.length === 0) && prevResponseRaw?.length) {
+                    existed.ResponseRaw = prevResponseRaw
+                }
+                if ((!existed.Headers || existed.Headers.length === 0) && prevHeaders?.length) {
+                    existed.Headers = prevHeaders
+                }
+                if (!existed.ContentType && prevContentType) {
+                    existed.ContentType = prevContentType
+                }
+                if (!existed.StatusCode && prevStatusCode) {
+                    existed.StatusCode = prevStatusCode
+                }
 
                 if (nextChunks.length > 0) {
                     const merged = existedChunks.slice()
@@ -1455,7 +1477,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
                 const first = getFirstResponse()
                 if (first?.UUID && first.UUID === existed.UUID) {
-                    setFirstResponse(existed)
+                    // `existed` is mutated in-place, but state update needs a new reference to trigger re-render.
+                    setFirstResponse({
+                        ...existed,
+                        Headers: existed.Headers ? existed.Headers.slice() : [],
+                        RandomChunkedData: existed.RandomChunkedData ? existed.RandomChunkedData.slice() : []
+                    })
                 }
                 return true
             }
@@ -1563,7 +1590,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.id])
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
-        if (inViewport) setAll(extractedMap) 
+        if (inViewport) setAll(extractedMap)
     })
     const onlyOneResponse = useMemo(() => {
         return failedFuzzer.length + successFuzzer.length === 1
@@ -1840,14 +1867,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <ChevronLeftIcon
                         className={classNames(styles["chevron-icon"], {
                             [styles["chevron-icon-disable"]]:
-                                !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
+                            !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
                         })}
                         onClick={() => onPrePage()}
                     />
                     <ChevronRightIcon
                         className={classNames(styles["chevron-icon"], {
                             [styles["chevron-icon-disable"]]:
-                                !isbuttonIsSendReqStatus || currentPage >= Number(total) || !Number(total)
+                            !isbuttonIsSendReqStatus || currentPage >= Number(total) || !Number(total)
                         })}
                         onClick={() => onNextPage()}
                     />
@@ -1859,7 +1886,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <>
                                 <div>
                                     {t("YakitButton.privacy_mode")}&nbsp;
-                                     <YakitSwitch checked={privacy} onChange={setPrivacy} />
+                                    <YakitSwitch checked={privacy} onChange={setPrivacy} />
                                 </div>
                                 <div style={{display: "flex", justifyContent: "space-between"}}>
                                     HEX
@@ -2518,29 +2545,29 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {...ResizeBoxProps}
                         firstNode={
                             <div ref={firstNodeRef} style={{ height: "100%", overflow: "hidden" }}>
-                            <WebFuzzerNewEditor
-                                ref={webFuzzerNewEditorRef}
-                                refreshTrigger={refreshTrigger}
-                                request={requestRef.current}
-                                setRequest={onSetRequest}
-                                hex={hex}
-                                isHttps={advancedConfigValue.isHttps}
-                                hotPatchCode={hotPatchCodeRef.current}
-                                hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                                setHotPatchCode={setHotPatchCode}
-                                setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                                firstNodeExtra={firstNodeExtra}
-                                pageId={props.id}
-                                oneResponseValue={
-                                    onlyOneResponse
-                                        ? {
-                                            originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
-                                            originalPackage: httpResponse.ResponseRaw
-                                        }
-                                        : undefined
-                                }
-                                privacy={privacy}
-                            />
+                                <WebFuzzerNewEditor
+                                    ref={webFuzzerNewEditorRef}
+                                    refreshTrigger={refreshTrigger}
+                                    request={requestRef.current}
+                                    setRequest={onSetRequest}
+                                    hex={hex}
+                                    isHttps={advancedConfigValue.isHttps}
+                                    hotPatchCode={hotPatchCodeRef.current}
+                                    hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                                    setHotPatchCode={setHotPatchCode}
+                                    setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                                    firstNodeExtra={firstNodeExtra}
+                                    pageId={props.id}
+                                    oneResponseValue={
+                                        onlyOneResponse
+                                            ? {
+                                                originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
+                                                originalPackage: httpResponse.ResponseRaw
+                                            }
+                                            : undefined
+                                    }
+                                    privacy={privacy}
+                                />
                             </div>
                         }
                         secondNode={
@@ -3060,10 +3087,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         />
                         {((rsp.Payloads && rsp.Payloads.length > 0) ||
                             rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
-                                <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
-                                    {t("SecondNodeExtra.viewExtractionResults")}
-                                </YakitButton>
-                            )}
+                            <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
+                                {t("SecondNodeExtra.viewExtractionResults")}
+                            </YakitButton>
+                        )}
                     </>
                 ) : (
                     <YakitDropdownMenu
@@ -3520,22 +3547,22 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             <>
                 {!!failedFuzzer.length &&
                     <Tooltip title={t("SecondNodeExtra.exportPayload")}>
-                    <YakitButton
-                        style={{marginRight: 10}}
-                        type='outline2'
-                        icon={<OutlineExportIcon />} 
-                        size={size}
-                        onClick={() => {
-                            emiter.emit(
-                                "onGetExportFuzzer",
-                                JSON.stringify({
-                                    pageId,
-                                    type: "payload"
-                                })
-                            )
-                        }}
-                    />
-                </Tooltip>}
+                        <YakitButton
+                            style={{marginRight: 10}}
+                            type='outline2'
+                            icon={<OutlineExportIcon />}
+                            size={size}
+                            onClick={() => {
+                                emiter.emit(
+                                    "onGetExportFuzzer",
+                                    JSON.stringify({
+                                        pageId,
+                                        type: "payload"
+                                    })
+                                )
+                            }}
+                        />
+                    </Tooltip>}
                 {retryNoPopconfirm ? (
                     <YakitButton
                         type={"primary"}
@@ -3951,9 +3978,47 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
         }, [fuzzerResponse])
 
+        const isStreamingResponse = !!loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0
+
+        const assembledResponsePackage = useCreation(() => {
+            const header = fuzzerResponse?.ResponseRaw || new Uint8Array()
+            const chunks = (fuzzerResponse?.RandomChunkedData || []).slice()
+            if (chunks.length === 0) return header
+
+            const bodyParts = chunks
+                .slice()
+                .sort((a, b) => (Number(a?.Index) || 0) - (Number(b?.Index) || 0))
+                .map((c) => c?.Data || new Uint8Array())
+                .filter((d) => d.length > 0)
+            if (bodyParts.length === 0) return header
+
+            const bodyLen = bodyParts.reduce((acc, cur) => acc + cur.length, 0)
+            const body = new Uint8Array(bodyLen)
+            let offset = 0
+            bodyParts.forEach((p) => {
+                body.set(p, offset)
+                offset += p.length
+            })
+
+            const maxBodyBytes = 5 * 1024 * 1024
+            const boundedBody = body.length > maxBodyBytes ? body.subarray(body.length - maxBodyBytes) : body
+
+            const out = new Uint8Array(header.length + boundedBody.length)
+            out.set(header, 0)
+            out.set(boundedBody, header.length)
+            return out
+        }, [fuzzerResponse?.ResponseRaw, fuzzerResponse?.RandomChunkedData, fuzzerResponse?.BodyLength, fuzzerResponse?.DurationMs])
+
+        const responseHeaderString = useCreation(() => {
+            return Uint8ArrayToString(fuzzerResponse?.ResponseRaw || new Uint8Array())
+        }, [fuzzerResponse?.ResponseRaw])
+
         const responseRawString = useCreation(() => {
-            return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
-        }, [fuzzerResponse.ResponseRaw])
+            // Streaming mode: the body is appended into Monaco via `useAutoScrollToBottom`,
+            // so keep the base `originValue` stable as the header to avoid wiping the editor.
+            if (isStreamingResponse) return responseHeaderString
+            return Uint8ArrayToString(assembledResponsePackage)
+        }, [isStreamingResponse, responseHeaderString, assembledResponsePackage])
 
         const copyUrl = useMemoizedFn(() => {
             copyAsUrl({ Request: request, IsHTTPS: !!isHttps })
@@ -3974,13 +4039,20 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         }, [fuzzerResponse.RuntimeID])
 
         // 计算当前显示的值
-        const currentOriginValue = codeKey === "utf-8" ? responseRawString : codeValue
+        // - 流式阶段：强制用 header 作为稳定的 base（body 由 hook 增量追加）
+        // - 非流式阶段：支持编码转换；codeValue 未准备好时兜底展示原始内容
+        const currentOriginValue = isStreamingResponse
+            ? responseHeaderString
+            : codeKey === "utf-8"
+                ? responseRawString
+                : codeValue || responseRawString
+
+        const currentOriginalPackage = isStreamingResponse ? (fuzzerResponse?.ResponseRaw || new Uint8Array()) : assembledResponsePackage
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
         const { handleEditorMount } = useAutoScrollToBottom({
-            enabled: loading,
-            content: currentOriginValue,
-            resetDep: fuzzerResponse,
+            chunkedData: fuzzerResponse.RandomChunkedData,
+            id: fuzzerResponse?.UUID,
             onEditorMount: onSetOnlyOneResEditor
         })
 
@@ -3998,7 +4070,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             originValue={currentOriginValue}
-                            originalPackage={fuzzerResponse.ResponseRaw}
+                            originalPackage={currentOriginalPackage}
                             readOnly={true}
                             isResponse={true}
                             loading={codeLoading}
@@ -4007,7 +4079,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             AfterBeautifyRenderBtn={
                                 <CodingPopover
                                     key='coding'
-                                    originValue={fuzzerResponse.ResponseRaw}
+                                    originValue={currentOriginalPackage}
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {
@@ -4024,9 +4096,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     <Result
                                         status={
                                             reason.includes("tcp: i/o timeout") ||
-                                                reason.includes("empty response") ||
-                                                reason.includes("no such host") ||
-                                                reason.includes("cannot create proxy")
+                                            reason.includes("empty response") ||
+                                            reason.includes("no such host") ||
+                                            reason.includes("cannot create proxy")
                                                 ? "warning"
                                                 : "error"
                                         }
@@ -4085,7 +4157,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     },
                                     response: {
                                         originValue: codeKey === "utf-8" ? responseRawString : codeValue,
-                                        originalPackage: fuzzerResponse.ResponseRaw
+                                        originalPackage: assembledResponsePackage
                                     }
                                 })
                             }}
@@ -4106,7 +4178,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     ref={ref}
                                     onClose={onClose}
                                     onSave={onSaveMatcherAndExtraction}
-                                    httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                    httpResponse={Uint8ArrayToString(assembledResponsePackage)}
                                     httpRequest={request}
                                     isHttps={isHttps}
                                     matcherValue={matcherValue}
@@ -4264,10 +4336,10 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
 })
 
 export const ByteCountTag: React.FC<{ selectionByteCount?: number; itemKey: string; style?: CSSProperties }> = ({
-    selectionByteCount = 0,
-    itemKey,
-    style = {}
-}) => {
+                                                                                                                    selectionByteCount = 0,
+                                                                                                                    itemKey,
+                                                                                                                    style = {}
+                                                                                                                }) => {
     return selectionByteCount > 0 ? (
         <YakitTag key={itemKey} style={style}>
             {selectionByteCount} bytes

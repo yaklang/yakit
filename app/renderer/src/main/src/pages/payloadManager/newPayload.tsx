@@ -2349,7 +2349,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 let node =
                     selectData.node?.map((item) => {
                         if (item.id === id) {
-                            return {...item, name: newName}
+                            return {...item, name: newName, id: `${item.type}-${newName}`}
                         }
                         return item
                     }) || []
@@ -2363,7 +2363,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             } else {
                 const newData = copyData.map((item) => {
                     if (item.id === id) {
-                        return {...item, name: newName}
+                        return {...item, name: newName, id: `${item.type}-${newName}`}
                     }
                     return item
                 })
@@ -2404,6 +2404,11 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     setInputName(inputName)
                     setFileById(file.id, inputName)
                     setExportData && setExportData([])
+                    
+                    // 右边内容同步修改
+                    if(file.id === selectItem){
+                        setSelectItem(`${file.type}-${inputName}`)
+                    }
                 })
                 .catch((e: any) => {
                     setInputName(file.name)
