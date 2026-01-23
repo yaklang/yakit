@@ -313,6 +313,14 @@ const Home: React.FC<HomeProp> = (props) => {
                 onClick: () => onMenu({route: YakitRoute.Notepad_Manage})
             },
             {
+                label:
+                    i18n.language === "en" ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`,
+                icon: <PublicNotepadIcon />,
+                desc: t("YakitRoute.penetrationRecordDescription"),
+                rightIcon: <OutlineArrowrightIcon />,
+                onClick: () => onMenu({route: YakitRoute.Modify_Notepad})
+            },
+            {
                 label: t("Home.screenRecording"),
                 icon: <PublicToolScreenRecordingIcon />,
                 desc: t("Home.recordScreenActivities"),
