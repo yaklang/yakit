@@ -54,7 +54,13 @@ const AddKnowledgenBaseDropdownMenu: FC<{
                     visible: createMenuOpen
                 }}
             >
-                <YakitButton icon={<PlusIcon />} size='small' style={{height: "26.85px", width: "26.85px"}} />
+                <YakitButton
+                    type='text2'
+                    icon={<PlusIcon />}
+                    size='small'
+                    style={{height: "26.85px", width: "26.85px"}}
+                    className='third-step'
+                />
             </YakitDropdownMenu>
             <KnowledgeBaseFormModal
                 visible={visible}

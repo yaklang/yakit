@@ -4,3 +4,10 @@
     text-overflow: ellipsis;
     overflow: hidden;
 }
+
+.__floater__body {
+    .__floater__arrow svg polygon {
+        fill: var(--Colors-Use-Basic-Background);
+        transform: translateX(1px);
+    }
+}

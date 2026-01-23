@@ -14,11 +14,13 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import styles from "../knowledgeBase.module.scss"
 import {extractFileName, knowledgeTypeOptions} from "../utils"
 import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import classNames from "classnames"
 
 const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form, type}) => {
     const {knowledgeBases} = useKnowledgeBase()
     const KnowledgeBaseFileValue = Form.useWatch("KnowledgeBaseFile", form)
+    const watchDisableERM = Form.useWatch("disableERM", form)
 
     useUpdateEffect(() => {
         const result = KnowledgeBaseFileValue
@@ -36,8 +38,8 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
         <Form
             form={form}
             layout='vertical'
-            className={styles["create-knowledge-from"]}
-            initialValues={{disableERM: false}}
+            className={classNames(styles["create-knowledge-from"], styles["create-knowledge-from-container"])}
+            initialValues={{disableERM: "true"}}
             onValuesChange={(changedValues) => {
                 if (changedValues.importPath) {
                     const fileName = extractFileName(changedValues.importPath)
@@ -103,13 +105,38 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                 }}
                 renderType='textarea'
                 textareaProps={{
-                    rows: 3
+                    rows: 2
                 }}
                 size='large'
                 help='可将文件拖入框内或'
                 selectType='file'
                 multiple={true}
             />
+
+            <Form.Item
+                label='构建模式'
+                name='disableERM'
+                help={
+                    watchDisableERM === "true"
+                        ? "仅存储知识和向量，不会存储实体，构建速度更快"
+                        : "会存储实体、知识和向量全部内容，构建速度较慢"
+                }
+            >
+                <YakitRadioButtons
+                    size='middle'
+                    buttonStyle='solid'
+                    options={[
+                        {
+                            value: "false",
+                            label: "增强知识图谱索引"
+                        },
+                        {
+                            value: "true",
+                            label: "仅构建知识索引"
+                        }
+                    ]}
+                />
+            </Form.Item>
 
             <Form.Item label='Tags：' name='Tags'>
                 <YakitSelect mode='tags' placeholder='请选择' options={knowledgeTypeOptions} />
@@ -124,13 +151,37 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                         name='KnowledgeBaseDescription'
                         rules={[{max: 500, message: "描述最多 500 个字符"}]}
                     >
-                        <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
+                        <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={2} showCount />
                     </Form.Item>
-                    <Form.Item label='仅构建知识' name='disableERM' valuePropName='checked'>
-                        <YakitSwitch />
-                    </Form.Item>
-                    <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
+
+                    <Form.Item label='知识条目长度限制：' name='KnowledgeBaseLength' initialValue={300}>
                         <YakitInputNumber />
+                    </Form.Item>
+                    <Form.Item label='分析并发数：' name='concurrency' initialValue={10}>
+                        <YakitInputNumber />
+                    </Form.Item>
+
+                    <Form.Item label='切片粒度：' name='chunk' initialValue={"Medium"}>
+                        <YakitSelect
+                            options={[
+                                {
+                                    label: "超细粒度 4k",
+                                    value: "UltraFine"
+                                },
+                                {
+                                    label: "细粒度 10k",
+                                    value: "Fine"
+                                },
+                                {
+                                    label: "中粒度 20k",
+                                    value: "Medium"
+                                },
+                                {
+                                    label: "粗粒度 40k",
+                                    value: "Coarse"
+                                }
+                            ]}
+                        />
                     </Form.Item>
                 </React.Fragment>
             ) : (
@@ -146,11 +197,35 @@ const CreateKnowledgeBase: FC<{form: FormInstance<any>; type?: "new"}> = ({form,
                         >
                             <YakitInput.TextArea maxLength={500} placeholder='请输入描述' rows={3} showCount />
                         </Form.Item>
-                        <Form.Item label='仅构建知识' name='disableERM' valuePropName='checked'>
-                            <YakitSwitch />
-                        </Form.Item>
-                        <Form.Item label='知识条目长度限制' name='KnowledgeBaseLength' initialValue={300}>
+
+                        <Form.Item label='知识条目长度限制：' name='KnowledgeBaseLength' initialValue={300}>
                             <YakitInputNumber />
+                        </Form.Item>
+                        <Form.Item label='分析并发数：' name='concurrency' initialValue={10}>
+                            <YakitInputNumber />
+                        </Form.Item>
+
+                        <Form.Item label='切片粒度：' name='chunk' initialValue={"Medium"}>
+                            <YakitSelect
+                                options={[
+                                    {
+                                        label: "超细粒度 4k",
+                                        value: "UltraFine"
+                                    },
+                                    {
+                                        label: "细粒度 10k",
+                                        value: "Fine"
+                                    },
+                                    {
+                                        label: "中粒度 20k",
+                                        value: "Medium"
+                                    },
+                                    {
+                                        label: "粗粒度 40k",
+                                        value: "Coarse"
+                                    }
+                                ]}
+                            />
                         </Form.Item>
                     </Collapse.Panel>
                 </YakitCollapse>

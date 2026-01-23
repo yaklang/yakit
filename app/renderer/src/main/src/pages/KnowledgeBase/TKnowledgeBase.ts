@@ -40,7 +40,9 @@ interface CreateKnowledgeBaseData extends Omit<Entity, "ID">, Omit<KnowledgeBase
     IsDefault?: boolean
     addManuallyItem: boolean
     prompt?: string
-    disableERM: boolean
+    disableERM: "true" | "false"
+    chunk: string
+    concurrency: number
     // 从实体生成知识 流数据收集
     historyGenerateKnowledgeList: Array<{
         date: string

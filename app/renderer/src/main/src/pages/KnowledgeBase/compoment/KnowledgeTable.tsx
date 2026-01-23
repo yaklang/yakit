@@ -710,6 +710,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (
                 }
                 {...ResizeBoxProps}
             />
+
             <KnowledgeDetailDrawer
                 knowledgeDrawerDetail={knowledgeDrawerDetail}
                 setKnowledgeDrawerDetail={setKnowledgeDrawerDetail}

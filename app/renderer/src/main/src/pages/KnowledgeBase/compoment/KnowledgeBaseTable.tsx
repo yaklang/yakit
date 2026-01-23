@@ -122,20 +122,23 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
             })
         },
         {
+            onSuccess: (value) => {
+                setStructureTableHeaderGroupOptions?.(value)
+                setTableProps((prev) => {
+                    // 如果当前的 type 在新的 options 中不存在，则切换到第一个可用的 type
+                    if (!value.find((option) => option.value === prev.type)) {
+                        return {
+                            ...prev,
+                            type: value[0]?.value || "entity"
+                        }
+                    }
+                    return prev
+                })
+            },
             manual: true,
             onError: (err) => failed(`获取全局知识库失败: ${err}`)
         }
     )
-
-    useUpdateEffect(() => {
-        setTableProps((preValue) => {
-            return {
-                ...preValue,
-                type: structureTableHeaderGroupOptions?.[0]?.value ?? ""
-            }
-        })
-        setStructureTableHeaderGroupOptions?.(structureTableHeaderGroupOptions)
-    }, [structureTableHeaderGroupOptions])
 
     const [addModalData, setAddModalData] = useSafeState({
         visible: false,
