@@ -10,6 +10,7 @@ import {
     PublicDirectoryScanningIcon,
     PublicInformationGatheringIcon,
     PublicMitmIcon,
+    PublicNotepadIcon,
     PublicNotepadManagerIcon,
     PublicPayloadGeneraterIcon,
     PublicPayloadManagerIcon,
@@ -302,6 +303,14 @@ const Home: React.FC<HomeProp> = (props) => {
                 desc: t("YakitRoute.manageAllDiscoveredDomainAssets"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_Domain})
+            },
+            {
+                label:
+                    i18n.language === "en" ? `${getNotepadNameByEdition()} Manage` : `${getNotepadNameByEdition()}管理`,
+                icon: <PublicNotepadIcon />,
+                desc: t("YakitRoute.penetrationRecordDescription"),
+                rightIcon: <OutlineArrowrightIcon />,
+                onClick: () => onMenu({route: YakitRoute.Notepad_Manage})
             },
             {
                 label: t("Home.screenRecording"),
