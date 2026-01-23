@@ -266,24 +266,26 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     useAsyncEffect(async () => {
         if (!previousKnowledgeBases) return
 
-        for (const kb of knowledgeBases) {
-            const prev = previousKnowledgeBases.find((it) => it.ID === kb.ID)
-            if (!prev) continue
+        try {
+            for (const kb of knowledgeBases) {
+                const prev = previousKnowledgeBases.find((it) => it.ID === kb.ID)
+                if (!prev) continue
 
-            const added = extractAddedHistory(kb, prev)
-            if (added) {
-                await buildKnowledgeEntry(kb, added)
-            }
+                const added = extractAddedHistory(kb, prev)
+                if (added) {
+                    await buildKnowledgeEntry(kb, added)
+                }
 
-            if (prev.streamToken !== undefined && kb.streamToken !== prev.streamToken) {
-                const extractStreamItem = extractStreamTokenChangedItem(knowledgeBases, previousKnowledgeBases)
-                await buildKnowledgeEntry(kb, {
-                    ...extractStreamItem,
-                    token: extractStreamItem.streamToken,
-                    name: extractStreamItem.KnowledgeBaseName
-                })
+                if (prev.streamToken !== undefined && kb.streamToken !== prev.streamToken) {
+                    const extractStreamItem = extractStreamTokenChangedItem(knowledgeBases, previousKnowledgeBases)
+                    await buildKnowledgeEntry(kb, {
+                        ...extractStreamItem,
+                        token: extractStreamItem.streamToken,
+                        name: extractStreamItem.KnowledgeBaseName
+                    })
+                }
             }
-        }
+        } catch (error) {}
     }, [knowledgeBases, previousKnowledgeBases])
 
     //  新增 / 手动新增知识库
@@ -582,6 +584,11 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     mentionType: "knowledgeBase",
                     mentionName: targetKnowledgeBase.KnowledgeBaseName
                 })
+                aiReActChatRef.current?.onMemfitExtra?.({
+                    mentionId: "",
+                    mentionType: "focusMode",
+                    mentionName: "knowledge_enhance"
+                })
             })
         }
     }
@@ -640,23 +647,25 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     }
 
     useAsyncEffect(async () => {
-        const visible = await getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible)
-        const step = await getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep)
-        if (knowledgeBaseContentViewport && inViewport) {
-            if (!visible && !step) {
-                return setRun(false)
-            } else if (visible && !step) {
-                return setRun(true)
-            } else {
-                return setRun(false)
+        try {
+            const visible = await getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible)
+            const step = await getLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep)
+            if (knowledgeBaseContentViewport && inViewport) {
+                if (!visible && !step) {
+                    return setRun(false)
+                } else if (visible && !step) {
+                    return setRun(true)
+                } else {
+                    return setRun(false)
+                }
             }
-        }
+        } catch (error) {}
     }, [knowledgeBaseContentViewport, joyrideStep.visible, inViewport])
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
-            firstRatio: "calc(100% - 432px)",
-            secondRatio: "432px"
+            firstRatio: "calc(100% - 462px)",
+            secondRatio: "462px"
         }
         if (!showFreeChat) {
             p.secondRatio = "0%"
@@ -712,7 +721,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         style={{display: "flex"}}
                         lineDirection='left'
                         secondNodeStyle={{
-                            width: showFreeChat ? "432px" : "0%",
+                            width: showFreeChat ? "462px" : "0%",
                             padding: "0"
                         }}
                         firstNode={

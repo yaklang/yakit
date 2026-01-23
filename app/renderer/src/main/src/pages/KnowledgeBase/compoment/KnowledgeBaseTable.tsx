@@ -22,7 +22,6 @@ import {failed} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AddKnowledgeBaseModal} from "./AddKnowledgeBaseModal"
-import console from "console"
 
 type UseMultipleHoldGRPCStreamReturn = ReturnType<typeof useMultipleHoldGRPCStream>
 

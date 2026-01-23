@@ -2050,27 +2050,30 @@ export const OutlineBotIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineBot} {...props} />
 }
 
-const OutlineBot = () => (
-    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
-        <path
-            d='M8.00008 5V2H5.06675M0.666748 9.5H2.13341M13.8667 9.5H15.3334M10.2001 8.75V10.25M5.80008 8.75V10.25M3.60008 5H12.4001C13.2101 5 13.8667 5.67157 13.8667 6.5V12.5C13.8667 13.3284 13.2101 14 12.4001 14H3.60008C2.79006 14 2.13341 13.3284 2.13341 12.5V6.5C2.13341 5.67157 2.79006 5 3.60008 5Z'
-            stroke='url(#paint0_linear_48491_15005)'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-        <defs>
-            <linearGradient
-                id='paint0_linear_48491_15005'
-                x1='0.666748'
-                y1='2'
-                x2='17.4435'
-                y2='8.77478'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop stopColor='#DA53DD' />
-                <stop offset='0.639423' stopColor='#825AF8' />
-                <stop offset='1' stopColor='#398DFF' />
-            </linearGradient>
-        </defs>
-    </svg>
-)
+const OutlineBot = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <path
+                d='M8.00008 5V2H5.06675M0.666748 9.5H2.13341M13.8667 9.5H15.3334M10.2001 8.75V10.25M5.80008 8.75V10.25M3.60008 5H12.4001C13.2101 5 13.8667 5.67157 13.8667 6.5V12.5C13.8667 13.3284 13.2101 14 12.4001 14H3.60008C2.79006 14 2.13341 13.3284 2.13341 12.5V6.5C2.13341 5.67157 2.79006 5 3.60008 5Z'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <defs>
+                <linearGradient
+                    id='paint0_linear_48491_15005'
+                    x1='0.666748'
+                    y1='2'
+                    x2='17.4435'
+                    y2='8.77478'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#DA53DD' />
+                    <stop offset='0.639423' stopColor='#825AF8' />
+                    <stop offset='1' stopColor='#398DFF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
