@@ -22,7 +22,7 @@ export const getXtermTheme = () => {
         brightMagenta: vars["--yakit-colors-Magenta-60"],
         cyan: vars["--yakit-colors-Cyan-80"],
         brightCyan: vars["--yakit-colors-Cyan-60"],
-        white: vars["--yakit-colors-Neutral-10"],
+        white: vars["--yakit-colors-Orange-50"],
         brightWhite: vars["--yakit-colors-Neutral-0"]
     }
 }
