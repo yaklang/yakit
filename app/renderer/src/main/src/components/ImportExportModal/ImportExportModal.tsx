@@ -70,18 +70,28 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
 
     const [form] = Form.useForm()
 
-    const [token, setToken] = useSafeState("")
+    const token = useRef("")
     const [showProgressStream, setShowProgressStream] = useSafeState(false)
     const timeRef = useRef<ReturnType<typeof setTimeout>>()
     const importExportStreamRef = useRef<P[]>(initialProgress)
     const [progressStream, setProgressStream] = useSafeState<P[]>(initialProgress)
+
+    const handleReset = useMemoizedFn(() => {
+        token.current = ""
+        setShowProgressStream(false)
+        timeRef.current = undefined
+        importExportStreamRef.current = initialProgress
+        setProgressStream(initialProgress)
+    })
 
     const onSubmit = useMemoizedFn(async () => {
         try {
             const values = form.getFieldsValue() as F
             await onBeforeSubmit?.(values)
             const params = onSubmitForm(values)
-            await ipcRenderer.invoke(extra.apiKey, params, token)
+            token.current = randomString(40)
+            handleListeners()
+            await ipcRenderer.invoke(extra.apiKey, params, token.current)
             setShowProgressStream(true)
         } catch (e) {
             yakitNotify("error", `[${extra.apiKey}] error:  ${e}`)
@@ -89,12 +99,12 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     })
 
     const onCancelStream = useMemoizedFn(() => {
-        if (!token) return
+        if (!token.current) return
 
-        ipcRenderer.invoke(`cancel-${extra.apiKey}`, token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
+        ipcRenderer.invoke(`cancel-${extra.apiKey}`, token.current)
+        ipcRenderer.removeAllListeners(`${token.current}-data`)
+        ipcRenderer.removeAllListeners(`${token.current}-error`)
+        ipcRenderer.removeAllListeners(`${token.current}-end`)
         clearInterval(timeRef.current)
     })
 
@@ -112,8 +122,8 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         return getlogListInfo?.(progressStream) || []
     }, [JSON.stringify(progressStream)])
 
-    useEffect(() => {
-        if (!token) {
+    const handleListeners = useMemoizedFn(() => {
+        if (!token.current) {
             return
         }
         const typeTitle = extra.apiKey
@@ -121,21 +131,16 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
             setProgressStream([...importExportStreamRef.current])
         }
         timeRef.current = setInterval(updateImportExportHTTPFlowStream, 500)
-        ipcRenderer.on(`${token}-data`, async (_, data: P) => {
+        ipcRenderer.on(`${token.current}-data`, async (_, data: P) => {
             importExportStreamRef.current.unshift(data)
         })
-        ipcRenderer.on(`${token}-error`, (_, error) => {
+        ipcRenderer.on(`${token.current}-error`, (_, error) => {
             yakitNotify("error", `[${typeTitle}] error:  ${error}`)
         })
-        ipcRenderer.on(`${token}-end`, () => {
+        ipcRenderer.on(`${token.current}-end`, () => {
             yakitNotify("info", `[${typeTitle}] finished`)
         })
-        return () => {
-            if (token) {
-                onCancelStream()
-            }
-        }
-    }, [token])
+    })
 
     const onCancel = useMemoizedFn(() => {
         onFinished(false)
@@ -165,16 +170,13 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
 
     useEffect(() => {
         if (extra.hint) {
-            setToken(randomString(40))
+            handleReset()
             form.resetFields()
         }
         // 关闭时重置所有数据
         return () => {
             if (extra.hint) {
-                setShowProgressStream(false)
-                setProgressStream(initialProgress)
-                importExportStreamRef.current = initialProgress
-                clearInterval(timeRef.current)
+                onCancelStream()
             }
         }
     }, [extra.hint])
