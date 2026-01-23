@@ -1,5 +1,12 @@
-import React, {memo, useEffect, useRef, useState} from "react"
-import {ExportAIForgeRequest, ExportImportAIForgeProgress, ForgeNameProps, ImportAIForgeRequest} from "./type"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import {
+    ExportAIForgeFormValues,
+    ExportAIForgeRequest,
+    ExportImportAIForgeProgress,
+    ForgeNameProps,
+    ImportAIForgeFormValues,
+    ImportAIForgeRequest
+} from "./type"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {
     OutlineExportIcon,
@@ -28,15 +35,23 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {Tooltip} from "antd"
+import {Form, Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
 import {AIForgeListDefaultPagination, ReActChatEventEnum} from "../defaultConstant"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/forge"
-import PwdImportExportModal, {PwdImportExportModalExtra} from "@/components/PwdImportExportModal/PwdImportExportModal"
+import ImportExportModal, {ImportExportModalExtra} from "@/components/ImportExportModal/ImportExportModal"
+import {openABSFileLocated} from "@/utils/openWebsite"
+import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {AITool, GetAIToolListRequest} from "../type/aiTool"
+import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
+import {grpcGetAIToolList} from "../aiToolList/utils"
+import {LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
+const {ipcRenderer} = window.require("electron")
 
 const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     // const {} = props
@@ -261,34 +276,130 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     // #endregion
 
     // #region AIForge单个导入导出
-    const [importExportExtra, setImportExportExtra] = useState<PwdImportExportModalExtra>({
+    const [importExportExtra, setImportExportExtra] = useState<ImportExportModalExtra>({
         hint: false,
-        title: "导出Forge",
+        title: "导出技能",
         type: "export",
         apiKey: "ExportAIForge"
     })
+    const logListRef = useRef<LogListInfo[]>([])
     const forgeNamesRef = useRef<string[]>([])
+    const toolNames = useRef<string[]>([])
     const outputNameRef = useRef<string>("")
-    const handleOpenImportExportHint = useMemoizedFn((extra: Omit<PwdImportExportModalExtra, "hint">) => {
+    const handleOpenImportExportHint = useMemoizedFn((extra: Omit<ImportExportModalExtra, "hint">) => {
         if (importExportExtra.hint) return
         setImportExportExtra({...extra, hint: true})
     })
-    const handleCallbackImportExportHint = useMemoizedFn((result: boolean) => {
+
+    const exportPath = useRef<string>("")
+    const handleFinishedImportExportHint = useMemoizedFn((result: boolean) => {
         if (result) {
             const type = importExportExtra.type
             if (type === "import") {
                 // 刷新列表
                 handleEmiterTriggerRefresh()
+            } else {
+                if (exportPath.current) {
+                    openABSFileLocated(exportPath.current)
+                }
             }
-            yakitNotify("success", importExportExtra.type + "成功")
+            yakitNotify("success", (importExportExtra.type === "export" ? "导出" : "导入") + "成功")
         }
-        setImportExportExtra((prev) => {
-            return {
-                ...prev,
-                hint: false
-            }
-        })
+        exportPath.current = ""
+
+        const index = logListRef.current.findIndex((i) => i.isError)
+        if (index === -1) {
+            setImportExportExtra((prev) => {
+                return {
+                    ...prev,
+                    hint: false
+                }
+            })
+        }
+        logListRef.current = []
     })
+
+    const commonImportExportProps = useMemo(() => {
+        return {
+            getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined,
+            extra: importExportExtra,
+            initialProgress: [
+                {
+                    Percent: 0,
+                    Message: "",
+                    MessageType: ""
+                }
+            ],
+            getProgressValue: (p: ExportImportAIForgeProgress) => {
+                return p.Percent / 100
+            },
+            getlogListInfo: (stream: ExportImportAIForgeProgress[]) => {
+                logListRef.current = stream
+                    .filter((item1) => !(item1.Percent === 0 && item1.Message === "" && item1.MessageType === ""))
+                    .map((item) => ({
+                        message: item.Message,
+                        isError: item.MessageType === "error",
+                        key: Math.random() * 5 + ""
+                    }))
+                return logListRef.current
+            },
+            onFinished: handleFinishedImportExportHint
+        }
+    }, [importExportExtra])
+
+    // aiTools下拉列表
+    const [selectLoading, setSelectLoading] = useState<boolean>(false)
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <div>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
+            </div>
+        )
+    })
+    const [searchKeyword, setSearchKeyword] = useState("")
+    const [aiTool, setAiTool] = useState<AITool[]>([])
+    const [aiToolPagination, setAiToolPagination] = useState<PaginationSchema>({
+        ...genDefaultPagination(20),
+        OrderBy: "created_at",
+        Page: 1
+    })
+    const {run: debouncedSearch} = useDebounceFn(
+        (value: string) => {
+            setAiTool([])
+            setAiToolPagination((v) => ({...v, Page: 1}))
+            setSearchKeyword(value)
+            getAiToolData(1, value)
+        },
+        {
+            wait: 300
+        }
+    )
+    const getAiToolData = async (page: number, keyword = searchKeyword) => {
+        setSelectLoading(true)
+        const paginationProps = {
+            ...aiToolPagination,
+            page: page
+        }
+        const newQuery: GetAIToolListRequest = {
+            Query: keyword,
+            ToolName: "",
+            Pagination: paginationProps,
+            OnlyFavorites: false
+        }
+        const isInit = page === 1
+        try {
+            const res = await grpcGetAIToolList(newQuery)
+            if (!res.Tools) res.Tools = []
+            if (res.Tools.length > 0) {
+                setAiToolPagination((v) => ({...v, Page: paginationProps.page}))
+            }
+            const newData = res.Tools.map((item) => ({...item}))
+            const opsd = isInit ? newData : aiTool.concat(newData)
+            setAiTool(opsd)
+        } finally {
+            setSelectLoading(false)
+        }
+    }
     // #endregion
 
     return (
@@ -304,7 +415,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                             icon={<OutlineImportIcon />}
                             onClick={() =>
                                 handleOpenImportExportHint({
-                                    title: "导入Forge",
+                                    title: "导入技能",
                                     type: "import",
                                     apiKey: "ImportAIForge"
                                 })
@@ -394,7 +505,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
                                             <div className={styles["item-extra"]}>
                                                 <Tooltip
-                                                    title={"导出Forge"}
+                                                    title={"导出技能"}
                                                     placement='topRight'
                                                     overlayClassName={styles["item-extra-tooltip"]}
                                                 >
@@ -404,9 +515,10 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             forgeNamesRef.current = [ForgeName]
+                                                            toolNames.current = tools
                                                             outputNameRef.current = ForgeVerboseName || ForgeName || ""
                                                             handleOpenImportExportHint({
-                                                                title: "导出Forge",
+                                                                title: "导出技能",
                                                                 type: "export",
                                                                 apiKey: "ExportAIForge"
                                                             })
@@ -472,29 +584,101 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                     </div>
                 </div>
             </div>
-            <PwdImportExportModal<ExportAIForgeRequest, ImportAIForgeRequest, ExportImportAIForgeProgress>
-                getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
-                extra={importExportExtra}
-                outputName={outputNameRef.current || ""}
-                exportRequest={(formValue) => ({
-                    ForgeNames: forgeNamesRef.current,
-                    OutputName: formValue.OutputName,
-                    Password: formValue.Password
-                })}
-                ImportRequest={(formValue) => ({
-                    Overwrite: true,
-                    InputPath: formValue.InputPath,
-                    Password: formValue.Password
-                })}
-                initialProgress={{
-                    Percent: 0,
-                    Message: "",
-                    MessageType: ""
-                }}
-                getProgressValue={(p) => p.Percent / 100}
-                isProgressFinished={(p) => p.Percent === 100}
-                onCallback={handleCallbackImportExportHint}
-            />
+            {importExportExtra.type === "export" && (
+                <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
+                    {...commonImportExportProps}
+                    formProps={{
+                        initialValues: {OutputName: outputNameRef.current || "", ToolNames: toolNames.current}
+                    }}
+                    renderForm={() => (
+                        <>
+                            <Form.Item label='文件名' name='OutputName' rules={[{required: true}]}>
+                                <YakitInput />
+                            </Form.Item>
+                            <Form.Item label='工具' name='ToolNames'>
+                                <YakitSelect
+                                    showSearch
+                                    placeholder='请选择工具'
+                                    optionFilterProp='children'
+                                    filterOption={false}
+                                    onSearch={debouncedSearch}
+                                    onPopupScroll={(e) => {
+                                        const {target} = e
+                                        const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                                        if (
+                                            ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight &&
+                                            !selectLoading
+                                        ) {
+                                            getAiToolData(aiToolPagination.Page + 1, searchKeyword)
+                                        }
+                                    }}
+                                    dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                                    mode='multiple'
+                                    onDropdownVisibleChange={(open) => {
+                                        if (open) {
+                                            getAiToolData(1, searchKeyword)
+                                        } else {
+                                            setAiToolPagination((v) => ({...v, Page: 1}))
+                                            setAiTool([])
+                                            setSearchKeyword("")
+                                        }
+                                    }}
+                                >
+                                    {aiTool.map((item) => (
+                                        <YakitSelect.Option key={item.Name} value={item.Name}>
+                                            {item.VerboseName || item.Name}
+                                        </YakitSelect.Option>
+                                    ))}
+                                </YakitSelect>
+                            </Form.Item>
+                            <Form.Item label='密码' name='Password'>
+                                <YakitInput />
+                            </Form.Item>
+                        </>
+                    )}
+                    onBeforeSubmit={async (values) => {
+                        let name = values.OutputName + ".zip"
+                        if (values.Password) name += ".enc"
+                        try {
+                            exportPath.current = await ipcRenderer.invoke("GenerateProjectsFilePath", name)
+                        } catch (error) {}
+                    }}
+                    onSubmitForm={(values) => ({
+                        ForgeNames: forgeNamesRef.current,
+                        ...values
+                    })}
+                    isProgressFinished={(p: ExportImportAIForgeProgress) =>
+                        p.Percent === 100 && p.MessageType === "success"
+                    }
+                />
+            )}
+            {importExportExtra.type === "import" && (
+                <ImportExportModal<ImportAIForgeFormValues, ImportAIForgeRequest, ExportImportAIForgeProgress>
+                    {...commonImportExportProps}
+                    renderForm={() => (
+                        <>
+                            <YakitFormDragger
+                                formItemProps={{
+                                    name: "InputPath",
+                                    label: "本地路径",
+                                    rules: [{required: true, message: "请输入本地路径"}]
+                                }}
+                                multiple={false}
+                                selectType='file'
+                                fileExtensionIsExist={false}
+                            />
+                            <Form.Item label='密码' name='Password'>
+                                <YakitInput />
+                            </Form.Item>
+                        </>
+                    )}
+                    onSubmitForm={(values) => ({
+                        Overwrite: true,
+                        ...values
+                    })}
+                    isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100}
+                />
+            )}
         </div>
     )
 })

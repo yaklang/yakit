@@ -893,7 +893,7 @@ service Yak {
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
   rpc QueryAIEvent(AIEventQueryRequest) returns (AIEventQueryResponse);
-   rpc DeleteAIEvent(AIEventDeleteRequest) returns (DbOperateMessage);
+  rpc DeleteAIEvent(AIEventDeleteRequest) returns (DbOperateMessage);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
@@ -1999,6 +1999,7 @@ message ExportAIForgeRequest {
   string TargetPath = 2;
   string OutputName = 3;
   string Password = 4;
+  repeated string ToolNames = 5;
 }
 
 message ImportAIForgeRequest {
@@ -2550,6 +2551,8 @@ message GlobalNetworkConfig {
   uint64 MinTlsVersion = 21;
   uint64 MaxTlsVersion = 22;
   uint64 MaxContentLength = 23;
+  // 插件加载超时配置（秒）
+  float LoadPluginTimeout = 24;
 }
 
 message ProxyEndpoint {
