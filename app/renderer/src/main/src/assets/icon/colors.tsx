@@ -2053,22 +2053,15 @@ export const OutlineBotIcon = (props: Partial<IconProps>) => {
 const OutlineBot = () => {
     const id = uuidv4()
     return (
-        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='13' viewBox='0 0 16 13' fill='none'>
             <path
-                d='M8.00008 5V2H5.06675M0.666748 9.5H2.13341M13.8667 9.5H15.3334M10.2001 8.75V10.25M5.80008 8.75V10.25M3.60008 5H12.4001C13.2101 5 13.8667 5.67157 13.8667 6.5V12.5C13.8667 13.3284 13.2101 14 12.4001 14H3.60008C2.79006 14 2.13341 13.3284 2.13341 12.5V6.5C2.13341 5.67157 2.79006 5 3.60008 5Z'
+                d='M7.83333 3.5V0.5H4.9M0.5 8H1.96667M13.7 8H15.1667M10.0333 7.25V8.75M5.63333 7.25V8.75M3.43333 3.5H12.2333C13.0434 3.5 13.7 4.17157 13.7 5V11C13.7 11.8284 13.0434 12.5 12.2333 12.5H3.43333C2.62332 12.5 1.96667 11.8284 1.96667 11V5C1.96667 4.17157 2.62332 3.5 3.43333 3.5Z'
                 stroke={`url(#${id})`}
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
             <defs>
-                <linearGradient
-                    id='paint0_linear_48491_15005'
-                    x1='0.666748'
-                    y1='2'
-                    x2='17.4435'
-                    y2='8.77478'
-                    gradientUnits='userSpaceOnUse'
-                >
+                <linearGradient id={id} x1='0.5' y1='0.5' x2='17.2767' y2='7.27478' gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#DA53DD' />
                     <stop offset='0.639423' stopColor='#825AF8' />
                     <stop offset='1' stopColor='#398DFF' />

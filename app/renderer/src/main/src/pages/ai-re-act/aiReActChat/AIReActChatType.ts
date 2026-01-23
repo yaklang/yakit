@@ -35,6 +35,9 @@ export interface AIReActChatProps {
     ref?: React.ForwardedRef<AIReActChatRefProps>
     startRequest: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
     sendRequest?: (v: AISendParams) => Promise<AISendResProps>
+    externalParameters?: {
+        rightIcon?: string | React.ReactNode
+    }
 }
 
 export interface AIReActLogProps {

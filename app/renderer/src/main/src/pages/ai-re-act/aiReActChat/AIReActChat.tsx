@@ -25,6 +25,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {v4 as uuidv4} from "uuid"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     forwardRef((props, ref) => {
@@ -34,7 +35,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             chatContainerHeaderClassName,
             title = "自由对话",
             sendRequest,
-            startRequest
+            startRequest,
+            externalParameters
         } = props
         const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
 
@@ -207,12 +209,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             const konwledgeInputStringFn = (params: string) => {
                 try {
                     const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-                    onSetQuestion(data?.inputString ?? "")
+                    if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
+                        data.defualtAIMentionCommandParams.forEach((item) => {
+                            aiChatTextareaRef.current?.setMention?.({
+                                mentionId: item.mentionId,
+                                mentionType: item.mentionType,
+                                mentionName: item.mentionName
+                            })
+                        })
+                    }
                 } catch (error) {}
             }
-            emiter.on("konwledgeInputString", konwledgeInputStringFn)
+            emiter.on("defualtAIMentionCommandParams", konwledgeInputStringFn)
             return () => {
-                emiter.off("konwledgeInputString", konwledgeInputStringFn)
+                emiter.off("defualtAIMentionCommandParams", konwledgeInputStringFn)
             }
         }, [])
 
@@ -253,9 +263,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                     {focusMode && <YakitTag fullRadius={true}>专注模式:{focusMode}</YakitTag>}
                                 </div>
                                 <div className={styles["chat-header-extra"]}>
-                                    {isShowRetract && (
-                                        <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
-                                    )}
+                                    {isShowRetract &&
+                                        (externalParameters?.rightIcon ?? (
+                                            <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
+                                        ))}
                                 </div>
                             </div>
                             <AIReActChatContents chats={casualChat} />

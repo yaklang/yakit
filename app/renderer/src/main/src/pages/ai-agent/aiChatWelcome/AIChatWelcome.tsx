@@ -100,24 +100,28 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
         shallow
     )
 
-    const initKnowledgeStr = useMemoizedFn(() => {
-        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
-        return currentItem?.pageParamsInfo.AIRepository?.inputString ?? ""
-    })
-
     // #region 问题相关逻辑
 
     useEffect(() => {
         const konwledgeInputStringFn = (params: string) => {
             try {
                 const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-                onSetQuestion(data?.inputString ?? "")
-                removePagesDataCacheById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+                console.log(data?.defualtAIMentionCommandParams, "data.defualtAIMentionCommandParams")
+                if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
+                    data.defualtAIMentionCommandParams.forEach((item) => {
+                        aiChatTextareaRef.current?.setMention?.({
+                            mentionId: item.mentionId,
+                            mentionType: item.mentionType,
+                            mentionName: item.mentionName
+                        })
+                    })
+                    removePagesDataCacheById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+                }
             } catch (error) {}
         }
-        emiter.on("konwledgeInputString", konwledgeInputStringFn)
+        emiter.on("defualtAIMentionCommandParams", konwledgeInputStringFn)
         return () => {
-            emiter.off("konwledgeInputString", konwledgeInputStringFn)
+            emiter.off("defualtAIMentionCommandParams", konwledgeInputStringFn)
         }
     }, [])
 
@@ -134,7 +138,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
     const welcomeRef = useRef<HTMLDivElement>(null)
     const questionListAllRef = useRef<StreamResult.Log[]>([])
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
-    const inputDefaultValue = useRef<string>(initKnowledgeStr())
+    const inputDefaultValue = useRef<string>()
     const [inViewPort = true] = useInViewport(welcomeRef)
 
     const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")

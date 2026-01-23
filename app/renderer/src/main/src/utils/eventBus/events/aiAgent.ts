@@ -13,7 +13,7 @@ export type AIAgentEventProps = {
     /** ai任务树定位规划列表 */
     onAITreeLocatePlanningList?: string
     // 知识库 路由传递的参数
-    konwledgeInputString: string
+    defualtAIMentionCommandParams: string
     /**ai侧边栏展开收起模式 */
     switchSideHiddenMode: string
     // 一级页面关闭事件

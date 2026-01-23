@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect, useRef} from "react"
+import React, {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect, useRef} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 
@@ -58,7 +58,7 @@ import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
-import {Form, Progress} from "antd"
+import {Form, Progress, Tooltip} from "antd"
 import {ImportModal} from "./ImportModal"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -78,6 +78,8 @@ import {KnowledgeBaseGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {GuideFooter} from "./GuideFooter"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {PlusIcon, RemoveIcon} from "@/assets/newIcon"
+import {OutlinePlusSmIcon, OutlineXIcon} from "@/assets/icon/outline"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -764,6 +766,31 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                         ref={aiReActChatRef}
                                         startRequest={onStartRequest}
                                         sendRequest={onSendRequest}
+                                        externalParameters={{
+                                            rightIcon: (
+                                                <React.Fragment>
+                                                    <Tooltip title='新建对话'>
+                                                        <YakitButton
+                                                            type='text2'
+                                                            icon={<PlusIcon />}
+                                                            onClick={() => {
+                                                                if (activeID) {
+                                                                    events.onClose(activeID)
+                                                                    knowledgeBaseDataStore.set(activeID, chatIPCData)
+                                                                    events.onReset()
+                                                                    onChatFromHistory(activeID)
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                    <YakitButton
+                                                        type='text2'
+                                                        icon={<OutlineXIcon />}
+                                                        onClick={() => setShowFreeChat(false)}
+                                                    />
+                                                </React.Fragment>
+                                            )
+                                        }}
                                     />
                                 </div>
                             ) : null

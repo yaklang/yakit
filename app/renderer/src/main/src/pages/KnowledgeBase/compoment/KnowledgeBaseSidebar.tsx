@@ -754,7 +754,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     return (
         <div className={styles["knowledge-base-sidebar-container"]}>
-            {/* <div
+            <div
                 className={styles["knowledge-base-sidebar-ai-button"]}
                 onClick={() => {
                     emiter.emit(
@@ -762,7 +762,13 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         JSON.stringify({
                             route: YakitRoute.AI_Agent,
                             params: {
-                                inputString: "使用知识库回答:"
+                                defualtAIMentionCommandParams: [
+                                    {
+                                        mentionId: "@所有知识库",
+                                        mentionType: "knowledgeBase",
+                                        mentionName: "@所有知识库"
+                                    }
+                                ]
                             }
                         })
                     )
@@ -770,7 +776,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             >
                 <OutlineBotIcon />
                 <span>AI Agent</span>
-            </div> */}
+            </div>
 
             <YakitSideTab
                 type='vertical'
