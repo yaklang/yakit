@@ -4,6 +4,7 @@ const path = require("path")
 const url = require("url")
 const {registerIPC, registerNewIPC} = require("./ipc")
 const process = require("process")
+const isLinux = process.platform === "linux"
 const {
     initExtraLocalCache,
     getExtraLocalCacheValue,
@@ -60,7 +61,8 @@ function createEngineLinkWindow() {
         height: 600,
         minWidth: 900,
         minHeight: 600,
-        frame: false,
+        // 如果是linux系统，就开启桌面原生样式标题栏
+        frame: isLinux ? true:false,
         autoHideMenuBar: true,
         resizable: false,
         webPreferences: {
@@ -136,7 +138,7 @@ function createWindow() {
         height: height,
         minWidth: minWidth,
         minHeight: minHeight,
-        frame: false,
+        frame: isLinux ? true:false,
         autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),

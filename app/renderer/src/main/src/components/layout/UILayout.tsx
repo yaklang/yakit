@@ -365,6 +365,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 3、cpu架构
      * 4、引擎是否存在
      */
+    //判断系统是否是windows,仅对win开启winUI 
+    const isWindows = useMemo(() => {
+    return (window as any)?.runtime?.platform === "win32" ||
+           (window as any)?.process?.platform === "win32"
+    }, [])
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
         debugToPrintLog(`------ 主窗口获取系统基础信息 ------`)
         try {
@@ -2030,10 +2035,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             <div className={styles["divider-wrapper"]}></div>
                                         </>
                                     )}
+                                   {isWindows && (
                                     <WinUIOp
                                         currentProjectId={currentProject?.Id ? currentProject?.Id + "" : ""}
                                         pageChildrenShow={pageShowHome}
                                     />
+                                   )}
                                 </div>
                             </div>
                         )}
