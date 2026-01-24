@@ -1,45 +1,43 @@
-
 <p align="center">
   <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a> 
- <h2 align="center">Yakit-交互式应用安全测试平台</h2>
+ <h2 align="center"> YAKIT-A Cyber Security ALL-IN-ONE Platform based on Yak language</h2>
 <p align="center">
 <img src="https://img.shields.io/github/issues-pr/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/releases"><img src="https://img.shields.io/github/downloads/yaklang/yakit/total">
-<a href="https://github.com/yaklang/yakkit/graphs/contributors"><img src="https://img.shields.io/github/contributors-anon/yaklang/yakit">
+<a href="https://github.com/yaklang/yakit/graphs/contributors"><img src="https://img.shields.io/github/contributors-anon/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/releases/"><img src="https://img.shields.io/github/release/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/issues"><img src="https://img.shields.io/github/issues-raw/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/discussions"><img src="https://img.shields.io/github/stars/yaklang/yakit">
-<a href="https://github.com/yaklang/yakit/blob/main/LICENSE.md"><img src="https://img.shields.io/github/license/yaklang/yakit">
+<a href="https://github.com/yaklang/yakit/blob/master/LICENSE.md"><img src="https://img.shields.io/github/license/yaklang/yakit">
 </p>
 
 <p align="center">
-  <a href="https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf">查看白皮书</a> •
-  <a href="https://yaklang.io/products/intro/">官方文档</a> •
-  <a href="https://github.com/yaklang/yakit/issues">问题反馈</a> •
-  <a href="https://yaklang.io/">进入官网</a> •
-  <a href="#社区 ">加入社区</a> •
-  <a href="#项目架构">项目架构</a> 
+  <a href="https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf">Whitepaper</a> •
+  <a href="https://yaklang.io/products/intro/">Official documentation</a> •
+  <a href="https://github.com/yaklang/yakit/issues">Issue feedback</a> •
+  <a href="https://yaklang.io/">Official website</a> •
+  <a href="#Community">Community</a> •
+  <a href="#Architecture">Architecture</a> 
 </p>
 
 <p align="center">
- :book:语言选择： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> • 
-  <a href="https://github.com/yaklang/yakit/blob/main/README.md">中文</a> 
+ :book:Language： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> • 
+  <a href="https://github.com/yaklang/yakit/blob/master/README.md">中文</a> 
 </p>
 
 ---
-# Yakit 简介
+# Introduction
 
-安全融合是新常态下企业的一项安全运营与安全管理的改革，也是新常态下企业的当务之急。
+Security integration is a reform of security operations and management for enterprises in the new normal. It is also a top priority for enterprises in the new normal.
 
-基于安全融合的理念，Yaklang.io 团队研发出了安全领域垂直语言Yaklang，对于一些无法原生集成在 Yak 平台中的产品/工具，利用Yaklang可以重新编写他们的“高质量替代”。对于一些生态完整且认可度较高的产品，Yaklang能直接编译融合，并对源码进行必要修改，更好地适配Yaklang语言。对于一些不想写代码的安全从业者，Yakit会为Yaklang中所有的能力提供合适的GUI，随着版本更迭，GUI会更加成熟。
-
+Based on the concept of security integration, the Yaklang.io team has developed Yaklang, a vertical language in the security field. For some products/tools that cannot be natively integrated into the Yak platform, Yaklang can be used to rewrite their "high-quality substitutes." For ecologically complete and widely recognized products, Yaklang can directly compile and integrate them, making necessary modifications to the source code for better compatibility with the Yaklang language. For security practitioners who do not want to write code, Yakit provides a suitable GUI for all capabilities in Yaklang. As the versions evolve, the GUI will become more mature.
 <h3 align="center">
   <img src="imgs/yakit-cdsl.png" style="width: 500px" alt="yakit-cdsl.png" ></a>
 </h3>
 
-为了让Yaklang本身的安全能力更贴近大家的实际使用，我们为Yak编写了gRPC服务器，并使用这个服务器实现构建了一个客户端：Yakit。
+In order to make Yaklang's security capabilities more relevant to practical use, we have developed a gRPC server for Yak and built a client called Yakit using this server.
 
-## 项目架构
+## Architecture
 
 
 <h3 align="center">
@@ -47,99 +45,131 @@
 </h3>
 
 
-## 核心技术：CDSL
+## Core technologies: CDSL
 
-CDSL 定义为 CyberSecurity Domain Specific Language，网络安全领域的专用编程语言；我们编写了一个栈虚拟机来承载这门图灵完备的语言的运行时状态。我们希望通过 “CDSL” 的手段来实现安全能力的融合和底层平台大统一。
+CDSL, which stands for CyberSecurity Domain Specific Language, is a specialized programming language in the field of cybersecurity. We have developed a stack virtual machine to handle the runtime state of this Turing-complete language. Our aim is to integrate security capabilities and achieve a unified underlying platform through the use of CDSL.
 
-为了让自主研发的安全领域 CDSL 更贴近实际使用场景，我们为 Yaklang 编写了 gRPC 服务器，并基于 gRPC 服务器构建了客户端 Yakit。
-实际上就是通过 Yakit 的 GUI 去操控引擎的能力。Yakit 的 gRPC 服务器，让用户部署更加方便快捷，与平台无关，可选择远程部署或直接本地启动在主机中使用。
+To make our self-developed CDSL language more aligned with practical usage scenarios, we have created a gRPC server for Yaklang. Using this gRPC server as a foundation, we have built the Yakit client.
+
+In practice, Yakit's graphical user interface (GUI) allows users to control the capabilities of the engine. The gRPC server of Yakit enables convenient and efficient deployment options. It is platform-agnostic, providing users with the flexibility to choose between remote deployment or running it directly on their local machines.
 
 <h3 align="center">
   <img src="imgs/yakit-gongneng.png" style="width: 700px" alt="yakit-gongneng.png" ></a>
 </h3>
 
-1. 可百分百替代 BurpSuite 的 MITM 劫持平台；
-2. 难以复制的 MITM 被动扫描 GUI；
-3. 嵌入 Yaklang 脚本来实现动态调试流量; 随时动态执行代码；
-4. 全球第一个可视化的Web模糊测试工具—Web Fuzzer；
-5. Yakit插件商店：
-6. 可在渗透测试任何步骤内执行自定义的Yaklang脚本或插件
+1. It can completely replace BurpSuite as a MITM interception platform.
+2. It provides a unique and user-friendly GUI for difficult-to-replicate MITM passive scanning.
+3. It allows embedding Yaklang scripts for dynamic debugging of traffic and executing code on the fly.
+4. It is the world's first visual Web Fuzzer, a powerful tool for conducting comprehensive web vulnerability testing.
+5. Yakit Plugin Store: A marketplace where users can find and install various Yakit plugins.
+6. It enables the execution of custom Yaklang scripts or plugins at any step of penetration testing.
    ... ...
 
-安全能力概览：
+Overview of Security Capabilities：
 
 <h3 align="center">
   <img src="imgs/yaklang-caps.jpg" style="width: 700px" alt="yaklang-caps.jpg" ></a>
 </h3>
 
 
-## 特色技术
+## Specialized Technologies
 
-### MITM 交互式劫持
+### MITM Interactive Hijacking.
 
-MITM 操作台可百分百替代 BurpSuite执行所有操作(下载并安装证书、劫持请求、响应、编辑劫持到的数据包等)。并且提供一整套顺畅的工作流，劫持=>History=>Repeater/Intruder，劫持数据，在History查看历史数据，选择需要“挖掘”的数据包，发送到Web Fuzzer进行Repeater/Intruder操作。除了这些典型的操作场景外，MITM还提供了插件被动扫描、热加载、数据包替换、标记等更灵活的功能。
+The MITM (Man-in-the-Middle) Console in Yakit can fully replace BurpSuite and perform all operations, including downloading and installing certificates, hijacking requests and responses, and editing intercepted packets. It provides a smooth workflow that involves hijacking, history tracking, and using tools like Repeater and Intruder. Users can intercept data, view historical data in the history section, select packets for further analysis, and send them to the Web Fuzzer for Repeater or Intruder operations. In addition to these typical use cases, the MITM module in Yakit offers more flexible features such as plugin-based passive scanning, hot reloading, packet substitution, and tagging.
 
-Yakit的MITM模块原理是启动一个HTTP代理，自动转发流量，当用户启动手动劫持后，会停止自动转发，阻塞请求，并将请求出栈，做解Gzip、处理chunk、解码等处理，让请求变得人类可读，并显示在用户前端，用户可以对请求做查看、修改或重放。重放时，会对用户构造的HTTP请求数据包做修复，保证请求包的有效性。Yak引擎手动实现了HTTP库，所以用户可以自定义畸形的请求包、响应包，应用于一些特殊场景下的漏洞利用。
-
+The underlying principle of Yakit's MITM module is to start an HTTP proxy that automatically forwards traffic. When a user initiates a manual hijack, the automatic forwarding is stopped, and the request is blocked and popped out of the stack. The module then performs tasks such as Gzip decoding, chunk processing, and decoding to make the request human-readable, which is then displayed to the user. Users can view, modify, or replay requests as needed. During replay, the Yakit engine repairs the user-constructed HTTP request to ensure its validity. Yak's engine has a custom-built HTTP library, allowing users to customize malformed requests and responses, which can be useful in exploiting vulnerabilities in specific scenarios.
 
 <h3 align="center">
   <img src="imgs/yakit-mitm.png" style="width: 700px" alt="yakit-mitm.png" ></a>
 </h3>
 
 
-### Web应用交互式流量重放与模糊测试
+### Web Application Interactive Traffic Replay and Fuzz Testing.
 
-Web Fuzzer模块支持用户自定义HTTP原文发送请求。为了让用户使用简单，符合直觉，只需要关心数据相关信息，Yakit后端做了很多工作。HTTP原文中一些保证数据传输和解析的信息都是由Yakit后端修复补全的，例如修复CRLF，补全Content-Type、通过chunk方式传输、补全boundary、修复Content-Length等等。
-
+The Web Fuzzer module supports user-defined HTTP raw request sending. To make it user-friendly and intuitive, Yakit's backend performs several tasks. It ensures that the necessary information for data transmission and parsing in the HTTP raw request is repaired and completed. For example, Yakit fixes CRLF, completes the Content-Type, handles chunked transfer encoding, adds the missing boundary, corrects the Content-Length, and so on. This allows users to focus on the data-related information without worrying about the underlying intricacies of the HTTP protocol.
 <h3 align="center">
   <img src="imgs/webfuzzer.png" style="width: 600px" alt="webfuzzer.png" ></a>
 </h3>
 
 
-### Fuzztag 技术
+### Fuzztag 
 
-Web Fuzzer模块支持通过Fuzz标签，自然且完美整合了Host碰撞、Intruder、目录爆破等功能。例如单参数爆破场景，以爆破用户id为例，可以使用{{int(1-10)}}标签自动生成爆破的id。面对多个参数爆破的场景，采用笛卡尔乘积的结果作为爆破参数，相较于BurpSuite的Intruder模块，免去了选择爆破方式，导入字典等步骤，极大的减少了用户的操作路径，符合用户使用习惯。当然Web Fuzzer模块除了使用标签自动生成参数，也支持导入外部字典，例：{{file(/tmp/username.txt)}}。面对一些更复杂的数据场景，Web
-Fuzzer模块支持插入热加载标签，例如需要爆破某地区的身份证号，可以直接在Web Fuzzer模块插入Yak脚本生成数据进行爆破。而BurpSuite的Intruder模块，面临这种场景，需要编写代码生成字典，再导入Intruder模块。
+The Web Fuzzer module supports seamless integration of functionalities such as Host collision, Intruder, and directory brute-forcing through Fuzz tags. For example, in a single parameter brute-forcing scenario, let's take the user ID as an example. You can use the {{int(1-10)}} tag to automatically generate a range of IDs for brute-forcing. In scenarios where multiple parameters need to be brute-forced, the Cartesian product of the parameters is used for the brute-forcing. This eliminates the need to select the brute-forcing method and import dictionaries, reducing user operation steps and aligning with user habits compared to BurpSuite's Intruder module.
 
+In addition to generating parameters using tags, the Web Fuzzer module also supports importing external dictionaries. For example: {{file(/tmp/username.txt)}}. In more complex data scenarios, the Web Fuzzer module allows the insertion of hot-loaded tags. For example, if you need to brute-force ID numbers from a specific region, you can directly insert Yak scripts in the Web Fuzzer module to generate the data for brute-forcing. In contrast, BurpSuite's Intruder module would require writing code to generate dictionaries and then importing them into the Intruder module.
 <h3 align="center">
 <img src="imgs/fuzztag.png" style="width: 600px" alt="fuzztag.png" ></a>
 </h3>
 
->关于fuzztag的更多内容可以查看： [Fuzztag 速览](https://yaklang.com/docs/newforyak/fuzztag)
+You can refer to the following for more information about Fuzztag： [Fuzztag ](https://yaklang.com/docs/newforyak/fuzztag)
 
-### 反连技术与应用协议复用技术
+### Reverse Connection Technique and Application Protocol Multiplexing Technique.
 
-许多漏洞利用场景需要用到不同协议服务的反连，传统漏洞利用工具需要在公网服务器为每一个服务监听一个端口，如LDAP类型的漏洞利用，需要启动HTTP服务、LDAP服务，然后发送攻击请求，才能完成一次漏洞利用。传统服务需要为每一个服务分配唯一端口，而Yaklang的端口协议复用技术可以监听一个端口，识别请求的协议，作出相应响应。Yaklang端口协议复用技术优势除了节省系统资源，便于手工测试等外，由于底层原理是手工识别了各种协议头，基于协议标准对各种协议进行手工实现，从而可以灵活的构造各种协议的数据包。例如可以构造一些畸形的协议进行漏洞利用，或通过DNS协议、ICMP协议等携带数据，可以通过这种方式作为后门的权限维持或绕过一些TCP协议不出网情况下的漏洞利用。
+Many vulnerability exploitation scenarios require reverse connections to different protocol services. Traditional exploitation tools require setting up separate ports for each service on a public-facing server. For example, in the case of LDAP-based vulnerabilities, one would need to start an HTTP service, an LDAP service, and then send the attack request to complete the exploitation process. Traditional services require unique ports for each service. However, Yaklang's Port Protocol Multiplexing technique allows listening on a single port and identifying the protocol of incoming requests to respond accordingly. The advantage of Yaklang's Port Protocol Multiplexing is not only resource-saving and convenient for manual testing, but also the ability to manually implement various protocols by handcrafting protocol headers. This allows flexible construction of different protocol packets, including the ability to create malformed protocols for vulnerability exploitation or carry data through protocols such as DNS or ICMP, which can be used for backdoor persistence or bypassing certain TCP-based vulnerabilities without going out to the network.
 
-与此同时Yakit基于端口协议复用技术实现了反连模块，其中包括Reverse Shell、反连利用、反连检测功能。Reverse Shell可以监听指定端口，作为反弹Shell的接收端，收到反弹Shell后，可以和ssh一样控制远端服务器。传统渗透测试的反连需求中需要使用Nc监听端口，但一些按键如退格键、方向键会有乱码的情况，反弹的Shell使用起来和原生的ssh还有很大区别，而Yakit的Reverse Shell可以做到类似原生ssh的使用体验。反连利用部分可以通过监听一个端口，为不同协议的回连设置Payload，收到请求后便会自动识别请求的协议，返回相应Payload，实现漏洞利用。反连检测功能提供了TCP、DNSLog、ICMP反连的检测，可用于一些命令执行的检测。
-
+Meanwhile, Yakit implements a reverse connection module based on the Port Protocol Multiplexing technique, which includes features such as Reverse Shell, reverse connection exploitation, and reverse connection detection. The Reverse Shell feature allows listening on a specified port as the receiver for reverse shells. Once a reverse shell is received, it can be used to control the remote server, similar to SSH. In traditional penetration testing scenarios, tools like Nc are used to listen on ports, but they may encounter issues with certain keys like backspace or arrow keys. The reverse shell experience provided by Yakit is similar to native SSH, addressing these limitations. The reverse connection exploitation feature allows setting payloads for different protocols based on a listening port. When a request is received, the protocol is automatically identified, and the corresponding payload is returned to achieve vulnerability exploitation. The reverse connection detection feature provides detection for TCP, DNSLog, and ICMP reverse connections, which can be used for command execution detection.
 <h3 align="center">
 <img src="imgs/reverse.png" style="width: 600px" alt="reverse.png" ></a>
 </h3>
 
-## 使用
+## How to Use
 
-- 您可以进入[官网](https://yaklang.com/)进行下载安装
+- You can visit the [official website](https://yaklang.com/) to download and install Yakit.
 
-- 可以查看我们的[官方文档](https://yaklang.io/products/intro/)进行Yakit的学习和使用
+- You can refer to our [official documentation](https://yaklang.io/products/intro/) to learn and use Yakit.
 
-更多的技术内容可以查看：
+For more technical content, you can check:
 
-[Yakit技术文章](https://yaklang.io/products/article/yakit-technical-study/methodology)
+[Technical articles](https://yaklang.io/products/article/yakit-technical-study/methodology)
 
-[技术白皮书](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf)
+[Whitepaper](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf)
 
-## 加入社区
+## Development Setup
 
-如果对我们的产品有任何建设性意见或 BUG 反馈，欢迎大家提 issue
+Prerequisites:
 
-或通过微信公众号联系我们，也欢迎联系商业授权与合作
+- Node.js 18.x (recommended) and Yarn 1.x
+- Git
+- Windows, macOS, or Linux
 
-进交流群或有问题想与技术同学沟通，请联系并添加运营微信号加入社区：
+Steps:
+
+1. Install dependencies at repo root
+     
+     ```bash
+     yarn
+     ```
+
+2. Install renderer dependencies
+     
+     ```bash
+     yarn install-render
+     ```
+
+3. Start development (starts React renderer and Electron)
+     
+     ```bash
+     yarn dev
+     ```
+
+Useful scripts (from package.json):
+
+- Build renderer only: `yarn build-render`
+- Start Electron only (after renderer runs on 3000): `yarn start-electron`
+- Package (Windows example): `yarn pack-win`
+
+## Community
+
+If you have any constructive feedback or bug reports regarding our product, we welcome everyone to raise an issue.
+
+You can also contact us through our official WeChat account for inquiries or to explore business licensing and partnership opportunities.
+
+If you would like to join our community for discussions or have questions to communicate with our technical team, please contact us and add our operations WeChat ID.
 
 
 <h3 align="left">
-  运营微信号:<img src="imgs/wechat2.png" style="width: 200px" alt="wechat2.png" ></a>          公众号二维码：<img src="imgs/wechat1.jpeg" style="width: 200px" alt="wechat1.jpeg" ></a>
+  WeChat ID of the staff member:<img src="imgs/wechat2.png" style="width: 200px" alt="wechat2.png" ></a>        WeChat official account：<img src="imgs/wechat1.jpeg" style="width: 200px" alt="wechat1.jpeg" ></a>
 </h3>
 
 
@@ -148,25 +178,20 @@ Fuzzer模块支持插入热加载标签，例如需要爆破某地区的身份�
 [![Stargazers over time](https://starchart.cc/yaklang/yakit.svg)](https://starchart.cc/yaklang/yakit)
 
 
-## 免责声明
+## Disclaimer
 
-1. 本工具仅面向 **合法授权** 的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
+1. This tool is only for legally authorized enterprise security construction behaviors and personal learning behaviors. If you need to test the usability of this tool, please build a virtual environment by yourself.
 
-2. 在使用本工具进行检测时，您应确保该行为符合当地的法律法规，并且已经取得了足够的授权。请勿对非授权目标进行扫描。
+2. When using this tool for pentesting, you should ensure that the behavior complies with local laws and regulations and has obtained sufficient authorization. Do not scan unauthorized targets.
 
-3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
+3. Reverse engineering, decompiling, attempting to decipher the source code, implanting backdoors to spread malware, etc. on this software are prohibited.
 
-4. 如果您需要使用Yakit用于商业化目的，请确保你们已经获得官方授权，否则我们将追究您的相关责任。
-
-**如果发现上述禁止行为，我们将保留追究您法律责任的权利。**
-
-如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
-
-在安装并使用本工具前，请您 **务必审慎阅读、充分理解各条款内容**
-
-限制、免责条款或者其他涉及您重大权益的条款可能会以 **加粗**、加下划线等形式提示您重点注意。
-
-除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。
+4. If you need to use Yakit for commercial purposes, please ensure that you have obtained official authorization; otherwise, we will hold you accountable for any related responsibilities.
 
 
+If you have any illegal behavior when using this tool, you shall bear the corresponding consequences by yourself, and we will not bear any legal and joint responsibility.
+
+Before installing and using this tool, please read carefully and fully understand the terms
+
+Unless you have fully read, fully understood, and accepted all the terms of this agreement, please do not install and use this tool. Your use behavior or your acceptance of this Agreement in any other express or implied manner shall be deemed to have been read and agreed to be bound by this Agreement
 
