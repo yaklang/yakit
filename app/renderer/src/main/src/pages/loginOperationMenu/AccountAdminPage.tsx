@@ -1457,12 +1457,12 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         setLoading(true)
         const {user_name, department, role_id} = values
         // 编辑
-        // const departmentId: number = department[department.length - 1]
+        const departmentId: number = department[department.length - 1]
         if (editInfo) {
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
                 user_name,
-                department,
+                department:departmentId,
                 role_id: role_id?.key || role_id
             }
             NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
@@ -1471,11 +1471,11 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 data: params
             })
                 .then((res: API.ActionSucceeded) => {
-                    refresh(department, editInfo?.department_id)
+                    refresh(departmentId, editInfo?.department_id)
                     onCancel()
                 })
                 .catch((err) => {
-                    yakitNotify("error", "修改账号失败：" + err)
+                    yakitNotify("error", "修改账号失败：" + err?.message || err)
                 })
                 .finally(() => {
                     setLoading(false)
@@ -1485,7 +1485,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         else {
             const params: API.NewUrmRequest = {
                 user_name,
-                department,
+                department: departmentId,
                 role_id
             }
             NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
@@ -1496,7 +1496,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 .then((res: API.NewUrmResponse) => {
                     const {user_name, password} = res
                     onCancel()
-                    refresh(department)
+                    refresh(departmentId)
                     showYakitModal({
                         title: "账号信息",
                         content: (
