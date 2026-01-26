@@ -2,7 +2,6 @@ import React, {ReactElement, memo, useEffect, useMemo, useState} from "react"
 import {CollapseListProp, DefinitionListProps, HelpInfoListProps} from "./CollapseListType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {Collapse, Tooltip} from "antd"
-import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 
 import classNames from "classnames"
 import styles from "./CollapseList.module.scss"

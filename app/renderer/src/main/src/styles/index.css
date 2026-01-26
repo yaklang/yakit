@@ -1,0 +1,12 @@
+/* src/styles/index.css */
+
+/* Import Tailwind's base styles */
+@tailwind base;
+
+/* Import Tailwind's component styles */
+@tailwind components;
+
+/* Import Tailwind's utility styles */
+@tailwind utilities;
+
+/* 需使用npx tailwindcss -i ./src/styles/index.css -o ./src/styles/output.css --watch进行编译 */
