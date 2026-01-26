@@ -1,5 +1,6 @@
 import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {ProjectParamsProp, ProjectsResponse} from "@/pages/softwareSettings/ProjectManage"
+import { apiUpdateGlobalNetworkConfig } from "@/pages/spaceEngine/utils"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {useEeSystemConfig, useStore} from "@/store"
@@ -127,13 +128,15 @@ interface StartUploadProps {
     isAutoUploadProject?: boolean
     // 是否在登录前同步与HTTPFlows同步
     isUploadSyncData?: boolean
+    // 是否更新全局配置
+    isUpdateGlobalConfig?: boolean
 }
 
 export const useUploadInfoByEnpriTrace = () => {
     const {userInfo} = useStore()
     const {setEeSystemConfig} = useEeSystemConfig()
     const startUpload = useMemoizedFn((params:StartUploadProps) => {
-        const {isAutoUploadProject, isUploadSyncData} = params || {}
+        const {isAutoUploadProject, isUploadSyncData, isUpdateGlobalConfig} = params || {}
         const {isLogin, token} = userInfo
         if (isEnpriTrace()) {
             // 登录根据配置参数判断是否自动上传项目
@@ -157,6 +160,14 @@ export const useUploadInfoByEnpriTrace = () => {
                                 autoUploadProjectParams = {
                                     isOpen: item.isOpen,
                                     day: !Number.isNaN(+item.content) ? +item.content : 10
+                                }
+                            }
+                            // 此处全局配置更新仅在登录时生效
+                            if (isUpdateGlobalConfig && item.configName === "globalProxy"){
+                                if (item.isOpen) {
+                                    apiUpdateGlobalNetworkConfig({
+                                        GlobalProxy: [item.content]
+                                    })
                                 }
                             }
                         })
