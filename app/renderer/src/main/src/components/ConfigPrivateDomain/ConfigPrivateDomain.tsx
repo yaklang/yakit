@@ -106,7 +106,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         onClose && onClose()
                         onSuccee && onSuccee()
                         uploadProjectEvent.startUpload({
-                            isUploadSyncData: true
+                            isUploadSyncData: true,
+                            isUpdateGlobalConfig: enterpriseLogin
                         })
                     }
                     // 首次登录强制修改密码
@@ -165,9 +166,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                 }
 
-                if (!enterpriseLogin) {
-                    uploadProjectEvent.startUpload({})
-                }
+                uploadProjectEvent.startUpload({
+                    isUpdateGlobalConfig: enterpriseLogin
+                })
             })
             .catch((e: any) => {
                 // !enterpriseLogin && setTimeout(() => setLoading(false), 300)

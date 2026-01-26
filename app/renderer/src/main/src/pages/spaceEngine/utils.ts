@@ -70,6 +70,28 @@ export const apiSetGlobalNetworkConfig: (params: GlobalNetworkConfig) => Promise
     })
 }
 
+/**更新全局配置 */
+export const apiUpdateGlobalNetworkConfig: (params: Partial<GlobalNetworkConfig>) => Promise<GlobalNetworkConfig> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetGlobalNetworkConfig")
+            .then((config:GlobalNetworkConfig)=>{
+                const newConfig = {...config,...params}
+                ipcRenderer
+                    .invoke("SetGlobalNetworkConfig", newConfig)
+                    .then(resolve)
+                    .catch((e: any) => {
+                        yakitNotify("error", "设置全局配置错误:" + e)
+                        reject(e)
+                })
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "获取全局配置错误:" + e)
+                reject(e)
+            })
+    })
+}
+
 /** 获取第三方应用配置模板 */
 export const apiGetThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPartyAppConfigTemplateResponse> = (
     hiddenError
