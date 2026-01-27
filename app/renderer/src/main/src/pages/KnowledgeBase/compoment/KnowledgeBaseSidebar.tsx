@@ -1,5 +1,5 @@
 import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, type FC} from "react"
-import {useAsyncEffect, useMemoizedFn, useSafeState} from "ahooks"
+import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useSafeState} from "ahooks"
 
 import {
     OutlineFolderopenIcon,
@@ -172,7 +172,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         setActive(value)
     })
 
-    useEffect(() => {
+    useDebounceEffect(() => {
         const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
         const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
         const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
@@ -189,7 +189,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
         const processed = prioritizeProcessingItems(result)
         setKnowledgeBase(processed)
-        setKnowledgeBaseID(processed?.[0]?.ID ?? "")
+        // setKnowledgeBaseID(processed?.[0]?.ID ?? "")
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases, addMode])
 

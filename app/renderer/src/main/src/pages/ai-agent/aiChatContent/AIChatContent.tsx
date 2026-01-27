@@ -2,7 +2,7 @@ import React, {forwardRef, ReactNode, useEffect, useImperativeHandle, useMemo, u
 import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useCreation, useInterval, useMemoizedFn} from "ahooks"
+import {useCreation, useInterval, useInViewport, useMemoizedFn} from "ahooks"
 import {HorizontalScrollCard} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import classNames from "classnames"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
@@ -50,6 +50,7 @@ import {
     AIHandleStartResProps,
     AIReActChatRefProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
+import {PageNodeItemProps} from "@/store/pageInfo"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
@@ -408,6 +409,28 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 })
             })
         })
+
+        useEffect(() => {
+            const konwledgeInputStringFn = (params: string) => {
+                try {
+                    const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
+                    if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
+                        data.defualtAIMentionCommandParams.forEach((item) => {
+                            aiReActChatRef.current?.setMention?.({
+                                mentionId: item.mentionId,
+                                mentionType: item.mentionType,
+                                mentionName: item.mentionName
+                            })
+                        })
+                    }
+                } catch (error) {}
+            }
+            emiter.on("defualtAIMentionCommandParams", konwledgeInputStringFn)
+            return () => {
+                emiter.off("defualtAIMentionCommandParams", konwledgeInputStringFn)
+            }
+        }, [])
+
         return (
             <div className={styles["ai-chat-content-wrapper"]}>
                 <ExpandAndRetract

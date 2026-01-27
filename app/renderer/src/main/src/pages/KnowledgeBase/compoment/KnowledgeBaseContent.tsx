@@ -368,7 +368,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     })
 
     // TODO  AI 召回逻辑
-
     // #region 问题相关逻辑
     const aiReActChatRef = useRef<AIReActChatRefProps>(null)
 
@@ -578,14 +577,13 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     }, [showFreeChat, knowledgeBaseID])
 
     useEffect(() => {
-        if (!inViewport) {
-            // 此处无法直接设置setValue为空字符串，否则会引起 flushSync 的问题，所以先关闭抽屉
-            aiReActChatRef.current?.setValue?.("")
-            // setShowFreeChat(false)
-
-            return
+        if (inViewport) {
+            queueMicrotask(() => {
+                aiReActChatRef.current?.setValue("")
+                handleSendAfter()
+            })
         }
-    }, [inViewport])
+    }, [inViewport === true])
 
     const [refreshOlineRag, setRefreshOlineRag] = useSafeState(false)
 
