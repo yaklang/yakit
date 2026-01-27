@@ -13,7 +13,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
-import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {OutlineQuestionmarkcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakEditor} from "@/utils/editors"
 
@@ -41,6 +41,9 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
     const [isCheck, setIsCheck] = useState<boolean>(false)
 
     const [auths, setAuths] = useState<YakitAuthInfo[]>([])
+
+    // 鼠标移入项 用于判断是否显示 ×
+    const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
 
     const [showSTL, setShowSTL] = useState<boolean>(false)
     const [showAllow, setShowAllow] = useState<boolean>(false)
@@ -120,6 +123,15 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
         onSwitchLocalEngine()
     })
 
+    // 删除指定远程历史记录
+    const delRemoteHistoryItem = useMemoizedFn((authItem: YakitAuthInfo) => {
+        setAuths((prev) => prev.filter((item) => item.name !== authItem.name))
+        ipcRenderer
+            .invoke("remove-yakit-remote-auth", authItem.name)
+            .then(() => {})
+            .catch(() => {})
+    })
+
     return (
         <div className={styles["remote-engine-wrapper"]}>
             <YakitSpin spinning={loading}>
@@ -153,15 +165,42 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                 wrapperClassName={styles["select-style"]}
                                 placeholder='请选择...'
                                 onSelect={onSelectHistory}
-                            >
-                                {auths.map((item) => {
-                                    return (
-                                        <YakitSelect.Option key={item.name} value={item.name}>
-                                            {item.name}
-                                        </YakitSelect.Option>
-                                    )
+                                optionLabelProp='value'
+                                options={auths.map((item) => {
+                                    let showClose = false
+                                    if (mouseEnterItem === item.name) {
+                                        showClose = true
+                                    } else {
+                                        showClose = false
+                                    }
+                                    return {
+                                        label: (
+                                            <div
+                                                className={styles["remote-history-label-wrapper"]}
+                                                onMouseEnter={(e) => {
+                                                    setMouseEnterItem(item.name + "")
+                                                }}
+                                                onMouseLeave={() => {
+                                                    setMouseEnterItem("")
+                                                }}
+                                            >
+                                                <div className={styles["remote-history-label"]}>{item.name}</div>
+                                                <OutlineXIcon
+                                                    style={{
+                                                        display: showClose ? "block" : "none"
+                                                    }}
+                                                    className={styles["option-item-close"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        delRemoteHistoryItem(item)
+                                                    }}
+                                                />
+                                            </div>
+                                        ),
+                                        value: item.name
+                                    }
                                 })}
-                            </YakitSelect>
+                            ></YakitSelect>
                         </div>
                     </div>
 

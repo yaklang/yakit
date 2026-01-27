@@ -195,7 +195,7 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
                     </div>
                 }
                 secondNode={
-                    <div style={{height: "100%", backgroundColor: "var(--Colors-Use-Neutral-Bg-Hover)"}}>
+                    <div style={{height: "100%", backgroundColor: "var(--Colors-Use-Neutral-Bg)"}}>
                         <ReactResizeDetector
                             onResize={(width, height) => {
                                 if (!width || !height) return

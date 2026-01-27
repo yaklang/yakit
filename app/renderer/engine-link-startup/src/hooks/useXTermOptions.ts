@@ -6,7 +6,7 @@ export const getXtermTheme = () => {
     const vars = getAllYakitColorVars()
     return {
         foreground: vars["--Colors-Use-Neutral-Text-1-Title"],
-        background: vars["--Colors-Use-Neutral-Bg"],
+        background: vars["--Colors-Use-Basic-Background"],
 
         cursor: vars["--Colors-Use-Main-Primary"],
         cursorAccent: vars["--Colors-Use-Neutral-Bg"],
