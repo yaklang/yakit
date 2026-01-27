@@ -31,9 +31,6 @@ function createGrpcInterceptor() {
             // 请求前
             start(metadata, listener, next) {
                 // 请求前（等价 axios request interceptor）
-                if (global.password) {
-                    metadata.set("authorization", `bearer ${global.password}`)
-                }
                 const newListener = {
                     ...listener,
                     // 响应后
