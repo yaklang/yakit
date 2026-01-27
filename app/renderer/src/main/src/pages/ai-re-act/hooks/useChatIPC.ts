@@ -16,6 +16,7 @@ import {
     AIQuestionQueues,
     CasualLoadingStatus,
     PlanLoadingStatus,
+    UseAIPerfDataParams,
     UseCasualChatEvents,
     UseChatIPCEvents,
     UseChatIPCParams,
@@ -42,13 +43,13 @@ function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEven
 
 function useChatIPC(params?: UseChatIPCParams) {
     const {
+        cacheDataStore,
         getRequest,
         setSessionChatName,
         onTaskStart,
         onTaskReview,
         onTaskReviewExtra,
         onReviewRelease,
-        saveChatDataStore,
         onEnd
     } = params || {}
 
@@ -92,6 +93,23 @@ function useChatIPC(params?: UseChatIPCParams) {
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
         return chatID.current
+    })
+
+    /** 获取全部聊天数据 */
+    const getChatDataStore = useMemoizedFn(() => {
+        if (!chatID.current) {
+            throw new Error("session is empty")
+        }
+
+        return cacheDataStore?.get(chatID.current)
+    })
+    /** 将数据推送到ts文件数据库类实例里 */
+    const updateChatDataStore: UseAIPerfDataParams["updateChatDataStore"] = useMemoizedFn((updater) => {
+        if (!chatID.current) {
+            throw new Error("session is empty")
+        }
+
+        return cacheDataStore?.update(chatID.current, updater)
     })
 
     // 通信的状态
@@ -199,9 +217,17 @@ function useChatIPC(params?: UseChatIPCParams) {
     const logEvents = useAIChatLog()
 
     // AI性能相关数据和逻辑
-    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: logEvents.pushLog})
+    const aiPerfDataEvent = useAIPerfData({
+        pushLog: logEvents.pushLog,
+        getChatDataStore,
+        updateChatDataStore
+    })
     // 执行过程中插件输出的卡片
-    const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: logEvents.pushLog})
+    const [yakExecResult, yakExecResultEvent] = useYakExecResult({
+        pushLog: logEvents.pushLog,
+        getChatDataStore,
+        updateChatDataStore
+    })
     // #endregion
 
     // #region 自由对话(ReAct)相关变量和hook
@@ -216,7 +242,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [casualChat, casualChatEvent] = useCasualChat({
         pushLog: logEvents.pushLog,
         getRequest: fetchRequestParams,
-        onReviewRelease: handleCasualReviewRelease
+        onReviewRelease: handleCasualReviewRelease,
+        getChatDataStore,
+        updateChatDataStore
     })
     // #endregion
 
@@ -244,7 +272,9 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
-        sendRequest: sendRequest
+        sendRequest: sendRequest,
+        getChatDataStore,
+        updateChatDataStore
     })
     // #endregion
 
@@ -405,17 +435,20 @@ function useChatIPC(params?: UseChatIPCParams) {
         } catch (error) {}
     })
     const savaHistoryChats = useMemoizedFn(() => {
+        const oldData = cacheDataStore?.get(chatID.current)
+        if (!oldData) return
         const answer: AIChatData = {
+            ...oldData,
             runTimeIDs: cloneDeep(runTimeIDs),
             coordinatorIDs: cloneDeep(coordinatorIDs),
             yakExecResult: cloneDeep(yakExecResult),
-            aiPerfData: cloneDeep(aiPerfData),
+            // aiPerfData: cloneDeep(aiPerfData),
             casualChat: cloneDeep(casualChat),
             taskChat: cloneDeep(taskChat),
             grpcFolders: cloneDeep(grpcFolders),
             reActTimelines: cloneDeep(reActTimelines)
         }
-        saveChatDataStore?.(chatID.current, answer)
+        cacheDataStore?.set(chatID.current, answer)
     })
 
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
@@ -780,7 +813,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         return () => {
             if (getExecute() && chatID.current) {
                 onClose(chatID.current)
-                onReset()
             }
             // 多个接口流不会清空，只在页面卸载时触发清空并关闭页面
             logEvents.cancelLogsWin()

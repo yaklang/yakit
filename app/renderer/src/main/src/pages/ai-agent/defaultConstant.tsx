@@ -28,7 +28,7 @@ import {
     TongyiIcon,
     MemfitIcon
 } from "./aiModelList/icon"
-import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
+import {UseChatIPCState} from "../ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AITaskStatus} from "../ai-re-act/hooks/grpcApi"
 import {
     SolidCursorclickIcon,
@@ -232,15 +232,8 @@ export enum AIMCPServerTypeEnum {
 export const defaultChatIPCData: UseChatIPCState = {
     execute: false,
     runTimeIDs: [],
-    aiPerfData: {
-        consumption: {},
-        pressure: [],
-        firstCost: [],
-        totalCost: []
-    },
     casualChat: {
-        elements: [],
-        contents: {current: new Map()}
+        elements: []
     },
     yakExecResult: {
         card: [],
@@ -249,8 +242,7 @@ export const defaultChatIPCData: UseChatIPCState = {
     },
     taskChat: {
         plan: [],
-        elements: [],
-        contents: {current: new Map()}
+        elements: []
     },
     grpcFolders: [],
     questionQueue: {
@@ -264,12 +256,6 @@ export const defaultChatIPCData: UseChatIPCState = {
     systemStream: "",
     coordinatorIDs: [],
     focusMode: ""
-}
-export const defaultAIPerfData: UseAIPerfDataState = {
-    consumption: {},
-    pressure: [],
-    firstCost: [],
-    totalCost: []
 }
 //#endregion
 

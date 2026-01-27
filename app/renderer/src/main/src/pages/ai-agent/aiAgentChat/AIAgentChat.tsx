@@ -171,7 +171,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskStart: handleTaskStart,
         getRequest: getSetting,
         setSessionChatName,
-        saveChatDataStore: aiChatDataStore.set
+        cacheDataStore: aiChatDataStore
     })
     const {execute} = chatIPCData
 

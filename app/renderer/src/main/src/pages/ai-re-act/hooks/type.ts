@@ -12,9 +12,10 @@ import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {Dispatch, MutableRefObject, SetStateAction} from "react"
 import {AIChatData} from "@/pages/ai-agent/type/aiChat"
+import {ChatDataStore, DeepPartial} from "@/pages/ai-agent/store/ChatDataStore"
 
 /** 公共 hoos 事件 */
-interface UseHookBaseParams {
+ interface UseHookBaseParams {
     /** 将数据推送到日志集合中 */
     pushLog: (log: AIChatLogData) => void
 }
@@ -30,14 +31,13 @@ export type handleSendFunc = (params: {
 }) => void
 
 // #region useAIPerfData相关定义
-export interface UseAIPerfDataParams extends UseHookBaseParams {}
-
-export interface UseAIPerfDataState {
-    consumption: AITokenConsumption
-    pressure: AIAgentGrpcApi.Pressure[]
-    firstCost: AIAgentGrpcApi.AICostMS[]
-    totalCost: AIAgentGrpcApi.AICostMS[]
+export interface UseAIPerfDataParams extends UseHookBaseParams {
+    /** 获取全部聊天数据 */
+    getChatDataStore: () => AIChatData | undefined
+    /** 将数据推送到ts文件数据库类实例里 */
+    updateChatDataStore: (updater: DeepPartial<AIChatData>) => void
 }
+
 export interface UseAIPerfDataEvents extends UseHookBaseEvents {}
 // #endregion
 
@@ -62,7 +62,6 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 
 export interface UseCasualChatState {
     elements: ReActChatRenderItem[]
-    contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
     handleSend: handleSendFunc
@@ -89,7 +88,6 @@ export interface UseTaskChatState {
     /** 正在执行的任务列表 */
     plan: AITaskInfoProps[]
     elements: ReActChatRenderItem[]
-    contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSend: handleSendFunc
@@ -117,11 +115,15 @@ export interface AIChatIPCNotifyMessage {
 }
 
 export interface UseChatIPCParams {
+    /** 文件数据缓存实例类 */
+    cacheDataStore?: ChatDataStore
     /** 获取流接口请求参数 */
     getRequest?: () => AIAgentSetting | undefined
     /** 设置会话的名字 */
     setSessionChatName?: (session: string, name: string) => void
 
+    /** 查看历史会话数据 */
+    onViewChat?: (session: string) => void
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: () => void
     /** 任务规划的 review 事件 */
@@ -132,8 +134,6 @@ export interface UseChatIPCParams {
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
 
-    /** 保存历史数据 */
-    saveChatDataStore?: (session: string, data: AIChatData) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
 }
@@ -172,8 +172,6 @@ export interface UseChatIPCState {
     runTimeIDs: string[]
     /** 插件输出的卡片数据 */
     yakExecResult: UseYakExecResultState
-    /** AI性能相关数据 */
-    aiPerfData: UseAIPerfDataState
     /** 自由对话相关数据 */
     casualChat: UseCasualChatState
     /** 任务规划相关数据 */
