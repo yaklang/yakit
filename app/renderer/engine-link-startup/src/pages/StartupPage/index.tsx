@@ -1105,7 +1105,6 @@ export const StartupPage: React.FC = () => {
                             <RemoteEngine
                                 loading={remoteLinkLoading}
                                 setLoading={setRemoteLinkLoading}
-                                installedEngine={isEngineInstalled.current}
                                 onSubmit={handleLinkRemoteEngine}
                                 onSwitchLocalEngine={handleRemoteToLocal}
                             />
