@@ -1003,6 +1003,14 @@ service Yak {
 
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
+
+  // Download rags
+  rpc DownloadRAGs(DownloadRAGsRequest) returns (stream ExecResult);
+}
+
+message DownloadRAGsRequest {
+  string RagName = 1;
+  bool Force = 3;
 }
 
 message CreateKnowledgeBaseV2Request {
@@ -2553,6 +2561,22 @@ message GlobalNetworkConfig {
   uint64 MaxContentLength = 23;
   // 插件加载超时配置（秒）
   float LoadPluginTimeout = 24;
+
+  // 是否启用新的配置，这个新的配置项会覆盖之前的 PrimaryAIType 和 AiApiPriority
+  bool EnableTieredAIModelConfig = 25;
+  TieredAIModelConfigDescriptor TieredAIModelConfig = 225;
+  repeated ThirdPartyApplicationConfig IntelligentAIModelConfig = 26;
+  repeated ThirdPartyApplicationConfig LightweightAIModelConfig = 27;
+  repeated ThirdPartyApplicationConfig VisionAIModelConfig = 29;
+}
+
+message TieredAIModelConfigDescriptor {
+  // empty / auto
+  // auto: 自动选择
+  // performance: 性能优先(优先选用高级智能模型)
+  // cost: 成本优先(优先选用轻量级模型)
+  string ModelRoutingPolicy = 1; // auto / performance / cost / balance
+  bool DisableFallbackToLightweightModel = 2; // 是否禁用降级到轻量级模型
 }
 
 message ProxyEndpoint {
@@ -2617,6 +2641,7 @@ message ThirdPartyApplicationConfig {
   string Domain = 6;
   string WebhookURL = 7;
   repeated KVPair ExtraParams = 8;
+  bool Disabled = 9;
 }
 
 message DiagnoseNetworkRequest {
@@ -6352,7 +6377,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-
+  
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
 }
