@@ -1,18 +1,17 @@
 import type {FC, ReactNode} from "react"
-import {AIOnlineModelIconMap} from "../defaultConstant"
+import {AIOnlineModelIconMap, AITabsEnum} from "../defaultConstant"
 import styles from "./ModelInfo.module.scss"
 import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
-import {OutlineLogIcon} from "@/assets/icon/outline"
+import {OutlinCompileThreeIcon, OutlineLogIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setClipboardText} from "@/utils/clipboard"
-// import {RocketSvgIcon} from "@/components/layout/icons"
 import {Tooltip} from "antd"
-// import {SolidAnnotationIcon} from "@/assets/icon/solid"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {AIChatToolDrawerContent} from "../chatTemplate/AIAgentChatTemplate"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {OutlineAtomIconByStatus} from "../aiModelList/AIModelList"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface ModalInfoProps {
     icon?: string
@@ -20,15 +19,12 @@ export interface ModalInfoProps {
     time?: number
     copyStr?: string
     callToolId?: string
+    aiFilePath?: string
 }
 
-const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr}) => {
+const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr, aiFilePath}) => {
     const iconSvg = useCreation(() => {
-        return (
-            AIOnlineModelIconMap[icon || ""] || (
-                <OutlineAtomIconByStatus isRunning={true} size='small' />
-            )
-        )
+        return AIOnlineModelIconMap[icon || ""] || <OutlineAtomIconByStatus isRunning={true} size='small' />
     }, [icon])
     const handleDetails = useMemoizedFn(() => {
         if (!callToolId) return
@@ -36,9 +32,19 @@ const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr})
             title: "详情",
             width: "40%",
             bodyStyle: {padding: 0},
-            content: <AIChatToolDrawerContent callToolId={callToolId} />,
+            content: <AIChatToolDrawerContent callToolId={callToolId} aiFilePath={aiFilePath} />,
             onClose: () => m.destroy()
         })
+    })
+
+    // 跳转并查看文件
+    const handleViewFile = useMemoizedFn(() => {
+        if (!aiFilePath) return
+
+        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
+        setTimeout(() => {
+            emiter.emit("fileSystemDefaultExpand", aiFilePath)
+        }, 800)
     })
 
     return (
@@ -59,15 +65,22 @@ const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr})
                         />
                     </Tooltip>
                 )}
+                {aiFilePath && (
+                    <Tooltip placement='top' title='查看文件'>
+                        <YakitButton
+                            type='text2'
+                            color='default'
+                            icon={<OutlinCompileThreeIcon />}
+                            onClick={handleViewFile}
+                        />
+                    </Tooltip>
+                )}
                 {callToolId && (
                     <Tooltip placement='top' title='查看详情'>
                         <YakitButton type='text2' color='default' icon={<OutlineLogIcon />} onClick={handleDetails} />
                     </Tooltip>
                 )}
-                {/* <Tooltip placement='top' title='生成步骤'>
-                    <YakitButton type='text2' color='default' icon={<OutlineLogIcon />} />
-                </Tooltip>
-                <Tooltip placement='top' title=''>
+                {/*   <Tooltip placement='top' title=''>
                     <YakitButton type='text2' color='default' icon={<SolidAnnotationIcon />} />
                 </Tooltip>
                 <Tooltip placement='top' title=''>

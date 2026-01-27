@@ -8,6 +8,7 @@ import {handleGrpcDataPushLog} from "./utils"
 import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIYakExecFileRecord} from "./aiRender"
+import useThrottleState from "@/hook/useThrottleState"
 
 // 属于该 hook 处理数据的类型
 export const UseYakExecResultTypes = ["yak_exec_result"]
@@ -29,7 +30,9 @@ function useYakExecResult(params?: UseYakExecResultParams) {
 
     const execFileRecordOrder = useRef(1)
     /** 插件执行过程中的文件操作记录 */
-    const [execFileRecord, setExecFileRecord] = useState<Map<string, AIYakExecFileRecord[]>>(new Map())
+    const [execFileRecord, setExecFileRecord] = useThrottleState<Map<string, AIYakExecFileRecord[]>>(new Map(), {
+        wait: 2000
+    })
     const updateExecFileRecord = useMemoizedFn((CallToolID: string, info: StreamResult.Log) => {
         try {
             setExecFileRecord((old) => {

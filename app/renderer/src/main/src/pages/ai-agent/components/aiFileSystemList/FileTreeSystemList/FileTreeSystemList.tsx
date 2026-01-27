@@ -1,13 +1,16 @@
 import {OutlineChevrondownIcon} from "@/assets/icon/outline"
 import {Tree} from "antd"
 import FileTreeSystemItem from "../FileTreeSystemItem/FileTreeSystemIem"
-import {FC, useCallback, useState, useTransition} from "react"
+import {FC, memo, useCallback, useState, useTransition} from "react"
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import useFileTree from "@/pages/ai-re-act/hooks/useFileTree"
 import {cloneDeep} from "lodash"
 import styles from "./FileTreeSystemList.module.scss"
 import {FileTreeSystemListProps} from "../type"
 import {TREE_DRAG_KEY} from "@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop"
+import {getRelevantPaths} from "../utils"
+import {useMount} from "ahooks"
+import emiter from "@/utils/eventBus/eventBus"
 
 const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
     path,
@@ -27,7 +30,7 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
     const [loadedKeys, setLoadedKeys] = useState<string[]>([])
     const [data, setData] = useState<FileNodeProps[]>([])
     const [_, startTransition] = useTransition()
-    const [fileTree, {onLoadFolderChildren, onResetTree}] = useFileTree({
+    const [fileTree, {onLoadFolderChildren, onResetTree, getDetailMap}] = useFileTree({
         target: {path, isFolder},
         onRefreshTreeData: () => {
             updateData()
@@ -64,6 +67,30 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
         setLoadedKeys([])
         onResetTree()
     }
+
+    const processExpand = async (expandKey: string) => {
+        if (!expandKey) return
+        try {
+            const relevantPaths = getRelevantPaths(path, [expandKey])
+            for (const relevant of relevantPaths) {
+                if (!fileTree.folderChildrenSet.current.has(relevant)) {
+                    await onLoadFolderChildren(relevant)
+                }
+            }
+            updateData()
+            setExpandedKeys((prev) => [...prev, ...relevantPaths])
+            setLoadedKeys((prev) => [...prev, ...relevantPaths])
+            const expandMap = getDetailMap?.(expandKey)
+            !isOpen && setSelected(expandMap)
+        } catch {}
+    }
+
+    useMount(() => {
+        emiter.on("fileSystemDefaultExpand", processExpand)
+        return () => {
+            emiter.off("fileSystemDefaultExpand", processExpand)
+        }
+    })
     return (
         <Tree.DirectoryTree
             draggable
@@ -119,4 +146,4 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
         />
     )
 }
-export default FileTreeSystemList
+export default memo(FileTreeSystemList)

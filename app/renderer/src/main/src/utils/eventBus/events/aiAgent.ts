@@ -18,8 +18,8 @@ export type AIAgentEventProps = {
     switchSideHiddenMode: string
     // 一级页面关闭事件
     onClosePageRepository?: string
-    /** 文件系统-文件预览已打开 */
-    filePreviewReady: string
+    // /** 文件系统-文件预览已打开 */
+    // filePreviewReady: string
     /**
      *@deprecated 设置ai输入框 {AIAgentTriggerEventInfo}
      * @name type "mention"
@@ -31,5 +31,7 @@ export type AIAgentEventProps = {
      * @name type "online"|"local"
      * @name params 传递的值
      */
-    aiModelSelectChange: string
+    aiModelSelectChange: string,
+    /** 文件系统默认展开路径 */
+    fileSystemDefaultExpand: string
 }
