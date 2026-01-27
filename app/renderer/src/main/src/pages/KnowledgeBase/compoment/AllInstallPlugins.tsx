@@ -22,37 +22,12 @@ import {
 } from "@/assets/icon/outline"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
+import {downloadWithEvents} from "../utils"
 
 const {ipcRenderer} = window.require("electron")
 
 export const installWithEvents = (binary: {Name: string; Force: boolean}, token: string) => {
-    return new Promise<void>((resolve, reject) => {
-        let settled = false
-
-        const safeResolve = () => {
-            if (!settled) {
-                settled = true
-                resolve()
-            }
-        }
-
-        const safeReject = (err) => {
-            if (!settled) {
-                settled = true
-                reject(err)
-            }
-        }
-
-        ipcRenderer.invoke("InstallThirdPartyBinary", binary, token).catch(safeReject)
-
-        ipcRenderer.once(`${token}-end`, () => {
-            safeResolve()
-        })
-
-        ipcRenderer.once(`${token}-error`, (_, error) => {
-            safeReject(error)
-        })
-    })
+    return downloadWithEvents("InstallThirdPartyBinary", binary, token)
 }
 
 const onCloseKnowledgeRepository = () => {

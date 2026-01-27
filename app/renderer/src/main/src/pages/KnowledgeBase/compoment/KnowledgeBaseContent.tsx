@@ -80,6 +80,8 @@ import {GuideFooter} from "./GuideFooter"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {PlusIcon, RemoveIcon} from "@/assets/newIcon"
 import {OutlinePlusSmIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -568,12 +570,28 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             setActiveChat(undefined)
         }
     }
-
-    useUpdateEffect(() => {
+    const {removePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById,
+            removePagesDataCacheById: s.removePagesDataCacheById
+        }),
+        shallow
+    )
+    useEffect(() => {
         if (showFreeChat) {
             handleSendAfter()
         }
     }, [showFreeChat, knowledgeBaseID])
+
+    useEffect(() => {
+        if (!inViewport) {
+            removePagesDataCacheById(YakitRoute.AI_REPOSITORY, YakitRoute.AI_REPOSITORY)
+            aiReActChatRef.current?.setValue("")
+        } else {
+            handleSendAfter()
+        }
+    }, [inViewport])
 
     const [refreshOlineRag, setRefreshOlineRag] = useSafeState(false)
 

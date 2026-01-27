@@ -390,16 +390,29 @@
                                     border-radius: 4px;
                                 }
                             }
-                            .title {
-                                line-height: 24px;
-                                color: var(--Colors-Use-Neutral-Text-1-Title);
-                                font-size: 14px;
-                                font-style: normal;
-                                font-weight: 500;
+                            .title-left {
                                 width: calc(100% - 52px);
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                                .size {
+                                    line-height: 24px;
+                                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                                    font-size: 12px;
+                                    font-style: normal;
+                                    font-weight: 500;
+                                    white-space: nowrap;
+                                }
+                                .title {
+                                    line-height: 24px;
+                                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                                    font-size: 14px;
+                                    font-style: normal;
+                                    font-weight: 500;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
                             }
 
                             .default-tag {

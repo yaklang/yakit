@@ -906,6 +906,7 @@ export interface OnlieRageLatestResponse {
     hashfile: string
     hashtype: string
     hash: string
+    file_size: number
 }
 
 // 获取线上知识库数据
@@ -986,6 +987,42 @@ const joyrideSteps: Step[] = [
     }
 ]
 
+const downloadWithEvents = (invokeChannel: string, invokeArgs: any, token: string, onData?: (data: any) => void) => {
+    return new Promise<void>((resolve, reject) => {
+        let settled = false
+
+        const safeResolve = () => {
+            if (!settled) {
+                settled = true
+                resolve()
+            }
+        }
+
+        const safeReject = (err) => {
+            if (!settled) {
+                settled = true
+                reject(err)
+            }
+        }
+
+        ipcRenderer.invoke(invokeChannel, invokeArgs, token).catch(safeReject)
+
+        if (onData) {
+            ipcRenderer.on(`${token}-data`, (_, data) => {
+                onData(data)
+            })
+        }
+
+        ipcRenderer.once(`${token}-end`, () => {
+            safeResolve()
+        })
+
+        ipcRenderer.once(`${token}-error`, (_, error) => {
+            safeReject(error)
+        })
+    })
+}
+
 export {
     targetInstallList,
     getFileInfoList,
@@ -1017,5 +1054,6 @@ export {
     BuildingOnlineKnowledgeBase,
     stopList,
     joyrideSteps,
-    extractStreamTokenChangedItem
+    extractStreamTokenChangedItem,
+    downloadWithEvents
 }
