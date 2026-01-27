@@ -11,7 +11,7 @@ import {
     grpcFetchLocalYakVersionHash,
     grpcFetchSpecifiedYakVersionHash
 } from "../../grpc"
-import {FetchSoftwareVersion, getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
+import {FetchSoftwareVersion, getReleaseEditionName, isCommunityYakit, isEnpriTraceAgent} from "@/utils/envfile"
 import {yakitNotify} from "@/utils/notification"
 import {outputToWelcomeConsole, SystemInfo} from "../../utils"
 import {getLocalValue} from "@/utils/kv"
@@ -52,7 +52,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             yakitStatusRef.current = yakitStatus
         }, [yakitStatus])
 
+        const latestCheckCallIdRef = useRef(0)
         const handleAllowSecretLocal = useMemoizedFn(async (port: number, checkVersion: boolean) => {
+            const callId = ++latestCheckCallIdRef.current
             // 中断连接 后续不执行
             if (yakitStatusRef.current === "break") {
                 debugToPrintLog(`------ 开始 check 被阻止 ------`)
@@ -117,6 +119,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         setYakitStatus("allow-secret-error")
                 }
             } catch (error) {
+                // 旧调用直接跳过
+                if (callId !== latestCheckCallIdRef.current) return
                 if (yakitStatusRef.current !== "break") {
                     // 未知意外情况则重置引擎
                     outputToWelcomeConsole(`check出现意外情况：${error}`)
@@ -148,8 +152,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 setLog(["开发环境，直接连接引擎"])
                 startYakEngine()
             } else if (checkVersion) {
-                if (!isEnpriTraceAgent()) setLog(["检查软件是否有更新..."])
-                handleCheckYakitLatestVersion()
+                // SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
+                if (isEnpriTraceAgent()) {
+                    handleCheckEngineVersion()
+                } else {
+                    setLog(["检查软件是否有更新..."])
+                    handleCheckYakitLatestVersion()
+                }
             } else {
                 startYakEngine()
             }
@@ -157,7 +166,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /**
          * @name 检查yakit是否有版本更新
-         * - SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
          * - 未开启 yakit 更新检查，不进行 yakit 更新检查，直接检查引擎和内置的版本
          */
         const handleCheckYakitLatestVersion = useMemoizedFn(() => {
@@ -168,10 +176,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 return
             }
 
-            if (isEnpriTraceAgent()) {
-                handleCheckEngineVersion()
-                return
-            }
             let showUpdateYakit = false
             getLocalValue(LocalGVS.NoAutobootLatestVersionCheck)
                 .then(async (val: boolean) => {
@@ -265,7 +269,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     )
 
                     if (!currentYak.current) {
-                        startYakEngine()
+                        softwareBasics()
                         return
                     }
 
@@ -286,7 +290,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     }
                 } else {
                     setLog((old) => old.concat([`错误: ${res1.reason}`]))
-                    startYakEngine()
+                    softwareBasics()
                 }
             } catch (error) {
                 setLog((old) => old.concat([`错误: ${error}`]))
@@ -324,18 +328,44 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 ])
 
                 if (!res1 || !Array.isArray(res2) || res2.length === 0) {
-                    setLog((old) => old.concat(["未知异常情况，无法检测来源，准备连接引擎"]))
+                    setLog((old) => old.concat(["未知异常情况，无法检测来源"]))
                 } else {
                     if (res2.includes(res1 as string)) {
-                        setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
+                        setLog((old) => old.concat(["引擎来源正确"]))
                     } else {
                         setLog((old) => old.concat(["引擎非官方来源"]))
                         yakitNotify("info", "引擎非官方来源")
                     }
                 }
             } catch (error) {
-                setLog((old) => old.concat(["异常情况，无法检测来源，准备连接引擎"]))
+                setLog((old) => old.concat(["异常情况，无法检测来源"]))
             } finally {
+                softwareBasics()
+            }
+        })
+
+        /**
+         * @name 软件基础设置
+         * - 更新校验完毕之后，用户第一次使用时（目前只有社区版yakit支持设置）
+         */
+        const softwareBasics = useMemoizedFn(async () => {
+            // 中断连接 后续不执行
+            if (yakitStatusRef.current === "break") {
+                debugToPrintLog(`------ 开始软件基础设置 被阻止 ------`)
+                setLog([])
+                return
+            }
+            let flag = false
+            if (isCommunityYakit()) {
+                try {
+                    const res = await getLocalValue(LocalGVS.YakitCESoftwareBasics)
+                    flag = !res
+                } catch (error) {}
+            }
+            if (flag) {
+                debugToPrintLog(`------ 开始软件基础设置逻辑 ------`)
+                setYakitStatus("softwareBasics")
+            } else {
                 startYakEngine()
             }
         })
@@ -349,7 +379,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             }
 
             if (allowSecretLocalJson.current) {
-                debugToPrintLog(`------ 准备开始启动引擎逻辑 ------`)
+                debugToPrintLog(`------ 准备开始启动连接引擎逻辑 ------`)
+                setLog(["准备开始启动连接引擎"])
                 setTimeout(() => {
                     onLinkEngine({
                         port: allowSecretLocalJson.current.port,
@@ -399,6 +430,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 init: initLink,
                 checkEngine: handleCheckEngineVersion,
                 checkEngineSource: handleCheckEngineSource,
+                startYakEngine: startYakEngine,
                 link: toLink
             }),
             []

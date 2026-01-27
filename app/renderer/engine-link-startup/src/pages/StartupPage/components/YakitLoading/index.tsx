@@ -14,11 +14,12 @@ import {EngineModeVerbose} from "../../utils"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ipcEventPre} from "@/utils/ipcEventPre"
+import {SoftwareBasics, SoftwareBasicsProps} from "../SoftwareBasics"
 
 import classNames from "classnames"
 import styles from "./YakitLoading.module.scss"
 const {ipcRenderer} = window.require("electron")
-export interface YakitLoadingProp {
+export interface YakitLoadingProp extends SoftwareBasicsProps {
     /** loading 文案 */
     yakitLoadingTip: string
     /** 界面暂时无法操作 */
@@ -69,7 +70,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         checkLog,
         dbPath,
         port,
-        countdown = 0
+        countdown = 0,
+        softTheme,
+        setSoftTheme,
+        softMode,
+        setSoftMode,
+        softLang,
+        setSoftLang
     } = props
 
     const [form] = Form.useForm()
@@ -484,6 +491,21 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        if (yakitStatus === "softwareBasics") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("softwareBasics")}
+                    >
+                        手动连接引擎
+                    </YakitButton>
+                </>
+            )
+        }
+
         if (yakitStatus === "break") {
             return (
                 <>
@@ -544,7 +566,9 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         if (!yakitStatus) {
             return false
         }
-        return !["install", "installNetWork", "init", "ready", "link", "link_countdown"].includes(yakitStatus)
+        return !["install", "installNetWork", "init", "softwareBasics", "ready", "link", "link_countdown"].includes(
+            yakitStatus
+        )
     }, [yakitStatus])
 
     useEffect(() => {
@@ -554,28 +578,39 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     return (
         <YakitSpin spinning={disableYakitLoading} tip={yakitLoadingTip}>
             <div className={styles["startup-loading-wrapper"]}>
-                <div
-                    className={classNames(styles["log-wrapper"], {
-                        [styles["log-default-color"]]: !logError,
-                        [styles["log-error-color"]]: logError
-                    })}
-                >
-                    <div className={styles["log-body"]}>
-                        {yakitStatus === "link_countdown" ? (
-                            <div className={styles["log-item"]}>引擎连接成功！{countdown} 秒后自动进入...</div>
-                        ) : yakitStatus === "break" ? (
-                            <div className={styles["log-item"]}>已主动断开, 请点击手动连接引擎</div>
-                        ) : (
-                            checkLog.map((item, index, arr) => {
-                                return (
-                                    <div key={item} className={styles["log-item"]}>
-                                        {item}
-                                    </div>
-                                )
-                            })
-                        )}
+                {yakitStatus === "softwareBasics" ? (
+                    <SoftwareBasics
+                        softTheme={softTheme}
+                        setSoftTheme={setSoftTheme}
+                        softMode={softMode}
+                        setSoftMode={setSoftMode}
+                        softLang={softLang}
+                        setSoftLang={setSoftLang}
+                    />
+                ) : (
+                    <div
+                        className={classNames(styles["log-wrapper"], {
+                            [styles["log-default-color"]]: !logError,
+                            [styles["log-error-color"]]: logError
+                        })}
+                    >
+                        <div className={styles["log-body"]}>
+                            {yakitStatus === "link_countdown" ? (
+                                <div className={styles["log-item"]}>引擎连接成功！{countdown} 秒后自动进入...</div>
+                            ) : yakitStatus === "break" ? (
+                                <div className={styles["log-item"]}>已主动断开, 请点击手动连接引擎</div>
+                            ) : (
+                                checkLog.map((item, index, arr) => {
+                                    return (
+                                        <div key={item} className={styles["log-item"]}>
+                                            {item}
+                                        </div>
+                                    )
+                                })
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
                 <div className={styles["engine-log-btn"]}>
                     <Form
                         form={form}
