@@ -48,10 +48,10 @@ import {AIInputEvent} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {cloneDeep} from "lodash"
-import {AIAgentSettingDefault, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
+import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {AIAgentSetting, AITabsEnumType} from "@/pages/ai-agent/aiAgentType"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
@@ -78,10 +78,8 @@ import {KnowledgeBaseGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {GuideFooter} from "./GuideFooter"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {PlusIcon, RemoveIcon} from "@/assets/newIcon"
-import {OutlinePlusSmIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
+import {PlusIcon} from "@/assets/newIcon"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -570,26 +568,22 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             setActiveChat(undefined)
         }
     }
-    const {removePagesDataCacheById} = usePageInfo(
-        (s) => ({
-            queryPagesDataById: s.queryPagesDataById,
-            updatePagesDataCacheById: s.updatePagesDataCacheById,
-            removePagesDataCacheById: s.removePagesDataCacheById
-        }),
-        shallow
-    )
+
     useEffect(() => {
-        if (showFreeChat) {
+        if (!showFreeChat || !knowledgeBaseID) return
+
+        queueMicrotask(() => {
             handleSendAfter()
-        }
+        })
     }, [showFreeChat, knowledgeBaseID])
 
     useEffect(() => {
         if (!inViewport) {
-            removePagesDataCacheById(YakitRoute.AI_REPOSITORY, YakitRoute.AI_REPOSITORY)
-            aiReActChatRef.current?.setValue("")
-        } else {
-            handleSendAfter()
+            // 此处无法直接设置setValue为空字符串，否则会引起 flushSync 的问题，所以先关闭抽屉
+            aiReActChatRef.current?.setValue?.("")
+            // setShowFreeChat(false)
+
+            return
         }
     }, [inViewport])
 
@@ -597,15 +591,18 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const handleSendAfter = () => {
         const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
-        if (!!targetKnowledgeBase) {
-            setTimeout(() => {
+        if (!targetKnowledgeBase) return
+
+        requestAnimationFrame(() => {
+            queueMicrotask(() => {
                 aiReActChatRef.current?.setMention({
                     mentionId: targetKnowledgeBase.ID,
                     mentionType: "knowledgeBase",
-                    mentionName: targetKnowledgeBase.KnowledgeBaseName
+                    mentionName: targetKnowledgeBase.KnowledgeBaseName,
+                    lock: true
                 })
             })
-        }
+        })
     }
 
     const onSendRequest = useMemoizedFn((data: AISendParams) => {

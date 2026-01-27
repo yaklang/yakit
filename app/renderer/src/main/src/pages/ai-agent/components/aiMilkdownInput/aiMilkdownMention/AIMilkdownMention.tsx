@@ -125,10 +125,12 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
 interface AICustomMentionProps {}
 export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
     const {node, selected, view, contentRef} = useNodeViewContext()
+    const locked = node?.attrs?.lock ?? false
     const readonly = useCreation(() => {
         return !view.editable
     }, [view.editable])
     const onRemove = useMemoizedFn(() => {
+        if (locked) return
         const {state, dispatch} = view
         const {from, to} = state.selection
         if (from !== to) {
@@ -152,7 +154,7 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
                 {iconMap[node?.attrs?.mentionType as iconMapType] || null}
             </div>
             <div className={styles["content"]} ref={contentRef} contentEditable={false}></div>
-            {!readonly && <OutlineXIcon className={styles["mention-icon-wrapper"]} onClick={onRemove} />}
+            {!readonly && !locked && <OutlineXIcon className={styles["mention-icon-wrapper"]} onClick={onRemove} />}
         </div>
     )
 }
