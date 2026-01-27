@@ -78,6 +78,15 @@
         width: 16px !important;
         height: 16px !important;
     }
+    .user-avatar{
+        width: 16px !important;
+        height: 16px !important;
+        :global{
+            .ant-avatar-string{
+                line-height: 14px!important;
+            }
+        }
+    }
 }
 
 .user-item {

@@ -166,7 +166,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                     <div className={styles["user-item"]}>
                         {ele.head_img?
                             <img src={ele.head_img} alt={ele.name} className={styles["user-img"]} />:
-                            <Avatar size={28} style={{backgroundColor: ele.avatarColor || randomAvatarColor(), cursor: "pointer"}}>
+                            <Avatar className={styles["user-avatar"]} size={28} style={{backgroundColor: ele.avatarColor || randomAvatarColor(), cursor: "pointer"}}>
                                 {ele.name && ele.name.slice(0, 1)}
                             </Avatar>}
                         <span className={styles["user-name"]}>{ele.name}</span>
