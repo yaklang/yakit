@@ -88,3 +88,22 @@ export const checkPathIncludeRelation = async (
 
     return PathIncludeResult.None
 }
+
+export const getRelevantPaths = (path: string, defaultExpandedKeys?: string[]): string[] => {
+    if (!defaultExpandedKeys || defaultExpandedKeys.length === 0) return []
+    const relevantPaths: string[] = []
+    for (const fullPath of defaultExpandedKeys) {
+        if (fullPath.startsWith(path)) {
+            const parts = fullPath.split(/[/\\]/)
+            let currentPath = ""
+            for (let i = 0; i < parts.length; i++) {
+                currentPath += i === 0 ? parts[i] : "\\" + parts[i]
+
+                if (currentPath.startsWith(path) && !relevantPaths.includes(currentPath)) {
+                    relevantPaths.push(currentPath)
+                }
+            }
+        }
+    }
+    return relevantPaths
+}

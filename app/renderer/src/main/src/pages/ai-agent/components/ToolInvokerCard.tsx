@@ -50,7 +50,6 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     //  HTTP 流量
     const getHTTPTraffic = useCallback(async () => {
         const result = await grpcQueryHTTPFlows({RuntimeId: params})
-        // 随机数
         setTrafficLen(result.Total)
     }, [params])
 

@@ -29,7 +29,7 @@
         display: grid;
         grid-template-rows: 0fr;
         // transition: grid-template-rows 0.3s ease-in-out;
-        overflow-y: overlay;
+        // overflow-y: overlay;
         max-height: 100px;
         &-inner {
             height: 100%;
@@ -85,10 +85,11 @@
 }
 .single-stream-text {
     border-left: 2px solid #d0d7de;
-    padding-left: 12px;
     margin: 0;
     line-height: 16px;
     padding: 4px;
+    padding-left: 2em;
+    text-indent: -1em;
     &-title {
         margin: 0;
         color: var(--Colors-Use-Neutral-Text-1-Title);

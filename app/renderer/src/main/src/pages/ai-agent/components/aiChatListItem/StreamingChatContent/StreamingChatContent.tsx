@@ -8,6 +8,7 @@ type StreamCls = {className: string} | {aiMarkdownProps?: {className: string}}
 
 type StreamingChatContentProps = ReActChatRenderItem & {
     streamClassName?: StreamCls
+    hasNext?: boolean
 }
 
 type SingleStreamProps = {
@@ -23,10 +24,10 @@ const AIStreamCard: FC<SingleStreamProps> = ({chatType, token, streamClassName})
 }
 
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
-    const {streamClassName, chatType, token} = props
+    const {streamClassName, chatType, token, hasNext} = props
 
     if (props.isGroup === true) {
-        return <AIGroupStreamCard elements={props.children} />
+        return <AIGroupStreamCard elements={props.children} hasNext={hasNext} />
     }
     return <AIStreamCard chatType={chatType} token={token} streamClassName={streamClassName} />
 }

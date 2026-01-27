@@ -9,7 +9,6 @@ import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
 import {useCustomFolder} from "../store/useCustomFolder"
 import styles from "./FileTreeSystem.module.scss"
 import FileTreeDrop from "@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop"
-import emiter from "@/utils/eventBus/eventBus"
 import {Divider} from "antd"
 
 const FileTreeSystem = () => {
@@ -40,18 +39,28 @@ const FileTreeSystem = () => {
         // 打开了就一直打开，目前没有关闭预览，所以只发一次事件
         if (hasEmittedRef.current) return
 
-        emiter.emit("filePreviewReady", "")
+        // emiter.emit("filePreviewReady", "")
         setFirstRatio("30%")
         hasEmittedRef.current = true
     }, [filePreviewData])
 
+    // const resizeBoxStyle = useMemo(() => {
+    //     if(!filePreviewData) return {
+    //         firstNodeStyle: { width: "100%" },
+    //         secondNodeStyle:{ display: "none" }
+    //     }
+    //     return {
+    //         firstNodeStyle: {width: "30%", padding: "4px", overflow: "hidden"}
+    //     }
+    // }, [filePreviewData])
+
     return (
         <YakitResizeBox
             firstRatio={firstRatio}
-            firstNodeStyle={{width:'30%',padding: "4px", overflow: "hidden"}}
             lineDirection='right'
             firstMinSize={200}
             lineStyle={{width: 4}}
+            firstNodeStyle={{width: "30%", padding: "4px", overflow: "hidden"}}
             firstNode={
                 <div className={styles.fileTreeSystemLeft}>
                     <div className={styles.topPanel}>

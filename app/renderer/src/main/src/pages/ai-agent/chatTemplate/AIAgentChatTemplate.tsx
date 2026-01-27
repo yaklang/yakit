@@ -157,9 +157,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         chatIPCData: {systemStream}
     } = useChatIPCStore()
 
-    const renderItem = (stream: ReActChatRenderItem) => {
+    const renderItem = (index: number, stream: ReActChatRenderItem) => {
         if (!stream.token) return null
-        return <AIChatListItem key={stream.token} item={stream} type='task-agent' />
+        const hasNext = streams.length - index > 1
+        return <AIChatListItem key={stream.token} hasNext={hasNext} item={stream} type='task-agent' />
     }
 
     const Item = useCallback(
@@ -214,7 +215,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 data={streams}
                 followOutput={followOutput}
                 totalCount={streams.length}
-                itemContent={(_, item) => renderItem(item)}
+                itemContent={(index, item) => renderItem(index, item)}
                 atBottomThreshold={100}
                 initialTopMostItemIndex={{index: "LAST"}}
                 skipAnimationFrameInResizeObserver
@@ -226,7 +227,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 })
 
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
-    const {callToolId} = props
+    const {callToolId, aiFilePath} = props
     const [toolList, setToolList] = useState<AIChatQSData[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
@@ -303,7 +304,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                         modalInfo={{
                                             time: Timestamp,
                                             title: info.AIModelName,
-                                            icon: info.AIService
+                                            icon: info.AIService,
+                                            aiFilePath,
                                         }}
                                         fileList={fileList}
                                     />

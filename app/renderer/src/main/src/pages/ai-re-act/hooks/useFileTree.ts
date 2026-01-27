@@ -28,6 +28,8 @@ export interface UseFileTreeEvents {
     onLoadFolderChildren: (folderPath: string) => Promise<void>
     /** 刷新整棵文件树数据 */
     onResetTree: () => Promise<void>
+    /** 获取指定节点的详情数据 */
+    getDetailMap: (key:string) => FileNodeProps | undefined
 }
 // #endregion
 
@@ -94,6 +96,11 @@ function useFileTree(params: UseFileTreeParams) {
     })
     const deleteNodeDetailMap = useMemoizedFn((path: string) => {
         nodeDetailMap.current.delete(path)
+    })
+
+    // 获取指定节点的详情数据
+    const getDetailMap = useMemoizedFn((key:string) => {
+      return nodeDetailMap.current.get(key)
     })
 
     // 待获取子集的文件夹列表
@@ -499,7 +506,7 @@ function useFileTree(params: UseFileTreeParams) {
 
     return [
         {treeData: treeData, folderChildrenSet: folderNodeSet},
-        {onLoadFolderChildren: loadFolderChildren, onResetTree}
+        {onLoadFolderChildren: loadFolderChildren, onResetTree, getDetailMap},
     ]
 }
 
