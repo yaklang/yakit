@@ -244,18 +244,24 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         useEffect(() => {
             if (tableType === "route") {
                 updatePluginTunHijack()
+            }
+        }, [tableType])
+
+        useEffect(()=>{
+            if(tableType === "route" && tableData.length !== 0){
                 // 开启定时器
                 if (extraTimerRef.current) {
                     clearInterval(extraTimerRef.current)
                 }
                 extraTimerRef.current = setInterval(() => pluginTunHijackFindActions.startPluginTunHijack(), 3 * 1000)
             }
+            
             return () => {
                 if (extraTimerRef.current) {
                     clearInterval(extraTimerRef.current)
                 }
             }
-        }, [tableType])
+        },[tableType, tableData])
 
         const updatePluginTunHijack = useMemoizedFn(() => {
             setLoading(true)

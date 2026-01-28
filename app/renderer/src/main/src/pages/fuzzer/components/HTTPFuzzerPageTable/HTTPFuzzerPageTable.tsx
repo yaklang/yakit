@@ -42,7 +42,7 @@ import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelecti
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { ExportDataType } from "@/utils/exporter"
 import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from "./extractedFilter"
-import { useAutoScrollToBottom } from "../../hooks/useAutoScrollToBottom"
+import { useChunkAutoScrollToBottom } from "../../hooks/useAutoScrollToBottom"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1050,7 +1050,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data, fuzzerTableMaxData])
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
-        const { handleEditorMount } = useAutoScrollToBottom({
+        const { handleEditorMount } = useChunkAutoScrollToBottom({
             chunkedData: currentSelectItem?.RandomChunkedData || [],
             id: currentSelectItem?.UUID,
         })

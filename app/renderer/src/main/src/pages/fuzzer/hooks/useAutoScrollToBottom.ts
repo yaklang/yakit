@@ -6,7 +6,7 @@ import {monaco} from "react-monaco-editor"
 import { RandomChunkedResponse } from "../HTTPFuzzerPage"
 import { Uint8ArrayToString } from "@/utils/str"
 
-interface UseAutoScrollToBottomOptions {
+interface UseChunkAutoScrollToBottomOptions {
     /** 需要流式加载的内容 */
     chunkedData: RandomChunkedResponse[]
     /** 可选的唯一标识符，用于重置滚动状态 */
@@ -15,7 +15,7 @@ interface UseAutoScrollToBottomOptions {
     onEditorMount?: (editor: IMonacoEditor) => void
 }
 
-interface UseAutoScrollToBottomReturn {
+interface UseChunkAutoScrollToBottomReturn {
     /** 编辑器挂载回调，传给 onEditor */
     handleEditorMount: (editor: IMonacoEditor) => void
     /** 手动滚动到底部 */
@@ -28,10 +28,11 @@ interface UseAutoScrollToBottomReturn {
 
 /**
  * 自动滚动到底部的 hook
+ * - 流式加载
  * - 内容变化时自动滚动到底部
  * - 用户手动向上滚动后，停止自动滚动
  */
-export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): UseAutoScrollToBottomReturn => {
+export const useChunkAutoScrollToBottom = (options: UseChunkAutoScrollToBottomOptions): UseChunkAutoScrollToBottomReturn => {
     const { chunkedData, id, onEditorMount } = options
     // 编辑器引用
     const editorRef = useRef<IMonacoEditor>()
@@ -42,7 +43,7 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
 
     // 流是否加载中
     const isStreamLoad = useMemo(()=>{
-        if(chunkedData.length ===0) return true
+        if(chunkedData.length === 0) return true
         const lastChunk = chunkedData[chunkedData.length -1]
         return !lastChunk.IsFinal
     },[chunkedData])
@@ -53,6 +54,7 @@ export const useAutoScrollToBottom = (options: UseAutoScrollToBottomOptions): Us
         if (!editor) return
         const model = editor.getModel()
         if (!model) return
+        if (chunkedData.length === 0) return
         const lineCount = model.getLineCount()
         editor.revealLine(lineCount)
     })
