@@ -235,8 +235,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             getRemoteValue(RemoteMitmGV.MitmSNI).then((e) => {
                 try {
                     const { OverwriteSNI = false, SNI = '', SNIMapping = [{Key:'', Value: ''}]  } = JSON.parse(e)
+                    const overwriteSNIValue = typeof OverwriteSNI === 'boolean' ? OverwriteSNI : OverwriteSNI === 'true'
+                    defFieldsRef.current.OverwriteSNI = overwriteSNIValue
+                    defFieldsRef.current.SNI = SNI
+                    defFieldsRef.current.SNIMapping = SNIMapping
                     form.setFieldsValue({
-                        OverwriteSNI: typeof OverwriteSNI === 'boolean' ? OverwriteSNI: OverwriteSNI === 'true',
+                        OverwriteSNI: overwriteSNIValue,
                         SNI,
                         SNIMapping
                     })
@@ -315,7 +319,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 const params: AdvancedConfigurationFromValue = {
                     ...formValue,
                     certs,
-                    etcHosts
+                    etcHosts,
+                    SNIMapping: formValue.SNIMapping || defFieldsRef.current.SNIMapping
                 }
                 setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
                 setRemoteValue(MITMConsts.MITMDefaultPreferGMTLS, `${params.preferGMTLS}`)
