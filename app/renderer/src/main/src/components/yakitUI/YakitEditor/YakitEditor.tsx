@@ -135,12 +135,12 @@ const keyToFontSize: Record<string, number> = {
 }
 
 /** 编辑器右键默认菜单 - 顶部 */
-const DefaultMenuTop: (t: (text: string) => string) => EditorMenuItemType[] = (t) => {
+const DefaultMenuTop: (t: (text: string) => string, nowFontsize: number) => EditorMenuItemType[] = (t, nowFontsize) => {
     return [
         {
             key: "font-size",
             label: t("YakitEditor.fontSize"),
-            children: fontSizeOptions.map((val)=> ({ key: val+'', label: val+'' }))
+            children: fontSizeOptions.map((val)=> ({ key: val+'', label: `${val}${(nowFontsize === val ? '\u00A0\u00A0\u00A0√': '')}` }))
         }
     ]
 }
@@ -242,7 +242,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
 
     /** @name 记录右键菜单组信息 */
-    const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t), [i18n.language])
+    const {fontSize: nowFontsize, setFontSize: setNowFontsize, initFontSize } = useEditorFontSize()
+    const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t,nowFontsize), [i18n.language,nowFontsize])
     const DefaultMenuBottomArr = useMemo(() => DefaultMenuBottom(t), [i18n.language])
     const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTopArr, ...DefaultMenuBottomArr])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
@@ -251,7 +252,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const keyToOnRunRef = useRef<Record<string, string[]>>({})
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
-    const {fontSize: nowFontsize, setFontSize: setNowFontsize} = useEditorFontSize()
     const {theme: themeGlobal} = useTheme()
 
     const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
@@ -269,6 +269,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             document.body.removeChild(fakeInput)
         }
     }, [disabled])
+
+    useEffect(()=>{
+        initFontSize()
+    },[])
 
     // 阻止编辑器点击URL默认打开行为 自定义外部系统默认浏览器打开URL
     useEffect(() => {
