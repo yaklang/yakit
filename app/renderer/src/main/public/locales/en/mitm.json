@@ -181,5 +181,13 @@
   },
    "YakScriptLoader":{
     "reset_parameters":"Reset Parameters"
+  },
+  "AdvancedConfiguration":{
+    "sni_config" :"SNI Config",
+    "map_rules":"Map Rules",
+    "host_rules":"Host Rules",
+    "SNI_value":"SNI Value",
+    "SNI_extra":"Leaving it blank indicates that SNI will not be sent",
+    "mandatory_SNI":"Mandatory SNI："
   }
 }
