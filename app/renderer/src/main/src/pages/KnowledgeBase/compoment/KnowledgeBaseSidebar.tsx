@@ -1,4 +1,4 @@
-import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, type FC} from "react"
+import React, {Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useRef, type FC} from "react"
 import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useSafeState} from "ahooks"
 
 import {
@@ -391,6 +391,33 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         await onRefreshOnlineRag()
     }, [refreshOlineRag])
 
+    const generateInsertModaOptions = useMemo(() => {
+        const result = insertModaOptions.map((it) => {
+            if (it.value === "manual") {
+                const targetNum = knowledgeBase.filter((it) => !it.CreatedFromUI).length ?? 0
+                return {
+                    ...it,
+                    label: it.label + targetNum
+                }
+            } else if (it.value === "external") {
+                const targetNum = knowledgeBase.filter((it) => !it.IsImported).length ?? 0
+                return {
+                    ...it,
+                    label: it.label + targetNum
+                }
+            } else if (it.value === "other") {
+                const targetNum = knowledgeBase.filter((it) => !it.IsDefault).length ?? 0
+                return {
+                    ...it,
+                    label: it.label + targetNum
+                }
+            } else {
+                return it
+            }
+        })
+        return result
+    }, [knowledgeBase])
+
     const renderTabContent = useMemoizedFn((key: KnowledgeTabListEnum) => {
         let content: ReactNode = <></>
         switch (key) {
@@ -463,7 +490,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
                             <div className={styles["repository-manage-options"]}>
                                 <div>
-                                    {insertModaOptions?.map((tag) => (
+                                    {generateInsertModaOptions?.map((tag) => (
                                         <YakitCheckableTag
                                             key={tag.value}
                                             checked={addMode.includes(tag.value)}
