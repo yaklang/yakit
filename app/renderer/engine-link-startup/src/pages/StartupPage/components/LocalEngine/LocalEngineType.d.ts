@@ -20,6 +20,8 @@ export interface LocalEngineLinkFuncProps {
     checkEngine: () => void
     /** 校验引擎来源 */
     checkEngineSource: (version?: string) => void
+    /** 开始连接本地引擎 */
+    startYakEngine: () => void
     /** 检查引擎版本后的本地连接 */
     link: (port: number) => void
 }

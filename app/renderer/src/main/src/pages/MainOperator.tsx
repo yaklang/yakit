@@ -68,8 +68,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {IRifyUpdateProjectManagerModal} from "./YakRunnerProjectManager/YakRunnerProjectManager"
 import {parseUrl} from "@/hook/useProxy"
 import { JSONParseLog } from "@/utils/tool"
-import {RemoteSoftModeGV} from "@/enums/softMode"
-import {useSoftMode} from "@/store/softMode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -256,7 +254,6 @@ const getDefaultExpand = () => {
     return true
 }
 const Main: React.FC<MainProp> = React.memo((props) => {
-    const {setSoftMode} = useSoftMode()
     const [showRenderCrash, setShowRenderCrash] = useState(false)
     const [showProxyModal, setShowProxyModal] = useState(false)
     const [ProxyModalLoading, setProxyModalLoading] = useState(false)
@@ -292,14 +289,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     // 首页加载时初始化
     useEffect(() => {
-        // yakit社区版获取模式
-        if (isCommunityYakit()) {
-            getRemoteValue(RemoteSoftModeGV.YakitCEMode).then((mode) => {
-                if (mode) {
-                    setSoftMode(mode)
-                }
-            })
-        }
         checkAndShowDataMigration()
     }, [])
 

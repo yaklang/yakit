@@ -51,13 +51,13 @@ export type YakitStatusType =
     | "update_yakit" // 检测到新版yakit
     | "update_yak" // 检测到新版yak
     | "check_yak_version_error" // 检测新版yak出错
+    | "softwareBasics" // 软件基础设置
     | "ready" // 开始尝试连接引擎
     | "start_timeout" // 引擎启动超时
     | "error" // 引擎连接超时
     | "link_countdown" // 引擎连接成功，倒计时进入
     | "link" // 引擎连接成功
     | "break" // 小风车主动断开本地连接的引擎
-    | "control-remote" // 远程控制
     | ""
 
 /** 下载进度条-时间数据 */
