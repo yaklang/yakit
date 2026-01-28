@@ -123,6 +123,31 @@
     }
 }
 
+.remote-history-label-wrapper {
+    display: flex;
+    justify-content: space-between;
+
+    .remote-history-label {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .option-item-close {
+        svg {
+            width: 16px;
+            height: 16px;
+            margin-top: 4px;
+            color: var(--Colors-Use-Main-Primary);
+
+            &:hover {
+                color: var(--Colors-Use-Error-Primary);
+            }
+        }
+    }
+}
+
 /* ---------- PEMExample & PEMHint ---------- */
 .pem-example-popover {
     :global {
