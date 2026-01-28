@@ -181,5 +181,13 @@
   },
   "YakScriptLoader":{
     "reset_parameters":"重置参数"
+  },
+  "AdvancedConfiguration":{
+    "sni_config" :"SNI 配置",
+    "map_rules":"映射规则",
+    "host_rules":"Host 规则",
+    "SNI_value":"SNI 值",
+    "SNI_extra":"留空表示不发送 SNI",
+    "mandatory_SNI":"强制 SNI："
   }
 }
