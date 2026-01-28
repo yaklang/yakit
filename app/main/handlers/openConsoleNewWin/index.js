@@ -30,6 +30,7 @@ module.exports = {
         ipcMain.on("onTop-console-new-window", () => {
             if (childWindow && !childWindow.isDestroyed()) {
                 childWindow.showInactive()
+                childWindow.moveTop()
             }
         })
 

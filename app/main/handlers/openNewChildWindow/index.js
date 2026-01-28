@@ -46,6 +46,7 @@ module.exports = {
         ipcMain.on("onTop-childWin", () => {
             if (childWindow && !childWindow.isDestroyed()) {
                 childWindow.showInactive()
+                childWindow.moveTop()
             }
         })
 
