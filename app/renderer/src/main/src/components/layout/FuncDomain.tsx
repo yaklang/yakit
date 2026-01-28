@@ -2476,7 +2476,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         isRemoteMode,
         communityYaklang,
         noticeType,
-        messageList
+        messageList,
+        isIntranetYakitUpdateWait,
     ])
 
     return (
