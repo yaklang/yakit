@@ -11,6 +11,7 @@ import {KnowledgeBaseContentProps} from "../TKnowledgeBase"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {extractFileName} from "../utils"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {randomString} from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -42,7 +43,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
 
     useEffect(() => {
         if (visible) {
-            const newToken = `import-kb-${Date.now()}`
+            const newToken = `import-kb-${randomString(50)}`
             setToken(newToken)
             setHasError(false)
         }

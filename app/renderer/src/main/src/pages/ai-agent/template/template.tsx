@@ -83,7 +83,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         }, [inViewport])
 
         const onSetAIInputByType = useMemoizedFn((res) => {
-            console.log(11111)
             try {
                 const data: AIAgentTriggerEventInfo = JSON.parse(res)
                 const {type} = data

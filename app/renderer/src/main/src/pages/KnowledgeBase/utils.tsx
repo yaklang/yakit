@@ -1057,3 +1057,47 @@ export {
     extractStreamTokenChangedItem,
     downloadWithEvents
 }
+
+// await handleBuildingOnlineKnowledge(
+//     {
+//         ...ragItem,
+//         file_address: localFilePath
+//     },
+//     newToken
+// )
+// const handleBuildingOnlineKnowledge = useMemoizedFn(
+//     async (ragItem: OnlieRageLatestResponse & {file_address?: string}, newToken: string) => {
+//         const rag_file_path = ragItem.file_address
+//         const rag_name = ragItem.name
+//         const rag_serial_version_uid = ragItem.hash
+//         try {
+//             const plugin: TClearKnowledgeResponse = await grpcFetchLocalPluginDetail({Name: "导入默认知识库"}, true)
+//             // 先构建知识库
+//             await BuildingOnlineKnowledgeBase(
+//                 {...plugin, rag_file_path, rag_name, rag_serial_version_uid},
+//                 newToken
+//             )
+//             // 返回一个 Promise，只有 onEnd 触发后 resolve，否则 onError reject
+//             return await new Promise<void>((resolve, reject) => {
+//                 api?.createStream(newToken, {
+//                     taskName: "debug-plugin",
+//                     apiKey: "DebugPlugin",
+//                     token: newToken,
+//                     onEnd: async () => {
+//                         try {
+//                             setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
+//                             await refreshAsync?.()
+//                         } catch (e) {}
+//                         resolve()
+//                     },
+//                     onError: (e) => {
+//                         api.removeStream && api.removeStream(newToken)
+//                         reject(e)
+//                     }
+//                 })
+//             })
+//         } catch (error) {
+//             throw error
+//         }
+//     }
+// )
