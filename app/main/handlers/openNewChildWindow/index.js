@@ -42,11 +42,10 @@ module.exports = {
             }
         })
 
-        // 监听主窗口触发子窗口获取焦点
+        // 监听主窗口触发子窗口显示但不激活
         ipcMain.on("onTop-childWin", () => {
             if (childWindow && !childWindow.isDestroyed()) {
-                childWindow.focus()
-                childWindow.show()
+                childWindow.showInactive()
             }
         })
 
