@@ -283,7 +283,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             PluginConcurrency: params.PluginConcurrency,
             OverwriteSNI: params.OverwriteSNI,
             SNI: params.OverwriteSNI ? params.SNI : "",
-            SNIMapping: params.SNIMapping
+            SNIMapping: (params.SNIMapping || []).filter(({ Key }) => Key && Key.trim())
         }
         if (params.stateSecretHijacking === "enableGMTLS") {
             extra.enableGMTLS = true
