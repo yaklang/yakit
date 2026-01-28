@@ -50,7 +50,9 @@
       "online": "Online",
       "local": "Local",
       "importSharedData": "Import Shared Data",
-      "importHARHistoryData": "Import HAR History Data"
+      "importHARHistoryData": "Import HAR History Data",
+      "proxyManagement": "Proxy Management",
+      "hotPatchManagement": "HotPatch Management"
     },
     "HeardMenu": {
       "editMenu": "Edit Menu",

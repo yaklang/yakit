@@ -682,9 +682,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         emiter.on("switchMenuItem", onSwitchMenuItem)
         /**关闭一级菜单 */
         emiter.on("onCloseFirstMenu", onCloseFirstMenu)
+        /**更新单例页面标签名 */
+        emiter.on("onUpdateSingletonPageName", onUpdateSingletonPageName)
         return () => {
             emiter.off("switchMenuItem", onSwitchMenuItem)
             emiter.off("onCloseFirstMenu", onCloseFirstMenu)
+            emiter.off("onUpdateSingletonPageName", onUpdateSingletonPageName)
         }
     }, [])
     const onSwitchMenuItem = useMemoizedFn((data) => {
@@ -696,6 +699,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         } catch (error) {
             yakitNotify("error", `切换一级菜单选中key失败:${error}`)
         }
+    })
+    /**
+     * 更新单例页面的标签名
+     */
+    const onUpdateSingletonPageName = useMemoizedFn((res: string) => {
+        try {
+            const {route, value} = JSON.parse(res)
+            const key = routeConvertKey(route, "")
+            const index = getPageCache().findIndex((item) => item.routeKey === key && item.singleNode)
+            if (index === -1) return
+            const newPageCache = [...getPageCache()]
+            newPageCache[index] = {...newPageCache[index], verbose: value}
+            setPageCache(newPageCache)
+        } catch (error) {}
     })
     const onCloseFirstMenu = useMemoizedFn((res) => {
         try {

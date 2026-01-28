@@ -557,7 +557,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     })
                     .then((res: QueryHotPatchTemplateListResponse) => {
                         const nameArr = res.Name
-                        const newHotPatchTempLocal = hotPatchTempLocalRef.current.slice()
+                        const newHotPatchTempLocal = hotPatchTempLocalRef.current.slice().filter(({ isDefault }) => isDefault )
                         nameArr.forEach((name) => {
                             const index = newHotPatchTempLocal.findIndex((item) => item.name === name)
                             if (index === -1) {

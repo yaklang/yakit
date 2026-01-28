@@ -27,6 +27,7 @@ import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import styles from "./ConfigNetworkPage.module.scss"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import classNames from "classnames"
+import { YakitRadioButtons } from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 const {ipcRenderer} = window.require("electron")
 
 const generateEndpointId = () => `ep-${randomString(8)}`
@@ -52,8 +53,8 @@ const PasswordDisplay: React.FC<{
 }
 
 export interface ProxyRulesConfigProps {
-    visible: boolean
-    onClose: () => void
+    visible?: boolean
+    onClose?: () => void
     hideRules?: boolean
 }
 
@@ -352,7 +353,18 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
     const renderContent = useMemoizedFn(() => {
         return (
             <div style={{flex: 1, padding: 20}}>
-                <div style={{textAlign: "right", marginBottom: 12}}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                {visible === undefined ? (
+                    <YakitRadioButtons
+                        value={activeKey}
+                        onChange={(e) => {
+                            setActiveKey(e.target.value)
+                        }}
+                        buttonStyle='solid'
+                        options={tab}
+                    />
+                ): <div/>}
+                <div>
                     {!isEndpoints && (
                         <YakitPopconfirm
                             title={t("ProxyConfig.confirm_delete_all")}
@@ -383,31 +395,15 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                         </YakitButton>
                     )}
                 </div>
+                </div>
                 {isEndpoints ? renderEndPointsTable() : renderRoutesTable()}
             </div>
         )
     })
 
-    return (
-        <YakitDrawer
-            visible={visible}
-            placement='bottom'
-            onClose={onClose}
-            height='70%'
-            title={
-                <div className={styles["textarea-header"]}>
-                    <span className={styles["header-title"]}>{t("AgentConfigModal.proxy_configuration")}</span>
-                    {!hideRules && (
-                        <Tooltip title={t("ProxyConfig.tip")}>
-                            <OutlineQuestionmarkcircleIcon className={styles["header-hint-icon"]} />
-                        </Tooltip>
-                    )}
-                </div>
-            }
-            maskClosable={false}
-            className={styles["proxy-rules-config-overlay"]}
-        >
-            {hideRules ? (
+    const drawerContent = (
+        <>
+            {hideRules || visible === undefined ? (
                 renderContent()
             ) : (
                 <YakitSideTab
@@ -505,6 +501,33 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                     )}
                 </Form>
             </YakitModal>
+        </>
+    )
+
+    if (visible === undefined) {
+        return <div className={styles["proxy-rules-config-overlay"]} style={{ height: '100%' }}>{drawerContent}</div>
+    }
+
+    return (
+        <YakitDrawer
+            visible={visible}
+            placement='bottom'
+            onClose={onClose}
+            height='70%'
+            title={
+                <div className={styles["textarea-header"]}>
+                    <span className={styles["header-title"]}>{t("AgentConfigModal.proxy_configuration")}</span>
+                    {!hideRules && (
+                        <Tooltip title={t("ProxyConfig.tip")}>
+                            <OutlineQuestionmarkcircleIcon className={styles["header-hint-icon"]} />
+                        </Tooltip>
+                    )}
+                </div>
+            }
+            maskClosable={false}
+            className={styles["proxy-rules-config-overlay"]}
+        >
+            {drawerContent}
         </YakitDrawer>
     )
 }

@@ -67,7 +67,8 @@
         "restore": "复原",
         "share": "分享",
         "ImportTutorial": "导入教程",
-        "privacy_mode":"隐私模式"
+        "privacy_mode":"隐私模式",
+        "rename": "重命名"
     },
     "YakitNotification": {
         "unknown_error": "未知错误",
@@ -102,7 +103,8 @@
         "executeFailed": "执行失败{colon}",
         "search_failed": "搜索失败{colon}",
         "complete_variable_before_add": "请将已添加【变量{index}】设置完成后再进行添加",
-        "shareFailed": "分享失败{colon}"
+        "shareFailed": "分享失败{colon}",
+        "reName_success": "重命名成功"
     },
     "YakitFormDragger": {
         "filePath": "文件路径",

@@ -67,7 +67,8 @@
         "restore": "Restore",
         "share": "Share",
         "ImportTutorial": "Import Tutorial",
-        "privacy_mode":"Privacy Mode"
+        "privacy_mode":"Privacy Mode",
+        "rename": "Rename"
     },
     "YakitNotification": {
         "unknown_error": "Unknown Error",
@@ -102,7 +103,8 @@
         "executeFailed": "Execution failed{colon}",
         "search_failed": "Search failed{colon}",
         "complete_variable_before_add": "Please complete the settings for Variable {index} before adding another one",
-        "shareFailed": "Share failed{colon}"
+        "shareFailed": "Share failed{colon}",
+        "reName_success": "ReName Success"
     },
     "YakitFormDragger": {
         "filePath": "File Path",
