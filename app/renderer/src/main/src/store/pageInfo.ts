@@ -16,6 +16,7 @@ import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeSca
 import {ConcurrencyAdvancedConfigValue} from "@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency"
 import {FilterLibRuleKind} from "@/pages/ruleManagement/RuleManagementType"
 import { JSONParseLog } from "@/utils/tool"
+import { configManagementTabType } from "."
 
 /**
  * @description 页面暂存数据
@@ -91,6 +92,10 @@ interface PageParamsInfoProps {
     auditHoleInfo?: AuditHoleInfoProps
     /** 知识库页面 */
     AIRepository?: AIRepositoryProps
+    /** 配置管理页面 */
+    configManagementParams?: {
+        tab?: configManagementTabType
+    }
 }
 
 export interface AIForgeEditorPageInfoProps {

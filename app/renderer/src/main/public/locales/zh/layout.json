@@ -50,7 +50,9 @@
       "online": "线上",
       "local": "本地",
       "importSharedData": "导入分享数据",
-      "importHARHistoryData": "导入HAR流量数据"
+      "importHARHistoryData": "导入HAR流量数据",
+      "proxyManagement": "代理管理",
+      "hotPatchManagement": "热加载管理"
     },
     "HeardMenu": {
       "editMenu": "编辑菜单",

@@ -104,3 +104,16 @@ export const useGoogleChromePluginPath = create<GoogleChromePluginPathProps>((se
     googleChromePluginPath: "",
     setGoogleChromePluginPath: (path) => set({googleChromePluginPath: path})
 }))
+
+export type configManagementTabType  = 'payload' | 'proxy' | 'hotPatch'
+
+interface ConfigManagementTabProps {
+    /**@name 配置管理页面当前选中的tab */
+    configManagementActiveTab: configManagementTabType
+    setConfigManagementActiveTab: (tab: configManagementTabType) => void
+}
+
+export const useConfigManagementTab = create<ConfigManagementTabProps>((set) => ({
+    configManagementActiveTab: "payload",
+    setConfigManagementActiveTab: (tab) => set({configManagementActiveTab: tab})
+}))

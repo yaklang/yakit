@@ -210,7 +210,9 @@
     "bruteforce_rsa_oaep": "Brute-Force RSA-OAEP",
     "bruteforce_csrf_with_token": "Brute-Force CSRF (with token protection)",
     "crack_signature": "Crack Signature",
-    "third_party_captcha_bypass": "Third-party CAPTCHA Bypass"
+    "third_party_captcha_bypass": "Third-party CAPTCHA Bypass",
+    "source": "Source",
+    "executionResult": "Execution Result"
   },
   "HTTPFuzzerHistorySelector": {
     "confirmDeletePackets": "This will delete the data packets and cached data. Are you sure you want to delete them?",
@@ -522,7 +524,14 @@
     "hot_reload_template_name_empty": "Hot-reload template name is empty",
     "hot_reload_template_name_exists": "Hot-reload template name already exists",
     "enter_hot_reload_template_name": "Please name the hot-reload template...",
-    "save_hot_reload_template": "Save Hot-Reload Template"
+    "save_hot_reload_template": "Save Hot-Reload Template",
+    "MITM_hot_template": "MITM",
+    "WebFuzzer_hot_template": "Web Fuzzer",
+    "add_template": "Add Template",
+    "template_empty_message": "Template name cannot be empty",
+    "template_repeat_message": "Template name already exists",
+    "add_template_success": "Add Template Success",
+    "template_list":"Template List"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "Apply the modified content?",
