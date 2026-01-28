@@ -166,6 +166,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                 placeholder='请选择...'
                                 onSelect={onSelectHistory}
                                 optionLabelProp='value'
+                                allowClear
                                 options={auths.map((item) => {
                                     let showClose = false
                                     if (mouseEnterItem === item.name) {
