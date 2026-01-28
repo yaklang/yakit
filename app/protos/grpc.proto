@@ -903,6 +903,7 @@ service Yak {
   rpc DeleteAIMemoryEntity(DeleteAIMemoryEntityRequest) returns (DbOperateMessage);
   rpc GetAIMemoryEntity(GetAIMemoryEntityRequest) returns (AIMemoryEntity);
   rpc QueryAIMemoryEntity(QueryAIMemoryEntityRequest) returns (QueryAIMemoryEntityResponse);
+  rpc CountAIMemoryEntityTags(CountAIMemoryEntityTagsRequest) returns (CountAIMemoryEntityTagsResponse);
 
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
@@ -2132,6 +2133,14 @@ message GetAIMemoryEntityRequest {
 
 message DeleteAIMemoryEntityRequest {
   AIMemoryEntityFilter Filter = 1;
+}
+
+message CountAIMemoryEntityTagsRequest {
+  string SessionID = 1;
+}
+
+message CountAIMemoryEntityTagsResponse {
+  repeated TagsCode TagsCount = 1;
 }
 
 message StartMcpServerRequest {
