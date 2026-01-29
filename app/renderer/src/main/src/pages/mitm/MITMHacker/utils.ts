@@ -172,6 +172,7 @@ interface ExtraMITMServerV2 {
     PluginConcurrency: number
     OverwriteSNI: boolean
     SNI: string
+    SNIMapping: { Key: string, Value: string }[]
 }
 /**转 mitm v1版本grpc参数 */
 export const convertMITMStartCallV1 = (oldData: MITMStartCallRequest): MITMStartCallRequestV1 => {
@@ -206,7 +207,8 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
                   PluginConcurrency: value.extra.PluginConcurrency,
                   OverwriteSNI: value.extra.OverwriteSNI,
-                  SNI: value.extra.SNI
+                  SNI: value.extra.SNI,
+                  SNIMapping: value.extra.SNIMapping,
               }
     }
     return data

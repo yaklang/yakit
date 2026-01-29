@@ -117,7 +117,7 @@ interface CodeComparisonProps {
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
     const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly } = props;
-    const { fontSize } = useEditorFontSize()
+    const { fontSize, initFontSize } = useEditorFontSize()
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
@@ -136,6 +136,10 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     useLayoutEffect(() => {
         applyYakitMonacoTheme(theme)
     }, [theme])
+
+    useEffect(()=>{
+        initFontSize()
+    },[])
 
     const changeLineConversion = () => {
         if (!diffDivRef || !diffDivRef.current) return

@@ -771,7 +771,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     query?.beforeBodyLength ||
                     query?.afterDurationMs ||
                     query?.beforeDurationMs ||
-                    (query?.ExtractedResults && query?.ExtractedResults?.length > 0)
+                    (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
+                    query?.ExtractedResultsNotEmpty
                 ) {
                     const newDataTable = sorterFunction(data, sorterTable) || []
                     const l = newDataTable.length

@@ -2293,6 +2293,40 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         [i18n.language]
     )
 
+    const renderTLSTags = useMemo(
+        () => (
+            <div>
+                {advancedConfigValue.randomJA3 && (
+                    <YakitTag
+                        closable
+                        onClose={() => {
+                            setAdvancedConfigValue({
+                                ...advancedConfigValue,
+                                randomJA3: false
+                            })
+                        }}
+                    >
+                        {t("HttpQueryAdvancedConfig.random_tls")}
+                    </YakitTag>
+                )}
+                {advancedConfigValue.isGmTLS && (
+                    <YakitTag
+                        closable
+                        onClose={() => {
+                            setAdvancedConfigValue({
+                                ...advancedConfigValue,
+                                isGmTLS: false
+                            })
+                        }}
+                    >
+                        {t("HttpQueryAdvancedConfig.guomi_tls")}
+                    </YakitTag>
+                )}
+            </div>
+        ),
+        [i18n.language, advancedConfigValue]
+    )
+
     const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)
     useEffect(() => {
         if (inViewport) {
@@ -2481,6 +2515,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onlyOneResponse={onlyOneResponse}
                                 httpResponse={httpResponse}
                             />
+                            {renderTLSTags}
                         </div>
                         <div className={styles["fuzzer-heard-right"]}>
                             {getFuzzerRequestParams && typeof getFuzzerRequestParams === "function" ? (

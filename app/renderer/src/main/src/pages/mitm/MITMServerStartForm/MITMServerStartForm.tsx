@@ -281,8 +281,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             DisableSystemProxy: params.DisableSystemProxy,
             DisableWebsocketCompression: params.DisableWebsocketCompression,
             PluginConcurrency: params.PluginConcurrency,
-            OverwriteSNI: params.OverwriteSNI !== "auto",
-            SNI: params.OverwriteSNI === "mandatory" ? params.SNI : ""
+            OverwriteSNI: params.OverwriteSNI,
+            SNI: params.OverwriteSNI ? params.SNI : "",
+            SNIMapping: (params.SNIMapping || []).filter(({ Key }) => Key && Key.trim())
         }
         if (params.stateSecretHijacking === "enableGMTLS") {
             extra.enableGMTLS = true
