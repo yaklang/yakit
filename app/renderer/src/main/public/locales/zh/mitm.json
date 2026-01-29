@@ -187,7 +187,8 @@
     "map_rules":"映射规则",
     "host_rules":"Host 规则",
     "SNI_value":"SNI 值",
-    "SNI_extra":"留空表示不发送 SNI",
-    "mandatory_SNI":"强制 SNI："
+    "SNI_extra":"为空表示不发送SNI，映射规则优先级大于强制SNI",
+    "mandatory_SNI":"强制 SNI:",
+    "add_message":"请设置完成后再添加"
   }
 }
