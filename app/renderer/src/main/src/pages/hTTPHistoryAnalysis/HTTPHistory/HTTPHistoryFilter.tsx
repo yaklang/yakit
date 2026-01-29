@@ -62,13 +62,12 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "@/components/layout/icons"
 import {Divider, Tooltip} from "antd"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 import {WebTree} from "@/components/WebTree/WebTree"
 import ReactResizeDetector from "react-resize-detector"
 import {HistoryProcess, HistoryTab} from "@/components/HTTPHistory"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {v4 as uuidv4} from "uuid"
-import {cloneDeep, isEqual} from "lodash"
+import {cloneDeep, isEqual, toArray} from "lodash"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
@@ -101,7 +100,12 @@ import styles from "./HTTPHistoryFilter.module.scss"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import {
+    defFilterConfig,
+    FilterConfig,
+    HTTPFlowTableFormConfiguration
+} from "@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPHistoryFilterProps {
@@ -409,117 +413,121 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     // #region 高级筛选
     const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
-    const [filterMode, setFilterMode, getFilterMode] = useGetSetState<"shield" | "show">("shield")
-    const [hostName, setHostName, getHostName] = useGetSetState<string[]>([])
-    const [urlPath, setUrlPath] = useState<string[]>([])
-    const [fileSuffix, setFileSuffix] = useState<string[]>([])
-    const [searchContentType, setSearchContentType] = useState<string>("")
-    const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
-    const [statusCode, setStatusCode] = useState<string>("")
+    const [filterConfig, setFilterConfig] = useState<FilterConfig>(cloneDeep(defFilterConfig))
     useEffect(() => {
-        getDefautAdvancedSearch()
+        const fetchConfig = async () => {
+            try {
+                const config = await getDefautAdvancedSearch()
+                setFilterConfig(config)
+            } catch (error) {}
+        }
+        fetchConfig()
     }, [])
-    const getDefautAdvancedSearch = () => {
-        // 筛选模式
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFilterMode).then((e) => {
-            if (!!e) {
-                setFilterMode(e)
-            }
-        })
-        // HostName
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisHostName).then((e) => {
-            if (!!e) {
-                let hostName = JSON.parse(e)
-                setHostName(hostName)
-            }
-        })
-        // URL路径
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisUrlPath).then((e) => {
-            if (!!e) {
-                let pathArr = JSON.parse(e)
-                setUrlPath(pathArr)
-            }
-        })
-        // 文件后缀
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFileSuffix).then((e) => {
-            if (!!e) {
-                let fileSuffix = JSON.parse(e)
-                setFileSuffix(fileSuffix)
-            }
-        })
-        // 响应类型
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisContentType).then((e) => {
-            if (!!e) {
-                const ContentType: string = e
-                setSearchContentType(ContentType)
-            }
-        })
-        // 关键字
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisExcludeKeywords).then((e) => {
-            if (!!e) {
-                let excludeKeywords = JSON.parse(e)
-                setExcludeKeywords(excludeKeywords)
-            }
-        })
-        // 状态码
-        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisStatusCode).then((e) => {
-            if (!!e) {
-                const statusCode: string = e
-                setStatusCode(statusCode)
-            }
-        })
+    const safeParse = (val?: string) => {
+        if (!val) return undefined
+        try {
+            return JSONParseLog(val, {
+                page: "HTTPFlowFilterTable",
+                fun: "safeParse"
+            })
+        } catch {
+            return undefined
+        }
     }
+    const getDefautAdvancedSearch = useMemoizedFn(async () => {
+        let config = filterConfig
+        try {
+            const res = await getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration)
+            if (!res) {
+                // 迁移旧数据
+                const [
+                    filterModeRes,
+                    hostNameRes,
+                    urlPathRes,
+                    fileSuffixRes,
+                    searchContentTypeRes,
+                    excludeKeywordsRes,
+                    statusCodeRes
+                ] = await Promise.allSettled([
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFilterMode),
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisHostName),
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisUrlPath),
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFileSuffix),
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisContentType),
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisExcludeKeywords),
+                    getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisStatusCode)
+                ])
+                const filterMode = filterModeRes.status === "fulfilled" ? filterModeRes.value || "shield" : "shield"
+                const hostName = hostNameRes.status === "fulfilled" ? hostNameRes.value : []
+                const urlPath = urlPathRes.status === "fulfilled" ? urlPathRes.value : []
+                const fileSuffix = fileSuffixRes.status === "fulfilled" ? fileSuffixRes.value : []
+                const searchContentType = searchContentTypeRes.status === "fulfilled" ? searchContentTypeRes.value : ""
+                const excludeKeywords = excludeKeywordsRes.status === "fulfilled" ? excludeKeywordsRes.value : []
+                const statusCode = statusCodeRes.status === "fulfilled" ? statusCodeRes.value : ""
+
+                if (filterMode === "shield") {
+                    config = {
+                        filterMode: filterMode,
+                        shield: {
+                            hostName: toArray(safeParse(hostName)),
+                            urlPath: toArray(safeParse(urlPath)),
+                            fileSuffix: toArray(safeParse(fileSuffix)),
+                            searchContentType: searchContentType ? searchContentType.split(",") : [],
+                            excludeKeywords: toArray(safeParse(excludeKeywords)),
+                            statusCode: statusCode
+                        },
+                        show: config.show
+                    }
+                } else {
+                    config = {
+                        filterMode: filterMode,
+                        shield: config.shield,
+                        show: {
+                            hostName: toArray(safeParse(hostName)),
+                            urlPath: toArray(safeParse(urlPath)),
+                            fileSuffix: toArray(safeParse(fileSuffix)),
+                            searchContentType: searchContentType ? searchContentType.split(",") : []
+                        }
+                    }
+                }
+            } else {
+                config = safeParse(res)
+            }
+        } catch (error) {}
+        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration, JSON.stringify(config))
+        return cloneDeep(config)
+    })
+    const comFilterConfig = useCampare(filterConfig)
     useDebounceEffect(
         () => {
             refreshTabsContRef.current = true
             setQuery((prev) => {
-                // 屏蔽
-                if (filterMode === "shield") {
-                    return {
-                        ...prev,
-                        SearchContentType: "",
-                        ExcludeContentType: searchContentType.length === 0 ? [] : searchContentType.split(","),
-                        HostnameFilter: [],
-                        ExcludeInUrl: hostName,
-                        IncludePath: [],
-                        ExcludePath: urlPath,
-                        IncludeSuffix: [],
-                        ExcludeSuffix: fileSuffix,
-                        ExcludeKeywords: excludeKeywords,
-                        ExcludeStatusCode: statusCode
-                    }
-                }
-                // 展示
-                else {
-                    return {
-                        ...prev,
-                        SearchContentType: searchContentType,
-                        ExcludeContentType: [],
-                        HostnameFilter: hostName,
-                        ExcludeInUrl: [],
-                        IncludePath: urlPath,
-                        ExcludePath: [],
-                        IncludeSuffix: fileSuffix,
-                        ExcludeSuffix: [],
-                        ExcludeKeywords: [],
-                        ExcludeStatusCode: ""
-                    }
+                return {
+                    ...prev,
+                    SearchContentType: filterConfig.show.searchContentType.join(","),
+                    ExcludeContentType: filterConfig.shield.searchContentType,
+                    HostnameFilter: filterConfig.show.hostName,
+                    ExcludeInUrl: filterConfig.shield.hostName,
+                    IncludePath: filterConfig.show.urlPath,
+                    ExcludePath: filterConfig.shield.urlPath,
+                    IncludeSuffix: filterConfig.show.fileSuffix,
+                    ExcludeSuffix: filterConfig.shield.fileSuffix,
+                    ExcludeKeywords: filterConfig.shield.excludeKeywords,
+                    ExcludeStatusCode: filterConfig.shield.statusCode
                 }
             })
         },
-        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode],
+        [comFilterConfig],
         {wait: 500}
     )
     const isFilter: boolean = useCreation(() => {
-        return (
-            hostName.length > 0 ||
-            urlPath.length > 0 ||
-            fileSuffix.length > 0 ||
-            searchContentType?.length > 0 ||
-            excludeKeywords.length > 0 ||
-            statusCode?.length > 0
-        )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
+        const checkObj = (obj: Record<string, any>) =>
+            Object.values(obj).some((val) => {
+                if (Array.isArray(val)) return val.length > 0
+                return val !== ""
+            })
+        return checkObj(filterConfig.shield) || checkObj(filterConfig.show)
+    }, [filterConfig])
     // #endregion
 
     // #region 表格勾选，表格行选中相关
@@ -2444,40 +2452,15 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 onRowDoubleClick={onHTTPFlowFilterTableRowDoubleClick}
             />
             {/* 高级筛选抽屉 */}
-            {drawerFormVisible && (
-                <HTTPFlowTableFormConfiguration
-                    pageType='HTTPHistoryFilter'
-                    responseType={contentType}
-                    visible={drawerFormVisible}
-                    setVisible={setDrawerFormVisible}
-                    onSave={(filters) => {
-                        const {
-                            filterMode,
-                            hostName,
-                            urlPath,
-                            fileSuffix,
-                            searchContentType,
-                            excludeKeywords,
-                            statusCode
-                        } = filters
-                        setFilterMode(filterMode)
-                        setHostName(hostName)
-                        setUrlPath(urlPath)
-                        setFileSuffix(fileSuffix)
-                        setSearchContentType(searchContentType)
-                        setExcludeKeywords(excludeKeywords)
-                        setStatusCode(statusCode)
-                        setDrawerFormVisible(false)
-                    }}
-                    filterMode={filterMode}
-                    hostName={hostName}
-                    urlPath={urlPath}
-                    fileSuffix={fileSuffix}
-                    searchContentType={searchContentType}
-                    excludeKeywords={excludeKeywords}
-                    statusCode={statusCode}
-                />
-            )}
+            <HTTPFlowTableFormConfiguration
+                visible={drawerFormVisible}
+                setVisible={setDrawerFormVisible}
+                filterConfig={filterConfig}
+                saveOk={(config) => {
+                    setFilterConfig(config)
+                    setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration, JSON.stringify(config))
+                }}
+            ></HTTPFlowTableFormConfiguration>
             {/* 导出HAR数据 */}
             {percentVisible && (
                 <ImportExportProgress

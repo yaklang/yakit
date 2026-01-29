@@ -130,7 +130,8 @@
     "responseType": "Response Type",
     "keyword": "Keyword",
     "matchingLogicSameAsSearch": "Matching logic is the same as the keyword search outside",
-    "statusCode": "Status Code"
+    "statusCode": "Status Code",
+    "conflictFieldsWarning": "The following fields have overlapping values in both “Block” and “Show”: {v}"
   },
   "HTTPFlowDetail": {
     "requestDetails": "Request Details",

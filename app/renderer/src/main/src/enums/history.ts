@@ -9,7 +9,9 @@ export enum RemoteHistoryGV {
     HistoryAnalysisLeftTabs = "history-analysis-left-tabs",
     HistoryAnalysisHotPatchCodeSave = "history-analysis-hotPatchCode",
     HTTPHistoryFilterLeftTabs = "history-filter-left-tabs",
-    /** 分析页面高级筛选 */
+    HTTPFlowTableFormConfiguration = "HTTPFlowTableFormConfiguration",
+    HTTPFlowTableAnalysisFormConfiguration = "HTTPFlowTableAnalysisFormConfiguration",
+    /** 分析页面高级筛选(旧) */
     HTTPFlowTableAnalysisFilterMode = "HTTPFlowTable-AnalysisFilter-Mode",
     HTTPFlowTableAnalysisHostName = "HTTPFlowTable-AnalysisFilter-HostName",
     HTTPFlowTableAnalysisUrlPath = "HTTPFlowTable-AnalysisFilter-UrlPath",

@@ -26,9 +26,15 @@ import MITMContext from "../Context/MITMContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {Badge} from "antd"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import {
+    defFilterConfig,
+    FilterConfig,
+    HTTPFlowTableFormConfiguration
+} from "@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration"
+import {RemoteHistoryGV} from "@/enums/history"
+import {cloneDeep} from "lodash"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -204,24 +210,15 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
 
     // #region 高级筛选
     const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
-
-    const [filterMode, setFilterMode] = useState<"shield" | "show">("shield")
-    const [hostName, setHostName] = useState<string[]>([])
-    const [urlPath, setUrlPath] = useState<string[]>([])
-    const [fileSuffix, setFileSuffix] = useState<string[]>([])
-    const [searchContentType, setSearchContentType] = useState<string>("")
-    const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
-    const [statusCode, setStatusCode] = useState<string>("")
+    const [filterConfig, setFilterConfig] = useState<FilterConfig>(cloneDeep(defFilterConfig))
     const isFilter: boolean = useMemo(() => {
-        return (
-            hostName.length > 0 ||
-            urlPath.length > 0 ||
-            fileSuffix.length > 0 ||
-            searchContentType?.length > 0 ||
-            excludeKeywords.length > 0 ||
-            statusCode?.length > 0
-        )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
+        const checkObj = (obj: Record<string, any>) =>
+            Object.values(obj).some((val) => {
+                if (Array.isArray(val)) return val.length > 0
+                return val !== ""
+            })
+        return checkObj(filterConfig.shield) || checkObj(filterConfig.show)
+    }, [filterConfig])
 
     useEffect(() => {
         emiter.on("onGetAdvancedSearchDataEvent", onGetAdvancedSearchData)
@@ -232,20 +229,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const onGetAdvancedSearchData = useMemoizedFn((str: string) => {
         try {
             const value = JSONParseLog(str, {page: "MITMLog", fun: "onGetAdvancedSearchData"})
-            const {advancedSearchData} = value
-            setFilterMode(advancedSearchData.filterMode)
-            setHostName(advancedSearchData.hostName)
-            setUrlPath(advancedSearchData.urlPath)
-            setFileSuffix(advancedSearchData.fileSuffix)
-            setSearchContentType(advancedSearchData.searchContentType)
-            setExcludeKeywords(advancedSearchData.excludeKeywords)
-            setStatusCode(advancedSearchData.statusCode)
-            emiter.emit(
-                "onGetOtherPageAdvancedSearchDataEvent",
-                JSON.stringify({
-                    advancedSearchData
-                })
-            )
+            setFilterConfig(value)
+            emiter.emit("onGetOtherPageAdvancedSearchDataEvent", JSON.stringify(value))
         } catch (error) {}
     })
     // #endregion
@@ -297,54 +282,16 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             <OutlineCheckIcon className={styles["check-icon"]} />
                         </YakitTag>
                     )}
-                    {drawerFormVisible && (
-                        <HTTPFlowTableFormConfiguration
-                            pageType={"MITM"}
-                            responseType={contentType}
-                            visible={drawerFormVisible}
-                            setVisible={setDrawerFormVisible}
-                            onSave={(filters) => {
-                                const {
-                                    filterMode,
-                                    hostName,
-                                    urlPath,
-                                    fileSuffix,
-                                    searchContentType,
-                                    excludeKeywords,
-                                    statusCode
-                                } = filters
-                                setFilterMode(filterMode)
-                                setHostName(hostName)
-                                setUrlPath(urlPath)
-                                setFileSuffix(fileSuffix)
-                                setSearchContentType(searchContentType)
-                                setExcludeKeywords(excludeKeywords)
-                                setStatusCode(statusCode)
-                                setDrawerFormVisible(false)
-                                emiter.emit(
-                                    "onGetOtherPageAdvancedSearchDataEvent",
-                                    JSON.stringify({
-                                        advancedSearchData: {
-                                            filterMode,
-                                            hostName,
-                                            urlPath,
-                                            fileSuffix,
-                                            searchContentType,
-                                            excludeKeywords,
-                                            statusCode
-                                        }
-                                    })
-                                )
-                            }}
-                            filterMode={filterMode}
-                            hostName={hostName}
-                            urlPath={urlPath}
-                            fileSuffix={fileSuffix}
-                            searchContentType={searchContentType}
-                            excludeKeywords={excludeKeywords}
-                            statusCode={statusCode}
-                        />
-                    )}
+                    <HTTPFlowTableFormConfiguration
+                        visible={drawerFormVisible}
+                        setVisible={setDrawerFormVisible}
+                        filterConfig={filterConfig}
+                        saveOk={(config) => {
+                            setFilterConfig(config)
+                            setRemoteValue(RemoteHistoryGV.HTTPFlowTableFormConfiguration, JSON.stringify(config))
+                            emiter.emit("onGetOtherPageAdvancedSearchDataEvent", JSON.stringify(config))
+                        }}
+                    ></HTTPFlowTableFormConfiguration>
                 </div>
                 <YakitPopover
                     placement='bottom'
