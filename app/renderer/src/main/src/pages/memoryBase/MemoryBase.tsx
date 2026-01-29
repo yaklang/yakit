@@ -111,6 +111,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     }, [])
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn(() => {
+        if (search.type === "ai") return
         debugVirtualTableEvent.startT()
     })
     const onFirst = useMemoizedFn(() => {
@@ -409,6 +410,9 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                     ...filter
                 }
             }
+            if (!!filter.SemanticQuery) {
+                debugVirtualTableEvent.stopT()
+            }
             debugVirtualTableEvent.setP(newParams)
         }),
         {wait: 200}
@@ -470,7 +474,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                             onSearch: onSearch
                                         }}
                                     />
-                                    <YakitButton type='outline2'>智能删除</YakitButton>
+                                    {/* <YakitButton type='outline2'>智能删除</YakitButton> */}
                                     <YakitPopconfirm title={"确定删除吗?"} onConfirm={onBatchRemove}>
                                         <YakitButton danger type='outline1' disabled={disabledBatchRemove}>
                                             批量删除
