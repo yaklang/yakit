@@ -1,5 +1,17 @@
-import React, {useState} from "react"
-import {MemoryBaseProps, AITextareaProps, MemoryQueryProps, MemoryTableProps} from "./type"
+import React, {useEffect, useRef, useState} from "react"
+import {
+    MemoryBaseProps,
+    AITextareaProps,
+    MemoryQueryProps,
+    MemoryTableProps,
+    AIMemoryEntityFilter,
+    RatingListItem,
+    MemorySelectQuery,
+    AIMemoryEntity,
+    QueryAIMemoryEntityRequest,
+    CountAIMemoryEntityTagsResponse,
+    AIMemorySearchParams
+} from "./type"
 import styles from "./MemoryBase.module.scss"
 import classNames from "classnames"
 import {ChevrondownButton, ChevronleftButton} from "../ai-re-act/aiReActChat/AIReActComponent"
@@ -8,76 +20,148 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowupIcon,
     OutlineQuestionmarkcircleIcon,
-    OutlineTranslateIcon,
+    OutlineRefreshIcon,
+    OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {Divider, Slider} from "antd"
+import {Badge, Divider, Slider, Tooltip} from "antd"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import numeral from "numeral"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {AIMemoryContent} from "../ai-agent/chatTemplate/aiMemoryList/AIMemoryList"
+import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
+import {YakitCombinationSearchProps} from "@/components/YakitCombinationSearch/YakitCombinationSearchType"
+import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
+import {genDefaultPagination} from "../invoker/schema"
+import {
+    getAIMemoryEntityFilter,
+    grpcCountAIMemoryEntityTags,
+    grpcDeleteAIMemoryEntity,
+    grpcQueryAIMemoryEntity
+} from "./utils"
+import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {LoadingOutlined} from "@ant-design/icons"
+import ReactResizeDetector from "react-resize-detector"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {batchRefreshMenuData} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {TagsCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {cloneDeep} from "lodash"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const {YakitPanel} = YakitCollapse
 
+const defaultMemoryQuery: MemorySelectQuery = {
+    rate: [],
+    tags: [],
+    tagMatchAll: false
+}
 const MemoryBase: React.FC<MemoryBaseProps> = React.memo((props) => {
+    const [selectQuery, setSelectQuery] = useState<MemorySelectQuery>(cloneDeep(defaultMemoryQuery))
     return (
         <div className={styles["memory-base"]}>
-            <MemoryQuery />
-            <MemoryTable />
+            <MemoryQuery selectQuery={selectQuery} setSelectQuery={setSelectQuery} />
+            <MemoryTable queryParams={selectQuery} setQueryParams={setSelectQuery} />
         </div>
     )
 })
 
 export default MemoryBase
 
+const searchOptions: YakitCombinationSearchProps["addonBeforeOption"] = [
+    {
+        label: "ai",
+        value: "ai"
+    },
+    {
+        label: "关键字",
+        value: "keyword"
+    }
+]
 const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
+    const {queryParams, setQueryParams} = props
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [tagShow, setTagShow] = useState<boolean>(false)
-    const [currentItem, setCurrentItem] = useState()
-    //     const [tableParams, tableData, tableTotal, pagination, _, __, debugVirtualTableEvent] = useVirtualTableHook<
-    //     SearchKnowledgeBaseEntryRequest,
-    //     KnowledgeBaseEntry,
-    //     "KnowledgeBaseEntries",
-    //     "ID"
-    // >({
-    //     tableBoxRef,
-    //     tableRef,
-    //     boxHeightRef,
-    //     grpcFun: apiSearchKnowledgeBaseEntry,
-    //     onFirst,
-    //     // initResDataFun,
-    //     defaultParams: {
-    //         Filter: {
-    //             KnowledgeBaseId: knowledgeBaseItems?.ID
-    //         },
-    //         Pagination: {
-    //             ...genDefaultPagination(20)
-    //         }
-    //     },
-    //     responseKey: {data: "KnowledgeBaseEntries", id: "ID"}
-    // })
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+    const [currentItem, setCurrentItem] = useState<AIMemoryEntity>()
+    const [selectList, setSelectList] = useState<AIMemoryEntity[]>([])
+    const [search, setSearch] = useState<AIMemorySearchParams>({
+        type: "keyword",
+        keyword: "",
+        aiInput: ""
+    })
+
+    const tableBoxRef = useRef<HTMLDivElement>(null)
+    const boxHeightRef = useRef<number>()
+    const tableRef = useRef<HTMLUListElement>(null)
+
+    useEffect(() => {
+        emiter.on("onRefreshQueryAIMemoryEntity", onStartInterval)
+        return () => {
+            emiter.off("onRefreshQueryAIMemoryEntity", onStartInterval)
+        }
+    }, [])
+    /**开启实时数据刷新 */
+    const onStartInterval = useMemoizedFn(() => {
+        debugVirtualTableEvent.startT()
+    })
+    const onFirst = useMemoizedFn(() => {
+        setIsRefresh(!isRefresh)
+        setSelectList([])
+        setAllCheck(false)
+        setCurrentItem(undefined)
+    })
+    useDebounceEffect(
+        () => {
+            onSearch()
+        },
+        [queryParams],
+        {wait: 200}
+    )
+    const [tableParams, tableData, tableTotal, pagination, tableLoading, offsetData, debugVirtualTableEvent] =
+        useVirtualTableHook<QueryAIMemoryEntityRequest, AIMemoryEntity, "Data", "Id">({
+            tableBoxRef,
+            tableRef,
+            boxHeightRef,
+            grpcFun: grpcQueryAIMemoryEntity,
+            onFirst,
+            defaultParams: {
+                Filter: getAIMemoryEntityFilter({query: queryParams, search}),
+                Pagination: {
+                    ...genDefaultPagination(50)
+                }
+            }
+        })
     const columns: ColumnsTypeProps[] = useCreation(() => {
         const columnsArr: ColumnsTypeProps[] = [
             {
                 title: "序号",
-                dataKey: "序号",
+                dataKey: "Id",
                 width: 80,
                 sorterProps: {
                     sorter: true,
-                    sorterKey: "ID"
+                    sorterKey: "Id"
                 }
             },
             {
                 title: "ID",
-                dataKey: "ID"
+                dataKey: "MemoryID",
+                render: (value) => (
+                    <div className={styles["memory-id-cell"]}>
+                        <span className={styles["text"]} title={value}>
+                            {value}
+                        </span>
+                        <CopyComponents copyText={value} />
+                    </div>
+                )
             },
             {
                 title: "Tags",
@@ -87,72 +171,348 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                 }
             },
             {
-                title: "摘要",
-                dataKey: "Summary",
+                title: "记忆总结",
+                dataKey: "Content",
                 enableDrag: false
             },
             {
                 title: "操作",
                 dataKey: "HiddenIndex",
-                width: 90,
+                width: 60,
                 fixed: "right",
-                render: (_) => (
+                render: (_, recorder) => (
                     <div>
-                        <YakitButton icon={<OutlineTranslateIcon />} type='text2' colors='danger' />
+                        <YakitPopconfirm
+                            title='确认删除吗?'
+                            onConfirm={(e) => {
+                                e?.stopPropagation()
+                                onRemove(recorder)
+                            }}
+                        >
+                            <YakitButton
+                                icon={<OutlineTrashIcon />}
+                                type='text'
+                                danger
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                }}
+                            />
+                        </YakitPopconfirm>
                     </div>
                 )
             }
         ]
         return columnsArr
     }, [])
+    const onRemove = useMemoizedFn((recorder) => {
+        if (!recorder.MemoryID) return
+        grpcDeleteAIMemoryEntity({
+            Filter: {MemoryID: [recorder.MemoryID]}
+        }).then((res) => {
+            debugVirtualTableEvent.noResetRefreshT()
+        })
+    })
+    const onBatchRemove = useMemoizedFn(() => {
+        let filterParams: AIMemoryEntityFilter = {}
+        if (allCheck) {
+            filterParams = getAIMemoryEntityFilter({query: queryParams, search})
+        } else {
+            filterParams = {
+                MemoryID: selectList.map((ele) => ele.MemoryID)
+            }
+        }
+        grpcDeleteAIMemoryEntity({
+            Filter: filterParams
+        }).then((res) => {
+            debugVirtualTableEvent.noResetRefreshT()
+        })
+    })
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         let sort = {...newSort}
         if (sort.order === "none") {
             sort.order = "desc"
             sort.orderBy = "id"
         }
+
+        const finalParams = {
+            Pagination: {
+                ...tableParams.Pagination,
+                Order: sort.order,
+                OrderBy: sort.orderBy
+            },
+            Filter: {
+                ...tableParams.Filter,
+                ...filter
+            }
+        }
+        debugVirtualTableEvent.setP(finalParams)
     })
 
-    const onSetCurrentRow = useMemoizedFn((val) => {
+    const onSetCurrentRow = useMemoizedFn((val?: AIMemoryEntity) => {
         setCurrentItem(val)
     })
-    const onClose = useMemoizedFn(() => {})
+    const onClose = useMemoizedFn(() => {
+        setQueryParams((prev) => ({
+            ...prev,
+            rate: [],
+            tags: []
+        }))
+    })
+    const onSelectBeforeOption = useMemoizedFn((o) => {
+        setSearch((perv) => ({
+            ...perv,
+            type: o
+        }))
+    })
+    const selectedRowKeys = useCreation(() => {
+        return selectList.map((ele) => ele.Id) || []
+    }, [selectList])
+    const onSelectAll = useMemoizedFn((_: string[], __: AIMemoryEntity[], checked: boolean) => {
+        if (checked) {
+            setAllCheck(true)
+            setSelectList(tableData)
+        } else {
+            setAllCheck(false)
+            setSelectList([])
+        }
+    })
+
+    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, _: string, selectedRows: AIMemoryEntity) => {
+        if (c) {
+            setSelectList((s) => [...s, selectedRows])
+        } else {
+            setSelectList((s) => s.filter((ele) => ele.Id !== selectedRows.Id))
+            setAllCheck(false)
+        }
+    })
+    const currentSelectItem: AIAgentGrpcApi.MemoryEntry | null = useCreation(() => {
+        if (!!currentItem) {
+            const item: AIAgentGrpcApi.MemoryEntry = {
+                id: `${currentItem.Id}`,
+                created_at: "",
+                created_at_timestamp: currentItem.CreatedAt,
+                content: currentItem.Content,
+                tags: currentItem.Tags,
+                c_score: currentItem.CScore,
+                o_score: currentItem.OScore,
+                r_score: currentItem.RScore,
+                e_score: currentItem.EScore,
+                p_score: currentItem.PScore,
+                a_score: currentItem.AScore,
+                t_score: currentItem.TScore,
+                core_pact_vector: currentItem.CorePactVector,
+                potential_questions: currentItem.PotentialQuestions,
+                memory_id: currentItem.MemoryID
+            }
+            return item
+        }
+        return null
+    }, [currentItem])
+    /**table所在的div大小发生变化 */
+    const onTableResize = useMemoizedFn((width, height) => {
+        if (!width || !height) {
+            return
+        }
+        boxHeightRef.current = height
+    })
+    const onRefreshMenuSelect = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "noResetRefresh":
+                debugVirtualTableEvent.noResetRefreshT()
+                break
+            case "resetRefresh":
+                setQueryParams(cloneDeep(defaultMemoryQuery))
+                debugVirtualTableEvent.refreshT()
+                break
+            default:
+                break
+        }
+    })
+    const queryNumber = useCreation(() => {
+        return (queryParams?.rate?.length || 0) + (queryParams?.tags?.length || 0)
+    }, [queryParams])
+    const onDelRate = useMemoizedFn((val: RatingListItem) => {
+        setQueryParams((prev) => ({
+            ...prev,
+            rate: prev.rate.filter((ele) => ele.id !== val.id)
+        }))
+    })
+    const onDelTag = useMemoizedFn((val: TagsCode) => {
+        setQueryParams((prev) => ({
+            ...prev,
+            tags: prev.tags.filter((ele) => ele.Value !== val.Value)
+        }))
+    })
+    const queryContent = useMemoizedFn(() => {
+        return (
+            <>
+                {queryParams?.rate?.map((item) => {
+                    return (
+                        <Tooltip title={item.label} placement='top' overlayClassName='plugins-tooltip' key={item.id}>
+                            <YakitTag closable onClose={() => onDelRate(item)} className={styles["tag-item"]}>
+                                {item.label}({numeral(item.min).format("0.00")}~{numeral(item.max).format("0.00")})
+                            </YakitTag>
+                        </Tooltip>
+                    )
+                })}
+                {queryParams?.tags?.map((item) => {
+                    return (
+                        <Tooltip title={item.Value} placement='top' overlayClassName='plugins-tooltip' key={item.Value}>
+                            <YakitTag closable onClose={() => onDelTag(item)} className={styles["tag-item"]}>
+                                {item.Value}
+                            </YakitTag>
+                        </Tooltip>
+                    )
+                })}
+            </>
+        )
+    })
+    const searchValue = useCreation(() => {
+        switch (search.type) {
+            case "keyword":
+                return search.keyword
+            case "ai":
+                return search.aiInput
+            default:
+                return ""
+        }
+    }, [search])
+    const onValueChange = useMemoizedFn((e) => {
+        let newSearch: AIMemorySearchParams = {
+            ...search
+        }
+        switch (search.type) {
+            case "keyword":
+                newSearch.keyword = e.target.value
+                break
+            case "ai":
+                newSearch.aiInput = e.target.value
+                break
+            default:
+                break
+        }
+        setSearch({
+            ...newSearch
+        })
+    })
+    const onSearch = useDebounceFn(
+        useMemoizedFn(() => {
+            const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({query: queryParams, search})
+
+            const newParams: QueryAIMemoryEntityRequest = {
+                Pagination: {
+                    ...tableParams.Pagination,
+                    Limit: !!filter.SemanticQuery ? 200 : tableParams.Pagination.Limit //ai 搜索限制200条
+                },
+                Filter: {
+                    ...tableParams.Filter,
+                    ...filter
+                }
+            }
+            debugVirtualTableEvent.setP(newParams)
+        }),
+        {wait: 200}
+    ).run
+    const disabledBatchRemove = useCreation(() => {
+        return selectList.length === 0 && !allCheck
+    }, [selectList, allCheck])
     return (
         <div className={styles["memory-table-wrapper"]}>
-            <div className={styles["memory-table"]}>
-                <div className={styles["memory-table-heard"]}>
-                    <div className={styles["memory-table-title"]}>
-                        <span className={styles["title-text"]}>记忆库</span>
-                        <TableTotalAndSelectNumber total={52} />
-                        <YakitPopover visible={tagShow} onVisibleChange={setTagShow} content={<div>筛选内容</div>}>
-                            <YakitTag
-                                color='white'
-                                closable
-                                onClose={onClose}
-                                className={classNames(styles["filter-tag"], {
-                                    [styles["active-tag"]]: tagShow
-                                })}
-                            >
-                                查询条件<span className={styles["select-number"]}>3</span>
-                            </YakitTag>
-                        </YakitPopover>
-                    </div>
-                    <div className={styles["memory-table-subTitle"]}>
-                        编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
-                    </div>
-                </div>
-                <TableVirtualResize
+            <div className={styles["memory-table"]} ref={tableBoxRef}>
+                <ReactResizeDetector
+                    onResize={onTableResize}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
+                <TableVirtualResize<AIMemoryEntity>
+                    ref={tableRef}
+                    loading={tableLoading}
                     isRefresh={isRefresh}
-                    titleHeight={32}
-                    lineHighlight={false}
-                    isShowTitle={false}
-                    renderKey='ID'
-                    data={[]}
+                    titleHeight={48}
+                    renderTitle={
+                        <div className={styles["memory-table-heard"]}>
+                            <div className={styles["memory-table-title"]}>
+                                <div className={styles["memory-table-title-left"]}>
+                                    <span className={styles["title-text"]}>记忆库</span>
+                                    <TableTotalAndSelectNumber total={tableTotal} />
+                                    {queryNumber > 2 ? (
+                                        <YakitPopover
+                                            onVisibleChange={setTagShow}
+                                            content={<div className={styles["filter-popover"]}>{queryContent()}</div>}
+                                        >
+                                            <YakitTag
+                                                color='white'
+                                                closable
+                                                onClose={onClose}
+                                                className={classNames(styles["filter-tag"], {
+                                                    [styles["active-tag"]]: tagShow
+                                                })}
+                                            >
+                                                查询条件<span className={styles["select-number"]}>{queryNumber}</span>
+                                            </YakitTag>
+                                        </YakitPopover>
+                                    ) : (
+                                        <div>{queryContent()}</div>
+                                    )}
+                                </div>
+                                <div className={styles["memory-table-title-extra"]}>
+                                    <YakitCombinationSearch
+                                        beforeOptionWidth={100}
+                                        valueBeforeOption={search.type}
+                                        afterModuleType='input'
+                                        addonBeforeOption={searchOptions}
+                                        onSelectBeforeOption={onSelectBeforeOption}
+                                        inputSearchModuleTypeProps={{
+                                            value: searchValue,
+                                            onChange: onValueChange,
+                                            onSearch: onSearch
+                                        }}
+                                    />
+                                    <YakitButton type='outline2'>智能删除</YakitButton>
+                                    <YakitPopconfirm title={"确定删除吗?"} onConfirm={onBatchRemove}>
+                                        <YakitButton danger type='outline1' disabled={disabledBatchRemove}>
+                                            批量删除
+                                        </YakitButton>
+                                    </YakitPopconfirm>
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: batchRefreshMenuData,
+                                            onClick: ({key}) => {
+                                                onRefreshMenuSelect(key)
+                                            }
+                                        }}
+                                        dropdown={{
+                                            trigger: ["hover"],
+                                            placement: "bottom"
+                                        }}
+                                    >
+                                        <Badge dot={offsetData.length > 0} offset={[-5, 4]}>
+                                            <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
+                                        </Badge>
+                                    </YakitDropdownMenu>
+                                </div>
+                            </div>
+                            <div className={styles["memory-table-subTitle"]}>
+                                编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
+                            </div>
+                        </div>
+                    }
+                    renderKey='Id'
+                    data={tableData}
                     pagination={{
-                        total: 0,
-                        limit: 10,
-                        page: 1,
-                        onChange: () => null
+                        total: tableTotal,
+                        limit: pagination.Limit,
+                        page: pagination.Page,
+                        onChange: (page, limit) => {}
+                    }}
+                    rowSelection={{
+                        isAll: allCheck,
+                        type: "checkbox",
+                        selectedRowKeys,
+                        onSelectAll,
+                        onChangeCheckboxSingle
                     }}
                     columns={columns}
                     onSetCurrentRow={onSetCurrentRow}
@@ -161,112 +521,216 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                     onChange={onTableChange}
                 />
             </div>
-            <div className={styles["memory-detail"]}>
-                <div className={styles["memory-detail-header"]}>
-                    <div>详情</div>
-                    <YakitButton type='text2' icon={<OutlineXIcon />} />
+            {currentSelectItem && (
+                <div className={styles["memory-detail"]}>
+                    <div className={styles["memory-detail-header"]}>
+                        <div>详情</div>
+                        <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setCurrentItem(undefined)} />
+                    </div>
+                    <div className={styles["memory-detail-content"]}>
+                        <AIMemoryContent item={currentSelectItem} />
+                    </div>
                 </div>
-                <div className={styles["memory-detail-content"]}>
-                    <AIMemoryContent
-                        item={{
-                            id: "",
-                            created_at: "",
-                            created_at_timestamp: 0,
-                            content: "",
-                            tags: [],
-                            c_score: 0,
-                            o_score: 0,
-                            r_score: 0,
-                            e_score: 0,
-                            p_score: 0,
-                            a_score: 0,
-                            t_score: 0,
-                            core_pact_vector: [],
-                            potential_questions: []
-                        }}
-                    />
-                    <div>fsdfdsfdsfdsf</div>
-                </div>
-            </div>
+            )}
         </div>
     )
 })
-const ratingList = [
+const ratingList: RatingListItem[] = [
     {
         id: "1",
-        keyName: "C",
+        keyName: "CScore",
         label: "C",
         max: 1.0,
         min: 0.0
     },
     {
         id: "2",
-        keyName: "O",
+        keyName: "OScore",
         label: "O",
         max: 0.5,
         min: 0.0
     },
     {
         id: "3",
-        keyName: "R",
+        keyName: "RScore",
         label: "R",
         max: 0.75,
         min: 0.25
     },
     {
         id: "4",
-        keyName: "E",
+        keyName: "EScore",
         label: "E",
         max: 1.0,
         min: 0.0
     },
     {
         id: "5",
-        keyName: "P",
+        keyName: "PScore",
         label: "P",
         max: 1.0,
         min: 0.5
     },
     {
         id: "6",
-        keyName: "A",
+        keyName: "AScore",
         label: "A",
         max: 0.75,
         min: 0.25
     },
     {
         id: "7",
-        keyName: "T",
+        keyName: "TScore",
         label: "T",
         max: 0.5,
         min: 0.0
     }
 ]
-const tags = Array.from({length: 20}).map((_, index) => ({
-    id: index + 1,
-    name: `Tag ${index + 1}`,
-    total: Math.floor(Math.random() * 100)
-}))
 
 const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(true)
-    const [query, setQuery] = useControllableValue(props, {
-        defaultValue: "",
-        trigger: "setQuery",
-        valuePropName: "query"
+    const [tags, setTags] = useState<CountAIMemoryEntityTagsResponse["TagsCount"]>([])
+    const [tagsLoading, setTagsLoading] = useState<boolean>(true)
+    const [selectQuery, setSelectQuery] = useControllableValue<MemorySelectQuery>(props, {
+        defaultValue: {
+            rate: [],
+            tags: [],
+            tagMatchAll: false
+        },
+        trigger: "setSelectQuery",
+        valuePropName: "selectQuery"
+    })
+    const [tagMatchAll, setTagMatchAll] = useState<boolean>(selectQuery.tagMatchAll)
+    const [selectRateList, setSelectRateList] = useState<MemorySelectQuery["rate"]>(cloneDeep(ratingList))
+    const leftSideRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(leftSideRef)
+    useEffect(() => {
+        if (inViewport) getTags()
+    }, [inViewport])
+    useEffect(() => {
+        if (selectQuery.rate.length === 0) setSelectRateList(cloneDeep(ratingList))
+    }, [selectQuery.rate.length])
+    const getTags = useDebounceFn(
+        useMemoizedFn(() => {
+            setTagsLoading(true)
+            grpcCountAIMemoryEntityTags({})
+                .then((res) => {
+                    setTags(res?.TagsCount || [])
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setTagsLoading(false)
+                    }, 100)
+                )
+        }),
+        {wait: 500, leading: true}
+    ).run
+    /**
+     * @name 选择评分范围
+     */
+    const onnSelectRate = useMemoizedFn((item: RatingListItem, checked: boolean) => {
+        if (checked) {
+            const rateItem = selectRateList.find((it) => it.id === item.id)
+            if (rateItem) {
+                setSelectQuery((prev) => ({
+                    ...prev,
+                    rate: [...prev.rate, rateItem],
+                    tagMatchAll
+                }))
+            }
+        } else {
+            setSelectQuery((prev) => ({
+                ...prev,
+                rate: prev.rate.filter((ele) => ele.id !== item.id),
+                tagMatchAll
+            }))
+        }
+    })
+    /**
+     * @name 选择标签
+     */
+    const onnSelectTag = useMemoizedFn((item, checked: boolean) => {
+        if (checked) {
+            setSelectQuery((prev) => ({
+                ...prev,
+                tags: [...prev.tags, item]
+            }))
+        } else {
+            setSelectQuery((prev) => ({
+                ...prev,
+                tags: prev.tags.filter((ele) => ele.Value !== item.Value)
+            }))
+        }
+    })
+    const onTagMatchAll = useMemoizedFn((e) => {
+        const {value} = e.target
+        setTagMatchAll(value)
+        if (selectQuery.rate.length > 0) {
+            setSelectQuery((prev) => ({
+                ...prev,
+                tagMatchAll: value
+            }))
+        }
+    })
+    const onSliderChange = useMemoizedFn((val: number[], item: RatingListItem) => {
+        const [min, max] = val
+        const index = selectQuery.rate.findIndex((it) => it.id === item.id)
+        if (index !== -1) {
+            setSelectQuery((prev) => ({
+                ...prev,
+                rate: prev.rate.map((it) => {
+                    if (it.id === item.id) {
+                        return {
+                            ...it,
+                            min,
+                            max
+                        }
+                    }
+                    return it
+                })
+            }))
+        }
+        setSelectRateList((prev) => {
+            return prev.map((it) => {
+                if (it.id === item.id) {
+                    return {
+                        ...it,
+                        min,
+                        max
+                    }
+                }
+                return it
+            })
+        })
+    })
+    const onResetRate = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setSelectQuery((prev) => ({
+            ...prev,
+            rate: []
+        }))
+        setTagMatchAll(false)
+        setSelectRateList(cloneDeep(ratingList))
+    })
+    const onResetTags = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setSelectQuery((prev) => ({
+            ...prev,
+            tags: []
+        }))
     })
     return (
         <div
             className={classNames(styles["content-left-side"], {
                 [styles["content-left-side-hidden"]]: !show
             })}
+            ref={leftSideRef}
         >
             <div className={classNames(styles["memory-left-side"], {[styles["memory-left-side-hidden"]]: !show})}>
                 <div className={styles["query"]}>
-                    <div className={styles["query-header"]}>
-                        <ChevronleftButton onClick={() => setShow(false)} /> 高级查询
+                    <div className={styles["query-header"]} onClick={() => setShow(false)}>
+                        <ChevronleftButton /> 高级查询
                     </div>
-                    <AITextarea />
                 </div>
                 <YakitCollapse defaultActiveKey={["ratingRange", "Tags"]} className={styles["memory-query-collapse"]}>
                     <YakitPanel
@@ -277,51 +741,72 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                             </div>
                         }
                         extra={
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                }}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
+                            <>
+                                <YakitRadioButtons
+                                    value={tagMatchAll}
+                                    onChange={onTagMatchAll}
+                                    buttonStyle='solid'
+                                    options={[
+                                        {label: "AND", value: true},
+                                        {label: "OR", value: false}
+                                    ]}
+                                    size='small'
+                                    className={styles["tag-match-radio"]}
+                                />
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    className={styles["btn-padding-right-0"]}
+                                    onClick={onResetRate}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                            </>
                         }
                         key='ratingRange'
                     >
-                        {ratingList.map((item) => (
-                            <div key={item.id} className={styles["rating-item"]}>
-                                <YakitCheckbox />
-                                <span className={styles["item-label"]}>{item.label}</span>
-                                <div className={styles["slider-wrapper"]}>
-                                    <Slider
-                                        className={styles["slider"]}
-                                        step={0.01}
-                                        range
-                                        defaultValue={[item.min, item.max]}
-                                        min={0}
-                                        max={1}
+                        {ratingList.map((item) => {
+                            const checked = selectQuery?.rate?.findIndex((it) => it.id === item.id) !== -1
+                            const values = selectRateList.find((it) => it.id === item.id)
+                            const min = values?.min || 0
+                            const max = values?.max || 0
+                            return (
+                                <div key={item.id} className={styles["rating-item"]}>
+                                    <YakitCheckbox
+                                        checked={checked}
+                                        onChange={(e) => onnSelectRate(item, e.target.checked)}
                                     />
-                                    <span className={styles["slider-value"]}>
-                                        {numeral(item.min).format("0.00")}~{numeral(item.max).format("0.00")}
-                                    </span>
+                                    <span className={styles["item-label"]}>{item.label}</span>
+                                    <div className={styles["slider-wrapper"]}>
+                                        <Slider
+                                            className={styles["slider"]}
+                                            step={0.01}
+                                            range
+                                            value={[min, max]}
+                                            min={0}
+                                            max={1}
+                                            onChange={(val) => onSliderChange(val, item)}
+                                        />
+                                        <span className={styles["slider-value"]}>
+                                            {numeral(min).format("0.00")}~{numeral(max).format("0.00")}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </YakitPanel>
                     <YakitPanel
-                        header='Tags'
+                        header={
+                            <div className={styles["panel-header"]}>Tags{tagsLoading && <LoadingOutlined spin />}</div>
+                        }
                         key='Tags'
                         extra={
                             <YakitButton
                                 type='text'
                                 colors='danger'
                                 className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                }}
+                                onClick={onResetTags}
                                 size='small'
                             >
                                 重置
@@ -329,15 +814,26 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                         }
                     >
                         <div className={styles["tag-list"]}>
-                            {tags.map((tagItem) => (
-                                <div key={tagItem.id} className={styles["tag-item"]}>
-                                    <div className={styles["tag-label-wrapper"]}>
-                                        <YakitCheckbox />
-                                        <span className={styles["tag-label"]}>{tagItem.name}</span>
+                            {tags.map((tagItem) => {
+                                const checked = selectQuery?.tags?.findIndex((it) => it.Value === tagItem.Value) !== -1
+                                return (
+                                    <div
+                                        key={tagItem.Value}
+                                        className={classNames(styles["tag-item"], {
+                                            [styles["tag-item-checked"]]: checked
+                                        })}
+                                    >
+                                        <div
+                                            className={styles["tag-label-wrapper"]}
+                                            onClick={() => onnSelectTag(tagItem, !checked)}
+                                        >
+                                            <YakitCheckbox checked={checked} />
+                                            <span className={styles["tag-label"]}>{tagItem.Value}</span>
+                                        </div>
+                                        <span className={styles["tag-total"]}>{tagItem.Total}</span>
                                     </div>
-                                    <span className={styles["tag-total"]}>{tagItem.total}</span>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </YakitPanel>
                 </YakitCollapse>
@@ -350,6 +846,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     )
 })
 
+/**@deprecated UI发送变化，暂时不需要了 */
 const AITextarea: React.FC<AITextareaProps> = React.memo((props) => {
     const {textProps} = props
     return (

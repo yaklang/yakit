@@ -31,7 +31,7 @@
                 @extend %display-flex-center;
                 width: 100%;
                 gap: 4px;
-                padding: 12px 12px 0px 12px;
+                padding: 12px;
                 cursor: pointer;
             }
         }
@@ -43,7 +43,8 @@
                 .ant-collapse-header {
                     padding: 8px 12px 4px 12px;
                     .ant-collapse-arrow {
-                        margin-right: 2px;
+                        margin-right: 6px;
+                        margin-left: 2px;
                     }
                 }
                 .ant-collapse-content-box {
@@ -113,6 +114,19 @@
                         line-height: 16px;
                     }
                 }
+                .tag-item-checked {
+                    color: var(--Colors-Use-Main-Primary);
+                    .tag-total {
+                        color: var(--Colors-Use-Main-Primary);
+                    }
+                }
+            }
+            .tag-match-radio {
+                :global {
+                    .ant-radio-button-wrapper {
+                        padding: 0 4px;
+                    }
+                }
             }
         }
         .panel-header {
@@ -178,19 +192,35 @@
             .memory-table-title {
                 @extend %display-flex-center;
                 gap: 8px;
-                .title-text {
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                    font-size: 14px;
-                    font-weight: 500;
-                    line-height: 20px; /* 142.857% */
-                    letter-spacing: 0.1px;
+                width: 100%;
+                .memory-table-title-left {
+                    @extend %display-flex-center;
+                    gap: 8px;
+                    flex: 1;
+                    .title-text {
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        font-size: 14px;
+                        font-weight: 500;
+                        line-height: 20px; /* 142.857% */
+                        letter-spacing: 0.1px;
+
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        word-break: break-all;
+                    }
+                    .select-number {
+                        color: var(--Colors-Use-Main-Primary);
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                        margin-left: 4px;
+                    }
                 }
-                .select-number {
-                    color: var(--Colors-Use-Main-Primary);
-                    font-size: 12px;
-                    font-weight: 400;
-                    line-height: 16px;
-                    margin-left: 4px;
+                .memory-table-title-extra {
+                    @extend %display-flex-center;
+                    gap: 8px;
+                    justify-content: flex-end;
                 }
             }
             .memory-table-subTitle {
@@ -200,6 +230,17 @@
                 font-size: 12px;
                 line-height: 16px; /* 133.333% */
                 letter-spacing: 0.5px;
+            }
+        }
+        .memory-id-cell{
+            display: flex;
+            gap: 4px;
+            overflow: hidden;
+            .text{
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
             }
         }
     }
@@ -216,6 +257,8 @@
     border-left: 1px solid var(--Colors-Use-Neutral-Border);
     width: 360px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     .memory-detail-header {
         @extend %display-flex-center;
         justify-content: space-between;
@@ -232,6 +275,29 @@
     .memory-detail-content {
         padding: 16px 12px;
         overflow: auto;
-        height: 100%;
+        flex: 1;
+    }
+}
+
+.filter-popover {
+    padding-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 50vh;
+    overflow: auto;
+    :global {
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+        .ant-popover-inner-content {
+            padding: 12px;
+        }
+        .ant-popover-arrow {
+            left: 6px;
+        }
+    }
+    .tag-item {
+        width: fit-content;
     }
 }

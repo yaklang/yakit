@@ -124,8 +124,18 @@ export default AIMemoryList
 
 export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props) => {
     const {item} = props
+    const echartsData = useCreation(() => {
+        return {
+            xData: [],
+            yData: [item.c_score, item.o_score, item.r_score, item.e_score, item.p_score, item.a_score, item.t_score]
+        }
+    }, [item.c_score, item.o_score, item.r_score, item.e_score, item.p_score, item.a_score, item.t_score])
     return (
         <div className={styles["memory-popover-content"]}>
+            <div className={styles["memory-popover-heard"]}>
+                {item?.memory_id && <div className={styles["heard-text"]}>{item.memory_id}</div>}
+                <div className={styles["heard-content"]}>{item.content}</div>
+            </div>
             <div className={styles["memory-popover-score-wrapper"]}>
                 <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（记忆特征）</div>
                 <div className={styles["score-list"]}>
@@ -143,26 +153,25 @@ export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props
                         </div>
                     ))}
                 </div>
-                <AIMemoryScoreEcharts
-                    data={{
-                        xData: [],
-                        yData: [
-                            item.c_score,
-                            item.o_score,
-                            item.r_score,
-                            item.e_score,
-                            item.p_score,
-                            item.a_score,
-                            item.t_score
-                        ]
-                    }}
-                    style={{width: "100%", height: 220}}
-                />
+                <div className={styles["memory-popover-score-echarts"]}>
+                    <AIMemoryScoreEcharts data={echartsData} style={{width: "100%", height: 220}} />
+                </div>
+            </div>
+            <div className={styles["memory-popover-tags-wrapper"]}>
+                <div className={styles["title"]}>Tags</div>
+                <div className={styles["memory-popover-tags-list"]}>
+                    {item.tags.map((tag) => (
+                        <YakitTag key={tag} fullRadius={true} border={false} className={styles["tag-item"]}>
+                            {tag}
+                        </YakitTag>
+                    ))}
+                </div>
             </div>
             <div className={styles["memory-popover-potential-questions"]}>
+                <div className={styles["title"]}>Potential Questions</div>
                 {item.potential_questions.map((ele) => (
                     <div className={styles["potential-questions-item"]} key={ele} title={ele}>
-                        <span>{ele}</span>
+                        <span className={styles["label"]}>{ele}</span>
                     </div>
                 ))}
             </div>
@@ -256,7 +265,7 @@ const AIMemoryScoreEcharts: React.FC<AIMemoryScoreEchartsProps> = React.memo((pr
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts {...rest} option={getScoreOption(data)} />
+    return <ReactECharts {...rest} option={option} />
 })
 const getOption = (value: AIMemoryEchartsProps["data"]): EChartsOption => {
     const option: EChartsOption = {

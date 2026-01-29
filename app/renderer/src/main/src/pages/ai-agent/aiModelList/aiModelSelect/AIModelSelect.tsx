@@ -426,7 +426,9 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     return (
         <div className={classNames(styles["select-option-wrapper"])}>
             {icon}
-            <div className={styles["option-text"]}>{value}</div>
+            <div className={styles["option-text"]} title={value}>
+                {value}
+            </div>
             {/* {aiService && (
                 <Tooltip title={aiService}>
                     <OutlineInformationcircleIcon className={styles["icon-info"]} />

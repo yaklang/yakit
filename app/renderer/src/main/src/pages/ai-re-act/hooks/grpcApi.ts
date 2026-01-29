@@ -575,6 +575,7 @@ export declare namespace AIAgentGrpcApi {
     /** 记忆数据-单项 */
     export interface MemoryEntry {
         id: string
+        /** @description 可以传空，前端没有用到 */
         created_at: string
         created_at_timestamp: number
         content: string
@@ -588,6 +589,8 @@ export declare namespace AIAgentGrpcApi {
         t_score: number
         core_pact_vector: number[]
         potential_questions: string[]
+        /**记忆库页面有的数据，ai页面没有的 */
+        memory_id?: string
     }
     /** 记忆列表 */
     export interface MemoryEntryList {
