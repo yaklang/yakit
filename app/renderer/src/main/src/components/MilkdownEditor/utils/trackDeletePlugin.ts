@@ -4,54 +4,50 @@ import {fileCustomId} from "./uploadPlugin"
 import {createSlice} from "@milkdown/kit/ctx"
 import moment from "moment"
 import {DeleteOSSFileItem} from "../MilkdownEditorType"
-import {ReplaceStep} from "@milkdown/kit/prose/transform"
 
 export const getFileNameByUrl = (url) => {
-    // if (!url) return ""
-    // const [name, path] = url.split("?")[0].split("/").reverse()
-    // if (!name || !path) {
-    //     return ""
-    // }
+    if (!url) return ""
+    const [name, path] = url.split("?")[0].split("/").reverse()
+    if (!name || !path) {
+        return ""
+    }
     // const fileName = `${path}/${name}`
     // return fileName
     // 重要！！！ 此处后端已处理，后续简化此逻辑
     return url
 }
-const findOSSResource = (node, schema) => {
-    const deletedFileNames: DeleteOSSFileItem[] = []
-    const traverse = (currentNode) => {
-        // 如果节点有子节点，递归遍历
-        if (currentNode.content && currentNode.content.length > 0) {
-            currentNode.content.forEach((child) => {
-                traverse(child)
-            })
-        } else {
-            const {attrs} = currentNode
-            let fileName = ""
-            switch (currentNode.type.name) {
-                case fileCustomId:
-                    const fileUrl = attrs.fileId !== "0" ? attrs.fileId : ""
-                    fileName = getFileNameByUrl(fileUrl)
-                    break
-                case schema.nodes.image.name:
-                case schema.nodes["image-block"].name:
-                    fileName = getFileNameByUrl(attrs.src || "")
-                    break
-                default:
-                    break
-            }
-            if (fileName)
-                deletedFileNames.push({
-                    fileName,
-                    time: moment().valueOf()
-                })
+
+/**
+ * 从 doc 中收集所有 OSS 文件
+ */
+const collectOSSFiles = (doc, schema): Set<string> => {
+    const set = new Set<string>()
+
+    doc.descendants((node) => {
+        let url = ""
+        switch (node.type.name) {
+            case fileCustomId:
+                url = node.attrs?.fileId !== "0" ? node.attrs?.fileId : ""
+                break
+
+            case schema.nodes.image?.name:
+            case schema.nodes["image-block"]?.name:
+                url = node.attrs?.src
+                break
+
+            default:
+                break
         }
-    }
 
-    traverse(node)
+        const fileName = getFileNameByUrl(url)
+        if (fileName) {
+            set.add(fileName)
+        }
+    })
 
-    return deletedFileNames
+    return set
 }
+
 export const deletedFileUrlsCtx = createSlice<DeleteOSSFileItem[]>([], "deletedFileUrlsCtx")
 // 自定义插件：查找删除的文件和图片的url
 export const trackDeletePlugin = () =>
@@ -62,53 +58,43 @@ export const trackDeletePlugin = () =>
         return new Plugin({
             key: new PluginKey("MILKDOWN_PLUGIN_TRACK_DELETE"),
             appendTransaction: (transactions, oldState, newState) => {
-                const oldStateSize = oldState.doc.content.size
-                const newStateSize = newState.doc.content.size
-                if (oldStateSize === newStateSize) return null
-                if (oldStateSize > newStateSize) {
-                    // 删除
-                    let deletedFileUrls: DeleteOSSFileItem[] = []
-                    transactions.forEach((transaction) => {
-                        if (transaction.docChanged) {
-                            transaction.steps.forEach((step) => {
-                                if (step instanceof ReplaceStep) {
-                                    const {from, to} = step
-                                    if (from !== to) {
-                                        // 批量选中删除
-                                        const oldSlice = oldState.doc.slice(from, to)
-                                        const deleteDoc = oldSlice.content
-                                        const urls = findOSSResource(deleteDoc, oldState.schema) || []
-                                        deletedFileUrls = [...deletedFileUrls, ...urls]
-                                    }
-                                }
-                            })
-                        }
+                 // 唯一正确的判断
+                if (oldState.doc === newState.doc) return null
+
+                // 核心：语义 diff
+                const oldFiles = collectOSSFiles(oldState.doc, oldState.schema)
+                const newFiles = collectOSSFiles(newState.doc, newState.schema)
+
+                // 真正删除的文件
+                const deletedFiles = [...oldFiles].filter((f) => !newFiles.has(f))
+
+                // 被恢复的文件（undo）
+                const restoredFiles = [...newFiles].filter((f) => !oldFiles.has(f))
+
+                // =====================
+                // 删除
+                // =====================
+                if (deletedFiles.length > 0) {
+                    ctx.update(deletedFileUrlsCtx, (prev) => {
+                        const exist = new Set(prev.map((i) => i.fileName))
+
+                        const next = deletedFiles
+                            .filter((f) => !exist.has(f))
+                            .map((fileName) => ({
+                                fileName,
+                                time: moment().valueOf()
+                            }))
+
+                        return [...prev, ...next]
                     })
-                    if (deletedFileUrls.length > 0) {
-                        // 可以动态更新值
-                        ctx.update(deletedFileUrlsCtx, (prev) => [...prev, ...deletedFileUrls])
-                    }
-                } else {
-                    // ctrl+z恢复
-                    let addFileUrls: DeleteOSSFileItem[] = []
-                    transactions.forEach((transaction) => {
-                        if (transaction.docChanged) {
-                            transaction.steps.forEach((step) => {
-                                if (step instanceof ReplaceStep) {
-                                    const content = step.slice.content
-                                    if (content.size > 0) {
-                                        const urls = findOSSResource(content, oldState.schema) || []
-                                        addFileUrls = [...addFileUrls, ...urls]
-                                    }
-                                }
-                            })
-                        }
-                    })
-                    if (addFileUrls.length > 0) {
-                        const addUrl = addFileUrls.map((ele) => ele.fileName)
-                        // 可以动态更新值
-                        ctx.update(deletedFileUrlsCtx, (prev) => prev.filter((ele) => !addUrl.includes(ele.fileName)))
-                    }
+                }
+                // =====================
+                // 撤销恢复
+                // =====================
+                if (restoredFiles.length > 0) {
+                    ctx.update(deletedFileUrlsCtx, (prev) =>
+                        prev.filter((item) => !restoredFiles.includes(item.fileName))
+                    )
                 }
                 return null
             }

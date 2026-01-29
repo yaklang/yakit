@@ -130,7 +130,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
     const userInfo = useStore((s) => s.userInfo)
 
     useEffect(() => {
-        const {fileId, path: initPath, uploadUserId = ""} = attrs
+        const {fileId, path: initPath = "", uploadUserId = ""} = attrs
         const path = initPath.replace(/\\/g, "\\")
         if (fileId !== "0") {
             getFileInfoByLink()
@@ -170,7 +170,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
     })
 
     const getFileInfoByLink = useMemoizedFn(() => {
-        const {fileId, path: initPath} = attrs
+        const {fileId, path: initPath = ""} = attrs
         const path = initPath.replace(/\\/g, "\\")
         if (fileId !== "0") {
             setLoadingRefresh(true)
