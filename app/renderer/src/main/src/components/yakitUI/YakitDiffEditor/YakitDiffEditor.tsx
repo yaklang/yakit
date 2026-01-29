@@ -4,6 +4,7 @@ import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {yakitNotify} from "@/utils/notification"
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 
+import { useEditorFontSize } from "@/store/editorFontSize"
 import styles from "./YakitDiffEditor.module.scss"
 
 /** @name monaco-editor对比器 */
@@ -18,8 +19,13 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
         noWrap,
         leftReadOnly = false,
         rightReadOnly = false,
-        fontSize = 12
     } = props
+
+    const { fontSize, initFontSize } = useEditorFontSize();
+
+    useEffect(() => {
+        initFontSize()
+    }, [])
 
     const diffDivRef = useRef<HTMLDivElement>(null)
     const monaco = monacoEditor.editor
