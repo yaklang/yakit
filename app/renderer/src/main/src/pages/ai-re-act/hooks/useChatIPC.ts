@@ -19,7 +19,8 @@ import {
     UseCasualChatEvents,
     UseChatIPCEvents,
     UseChatIPCParams,
-    UseChatIPCState
+    UseChatIPCState,
+    UseHookBaseParams
 } from "./type"
 import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
@@ -35,6 +36,7 @@ import useThrottleState from "@/hook/useThrottleState"
 import {grpcQueryAIEvent} from "@/pages/ai-agent/grpc"
 import useAINodeLabel from "./useAINodeLabel"
 import {AIChatData} from "@/pages/ai-agent/type/aiChat"
+import {DeepPartial} from "@/pages/ai-agent/store/ChatDataStore"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -42,13 +44,13 @@ function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEven
 
 function useChatIPC(params?: UseChatIPCParams) {
     const {
+        cacheDataStore,
         getRequest,
         setSessionChatName,
         onTaskStart,
         onTaskReview,
         onTaskReviewExtra,
         onReviewRelease,
-        saveChatDataStore,
         onEnd
     } = params || {}
 
@@ -94,12 +96,28 @@ function useChatIPC(params?: UseChatIPCParams) {
         return chatID.current
     })
 
+    /** 获取全部聊天数据 */
+    const getChatDataStore: UseHookBaseParams["getChatDataStore"] = useMemoizedFn(() => {
+        if (!chatID.current) {
+            throw new Error("session is empty")
+        }
+
+        return cacheDataStore?.get(chatID.current)
+    })
+
     // 通信的状态
     const [execute, setExecute, getExecute] = useGetSetState(false)
     // #endregion
 
     // CoordinatorIDs
-    const [coordinatorIDs, setCoordinatorIDs] = useState<string[]>([])
+    const updateCoordinatorIDs = useMemoizedFn((id: string) => {
+        const ids = getChatDataStore()?.coordinatorIDs
+        if (!ids) {
+            cacheDataStore?.updater(chatID.current, {coordinatorIDs: [id]})
+        } else {
+            if (!ids.includes(id)) ids.push(id)
+        }
+    })
 
     // #region 接口更新的(文件|文件夹)数据集合
     const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
@@ -199,9 +217,15 @@ function useChatIPC(params?: UseChatIPCParams) {
     const logEvents = useAIChatLog()
 
     // AI性能相关数据和逻辑
-    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: logEvents.pushLog})
+    const aiPerfDataEvent = useAIPerfData({
+        pushLog: logEvents.pushLog,
+        getChatDataStore
+    })
     // 执行过程中插件输出的卡片
-    const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: logEvents.pushLog})
+    const [yakExecResult, yakExecResultEvent] = useYakExecResult({
+        pushLog: logEvents.pushLog,
+        getChatDataStore
+    })
     // #endregion
 
     // #region 自由对话(ReAct)相关变量和hook
@@ -215,6 +239,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     const [casualChat, casualChatEvent] = useCasualChat({
         pushLog: logEvents.pushLog,
+        getChatDataStore,
         getRequest: fetchRequestParams,
         onReviewRelease: handleCasualReviewRelease
     })
@@ -240,6 +265,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     const [taskChat, taskChatEvent] = useTaskChat({
         pushLog: logEvents.pushLog,
+        getChatDataStore,
         getRequest: fetchRequestParams,
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
@@ -251,7 +277,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
     const handleResetGrpcStatus = useMemoizedFn(() => {
         taskChatEvent.handleCloseGrpc()
-        chatID.current = ""
         setExecute(false)
         handleResetCasualChatLoading()
         handleResetTaskChatLoading()
@@ -322,7 +347,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 yakitNotify("warning", "AI 未执行任务，无法发送选项")
                 return
             }
-            if (!chatID || chatID.current !== token) {
+            if (!chatID.current || chatID.current !== token) {
                 yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
                 return
             }
@@ -356,7 +381,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         setExecute(false)
         handleResetGrpcFile()
         handleResetRunTimeIDs()
-        setCoordinatorIDs([])
         handleResetQuestionQueue()
         handleResetMemoryList()
         handleResetReActTimelines()
@@ -365,7 +389,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetCasualChatLoading()
         handleResetTaskChatLoading()
 
-        // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
         casualChatEvent.handleResetData()
@@ -405,17 +428,15 @@ function useChatIPC(params?: UseChatIPCParams) {
         } catch (error) {}
     })
     const savaHistoryChats = useMemoizedFn(() => {
-        const answer: AIChatData = {
+        const answer: DeepPartial<AIChatData> = {
             runTimeIDs: cloneDeep(runTimeIDs),
-            coordinatorIDs: cloneDeep(coordinatorIDs),
             yakExecResult: cloneDeep(yakExecResult),
-            aiPerfData: cloneDeep(aiPerfData),
             casualChat: cloneDeep(casualChat),
             taskChat: cloneDeep(taskChat),
             grpcFolders: cloneDeep(grpcFolders),
             reActTimelines: cloneDeep(reActTimelines)
         }
-        saveChatDataStore?.(chatID.current, answer)
+        cacheDataStore?.updater(chatID.current, answer)
     })
 
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
@@ -425,7 +446,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             yakitNotify("warning", "useChatIPC AI任务正在执行中，请稍后再试！")
             return
         }
-        onReset()
+        if (chatID.current !== token) onReset()
         setExecute(true)
         chatID.current = token
         fetchHistoryTimelines()
@@ -433,10 +454,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             try {
                 // 记录会话中所有的 CoordinatorId
                 if (res.CoordinatorId) {
-                    setCoordinatorIDs((old) => {
-                        if (old.includes(res.CoordinatorId)) return old
-                        return [...old, res.CoordinatorId]
-                    })
+                    updateCoordinatorIDs(res.CoordinatorId)
                 }
 
                 // 记录会话中所有的RunTimeID
@@ -752,6 +770,32 @@ function useChatIPC(params?: UseChatIPCParams) {
         }, 50)
     })
 
+    const onSwitchChat = useMemoizedFn((session?: string) => {
+        if (!chatID.current && !session) return
+        if (session && chatID.current === session) return
+
+        if (execute) {
+            ipcRenderer.invoke("cancel-ai-re-act", chatID.current).catch(() => {})
+        }
+
+        if (!session) {
+        }
+
+        const chatData = cacheDataStore?.get(session)
+        if (chatData) {
+            chatID.current = session
+            setGrpcFolders(chatData.grpcFolders || [])
+            setRunTimeIDs(chatData.runTimeIDs || [])
+            setReActTimelines(chatData.reActTimelines || [])
+            handleResetMemoryList()
+            handleResetSystemStream()
+            handleResetFocusMode()
+            yakExecResultEvent.handleSetYakResult(chatData.yakExecResult || {})
+            casualChatEvent.handleSetElements(chatData.casualChat?.elements || [])
+            taskChatEvent.handleSetElements(chatData.taskChat?.elements || [])
+        }
+    })
+
     const onClose = useMemoizedFn((token: string, option?: {tip: () => void}) => {
         ipcRenderer.invoke("cancel-ai-re-act", token).catch(() => {})
         if (option?.tip) {
@@ -759,14 +803,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         } else {
             // yakitNotify("info", "useChatIPC AI 任务已取消")
         }
-    })
-
-    /** 获取[自由对话(ReAct)|任务规划]指定mapKey的详情数据 */
-    const getChatContentMap: UseChatIPCEvents["getChatContentMap"] = useMemoizedFn((chatType, mapKey) => {
-        if (chatType === "task") {
-            return taskChatEvent.handleGetContentMap(mapKey)
-        }
-        return casualChatEvent.handleGetContentMap(mapKey)
     })
 
     useInterval(
@@ -780,7 +816,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         return () => {
             if (getExecute() && chatID.current) {
                 onClose(chatID.current)
-                onReset()
             }
             // 多个接口流不会清空，只在页面卸载时触发清空并关闭页面
             logEvents.cancelLogsWin()
@@ -792,7 +827,6 @@ function useChatIPC(params?: UseChatIPCParams) {
             execute,
             runTimeIDs,
             yakExecResult,
-            aiPerfData,
             casualChat,
             taskChat,
             grpcFolders,
@@ -802,14 +836,12 @@ function useChatIPC(params?: UseChatIPCParams) {
             memoryList,
             taskStatus,
             systemStream,
-            coordinatorIDs,
             focusMode
         }
     }, [
         execute,
         runTimeIDs,
         yakExecResult,
-        aiPerfData,
         casualChat,
         taskChat,
         grpcFolders,
@@ -819,7 +851,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         memoryList,
         taskStatus,
         systemStream,
-        coordinatorIDs,
         focusMode
     ])
 
@@ -827,12 +858,12 @@ function useChatIPC(params?: UseChatIPCParams) {
         return {
             fetchToken,
             fetchTaskChatID,
+            onSwitchChat,
             onStart,
             onSend,
             onClose,
             onReset,
-            handleTaskReviewRelease,
-            getChatContentMap
+            handleTaskReviewRelease
         }
     }, [])
 

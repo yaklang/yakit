@@ -4,7 +4,6 @@ import {defaultChatIPCData} from "@/pages/ai-agent/defaultConstant"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {
     AIFileSystemPin,
-    UseAIPerfDataState,
     UseCasualChatState,
     UseChatIPCEvents,
     UseTaskChatState,
@@ -49,12 +48,6 @@ function useAIChatUIData() {
         return chatIPCData.yakExecResult || defaultChatIPCData.yakExecResult
     }, [activeChat, chatIPCData.yakExecResult])
 
-    const aiPerfData: UseAIPerfDataState = useCreation(() => {
-        if (activeChat && activeChat.session && getChatData && activeChat.session !== session) {
-            return getChatData(activeChat.session)?.aiPerfData || defaultChatIPCData.aiPerfData
-        }
-        return chatIPCData.aiPerfData || defaultChatIPCData.aiPerfData
-    }, [chatIPCData.aiPerfData])
     const casualChat: UseCasualChatState = useCreation(() => {
         if (activeChat && activeChat.session && getChatData && activeChat.session !== session) {
             return getChatData(activeChat.session)?.casualChat || defaultChatIPCData.casualChat
@@ -69,13 +62,6 @@ function useAIChatUIData() {
         return chatIPCData.reActTimelines || defaultChatIPCData.reActTimelines
     }, [activeChat, chatIPCData.reActTimelines])
 
-    const coordinatorIDs: string[] = useCreation(() => {
-        if (activeChat && activeChat.session && getChatData && activeChat.session !== session) {
-            return getChatData(activeChat.session)?.coordinatorIDs || defaultChatIPCData.coordinatorIDs
-        }
-        return chatIPCData.coordinatorIDs || []
-    }, [activeChat, chatIPCData.coordinatorIDs])
-
     const getChatContentMap: UseChatIPCEvents["getChatContentMap"] = useMemoizedFn((chatType, mapKey) => {
         if (chatType === "task") {
             return taskChat.contents.current.get(mapKey)
@@ -88,10 +74,8 @@ function useAIChatUIData() {
         grpcFolders,
         taskChat,
         yakExecResult,
-        aiPerfData,
         casualChat,
         reActTimelines,
-        coordinatorIDs,
         getChatContentMap
     }
 }

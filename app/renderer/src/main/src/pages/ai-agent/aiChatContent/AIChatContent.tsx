@@ -51,18 +51,12 @@ import {
     AIReActChatRefProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
 import {PageNodeItemProps} from "@/store/pageInfo"
+import {aiChatDataStore} from "../store/ChatDataStore"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
-        const {
-            runTimeIDs: initRunTimeIDs,
-            yakExecResult,
-            aiPerfData,
-            taskChat,
-            grpcFolders,
-            coordinatorIDs
-        } = useAIChatUIData()
+        const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders} = useAIChatUIData()
         const {chatIPCData} = useChatIPCStore()
         const {activeChat} = useAIAgentStore()
         const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -117,10 +111,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             }
             setExportLoading(true)
             try {
+                const ids = aiChatDataStore.get(activeChat.request.TimelineSessionID || "default")?.coordinatorIDs || []
                 await grpcExportAILogs(
                     {
                         SessionID: activeChat.request.TimelineSessionID || "default",
-                        CoordinatorIDs: coordinatorIDs,
+                        CoordinatorIDs: ids,
                         ExportDataTypes: data.types,
                         OutputPath: data.outputPath
                     },

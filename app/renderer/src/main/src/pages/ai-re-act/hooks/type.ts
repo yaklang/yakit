@@ -1,22 +1,18 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {
-    AIChatQSData,
-    AIStreamOutput,
-    AITaskInfoProps,
-    AITokenConsumption,
-    AIYakExecFileRecord,
-    ReActChatRenderItem
-} from "./aiRender"
+import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AIYakExecFileRecord, ReActChatRenderItem} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {Dispatch, MutableRefObject, SetStateAction} from "react"
+import {Dispatch, SetStateAction} from "react"
 import {AIChatData} from "@/pages/ai-agent/type/aiChat"
+import {ChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 
 /** 公共 hoos 事件 */
-interface UseHookBaseParams {
+export interface UseHookBaseParams {
     /** 将数据推送到日志集合中 */
     pushLog: (log: AIChatLogData) => void
+    /** 获取全部聊天数据 */
+    getChatDataStore: () => AIChatData | undefined
 }
 interface UseHookBaseEvents {
     handleSetData: (res: AIOutputEvent) => void
@@ -32,12 +28,6 @@ export type handleSendFunc = (params: {
 // #region useAIPerfData相关定义
 export interface UseAIPerfDataParams extends UseHookBaseParams {}
 
-export interface UseAIPerfDataState {
-    consumption: AITokenConsumption
-    pressure: AIAgentGrpcApi.Pressure[]
-    firstCost: AIAgentGrpcApi.AICostMS[]
-    totalCost: AIAgentGrpcApi.AICostMS[]
-}
 export interface UseAIPerfDataEvents extends UseHookBaseEvents {}
 // #endregion
 
@@ -49,7 +39,10 @@ export interface UseYakExecResultState {
     execFileRecord: Map<string, AIYakExecFileRecord[]>
     yakExecResultLogs: StreamResult.Log[]
 }
-export interface UseYakExecResultEvents extends UseHookBaseEvents {}
+export interface UseYakExecResultEvents extends UseHookBaseEvents {
+    /** 设置UI展示的列表数据 */
+    handleSetYakResult: (newData: UseYakExecResultState) => void
+}
 // #endregion
 
 // #region useCasualChat相关定义
@@ -57,17 +50,16 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     /** 获取流接口请求参数 */
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
-    onReviewRelease?: (id: string) => void
+    onReviewRelease: (id: string) => void
 }
 
 export interface UseCasualChatState {
     elements: ReActChatRenderItem[]
-    contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
     handleSend: handleSendFunc
-    /** 通过 mapKey 获取数据的详情 */
-    handleGetContentMap: (mapKey: string) => AIChatQSData | undefined
+    /** 设置UI展示的列表数据 */
+    handleSetElements: (newElements: ReActChatRenderItem[]) => void
 }
 // #endregion
 
@@ -89,7 +81,6 @@ export interface UseTaskChatState {
     /** 正在执行的任务列表 */
     plan: AITaskInfoProps[]
     elements: ReActChatRenderItem[]
-    contents: MutableRefObject<Map<string, AIChatQSData>>
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSend: handleSendFunc
@@ -99,8 +90,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleCloseGrpc: () => void
     /** 当前任务规划结束-触发UI展示结束标识 */
     handlePlanExecEnd: (res: AIOutputEvent) => void
-    /** 通过 mapKey 获取数据的详情 */
-    handleGetContentMap: (mapKey: string) => AIChatQSData | undefined
+    /** 设置UI展示的列表数据 */
+    handleSetElements: (newElements: ReActChatRenderItem[]) => void
 }
 // #endregion
 
@@ -117,11 +108,15 @@ export interface AIChatIPCNotifyMessage {
 }
 
 export interface UseChatIPCParams {
+    /** 文件数据缓存实例类 */
+    cacheDataStore?: ChatDataStore
     /** 获取流接口请求参数 */
     getRequest?: () => AIAgentSetting | undefined
     /** 设置会话的名字 */
     setSessionChatName?: (session: string, name: string) => void
 
+    /** 查看历史会话数据 */
+    onViewChat?: (session: string) => void
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: () => void
     /** 任务规划的 review 事件 */
@@ -132,8 +127,6 @@ export interface UseChatIPCParams {
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
 
-    /** 保存历史数据 */
-    saveChatDataStore?: (session: string, data: AIChatData) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
 }
@@ -166,14 +159,10 @@ export interface PlanLoadingStatus {
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
-    /** 所有的 coordinatorID */
-    coordinatorIDs: string[]
     /** 运行时的runtimeid合集 */
     runTimeIDs: string[]
     /** 插件输出的卡片数据 */
     yakExecResult: UseYakExecResultState
-    /** AI性能相关数据 */
-    aiPerfData: UseAIPerfDataState
     /** 自由对话相关数据 */
     casualChat: UseCasualChatState
     /** 任务规划相关数据 */
@@ -218,6 +207,8 @@ export interface UseChatIPCEvents {
     fetchToken: () => string
     /** 获取当前执行任务规划的问题id */
     fetchTaskChatID: () => string
+    /** 切换历史会话展示 */
+    onSwitchChat: (session?: string) => void
     /** 开始执行接口流 */
     onStart: (params: AIChatIPCStartParams) => void
     /** 向执行中的接口流主动输入信息 */
@@ -233,8 +224,6 @@ export interface UseChatIPCEvents {
     onReset: () => void
     /** 取消任务规划当前的Review */
     handleTaskReviewRelease: (id: string) => void
-    /** 获取[自由对话(ReAct)|任务规划]指定mapKey的详情数据 */
-    getChatContentMap: (chatType: ReActChatRenderItem["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 // #endregion
 

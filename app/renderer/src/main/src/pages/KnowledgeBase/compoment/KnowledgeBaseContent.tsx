@@ -385,7 +385,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         getRequest: getSetting,
-        saveChatDataStore: knowledgeBaseDataStore.set
+        cacheDataStore: knowledgeBaseDataStore
     })
 
     const {
