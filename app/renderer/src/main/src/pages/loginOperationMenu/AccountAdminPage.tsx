@@ -1457,7 +1457,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         setLoading(true)
         const {user_name, department, role_id} = values
         // 编辑
-        const departmentId: number = department[department.length - 1]
+        const departmentId: number = Array.isArray(department) ? department[department.length - 1] : department
         if (editInfo) {
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
@@ -1521,7 +1521,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                     })
                 })
                 .catch((err) => {
-                    yakitNotify("error", "创建账号失败：" + err)
+                    yakitNotify("error", "创建账号失败：" + err?.message || err)
                 })
                 .finally(() => {
                     setLoading(false)
