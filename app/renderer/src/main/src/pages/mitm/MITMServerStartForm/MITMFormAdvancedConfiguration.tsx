@@ -99,6 +99,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
         const overwriteSNI = useWatch("OverwriteSNI", form)
         const {t, i18n} = useI18nNamespaces(["webFuzzer","mitm", "yakitUi"])
+        const tableRef = useRef<HTMLDivElement>(null);
         
 
         const getValue = useMemoizedFn(() => {
@@ -551,27 +552,41 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             {(fields, {add, remove}) => (
                                 <>
                                     <div className={styles["sni-rules-header"]}>
-                                        <span className={styles["sni-rules-header-title"]}>{t("AdvancedConfiguration.map_rules")}</span>
                                         <YakitButton
-                                            type='primary'
-                                            size="small"
-                                            icon={<OutlinePlusIcon />}
-                                            onClick={() => add({Key: "", Value: ""})}
+                                            type='text'
+                                            icon={<PlusCircleIcon />}
+                                            style={{paddingLeft: 0}}
+                                            onClick={() => {
+                                                const snimapping = form.getFieldValue("SNIMapping") || [];
+                                                if (snimapping.length > 0) {
+                                                    const { Key, Value } = snimapping[snimapping.length - 1];
+                                                    if (!Key && !Value) {
+                                                        yakitFailed("请设置完成后再添加");
+                                                        return;
+                                                    }
+                                                }
+                                                add({Key: "", Value: ""})
+                                                setTimeout(() => {
+                                                    if (tableRef.current) {
+                                                        tableRef.current.scrollTop = tableRef.current.scrollHeight;
+                                                    }
+                                                }, 100);
+                                            }}
                                         >
                                             {t("YakitButton.add")}
                                         </YakitButton>
+                                        <Divider type='vertical' style={{ margin: 0 }}/>
                                         <YakitButton
-                                            type='outline2'
-                                            size="small"
-                                            className={styles["sni-clear-btn"]}
+                                            type='text' 
+                                            danger
                                             onClick={() => {
                                                 form.setFieldsValue({SNIMapping: [{Key: "", Value: ""}]})
                                             }}
                                         >
-                                            {t("YakitButton.clear")}
+                                            {t("YakitButton.reset")}
                                         </YakitButton>
                                     </div>
-                                    <div className={styles["sni-rules-table"]}>
+                                    <div ref={tableRef} className={styles["sni-rules-table"]}>
                                         <div className={styles["table-header"]}>
                                             <div className={styles["header-cell"]}>{t("AdvancedConfiguration.host_rules")}</div>
                                             <div className={styles["header-cell"]}>{t("AdvancedConfiguration.SNI_value")}</div>
