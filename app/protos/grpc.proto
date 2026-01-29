@@ -1421,6 +1421,7 @@ message KnowledgeBaseInfo {
   bool IsImported = 6;
   bool CreatedFromUI = 7;
   bool IsDefault = 8;
+  string SerialVersionID = 9;
 }
 
 message GetKnowledgeBaseResponse {
