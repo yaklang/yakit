@@ -42,9 +42,6 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
 
     const [auths, setAuths] = useState<YakitAuthInfo[]>([])
 
-    // 鼠标移入项 用于判断是否显示 ×
-    const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
-
     const [showSTL, setShowSTL] = useState<boolean>(false)
     const [showAllow, setShowAllow] = useState<boolean>(false)
 
@@ -168,28 +165,13 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                 optionLabelProp='value'
                                 allowClear
                                 options={auths.map((item) => {
-                                    let showClose = false
-                                    if (mouseEnterItem === item.name) {
-                                        showClose = true
-                                    } else {
-                                        showClose = false
-                                    }
                                     return {
                                         label: (
                                             <div
                                                 className={styles["remote-history-label-wrapper"]}
-                                                onMouseEnter={(e) => {
-                                                    setMouseEnterItem(item.name + "")
-                                                }}
-                                                onMouseLeave={() => {
-                                                    setMouseEnterItem("")
-                                                }}
                                             >
                                                 <div className={styles["remote-history-label"]}>{item.name}</div>
                                                 <OutlineXIcon
-                                                    style={{
-                                                        display: showClose ? "block" : "none"
-                                                    }}
                                                     className={styles["option-item-close"]}
                                                     onClick={(e) => {
                                                         e.stopPropagation()

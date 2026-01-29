@@ -135,6 +135,7 @@
     }
 
     .option-item-close {
+        display: none;
         svg {
             width: 16px;
             height: 16px;
@@ -144,6 +145,11 @@
             &:hover {
                 color: var(--Colors-Use-Error-Primary);
             }
+        }
+    }
+    &:hover {
+        .option-item-close {
+            display: block;
         }
     }
 }
