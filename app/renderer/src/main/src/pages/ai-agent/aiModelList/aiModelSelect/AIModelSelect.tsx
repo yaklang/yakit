@@ -110,11 +110,11 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     }, [inViewport])
 
     useEffect(() => {
-        if (setting?.AIService) getModelNameOption()
+        if (setting?.AIService) getModelNameOption(true)
     }, [setting?.AIService])
 
     const getModelNameOption = useDebounceFn(
-        useMemoizedFn(async () => {
+        useMemoizedFn(async (hiddenError: boolean) => {
             if (!setting?.AIService) return
             try {
                 setOnlineLoading(true)
@@ -148,7 +148,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         }
                     }
                 })
-                const models = await grpcListAiModel({Config: JSON.stringify(params)})
+                const models = await grpcListAiModel({Config: JSON.stringify(params)}, hiddenError) // hiddenError>只针对这个接口
                 let modalNameList: YakitSelectProps["options"] = models.ModelName.map((modelName: string) => ({
                     label: modelName,
                     value: modelName
@@ -380,7 +380,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             size='small'
                                             type='text2'
                                             icon={<OutlineRefreshIcon />}
-                                            onClick={getModelNameOption}
+                                            onClick={() => getModelNameOption(false)}
                                         />
                                     )}
                                 </div>
