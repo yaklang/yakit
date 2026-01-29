@@ -140,8 +140,8 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
 
         // 段落开头并含有/才显示
         if (
-            parentNode.type.name === "doc" &&
-            node.type.name === "paragraph" &&
+            parentNode&&parentNode.type.name === "doc" &&
+            node&&node.type.name === "paragraph" &&
             node.content.size === 1 &&
             node.textContent === "/"
         ) {

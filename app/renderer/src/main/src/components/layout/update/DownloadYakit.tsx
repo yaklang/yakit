@@ -24,6 +24,7 @@ import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
+import { apiDownloadStorageType } from "@/pages/notepadManage/notepadManage/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,7 +55,8 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                 // 处理内网版本
                 grpcFetchIntranetYakitVersion()
                     .then((filePath: string) => {
-                        ipcRenderer
+                        apiDownloadStorageType(filePath).then((filePath) => {
+                            ipcRenderer
                             .invoke("download-latest-intranet-yakit", filePath)
                             .then((isAlready) => {
                                 if (!isBreakRef.current) return
@@ -87,6 +89,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                             .finally(() => {
                                 setVisible?.(false)
                             })
+                        })
                     })
                     .catch((e: any) => {
                         if (!isBreakRef.current) return

@@ -29,20 +29,20 @@ const isUploadImg = (params: HttpUploadImgBaseRequest) => {
 export interface HttpUploadImgPathRequest extends HttpUploadImgBaseRequest {
     path: string
 }
-/** @name 上传图片(文件路径) */
-export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest, string> = (request, hiddenError) => {
+/** @name 上传图片(文件路径/base64) */
+export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest|HttpUploadImgBase64Request, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        // console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request}))
 
         if (!isUploadImg({type: request.type, filedHash: request.filedHash})) {
             reject("参数错误")
             return
         }
-        ipcRenderer
-            .invoke("http-upload-img-path", request)
-            .then((res) => {
-                if (res?.code === 200 && res?.data) {
-                    resolve(res.data)
+        
+        ipcRenderer.invoke("split-upload", {...request,url:"fragment/upload"})
+            .then(({resArr}) => {
+                const res = resArr?.[0]
+                if (res?.code === 200 && res?.data?.from) {
+                    resolve(res?.data?.from)
                 } else {
                     const message = res?.message || res?.data?.reason || "未知错误"
                     if (!hiddenError) yakitNotify("error", "上传图片失败:" + message)
@@ -63,7 +63,6 @@ export interface HttpUploadImgBase64Request extends HttpUploadImgBaseRequest {
 /** @name 上传图片(base64) */
 export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        // console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request, base64: "base64"}))
         if (!isUploadImg({type: request.type, filedHash: request.filedHash})) {
             reject("参数错误")
             return
@@ -71,8 +70,8 @@ export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = 
         ipcRenderer
             .invoke("http-upload-img-base64", request)
             .then((res) => {
-                if (res?.code === 200 && res?.data) {
-                    resolve(res.data)
+                if (res?.code === 200 && res?.data?.from) {
+                    resolve(res?.data?.from)
                 } else {
                     const message = res?.message || res?.data?.reason || "未知错误"
                     if (!hiddenError) yakitNotify("error", "上传图片失败:" + message)
@@ -122,6 +121,24 @@ export const httpDeleteOSSResource: APIFunc<API.DeleteOssResource, API.ActionSuc
         NetWorkApi<API.DeleteOssResource, API.ActionSucceeded>({
             method: "delete",
             url: "oss/resource",
+            data: info
+        })
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "删除OSS资源失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+
+/** @name 删除 OSS 资源 */
+export const httpDeleteNotepadFile: APIFunc<API.DeleteOssResource, API.ActionSucceeded> = (info, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        // console.log("method:delete|api:oss/resource\n", JSON.stringify(info))
+        NetWorkApi<API.DeleteOssResource, API.ActionSucceeded>({
+            method: "delete",
+            url: "notepad/file",
             data: info
         })
             .then(resolve)
