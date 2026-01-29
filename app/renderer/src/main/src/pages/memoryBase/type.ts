@@ -1,8 +1,8 @@
 import {TagsCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {QSInputTextareaProps} from "../ai-agent/template/type"
 import {PaginationSchema} from "../invoker/schema"
-import {ExportAILogsModal} from "../ai-agent/components/ExportAILogsModal/ExportAILogsModal"
 
+export type RateModeType = "must_aware" | "action_tips" | "reliability_warning" | "connection_links" | "none"
 export interface MemoryBaseProps {
     pageId: string
 }

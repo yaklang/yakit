@@ -128,6 +128,58 @@
                     }
                 }
             }
+
+            .select-rate-mode {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 4px;
+                .select-all {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    flex-shrink: 0;
+                }
+                .divider {
+                    margin: 0;
+                }
+                .select-wrapper {
+                    display: flex;
+                    border: 1px solid var(--Colors-Use-Neutral-Border);
+                    border-radius: 4px;
+                    flex: 1;
+                    overflow: hidden;
+                    &:hover {
+                        border-color: var(--Colors-Use-Main-Hover);
+                    }
+                    &:focus {
+                        border-color: var(--Colors-Use-Main-Hover);
+                        box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
+                    }
+                    .select-before {
+                        display: flex;
+                        flex-shrink: 0;
+                        height: 24px;
+                        padding: 0 8px;
+                        justify-content: center;
+                        align-items: center;
+                        background: var(--Colors-Use-Neutral-Bg);
+                        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                    .select {
+                        flex: 1;
+                    }
+                }
+                .select-wrapper-active {
+                    border-color: var(--Colors-Use-Main-Hover);
+                    box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
+                }
+            }
         }
         .panel-header {
             @extend %display-flex-center;
@@ -232,11 +284,11 @@
                 letter-spacing: 0.5px;
             }
         }
-        .memory-id-cell{
+        .memory-id-cell {
             display: flex;
             gap: 4px;
             overflow: hidden;
-            .text{
+            .text {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;

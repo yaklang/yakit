@@ -10,7 +10,8 @@ import {
     AIMemoryEntity,
     QueryAIMemoryEntityRequest,
     CountAIMemoryEntityTagsResponse,
-    AIMemorySearchParams
+    AIMemorySearchParams,
+    RateModeType
 } from "./type"
 import styles from "./MemoryBase.module.scss"
 import classNames from "classnames"
@@ -31,7 +32,15 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import numeral from "numeral"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useInViewport,
+    useMemoizedFn,
+    useSelections
+} from "ahooks"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -56,6 +65,8 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {TagsCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {cloneDeep} from "lodash"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 const {YakitPanel} = YakitCollapse
 
@@ -551,15 +562,15 @@ const ratingList: RatingListItem[] = [
         id: "2",
         keyName: "OScore",
         label: "O",
-        max: 0.5,
+        max: 1.0,
         min: 0.0
     },
     {
         id: "3",
         keyName: "RScore",
         label: "R",
-        max: 0.75,
-        min: 0.25
+        max: 1.0,
+        min: 0.0
     },
     {
         id: "4",
@@ -573,24 +584,112 @@ const ratingList: RatingListItem[] = [
         keyName: "PScore",
         label: "P",
         max: 1.0,
-        min: 0.5
+        min: 0.0
     },
     {
         id: "6",
         keyName: "AScore",
         label: "A",
-        max: 0.75,
-        min: 0.25
+        max: 1.0,
+        min: 0.0
     },
     {
         id: "7",
         keyName: "TScore",
         label: "T",
-        max: 0.5,
+        max: 1.0,
         min: 0.0
     }
 ]
 
+const rateOption: YakitSelectProps["options"] = [
+    {
+        label: "无",
+        value: "none"
+    },
+    {
+        label: "关键偏好",
+        value: "must_aware"
+    },
+    {
+        label: "重要经验",
+        value: "action_tips"
+    },
+    {
+        label: "高相关但低可信",
+        value: "reliability_warning"
+    },
+    {
+        label: "强关联线索",
+        value: "connection_links"
+    }
+]
+
+const rateRemoveList = [
+    {
+        label: "低相关",
+        value: "delete_candidate_noise",
+        params: {
+            RScore: {
+                Enabled: true,
+                Max: 0.15,
+                Min: 0.0
+            }
+        }
+    },
+    {
+        label: "强负面且低信息量",
+        value: "delete_candidate_emotional",
+        params: {
+            EScore: {
+                Enabled: true,
+                Max: 0.15,
+                Min: 0.0
+            },
+            RScore: {
+                Enabled: true,
+                Max: 0.5,
+                Min: 0.0
+            },
+            AScore: {
+                Enabled: true,
+                Max: 0.45,
+                Min: 0.0
+            },
+            PScore: {
+                Enabled: true,
+                Max: 0.55,
+                Min: 0.0
+            }
+        }
+    },
+    {
+        label: "疑似过时且无复用价值",
+        value: "delete_candidate_stale",
+        params: {
+            TScore: {
+                Enabled: true,
+                Max: 0.15,
+                Min: 0.0
+            },
+            RScore: {
+                Enabled: true,
+                Max: 0.45,
+                Min: 0.0
+            },
+            AScore: {
+                Enabled: true,
+                Max: 0.6,
+                Min: 0.0
+            },
+            PScore: {
+                Enabled: true,
+                Max: 0.7,
+                Min: 0.0
+            }
+        }
+    }
+]
 const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(true)
     const [tags, setTags] = useState<CountAIMemoryEntityTagsResponse["TagsCount"]>([])
@@ -604,15 +703,21 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         trigger: "setSelectQuery",
         valuePropName: "selectQuery"
     })
+    const [rateMode, setRateMode] = useState<RateModeType>()
     const [tagMatchAll, setTagMatchAll] = useState<boolean>(selectQuery.tagMatchAll)
     const [selectRateList, setSelectRateList] = useState<MemorySelectQuery["rate"]>(cloneDeep(ratingList))
+    const [selectAllRate, setSelectAllRate] = useState<boolean>(false)
+
     const leftSideRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(leftSideRef)
     useEffect(() => {
         if (inViewport) getTags()
     }, [inViewport])
     useEffect(() => {
-        if (selectQuery.rate.length === 0) setSelectRateList(cloneDeep(ratingList))
+        if (selectQuery.rate.length === 0) {
+            setSelectRateList(cloneDeep(ratingList))
+            setSelectAllRate(false)
+        }
     }, [selectQuery.rate.length])
     const getTags = useDebounceFn(
         useMemoizedFn(() => {
@@ -723,6 +828,139 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
             tags: []
         }))
     })
+
+    const indeterminate = useCreation(() => {
+        return selectAllRate && selectQuery.rate.length > 0
+    }, [selectAllRate, selectQuery.rate])
+
+    const onSelectAllRate = useMemoizedFn((e) => {
+        const {checked} = e.target
+        if (checked) {
+            setSelectQuery((prev) => ({
+                ...prev,
+                rate: cloneDeep(selectRateList)
+            }))
+        } else {
+            setSelectQuery((prev) => ({
+                ...prev,
+                rate: []
+            }))
+        }
+        setSelectAllRate(checked)
+    })
+    const onRateSelect = useMemoizedFn((val: RateModeType) => {
+        let newSelectRateList: MemorySelectQuery["rate"] = []
+        let newRateQuery: MemorySelectQuery["rate"] = []
+        let r, p, a, o, c
+        ratingList.forEach((ele) => {
+            if (ele.keyName === "RScore") {
+                r = ele
+            }
+            if (ele.keyName === "PScore") {
+                p = ele
+            }
+            if (ele.keyName === "AScore") {
+                a = ele
+            }
+            if (ele.keyName === "OScore") {
+                o = ele
+            }
+            if (ele.keyName === "CScore") {
+                c = ele
+            }
+        })
+        switch (val) {
+            case "must_aware":
+                if (r && p) {
+                    newRateQuery = [
+                        {
+                            ...r,
+                            min: 0.7,
+                            max: 1.0
+                        },
+                        {
+                            ...p,
+                            min: 0.75,
+                            max: 1.0
+                        }
+                    ]
+                    newSelectRateList = selectRateList
+                        .filter((ele) => ele.keyName !== "RScore" && ele.keyName !== "PScore")
+                        .concat(newRateQuery)
+                }
+                break
+            case "action_tips":
+                if (r && a) {
+                    newRateQuery = [
+                        {
+                            ...r,
+                            min: 0.45,
+                            max: 1.0
+                        },
+                        {
+                            ...a,
+                            min: 0.8,
+                            max: 1.0
+                        }
+                    ]
+                    newSelectRateList = selectRateList
+                        .filter((ele) => ele.keyName !== "RScore" && ele.keyName !== "AScore")
+                        .concat(newRateQuery)
+                }
+                break
+            case "reliability_warning":
+                if (r && o) {
+                    newRateQuery = [
+                        {
+                            ...r,
+                            min: 7,
+                            max: 1.0
+                        },
+                        {
+                            ...o,
+                            min: 0,
+                            max: 0.4
+                        }
+                    ]
+                    newSelectRateList = selectRateList
+                        .filter((ele) => ele.keyName !== "RScore" && ele.keyName !== "OScore")
+                        .concat(newRateQuery)
+                }
+                break
+
+            case "connection_links":
+                if (r && c) {
+                    newRateQuery = [
+                        {
+                            ...r,
+                            min: 0.48,
+                            max: 1.0
+                        },
+                        {
+                            ...c,
+                            min: 0.8,
+                            max: 1.0
+                        }
+                    ]
+                    newSelectRateList = selectRateList
+                        .filter((ele) => ele.keyName !== "RScore" && ele.keyName !== "CScore")
+                        .concat(newRateQuery)
+                }
+                break
+            case "none":
+                newSelectRateList = cloneDeep(ratingList)
+                break
+            default:
+                break
+        }
+        setSelectRateList([...newSelectRateList])
+        setSelectQuery((prev) => ({
+            ...prev,
+            rate: [...newRateQuery]
+        }))
+        setRateMode(val)
+    })
+    const [rateSelectVisible, setRateSelectVisible] = useState<boolean>(false)
     return (
         <div
             className={classNames(styles["content-left-side"], {
@@ -770,11 +1008,39 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                         }
                         key='ratingRange'
                     >
+                        <div className={styles["select-rate-mode"]}>
+                            <div className={styles["select-all"]}>
+                                <YakitCheckbox
+                                    checked={selectAllRate}
+                                    indeterminate={indeterminate}
+                                    onChange={onSelectAllRate}
+                                />
+                                全选
+                            </div>
+                            <Divider className={styles["divider"]} type='vertical' />
+                            <div
+                                className={classNames(styles["select-wrapper"], {
+                                    [styles["select-wrapper-active"]]: rateSelectVisible
+                                })}
+                                tabIndex={1}
+                            >
+                                <div className={styles["select-before"]}>预设</div>
+                                <YakitSelect
+                                    bordered={false}
+                                    options={rateOption}
+                                    value={rateMode}
+                                    onSelect={onRateSelect}
+                                    wrapperClassName={styles["select"]}
+                                    size='small'
+                                    onDropdownVisibleChange={setRateSelectVisible}
+                                />
+                            </div>
+                        </div>
                         {ratingList.map((item) => {
                             const checked = selectQuery?.rate?.findIndex((it) => it.id === item.id) !== -1
                             const values = selectRateList.find((it) => it.id === item.id)
-                            const min = values?.min || 0
-                            const max = values?.max || 0
+                            const min = values?.min ?? 0
+                            const max = values?.max ?? 1
                             return (
                                 <div key={item.id} className={styles["rating-item"]}>
                                     <YakitCheckbox
