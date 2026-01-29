@@ -610,7 +610,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                                     <Form.Item
                                                         {...field}
                                                         name={[field.name, "Value"]}
-                                                        style={{marginBottom: 0}}
+                                                        style={{marginBottom: 0, flex: 1}}
                                                     >
                                                         <YakitInput
                                                             placeholder={`[${t("AdvancedConfiguration.SNI_extra")}]`}
