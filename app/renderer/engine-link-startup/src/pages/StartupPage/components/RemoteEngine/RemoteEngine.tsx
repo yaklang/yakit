@@ -12,7 +12,12 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {Divider, Form} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {OutlineArrowcirclerightIcon, OutlineExitIcon, OutlineQuestionmarkcircleIcon} from "@/assets/outline"
+import {
+    OutlineArrowcirclerightIcon,
+    OutlineExitIcon,
+    OutlineQuestionmarkcircleIcon,
+    OutlineXIcon
+} from "@/assets/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {EngineModeVerbose} from "../../utils"
 import {Editor} from "@/components/Editor"
@@ -29,7 +34,7 @@ const DefaultRemoteLink: RemoteLinkInfo = {
 }
 
 export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
-    const {loading, setLoading, installedEngine, onSubmit, onSwitchLocalEngine} = props
+    const {loading, setLoading, onSubmit, onSwitchLocalEngine} = props
 
     /** 远程主机参数 */
     const [remote, setRemote] = useState<RemoteLinkInfo>({...DefaultRemoteLink})
@@ -116,182 +121,204 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
         onSwitchLocalEngine()
     })
 
+    // 删除指定远程历史记录
+    const delRemoteHistoryItem = useMemoizedFn((authItem: YakitAuthInfo) => {
+        setAuths((prev) => prev.filter((item) => item.name !== authItem.name))
+        ipcRenderer
+            .invoke(ipcEventPre + "remove-yakit-remote-auth", authItem.name)
+            .then(() => {})
+            .catch(() => {})
+    })
+
     return (
         <div className={styles["remote-engine-wrapper"]}>
             <YakitSpin spinning={loading}>
-                <div className={styles["remote-title"]}>远程模式</div>
-                <div className={styles["remote-history"]}>
-                    <div className={styles["select-title"]}>连接历史</div>
-                    <YakitSelect
-                        wrapperClassName={styles["select-style"]}
-                        placeholder='请选择...'
-                        onSelect={onSelectHistory}
-                        size='middle'
-                    >
-                        {auths.map((item) => {
-                            return (
-                                <YakitSelect.Option key={item.name} value={item.name}>
-                                    {item.name}
-                                </YakitSelect.Option>
-                            )
-                        })}
-                    </YakitSelect>
-                </div>
-                <div className={styles["divider-line"]}></div>
-                <div className={styles["remote-info"]}>
-                    <Form colon={false} requiredMark={false} layout='vertical'>
-                        <div className={styles["form-item-inline"]}>
-                            <Form.Item
-                                label={
-                                    <div className={styles.requiredLabel}>
-                                        Yak gRPC 主机地址<span className={styles.redStar}>*</span>
-                                    </div>
+                <div className={styles["remote-yaklang-engine-body"]}>
+                    <div className={styles["remote-title"]}>远程模式</div>
+                    <div className={styles["remote-history"]}>
+                        <div className={styles["select-title"]}>连接历史</div>
+                        <YakitSelect
+                            wrapperClassName={styles["select-style"]}
+                            placeholder='请选择...'
+                            onSelect={onSelectHistory}
+                            size='middle'
+                            optionLabelProp='value'
+                            allowClear
+                            options={auths.map((item) => {
+                                return {
+                                    label: (
+                                        <div className={styles["remote-history-label-wrapper"]}>
+                                            <div className={styles["remote-history-label"]}>{item.name}</div>
+                                            <OutlineXIcon
+                                                className={styles["option-item-close"]}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    delRemoteHistoryItem(item)
+                                                }}
+                                            />
+                                        </div>
+                                    ),
+                                    value: item.name
                                 }
-                                required={true}
-                                style={{flex: 1}}
-                            >
-                                <YakitInput
-                                    className={classNames({
-                                        [styles["error-border"]]: isCheck && !remote.host
-                                    })}
-                                    value={remote.host}
-                                    onChange={(e) => setRemote({...remote, host: e.target.value})}
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                label={
-                                    <div className={styles.requiredLabel}>
-                                        Yak gRPC 端口<span className={styles.redStar}>*</span>
-                                    </div>
-                                }
-                                required={true}
-                                style={{flex: 1}}
-                            >
-                                <YakitInput
-                                    className={classNames({
-                                        [styles["error-border"]]: isCheck && !remote.port
-                                    })}
-                                    value={remote.port}
-                                    onChange={(e) => setRemote({...remote, port: e.target.value})}
-                                />
-                            </Form.Item>
-                        </div>
-
-                        <Form.Item label='启用通信加密认证 TLS:'>
-                            <YakitSwitch
-                                size='middle'
-                                checked={remote.tls}
-                                onChange={(tls) => setRemote({...remote, tls})}
-                            />
-                        </Form.Item>
-                        {remote.tls && (
-                            <>
+                            })}
+                        ></YakitSelect>
+                    </div>
+                    <div className={styles["divider-line"]}></div>
+                    <div className={styles["remote-info"]}>
+                        <Form colon={false} requiredMark={false} layout='vertical'>
+                            <div className={styles["form-item-inline"]}>
                                 <Form.Item
                                     label={
-                                        <div className={styles["pem-title"]}>
-                                            gRPC Root-CA 证书(PEM)<span className={styles.redStar}>*</span>{" "}
-                                            <PEMExample setShow={setShowSTL}>
-                                                <OutlineQuestionmarkcircleIcon
-                                                    className={
-                                                        showSTL ? styles["icon-show-style"] : styles["icon-style"]
-                                                    }
-                                                />
-                                            </PEMExample>
-                                            :
+                                        <div className={styles.requiredLabel}>
+                                            Yak gRPC 主机地址<span className={styles.redStar}>*</span>
                                         </div>
                                     }
                                     required={true}
+                                    style={{flex: 1}}
                                 >
-                                    <div
-                                        className={classNames(styles["pem-content"], {
-                                            [styles["error-border"]]: isCheck && !remote.caPem
-                                        })}
-                                    >
-                                        <Editor
-                                            language={"pem"}
-                                            value={remote.caPem}
-                                            onSetValue={(caPem) => setRemote({...remote, caPem})}
-                                        />
-                                    </div>
-                                </Form.Item>
-                                <Form.Item label='密码'>
                                     <YakitInput
-                                        className={styles["input-style"]}
-                                        value={remote.password}
-                                        onChange={(e) => setRemote({...remote, password: e.target.value})}
+                                        className={classNames({
+                                            [styles["error-border"]]: isCheck && !remote.host
+                                        })}
+                                        value={remote.host}
+                                        onChange={(e) => setRemote({...remote, host: e.target.value})}
                                     />
                                 </Form.Item>
-                            </>
-                        )}
-                        <Form.Item
-                            label={
-                                <div className={styles["pem-title"]}>
-                                    保存为历史连接{" "}
-                                    <PEMHint setShow={setShowAllow}>
-                                        <OutlineQuestionmarkcircleIcon
-                                            className={classNames(styles["icon-style"], {
-                                                [styles["icon-show-style"]]: showAllow
-                                            })}
-                                        />
-                                    </PEMHint>
-                                    :
-                                </div>
-                            }
-                        >
-                            <YakitSwitch
-                                size='middle'
-                                checked={remote.allowSave}
-                                onChange={(allowSave: boolean) => setRemote({...remote, allowSave})}
-                            />
-                        </Form.Item>
-                        {remote.allowSave && (
-                            <Form.Item
-                                label={
-                                    <div className={styles.requiredLabel}>
-                                        连接名<span className={styles.redStar}>*</span>
-                                    </div>
-                                }
-                                required={true}
-                                help='填写后，本次记录会保存到连接历史中，之后可以快捷调用'
-                            >
-                                <YakitInput
-                                    className={classNames(styles["input-style"], {
-                                        [styles["error-border"]]: isCheck && !remote.linkName
-                                    })}
-                                    value={remote.linkName}
-                                    onChange={(e) => setRemote({...remote, linkName: e.target.value})}
+
+                                <Form.Item
+                                    label={
+                                        <div className={styles.requiredLabel}>
+                                            Yak gRPC 端口<span className={styles.redStar}>*</span>
+                                        </div>
+                                    }
+                                    required={true}
+                                    style={{flex: 1}}
+                                >
+                                    <YakitInput
+                                        className={classNames({
+                                            [styles["error-border"]]: isCheck && !remote.port
+                                        })}
+                                        value={remote.port}
+                                        onChange={(e) => setRemote({...remote, port: e.target.value})}
+                                    />
+                                </Form.Item>
+                            </div>
+
+                            <Form.Item label='启用通信加密认证 TLS:'>
+                                <YakitSwitch
+                                    size='middle'
+                                    checked={remote.tls}
+                                    onChange={(tls) => setRemote({...remote, tls})}
                                 />
                             </Form.Item>
-                        )}
-                        <Form.Item label=''>
-                            <YakitButton size='large' onClick={submit} className={styles["btn-style"]}>
-                                启动连接
-                            </YakitButton>
-                        </Form.Item>
-                    </Form>
-                </div>
-                <div className={styles["footer-btn"]}>
-                    <span
-                        className={styles["exit-btn"]}
-                        onClick={() => ipcRenderer.invoke(ipcEventPre + "UIOperate", "close")}
-                    >
-                        <OutlineExitIcon className={styles["exit-icon"]} />
-                        退出
-                    </span>
-                    <Divider type='vertical'></Divider>
-                    <span
-                        className={classNames(styles["go-local"], {
-                            [styles["go-local-disable"]]: loading
-                        })}
-                        onClick={() => {
-                            if (loading) return
-                            handleSwitchLocalEngine()
-                        }}
-                    >
-                        {EngineModeVerbose("local")}
-                        <OutlineArrowcirclerightIcon className={styles["arrow-circle-right-icon"]} />
-                    </span>
+                            {remote.tls && (
+                                <>
+                                    <Form.Item
+                                        label={
+                                            <div className={styles["pem-title"]}>
+                                                gRPC Root-CA 证书(PEM)<span className={styles.redStar}>*</span>{" "}
+                                                <PEMExample setShow={setShowSTL}>
+                                                    <OutlineQuestionmarkcircleIcon
+                                                        className={
+                                                            showSTL ? styles["icon-show-style"] : styles["icon-style"]
+                                                        }
+                                                    />
+                                                </PEMExample>
+                                                :
+                                            </div>
+                                        }
+                                        required={true}
+                                    >
+                                        <div
+                                            className={classNames(styles["pem-content"], {
+                                                [styles["error-border"]]: isCheck && !remote.caPem
+                                            })}
+                                        >
+                                            <Editor
+                                                language={"pem"}
+                                                value={remote.caPem}
+                                                onSetValue={(caPem) => setRemote({...remote, caPem})}
+                                            />
+                                        </div>
+                                    </Form.Item>
+                                    <Form.Item label='密码'>
+                                        <YakitInput
+                                            className={styles["input-style"]}
+                                            value={remote.password}
+                                            onChange={(e) => setRemote({...remote, password: e.target.value})}
+                                        />
+                                    </Form.Item>
+                                </>
+                            )}
+                            <Form.Item
+                                label={
+                                    <div className={styles["pem-title"]}>
+                                        保存为历史连接{" "}
+                                        <PEMHint setShow={setShowAllow}>
+                                            <OutlineQuestionmarkcircleIcon
+                                                className={classNames(styles["icon-style"], {
+                                                    [styles["icon-show-style"]]: showAllow
+                                                })}
+                                            />
+                                        </PEMHint>
+                                        :
+                                    </div>
+                                }
+                            >
+                                <YakitSwitch
+                                    size='middle'
+                                    checked={remote.allowSave}
+                                    onChange={(allowSave: boolean) => setRemote({...remote, allowSave})}
+                                />
+                            </Form.Item>
+                            {remote.allowSave && (
+                                <Form.Item
+                                    label={
+                                        <div className={styles.requiredLabel}>
+                                            连接名<span className={styles.redStar}>*</span>
+                                        </div>
+                                    }
+                                    required={true}
+                                    help='填写后，本次记录会保存到连接历史中，之后可以快捷调用'
+                                >
+                                    <YakitInput
+                                        className={classNames(styles["input-style"], {
+                                            [styles["error-border"]]: isCheck && !remote.linkName
+                                        })}
+                                        value={remote.linkName}
+                                        onChange={(e) => setRemote({...remote, linkName: e.target.value})}
+                                    />
+                                </Form.Item>
+                            )}
+                            <Form.Item label=''>
+                                <YakitButton size='large' onClick={submit} className={styles["btn-style"]}>
+                                    启动连接
+                                </YakitButton>
+                            </Form.Item>
+                        </Form>
+                    </div>
+                    <div className={styles["footer-btn"]}>
+                        <span
+                            className={styles["exit-btn"]}
+                            onClick={() => ipcRenderer.invoke(ipcEventPre + "UIOperate", "close")}
+                        >
+                            <OutlineExitIcon className={styles["exit-icon"]} />
+                            退出
+                        </span>
+                        <Divider type='vertical'></Divider>
+                        <span
+                            className={classNames(styles["go-local"], {
+                                [styles["go-local-disable"]]: loading
+                            })}
+                            onClick={() => {
+                                if (loading) return
+                                handleSwitchLocalEngine()
+                            }}
+                        >
+                            {EngineModeVerbose("local")}
+                            <OutlineArrowcirclerightIcon className={styles["arrow-circle-right-icon"]} />
+                        </span>
+                    </div>
                 </div>
             </YakitSpin>
         </div>

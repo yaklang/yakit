@@ -1326,6 +1326,15 @@ module.exports = {
             saveSecret(name, host, port, tls, password, caPem)
         })
 
+        ipcMain.handle(ipcEventPre + "remove-yakit-remote-auth", async (e, name) => {
+            saveAllSecret([
+                ...authMeta.filter((i) => {
+                    return i.name !== name
+                })
+            ])
+            loadSecrets()
+        })
+
         // 打开指定路径文件
         ipcMain.handle(ipcEventPre + "open-specified-file", async (e, path) => {
             return shell.showItemInFolder(path)
