@@ -107,6 +107,10 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             this.emit("offline-after", [payload])
         })
         this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
+        this.doc.on("afterTransaction", (tr) => {
+            console.log(":::WS:::this.wsProvider.awareness---",this.wsProvider.awareness);
+            
+        })
         this.wsProvider.once("synced", (isSynced: boolean) => {
             this.setCollabStatus({...this.collabStatus, isSynced})
         })

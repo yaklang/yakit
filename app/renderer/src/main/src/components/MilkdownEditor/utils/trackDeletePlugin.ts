@@ -4,6 +4,7 @@ import {fileCustomId} from "./uploadPlugin"
 import {createSlice} from "@milkdown/kit/ctx"
 import moment from "moment"
 import {DeleteOSSFileItem} from "../MilkdownEditorType"
+import {ReplaceStep} from "@milkdown/kit/prose/transform"
 
 export const getFileNameByUrl = (url) => {
     if (!url) return ""
@@ -55,11 +56,23 @@ export const trackDeletePlugin = () =>
         ctx.inject(deletedFileUrlsCtx) // 注入上下文
         // 在插件初始化时设置值
         ctx.set(deletedFileUrlsCtx, [])
+        console.log("--------------------------------");
+        
         return new Plugin({
             key: new PluginKey("MILKDOWN_PLUGIN_TRACK_DELETE"),
             appendTransaction: (transactions, oldState, newState) => {
-                 // 唯一正确的判断
+                console.log("State---",typeof transactions,transactions, oldState, newState);
+                
+                // doc 没变
                 if (oldState.doc === newState.doc) return null
+
+                // 不是用户真正删除行为，直接跳过
+                const hasReplaceStep = transactions.some(tr =>
+                    tr.steps.some(step => step instanceof ReplaceStep) && tr.docChanged
+                )
+                 if (!hasReplaceStep) {
+                    return null
+                }
 
                 // 核心：语义 diff
                 const oldFiles = collectOSSFiles(oldState.doc, oldState.schema)
@@ -70,11 +83,12 @@ export const trackDeletePlugin = () =>
 
                 // 被恢复的文件（undo）
                 const restoredFiles = [...newFiles].filter((f) => !oldFiles.has(f))
-
                 // =====================
                 // 删除
                 // =====================
                 if (deletedFiles.length > 0) {
+                    console.log("diff-删除", deletedFiles);
+                    
                     ctx.update(deletedFileUrlsCtx, (prev) => {
                         const exist = new Set(prev.map((i) => i.fileName))
 
@@ -92,6 +106,7 @@ export const trackDeletePlugin = () =>
                 // 撤销恢复
                 // =====================
                 if (restoredFiles.length > 0) {
+                    console.log("diff-恢复", restoredFiles);
                     ctx.update(deletedFileUrlsCtx, (prev) =>
                         prev.filter((item) => !restoredFiles.includes(item.fileName))
                     )

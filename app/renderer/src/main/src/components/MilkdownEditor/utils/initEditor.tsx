@@ -357,6 +357,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 }
             ].flat()
             //#endregion
+            console.log("init---");
+            
             return (
                 Editor.make()
                     .config((ctx) => {

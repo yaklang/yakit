@@ -97,6 +97,8 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
     })
     const onEdit = useMemoizedFn(() => {
         setEditLoading(true)
+        console.log("查询该笔记本详情222");
+        
         apiGetNotepadDetail(record.hash)
             .then((res) => {
                 goEditNotepad({notepadHash: res.hash, title: res.title})

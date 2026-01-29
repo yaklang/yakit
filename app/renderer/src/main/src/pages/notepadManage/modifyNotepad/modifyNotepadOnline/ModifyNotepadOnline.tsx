@@ -12,7 +12,7 @@ import {Divider, Tooltip} from "antd"
 import moment from "moment"
 import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {failed, yakitNotify} from "@/utils/notification"
 import {API} from "@/services/swagger/resposeType"
@@ -98,6 +98,10 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         hash: ""
     })
 
+useEffect(()=>{
+    console.log("notepadDetail---",notepadDetail);
+},[notepadDetail])
+
     const [documentLinkStatus, setDocumentLinkStatus] = useState<CollabStatus>({
         status: "disconnected",
         isSynced: false,
@@ -119,6 +123,8 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
             setNotepadLoading(true)
+            console.log("查询该笔记本详情---");
+            
             apiGetNotepadDetail(`${pageInfo.notepadHash}`)
                 .then((res) => {
                     const isCollaborator = res.collaborator?.find((ele) => ele.user_id === userInfo.user_id)
@@ -134,6 +140,8 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     } else {
                         perTabName.current = res.title
                         notepadContentRef.current = res.content
+                        console.log("notepadDetail111---");
+                        
                         setNotepadDetail(res)
                     }
                 })
@@ -153,6 +161,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
             setNotepadLoading(true)
             apiSaveNotepad(params)
                 .then((hash) => {
+                    console.log("notepadDetail222---");
                     setNotepadDetail({
                         ...(notepadDetail || {}),
                         notepadUserId: userInfo.user_id || 0,
@@ -262,6 +271,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (!inViewport) {
             notepadContentRef.current = editor?.action(getMarkdown()) || ""
             onSaveNewContent(notepadContentRef.current)
+            console.log("notepadDetail333---");
             setNotepadDetail((v) => ({...v, content: notepadContentRef.current}))
         }
     }, [inViewport])
@@ -282,6 +292,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         (value) => {
             notepadContentRef.current = value
             const time = moment().unix()
+            console.log("notepadDetail444---");
             setNotepadDetail((v) => ({...v, updated_at: time}))
         },
         {wait: 200, leading: true}
@@ -299,6 +310,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
 
     const onSecondMenuDataChange = useMemoizedFn(() => {
         const t = initTabName()
+        console.log("notepadDetail555---");
         setNotepadDetail((v) => ({...v, title: t}))
         setTabName(t)
         setComposedTabName(t)
@@ -313,6 +325,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (title) {
             perTabName.current = title
         }
+        console.log("notepadDetail666---");
         setNotepadDetail((v) => ({...v, title}))
         setComposedTabName(title)
         onSetPageTabName(title)
@@ -420,6 +433,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                 footer: null
             })
         })
+
     return (
         <ModifyNotepadContent
             ref={modifyNotepadContentRef}

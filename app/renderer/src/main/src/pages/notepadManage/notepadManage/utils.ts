@@ -111,7 +111,11 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
                 hash
             }
         })
-            .then(resolve)
+            .then((res) => {
+                console.log("获取云文档详情---",hash, res);
+                
+                resolve(res)
+            })
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "获取云文档详情失败:" + err)
                 reject(err)

@@ -179,15 +179,25 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             } else {
                 setInterval(undefined)
             }
+            console.log("set-urls", urls);
+            
             setDeletedFiles(urls)
         }),
         {wait: 200}
     ).run
 
+    // 校验文件是否真的被删除 如果不在defaultValue中 则是真的删除
+    const juagdeDeleteFile = useMemoizedFn((fileNames: string[] = [])=>{
+        const value = get()?.action(getMarkdown()) || ""
+        console.log("真*删除校验",value);
+        let newFileNames = fileNames.filter((fileName)=>!(value).includes(fileName))
+        return newFileNames
+    })
+
     /**删除文档中被删除的所有文件 */
     const onDeleteAllFiles = useMemoizedFn(() => {
         if (deletedFiles.length > 0) {
-            httpDeleteNotepadFile({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
+            httpDeleteNotepadFile({file_name: juagdeDeleteFile(deletedFiles.map((ele) => ele.fileName))}, true)
         }
     })
     /**删除在文档中被删除30s的文件 */
@@ -203,14 +213,20 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 newDeletedFiles.push(element)
             }
         }
+
         if (fileName.length > 0) {
             setInterval(undefined)
-            httpDeleteNotepadFile({file_name: fileName}, true).finally(() => {
+            const value = get()?.action(getMarkdown()) || ""
+            
+            httpDeleteNotepadFile({file_name: juagdeDeleteFile(fileName)}, true).finally(() => {
                 // 暂不考虑删除失败的情况
+                console.log("再次ctx.update更新", newDeletedFiles);
+                
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
             })
         }
     })
+    
     //#endregion 删除资源 end
 
     //#region 协作文档
@@ -222,6 +238,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     // TODO - 共享标题
     useUpdateEffect(() => {
         if (collabManagerRef.current) {
+            console.log("xxxx", collabParams.title);
             collabManagerRef.current.setTitle(collabParams.title)
         }
     }, [collabParams.title])
@@ -230,6 +247,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         if (inViewport) {
             // 直接连接会collabService有意外报错情况
             // 第二次flush,之前的collabService只是断开连接没有销毁,所以值有保留,传入defaultValue编辑器内部会自己做对比显示最新的内容
+            console.log("xxx", defaultValue);
+            
             collabManagerRef.current?.flush(defaultValue || "")
         } else {
             onCollabDisconnect()

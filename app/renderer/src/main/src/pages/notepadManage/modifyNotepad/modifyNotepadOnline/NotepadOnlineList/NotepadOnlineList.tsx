@@ -118,6 +118,8 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
     const goNotepadDetail = useMemoizedFn((rowData: API.GetNotepadList) => {
         if (notepadHash === rowData.hash) return
         setSpinning(true)
+        console.log("查询该笔记本详情111");
+        
         apiGetNotepadDetail(rowData.hash)
             .then((res) => {
                 goEditNotepad({

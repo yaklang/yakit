@@ -140,6 +140,8 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const onOpenManage = useMemoizedFn(() => {
         setLoadingManage(true)
         // 查询该笔记本详情
+        console.log("查询该笔记本详情333");
+        
         apiGetNotepadDetail(notepadInfo.hash)
             .then((res) => {
                 setCollaborators(res.collaborator || [])
