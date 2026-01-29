@@ -509,6 +509,7 @@ export const StartupPage: React.FC = () => {
                     setTheme(getSoftTheme())
                     if (isCommunityYakit()) {
                         setLocalValue(LocalGVS.YakitCESoftwareBasics, true)
+                        setLocalValue(LocalGVS.YakitCEMode, getSoftMode())
                     }
                     if (localEngineRef.current) {
                         localEngineRef.current.startYakEngine()
@@ -869,7 +870,11 @@ export const StartupPage: React.FC = () => {
 
             // 缓存社区版yakit软件模式
             if (isCommunityYakit()) {
-                setRemoteValue(RemoteSoftModeGV.YakitCEMode, getSoftMode())
+                getLocalValue(LocalGVS.YakitCEMode).then(res => {
+                    setRemoteValue(RemoteSoftModeGV.YakitCEMode, res || getSoftMode())
+                }).catch(() => {
+                    setRemoteValue(RemoteSoftModeGV.YakitCEMode, getSoftMode())
+                })
             }
 
             // 缓存连接端口
