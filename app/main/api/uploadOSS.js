@@ -22,7 +22,7 @@ module.exports = (win, getClient) => {
                 // 获取文件名
                 const fileName = customPath.basename(path)
                 // 文件大小（以字节为单位）
-                const size = fs.statSync(path).size
+                const size = fs.statSync(path).size || 1
                 // 5GB 的字节数
                 const fiveGBInBytes = 5 * 1024 * 1024 * 1024
                 if (size > fiveGBInBytes) {
@@ -109,7 +109,7 @@ module.exports = (win, getClient) => {
             formData.append("index", chunkIndex)
             formData.append("totalChunks", totalChunks)
             formData.append("hash", fileHashTime)
-            formData.append("filedHash", filedHash)
+            formData.append("fileHash", filedHash)
             formData.append("type", type)
             httpApi({
                 url,

@@ -49,24 +49,24 @@ export const customSyncHeadingIdPlugin = $prose((ctx) => {
         const tr = view.state.tr.setMeta("addToHistory", false)
 
         let found = false
+        if (headingSchema) {
+            view.state.doc.descendants((node, pos) => {
+                if (node.type === headingSchema.type(ctx)) {
+                    if (node.textContent.trim().length === 0) return
 
-        view.state.doc.descendants((node, pos) => {
-            if (node.type === headingSchema.type(ctx)) {
-                if (node.textContent.trim().length === 0) return
-
-                const attrs = node.attrs
-                const idString = node.textContent.length > 20 ? node.textContent.substring(0, 20) : node.textContent
-                const id = Buffer.from(idString).toString("hex")
-                if (attrs.id !== id) {
-                    found = true
-                    tr.setMeta(headingIdPluginKey, true).setNodeMarkup(pos, undefined, {
-                        ...attrs,
-                        id: id
-                    })
+                    const attrs = node.attrs
+                    const idString = node.textContent.length > 20 ? node.textContent.substring(0, 20) : node.textContent
+                    const id = Buffer.from(idString).toString("hex")
+                    if (attrs.id !== id) {
+                        found = true
+                        tr.setMeta(headingIdPluginKey, true).setNodeMarkup(pos, undefined, {
+                            ...attrs,
+                            id: id
+                        })
+                    }
                 }
-            }
-        })
-
+            })
+        }
         if (found) view.dispatch(tr)
     }, 500)
 

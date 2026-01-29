@@ -975,7 +975,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 token: uploadTokenRef.current,
                 type: "PluginDB"
             })
-            .then((TaskStatus) => {
+            .then(({TaskStatus}) => {
                 if (TaskStatus) {
                     setPercent(100)
                     yakitNotify("success", "上传成功")

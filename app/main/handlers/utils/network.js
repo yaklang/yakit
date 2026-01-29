@@ -382,14 +382,11 @@ const downloadYakitEE = async (version, isIRify, destination, progressHandler, o
 
 /** 下载 Yakit 内网版 进度 */
 const downloadIntranetYakit = async (filePath, destination, progressHandler, onFinished, onError) => {
-    const match = filePath.match(/yakit-projects(\/[^]+)$/)
-    // 私有域地址
-    const downloadUrl = `${HttpSetting.httpBaseURL}/install_package${match[1]}`
     requestWithProgress(
-        downloadUrl,
+        filePath,
         destination,
         {
-            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+            httpsAgent: getHttpsAgentByDomain(url.parse(filePath).host)
         },
         progressHandler,
         onFinished,

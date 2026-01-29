@@ -66,10 +66,10 @@ interface UploadScreenRecorderRequest {
     Ids?: string[]
 }
 const batchMenuDataEnterprise: YakitMenuItemProps[] = [
-    {
-        key: "upload",
-        label: "上传"
-    },
+    // {
+    //     key: "upload",
+    //     label: "上传"
+    // },
     {
         key: "remove",
         label: "删除"
@@ -752,12 +752,12 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
             <div className={styles["list-item-operate"]}>
                 <PencilAltIcon onClick={() => onEdit()} />
 
-                {isEnterpriseEdition() && (
+                {/* {isEnterpriseEdition() && (
                     <>
                         <Divider type='vertical' style={{margin: "0 16px"}} />
                         {uploadLoading ? <LoadingOutlined /> : <CloudUploadIcon onClick={() => onUpload()} />}
                     </>
-                )}
+                )} */}
                 <Divider type='vertical' style={{margin: "0 16px"}} />
                 <YakitPopconfirm title={"删除录屏的同时会删除本地录屏文件"} onConfirm={() => onRemove()}>
                     <YakitButton
