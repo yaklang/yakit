@@ -210,7 +210,9 @@
     "bruteforce_rsa_oaep": "爆破 RSA-OAEP",
     "bruteforce_csrf_with_token": "爆破 CSRF（带有保护用 token）",
     "crack_signature": "破解 Signature",
-    "third_party_captcha_bypass": "第三方验证码绕过"
+    "third_party_captcha_bypass": "第三方验证码绕过",
+    "source": "源码",
+    "executionResult": "执行结果"
   },
   "HTTPFuzzerHistorySelector": {
     "confirmDeletePackets": "将会删除数据包与缓存数据，确定删除吗？",
@@ -522,7 +524,14 @@
     "hot_reload_template_name_empty": "热加载模板名为空",
     "hot_reload_template_name_exists": "热加载模板名已存在",
     "enter_hot_reload_template_name": "请为热加载模板取个名字...",
-    "save_hot_reload_template": "保存热加载模板"
+    "save_hot_reload_template": "保存热加载模板",
+    "MITM_hot_template": "MITM",
+    "WebFuzzer_hot_template": "Web Fuzzer",
+    "add_template": "新建模板",
+    "template_empty_message": "模板名称不能为空",
+    "template_repeat_message": "模板名称已存在",
+    "add_template_success": "新建模板成功",
+    "template_list":"模板列表"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "是否应用修改的内容",

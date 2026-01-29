@@ -38,6 +38,8 @@ export enum YakitRoute {
     YakScript = "yakScript",
     // Payload页面
     PayloadManager = "payload-manager",
+    // 配置管理页面（字典/代理/热加载）
+    ConfigManagement = "config-management",
     // 私有版用户管理
     AccountAdminPage = "account-admin-page",
     RoleAdminPage = "role-admin-page",

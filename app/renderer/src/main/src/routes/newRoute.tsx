@@ -122,6 +122,7 @@ import {
     isCommunityYakit
 } from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
+import {ConfigManagement} from "@/pages/configManagement/ConfigManagement"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
 import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
@@ -392,7 +393,12 @@ export const YakitRouteToPageInfo: Record<
     "modify-ai-forge": {label: "编辑 Forge", labelUi: "YakitRoute.editForge"},
     "add-ai-tool": {label: "新建 Tool", labelUi: "YakitRoute.createTool"},
     "modify-ai-tool": {label: "编辑 Tool", labelUi: "YakitRoute.editTool"},
-    "ssa-compile-history": {label: "SSA项目编译历史", labelUi: "YakitRoute.ssaCompileHistory"}
+    "ssa-compile-history": {label: "SSA项目编译历史", labelUi: "YakitRoute.ssaCompileHistory"},
+    "config-management": {
+        label: "配置管理",
+        labelUi: "YakitRoute.configManagement",
+        describeUi: "YakitRoute.unifiedConfigurationManagementForPayloadProxyAndHotPatch"
+    }
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -412,6 +418,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.DB_CVE,
     YakitRoute.YakScript,
     YakitRoute.PayloadManager,
+    YakitRoute.ConfigManagement,
     YakitRoute.AccountAdminPage,
     YakitRoute.RoleAdminPage,
     YakitRoute.HoleCollectPage,
@@ -467,6 +474,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Plugin_Audit,
     YakitRoute.AddYakitScript,
     YakitRoute.PayloadManager,
+    YakitRoute.ConfigManagement,
     YakitRoute.Data_Statistics,
     YakitRoute.BatchExecutorPage,
     YakitRoute.Codec,
@@ -832,6 +840,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunner />
         case YakitRoute.PayloadManager:
             return <NewPayload />
+        case YakitRoute.ConfigManagement:
+            return <ConfigManagement />
         case YakitRoute.AccountAdminPage:
             return <AccountAdminPage />
         case YakitRoute.RoleAdminPage:
@@ -1543,11 +1553,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                     ...YakitRouteToPageInfo[YakitRoute.Codec]
                 },
                 {
-                    page: YakitRoute.PayloadManager,
-                    icon: <SolidPayloadIcon />,
-                    ...YakitRouteToPageInfo[YakitRoute.PayloadManager]
-                },
-                {
                     page: YakitRoute.YakScript,
                     icon: <SolidTerminalIcon />,
                     ...YakitRouteToPageInfo[YakitRoute.YakScript]
@@ -1586,11 +1591,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                         page: YakitRoute.Codec,
                         icon: <SolidCodecIcon />,
                         ...YakitRouteToPageInfo[YakitRoute.Codec]
-                    },
-                    {
-                        page: YakitRoute.PayloadManager,
-                        icon: <SolidPayloadIcon />,
-                        ...YakitRouteToPageInfo[YakitRoute.PayloadManager]
                     },
                     {
                         page: YakitRoute.YakScript,
