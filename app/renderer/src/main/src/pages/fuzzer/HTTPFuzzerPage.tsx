@@ -173,7 +173,7 @@ import { useProxy } from "@/hook/useProxy"
 import { MITMConsts } from "../mitm/MITMConsts"
 import { RemoteGV } from "@/yakitGV"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import { useAutoScrollToBottom } from "./hooks/useAutoScrollToBottom"
+import { useChunkAutoScrollToBottom } from "./hooks/useAutoScrollToBottom"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -4014,7 +4014,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         }, [fuzzerResponse?.ResponseRaw])
 
         const responseRawString = useCreation(() => {
-            // Streaming mode: the body is appended into Monaco via `useAutoScrollToBottom`,
+            // Streaming mode: the body is appended into Monaco via `useChunkAutoScrollToBottom`,
             // so keep the base `originValue` stable as the header to avoid wiping the editor.
             if (isStreamingResponse) return responseHeaderString
             return Uint8ArrayToString(assembledResponsePackage)
@@ -4050,7 +4050,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const currentOriginalPackage = isStreamingResponse ? (fuzzerResponse?.ResponseRaw || new Uint8Array()) : assembledResponsePackage
 
         // 自动滚动到底部 hook（仅在流式加载时启用）
-        const { handleEditorMount } = useAutoScrollToBottom({
+        const { handleEditorMount } = useChunkAutoScrollToBottom({
             chunkedData: fuzzerResponse.RandomChunkedData,
             id: fuzzerResponse?.UUID,
             onEditorMount: onSetOnlyOneResEditor
