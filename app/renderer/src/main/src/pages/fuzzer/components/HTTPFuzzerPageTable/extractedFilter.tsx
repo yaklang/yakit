@@ -83,6 +83,9 @@ const ExtractedFilter: React.FC<ExtractedFilterProps> = memo((props) => {
                             onChange={(e) => {
                                 const checked = e.target.checked
                                 setExtractedNotEmpty(checked)
+                                onSearch({
+                                    ExtractedResultsNotEmpty: checked
+                                })
                             }}
                         />
                     </div>
