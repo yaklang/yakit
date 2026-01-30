@@ -54,6 +54,20 @@
         }
       }
     }
+    .filters-form {
+      .form-label {
+          display: flex;
+          align-items: center;
+          .info-icon {
+            margin-left: 4px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
+      }
+    }
   }
 
   .setting-body {

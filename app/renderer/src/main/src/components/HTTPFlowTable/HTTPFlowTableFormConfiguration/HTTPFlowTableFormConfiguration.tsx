@@ -3,14 +3,14 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {Form, Modal} from "antd"
+import {Form, Modal, Tooltip} from "antd"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {contentType} from "../HTTPFlowTable"
 import {isEqual, toArray} from "lodash"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {yakitNotify} from "@/utils/notification"
 import styles from "./HTTPFlowTableFormConfiguration.module.scss"
 
@@ -211,9 +211,21 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                         form={form}
                         labelCol={{span: 6}}
                         wrapperCol={{span: 16}}
-                        className={styles["mitm-filters-form"]}
+                        className={styles["filters-form"]}
                     >
-                        <Form.Item label={t("HTTPFlowTableFormConfiguration.filterMode")} name='filterMode'>
+                        <Form.Item
+                            name='filterMode'
+                            label={
+                                <span className={styles["form-label"]}>
+                                    {t("HTTPFlowTableFormConfiguration.filterMode")}
+                                    <Tooltip
+                                        title={t("HTTPFlowTableFormConfiguration.advancedFilterHelp")}
+                                    >
+                                        <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                                    </Tooltip>
+                                </span>
+                            }
+                        >
                             <YakitRadioButtons
                                 buttonStyle='solid'
                                 options={[

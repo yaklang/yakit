@@ -121,6 +121,7 @@
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
     "advancedFilter": "高级筛选",
+    "advancedFilterHelp": "同时配置'屏蔽内容'和'只展示'将以AND关系同时生效",
     "filterMode": "筛选模式",
     "blockedContent": "屏蔽内容",
     "displayOnly": "只展示",

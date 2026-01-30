@@ -121,6 +121,7 @@
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
     "advancedFilter": "Advanced Filter",
+    "advancedFilterHelp": "Configuring both “Blocked Content” and “Show Only” will apply both rules simultaneously using AND logic.",
     "filterMode": "Filter Mode",
     "blockedContent": "Blocked Content",
     "displayOnly": "Display Only",
