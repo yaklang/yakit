@@ -64,5 +64,6 @@ export interface AIAgentChatStreamProps {
 //#region AI工具查看详情
 export interface AIChatToolDrawerContentProps {
     callToolId: string
+    aiFilePath?: string
 }
 // #endregion

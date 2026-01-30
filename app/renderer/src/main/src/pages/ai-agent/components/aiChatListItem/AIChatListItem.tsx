@@ -62,7 +62,7 @@ const isExtraShow = (extraValue: HandleStartParams["extraValue"]) => {
     )
 }
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
-    const {item, type} = props
+    const {item, type, hasNext} = props
 
     const {handleSendCasual} = useChatIPCDispatcher()
     const {taskChat, yakExecResult} = useAIChatUIData()
@@ -123,6 +123,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         modalInfo={{
                             time: Timestamp,
                             callToolId: data.callToolId,
+                            aiFilePath: data.dirPath,
                             title: item.AIModelName,
                             icon: item.AIService
                         }}
@@ -180,7 +181,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     })
 
     const renderContent = useMemoizedFn(() => {
-        if (isStream) return <StreamingChatContent {...item} streamClassName={aiStreamNodeProps} />
+        if (isStream) return <StreamingChatContent {...item} hasNext={hasNext} streamClassName={aiStreamNodeProps} />
         return (
             <StaticChatContent
                 {...item}

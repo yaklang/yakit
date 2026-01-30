@@ -110,9 +110,11 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     } = useChatIPCStore().chatIPCData
     const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
 
-    const renderItem = (item?: ReActChatRenderItem) => {
+    const renderItem = (index: number, item?: ReActChatRenderItem) => {
         if (!item?.token) return null
-        return <AIChatListItem key={item.token} item={item} type='re-act' />
+        // 下一个内容存在
+        const hasNext = chats.elements.length - index > 1
+        return <AIChatListItem key={item.token} hasNext={hasNext} item={item} type='re-act' />
     }
 
     const Item = useCallback(
@@ -161,7 +163,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 atBottomStateChange={setIsAtBottomRef}
                 data={chats.elements}
                 followOutput={followOutput}
-                itemContent={(_, item) => renderItem(item)}
+                itemContent={(index, item) => renderItem(index, item)}
                 initialTopMostItemIndex={{index: "LAST"}}
                 components={components}
                 atBottomThreshold={50}

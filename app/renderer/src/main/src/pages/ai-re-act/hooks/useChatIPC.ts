@@ -277,13 +277,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                 handleFocusModeChange(data.react_task_id, data.focus_mode)
             }
 
-            handleNotifyMessage({
-                Type,
-                NodeId,
-                NodeIdVerbose,
-                Timestamp,
-                Content: data.react_task_input
-            })
+            // handleNotifyMessage({
+            //     Type,
+            //     NodeId,
+            //     NodeIdVerbose,
+            //     Timestamp,
+            //     Content: data.react_task_input
+            // })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
