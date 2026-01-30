@@ -76,7 +76,6 @@ const AIStreamNode: FC<{
                     [查看文献]
                 </YakitButton>
             </YakitPopover>
-            <br />
         </div>
     )
 }
@@ -136,6 +135,7 @@ const AIGroupStreamCard: FC<{
         const el = contentRef.current
         if (!el || !expand) return
         if (!allowAutoScrollRef.current) return
+        if (hasNext) return 
         requestAnimationFrame(() => {
             el.scrollTo({top: el.scrollHeight, behavior: "smooth"})
         })
@@ -153,7 +153,7 @@ const AIGroupStreamCard: FC<{
             cancelAnimationFrame(rafId)
             observer.disconnect()
         }
-    }, [elements.length, expand])
+    }, [elements.length, expand, hasNext])
 
     useEffect(() => {
         if (hasNext) {
