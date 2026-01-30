@@ -3598,7 +3598,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ExcludePath: params.ExcludePath,
             IncludeSuffix: params.IncludeSuffix,
             ExcludeSuffix: params.ExcludeSuffix,
-            ExcludeKeywords: params.ExcludeKeywords
+            ExcludeKeywords: params.ExcludeKeywords,
+            ExcludeStatusCode: params.ExcludeStatusCode
         }
         return obj
     }, [props.params, pageType, runTimeId, params])
