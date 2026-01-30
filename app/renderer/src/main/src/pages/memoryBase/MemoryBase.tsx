@@ -92,10 +92,10 @@ const MemoryBase: React.FC<MemoryBaseProps> = React.memo((props) => {
 export default MemoryBase
 
 const searchOptions: YakitCombinationSearchProps["addonBeforeOption"] = [
-    {
-        label: "语义搜索",
-        value: "ai"
-    },
+    // {
+    //     label: "语义搜索",
+    //     value: "ai"
+    // },
     {
         label: "关键字",
         value: "keyword"
