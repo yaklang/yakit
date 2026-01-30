@@ -67,6 +67,9 @@ import {cloneDeep} from "lodash"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {yakitNotify} from "@/utils/notification"
+import {NoPromptHint} from "../pluginHub/utilsUI/UtilsTemplate"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
 
 const {YakitPanel} = YakitCollapse
 
@@ -90,11 +93,82 @@ export default MemoryBase
 const searchOptions: YakitCombinationSearchProps["addonBeforeOption"] = [
     {
         label: "ai",
-        value: "ai"
+        value: "ai搜索"
     },
     {
         label: "关键字",
         value: "keyword"
+    }
+]
+
+interface RateRemoveListItem {
+    label: string
+    key: string
+    params: AIMemoryEntityFilter
+}
+const rateRemoveList: RateRemoveListItem[] = [
+    {
+        label: "低相关",
+        key: "delete_candidate_noise",
+        params: {
+            RScore: {
+                Enabled: true,
+                Max: 0.15,
+                Min: 0.0
+            }
+        }
+    },
+    {
+        label: "强负面且低信息量",
+        key: "delete_candidate_emotional",
+        params: {
+            EScore: {
+                Enabled: true,
+                Max: 0.15,
+                Min: 0.0
+            },
+            RScore: {
+                Enabled: true,
+                Max: 0.5,
+                Min: 0.0
+            },
+            AScore: {
+                Enabled: true,
+                Max: 0.45,
+                Min: 0.0
+            },
+            PScore: {
+                Enabled: true,
+                Max: 0.55,
+                Min: 0.0
+            }
+        }
+    },
+    {
+        label: "疑似过时且无复用价值",
+        key: "delete_candidate_stale",
+        params: {
+            TScore: {
+                Enabled: true,
+                Max: 0.15,
+                Min: 0.0
+            },
+            RScore: {
+                Enabled: true,
+                Max: 0.45,
+                Min: 0.0
+            },
+            AScore: {
+                Enabled: true,
+                Max: 0.6,
+                Min: 0.0
+            },
+            PScore: {
+                Enabled: true,
+                Max: 0.7,
+                Min: 0.0
+            }
+        }
     }
 ]
 const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
@@ -431,6 +505,33 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     const disabledBatchRemove = useCreation(() => {
         return selectList.length === 0 && !allCheck
     }, [selectList, allCheck])
+
+    const [visibleRemove, setVisibleRemove] = useState<boolean>(false)
+    const removeItemRef = useRef<RateRemoveListItem>()
+    const onFastRemove = useMemoizedFn((key) => {
+        const item = rateRemoveList.find((ele) => ele.key === key)
+        if (!item) {
+            yakitNotify("error", "未找到快捷删除配置")
+            return
+        }
+        removeItemRef.current = item
+        setVisibleRemove(true)
+    })
+    const delHintCallback = useMemoizedFn((isOk: boolean) => {
+        if (isOk) {
+            if (!removeItemRef.current) return
+            const filterParams: AIMemoryEntityFilter = {...removeItemRef.current.params}
+            grpcDeleteAIMemoryEntity({
+                Filter: filterParams
+            }).then(() => {
+                yakitNotify("success", `已删除${removeItemRef.current?.label}的相关记忆`)
+                setVisibleRemove(false)
+                debugVirtualTableEvent.noResetRefreshT()
+            })
+        } else {
+            setVisibleRemove(false)
+        }
+    })
     return (
         <div className={styles["memory-table-wrapper"]}>
             <div className={styles["memory-table"]} ref={tableBoxRef}>
@@ -485,7 +586,22 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                             onSearch: onSearch
                                         }}
                                     />
-                                    {/* <YakitButton type='outline2'>智能删除</YakitButton> */}
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: rateRemoveList,
+                                            onClick: ({key}) => {
+                                                onFastRemove(key)
+                                            }
+                                        }}
+                                        dropdown={{
+                                            trigger: ["click"],
+                                            placement: "bottom"
+                                        }}
+                                    >
+                                        <YakitButton className={styles["btn-style"]} type='outline1'>
+                                            快捷删除
+                                        </YakitButton>
+                                    </YakitDropdownMenu>
                                     <YakitPopconfirm title={"确定删除吗?"} onConfirm={onBatchRemove}>
                                         <YakitButton danger type='outline1' disabled={disabledBatchRemove}>
                                             批量删除
@@ -547,6 +663,13 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                     </div>
                 </div>
             )}
+            <NoPromptHint
+                visible={visibleRemove}
+                title='删除确认'
+                content={`是否确认删除${removeItemRef.current?.label}的所有相关记忆,删除后不可恢复`}
+                cacheKey={RemoteAIAgentGV.AIMemoryRemove}
+                onCallback={delHintCallback}
+            />
         </div>
     )
 })
@@ -625,71 +748,6 @@ const rateOption: YakitSelectProps["options"] = [
     }
 ]
 
-const rateRemoveList = [
-    {
-        label: "低相关",
-        value: "delete_candidate_noise",
-        params: {
-            RScore: {
-                Enabled: true,
-                Max: 0.15,
-                Min: 0.0
-            }
-        }
-    },
-    {
-        label: "强负面且低信息量",
-        value: "delete_candidate_emotional",
-        params: {
-            EScore: {
-                Enabled: true,
-                Max: 0.15,
-                Min: 0.0
-            },
-            RScore: {
-                Enabled: true,
-                Max: 0.5,
-                Min: 0.0
-            },
-            AScore: {
-                Enabled: true,
-                Max: 0.45,
-                Min: 0.0
-            },
-            PScore: {
-                Enabled: true,
-                Max: 0.55,
-                Min: 0.0
-            }
-        }
-    },
-    {
-        label: "疑似过时且无复用价值",
-        value: "delete_candidate_stale",
-        params: {
-            TScore: {
-                Enabled: true,
-                Max: 0.15,
-                Min: 0.0
-            },
-            RScore: {
-                Enabled: true,
-                Max: 0.45,
-                Min: 0.0
-            },
-            AScore: {
-                Enabled: true,
-                Max: 0.6,
-                Min: 0.0
-            },
-            PScore: {
-                Enabled: true,
-                Max: 0.7,
-                Min: 0.0
-            }
-        }
-    }
-]
 const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(true)
     const [tags, setTags] = useState<CountAIMemoryEntityTagsResponse["TagsCount"]>([])
@@ -703,7 +761,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         trigger: "setSelectQuery",
         valuePropName: "selectQuery"
     })
-    const [rateMode, setRateMode] = useState<RateModeType>()
+    const [rateMode, setRateMode] = useState<RateModeType>("must_aware")
     const [tagMatchAll, setTagMatchAll] = useState<boolean>(selectQuery.tagMatchAll)
     const [selectRateList, setSelectRateList] = useState<MemorySelectQuery["rate"]>(cloneDeep(ratingList))
     const [selectAllRate, setSelectAllRate] = useState<boolean>(false)
@@ -711,8 +769,13 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     const leftSideRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(leftSideRef)
     useEffect(() => {
-        if (inViewport) getTags()
+        if (inViewport) {
+            getTags()
+        }
     }, [inViewport])
+    useEffect(() => {
+        onRateSelect("must_aware")
+    }, [])
     useEffect(() => {
         if (selectQuery.rate.length === 0) {
             setSelectRateList(cloneDeep(ratingList))
@@ -814,12 +877,38 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     })
     const onResetRate = useMemoizedFn((e) => {
         e.stopPropagation()
+        setTagMatchAll(false)
+
+        let r, p
+        ratingList.forEach((ele) => {
+            if (ele.keyName === "RScore") {
+                r = ele
+            }
+            if (ele.keyName === "PScore") {
+                p = ele
+            }
+        })
+        const newRateQuery = [
+            {
+                ...r,
+                min: 0.7,
+                max: 1.0
+            },
+            {
+                ...p,
+                min: 0.75,
+                max: 1.0
+            }
+        ]
+        const newSelectRateList = ratingList
+            .filter((ele) => ele.keyName !== "RScore" && ele.keyName !== "PScore")
+            .concat(newRateQuery)
         setSelectQuery((prev) => ({
             ...prev,
-            rate: []
+            rate: [...newRateQuery]
         }))
-        setTagMatchAll(false)
-        setSelectRateList(cloneDeep(ratingList))
+        setSelectRateList([...newSelectRateList])
+        setRateMode("must_aware")
     })
     const onResetTags = useMemoizedFn((e) => {
         e.stopPropagation()
