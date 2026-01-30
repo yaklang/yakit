@@ -29,10 +29,62 @@ let engineLinkWin = null
 /** 是否展示关闭二次确认弹窗的标志位 */
 let closeFlag = true
 
+// 收集GPU信息用于诊断
+const gpuFeatures = app.getGPUFeatureStatus()
+// 根据GPU状态决定是否禁用硬件加速
+function configureGPU() {
+    const platform = process.platform
+
+    // 1️、用户显式指定
+    if (process.argv.includes("--disable-gpu")) {
+        app.disableHardwareAcceleration()
+        return "disabled_by_flag"
+    }
+
+    // 2️、明确的软件回退信号
+    const fatalStates = new Set(["disabled_software", "unavailable_software", "disabled"])
+
+    if (fatalStates.has(gpuFeatures.gpu_compositing)) {
+        app.disableHardwareAcceleration()
+        return "software_detected"
+    }
+
+    // 3️、扫描所有 GPU feature
+    let hasFatal = false
+    Object.entries(gpuFeatures).forEach(([key, value]) => {
+        if (typeof value === "string" && value.includes("software")) {
+            renderLogOutputFile(`[GPU] Software fallback: ${key}=${value}`)
+            hasFatal = true
+        }
+    })
+    if (hasFatal) {
+        app.disableHardwareAcceleration()
+        return "software_fallback"
+    }
+
+    // 4️、平台微调（保守）
+    if (platform === "win32") {
+        // Windows优化
+        app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion")
+    } else if (platform === "darwin") {
+        // macOS优化
+        app.commandLine.appendSwitch("disable-gpu-sandbox")
+    } else if (platform === "linux") {
+        // Linux优化
+        app.commandLine.appendSwitch("disable-features", "UseOzonePlatform")
+    }
+    return "hardware"
+}
+// 应用GPU配置
+const gpuMode = configureGPU()
+
 process.on("uncaughtException", (error) => {
     try {
         console.info(error)
-        win.webContents.send("debug-print-log", `[Main] index / uncaughtException => ${error?.message || JSON.stringify(error)}`)
+        win.webContents.send(
+            "debug-print-log",
+            `[Main] index / uncaughtException => ${error?.message || JSON.stringify(error)}`
+        )
     } catch (error) {}
 })
 
@@ -97,6 +149,10 @@ function createEngineLinkWindow() {
 
     engineLinkWin.webContents.on("will-navigate", (e) => e.preventDefault())
 
+    engineLinkWin.webContents.on("did-fail-load", (event, errorCode, errorDescription) => {
+        renderLogOutputFile(`[engineLink] Failed to load: ${errorCode} ${errorDescription}`)
+    })
+
     engineLinkWin.on("show", () => {
         state.manage(engineLinkWin)
     })
@@ -146,8 +202,7 @@ function createWindow() {
         },
         titleBarStyle: "hidden",
         show: false,
-        skipTaskbar: true,
-        paintWhenInitiallyHidden: false
+        skipTaskbar: true
     })
 
     if (isDev) win.loadURL("http://127.0.0.1:3000")
@@ -167,6 +222,10 @@ function createWindow() {
         renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
         if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
         require("./handlers/logger").saveLogs()
+    })
+
+    win.webContents.on("did-fail-load", (event, errorCode, errorDescription) => {
+        renderLogOutputFile(`[Main] Failed to load: ${errorCode} ${errorDescription}`)
     })
 
     win.on("show", () => {
@@ -226,40 +285,158 @@ function winHide(targetWin) {
         targetWin.setSkipTaskbar(true)
     }
 }
-// 窗口显示
-function winShow(targetWin) {
+// 窗口显示 - 增强版防黑屏
+function winShow(targetWin, windowType) {
     if (targetWin && !targetWin.isDestroyed()) {
+        renderLogOutputFile(`[winShow] Attempting to show window: ${targetWin.webContents.getURL()}`)
         let shown = false
-
         const show = () => {
-            if (shown) return
+            if (shown) {
+                return
+            }
             shown = true
-            targetWin.show()
-            targetWin.focus()
-            targetWin.setSkipTaskbar(false)
+
+            try {
+                targetWin.show()
+                targetWin.focus()
+                targetWin.setSkipTaskbar(false)
+                // 显示后检查内容
+                setTimeout(() => {
+                    checkWindowContent()
+                }, 1000)
+            } catch (error) {
+                renderLogOutputFile(`[winShow] Error showing ${windowType} window: ${error}`)
+            }
         }
 
-        /**
-         * 情况 1：大多数时候
-         * renderer 已经可绘制了
-         */
-        if (!targetWin.webContents.isLoadingMainFrame()) {
+        // 检查窗口内容是否已渲染
+        const checkWindowContent = () => {
+            targetWin.webContents
+                .executeJavaScript(
+                    `
+            (function() {
+                try {
+                    const body = document.body;
+                    const hasContent = body && body.children.length > 0;
+                    const computedStyle = body ? window.getComputedStyle(body) : null;
+                    const isVisible = computedStyle && 
+                                    computedStyle.display !== 'none' && 
+                                    computedStyle.visibility !== 'hidden' &&
+                                    computedStyle.opacity !== '0';
+                    
+                    return {
+                        success: true,
+                        hasContent: hasContent,
+                        isVisible: isVisible,
+                        readyState: document.readyState,
+                        childCount: body ? body.children.length : 0,
+                        hasCanvas: !!document.querySelector('canvas'),
+                        hasImages: !!document.querySelector('img'),
+                        timestamp: Date.now()
+                    };
+                } catch (err) {
+                    return {
+                        success: false,
+                        error: err.message,
+                        timestamp: Date.now()
+                    };
+                }
+            })();
+        `
+                )
+                .then((result) => {
+                    renderLogOutputFile(`[winShow] Content check result for ${windowType}: ${JSON.stringify(result)}`)
+                    if (result.success && !result.hasContent && targetWin.isVisible()) {
+                        renderLogOutputFile(`[winShow] ${windowType} window visible but no content detected`)
+                        // 触发重绘策略
+                        triggerRepaintStrategies()
+                    }
+                })
+                .catch((err) => {
+                    renderLogOutputFile(`[winShow] Content check failed for ${windowType}: ${err}`)
+                })
+        }
+
+        // 触发重绘策略
+        const triggerRepaintStrategies = () => {
+            renderLogOutputFile(`[winShow] Triggering repaint strategies for ${windowType} window`)
+
+            // 策略1: 强制重绘
+            setTimeout(() => {
+                targetWin.webContents
+                    .executeJavaScript(
+                        `
+                    (function() {
+                        // 强制重绘
+                        document.body && document.body.style && (document.body.style.display = 'none');
+                        setTimeout(() => {
+                            document.body && document.body.style && (document.body.style.display = '');
+                        }, 16);
+                        return 'forced-repaint';
+                    })();
+                `
+                    )
+                    .then(() => {
+                        renderLogOutputFile(`[winShow] Strategy 1: Forced repaint`)
+                    })
+                    .catch((err) => {
+                        renderLogOutputFile(`[winShow] Strategy 1 error: ${err}`)
+                    })
+            }, 500)
+
+            // 策略2: 如果仍然没有内容，重新加载
+            setTimeout(() => {
+                targetWin.webContents
+                    .executeJavaScript(
+                        `
+                    document.body && document.body.children.length > 0
+                `
+                    )
+                    .then((hasContent) => {
+                        if (!hasContent) {
+                            renderLogOutputFile(`[winShow] Strategy 2: No content after 1s, reloading...`)
+                            targetWin.webContents.reload()
+                        }
+                    })
+                    .catch(() => {})
+            }, 1000)
+        }
+
+        // 情况1: 如果窗口已经显示，直接返回
+        if (targetWin.isVisible()) {
+            return
+        }
+
+        // 情况2: 内容已加载完成且URL有效
+        if (!targetWin.webContents.isLoading() && targetWin.webContents.getURL()) {
+            renderLogOutputFile(`[winShow] ${windowType} - Case 2: Content already loaded`)
             show()
             return
         }
 
-        /**
-         * 情况 2：GPU / renderer 较慢
-         * 尝试等 ready-to-show
-         */
-        targetWin.once("ready-to-show", () => {
+        // 设置超时保护
+        const loadTimeout = setTimeout(() => {
+            renderLogOutputFile(`[winShow] ${windowType} - Case 6: Load timeout (5s)`)
+            show()
+        }, 5000)
+
+        // 情况3: 等待加载完成
+        targetWin.webContents.once("did-finish-load", () => {
+            renderLogOutputFile(`[winShow] ${windowType} - Case 3: Content loaded`)
+            clearTimeout(loadTimeout)
             show()
         })
 
-        /**
-         * 情况 3：ready-to-show 太晚
-         */
+        // 情况4: ready-to-show 事件
+        targetWin.once("ready-to-show", () => {
+            renderLogOutputFile(`[winShow] ${windowType} - Case 4: Ready-to-show event`)
+            clearTimeout(loadTimeout)
+            show()
+        })
+
+        // 情况5: 最终fallback
         setTimeout(() => {
+            renderLogOutputFile(`[winShow] ${windowType} - Case 5: Fallback after 500ms`)
             show()
         }, 500)
     }
@@ -301,7 +478,7 @@ function registerGlobalIPC() {
         winHide(win)
         engineLinkWin.webContents.reload()
         setTimeout(() => {
-            winShow(engineLinkWin)
+            winShow(engineLinkWin, "engineLink")
         }, 500)
         return
     })
@@ -311,7 +488,7 @@ function registerGlobalIPC() {
         winHide(win)
         engineLinkWin.webContents.reloadIgnoringCache()
         setTimeout(() => {
-            winShow(engineLinkWin)
+            winShow(engineLinkWin, "engineLink")
         }, 500)
         return
     })
@@ -329,14 +506,14 @@ function registerGlobalIPC() {
     // engineLink 完成操作
     ipcMain.handle("engineLinkWin-done", async (event, data) => {
         winHide(engineLinkWin)
-        winShow(win)
+        winShow(win, "Main")
         safeSend(win, "from-engineLinkWin", data)
     })
 
     // win 完成操作
     ipcMain.handle("yakitMainWin-done", async (event, data) => {
         winHide(win)
-        winShow(engineLinkWin)
+        winShow(engineLinkWin, "engineLink")
         safeSend(engineLinkWin, "from-win", data)
     })
 
@@ -369,8 +546,8 @@ function registerGlobalIPC() {
             const showIcon = isIRify
                 ? "../assets/irify-close.png"
                 : isMemfit
-                ? "../assets/memfit-close.png"
-                : "../assets/yakit-close.png"
+                  ? "../assets/memfit-close.png"
+                  : "../assets/yakit-close.png"
 
             dialog
                 .showMessageBox(parentWindow, {
@@ -435,7 +612,7 @@ app.whenReady().then(() => {
      * 不存在则新建文件夹
      */
     initAllLogFolders()
-
+    getAllLogHandles()
     /** 获取缓存数据并储存于软件内 */
     initLocalCache()
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
@@ -474,10 +651,6 @@ app.whenReady().then(() => {
         const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
         callback(filePath)
     })
-
-    try {
-        getAllLogHandles()
-    } catch (error) {}
 
     createEngineLinkWindow()
     createWindow()
