@@ -357,8 +357,27 @@
     }
 }
 
-.extract-results {
-    padding: 8px 24px;
-    max-height: 70vh;
-    overflow-y: auto;
+.instructions-search-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .search-box {
+        display: flex;
+        justify-content: flex-end;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        background-color: var(--Colors-Use-Neutral-Bg);
+    }
+
+    .extract-results {
+        flex: 1;
+        padding: 8px 24px;
+        max-height: 70vh;
+        overflow-y: auto;
+
+        mark[data-search-highlight] {
+            background-color: var(--Colors-Use-Main-Hover);
+        }
+    }
 }
