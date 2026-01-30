@@ -66,7 +66,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 return {
                     setMention: (v) => onSetMention(v),
                     setValue: (v) => onSetValue(v),
-                    getValue: () => getMarkdownValue()
+                    getValue: () => getMarkdownValue(),
+                    editorMilkdown: editorMilkdown.current
                 }
             },
             []

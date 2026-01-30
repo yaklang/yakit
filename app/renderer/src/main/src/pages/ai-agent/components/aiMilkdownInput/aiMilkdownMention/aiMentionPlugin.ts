@@ -29,7 +29,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
                 return {
                     mentionId: dom.getAttribute("data-mention-id"),
                     mentionType: dom.getAttribute("data-mention-type"),
-                    mentionName: dom.getAttribute("data-mention-name")
+                    mentionName: dom.getAttribute("data-mention-name"),
+                    lock: dom.getAttribute("data-lock") === "true" // 新增 lock
                 }
             }
         }
@@ -43,7 +44,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
                 ...ctx.get(aiMentionCustomAttr.key)(node),
                 "data-mention-id": node.attrs.mentionId,
                 "data-mention-type": node.attrs.mentionType,
-                "data-mention-name": node.attrs.mentionName
+                "data-mention-name": node.attrs.mentionName,
+                "data-lock": node.attrs.lock ? "true" : "false" // 新增 lock
             },
             0
         ]
@@ -85,7 +87,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
     attrs: {
         mentionId: {default: "0"},
         mentionType: {default: ""},
-        mentionName: {default: ""}
+        mentionName: {default: ""},
+        lock: {default: false} // 默认不可锁
     }
 }))
 
@@ -93,6 +96,7 @@ export interface AIMentionCommandParams {
     mentionId: string
     mentionType: iconMapType
     mentionName: string
+    lock?: boolean // 新增 lock 属性
 }
 export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     `command-${aiMentionCustomId}`,
@@ -100,7 +104,7 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
         if (!params) return false
         const {selection, tr} = state
         if (!(selection instanceof TextSelection)) return false
-        const {mentionType, mentionId, mentionName} = params
+        const {mentionType, mentionId, mentionName, lock} = params
         const {from} = selection
         tr.deleteRange(from - 1, from)
         const fragment = state.schema.text(`${mentionName}`)
@@ -108,7 +112,9 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
             tr
                 .setMeta(aiMentionCustomId, true)
                 .replaceSelectionWith(
-                    aiMentionCustomSchema.type(ctx).create({mentionId: mentionId, mentionType, mentionName}, fragment)
+                    aiMentionCustomSchema
+                        .type(ctx)
+                        .create({mentionId, mentionType, mentionName, lock: lock ?? false}, fragment)
                 )
                 .scrollIntoView()
         )

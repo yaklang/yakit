@@ -22,37 +22,12 @@ import {
 } from "@/assets/icon/outline"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
+import {downloadWithEvents} from "../utils"
 
 const {ipcRenderer} = window.require("electron")
 
-export const installWithEvents = (binary: {Name: string; Force: boolean}, token: string) => {
-    return new Promise<void>((resolve, reject) => {
-        let settled = false
-
-        const safeResolve = () => {
-            if (!settled) {
-                settled = true
-                resolve()
-            }
-        }
-
-        const safeReject = (err) => {
-            if (!settled) {
-                settled = true
-                reject(err)
-            }
-        }
-
-        ipcRenderer.invoke("InstallThirdPartyBinary", binary, token).catch(safeReject)
-
-        ipcRenderer.once(`${token}-end`, () => {
-            safeResolve()
-        })
-
-        ipcRenderer.once(`${token}-error`, (_, error) => {
-            safeReject(error)
-        })
-    })
+export const installWithEvents = (url: string, binary: {Name: string; Force: boolean}, token: string) => {
+    return downloadWithEvents(url, binary, token)
 }
 
 const onCloseKnowledgeRepository = () => {
@@ -94,7 +69,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
 
                 // 并发执行安装
                 const promises = emptyInstallPathItem.map((b) =>
-                    installWithEvents({Name: b.Name, Force: true}, b.installToken)
+                    installWithEvents("InstallThirdPartyBinary", {Name: b.Name, Force: true}, b.installToken)
                 )
                 await Promise.all(promises)
             }
@@ -155,6 +130,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
 
         return () => {
             installTokens.forEach((token) => {
+                ipcRenderer.invoke("cancel-InstallThirdPartyBinary", token)
                 ipcRenderer.removeAllListeners(`${token}-data`)
                 ipcRenderer.removeAllListeners(`${token}-error`)
                 ipcRenderer.removeAllListeners(`${token}-end`)
@@ -176,7 +152,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                 return prev
             })
 
-            await installWithEvents({Name: binary.Name, Force: true}, binary.installToken)
+            await installWithEvents("InstallThirdPartyBinary", {Name: binary.Name, Force: true}, binary.installToken)
             await binariesToInstallRefreshAsync()
             success(`${binary.Name} 下载完成`)
             onInstallPlug(false)

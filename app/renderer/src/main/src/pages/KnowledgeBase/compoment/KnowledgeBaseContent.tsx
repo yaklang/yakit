@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect, useRef} from "react"
+import React, {Dispatch, SetStateAction, useMemo, forwardRef, useImperativeHandle, memo, useEffect, useRef} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 
@@ -48,17 +48,17 @@ import {AIInputEvent} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {cloneDeep} from "lodash"
-import {AIAgentSettingDefault, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
+import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {AIAgentSetting, AITabsEnumType} from "@/pages/ai-agent/aiAgentType"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
-import {Form, Progress} from "antd"
+import {Form, Progress, Tooltip} from "antd"
 import {ImportModal} from "./ImportModal"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -78,6 +78,8 @@ import {KnowledgeBaseGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {GuideFooter} from "./GuideFooter"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinePlusIcon} from "@/assets/newIcon"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -366,7 +368,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     })
 
     // TODO  AI 召回逻辑
-
     // #region 问题相关逻辑
     const aiReActChatRef = useRef<AIReActChatRefProps>(null)
 
@@ -567,26 +568,43 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         }
     }
 
-    useUpdateEffect(() => {
-        if (showFreeChat) {
-            handleSendAfter()
-        }
+    useEffect(() => {
+        if (!showFreeChat || !knowledgeBaseID) return
+
+        handleSendAfter()
     }, [showFreeChat, knowledgeBaseID])
+
+    useEffect(() => {
+        if (inViewport) {
+            queueMicrotask(() => {
+                aiReActChatRef.current?.setValue("")
+                handleSendAfter()
+            })
+        }
+    }, [inViewport])
 
     const [refreshOlineRag, setRefreshOlineRag] = useSafeState(false)
 
-    const handleSendAfter = () => {
+    // 跳转 ai agent 所需携带参数
+    const generatreMention = useMemoizedFn(() => {
         const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
-        if (!!targetKnowledgeBase) {
-            setTimeout(() => {
-                aiReActChatRef.current?.setMention({
-                    mentionId: targetKnowledgeBase.ID,
-                    mentionType: "knowledgeBase",
-                    mentionName: targetKnowledgeBase.KnowledgeBaseName
-                })
+        if (!targetKnowledgeBase) return
+
+        queueMicrotask(() => {
+            aiReActChatRef.current?.setMention({
+                mentionId: targetKnowledgeBase.ID,
+                mentionType: "knowledgeBase",
+                mentionName: targetKnowledgeBase.KnowledgeBaseName,
+                lock: true
             })
-        }
-    }
+        })
+    })
+
+    const handleSendAfter = useMemoizedFn(() => {
+        requestAnimationFrame(() => {
+            generatreMention()
+        })
+    })
 
     const onSendRequest = useMemoizedFn((data: AISendParams) => {
         return new Promise<AISendResProps>((resolve) => {
@@ -764,6 +782,31 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                         ref={aiReActChatRef}
                                         startRequest={onStartRequest}
                                         sendRequest={onSendRequest}
+                                        externalParameters={{
+                                            rightIcon: (
+                                                <React.Fragment>
+                                                    <Tooltip title='新建对话'>
+                                                        <YakitButton
+                                                            type='text2'
+                                                            icon={<OutlinePlusIcon />}
+                                                            onClick={() => {
+                                                                if (activeID) {
+                                                                    events.onClose(activeID)
+                                                                    knowledgeBaseDataStore.set(activeID, chatIPCData)
+                                                                    events.onReset()
+                                                                    onChatFromHistory(activeID)
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                    <YakitButton
+                                                        type='text2'
+                                                        icon={<OutlineXIcon />}
+                                                        onClick={() => setShowFreeChat(false)}
+                                                    />
+                                                </React.Fragment>
+                                            )
+                                        }}
                                     />
                                 </div>
                             ) : null

@@ -52,6 +52,7 @@ import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 import {AIChatContentRefProps} from "../aiChatContent/type"
+import {PageNodeItemProps} from "@/store/pageInfo"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -69,6 +70,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
 
     const aiReActChatRef = useRef<AIChatContentRefProps>(null)
+    const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
 
     // 插件并发构建流 hooks
     const [streams, api] = useMultipleHoldGRPCStream()
@@ -594,6 +596,31 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         aiChatDataStore.remove(session)
     })
 
+    useEffect(() => {
+        emiter.on("defualtAIMentionCommandParams", konwledgeInputStringFn)
+        return () => {
+            emiter.off("defualtAIMentionCommandParams", konwledgeInputStringFn)
+        }
+    }, [])
+
+    const konwledgeInputStringFn = useMemoizedFn((params: string) => {
+        const currentRef = mode === "welcome" ? aiChatWelcomeRef : aiReActChatRef
+        try {
+            const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
+
+            if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
+                data.defualtAIMentionCommandParams.forEach((item) => {
+                    currentRef.current?.setValue("")
+                    currentRef.current?.setMention?.({
+                        mentionId: item.mentionId,
+                        mentionType: item.mentionType,
+                        mentionName: item.mentionName
+                    })
+                })
+            }
+        } catch (error) {}
+    })
+
     return (
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
             <ChatIPCContent.Provider value={{store, dispatcher}}>
@@ -605,6 +632,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                                 onSetReAct={onSetReAct}
                                 api={api}
                                 streams={streams}
+                                ref={aiChatWelcomeRef}
                             />
                         </React.Suspense>
                     ) : (

@@ -5,7 +5,7 @@ import {AIHandleStartResProps, AIReActChatProps, AISendResProps} from "./AIReAct
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {ColorsChatIcon} from "@/assets/icon/colors"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
@@ -16,7 +16,7 @@ import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButto
 import {AIInputEvent, AIStartParams} from "../hooks/grpcApi"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
-import {PageNodeItemProps} from "@/store/pageInfo"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import emiter from "@/utils/eventBus/eventBus"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
@@ -25,6 +25,9 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {v4 as uuidv4} from "uuid"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {shallow} from "zustand/shallow"
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     forwardRef((props, ref) => {
@@ -34,7 +37,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             chatContainerHeaderClassName,
             title = "自由对话",
             sendRequest,
-            startRequest
+            startRequest,
+            externalParameters
         } = props
         const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
 
@@ -203,19 +207,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             } catch (error) {}
         })
 
-        useEffect(() => {
-            const konwledgeInputStringFn = (params: string) => {
-                try {
-                    const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-                    onSetQuestion(data?.inputString ?? "")
-                } catch (error) {}
-            }
-            emiter.on("konwledgeInputString", konwledgeInputStringFn)
-            return () => {
-                emiter.off("konwledgeInputString", konwledgeInputStringFn)
-            }
-        }, [])
-
         // #endregion
 
         const isShowRetract = useCreation(() => {
@@ -253,9 +244,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                     {focusMode && <YakitTag fullRadius={true}>专注模式:{focusMode}</YakitTag>}
                                 </div>
                                 <div className={styles["chat-header-extra"]}>
-                                    {isShowRetract && (
-                                        <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
-                                    )}
+                                    {isShowRetract &&
+                                        (externalParameters?.rightIcon ?? (
+                                            <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
+                                        ))}
                                 </div>
                             </div>
                             <AIReActChatContents chats={casualChat} />

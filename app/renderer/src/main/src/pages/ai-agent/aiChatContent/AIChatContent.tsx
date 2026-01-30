@@ -2,7 +2,7 @@ import React, {forwardRef, ReactNode, useEffect, useImperativeHandle, useMemo, u
 import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useCreation, useInterval, useMemoizedFn} from "ahooks"
+import {useCreation, useInterval, useInViewport, useMemoizedFn} from "ahooks"
 import {HorizontalScrollCard} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import classNames from "classnames"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
@@ -50,6 +50,7 @@ import {
     AIHandleStartResProps,
     AIReActChatRefProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
+import {PageNodeItemProps} from "@/store/pageInfo"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
@@ -408,6 +409,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 })
             })
         })
+
         return (
             <div className={styles["ai-chat-content-wrapper"]}>
                 <ExpandAndRetract

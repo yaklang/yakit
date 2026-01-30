@@ -618,7 +618,8 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
                 RelatedEntityUUIDS: "",
                 disableERM: "false",
                 concurrency: 10,
-                chunk: "Medium"
+                chunk: "Medium",
+                SerialVersionID: ""
             }
             return [value, ...(knowledgeBaseList || [])]
         }, [knowledgeBaseList])

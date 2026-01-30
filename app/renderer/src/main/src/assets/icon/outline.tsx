@@ -1,6 +1,7 @@
 import Icon from "@ant-design/icons"
 import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 import React from "react"
+import {v4 as uuidv4} from "uuid"
 
 interface IconProps extends CustomIconComponentProps {
     onClick: (e: React.MouseEvent) => void
@@ -6023,29 +6024,32 @@ export const OutlineListTodoIcon = (props: Partial<IconProps>) => {
     return <Icon component={ListTodo} {...props} />
 }
 
-const OutlinePlusSm = () => (
-    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
-        <g clipPath='url(#clip0_47688_39165)'>
-            <path
-                d='M12.2468 1.75357L9.3335 4.6669L8.2735 3.6069C8.02368 3.35857 7.68574 3.21918 7.3335 3.21918C6.98125 3.21918 6.64331 3.35857 6.3935 3.6069L5.3335 4.6669L11.3335 10.6669L12.3935 9.6069C12.6418 9.35709 12.7812 9.01915 12.7812 8.6669C12.7812 8.31466 12.6418 7.97672 12.3935 7.7269L11.3335 6.6669L14.2468 3.75357C14.512 3.48835 14.661 3.12864 14.661 2.75357C14.661 2.3785 14.512 2.01879 14.2468 1.75357C13.9816 1.48835 13.6219 1.33936 13.2468 1.33936C12.8718 1.33936 12.512 1.48835 12.2468 1.75357Z'
-                stroke='currentColor'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-            />
-            <path
-                d='M6.00016 5.3335C4.66683 7.3335 3.3335 7.66683 1.3335 8.00016L6.66683 14.6668C8.00016 14.0002 10.6668 11.3335 10.6668 10.0002'
-                stroke='currentColor'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-            />
-        </g>
-        <defs>
-            <clipPath id='clip0_47688_39165'>
-                <rect width='16' height='16' fill='white' />
-            </clipPath>
-        </defs>
-    </svg>
-)
+const OutlinePlusSm = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <g clipPath={`url(#${id})`}>
+                <path
+                    d='M12.2468 1.75357L9.3335 4.6669L8.2735 3.6069C8.02368 3.35857 7.68574 3.21918 7.3335 3.21918C6.98125 3.21918 6.64331 3.35857 6.3935 3.6069L5.3335 4.6669L11.3335 10.6669L12.3935 9.6069C12.6418 9.35709 12.7812 9.01915 12.7812 8.6669C12.7812 8.31466 12.6418 7.97672 12.3935 7.7269L11.3335 6.6669L14.2468 3.75357C14.512 3.48835 14.661 3.12864 14.661 2.75357C14.661 2.3785 14.512 2.01879 14.2468 1.75357C13.9816 1.48835 13.6219 1.33936 13.2468 1.33936C12.8718 1.33936 12.512 1.48835 12.2468 1.75357Z'
+                    stroke='currentColor'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M6.00016 5.3335C4.66683 7.3335 3.3335 7.66683 1.3335 8.00016L6.66683 14.6668C8.00016 14.0002 10.6668 11.3335 10.6668 10.0002'
+                    stroke='currentColor'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+            </g>
+            <defs>
+                <clipPath id={id}>
+                    <rect width='16' height='16' fill='white' />
+                </clipPath>
+            </defs>
+        </svg>
+    )
+}
 
 /**
  * @description  Outline/plus-sm
