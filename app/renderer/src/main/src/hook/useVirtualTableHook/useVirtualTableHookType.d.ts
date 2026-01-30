@@ -1,5 +1,6 @@
 import React from "react"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {APIFunc} from "@/apiUtils/type"
 export type useVirtualTableHookParams<T, DataT, DataKey> = {
     // 表格容器ref
     tableBoxRef: React.MutableRefObject<any>
@@ -8,7 +9,7 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
     // 表格容器ref
     boxHeightRef: React.MutableRefObject<any>
     // 请求接口
-    grpcFun: (params: ParamsTProps) => Promise<DataResponseProps<DataT, DataKey>>
+    grpcFun: APIFunc<ParamsTProps, DataResponseProps<DataT, DataKey>>
     // 默认请求参数
     defaultParams?: T
     // 第一次请求的回调
@@ -26,8 +27,8 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
 export type VirtualPaging = {
     Page: number
     Limit: number
-    Order?: "asc" | "desc" | string
-    OrderBy?: "created_at" | "updated_at" | string
+    Order: "asc" | "desc" | string
+    OrderBy: "created_at" | "updated_at" | string
     AfterId?: number
     BeforeId?: number
 }

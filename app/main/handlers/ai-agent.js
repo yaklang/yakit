@@ -403,4 +403,101 @@ module.exports = (win, getClient) => {
         return await asyncQueryAIFocus(params)
     })
     // #endregion
+    // #region AI-Memory AI记忆库
+    const asyncCreateAIMemoryEntity = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreateAIMemoryEntity(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 创建 AI-Memory AI记忆
+    ipcMain.handle("CreateAIMemoryEntity", async (e, params) => {
+        return await asyncCreateAIMemoryEntity(params)
+    })
+
+    const asyncUpdateAIMemoryEntity = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateAIMemoryEntity(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 更新 AI-Memory AI记忆
+    ipcMain.handle("UpdateAIMemoryEntity", async (e, params) => {
+        return await asyncUpdateAIMemoryEntity(params)
+    })
+
+    const asyncDeleteAIMemoryEntity = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAIMemoryEntity(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除 AI-Memory AI记忆
+    ipcMain.handle("DeleteAIMemoryEntity", async (e, params) => {
+        return await asyncDeleteAIMemoryEntity(params)
+    })
+
+    const asyncQueryAIMemoryEntity = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAIMemoryEntity(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 查询 AI-Memory AI记忆
+    ipcMain.handle("QueryAIMemoryEntity", async (e, params) => {
+        return await asyncQueryAIMemoryEntity(params)
+    })
+
+    const asyncGetAIMemoryEntity = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAIMemoryEntity(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取 AI-Memory AI记忆详情
+    ipcMain.handle("GetAIMemoryEntity", async (e, params) => {
+        return await asyncGetAIMemoryEntity(params)
+    })
+
+    const asyncCountAIMemoryEntityTags = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CountAIMemoryEntityTags(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取 AI-Memory tag统计
+    ipcMain.handle("CountAIMemoryEntityTags", async (e, params) => {
+        return await asyncCountAIMemoryEntityTags(params)
+    })
+    // #endregion
 }

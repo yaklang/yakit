@@ -12,6 +12,9 @@ export type RefreshDataEventProps = {
     // 通知CodeScan轮询更新
     onRefreshCodeScanResult: string
 
+    // 通知QueryAIMemoryEntity轮询更新
+    onRefreshQueryAIMemoryEntity: string
+
     // WebSocket通知
     onRefreshMessageSocket: string
 
