@@ -17,7 +17,7 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
-import {isEnpriTrace, isYakit} from "@/utils/envfile"
+import {isYakitOrEnpriTrace, isYakit} from "@/utils/envfile"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import classNames from "classnames"
 import {ExtraMenuItem, getExtraMenu} from "@/routes/newRoute"
@@ -228,6 +228,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         )}
                     </>
                 )}
+                {isYakitOrEnpriTrace() ?
                 <YakitPopover
                     placement={"bottom"}
                     overlayClassName={styles["management-menu-wrapper"]}
@@ -248,7 +249,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     <YakitButton type='secondary2' icon={<SolidPayloadIcon />}>
                         {managementTitle}
                     </YakitButton>
-                </YakitPopover>
+                </YakitPopover> : null}
                 <OrdinaryMenu menuList={getExtraMenu(softMode)} onMenuSelect={onMenuSelect} />
             </>
         )

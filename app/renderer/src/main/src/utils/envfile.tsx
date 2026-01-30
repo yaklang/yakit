@@ -115,6 +115,13 @@ export const isYakit = () => {
     )
 }
 
+export const isYakitOrEnpriTrace = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+    )
+}
+
 export const isEnterpriseOrSimpleEdition = () => {
     switch (GetReleaseEdition()) {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:

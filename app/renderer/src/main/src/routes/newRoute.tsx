@@ -1465,10 +1465,6 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
             ...YakitRouteToPageInfo[YakitRoute.Codec]
         },
         {
-            page: YakitRoute.PayloadManager,
-            ...YakitRouteToPageInfo[YakitRoute.PayloadManager]
-        },
-        {
             page: YakitRoute.DataCompare,
             ...YakitRouteToPageInfo[YakitRoute.DataCompare]
         },
@@ -1744,11 +1740,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                         page: YakitRoute.Codec,
                         icon: <SolidCodecIcon />,
                         ...YakitRouteToPageInfo[YakitRoute.Codec]
-                    },
-                    {
-                        page: YakitRoute.PayloadManager,
-                        icon: <SolidPayloadIcon />,
-                        ...YakitRouteToPageInfo[YakitRoute.PayloadManager]
                     },
                     {
                         page: YakitRoute.DataCompare,
