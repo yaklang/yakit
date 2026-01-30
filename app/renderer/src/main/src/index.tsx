@@ -12,15 +12,12 @@ import "./yakitLib.scss"
 import "./assets/global.scss"
 import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
-import {getLocalValue, getRemoteValue} from "./utils/kv"
-import {GetMainColor, getRemoteI18nGV, isCommunityYakit} from "./utils/envfile"
+import {getLocalValue} from "./utils/kv"
+import {GetMainColor, getRemoteI18nGV} from "./utils/envfile"
 import i18n from "@/i18n/i18n"
 import {useTheme} from "./hook/useTheme"
 import {generateAllThemeColors} from "./yakit-colors-generator"
 import { debugToPrintLogs } from "./utils/logCollection"
-import { RemoteSoftModeGV } from "./enums/softMode"
-import {useSoftMode} from "@/store/softMode"
-import { LocalGVS } from "./enums/localGlobal"
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -62,8 +59,6 @@ function applyThemeColors(theme: "light" | "dark", colors: Record<string, string
 
 const App = () => {
     const [windowType, setWindowType] = useState(getQueryParam("window"))
-    // 模式 目前只有yakit社区版有
-    const {setSoftMode} = useSoftMode()
 
     useEffect(() => {
         getLocalValue(getRemoteI18nGV())
@@ -73,15 +68,6 @@ const App = () => {
                 }
             })
             .catch((err) => console.error(err))
-
-        // yakit社区版获取模式
-        if (isCommunityYakit()) {
-            getLocalValue(LocalGVS.YakitCEMode).then((mode) => {
-                if (mode) {
-                    setSoftMode(mode)
-                }
-            })
-        }
 
         const onPopState = () => {
             setWindowType(getQueryParam("window"))

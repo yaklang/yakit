@@ -97,6 +97,8 @@ import {NewYakitLoading} from "../basics/NewYakitLoading"
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 import {JSONParseLog} from "@/utils/tool"
+import {LocalGVS} from "@/enums/localGlobal"
+import {useSoftMode} from "@/store/softMode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -174,6 +176,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const localEngineRef = useRef<LocalEngineLinkFuncProps>(null)
     // 是否持续监听引擎进程的连接状态
     const [keepalive, setKeepalive] = useState<boolean>(false)
+    // 模式 目前只有yakit社区版有
+    const {setSoftMode} = useSoftMode()
     /** ---------- 软件状态相关属性 End ---------- */
 
     // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
@@ -383,6 +387,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             const isInstalled = await grpcFetchYakInstallResult(true)
             isEngineInstalled.current = isInstalled
         } catch (error) {}
+
+        // yakit社区版获取模式
+        if (isCommunityYakit()) {
+            getLocalValue(LocalGVS.YakitCEMode).then((mode) => {
+                if (mode) {
+                    setSoftMode(mode)
+                }
+            })
+        }
 
         if (!getOldLink()) return
         if (nextFunc) nextFunc()
