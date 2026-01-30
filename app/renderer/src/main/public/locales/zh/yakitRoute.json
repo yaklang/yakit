@@ -121,6 +121,7 @@
     "ai": "AI",
     "ai-repository": "知识库",
     "ssaCompileHistory": "SSA项目编译历史",
-    "penetrationRecordDescription": "可记录渗透过程中的任何内容，便于记录查看"
+    "penetrationRecordDescription": "可记录渗透过程中的任何内容，便于记录查看",
+    "ai-memory": "记忆库"
   }
 }

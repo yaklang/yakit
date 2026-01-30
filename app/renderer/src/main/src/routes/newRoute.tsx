@@ -197,6 +197,7 @@ const ForgeEditor = React.lazy(() => import("@/pages/aiForge/forgeEditor/ForgeEd
 const AIToolEditor = React.lazy(() => import("@/pages/aiTool/AIToolEditor/AIToolEditor"))
 const YakRunnerScanHistory = React.lazy(() => import("@/pages/yakRunnerScanHistory/YakRunnerScanHistory"))
 const SSACompileHistory = React.lazy(() => import("@/pages/ssaCompileHistory/SSACompileHistory"))
+const MemoryBase = React.lazy(() => import("@/pages/memoryBase/MemoryBase"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -399,7 +400,8 @@ export const YakitRouteToPageInfo: Record<
         label: "配置管理",
         labelUi: "YakitRoute.configManagement",
         describeUi: "YakitRoute.unifiedConfigurationManagementForPayloadProxyAndHotPatch"
-    }
+    },
+    "ai-memory": {label: "记忆库", labelUi: "YakitRoute.ai-memory"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -452,7 +454,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-    YakitRoute.AI_REPOSITORY
+    YakitRoute.AI_REPOSITORY,
+    YakitRoute.AI_Memory
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -505,7 +508,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-    YakitRoute.AI_REPOSITORY
+    YakitRoute.AI_REPOSITORY,
+    YakitRoute.AI_Memory
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -930,7 +934,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <AIToolEditor pageId={params?.id || ""} />
         case YakitRoute.ModifyAITool:
             return <AIToolEditor pageId={params?.id || ""} isModify={true} />
-
+        case YakitRoute.AI_Memory:
+            return <MemoryBase pageId={params?.id || ""} />
         default:
             return <div />
     }
@@ -1098,6 +1103,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
                 ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
             },
             {page: YakitRoute.AI_REPOSITORY, ...YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY]},
+            {page: YakitRoute.AI_Memory, ...YakitRouteToPageInfo[YakitRoute.AI_Memory]},
 
             {
                 page: undefined,

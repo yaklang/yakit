@@ -897,6 +897,14 @@ service Yak {
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
+  // AI Memory CRUD
+  rpc CreateAIMemoryEntity(CreateAIMemoryEntityRequest) returns (Empty);
+  rpc UpdateAIMemoryEntity(AIMemoryEntity) returns (DbOperateMessage);
+  rpc DeleteAIMemoryEntity(DeleteAIMemoryEntityRequest) returns (DbOperateMessage);
+  rpc GetAIMemoryEntity(GetAIMemoryEntityRequest) returns (AIMemoryEntity);
+  rpc QueryAIMemoryEntity(QueryAIMemoryEntityRequest) returns (QueryAIMemoryEntityResponse);
+  rpc CountAIMemoryEntityTags(CountAIMemoryEntityTagsRequest) returns (CountAIMemoryEntityTagsResponse);
+
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
   // AI forge curd
@@ -2047,6 +2055,101 @@ message ExportAILogsRequest {
 
 message ExportAILogsResponse {
   string FilePath = 1;
+}
+
+message FloatRange {
+  bool Enabled = 1;
+  double Min = 2;
+  double Max = 3;
+}
+
+message Int64Range {
+  bool Enabled = 1;
+  int64 Min = 2;
+  int64 Max = 3;
+}
+
+message CreateAIMemoryEntityRequest {
+  string SessionID = 1;
+  string FreeInput = 2;
+}
+
+message AIMemoryEntity {
+  int64 Id = 1;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
+
+  string MemoryID = 4;
+  string SessionID = 5;
+
+  string Content = 6;
+  repeated string Tags = 7;
+  repeated string PotentialQuestions = 8;
+
+  double CScore = 9;
+  double OScore = 10;
+  double RScore = 11;
+  double EScore = 12;
+  double PScore = 13;
+  double AScore = 14;
+  double TScore = 15;
+
+  repeated float CorePactVector = 16;
+}
+
+message AIMemoryEntityFilter {
+  string SessionID = 1;
+  repeated string MemoryID = 2;
+
+  string ContentKeyword = 3;
+  repeated string Tags = 4;
+  bool TagMatchAll = 5;
+  string PotentialQuestionKeyword = 6;
+
+  FloatRange CScore = 7;
+  FloatRange OScore = 8;
+  FloatRange RScore = 9;
+  FloatRange EScore = 10;
+  FloatRange PScore = 11;
+  FloatRange AScore = 12;
+  FloatRange TScore = 13;
+
+  Int64Range CreatedAt = 14;
+  Int64Range UpdatedAt = 15;
+
+  // Semantic query (embedding based)
+  string SemanticQuery = 20;
+  // Score vector query (HNSW based), must be 7 dims when set.
+  repeated float CorePactQueryVector = 21;
+  int64 VectorTopK = 22;
+}
+
+message QueryAIMemoryEntityRequest {
+  Paging Pagination = 1;
+  AIMemoryEntityFilter Filter = 2;
+}
+
+message QueryAIMemoryEntityResponse {
+  Paging Pagination = 1;
+  repeated AIMemoryEntity Data = 2;
+  int64 Total = 3;
+}
+
+message GetAIMemoryEntityRequest {
+  string MemoryID = 1;
+  string SessionID = 2;
+}
+
+message DeleteAIMemoryEntityRequest {
+  AIMemoryEntityFilter Filter = 1;
+}
+
+message CountAIMemoryEntityTagsRequest {
+  string SessionID = 1;
+}
+
+message CountAIMemoryEntityTagsResponse {
+  repeated TagsCode TagsCount = 1;
 }
 
 message StartMcpServerRequest {

@@ -508,7 +508,7 @@ export interface HTTPFlowsFieldGroupResponse {
     StatusCode: TagsCode[]
 }
 
-interface TagsCode {
+export interface TagsCode {
     Value: string
     Total: number
 }
