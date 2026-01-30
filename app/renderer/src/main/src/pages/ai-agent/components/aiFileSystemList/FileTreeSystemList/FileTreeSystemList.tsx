@@ -8,9 +8,10 @@ import {cloneDeep} from "lodash"
 import styles from "./FileTreeSystemList.module.scss"
 import {FileTreeSystemListProps} from "../type"
 import {TREE_DRAG_KEY} from "@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop"
-import {getRelevantPaths} from "../utils"
 import {useMount} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
+
+const {ipcRenderer} = window.require("electron")
 
 const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
     path,
@@ -71,7 +72,10 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
     const processExpand = async (expandKey: string) => {
         if (!expandKey) return
         try {
-            const relevantPaths = getRelevantPaths(path, [expandKey])
+            const relevantPaths = await ipcRenderer.invoke("get-relevant-paths", {
+                targetPath: [expandKey],
+                basePath: path
+            })
             for (const relevant of relevantPaths) {
                 if (!fileTree.folderChildrenSet.current.has(relevant)) {
                     await onLoadFolderChildren(relevant)

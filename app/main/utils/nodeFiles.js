@@ -110,6 +110,35 @@ module.exports = {
                 return 4
             }
         })
+        /**
+         * @name 获取目标路径中，基于基础路径的所有相关路径列表
+         * @param {string} basePath 基础路径
+         * @param {string[]} targetPath 目标路径列表
+         * @return {string[]} 相关路径列表
+         */
+        ipcMain.handle("get-relevant-paths", (e, params) => {
+            const {basePath, targetPath} = params
+            if (!targetPath || targetPath.length === 0) {
+                return []
+            }
+            const relevantPaths = []
+            const normalizedBasePath = path.normalize(basePath)
+            for (const fullPath of targetPath) {
+                const normalizedFullPath = path.normalize(fullPath)
+                if (!normalizedFullPath.startsWith(normalizedBasePath)) {
+                    continue
+                }
+                const parts = normalizedFullPath.split(path.sep)
+                let currentPath = parts[0]
+                for (let i = 1; i < parts.length; i++) {
+                    currentPath = path.join(currentPath, parts[i])
+                    if (currentPath.startsWith(normalizedBasePath) && !relevantPaths.includes(currentPath)) {
+                        relevantPaths.push(currentPath)
+                    }
+                }
+            }
+            return relevantPaths
+        })
     },
     registerNewIPC: (win, getClient, ipcEventPre) => {}
 }
