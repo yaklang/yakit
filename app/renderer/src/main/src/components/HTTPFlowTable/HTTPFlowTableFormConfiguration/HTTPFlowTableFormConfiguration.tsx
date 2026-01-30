@@ -9,7 +9,6 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {contentType} from "../HTTPFlowTable"
 import {isEqual, toArray} from "lodash"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineInformationcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {yakitNotify} from "@/utils/notification"
 import styles from "./HTTPFlowTableFormConfiguration.module.scss"
@@ -126,7 +125,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         if (hasUnsavedChange()) {
             Modal.confirm({
                 title: t("YakitModal.friendlyReminder"),
-                icon: <ExclamationCircleOutlined />,
+                icon: <OutlineInformationcircleIcon />,
                 content: t("HTTPFlowTableFormConfiguration.saveAdvancedConfigAndClose"),
                 okText: t("YakitButton.save"),
                 cancelText: t("YakitButton.doNotSave"),
