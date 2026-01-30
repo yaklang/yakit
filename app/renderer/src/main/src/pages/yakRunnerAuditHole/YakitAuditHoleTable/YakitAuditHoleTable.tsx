@@ -104,7 +104,7 @@ export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Filter: {}
 }
 
-export const batchRefreshMenuData: YakitMenuItemProps[] = [
+const batchRefreshMenuData: YakitMenuItemProps[] = [
     {
         key: "noResetRefresh",
         label: "仅刷新"

@@ -3,7 +3,7 @@ import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "../eventBus/eventBus"
 import {Uint8ArrayToString} from "../str"
-import {JSONParseLog} from "../tool"
+import { JSONParseLog } from "../tool"
 
 const {ipcRenderer} = window.require("electron")
 let id = randomString(40)
@@ -99,10 +99,6 @@ export const startupDuplexConn = () => {
                 // 通知QuerySSARisks轮询更新
                 case "ssa_risk":
                     emiter.emit("onRefreshQuerySSARisks", JSON.stringify(obj))
-                    break
-                // 通知QueryAIMemoryEntity轮询更新
-                case "ai_memory":
-                    emiter.emit("onRefreshQueryAIMemoryEntity", JSON.stringify(obj))
                     break
                 // rps
                 case "rps":
