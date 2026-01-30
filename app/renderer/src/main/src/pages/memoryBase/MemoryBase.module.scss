@@ -139,6 +139,7 @@
                     align-items: center;
                     gap: 4px;
                     flex-shrink: 0;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .divider {
                     margin: 0;
@@ -197,6 +198,29 @@
         overflow: hidden;
     }
 }
+
+.panel-header-tooltip-title {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 6px 10px;
+    padding: 4px;
+    align-items: center;
+    .tooltip-title-box-one {
+        font-weight: bold;
+        color: var(--Colors-Use-Main-Primary); // 亮色突出首字母
+        font-family: "monospace";
+    }
+    .tooltip-title-box-two {
+        color: var(--Colors-Use-Neutral-Border);
+        font-size: 13px;
+    }
+    .tooltip-title-box-three {
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        font-size: 12px;
+        text-align: right; // 将中文向右对齐，形成左右两端对齐感
+    }
+}
+
 .btn-padding-right-0 {
     padding-right: 0;
 }

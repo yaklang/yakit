@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     MemoryBaseProps,
     AITextareaProps,
@@ -15,9 +15,9 @@ import {
 } from "./type"
 import styles from "./MemoryBase.module.scss"
 import classNames from "classnames"
-import { ChevrondownButton, ChevronleftButton } from "../ai-re-act/aiReActChat/AIReActComponent"
-import { QSInputTextarea } from "../ai-agent/template/template"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import {ChevrondownButton, ChevronleftButton} from "../ai-re-act/aiReActChat/AIReActComponent"
+import {QSInputTextarea} from "../ai-agent/template/template"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowupIcon,
     OutlineQuestionmarkcircleIcon,
@@ -25,13 +25,13 @@ import {
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import { Badge, Divider, Slider, Tooltip } from "antd"
-import { OutlineSparklesColorsIcon } from "@/assets/icon/colors"
+import {Badge, Divider, Slider, Tooltip} from "antd"
+import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import numeral from "numeral"
-import { TableTotalAndSelectNumber } from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
-import { TableVirtualResize } from "@/components/TableVirtualResize/TableVirtualResize"
+import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {
     useControllableValue,
     useCreation,
@@ -41,14 +41,14 @@ import {
     useMemoizedFn,
     useSelections
 } from "ahooks"
-import { ColumnsTypeProps, SortProps } from "@/components/TableVirtualResize/TableVirtualResizeType"
-import { CopyComponents, YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
-import { AIMemoryContent } from "../ai-agent/chatTemplate/aiMemoryList/AIMemoryList"
-import { YakitCombinationSearch } from "@/components/YakitCombinationSearch/YakitCombinationSearch"
-import { YakitCombinationSearchProps } from "@/components/YakitCombinationSearch/YakitCombinationSearchType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {AIMemoryContent} from "../ai-agent/chatTemplate/aiMemoryList/AIMemoryList"
+import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
+import {YakitCombinationSearchProps} from "@/components/YakitCombinationSearch/YakitCombinationSearchType"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
-import { genDefaultPagination } from "../invoker/schema"
+import {genDefaultPagination} from "../invoker/schema"
 import {
     getAIMemoryEntityFilter,
     grpcCountAIMemoryEntityTags,
@@ -56,23 +56,23 @@ import {
     grpcQueryAIMemoryEntity
 } from "./utils"
 import emiter from "@/utils/eventBus/eventBus"
-import { AIAgentGrpcApi } from "../ai-re-act/hooks/grpcApi"
-import { LoadingOutlined } from "@ant-design/icons"
+import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {LoadingOutlined} from "@ant-design/icons"
 import ReactResizeDetector from "react-resize-detector"
-import { YakitDropdownMenu } from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import { batchRefreshMenuData } from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
-import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import { TagsCode } from "@/components/HTTPFlowTable/HTTPFlowTable"
-import { cloneDeep } from "lodash"
-import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { YakitSelectProps } from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import { yakitNotify } from "@/utils/notification"
-import { NoPromptHint } from "../pluginHub/utilsUI/UtilsTemplate"
-import { RemoteAIAgentGV } from "@/enums/aiAgent"
-import { serverPushStatus } from "@/utils/duplex/duplex"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {batchRefreshMenuData} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {TagsCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {cloneDeep} from "lodash"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {yakitNotify} from "@/utils/notification"
+import {NoPromptHint} from "../pluginHub/utilsUI/UtilsTemplate"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {serverPushStatus} from "@/utils/duplex/duplex"
 
-const { YakitPanel } = YakitCollapse
+const {YakitPanel} = YakitCollapse
 
 const defaultMemoryQuery: MemorySelectQuery = {
     rate: [],
@@ -173,7 +173,7 @@ const rateRemoveList: RateRemoveListItem[] = [
     }
 ]
 const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
-    const { queryParams, setQueryParams } = props
+    const {queryParams, setQueryParams} = props
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [tagShow, setTagShow] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
@@ -219,7 +219,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             onSearch()
         },
         [queryParams],
-        { wait: 200 }
+        {wait: 200}
     )
     const [tableParams, tableData, tableTotal, pagination, tableLoading, offsetData, debugVirtualTableEvent] =
         useVirtualTableHook<QueryAIMemoryEntityRequest, AIMemoryEntity, "Data", "Id">({
@@ -229,7 +229,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             grpcFun: grpcQueryAIMemoryEntity,
             onFirst,
             defaultParams: {
-                Filter: getAIMemoryEntityFilter({ query: queryParams, search }),
+                Filter: getAIMemoryEntityFilter({query: queryParams, search}),
                 Pagination: {
                     ...genDefaultPagination(50)
                 }
@@ -302,7 +302,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     const onRemove = useMemoizedFn((recorder) => {
         if (!recorder.MemoryID) return
         grpcDeleteAIMemoryEntity({
-            Filter: { MemoryID: [recorder.MemoryID] }
+            Filter: {MemoryID: [recorder.MemoryID]}
         }).then((res) => {
             debugVirtualTableEvent.noResetRefreshT()
         })
@@ -310,7 +310,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     const onBatchRemove = useMemoizedFn(() => {
         let filterParams: AIMemoryEntityFilter = {}
         if (allCheck) {
-            filterParams = getAIMemoryEntityFilter({ query: queryParams, search })
+            filterParams = getAIMemoryEntityFilter({query: queryParams, search})
         } else {
             filterParams = {
                 MemoryID: selectList.map((ele) => ele.MemoryID)
@@ -323,7 +323,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
         })
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-        let sort = { ...newSort }
+        let sort = {...newSort}
         if (sort.order === "none") {
             sort.order = "desc"
             sort.orderBy = "id"
@@ -492,7 +492,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     })
     const onSearch = useDebounceFn(
         useMemoizedFn(() => {
-            const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({ query: queryParams, search })
+            const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({query: queryParams, search})
 
             const newParams: QueryAIMemoryEntityRequest = {
                 Pagination: {
@@ -509,7 +509,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             }
             debugVirtualTableEvent.setP(newParams)
         }),
-        { wait: 200 }
+        {wait: 200}
     ).run
     const disabledBatchRemove = useCreation(() => {
         return selectList.length === 0 && !allCheck
@@ -529,7 +529,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     const delHintCallback = useMemoizedFn((isOk: boolean) => {
         if (isOk) {
             if (!removeItemRef.current) return
-            const filterParams: AIMemoryEntityFilter = { ...removeItemRef.current.params }
+            const filterParams: AIMemoryEntityFilter = {...removeItemRef.current.params}
             grpcDeleteAIMemoryEntity({
                 Filter: filterParams
             }).then(() => {
@@ -598,7 +598,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                     <YakitDropdownMenu
                                         menu={{
                                             data: rateRemoveList,
-                                            onClick: ({ key }) => {
+                                            onClick: ({key}) => {
                                                 onFastRemove(key)
                                             }
                                         }}
@@ -619,7 +619,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                     <YakitDropdownMenu
                                         menu={{
                                             data: batchRefreshMenuData,
-                                            onClick: ({ key }) => {
+                                            onClick: ({key}) => {
                                                 onRefreshMenuSelect(key)
                                             }
                                         }}
@@ -633,19 +633,19 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                         </Badge>
                                     </YakitDropdownMenu>
                                 </div>
-	                            </div>
-	                            <div className={styles["memory-table-subTitle"]}>
-	                                编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
-	                            </div>
-	                        </div>
-	                    }
+                            </div>
+                            <div className={styles["memory-table-subTitle"]}>
+                                编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
+                            </div>
+                        </div>
+                    }
                     renderKey='Id'
                     data={tableData}
                     pagination={{
                         total: tableTotal,
                         limit: pagination.Limit,
                         page: pagination.Page,
-                        onChange: (page, limit) => { }
+                        onChange: (page, limit) => {}
                     }}
                     rowSelection={{
                         isAll: allCheck,
@@ -778,9 +778,6 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         }
     }, [inViewport])
     useEffect(() => {
-        onRateSelect("none")
-    }, [])
-    useEffect(() => {
         if (selectQuery.rate.length === 0) {
             setSelectRateList(cloneDeep(ratingList))
             setSelectAllRate(false)
@@ -799,7 +796,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                     }, 100)
                 )
         }),
-        { wait: 500, leading: true }
+        {wait: 500, leading: true}
     ).run
     /**
      * @name 选择评分范围
@@ -810,13 +807,13 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
             if (rateItem) {
                 setSelectQuery((prev) => ({
                     ...prev,
-                    rate: [...prev.rate, rateItem],
+                    rate: [...prev.rate, rateItem]
                 }))
             }
         } else {
             setSelectQuery((prev) => ({
                 ...prev,
-                rate: prev.rate.filter((ele) => ele.id !== item.id),
+                rate: prev.rate.filter((ele) => ele.id !== item.id)
             }))
         }
     })
@@ -836,7 +833,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
             }))
         }
     })
-    const onTagMatchAll = useMemoizedFn((e: { target: { value?: boolean } }) => {
+    const onTagMatchAll = useMemoizedFn((e: {target: {value?: boolean}}) => {
         const value = e?.target?.value ?? false
         setSelectQuery((prev) => ({
             ...prev,
@@ -919,21 +916,21 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     })
 
     const COREPAT_DATA = [
-        { l: 'C', en: 'Connectivity', cn: '关联度' },
-        { l: 'O', en: 'Origin', cn: '来源与确定性' },
-        { l: 'R', en: 'Relevance', cn: '相关性' },
-        { l: 'E', en: 'Emotion', cn: '情感' },
-        { l: 'P', en: 'Preference', cn: '个人偏好' },
-        { l: 'A', en: 'Actionability', cn: '可操作性' },
-        { l: 'T', en: 'Temporality', cn: '时效性' },
-    ];
+        {l: "C", en: "Connectivity", cn: "关联度"},
+        {l: "O", en: "Origin", cn: "来源与确定性"},
+        {l: "R", en: "Relevance", cn: "相关性"},
+        {l: "E", en: "Emotion", cn: "情感"},
+        {l: "P", en: "Preference", cn: "个人偏好"},
+        {l: "A", en: "Actionability", cn: "可操作性"},
+        {l: "T", en: "Temporality", cn: "时效性"}
+    ]
 
     const indeterminate = useCreation(() => {
         return selectAllRate && selectQuery.rate.length > 0
     }, [selectAllRate, selectQuery.rate])
 
     const onSelectAllRate = useMemoizedFn((e) => {
-        const { checked } = e.target
+        const {checked} = e.target
         if (checked) {
             setSelectQuery((prev) => ({
                 ...prev,
@@ -1067,7 +1064,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
             })}
             ref={leftSideRef}
         >
-            <div className={classNames(styles["memory-left-side"], { [styles["memory-left-side-hidden"]]: !show })}>
+            <div className={classNames(styles["memory-left-side"], {[styles["memory-left-side-hidden"]]: !show})}>
                 <div className={styles["query"]}>
                     <div className={styles["query-header"]} onClick={() => setShow(false)}>
                         <ChevronleftButton /> 高级查询
@@ -1080,30 +1077,12 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                                 <span>评分范围</span>
                                 <Tooltip
                                     title={
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: 'auto auto 1fr',
-                                            gap: '6px 10px',
-                                            padding: '4px',
-                                            alignItems: 'center'
-                                        }}>
+                                        <div className={styles["panel-header-tooltip-title"]}>
                                             {COREPAT_DATA.map((item) => (
                                                 <React.Fragment key={item.l}>
-                                                    <span style={{
-                                                        fontWeight: 'bold',
-                                                        color: '#faad14', // 亮色突出首字母
-                                                        fontFamily: 'monospace'
-                                                    }}>
-                                                        {item.l}
-                                                    </span>
-                                                    <span style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px' }}>
-                                                        {item.en}
-                                                    </span>
-                                                    <span style={{
-                                                        color: 'rgba(255, 255, 255, 0.5)',
-                                                        fontSize: '12px',
-                                                        textAlign: 'right' // 将中文向右对齐，形成左右两端对齐感
-                                                    }}>
+                                                    <span className={styles["tooltip-title-box-one"]}>{item.l}</span>
+                                                    <span className={styles["tooltip-title-box-two"]}>{item.en}</span>
+                                                    <span className={styles["tooltip-title-box-three"]} style={{}}>
                                                         {item.cn}
                                                     </span>
                                                 </React.Fragment>
@@ -1117,7 +1096,6 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                         }
                         extra={
                             <>
-                               
                                 <YakitButton
                                     type='text'
                                     colors='danger'
@@ -1196,26 +1174,26 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                         key='Tags'
                         extra={
                             <>
-	                            <YakitRadioButtons
-	                                    value={selectQuery.tagMatchAll}
-	                                    onChange={onTagMatchAll}
-	                                    buttonStyle='solid'
-	                                    options={[
-	                                        { label: "AND", value: true },
-	                                        { label: "OR", value: false }
+                                {/* <YakitRadioButtons
+                                    value={selectQuery.tagMatchAll}
+                                    onChange={onTagMatchAll}
+                                    buttonStyle='solid'
+                                    options={[
+                                        {label: "AND", value: true},
+                                        {label: "OR", value: false}
                                     ]}
                                     size='small'
                                     className={styles["tag-match-radio"]}
-                                />
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={onResetTags}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
+                                /> */}
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    className={styles["btn-padding-right-0"]}
+                                    onClick={onResetTags}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
                             </>
                         }
                     >
@@ -1254,7 +1232,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
 
 /**@deprecated UI发送变化，暂时不需要了 */
 const AITextarea: React.FC<AITextareaProps> = React.memo((props) => {
-    const { textProps } = props
+    const {textProps} = props
     return (
         <div className={styles["query-input-wrapper"]}>
             <div className={styles["query-input-content"]}>
