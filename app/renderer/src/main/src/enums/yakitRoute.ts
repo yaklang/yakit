@@ -121,7 +121,5 @@ export enum YakitRoute {
     /** AI 知识库 */
     AI_REPOSITORY = "ai-repository",
     // SSA编译历史
-    SSA_Compile_History = "ssa-compile-history",
-    /** AI 记忆库 */
-    AI_Memory = "ai-memory"
+    SSA_Compile_History = "ssa-compile-history"
 }

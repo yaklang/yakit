@@ -16,7 +16,5 @@ export enum RemoteAIAgentGV {
     /** @name 替换tool时是否隐藏提示框, 直接进行替换 */
     AIAgentReplaceToolNoPrompt = "ai-agent-replace-tool-no-prompt",
     /** @name ai侧边栏展开收起模式 */
-    AIAgentSideShowMode = "ai-agent-side-show-mode",
-    /** @name 记忆库快捷删除 */
-    AIMemoryRemove = "ai-memory-remove"
+    AIAgentSideShowMode = "ai-agent-side-show-mode"
 }

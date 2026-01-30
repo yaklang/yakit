@@ -113,9 +113,7 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
                 },
                 Pagination: {
                     Page: 1,
-                    Limit: 9999,
-                    OrderBy: "updated_at",
-                    Order: "desc"
+                    Limit: 9999
                 }
             })
             return response?.KnowledgeBaseEntries ?? []

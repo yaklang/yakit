@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {AIMemoryContentProps, AIMemoryEchartsProps, AIMemoryListProps, AIMemoryScoreEchartsProps} from "./type"
+import {AIMemoryEchartsProps, AIMemoryListProps, AIMemoryScoreEchartsProps} from "./type"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 import {useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import styles from "./AIMemoryList.module.scss"
@@ -74,7 +74,52 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
                             placement='rightBottom'
                             key={item.id}
                             overlayClassName={styles["memory-popover-wrapper"]}
-                            content={<AIMemoryContent item={item} />}
+                            content={
+                                <div className={styles["memory-popover-content"]}>
+                                    <div className={styles["memory-popover-score-wrapper"]}>
+                                        <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（记忆特征）</div>
+                                        <div className={styles["score-list"]}>
+                                            {getScoreList(item).map((score, index) => (
+                                                <div
+                                                    className={classNames(styles["score-item"], {
+                                                        [styles["score-item-height-color"]]: score.value >= 0.7
+                                                    })}
+                                                    key={score.label}
+                                                >
+                                                    <span>
+                                                        {score.label}={score.value}
+                                                    </span>
+                                                    {index !== item.core_pact_vector.length - 1 && (
+                                                        <div className={styles["divider"]} />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AIMemoryScoreEcharts
+                                            data={{
+                                                xData: [],
+                                                yData: [
+                                                    item.c_score,
+                                                    item.o_score,
+                                                    item.r_score,
+                                                    item.e_score,
+                                                    item.p_score,
+                                                    item.a_score,
+                                                    item.t_score
+                                                ]
+                                            }}
+                                            style={{width: "100%", height: 220}}
+                                        />
+                                    </div>
+                                    <div className={styles["memory-popover-potential-questions"]}>
+                                        {item.potential_questions.map((ele) => (
+                                            <div className={styles["potential-questions-item"]} key={ele} title={ele}>
+                                                <span>{ele}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            }
                         >
                             <div key={item.id} className={styles["memory-item"]}>
                                 <div className={styles["memory-content"]}>{item.content}</div>
@@ -122,62 +167,6 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
 
 export default AIMemoryList
 
-export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props) => {
-    const {item} = props
-    const echartsData = useCreation(() => {
-        return {
-            xData: [],
-            yData: [item.c_score, item.o_score, item.r_score, item.e_score, item.p_score, item.a_score, item.t_score]
-        }
-    }, [item.c_score, item.o_score, item.r_score, item.e_score, item.p_score, item.a_score, item.t_score])
-    return (
-        <div className={styles["memory-popover-content"]}>
-            <div className={styles["memory-popover-heard"]}>
-                {item?.memory_id && <div className={styles["heard-text"]}>{item.memory_id}</div>}
-                <div className={styles["heard-content"]}>{item.content}</div>
-            </div>
-            <div className={styles["memory-popover-score-wrapper"]}>
-                <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（记忆特征）</div>
-                <div className={styles["score-list"]}>
-                    {getScoreList(item).map((score, index) => (
-                        <div
-                            className={classNames(styles["score-item"], {
-                                [styles["score-item-height-color"]]: score.value >= 0.7
-                            })}
-                            key={score.label}
-                        >
-                            <span>
-                                {score.label}={score.value}
-                            </span>
-                            {index !== item.core_pact_vector.length - 1 && <div className={styles["divider"]} />}
-                        </div>
-                    ))}
-                </div>
-                <div className={styles["memory-popover-score-echarts"]}>
-                    <AIMemoryScoreEcharts data={echartsData} style={{width: "100%", height: 220}} />
-                </div>
-            </div>
-            <div className={styles["memory-popover-tags-wrapper"]}>
-                <div className={styles["title"]}>Tags</div>
-                <div className={styles["memory-popover-tags-list"]}>
-                    {item.tags.map((tag) => (
-                        <YakitTag key={tag} fullRadius={true} border={false} className={styles["tag-item"]}>
-                            {tag}
-                        </YakitTag>
-                    ))}
-                </div>
-            </div>
-            <div className={styles["memory-popover-potential-questions"]}>
-                <div className={styles["title"]}>Potential Questions</div>
-                {item.potential_questions.map((ele) => (
-                    <div className={styles["potential-questions-item"]} key={ele} title={ele}>
-                        <span className={styles["label"]}>{ele}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    )
-})
 const getScoreOption = (value: AIMemoryEchartsProps["data"]): EChartsOption => {
     const option: EChartsOption = {
         grid: {
@@ -265,7 +254,7 @@ const AIMemoryScoreEcharts: React.FC<AIMemoryScoreEchartsProps> = React.memo((pr
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts {...rest} option={option} />
+    return <ReactECharts {...rest} option={getScoreOption(data)} />
 })
 const getOption = (value: AIMemoryEchartsProps["data"]): EChartsOption => {
     const option: EChartsOption = {

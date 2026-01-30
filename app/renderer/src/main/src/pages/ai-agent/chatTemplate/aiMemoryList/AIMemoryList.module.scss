@@ -81,7 +81,7 @@
 .memory-popover-wrapper {
     :global {
         .ant-popover-inner-content {
-            padding: 8px;
+            padding: 4px;
         }
         .ant-popover-inner {
             border-radius: 8px;
@@ -92,33 +92,16 @@
     display: flex;
     flex-direction: column;
     max-width: 320px;
-    gap: 16px;
+    gap: 8px;
     padding-bottom: 12px;
-    .memory-popover-heard {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        .heard-text {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 20px; /* 142.857% */
-            letter-spacing: 0.1px;
-        }
-        .heard-content {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 20px; /* 142.857% */
-            letter-spacing: 0.1px;
-        }
-    }
     .memory-popover-score-wrapper {
         display: flex;
+        padding: 12px 8px;
         flex-direction: column;
         gap: 4px;
+        border-radius: 4px;
+        border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+        background: var(--Colors-Use-Neutral-Bg);
         .title {
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
@@ -151,63 +134,19 @@
                 color: var(--Colors-Use-Error-Primary);
             }
         }
-        .memory-popover-score-echarts {
-            padding: 12px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-            background: var(--Colors-Use-Neutral-Bg);
-        }
-    }
-    .memory-popover-tags-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-
-        .title {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px; /* 133.333% */
-            letter-spacing: 0.5px;
-        }
-
-        .memory-popover-tags-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            .tag-item {
-                margin-right: 0;
-            }
-        }
     }
     .memory-popover-potential-questions {
         display: flex;
         flex-direction: column;
         gap: 4px;
-        .title {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px; /* 133.333% */
-            letter-spacing: 0.5px;
-        }
+        padding: 0 8px;
         .potential-questions-item {
-            height: 28px;
-            display: flex;
-            align-items: center;
-            border-radius: 8px;
-            border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-            padding: 6px 8px;
-
-            .label {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
-                line-height: 16px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
         }
     }
 }
