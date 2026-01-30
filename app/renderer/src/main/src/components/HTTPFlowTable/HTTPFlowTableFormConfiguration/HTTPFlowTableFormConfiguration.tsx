@@ -90,6 +90,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         originConfigRef.current = filterConfig
     }, [visible])
 
+    // 屏蔽 和 只显示 相同字段情况下判断是否存在有值一样
     const hasIntersection = (a: string | string[], b: string | string[]) => {
         const arrA = toArray(a)
         const arrB = toArray(b)
