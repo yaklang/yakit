@@ -82,7 +82,8 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
                 }
             }
             updateData()
-            setExpandedKeys((prev) => [...prev, ...relevantPaths])
+            if(relevantPaths.length === 0) return
+            setExpandedKeys((prev) => [...prev,path , ...relevantPaths])
             setLoadedKeys((prev) => [...prev, ...relevantPaths])
             const expandMap = getDetailMap?.(expandKey)
             !isOpen && setSelected(expandMap)
