@@ -54,7 +54,6 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OutlineBotIcon} from "@/assets/icon/colors"
 import {convertBodyLength} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import loading from "@/alibaba/ali-react-table-dist/dist/base-table/loading"
 
 const {YakitPanel} = YakitCollapse
 

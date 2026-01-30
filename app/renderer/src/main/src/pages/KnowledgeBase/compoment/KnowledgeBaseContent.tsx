@@ -78,8 +78,8 @@ import {KnowledgeBaseGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {GuideFooter} from "./GuideFooter"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {PlusIcon} from "@/assets/newIcon"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinePlusIcon} from "@/assets/newIcon"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -571,9 +571,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     useEffect(() => {
         if (!showFreeChat || !knowledgeBaseID) return
 
-        queueMicrotask(() => {
-            handleSendAfter()
-        })
+        handleSendAfter()
     }, [showFreeChat, knowledgeBaseID])
 
     useEffect(() => {
@@ -583,25 +581,30 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 handleSendAfter()
             })
         }
-    }, [inViewport === true])
+    }, [inViewport])
 
     const [refreshOlineRag, setRefreshOlineRag] = useSafeState(false)
 
-    const handleSendAfter = () => {
+    // 跳转 ai agent 所需携带参数
+    const generatreMention = useMemoizedFn(() => {
         const targetKnowledgeBase = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
         if (!targetKnowledgeBase) return
 
-        requestAnimationFrame(() => {
-            queueMicrotask(() => {
-                aiReActChatRef.current?.setMention({
-                    mentionId: targetKnowledgeBase.ID,
-                    mentionType: "knowledgeBase",
-                    mentionName: targetKnowledgeBase.KnowledgeBaseName,
-                    lock: true
-                })
+        queueMicrotask(() => {
+            aiReActChatRef.current?.setMention({
+                mentionId: targetKnowledgeBase.ID,
+                mentionType: "knowledgeBase",
+                mentionName: targetKnowledgeBase.KnowledgeBaseName,
+                lock: true
             })
         })
-    }
+    })
+
+    const handleSendAfter = useMemoizedFn(() => {
+        requestAnimationFrame(() => {
+            generatreMention()
+        })
+    })
 
     const onSendRequest = useMemoizedFn((data: AISendParams) => {
         return new Promise<AISendResProps>((resolve) => {
@@ -785,7 +788,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                                     <Tooltip title='新建对话'>
                                                         <YakitButton
                                                             type='text2'
-                                                            icon={<PlusIcon />}
+                                                            icon={<OutlinePlusIcon />}
                                                             onClick={() => {
                                                                 if (activeID) {
                                                                     events.onClose(activeID)

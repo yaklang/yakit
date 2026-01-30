@@ -131,7 +131,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const lineStartRef = useRef<HTMLDivElement>(null)
         const welcomeRef = useRef<HTMLDivElement>(null)
         const questionListAllRef = useRef<StreamResult.Log[]>([])
-        const inputDefaultValue = useRef<string>()
         const [inViewPort = true] = useInViewport(welcomeRef)
 
         const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
@@ -402,7 +401,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                     refreshRate={50}
                                 />
                                 <AIChatTextarea
-                                    defaultValue={inputDefaultValue.current}
                                     ref={aiChatTextareaRef}
                                     onSubmit={handleTriageSubmit}
                                     className={classNames({
