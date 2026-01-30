@@ -20,5 +20,8 @@ export enum LocalGVS {
     IsDeletePrivatePluginsOnLogout = "is-delete-private-plugins-on-logout",
 
     /** @name 软件是否白屏崩溃过,在渲染端只会设置为false,在主进程触发崩溃时设置为true */
-    RenderCrashScreen = "render-crash-screen"
+    RenderCrashScreen = "render-crash-screen",
+
+    /** @name 软件-yakit社区版模式 */
+    YakitCEMode = "YakitCEMode"
 }

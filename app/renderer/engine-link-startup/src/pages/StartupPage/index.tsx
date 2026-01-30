@@ -61,7 +61,6 @@ import memfitRightDark from "@/assets/memfit-right-dark.webm"
 import {SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon} from "@/assets/colors"
 import {Theme, useTheme} from "@/hooks/useTheme"
 import {Lange, YakitSoftMode} from "./components/SoftwareBasics"
-import {RemoteSoftModeGV} from "@/enums/softMode"
 import styles from "./index.module.scss"
 const {ipcRenderer} = window.require("electron")
 
@@ -867,15 +866,6 @@ export const StartupPage: React.FC = () => {
             setRemoteLinkLoading(false)
 
             setLocalValue(LocalGVS.YaklangEngineMode, getEngineMode())
-
-            // 缓存社区版yakit软件模式
-            if (isCommunityYakit()) {
-                getLocalValue(LocalGVS.YakitCEMode).then(res => {
-                    setRemoteValue(RemoteSoftModeGV.YakitCEMode, res || getSoftMode())
-                }).catch(() => {
-                    setRemoteValue(RemoteSoftModeGV.YakitCEMode, getSoftMode())
-                })
-            }
 
             // 缓存连接端口
             cacheLocalModePort(getCredential().Port)
