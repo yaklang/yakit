@@ -635,7 +635,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                 </div>
                             </div>
                             <div className={styles["memory-table-subTitle"]}>
-                                编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
+                                AI 长期记忆中心：通过 C.O.R.E.P.A.T 维度向量实现记忆的质量评估与动态检索。
                             </div>
                         </div>
                     }
