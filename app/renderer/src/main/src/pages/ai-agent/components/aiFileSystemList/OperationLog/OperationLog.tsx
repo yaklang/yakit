@@ -1,4 +1,4 @@
-import {FC, ReactNode, useCallback, useMemo, useState} from "react"
+import {FC, forwardRef, ReactNode, useCallback, useMemo, useState} from "react"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import styles from "./OperationLog.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -12,7 +12,7 @@ import {FileLogShowDataProps} from "@/pages/invoker/YakitLogFormatter"
 import moment from "moment"
 import {useMemoizedFn} from "ahooks"
 import {PluginExecuteLogFile} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType"
-import {Virtuoso} from "react-virtuoso"
+import {ItemProps, ListProps, Virtuoso} from "react-virtuoso"
 
 interface OperationLogProps {
     loading: boolean
@@ -24,6 +24,27 @@ interface FilePreviewProps {
     data: FileLogShowDataProps | PluginExecuteLogFile.FileItem
     content: string | ReactNode
 }
+
+const VirtuosoItemContainer = forwardRef<HTMLDivElement, ItemProps<StreamResult.Log>>(
+    ({children, style, ...props}, ref) => {
+        return (
+            <div {...props} ref={ref} style={style} className={styles["item-wrapper"]}>
+                <div className={styles["item-inner"]}>{children}</div>
+            </div>
+        )
+    }
+)
+
+VirtuosoItemContainer.displayName = "VirtuosoItemContainer"
+
+const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps>(({children, style, ...props}, ref) => {
+    return (
+        <div {...props} ref={ref} style={style} className={styles["virtuoso-item-list"]}>
+            {children}
+        </div>
+    )
+})
+
 const FilePreview: FC<FilePreviewProps> = ({level, data, content}) => {
     if (!(level === "file")) return <div>{content}</div>
     if (isPluginExecuteLogFileItem(data)) return <span>{content}</span>
@@ -128,13 +149,14 @@ const OperationLog: FC<OperationLogProps> = ({loading, list}) => {
         }))
     })
 
-    const Item = useCallback(
-        ({children, style, "data-index": dataIndex}) => (
-            <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                <div className={styles["item-inner"]}>{children}</div>
-            </div>
-        ),
-        []
+
+    const components = useMemo(
+        () => ({
+            Item:VirtuosoItemContainer,
+            List: VirtuosoListContainer,
+            Footer: () => (list.length > 0 ? <div className={styles["arrow"]} /> : null)
+        }),
+        [list.length]
     )
 
     return (
@@ -159,7 +181,7 @@ const OperationLog: FC<OperationLogProps> = ({loading, list}) => {
                             <Virtuoso
                                 style={{height: "100%"}}
                                 data={logsByDate[day]}
-                                components={{Item}}
+                                components={components}
                                 initialTopMostItemIndex={{index: "LAST"}}
                                 itemContent={(index) => (
                                     <TimelineCard
