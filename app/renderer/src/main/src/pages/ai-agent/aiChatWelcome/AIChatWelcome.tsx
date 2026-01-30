@@ -1,4 +1,4 @@
-import React, {useEffect, useId, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useId, useImperativeHandle, useRef, useState} from "react"
 import {
     AIChatWelcomeProps,
     AIMaterialsData,
@@ -86,423 +86,417 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
     }
 }
 
-const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo((props) => {
-    const {t, i18n} = useI18nNamespaces(["aiAgent"])
-    const {onTriageSubmit, onSetReAct, streams, api} = props
+const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {t, i18n} = useI18nNamespaces(["aiAgent"])
+        const {onTriageSubmit, onSetReAct, streams, api} = props
 
-    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
-        (s) => ({
-            queryPagesDataById: s.queryPagesDataById,
-            updatePagesDataCacheById: s.updatePagesDataCacheById,
-            removePagesDataCacheById: s.removePagesDataCacheById
-        }),
-        shallow
-    )
+        const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
+            setMention: () => {},
+            setValue: () => {},
+            getValue: () => {}
+        })
 
-    // #region 问题相关逻辑
-
-    useEffect(() => {
-        const konwledgeInputStringFn = (params: string) => {
-            try {
-                const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-
-                if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
-                    data.defualtAIMentionCommandParams.forEach((item) => {
-                        aiChatTextareaRef.current?.setValue("")
-                        aiChatTextareaRef.current?.setMention?.({
-                            mentionId: item.mentionId,
-                            mentionType: item.mentionType,
-                            mentionName: item.mentionName
-                        })
-                    })
-                    removePagesDataCacheById(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+        useImperativeHandle(
+            ref,
+            () => {
+                return {
+                    ...aiChatTextareaRef.current,
+                    handleStart: () => {}
                 }
-            } catch (error) {}
-        }
-        emiter.on("defualtAIMentionCommandParams", konwledgeInputStringFn)
-        return () => {
-            emiter.off("defualtAIMentionCommandParams", konwledgeInputStringFn)
-        }
-    }, [])
+            },
+            []
+        )
 
-    const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
-    const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
-    const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
-    const [questionList, setQuestionList] = useState<string[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
-    // 控制下拉菜单
-    const [openDrawer, setOpenDrawer] = useState<boolean>(true)
+        const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+            (s) => ({
+                queryPagesDataById: s.queryPagesDataById,
+                updatePagesDataCacheById: s.updatePagesDataCacheById,
+                removePagesDataCacheById: s.removePagesDataCacheById
+            }),
+            shallow
+        )
 
-    const lineStartRef = useRef<HTMLDivElement>(null)
-    const welcomeRef = useRef<HTMLDivElement>(null)
-    const questionListAllRef = useRef<StreamResult.Log[]>([])
-    const aiChatTextareaRef = useRef<AIChatTextareaRefProps>(null)
-    const inputDefaultValue = useRef<string>()
-    const [inViewPort = true] = useInViewport(welcomeRef)
+        // #region 问题相关逻辑
 
-    const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
+        const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
+        const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
+        const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
+        const [questionList, setQuestionList] = useState<string[]>([])
+        const [loading, setLoading] = useState<boolean>(false)
+        const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
+        // 控制下拉菜单
+        const [openDrawer, setOpenDrawer] = useState<boolean>(true)
 
-    const tokenRef = useRef<string>(randomString(40))
-    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-        taskName: "debug-plugin",
-        apiKey: "DebugPlugin",
-        token: tokenRef.current,
-        isShowError: false,
-        isShowEnd: false,
-        isLimitLogs: false,
-        onEnd: () => {
-            setLoading(false)
+        const lineStartRef = useRef<HTMLDivElement>(null)
+        const welcomeRef = useRef<HTMLDivElement>(null)
+        const questionListAllRef = useRef<StreamResult.Log[]>([])
+        const inputDefaultValue = useRef<string>()
+        const [inViewPort = true] = useInViewport(welcomeRef)
+
+        const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
+
+        const tokenRef = useRef<string>(randomString(40))
+        const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+            taskName: "debug-plugin",
+            apiKey: "DebugPlugin",
+            token: tokenRef.current,
+            isShowError: false,
+            isShowEnd: false,
+            isLimitLogs: false,
+            onEnd: () => {
+                setLoading(false)
+                debugPluginStreamEvent.stop()
+            }
+        })
+
+        useEffect(() => {
+            if (inViewPort) {
+                getRandomAIMaterials()
+            }
+        }, [inViewPort])
+
+        useDebounceEffect(
+            () => {
+                const list = streamInfo.logState.filter((i) => i.level === "text").map((i) => i.data)
+                questionListAllRef.current = [...list]
+                const randList = list.slice(0, 3)
+                if (list.length > 0 && !isEqual(randList, questionList)) {
+                    setQuestionList([...randList])
+                }
+            },
+            [streamInfo.logState],
+            {wait: 500, leading: true}
+        )
+
+        useDebounceEffect(
+            () => {
+                if (checkItems.length > 0) {
+                    onStartExecute()
+                }
+            },
+            [checkItems],
+            {wait: 500, leading: true}
+        )
+        const onSetQuestion = useMemoizedFn((value: string) => {
+            aiChatTextareaRef.current?.setValue(value ?? "")
+        })
+        const onStartExecute = useMemoizedFn(() => {
+            debugPluginStreamEvent.cancel()
             debugPluginStreamEvent.stop()
-        }
-    })
-
-    useEffect(() => {
-        if (inViewPort) {
-            getRandomAIMaterials()
-        }
-    }, [inViewPort])
-
-    useDebounceEffect(
-        () => {
-            const list = streamInfo.logState.filter((i) => i.level === "text").map((i) => i.data)
-            questionListAllRef.current = [...list]
-            const randList = list.slice(0, 3)
-            if (list.length > 0 && !isEqual(randList, questionList)) {
-                setQuestionList([...randList])
+            debugPluginStreamEvent.reset()
+            const toolNames: string[] = []
+            const forgeNames: string[] = []
+            const knowledgeNames: string[] = []
+            checkItems.forEach((item) => {
+                switch (item.type) {
+                    case "工具":
+                        toolNames.push(item.name)
+                        break
+                    case "技能":
+                        forgeNames.push(item.name)
+                        break
+                    case "知识库":
+                        knowledgeNames.push(item.name)
+                        break
+                    default:
+                        break
+                }
+            })
+            const params: DebugPluginRequest = {
+                Code: "",
+                PluginType: "yak",
+                Input: "",
+                HTTPRequestTemplate: {
+                    ...defPluginExecuteFormValue
+                },
+                ExecParams: [
+                    {
+                        Key: "query",
+                        Value: JSON.stringify({
+                            tools: toolNames,
+                            forges: forgeNames,
+                            knowledge_bases: knowledgeNames
+                        })
+                    }
+                ],
+                PluginName: "简易意图识别"
             }
-        },
-        [streamInfo.logState],
-        {wait: 500, leading: true}
-    )
+            apiDebugPlugin({
+                params: params,
+                token: tokenRef.current,
+                isShowStartInfo: false
+            }).then(() => {
+                debugPluginStreamEvent.start()
+                setTimeout(() => {
+                    setLoading(true)
+                }, 100)
+            })
+        })
 
-    useDebounceEffect(
-        () => {
-            if (checkItems.length > 0) {
-                onStartExecute()
-            }
-        },
-        [checkItems],
-        {wait: 500, leading: true}
-    )
-    const onSetQuestion = useMemoizedFn((value: string) => {
-        aiChatTextareaRef.current?.setValue(value ?? "")
-    })
-    const onStartExecute = useMemoizedFn(() => {
-        debugPluginStreamEvent.cancel()
-        debugPluginStreamEvent.stop()
-        debugPluginStreamEvent.reset()
-        const toolNames: string[] = []
-        const forgeNames: string[] = []
-        const knowledgeNames: string[] = []
-        checkItems.forEach((item) => {
-            switch (item.type) {
-                case "工具":
-                    toolNames.push(item.name)
-                    break
+        const getRandomAIMaterials = useMemoizedFn(() => {
+            if (loadingAIMaterials) return
+            setLoadingAIMaterials(true)
+            grpcGetRandomAIMaterials({Limit: 3})
+                .then((res) => {
+                    debugPluginStreamEvent.stop()
+                    setRandomAIMaterials(res)
+                    setCheckItems([])
+                    setQuestionList([])
+                    questionListAllRef.current = []
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoadingAIMaterials(false)
+                    }, 200)
+                )
+        })
+
+        const resizeUpdate = useMemoizedFn(() => {
+            if (!lineStartRef.current) return
+            const lineStartRect = lineStartRef.current.getBoundingClientRect()
+            setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
+        })
+        const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
+            onTriageSubmit(value)
+            onSetQuestion("")
+        })
+        const onMore = useMemoizedFn((item: string) => {
+            switch (item) {
                 case "技能":
-                    forgeNames.push(item.name)
+                    onForgeMore()
                     break
                 case "知识库":
-                    knowledgeNames.push(item.name)
+                    onKnowledgeBaseMore()
+                    break
+                case "工具":
+                    onToolMore()
                     break
                 default:
                     break
             }
         })
-        const params: DebugPluginRequest = {
-            Code: "",
-            PluginType: "yak",
-            Input: "",
-            HTTPRequestTemplate: {
-                ...defPluginExecuteFormValue
-            },
-            ExecParams: [
-                {
-                    Key: "query",
-                    Value: JSON.stringify({
-                        tools: toolNames,
-                        forges: forgeNames,
-                        knowledge_bases: knowledgeNames
-                    })
-                }
-            ],
-            PluginName: "简易意图识别"
-        }
-        apiDebugPlugin({
-            params: params,
-            token: tokenRef.current,
-            isShowStartInfo: false
-        }).then(() => {
-            debugPluginStreamEvent.start()
-            setTimeout(() => {
-                setLoading(true)
-            }, 100)
-        })
-    })
-
-    const getRandomAIMaterials = useMemoizedFn(() => {
-        if (loadingAIMaterials) return
-        setLoadingAIMaterials(true)
-        grpcGetRandomAIMaterials({Limit: 3})
-            .then((res) => {
-                debugPluginStreamEvent.stop()
-                setRandomAIMaterials(res)
-                setCheckItems([])
-                setQuestionList([])
-                questionListAllRef.current = []
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setLoadingAIMaterials(false)
-                }, 200)
+        const onForgeMore = useMemoizedFn(() => {
+            emiter.emit(
+                "switchAIAgentTab",
+                JSON.stringify({
+                    type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                    params: {
+                        active: AIAgentTabListEnum.Forge_Name,
+                        show: true
+                    }
+                })
             )
-    })
+        })
+        const onKnowledgeBaseMore = useMemoizedFn(() => {
+            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+        })
+        const onToolMore = useMemoizedFn(() => {
+            emiter.emit(
+                "switchAIAgentTab",
+                JSON.stringify({
+                    type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                    params: {
+                        active: AIAgentTabListEnum.Tool,
+                        show: true
+                    }
+                })
+            )
+        })
 
-    const resizeUpdate = useMemoizedFn(() => {
-        if (!lineStartRef.current) return
-        const lineStartRect = lineStartRef.current.getBoundingClientRect()
-        setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
-    })
-    const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
-        onTriageSubmit(value)
-        onSetQuestion("")
-    })
-    const onMore = useMemoizedFn((item: string) => {
-        switch (item) {
-            case "技能":
-                onForgeMore()
-                break
-            case "知识库":
-                onKnowledgeBaseMore()
-                break
-            case "工具":
-                onToolMore()
-                break
-            default:
-                break
-        }
-    })
-    const onForgeMore = useMemoizedFn(() => {
-        emiter.emit(
-            "switchAIAgentTab",
-            JSON.stringify({
-                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-                params: {
-                    active: AIAgentTabListEnum.Forge_Name,
-                    show: true
-                }
-            })
-        )
-    })
-    const onKnowledgeBaseMore = useMemoizedFn(() => {
-        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
-    })
-    const onToolMore = useMemoizedFn(() => {
-        emiter.emit(
-            "switchAIAgentTab",
-            JSON.stringify({
-                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-                params: {
-                    active: AIAgentTabListEnum.Tool,
-                    show: true
-                }
-            })
-        )
-    })
+        const onCheckItem = useMemoizedFn((item: AIRecommendItemProps["item"]) => {
+            if (checkItems.includes(item)) {
+                setCheckItems((c) => c.filter((i) => i.name !== item.name))
+            } else {
+                setCheckItems([...checkItems, item])
+            }
+        })
 
-    const onCheckItem = useMemoizedFn((item: AIRecommendItemProps["item"]) => {
-        if (checkItems.includes(item)) {
-            setCheckItems((c) => c.filter((i) => i.name !== item.name))
-        } else {
-            setCheckItems([...checkItems, item])
-        }
-    })
-
-    const randomAIMaterialsData: RandomAIMaterialsDataProps = useCreation(() => {
-        const tools: AIMaterialsData = {
-            type: "工具",
-            data: (randomAIMaterials?.AITools || []).map((tool) => ({
+        const randomAIMaterialsData: RandomAIMaterialsDataProps = useCreation(() => {
+            const tools: AIMaterialsData = {
                 type: "工具",
-                name: tool.VerboseName || tool.Name,
-                description: tool.Description || ""
-            })),
-            icon: <AIToolIcon />,
-            hoverIcon: <HoverAIToolIcon />
-        }
-        const forges: AIMaterialsData = {
-            type: "技能",
-            data: (randomAIMaterials?.AIForges || []).map((forge) => ({
+                data: (randomAIMaterials?.AITools || []).map((tool) => ({
+                    type: "工具",
+                    name: tool.VerboseName || tool.Name,
+                    description: tool.Description || ""
+                })),
+                icon: <AIToolIcon />,
+                hoverIcon: <HoverAIToolIcon />
+            }
+            const forges: AIMaterialsData = {
                 type: "技能",
-                name: forge.ForgeVerboseName || forge.ForgeName,
-                description: forge.Description || ""
-            })),
-            icon: <AIForgeIcon />,
-            hoverIcon: <HoverAIForgeIcon />
-        }
-        const knowledgeBases: AIMaterialsData = {
-            type: "知识库",
-            data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
+                data: (randomAIMaterials?.AIForges || []).map((forge) => ({
+                    type: "技能",
+                    name: forge.ForgeVerboseName || forge.ForgeName,
+                    description: forge.Description || ""
+                })),
+                icon: <AIForgeIcon />,
+                hoverIcon: <HoverAIForgeIcon />
+            }
+            const knowledgeBases: AIMaterialsData = {
                 type: "知识库",
-                name: knowledgeBase.KnowledgeTitle || knowledgeBase.Summary,
-                description: knowledgeBase.KnowledgeDetails || ""
-            })),
-            icon: <AIKnowledgeBaseIcon />,
-            hoverIcon: <HoverAIKnowledgeBaseIcon />
-        }
-        return {
-            tools,
-            forges,
-            knowledgeBases
-        }
-    }, [randomAIMaterials])
-    const isEmptyAIMaterials = useCreation(() => {
-        return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
-    }, [randomAIMaterials])
-    const onSwitchQuestion = useMemoizedFn(() => {
-        setCheckItems([])
-        setQuestionList(getRandomItems(questionListAllRef.current))
-    })
-    return (
-        <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
-            <div className={styles["open-file-tree-button"]}>
-                <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
-                    {openDrawer ? "收起" : "展开"}
-                </YakitButton>
-                <Divider type='vertical' />
-                <SideSettingButton />
-            </div>
-            <div className={`${styles["file-tree-list"]} ${openDrawer ? styles["open"] : styles["close"]}`}>
-                <YakitRadioButtons
-                    value={sidebarSelected}
-                    onChange={(e) => setSidebarSelected(e.target.value)}
-                    buttonStyle='solid'
-                    options={sideberRadioOptions}
-                    className={styles["sidebar-radio"]}
-                />
-                {sidebarSelected === "fileTree" ? (
-                    <div className={styles["file-tree-list-inner"]}>
-                        <FileTreeList />
-                    </div>
-                ) : (
-                    <div className={styles["knowledge-base-list-inner"]}>
-                        <KnowledgeSidebarList api={api} streams={streams} />
-                    </div>
-                )}
-            </div>
-            <div className={styles["content"]}>
-                <div className={styles["content-absolute"]}>
-                    <div className={styles["input-wrapper"]}>
-                        <div className={styles["input-heard"]}>
-                            <div className={styles["title"]}>Memfit AI Agent</div>
-                            <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
+                data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
+                    type: "知识库",
+                    name: knowledgeBase.KnowledgeTitle || knowledgeBase.Summary,
+                    description: knowledgeBase.KnowledgeDetails || ""
+                })),
+                icon: <AIKnowledgeBaseIcon />,
+                hoverIcon: <HoverAIKnowledgeBaseIcon />
+            }
+            return {
+                tools,
+                forges,
+                knowledgeBases
+            }
+        }, [randomAIMaterials])
+        const isEmptyAIMaterials = useCreation(() => {
+            return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
+        }, [randomAIMaterials])
+        const onSwitchQuestion = useMemoizedFn(() => {
+            setCheckItems([])
+            setQuestionList(getRandomItems(questionListAllRef.current))
+        })
+        return (
+            <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
+                <div className={styles["open-file-tree-button"]}>
+                    <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
+                        {openDrawer ? "收起" : "展开"}
+                    </YakitButton>
+                    <Divider type='vertical' />
+                    <SideSettingButton />
+                </div>
+                <div className={`${styles["file-tree-list"]} ${openDrawer ? styles["open"] : styles["close"]}`}>
+                    <YakitRadioButtons
+                        value={sidebarSelected}
+                        onChange={(e) => setSidebarSelected(e.target.value)}
+                        buttonStyle='solid'
+                        options={sideberRadioOptions}
+                        className={styles["sidebar-radio"]}
+                    />
+                    {sidebarSelected === "fileTree" ? (
+                        <div className={styles["file-tree-list-inner"]}>
+                            <FileTreeList />
                         </div>
-                        <div className={classNames(styles["input-body-wrapper"])}>
-                            <ReactResizeDetector
-                                onResize={(_, height) => {
-                                    if (!height) return
-                                    resizeUpdate()
-                                }}
-                                handleWidth={false}
-                                handleHeight={true}
-                                refreshMode={"debounce"}
-                                refreshRate={50}
-                            />
-                            <AIChatTextarea
-                                defaultValue={inputDefaultValue.current}
-                                ref={aiChatTextareaRef}
-                                onSubmit={handleTriageSubmit}
-                                className={classNames({
-                                    [styles["input-body"]]: !isEmptyAIMaterials
-                                })}
-                            >
-                                {/* svg 定位点1/left */}
-                                <div className={styles["line"]} ref={lineStartRef} />
-                            </AIChatTextarea>
-                        </div>
-
-                        {checkItems.length > 0 ? (
-                            <div className={styles["suggestion-tips-wrapper"]}>
-                                <div className={styles["suggestion-tips-title"]}>
-                                    <span>你可能想问:</span>
-                                    {loading ? (
-                                        <YakitSpin size='small' wrapperClassName={styles["loading-spinner"]} />
-                                    ) : (
-                                        questionList.length > 2 && (
-                                            <YakitButton
-                                                icon={<OutlineRefreshIcon />}
-                                                size='small'
-                                                type='text'
-                                                className={styles["line2-btn"]}
-                                                onClick={onSwitchQuestion}
-                                            >
-                                                换一换
-                                            </YakitButton>
-                                        )
-                                    )}
-                                </div>
-                                <div className={styles["suggestion-tips-list"]}>
-                                    {questionList.map((item) => (
-                                        <div
-                                            key={item}
-                                            className={styles["suggestion-tips-item"]}
-                                            onClick={() => onSetQuestion(item)}
-                                        >
-                                            <div className={styles["suggestion-tips-item-text"]}>{item}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-                    </div>
-                    {!isEmptyAIMaterials && (
-                        <div className={styles["recommend-wrapper"]}>
-                            <AIDownAngleLeftIcon className={styles["recommend-down-left"]} />
-                            <AIDownAngleRightIcon className={styles["recommend-down-right"]} />
-                            <AIUpAngleLeftIcon className={styles["recommend-up-left"]} />
-                            <AIUpAngleRightIcon className={styles["recommend-up-right"]} />
-                            <div className={styles["recommend-heard"]}>
-                                <div className={styles["title"]}>首页推荐</div>
-                                <YakitButton
-                                    icon={<OutlineRefreshIcon />}
-                                    size='small'
-                                    type='text'
-                                    className={styles["line2-btn"]}
-                                    onClick={getRandomAIMaterials}
-                                >
-                                    换一换
-                                </YakitButton>
-                            </div>
-                            <YakitSpin spinning={loadingAIMaterials}>
-                                <div className={styles["recommend-body"]}>
-                                    {Object.keys(randomAIMaterialsData).map((key) => {
-                                        const aiItem: AIMaterialsData =
-                                            randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
-                                        return aiItem.data.length > 0 ? (
-                                            <AIRecommend
-                                                icon={aiItem.icon}
-                                                hoverIcon={aiItem.hoverIcon}
-                                                key={aiItem.type}
-                                                title={aiItem.type}
-                                                data={aiItem.data}
-                                                lineStartDOMRect={lineStartDOMRect}
-                                                onMore={() => onMore(aiItem.type)}
-                                                onCheckItem={onCheckItem}
-                                                checkItems={checkItems}
-                                            />
-                                        ) : (
-                                            <React.Fragment key={aiItem.type}></React.Fragment>
-                                        )
-                                    })}
-                                </div>
-                            </YakitSpin>
+                    ) : (
+                        <div className={styles["knowledge-base-list-inner"]}>
+                            <KnowledgeSidebarList api={api} streams={streams} />
                         </div>
                     )}
                 </div>
+                <div className={styles["content"]}>
+                    <div className={styles["content-absolute"]}>
+                        <div className={styles["input-wrapper"]}>
+                            <div className={styles["input-heard"]}>
+                                <div className={styles["title"]}>Memfit AI Agent</div>
+                                <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
+                            </div>
+                            <div className={classNames(styles["input-body-wrapper"])}>
+                                <ReactResizeDetector
+                                    onResize={(_, height) => {
+                                        if (!height) return
+                                        resizeUpdate()
+                                    }}
+                                    handleWidth={false}
+                                    handleHeight={true}
+                                    refreshMode={"debounce"}
+                                    refreshRate={50}
+                                />
+                                <AIChatTextarea
+                                    defaultValue={inputDefaultValue.current}
+                                    ref={aiChatTextareaRef}
+                                    onSubmit={handleTriageSubmit}
+                                    className={classNames({
+                                        [styles["input-body"]]: !isEmptyAIMaterials
+                                    })}
+                                >
+                                    {/* svg 定位点1/left */}
+                                    <div className={styles["line"]} ref={lineStartRef} />
+                                </AIChatTextarea>
+                            </div>
+
+                            {checkItems.length > 0 ? (
+                                <div className={styles["suggestion-tips-wrapper"]}>
+                                    <div className={styles["suggestion-tips-title"]}>
+                                        <span>你可能想问:</span>
+                                        {loading ? (
+                                            <YakitSpin size='small' wrapperClassName={styles["loading-spinner"]} />
+                                        ) : (
+                                            questionList.length > 2 && (
+                                                <YakitButton
+                                                    icon={<OutlineRefreshIcon />}
+                                                    size='small'
+                                                    type='text'
+                                                    className={styles["line2-btn"]}
+                                                    onClick={onSwitchQuestion}
+                                                >
+                                                    换一换
+                                                </YakitButton>
+                                            )
+                                        )}
+                                    </div>
+                                    <div className={styles["suggestion-tips-list"]}>
+                                        {questionList.map((item) => (
+                                            <div
+                                                key={item}
+                                                className={styles["suggestion-tips-item"]}
+                                                onClick={() => onSetQuestion(item)}
+                                            >
+                                                <div className={styles["suggestion-tips-item-text"]}>{item}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : null}
+                        </div>
+                        {!isEmptyAIMaterials && (
+                            <div className={styles["recommend-wrapper"]}>
+                                <AIDownAngleLeftIcon className={styles["recommend-down-left"]} />
+                                <AIDownAngleRightIcon className={styles["recommend-down-right"]} />
+                                <AIUpAngleLeftIcon className={styles["recommend-up-left"]} />
+                                <AIUpAngleRightIcon className={styles["recommend-up-right"]} />
+                                <div className={styles["recommend-heard"]}>
+                                    <div className={styles["title"]}>首页推荐</div>
+                                    <YakitButton
+                                        icon={<OutlineRefreshIcon />}
+                                        size='small'
+                                        type='text'
+                                        className={styles["line2-btn"]}
+                                        onClick={getRandomAIMaterials}
+                                    >
+                                        换一换
+                                    </YakitButton>
+                                </div>
+                                <YakitSpin spinning={loadingAIMaterials}>
+                                    <div className={styles["recommend-body"]}>
+                                        {Object.keys(randomAIMaterialsData).map((key) => {
+                                            const aiItem: AIMaterialsData =
+                                                randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
+                                            return aiItem.data.length > 0 ? (
+                                                <AIRecommend
+                                                    icon={aiItem.icon}
+                                                    hoverIcon={aiItem.hoverIcon}
+                                                    key={aiItem.type}
+                                                    title={aiItem.type}
+                                                    data={aiItem.data}
+                                                    lineStartDOMRect={lineStartDOMRect}
+                                                    onMore={() => onMore(aiItem.type)}
+                                                    onCheckItem={onCheckItem}
+                                                    checkItems={checkItems}
+                                                />
+                                            ) : (
+                                                <React.Fragment key={aiItem.type}></React.Fragment>
+                                            )
+                                        })}
+                                    </div>
+                                </YakitSpin>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
-        </div>
-    )
-})
+        )
+    })
+)
 
 export default AIChatWelcome
 

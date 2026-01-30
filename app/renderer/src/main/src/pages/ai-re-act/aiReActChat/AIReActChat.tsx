@@ -207,29 +207,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             } catch (error) {}
         })
 
-        useEffect(() => {
-            const konwledgeInputStringFn = (params: string) => {
-                try {
-                    const data: PageNodeItemProps["pageParamsInfo"]["AIRepository"] = JSON.parse(params)
-
-                    if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
-                        data.defualtAIMentionCommandParams.forEach((item) => {
-                            aiChatTextareaRef.current?.setValue("")
-                            aiChatTextareaRef.current?.setMention?.({
-                                mentionId: item.mentionId,
-                                mentionType: item.mentionType,
-                                mentionName: item.mentionName
-                            })
-                        })
-                    }
-                } catch (error) {}
-            }
-            emiter.on("defualtAIMentionCommandParams", konwledgeInputStringFn)
-            return () => {
-                emiter.off("defualtAIMentionCommandParams", konwledgeInputStringFn)
-            }
-        }, [])
-
         // #endregion
 
         const isShowRetract = useCreation(() => {
