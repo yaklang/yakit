@@ -41,7 +41,7 @@
     }
 
     .host:hover.lang-zh::after {
-        content: '如需手动指定目标地址或 Host 碰撞，请配置"高级配置-真实Host"';
+        content: '如需手动指定目标地址或 Host 碰撞，请在"左侧边栏-配置-真实Host"配置';
         background-color: var(--yakit-colors-Neutral-40);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
@@ -50,7 +50,7 @@
     }
 
     .host:hover.lang-en::after {
-        content: 'To manually specify the target address or perform Host collision, please configure "Advanced Settings - Real Host"';
+        content: 'To manually specify the target address or perform Host collision, Please configure in "Left Sidebar - Configuration - Real Host"';
         background-color: var(--yakit-colors-Neutral-40);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
