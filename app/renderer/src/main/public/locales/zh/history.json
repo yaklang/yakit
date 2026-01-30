@@ -121,6 +121,7 @@
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
     "advancedFilter": "高级筛选",
+    "advancedFilterHelp": "同时配置'屏蔽内容'和'只展示'将以AND关系同时生效",
     "filterMode": "筛选模式",
     "blockedContent": "屏蔽内容",
     "displayOnly": "只展示",
@@ -130,7 +131,8 @@
     "responseType": "响应类型",
     "keyword": "关键字",
     "matchingLogicSameAsSearch": "匹配逻辑与外面搜索关键字逻辑一样",
-    "statusCode": "状态码"
+    "statusCode": "状态码",
+    "conflictFieldsWarning": "以下字段在「屏蔽」和「展示」中存在相同值：{v}"
   },
   "HTTPFlowDetail": {
     "requestDetails": "请求详情",
