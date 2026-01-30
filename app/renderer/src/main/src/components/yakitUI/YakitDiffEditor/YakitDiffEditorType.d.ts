@@ -16,6 +16,4 @@ export interface YakitDiffEditorProps {
     leftReadOnly?: boolean
     /** 右侧是否只读 */
     rightReadOnly?: boolean
-    /** 字体大小 */
-    fontSize?: number
 }
