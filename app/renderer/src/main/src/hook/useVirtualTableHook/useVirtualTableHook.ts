@@ -97,6 +97,8 @@ export default function useVirtualTableHook<
     const [offsetData, setOffsetData, getOffsetData] = useGetState<DataT[]>([])
     // 设置是否自动刷新
     const idRef = useRef<NodeJS.Timeout>()
+    // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
+    const loopPausedRef = useRef<boolean>(false)
     // 表格是否可见
     const [inViewport] = useInViewport(tableBoxRef)
 
@@ -273,7 +275,7 @@ export default function useVirtualTableHook<
             }
             getDataByGrpc(query, "update")
         } else {
-            setIsLoop(true)
+            if (!loopPausedRef.current) setIsLoop(true)
         }
     })
 
@@ -294,6 +296,7 @@ export default function useVirtualTableHook<
     })
 
     const scrollUpdate = useMemoizedFn(() => {
+        if (loopPausedRef.current) return
         if (isGrpcRef.current) return
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
@@ -336,7 +339,7 @@ export default function useVirtualTableHook<
             const clientHeight = tableRef.current?.containerRef?.clientHeight
             const scrollHeight = tableRef.current?.containerRef?.scrollHeight
             if (sTop !== scrollTop || cHeight !== clientHeight || sHeight !== scrollHeight) {
-                setIsLoop(true)
+                if (!loopPausedRef.current) setIsLoop(true)
             }
             sTop = scrollTop
             cHeight = clientHeight
@@ -397,11 +400,14 @@ export default function useVirtualTableHook<
 
     /** @name 启动表格循环(用于后端通知前端更新时触发) */
     const startT = useMemoizedFn(() => {
+        loopPausedRef.current = false
         setIsLoop(true)
     })
     /** @name 关闭表格循环 */
     const stopT = useMemoizedFn(() => {
+        loopPausedRef.current = true
         setIsLoop(false)
+        if (idRef.current) clearInterval(idRef.current)
     })
 
     /** @name 设置表格loading状态 */

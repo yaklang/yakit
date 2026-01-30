@@ -70,6 +70,7 @@ import { YakitSelectProps } from "@/components/yakitUI/YakitSelect/YakitSelectTy
 import { yakitNotify } from "@/utils/notification"
 import { NoPromptHint } from "../pluginHub/utilsUI/UtilsTemplate"
 import { RemoteAIAgentGV } from "@/enums/aiAgent"
+import { serverPushStatus } from "@/utils/duplex/duplex"
 
 const { YakitPanel } = YakitCollapse
 
@@ -92,8 +93,8 @@ export default MemoryBase
 
 const searchOptions: YakitCombinationSearchProps["addonBeforeOption"] = [
     {
-        label: "ai",
-        value: "ai搜索"
+        label: "语义搜索",
+        value: "ai"
     },
     {
         label: "关键字",
@@ -194,6 +195,14 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             emiter.off("onRefreshQueryAIMemoryEntity", onStartInterval)
         }
     }, [])
+    // 语义(AI)搜索时关闭轮询，避免 offsetData 重复堆积；退出语义搜索后(仅在无推送模式)恢复轮询
+    useEffect(() => {
+        if (search.type === "ai" && !!search.aiInput) {
+            debugVirtualTableEvent.stopT()
+        } else if (!serverPushStatus) {
+            debugVirtualTableEvent.startT()
+        }
+    }, [search.type, search.aiInput])
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn(() => {
         if (search.type === "ai") return
@@ -624,12 +633,12 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                         </Badge>
                                     </YakitDropdownMenu>
                                 </div>
-                            </div>
-                            <div className={styles["memory-table-subTitle"]}>
-                                编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
-                            </div>
-                        </div>
-                    }
+	                            </div>
+	                            <div className={styles["memory-table-subTitle"]}>
+	                                编写一份关于如何优化电商平台用户体验的报告，涵盖界面设计、用户反馈和数据分析。
+	                            </div>
+	                        </div>
+	                    }
                     renderKey='Id'
                     data={tableData}
                     pagination={{
