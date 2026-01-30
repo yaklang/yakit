@@ -1332,7 +1332,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "zh":
             case "en":
                 i18n.changeLanguage(type)
-                setRemoteValue(getRemoteI18nGV(), type)
+                setLocalValue(getRemoteI18nGV(), type)
                 return
             default:
                 return

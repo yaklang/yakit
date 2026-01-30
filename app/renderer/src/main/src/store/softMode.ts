@@ -1,6 +1,6 @@
-import { RemoteSoftModeGV } from "@/enums/softMode"
+import {LocalGVS} from "@/enums/localGlobal"
 import {isCommunityYakit} from "@/utils/envfile"
-import { setRemoteValue } from "@/utils/kv"
+import {setLocalValue} from "@/utils/kv"
 import {create} from "zustand"
 
 export enum YakitModeEnum {
@@ -27,7 +27,7 @@ export const useSoftMode = create<MenuModeState>((set) => ({
     softMode: getDefaultSoftMode(),
     setSoftMode: (softMode) => {
         if (isCommunityYakit()) {
-            setRemoteValue(RemoteSoftModeGV.YakitCEMode, softMode + "")
+            setLocalValue(LocalGVS.YakitCEMode, softMode + "")
         }
         set({softMode})
     }

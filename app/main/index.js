@@ -320,7 +320,8 @@ function registerGlobalIPC() {
     ipcMain.handle("set-theme", (_e, theme) => {
         ;[
             // 通知所有窗口更新
-            engineLinkWin
+            engineLinkWin,
+            win
         ].forEach((w) => safeSend(w, "theme-updated", theme))
     })
 

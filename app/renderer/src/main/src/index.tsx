@@ -12,7 +12,7 @@ import "./yakitLib.scss"
 import "./assets/global.scss"
 import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
-import {getRemoteValue} from "./utils/kv"
+import {getLocalValue} from "./utils/kv"
 import {GetMainColor, getRemoteI18nGV} from "./utils/envfile"
 import i18n from "@/i18n/i18n"
 import {useTheme} from "./hook/useTheme"
@@ -61,7 +61,7 @@ const App = () => {
     const [windowType, setWindowType] = useState(getQueryParam("window"))
 
     useEffect(() => {
-        getRemoteValue(getRemoteI18nGV())
+        getLocalValue(getRemoteI18nGV())
             .then((savedLang) => {
                 if (savedLang) {
                     i18n.changeLanguage(savedLang)

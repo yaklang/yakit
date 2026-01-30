@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useSize} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {handleFetchArchitecture, handleFetchIsDev, handleFetchSystem, outputToWelcomeConsole, SystemInfo} from "./utils"
 import {
     grpcFetchBuildInYakVersion,
@@ -23,7 +23,7 @@ import {
     YaklangEngineMode,
     YaklangEngineWatchDogCredential
 } from "./types"
-import {getLocalValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import useGetSetState from "@/hooks/useGetSetState"
 import {yakitNotify} from "@/utils/notification"
 import {YakitLoading} from "./components/YakitLoading"
@@ -34,6 +34,7 @@ import {
     isCommunityEdition,
     isCommunityIRify,
     isCommunityMemfit,
+    isCommunityYakit,
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnpriTraceIRify,
@@ -57,12 +58,10 @@ import irifyRight from "@/assets/irify-right.png"
 import yakitRight from "@/assets/yakit-right.png"
 import memfitRight from "@/assets/memfit-right.webm"
 import memfitRightDark from "@/assets/memfit-right-dark.webm"
-
-import styles from "./index.module.scss"
 import {SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon} from "@/assets/colors"
-
-import {useTheme} from "@/hooks/useTheme"
-
+import {Theme, useTheme} from "@/hooks/useTheme"
+import {Lange, YakitSoftMode} from "./components/SoftwareBasics"
+import styles from "./index.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -121,8 +120,13 @@ export const StartupPage: React.FC = () => {
     const [keepalive, setKeepalive, getKeepalive] = useGetSetState<boolean>(false)
     /** 本地连接自定义端口号 */
     const [customPort, setCustomPort, getCustomPort] = useGetSetState<number>(GetConnectPort())
-
-    const {theme} = useTheme()
+    const {theme, setTheme} = useTheme()
+    /** 软件基础设置-主题 目前只有yakit社区版有 */
+    const [softTheme, setSoftTheme, getSoftTheme] = useGetSetState<Theme>(theme)
+    /** 软件基础设置-模式 目前只有yakit社区版有 */
+    const [softMode, setSoftMode, getSoftMode] = useGetSetState<YakitSoftMode>("classic")
+    /** 软件基础设置-语言 目前未支持 */
+    const [softLang, setSoftLang, getSoftLang] = useGetSetState<Lange>("zh")
 
     // #region 软件开始进行逻辑启动
     useEffect(() => {
@@ -499,6 +503,17 @@ export const StartupPage: React.FC = () => {
                     setRestartLoading(true)
                     setLinkLocalEngine()
                     return
+                case "softwareBasics":
+                    setRestartLoading(true)
+                    setTheme(getSoftTheme())
+                    if (isCommunityYakit()) {
+                        setLocalValue(LocalGVS.YakitCESoftwareBasics, true)
+                        setLocalValue(LocalGVS.YakitCEMode, getSoftMode())
+                    }
+                    if (localEngineRef.current) {
+                        localEngineRef.current.startYakEngine()
+                    }
+                    break
                 case "error":
                     // 引擎连接超时或意外断掉连接
                     setTimeoutLoading(setRestartLoading)
@@ -520,8 +535,7 @@ export const StartupPage: React.FC = () => {
                             safeSetYakitStatus("")
                             // 需要等 yakitStatus 状态更新
                             setTimeout(() => {
-                                handleStartLocalLink(false)
-                                isCheckVersion.current = false
+                                handleStartLocalLink(isCheckVersion.current)
                             }, 300)
                         }
                     } else {
@@ -531,12 +545,13 @@ export const StartupPage: React.FC = () => {
                         handleOperations("break")
                         breakHandleRef.current = true
                         setYakitLoadingTip("中断中...")
+                        setRestartLoading(false)
                         setDisableYakitLoading(true)
                         cancelAllTasks()
                         setTimeout(() => {
                             setYakitLoadingTip("")
                             setDisableYakitLoading(false)
-                        }, 2000)
+                        }, 3000)
                     }
                     return
                 case "link_countdown":
@@ -601,7 +616,9 @@ export const StartupPage: React.FC = () => {
 
     // 数据库修复
     const [dbPath, setDbPath] = useState<string[]>([])
+    const latestFixDBCallIdRef = useRef(0)
     const handleFixupDatabase = useMemoizedFn(async () => {
+        const callId = ++latestFixDBCallIdRef.current
         // 中断连接 后续不执行
         if (breakHandleRef.current) {
             debugToPrintLog(`------ 开始修复数据库 被阻止 ------`)
@@ -631,6 +648,8 @@ export const StartupPage: React.FC = () => {
                     safeSetYakitStatus("fix_database_error")
             }
         } catch (error) {
+            // 旧调用直接跳过
+            if (callId !== latestFixDBCallIdRef.current) return
             // 如果意外情况则按照修复失败处理
             if (!breakHandleRef.current) {
                 outputToWelcomeConsole(`修复数据库出现意外情况：${error}`)
@@ -819,7 +838,6 @@ export const StartupPage: React.FC = () => {
     useEffect(() => {
         if (engineLink && getYakitStatus() === "link" && getCredential().Port && !isStopSend.current) {
             ipcRenderer.invoke("engineLinkWin-done", {useOldLink: false, credential: getCredential()})
-            cacheLocalModePort(getCredential().Port)
         }
     }, [engineLink, yakitStatus])
 
@@ -848,6 +866,9 @@ export const StartupPage: React.FC = () => {
             setRemoteLinkLoading(false)
 
             setLocalValue(LocalGVS.YaklangEngineMode, getEngineMode())
+
+            // 缓存连接端口
+            cacheLocalModePort(getCredential().Port)
 
             const waitTime: number = 5000
             const id = setInterval(() => {
@@ -1049,26 +1070,27 @@ export const StartupPage: React.FC = () => {
                     setYakitStatus={safeSetYakitStatus}
                     setCheckLog={setCheckLog}
                 />
-                <div className={styles["startup-engine-log"]} style={{display: isRemoteEngine ? "none" : "block"}}>
+                <div
+                    className={styles["startup-engine-log"]}
+                    style={{display: isRemoteEngine || yakitStatus === "softwareBasics" ? "none" : "block"}}
+                >
                     <EngineLog />
                 </div>
                 {!isRemoteEngine ? (
-                    <>
-                        <div
-                            className={styles["startup-content-wrapper"]}
-                        >
-                            <LocalEngine
-                                ref={localEngineRef}
-                                setLog={setCheckLog}
-                                onLinkEngine={handleLinkLocalEngine}
-                                yakitStatus={yakitStatus}
-                                setYakitStatus={safeSetYakitStatus}
-                                buildInEngineVersion={buildInEngineVersion}
-                                setRestartLoading={setRestartLoading}
-                                yakitUpdate={yakitUpdate}
-                                setYakitUpdate={setYakitUpdate}
-                            />
-                            {(!engineLink || yakitStatus === "link_countdown") && (
+                    <div className={styles["startup-content-wrapper"]}>
+                        <LocalEngine
+                            ref={localEngineRef}
+                            setLog={setCheckLog}
+                            onLinkEngine={handleLinkLocalEngine}
+                            yakitStatus={yakitStatus}
+                            setYakitStatus={safeSetYakitStatus}
+                            buildInEngineVersion={buildInEngineVersion}
+                            setRestartLoading={setRestartLoading}
+                            yakitUpdate={yakitUpdate}
+                            setYakitUpdate={setYakitUpdate}
+                        />
+                        {!engineLink && (
+                            <>
                                 <YakitLoading
                                     yakitLoadingTip={yakitLoadingTip}
                                     disableYakitLoading={disableYakitLoading}
@@ -1084,24 +1106,30 @@ export const StartupPage: React.FC = () => {
                                     btnClickCallback={loadingClickCallback}
                                     port={customPort}
                                     countdown={countdown}
+                                    softTheme={softTheme}
+                                    setSoftTheme={setSoftTheme}
+                                    softMode={softMode}
+                                    setSoftMode={setSoftMode}
+                                    softLang={softLang}
+                                    setSoftLang={setSoftLang}
                                 />
-                            )}
-                            {!engineLink && yaklangDownload && (
-                                // 更新引擎
-                                <DownloadYaklang
-                                    isTop={isTop}
-                                    setIsTop={setIsTop}
-                                    yaklangSpecifyVersion={""}
-                                    system={system}
-                                    visible={yaklangDownload}
-                                    onCancel={onDownloadedYaklang}
-                                />
-                            )}
-                        </div>
-                    </>
+                                {/* 更新引擎 */}
+                                {yaklangDownload && (
+                                    <DownloadYaklang
+                                        isTop={isTop}
+                                        setIsTop={setIsTop}
+                                        yaklangSpecifyVersion={""}
+                                        system={system}
+                                        visible={yaklangDownload}
+                                        onCancel={onDownloadedYaklang}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </div>
                 ) : (
                     <>
-                        {!engineLink && yakitStatus !== "control-remote" && (
+                        {!engineLink && (
                             <RemoteEngine
                                 loading={remoteLinkLoading}
                                 setLoading={setRemoteLinkLoading}

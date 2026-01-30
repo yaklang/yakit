@@ -32,6 +32,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     const [autoStartProgress, setAutoStartProgress] = useState(false)
     // 是否正在重启引擎进程
     const startingUp = useRef<boolean>(false)
+    const latestStartCallIdRef = useRef(0)
 
     useEffect(() => {
         yakitStatusRef.current = props.yakitStatus
@@ -121,6 +122,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
             if (mode === "local") {
                 if (!startingUp.current) {
+                    const callId = ++latestStartCallIdRef.current
                     grpcStartLocalEngine({
                         port: props.credential.Port,
                         password: props.credential.Password,
@@ -148,6 +150,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             startingUp.current = false
                         })
                         .catch((error) => {
+                            // 旧调用直接跳过
+                            if (callId !== latestStartCallIdRef.current) return
                             // 如果手动中断 显示中断界面 意外情况暂时不做处理
                             outputToWelcomeConsole(`引擎启动命令被中断或意外情况：${error}`)
                             props.setCheckLog(["引擎启动命令被中断或意外情况，可查看日志详细信息..."])
