@@ -88,6 +88,59 @@ const isExtractorEmpty = (item: HTTPResponseExtractor) => {
     return (item?.Groups || []).map((i) => i.trim()).findIndex((ele) => !ele) !== -1
 }
 
+const InstructionsWithSearch: React.FC = React.memo(() => {
+    const [searchValue, setSearchValue] = useState<string>("")
+    const contentRef = useRef<HTMLDivElement>(null)
+    const originalHtmlRef = useRef<string>("")
+
+    useEffect(() => {
+        if (contentRef.current && !originalHtmlRef.current) {
+            originalHtmlRef.current = contentRef.current.innerHTML
+        }
+    }, [])
+
+    const highlightText = useMemoizedFn((keyword: string) => {
+        if (!contentRef.current || !originalHtmlRef.current) return
+        
+        if (!keyword.trim()) {
+            contentRef.current.innerHTML = originalHtmlRef.current
+            return
+        }
+
+        const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const regex = new RegExp(`(${escaped})(?![^<]*>)`, "gi")
+        
+        contentRef.current.innerHTML = originalHtmlRef.current.replace(regex, '<mark data-search-highlight="true">$1</mark>')
+        
+        // 滚动到第一个匹配项
+        const firstMark = contentRef.current.querySelector("mark[data-search-highlight]")
+        firstMark?.scrollIntoView({behavior: "smooth", block: "center"})
+    })
+
+    return (
+        <div className={styles["instructions-search-container"]}>
+            <div className={styles["search-box"]}>
+                <YakitInput.Search
+                    value={searchValue}
+                    onChange={(e) => {
+                        setSearchValue(e.target.value)
+                        if (!e.target.value) {
+                            if (contentRef.current && originalHtmlRef.current) {
+                                contentRef.current.innerHTML = originalHtmlRef.current
+                            }
+                        }
+                    }}
+                    onSearch={highlightText}
+                    allowClear
+                />
+            </div>
+            <div className={styles["extract-results"]} ref={contentRef}>
+                <SafeMarkdown source={MatchersAndExtractorsUseInstructions} />
+            </div>
+        </div>
+    )
+})
+
 export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> = React.memo((props) => {
     const {httpResponse, ...restProps} = props
     const [codeValue, setCodeValue] = useState<string>(httpResponse || defMatcherAndExtractionCode)
@@ -162,11 +215,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 cancelButtonProps: {style: {display: "none"}},
                 width: "60%",
                 maskClosable: false,
-                content: (
-                    <div className={styles["extract-results"]}>
-                        <SafeMarkdown source={MatchersAndExtractorsUseInstructions} />
-                    </div>
-                )
+                content: <InstructionsWithSearch />
             })
         })
         const matcherCollapseRef = useRef<MatcherCollapseRefProps>({
