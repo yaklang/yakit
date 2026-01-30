@@ -753,11 +753,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     const [tags, setTags] = useState<CountAIMemoryEntityTagsResponse["TagsCount"]>([])
     const [tagsLoading, setTagsLoading] = useState<boolean>(true)
     const [selectQuery, setSelectQuery] = useControllableValue<MemorySelectQuery>(props, {
-        defaultValue: {
-            rate: [],
-            tags: [],
-            tagMatchAll: false
-        },
+        defaultValue: cloneDeep(defaultMemoryQuery),
         trigger: "setSelectQuery",
         valuePropName: "selectQuery"
     })
@@ -800,7 +796,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     /**
      * @name 选择评分范围
      */
-    const onnSelectRate = useMemoizedFn((item: RatingListItem, checked: boolean) => {
+    const onSelectRate = useMemoizedFn((item: RatingListItem, checked: boolean) => {
         if (checked) {
             const rateItem = selectRateList.find((it) => it.id === item.id)
             if (rateItem) {
@@ -1069,7 +1065,23 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                         header={
                             <div className={styles["panel-header"]}>
                                 <span>评分范围</span>
-                                <OutlineQuestionmarkcircleIcon />
+                                <Tooltip
+                                    title={
+                                        <div>
+                                            C Connectivity Score 关联度
+                                            <br />
+                                            O Origin Score 来源与确定性 <br />
+                                            R Relevance Score 相关性
+                                            <br />
+                                            E Emotion Score 情感
+                                            <br />
+                                            P Preference Score 个人偏好 <br />
+                                            A Actionability Score 可操作性 <br />T Temporality Score 时效性
+                                        </div>
+                                    }
+                                >
+                                    <OutlineQuestionmarkcircleIcon />
+                                </Tooltip>
                             </div>
                         }
                         extra={
@@ -1135,7 +1147,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                                 <div key={item.id} className={styles["rating-item"]}>
                                     <YakitCheckbox
                                         checked={checked}
-                                        onChange={(e) => onnSelectRate(item, e.target.checked)}
+                                        onChange={(e) => onSelectRate(item, e.target.checked)}
                                     />
                                     <span className={styles["item-label"]}>{item.label}</span>
                                     <div className={styles["slider-wrapper"]}>
