@@ -1055,7 +1055,8 @@ const GetUIOpSettingMenu = () => {
                 {key: "ai-agent", label: "AI Agent"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"},
                 {key: "ai-repository", label: "知识库"},
-                {key: "ssa-compile-history", label: "SSA项目编译历史"}
+                {key: "ssa-compile-history", label: "SSA项目编译历史"},
+                {key: "memory-base", label: "记忆库"}
             ]
         },
         ModeSwitch(),
@@ -1313,6 +1314,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "ssa-compile-history":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.SSA_Compile_History}))
+                return
+            case "memory-base":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Memory}))
                 return
             case YakitModeEnum.Classic:
             case YakitModeEnum.SecurityExpert:
