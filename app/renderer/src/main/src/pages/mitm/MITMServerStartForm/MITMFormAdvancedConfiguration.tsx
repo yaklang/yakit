@@ -12,7 +12,8 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Form, Modal, Space, Upload} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {ExportIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
+import {ExportIcon, OutlinePlusIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
@@ -60,8 +61,9 @@ export interface AdvancedConfigurationFromValue {
     DisableSystemProxy: boolean
     DisableWebsocketCompression: boolean
     PluginConcurrency: number
-    OverwriteSNI: string
+    OverwriteSNI: boolean
     SNI: string
+    SNIMapping: {Key: string, Value: string}[]
 }
 const DefFieldsVal: AdvancedConfigurationFromValue = {
     certs: [],
@@ -77,8 +79,9 @@ const DefFieldsVal: AdvancedConfigurationFromValue = {
     DisableSystemProxy: false,
     DisableWebsocketCompression: false,
     PluginConcurrency: 20,
-    OverwriteSNI: "auto",
-    SNI: ""
+    OverwriteSNI: false,
+    SNI: "",
+    SNIMapping: [{Key: '', Value: ''}]
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -95,7 +98,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
         const overwriteSNI = useWatch("OverwriteSNI", form)
-        const {t, i18n} = useI18nNamespaces(["webFuzzer"])
+        const {t, i18n} = useI18nNamespaces(["webFuzzer","mitm", "yakitUi"])
+        const tableRef = useRef<HTMLDivElement>(null);
+        
 
         const getValue = useMemoizedFn(() => {
             const v = form.getFieldsValue()
@@ -117,7 +122,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     DisableWebsocketCompression: defFieldsRef.current.DisableWebsocketCompression,
                     PluginConcurrency: defFieldsRef.current.PluginConcurrency,
                     OverwriteSNI: defFieldsRef.current.OverwriteSNI,
-                    SNI: defFieldsRef.current.SNI
+                    SNI: defFieldsRef.current.SNI,
+                    SNIMapping: defFieldsRef.current.SNIMapping,
                 }
             }
         })
@@ -228,22 +234,18 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             })
             // SNI
             getRemoteValue(RemoteMitmGV.MitmSNI).then((e) => {
-                let v = "auto"
-                let v2 = ""
                 try {
-                    const obj = JSON.parse(e)
-                    v = obj.OverwriteSNI
-                    if (v !== "mandatory") {
-                        v2 = ""
-                    } else {
-                        v2 = obj.SNI
-                    }
+                    const { OverwriteSNI = false, SNI = '', SNIMapping = [{Key:'', Value: ''}]  } = JSON.parse(e)
+                    const overwriteSNIValue = typeof OverwriteSNI === 'boolean' ? OverwriteSNI : OverwriteSNI === 'true'
+                    defFieldsRef.current.OverwriteSNI = overwriteSNIValue
+                    defFieldsRef.current.SNI = SNI
+                    defFieldsRef.current.SNIMapping = SNIMapping
+                    form.setFieldsValue({
+                        OverwriteSNI: overwriteSNIValue,
+                        SNI,
+                        SNIMapping
+                    })
                 } catch {
-                } finally {
-                    defFieldsRef.current.OverwriteSNI = v
-                    form.setFieldsValue({OverwriteSNI: v})
-                    defFieldsRef.current.SNI = v2
-                    form.setFieldsValue({SNI: v2})
                 }
             })
         }, [visible])
@@ -318,7 +320,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 const params: AdvancedConfigurationFromValue = {
                     ...formValue,
                     certs,
-                    etcHosts
+                    etcHosts,
+                    SNIMapping: formValue.SNIMapping || defFieldsRef.current.SNIMapping
                 }
                 setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
                 setRemoteValue(MITMConsts.MITMDefaultPreferGMTLS, `${params.preferGMTLS}`)
@@ -335,7 +338,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(RemoteGV.MITMPluginConcurrency, params.PluginConcurrency + "")
                 setRemoteValue(
                     RemoteMitmGV.MitmSNI,
-                    JSON.stringify({OverwriteSNI: params.OverwriteSNI, SNI: params.SNI})
+                    JSON.stringify({OverwriteSNI: params.OverwriteSNI, SNI: params.SNI, SNIMapping: params.SNIMapping})
                 )
                 onSave(params)
             })
@@ -355,7 +358,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 proxyUsername: defFieldsRef.current.proxyUsername,
                 proxyPassword: defFieldsRef.current.proxyPassword,
                 OverwriteSNI: defFieldsRef.current.OverwriteSNI,
-                SNI: defFieldsRef.current.SNI
+                SNI: defFieldsRef.current.SNI,
+                SNIMapping: defFieldsRef.current.SNIMapping,
             }
             if (enableGMTLS) {
                 oldValue.preferGMTLS = defFieldsRef.current.preferGMTLS
@@ -367,7 +371,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 proxyUsername: formValue.proxyUsername || "",
                 proxyPassword: formValue.proxyPassword || "",
                 etcHosts,
-                SNI: formValue.OverwriteSNI === "mandatory" ? formValue.SNI : ""
+                SNI: formValue.OverwriteSNI ? formValue.SNI : ""
             }
             if (!isEqual(oldValue, newValue)) {
                 Modal.confirm({
@@ -543,36 +547,104 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     <Form.Item label={"插件并发进程"} name='PluginConcurrency' style={{marginBottom: 12}}>
                         <YakitInputNumber type='horizontal' size='small' min={1} defaultValue={20} />
                     </Form.Item>
-                    <Form.Item label={"SNI 配置"} name='OverwriteSNI'>
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            options={[
-                                {
-                                    value: "auto",
-                                    label: "自动"
-                                },
-                                {
-                                    value: "mandatory",
-                                    label: "强制"
-                                },
-                                {
-                                    value: "clear",
-                                    label: "清空"
-                                }
-                            ]}
-                            size={"small"}
-                            onChange={(e) => {
-                                if (e.target.value !== "mandatory") {
-                                    form.setFieldsValue({SNI: ""})
-                                }
-                            }}
-                        />
+                    <Form.Item label={t("AdvancedConfiguration.sni_config")} className={styles["sni-rules"]}>
+                        <Form.List name='SNIMapping'>
+                            {(fields, {add, remove}) => (
+                                <>
+                                    <div className={styles["sni-rules-header"]}>
+                                        <YakitButton
+                                            type='text'
+                                            icon={<PlusCircleIcon />}
+                                            style={{paddingLeft: 0}}
+                                            onClick={() => {
+                                                const snimapping = form.getFieldValue("SNIMapping") || [];
+                                                if (snimapping.length > 0) {
+                                                    const { Key, Value } = snimapping[snimapping.length - 1];
+                                                    if (!Key && !Value) {
+                                                        yakitFailed("请设置完成后再添加");
+                                                        return;
+                                                    }
+                                                }
+                                                add({Key: "", Value: ""})
+                                                setTimeout(() => {
+                                                    if (tableRef.current) {
+                                                        tableRef.current.scrollTop = tableRef.current.scrollHeight;
+                                                    }
+                                                }, 100);
+                                            }}
+                                        >
+                                            {t("YakitButton.add")}
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{ margin: 0 }}/>
+                                        <YakitButton
+                                            type='text' 
+                                            danger
+                                            onClick={() => {
+                                                form.setFieldsValue({SNIMapping: [{Key: "", Value: ""}]})
+                                            }}
+                                        >
+                                            {t("YakitButton.reset")}
+                                        </YakitButton>
+                                    </div>
+                                    <div ref={tableRef} className={styles["sni-rules-table"]}>
+                                        <div className={styles["table-header"]}>
+                                            <div className={styles["header-cell"]}>{t("AdvancedConfiguration.host_rules")}</div>
+                                            <div className={styles["header-cell"]}>{t("AdvancedConfiguration.SNI_value")}</div>
+                                        </div>
+                                        {fields.map((field) => (
+                                            <div key={field.key} className={styles["table-row"]}>
+                                                <div className={styles["table-cell"]}>
+                                                    <Form.Item
+                                                        {...field}
+                                                        name={[field.name, "Key"]}
+                                                        style={{marginBottom: 0}}
+                                                    >
+                                                        <YakitInput
+                                                            placeholder='*.example.com'
+                                                            size='small'
+                                                            style={{width: "100%"}}
+                                                        />
+                                                    </Form.Item>
+                                                </div>
+                                                <div className={styles["table-cell"]}>
+                                                    <Form.Item
+                                                        {...field}
+                                                        name={[field.name, "Value"]}
+                                                        style={{marginBottom: 0, flex: 1}}
+                                                    >
+                                                        <YakitInput
+                                                            placeholder={`[${t("AdvancedConfiguration.SNI_extra")}]`}
+                                                            size='small'
+                                                            style={{width: "100%"}}
+                                                        />
+                                                    </Form.Item>
+                                                    <YakitButton
+                                                        type='text'
+                                                        icon={<TrashIcon />}
+                                                        onClick={() => remove(field.name)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </Form.List>
+                        <div className={styles["sni-force-row"]}>
+                            <Form.Item name='OverwriteSNI' valuePropName='checked' style={{marginBottom: 0}}>
+                                <YakitCheckbox>{t("AdvancedConfiguration.mandatory_SNI")}</YakitCheckbox>
+                            </Form.Item>
+                            {overwriteSNI && (
+                                <Form.Item name='SNI' style={{marginBottom: 0}} extra={t("AdvancedConfiguration.SNI_extra")}>
+                                    <YakitInput 
+                                        size='small' 
+                                        placeholder='[cdn.cloudflare.com]'
+                                        className={styles["sni-input"]}
+                                    />
+                                </Form.Item>
+                            )}
+                        </div>
                     </Form.Item>
-                    {overwriteSNI === "mandatory" && (
-                        <Form.Item label={"强制SNI"} name='SNI'>
-                            <YakitInput size='small' />
-                        </Form.Item>
-                    )}
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
                         <div className={styles["drawer-TLS-item"]}>
                             <YakitButton

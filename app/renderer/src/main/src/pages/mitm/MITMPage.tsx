@@ -522,6 +522,7 @@ export interface ExtraMITMServerProps {
     PluginConcurrency: number
     OverwriteSNI: boolean
     SNI: string
+    SNIMapping: {Key: string, Value: string}[]
 }
 
 interface MITMServerProps {
