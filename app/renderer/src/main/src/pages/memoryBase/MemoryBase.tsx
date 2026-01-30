@@ -909,6 +909,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         }))
         setSelectRateList([...newSelectRateList])
         setRateMode("must_aware")
+        setSelectAllRate(false)
     })
     const onResetTags = useMemoizedFn((e) => {
         e.stopPropagation()
