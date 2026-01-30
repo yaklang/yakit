@@ -915,10 +915,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         urlArr = [...urlArr, item]
                     }
                 })
-
-                if (filterConfig.filterMode === "shield") {
-                    urlArr.push(...filterConfig.shield.hostName)
-                }
+                urlArr.push(...filterConfig.shield.hostName)
                 newParams = {
                     ...newParams,
                     SearchContentType: filterConfig.show.searchContentType.join(","),
