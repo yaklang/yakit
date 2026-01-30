@@ -64,7 +64,7 @@ export const getAIMemoryEntityFilter = (params: {
 }): QueryAIMemoryEntityRequest["Filter"] => {
     const {query, search} = params
     const filter: QueryAIMemoryEntityRequest["Filter"] = {
-        TagMatchAll: false,
+        TagMatchAll: query.tagMatchAll,
         CScore: undefined,
         OScore: undefined,
         RScore: undefined,
