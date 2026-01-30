@@ -399,6 +399,10 @@ export default function useVirtualTableHook<
     const startT = useMemoizedFn(() => {
         setIsLoop(true)
     })
+    /** @name 关闭表格循环 */
+    const stopT = useMemoizedFn(() => {
+        setIsLoop(false)
+    })
 
     /** @name 设置表格loading状态 */
     const setTLoad = useMemoizedFn((is: boolean) => {
@@ -436,6 +440,6 @@ export default function useVirtualTableHook<
         pagination,
         loading,
         offsetData,
-        {startT, refreshT, noResetRefreshT, setTLoad, setTData, setP}
+        {startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, setP}
     ] as const
 }
