@@ -795,7 +795,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
 
         if (!forceRenderMenu) isInitRef.current = true
-    }, [forceRenderMenu, menuType, contextMenu, contextMenuPlugin, customHTTPMutatePlugin, extraMenuListsObj])
+    }, [forceRenderMenu, menuType, contextMenu, contextMenuPlugin, customHTTPMutatePlugin, extraMenuListsObj, DefaultMenuTopArr])
 
     /**
      * editor编辑器的额外渲染功能:
