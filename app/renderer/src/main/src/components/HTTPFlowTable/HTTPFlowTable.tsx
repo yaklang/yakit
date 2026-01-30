@@ -11,7 +11,6 @@ import {
     useCreation,
     useDebounceEffect,
     useDebounceFn,
-    useGetState,
     useMemoizedFn,
     useUpdateEffect,
     useVirtualList,
@@ -680,7 +679,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [data, setData] = useState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>({
+    const [params, setParams, getParams] = useGetSetState<YakQueryHTTPFlowRequest>({
         SourceType: props.params?.SourceType || "mitm",
         ...getRunTimeIdObj(runTimeId),
         FromPlugin: "",
@@ -706,16 +705,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(false)
-    const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
+    const [selected, setSelected, getSelected] = useGetSetState<HTTPFlow>()
 
     const {compareState, setCompareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
 
     // 屏蔽数据
-    const [shieldData, setShieldData, getShieldData] = useGetState<ShieldData>({
+    const [shieldData, setShieldData, getShieldData] = useGetSetState<ShieldData>({
         data: []
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "K" | "M">("B")
+    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetSetState<"B" | "K" | "M">("B")
     // 最新一条数据ID
     const maxIdRef = useRef<number>(0)
     // 最后一条数据ID
@@ -728,9 +727,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-    const [offsetData, setOffsetData, getOffsetData] = useGetState<HTTPFlow[]>([])
-    const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
-    const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
+    const [offsetData, setOffsetData, getOffsetData] = useGetSetState<HTTPFlow[]>([])
+    const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetSetState<number>()
+    const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetSetState<number>()
     const [isReset, setIsReset] = useState<boolean>(false)
 
     const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
