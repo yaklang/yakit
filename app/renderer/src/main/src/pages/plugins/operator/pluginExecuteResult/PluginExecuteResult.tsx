@@ -69,7 +69,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         loading,
         defaultActiveKey,
         pluginExecuteResultWrapper = "",
-        PluginTabsRightNode
+        PluginTabsRightNode,
+        isCrawler = false
     } = props
     const {t, i18n} = useI18nNamespaces(["plugin"])
 
@@ -125,6 +126,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                     <PluginExecuteHttpFlow
                         runtimeId={runtimeId}
                         website={!!streamInfo.tabsInfoState["website"]?.targets}
+                        isCrawler={isCrawler}
                     />
                 ) : (
                     <></>
@@ -239,7 +241,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 })
 /**HTTP 流量 */
 export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
-    const {runtimeId, filterTagDom, website = false} = props
+    const {runtimeId, filterTagDom, website = false, isCrawler = false} = props
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
@@ -301,7 +303,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                         pageType='Plugin'
                         runtimeId={runtimeId}
                         filterTagDom={filterTagDom}
-                        params={{SourceType: "scan"}}
+                        params={{SourceType: isCrawler ? "basic-crawler" : "scan"}}
                         httpHistoryTableTitleStyle={{
                             paddingTop: 12,
                             paddingLeft: 8,
