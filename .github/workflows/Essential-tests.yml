@@ -8,8 +8,10 @@ on:
   pull_request:
     branches: [master]
     paths:
-      - 'app/renderer/src/main/src/__tests__/**'
-      - '.github/workflows/**'
+      - '__tests__/**'
+      - 'app/renderer/src/main/src/**'
+      - 'app/renderer/engine-link-startup/src/__tests__'
+      - 'app/**/src/**/__tests__/**'
 
 jobs:
   vitest:
@@ -31,27 +33,9 @@ jobs:
               app/renderer/src/main/yarn.lock
               app/renderer/engine-link-startup/yarn.lock
 
-      # - name: Cache Yarn cache
-      #   id: yarn-cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.cache/yarn
-      #     key: ${{ runner.os }}-yarn-cache-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-yarn-cache-
-
-      # - name: Cache node_modules
-      #   id: node-mod-cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: app/renderer/src/main/node_modules
-      #     key: ${{ runner.os }}-node-modules-${{ hashFiles('app/renderer/src/main/yarn.lock') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-node-modules-
-
-      - name: Install dependencies (renderer main)
+      - name: Install dependencies (root)
         # if: steps.node-mod-cache.outputs.cache-hit != 'true'
-        working-directory: app/renderer/src/main
+        working-directory: .
         run: yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
 
       - name: Skip install (node_modules cache hit)
@@ -59,24 +43,24 @@ jobs:
         run: echo "node_modules cache restored; skipping yarn install"
 
       - name: Verify installed packages (quick)
-        working-directory: app/renderer/src/main
+        working-directory: .
         run: |
           echo "Yarn cache dir: $(yarn cache dir)"
           ls -la node_modules | head -n 20 || true
 
       - name: Debug - list candidate test files
-        working-directory: app/renderer/src/main
+        working-directory: .
         run: |
           echo "pwd: $(pwd)"
           echo "node: $(node -v) yarn: $(yarn -v)"
           echo "Find test/spec files (up to depth 6):"
           find . -maxdepth 6 -type f \( -name "*.test.*" -o -name "*.spec.*" \) -print || true
-          echo "Show specific folder (if exists):"
-          ls -la src/components/playground/Vitest__Test__ || true
+          echo "Show renderer playground folder (if exists):"
+          ls -la app/renderer/src/main/src/components/playground/Vitest__Test__ || true
 
       - name: Determine relevant test files
         id: test_selection
-        working-directory: app/renderer/src/main
+        working-directory: .
         shell: bash
         run: |
           # Get files changed in the PR. Use multiple fallbacks because the runner
@@ -104,15 +88,14 @@ jobs:
 
           echo "Changed files:\n$CHANGED"
 
-          # Normalize changed paths to be relative to the working dir by
-          # taking the last occurrence of 'src/' (works for nested 'src' paths)
-          CHANGED_REL=$(printf "%s\n" "$CHANGED" | awk -F'src/' '{ if (NF>1) print "src/"$(NF) ; else print $0 }' | sort -u || true)
+          # Normalize changed paths to be relative to the repository root
+          CHANGED_REL=$(printf "%s\n" "$CHANGED" | sed 's|^\./||' | sort -u || true)
           # remove empty lines
           CHANGED_REL=$(printf "%s\n" "$CHANGED_REL" | sed '/^$/d' || true)
           echo "Normalized changes:\n$CHANGED_REL"
 
-          # Prefer explicitly changed test files
-          TEST_FILES=$(printf "%s\n" "$CHANGED_REL" | grep -E 'src/.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
+          # Prefer explicitly changed test files (paths under repo root)
+          TEST_FILES=$(printf "%s\n" "$CHANGED_REL" | grep -E '.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
           if [ -n "$TEST_FILES" ]; then
             TF=$(echo "$TEST_FILES" | tr '\n' ' ')
             echo "Found test files: $TF"
@@ -121,9 +104,9 @@ jobs:
           fi
 
           # Otherwise, map changed source dirs to test globs
-          DIRS=$(printf "%s\n" "$CHANGED_REL" | grep -E '^src/' || true)
+          DIRS=$(printf "%s\n" "$CHANGED_REL" | xargs -I{} dirname {} 2>/dev/null | sort -u || true)
           if [ -n "$DIRS" ]; then
-            PATTERNS=$(printf "%s\n" "$DIRS" | sed -E 's|/[^/]+$||' | sort -u | awk '{print $0"/**/*.test.* "$0"/**/*.spec.*"}' | tr '\n' ' ')
+            PATTERNS=$(printf "%s\n" "$DIRS" | awk '{print $0"/**/*.test.* "$0"/**/*.spec.*"}' | tr '\n' ' ')
             echo "Derived patterns: $PATTERNS"
             echo "tests=$PATTERNS" >> $GITHUB_OUTPUT
             exit 0
