@@ -1,6 +1,7 @@
 const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
+const os = require("os")
 const url = require("url")
 const {registerIPC, registerNewIPC} = require("./ipc")
 const process = require("process")
@@ -16,8 +17,13 @@ const {windowStatePatch} = require("./filePath")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
 const {MenuTemplate} = require("./menu")
-
-const {renderLogOutputFile, getAllLogHandles, closeAllLogHandles, initAllLogFolders} = require("./logFile")
+const {
+    renderLogOutputFile,
+    getAllLogHandles,
+    closeAllLogHandles,
+    initAllLogFolders,
+    printLogOutputFile
+} = require("./logFile")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -31,8 +37,7 @@ let closeFlag = true
 
 process.on("uncaughtException", (error) => {
     try {
-        console.info(error)
-        win.webContents.send("debug-print-log", `[Main] index / uncaughtException => ${error?.message || JSON.stringify(error)}`)
+        printLogOutputFile(`[Main] index / uncaughtException => ${error?.message || JSON.stringify(error)}`)
     } catch (error) {}
 })
 
@@ -44,6 +49,7 @@ let ipcRegistered = false
 /**
  * ---------------- 创建 yakitEngineLink 窗口 ----------------
  */
+let readyEngineLinkShow = false
 function createEngineLinkWindow() {
     const state = windowStateKeeper({
         defaultWidth: 900,
@@ -88,17 +94,47 @@ function createEngineLinkWindow() {
     engineLinkWin.setMenuBarVisibility(false)
     if (process.platform === "darwin") engineLinkWin.setWindowButtonVisibility(false)
 
-    engineLinkWin.webContents.on("render-process-gone", (event, details) => {
-        renderLogOutputFile(`----- engineLinkWin Render gone ------`)
-        renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
-        if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
-        require("./handlers/logger").saveLogs()
-    })
-
     engineLinkWin.webContents.on("will-navigate", (e) => e.preventDefault())
 
     engineLinkWin.on("show", () => {
+        printLogOutputFile(`[engineLinkWin] show event triggered`)
         state.manage(engineLinkWin)
+    })
+
+    engineLinkWin.once("ready-to-show", () => {
+        readyEngineLinkShow = true
+        printLogOutputFile(
+            `[engineLinkWin] ready-to-show, isVisible: ${engineLinkWin.isVisible()}, isDestroyed: ${engineLinkWin.isDestroyed()}`
+        )
+    })
+
+    engineLinkWin.webContents.on("did-finish-load", () => {
+        printLogOutputFile(`[engineLinkWin] did-finish-load, URL: ${engineLinkWin.webContents.getURL()}`)
+    })
+
+    engineLinkWin.webContents.on("did-frame-finish-load", (event, isMainFrame) => {
+        if (isMainFrame) {
+            printLogOutputFile(
+                `[engineLinkWin] main frame finished load, isLoadingMainFrame: ${engineLinkWin.webContents.isLoadingMainFrame()}`
+            )
+        }
+    })
+
+    engineLinkWin.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
+        printLogOutputFile(`[engineLinkWin] did-fail-load: ${errorCode} - ${errorDescription}, URL: ${validatedURL}`)
+    })
+
+    engineLinkWin.webContents.on("did-stop-loading", () => {
+        printLogOutputFile("[engineLinkWin] did-stop-loading")
+    })
+
+    engineLinkWin.webContents.on("render-process-gone", async (event, details) => {
+        const snapshot = await collectDevicePerformanceSnapshot()
+        renderLogOutputFile(`----- engineLinkWin Render gone ------`)
+        renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
+        renderLogOutputFile(`snapshot: ${JSON.stringify(snapshot)}`)
+        if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
+        require("./handlers/logger").saveLogs()
     })
 
     engineLinkWin.on("close", (e) => {
@@ -117,6 +153,7 @@ function createEngineLinkWindow() {
 /**
  * ---------------- 创建主窗口 ----------------
  */
+let readyWinShow = false
 function createWindow() {
     const minWidth = 900
     const minHeight = 650
@@ -146,8 +183,7 @@ function createWindow() {
         },
         titleBarStyle: "hidden",
         show: false,
-        skipTaskbar: true,
-        paintWhenInitiallyHidden: false
+        skipTaskbar: true
     })
 
     if (isDev) win.loadURL("http://127.0.0.1:3000")
@@ -162,15 +198,43 @@ function createWindow() {
     win.webContents.setWindowOpenHandler(() => ({action: "deny"}))
     win.webContents.on("will-navigate", (e) => e.preventDefault())
 
-    win.webContents.on("render-process-gone", (event, details) => {
-        renderLogOutputFile(`----- Render gone ------`)
-        renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
-        if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
-        require("./handlers/logger").saveLogs()
+    win.on("show", () => {
+        printLogOutputFile(`[mainWin] show event triggered`)
+        state.manage(win)
     })
 
-    win.on("show", () => {
-        state.manage(win)
+    win.once("ready-to-show", () => {
+        readyWinShow = true
+        printLogOutputFile(`[mainWin] ready-to-show, isVisible: ${win.isVisible()}, isDestroyed: ${win.isDestroyed()}`)
+    })
+
+    win.webContents.on("did-finish-load", () => {
+        printLogOutputFile(`[mainWin] did-finish-load, URL: ${win.webContents.getURL()}`)
+    })
+
+    win.webContents.on("did-frame-finish-load", (event, isMainFrame) => {
+        if (isMainFrame) {
+            printLogOutputFile(
+                `[mainWin] main frame finished load, isLoadingMainFrame: ${win.webContents.isLoadingMainFrame()}`
+            )
+        }
+    })
+
+    win.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
+        printLogOutputFile(`[mainWin] did-fail-load: ${errorCode} - ${errorDescription}, URL: ${validatedURL}`)
+    })
+
+    win.webContents.on("did-stop-loading", () => {
+        printLogOutputFile(`[mainWin] did-stop-loading`)
+    })
+
+    win.webContents.on("render-process-gone", async (event, details) => {
+        const snapshot = await collectDevicePerformanceSnapshot()
+        renderLogOutputFile(`----- Render gone ------`)
+        renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
+        renderLogOutputFile(`snapshot: ${JSON.stringify(snapshot)}`)
+        if (details.reason === "crashed") setLocalCache("render-crash-screen", true)
+        require("./handlers/logger").saveLogs()
     })
 
     win.on("close", (e) => {
@@ -227,10 +291,9 @@ function winHide(targetWin) {
     }
 }
 // 窗口显示
-function winShow(targetWin) {
+function winShow(targetWin, readyShow) {
     if (targetWin && !targetWin.isDestroyed()) {
         let shown = false
-
         const show = () => {
             if (shown) return
             shown = true
@@ -238,30 +301,21 @@ function winShow(targetWin) {
             targetWin.focus()
             targetWin.setSkipTaskbar(false)
         }
-
-        /**
-         * 情况 1：大多数时候
-         * renderer 已经可绘制了
-         */
-        if (!targetWin.webContents.isLoadingMainFrame()) {
+        // 确保窗口已经加载完成
+        if (targetWin.webContents.isLoading()) {
+            printLogOutputFile(`winShow Loading...`)
+            if (readyShow) {
+                printLogOutputFile(`winShow ready ok`)
+                show()
+            } else {
+                targetWin.webContents.once("did-finish-load", () => {
+                    show()
+                })
+            }
+        } else {
+            printLogOutputFile(`winShow Loading ok`)
             show()
-            return
         }
-
-        /**
-         * 情况 2：GPU / renderer 较慢
-         * 尝试等 ready-to-show
-         */
-        targetWin.once("ready-to-show", () => {
-            show()
-        })
-
-        /**
-         * 情况 3：ready-to-show 太晚
-         */
-        setTimeout(() => {
-            show()
-        }, 500)
     }
 }
 // 窗口关闭
@@ -288,6 +342,75 @@ function getActiveWindow() {
 }
 
 /**
+ * ---------------- 设备 / 性能 ----------------
+ */
+// 基础系统信息（Node / OS）
+function getBaseSystemInfo() {
+    return {
+        platform: process.platform,
+        arch: process.arch,
+        osType: os.type(),
+        osRelease: os.release(),
+        loadAvg: os.loadavg(),
+        uptime: os.uptime(),
+        cpuCount: os.cpus().length,
+        cpuModel: os.cpus()[0]?.model,
+        totalMemoryGB: (os.totalmem() / 1024 / 1024 / 1024).toFixed(2),
+        freeMemoryGB: (os.freemem() / 1024 / 1024 / 1024).toFixed(2),
+        nodeVersion: process.version,
+        electronVersion: process.versions.electron,
+        chromeVersion: process.versions.chrome,
+        v8Version: process.versions.v8
+    }
+}
+// GPU 核心信息
+function getGPUInfo() {
+    return {
+        gpuFeatureStatus: app.getGPUFeatureStatus(),
+        gpuInfoBasic: app.getGPUInfo("basic"),
+        gpuInfoComplete: app.getGPUInfo("complete")
+    }
+}
+// Chromium 命令行 GPU Flags
+function getGPUFlags() {
+    return {
+        disableGPU: app.commandLine.hasSwitch("disable-gpu"),
+        disableGPUCompositing: app.commandLine.hasSwitch("disable-gpu-compositing"),
+        useAngle: app.commandLine.getSwitchValue("use-angle"),
+        enableFeatures: app.commandLine.getSwitchValue("enable-features"),
+        disableFeatures: app.commandLine.getSwitchValue("disable-features")
+    }
+}
+// Electron 进程内存 / 性能状态
+async function getProcessMetrics() {
+    const metrics = app.getAppMetrics()
+    return metrics.map((m) => ({
+        pid: m.pid,
+        type: m.type,
+        cpuPercent: m.cpu.percentCPUUsage,
+        memoryMB: (m.memory.workingSetSize / 1024).toFixed(1)
+    }))
+}
+// GPU Crash / Blacklist 判断
+function analyzeGPUStatus(gpuFeatureStatus) {
+    const badFeatures = Object.entries(gpuFeatureStatus).filter(([, v]) => v !== "enabled")
+
+    return {
+        hasIssue: badFeatures.length > 0,
+        badFeatures
+    }
+}
+async function collectDevicePerformanceSnapshot() {
+    return {
+        time: new Date().toISOString(),
+        base: getBaseSystemInfo(),
+        gpu: getGPUInfo(),
+        gpuFlags: getGPUFlags(),
+        processes: await getProcessMetrics()
+    }
+}
+
+/**
  * ---------------- 注册 IPC，只执行一次 ----------------
  */
 function registerGlobalIPC() {
@@ -301,7 +424,7 @@ function registerGlobalIPC() {
         winHide(win)
         engineLinkWin.webContents.reload()
         setTimeout(() => {
-            winShow(engineLinkWin)
+            winShow(engineLinkWin, readyEngineLinkShow)
         }, 500)
         return
     })
@@ -311,7 +434,7 @@ function registerGlobalIPC() {
         winHide(win)
         engineLinkWin.webContents.reloadIgnoringCache()
         setTimeout(() => {
-            winShow(engineLinkWin)
+            winShow(engineLinkWin, readyEngineLinkShow)
         }, 500)
         return
     })
@@ -329,14 +452,14 @@ function registerGlobalIPC() {
     // engineLink 完成操作
     ipcMain.handle("engineLinkWin-done", async (event, data) => {
         winHide(engineLinkWin)
-        winShow(win)
+        winShow(win, readyWinShow)
         safeSend(win, "from-engineLinkWin", data)
     })
 
     // win 完成操作
     ipcMain.handle("yakitMainWin-done", async (event, data) => {
         winHide(win)
-        winShow(engineLinkWin)
+        winShow(engineLinkWin, readyEngineLinkShow)
         safeSend(engineLinkWin, "from-win", data)
     })
 
@@ -369,8 +492,8 @@ function registerGlobalIPC() {
             const showIcon = isIRify
                 ? "../assets/irify-close.png"
                 : isMemfit
-                ? "../assets/memfit-close.png"
-                : "../assets/yakit-close.png"
+                  ? "../assets/memfit-close.png"
+                  : "../assets/yakit-close.png"
 
             dialog
                 .showMessageBox(parentWindow, {
@@ -407,15 +530,15 @@ function registerGlobalIPC() {
     // ------------------- 窗口通信注册 -------------------
     try {
         registerNewIPC(engineLinkWin, "EngineLink:")
-        console.log("[engineLinkWin] registerNewIPC completed")
+        printLogOutputFile("[engineLinkWin] registerNewIPC completed")
     } catch (err) {
-        console.error("[engineLinkWin] registerNewIPC error:", err)
+        printLogOutputFile(`[engineLinkWin] registerNewIPC error: ${err}}`)
     }
     try {
         registerIPC(win)
-        console.log("[Main] registerIPC completed")
+        printLogOutputFile("[Main] registerIPC completed")
     } catch (err) {
-        console.error("[Main] registerIPC error:", err)
+        printLogOutputFile(`[Main] registerIPC error: ${err}}`)
     }
 }
 
@@ -428,7 +551,7 @@ Menu.setApplicationMenu(menu)
 /**
  * ---------------- App Ready ----------------
  */
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     /**
      * init-log-folders:
      * 存在则检查文件数量是否超过10个，超过则只保留最近10个文件
@@ -438,6 +561,8 @@ app.whenReady().then(() => {
 
     /** 获取缓存数据并储存于软件内 */
     initLocalCache()
+    getAllLogHandles()
+
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
     initExtraLocalCache(() => {
         const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
@@ -475,8 +600,14 @@ app.whenReady().then(() => {
         callback(filePath)
     })
 
+    // 收集 设备 / 性能
     try {
-        getAllLogHandles()
+        const snapshot = await collectDevicePerformanceSnapshot()
+        const {hasIssue, badFeatures} = analyzeGPUStatus(snapshot.gpu.gpuFeatureStatus)
+        if (hasIssue) {
+            printLogOutputFile(`hasIssue: ${JSON.stringify(badFeatures)}`)
+        }
+        printLogOutputFile(`after whenReady snapshot: ${JSON.stringify(snapshot)}`)
     } catch (error) {}
 
     createEngineLinkWindow()
@@ -492,6 +623,11 @@ app.whenReady().then(() => {
     try {
         registerGlobalIPC()
     } catch (error) {}
+})
+
+app.on("child-process-gone", async (_e, killed) => {
+    const snapshot = await collectDevicePerformanceSnapshot()
+    printLogOutputFile(`child-process-gone snapshot: ${JSON.stringify(snapshot)}, killed: ${killed}`)
 })
 
 /**
