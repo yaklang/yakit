@@ -200,8 +200,8 @@ export const apiDownloadStorageType: APIFunc<string, string> = (filePath) => {
                                 return
                             }
                             // 重要！！！ 此处仅供测试时使用 上线请复原
-                            resolve(`http://192.168.3.88:8080/install_package${match[1]}`)
-                            // resolve(`${setting}/install_package${match[1]}`)
+                            // resolve(`http://192.168.3.88:8080/install_package${match[1]}`)
+                            resolve(`${setting}/install_package${match[1]}`)
                          }).catch(() => {
                             reject()
                          })

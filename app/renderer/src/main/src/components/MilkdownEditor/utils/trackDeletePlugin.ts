@@ -4,6 +4,7 @@ import {fileCustomId} from "./uploadPlugin"
 import {createSlice} from "@milkdown/kit/ctx"
 import moment from "moment"
 import {DeleteOSSFileItem} from "../MilkdownEditorType"
+import { ReplaceStep } from "@milkdown/kit/prose/transform"
 
 export const getFileNameByUrl = (url) => {
     if (!url) return ""
@@ -58,8 +59,16 @@ export const trackDeletePlugin = () =>
         return new Plugin({
             key: new PluginKey("MILKDOWN_PLUGIN_TRACK_DELETE"),
             appendTransaction: (transactions, oldState, newState) => {
-                 // 唯一正确的判断
+                // doc 没变
                 if (oldState.doc === newState.doc) return null
+
+                // 不是用户真正删除行为，直接跳过
+                const hasReplaceStep = transactions.some(tr =>
+                    tr.steps.some(step => step instanceof ReplaceStep) && tr.docChanged
+                )
+                 if (!hasReplaceStep) {
+                    return null
+                }
 
                 // 核心：语义 diff
                 const oldFiles = collectOSSFiles(oldState.doc, oldState.schema)

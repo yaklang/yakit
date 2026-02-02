@@ -184,10 +184,17 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         {wait: 200}
     ).run
 
+    // 校验文件是否真的被删除 如果不在defaultValue中 则是真的删除
+    const judgeDeleteFile = useMemoizedFn((fileNames: string[] = [])=>{
+        const value = get()?.action(getMarkdown()) || ""
+        let newFileNames = fileNames.filter((fileName)=>!(value).includes(fileName))
+        return newFileNames
+    })
+
     /**删除文档中被删除的所有文件 */
     const onDeleteAllFiles = useMemoizedFn(() => {
         if (deletedFiles.length > 0) {
-            httpDeleteNotepadFile({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
+            httpDeleteNotepadFile({file_name: judgeDeleteFile(deletedFiles.map((ele) => ele.fileName))}, true)
         }
     })
     /**删除在文档中被删除30s的文件 */
@@ -205,7 +212,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         }
         if (fileName.length > 0) {
             setInterval(undefined)
-            httpDeleteNotepadFile({file_name: fileName}, true).finally(() => {
+            httpDeleteNotepadFile({file_name: judgeDeleteFile(fileName)}, true).finally(() => {
                 // 暂不考虑删除失败的情况
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
             })
