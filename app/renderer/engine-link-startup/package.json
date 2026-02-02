@@ -17,6 +17,8 @@
     "build-irify-enterprise": "tsc --noEmit && vite build --mode irifyEnterprise",
     "build-memfit": "tsc --noEmit && vite build --mode memfit",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
     "release-render": "node scripts/release-render.cjs"
   },
   "dependencies": {
@@ -43,15 +45,22 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
     "@types/node": "^24.6.0",
     "@types/react": "^18.2.9",
     "@types/react-dom": "^18.2.4",
     "@vitejs/plugin-react": "^4.0.0",
+    "@vitest/ui": "^1.0.4",
     "@xterm/xterm": "5.5.0",
+    "happy-dom": "^12.10.3",
+    "jsdom": "^23.0.1",
     "postcss-normalize": "^13.0.1",
     "prettier": "^3.0.1",
     "sass": "^1.93.2",
     "typescript": "~5.9.3",
-    "vite": "6.4.1"
+    "vite": "6.4.1",
+    "vitest": "^1.0.4"
   }
 }
