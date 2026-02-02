@@ -49,7 +49,7 @@ import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExe
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {isEqual} from "lodash"
 
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"

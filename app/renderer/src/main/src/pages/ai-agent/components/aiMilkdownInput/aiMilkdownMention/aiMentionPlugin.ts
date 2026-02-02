@@ -1,7 +1,6 @@
 import {$command, $nodeSchema, $nodeAttr} from "@milkdown/utils"
 import {Attrs} from "@milkdown/kit/prose/model"
 import {TextSelection} from "@milkdown/kit/prose/state"
-import {AIMentionTabsEnum, iconMap} from "@/pages/ai-agent/defaultConstant"
 import {iconMapType} from "../../aiChatMention/type"
 
 export const aiMentionCustomId = "ai-mention-custom"
