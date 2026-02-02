@@ -8,6 +8,7 @@ export enum TabKey {
 export interface AIFileSystemListProps {
     execFileRecord: UseYakExecResultState["execFileRecord"]
     activeKey?: TabKey
+    setActiveKey?: (key: TabKey) => void
 }
 
 export interface FileTreeSystemListWapperProps {

@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {AIFileSystemListProps, TabKey} from "./type"
 import {useCreation} from "ahooks"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -12,8 +12,29 @@ const options = [
     {label: "读写日志", value: TabKey.OperationLog}
 ]
 
-export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({execFileRecord, activeKey}) => {
-    const [activeTab, setActiveTab] = useState<TabKey>(activeKey ?? TabKey.FileTree)
+export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({execFileRecord, activeKey, setActiveKey}) => {
+    // 非受控模式下的内部状态
+    const [internalActiveTab, setInternalActiveTab] = useState<TabKey>(activeKey ?? TabKey.FileTree)
+
+    // 判断是否为受控模式
+    const isControlled = setActiveKey !== undefined
+
+    // 当前激活的 tab（受控模式使用 activeKey，非受控模式使用内部状态）
+    const activeTab = isControlled ? (activeKey ?? TabKey.FileTree) : internalActiveTab
+
+    useEffect(() => {
+        if (!isControlled && activeKey !== undefined) {
+            setInternalActiveTab(activeKey)
+        }
+    }, [activeKey, isControlled])
+
+    const handleTabChange = (value: TabKey) => {
+        if (isControlled) {
+            setActiveKey(value)
+        } else {
+            setInternalActiveTab(value)
+        }
+    }
 
     const list = useCreation(() => {
         return Array.from(execFileRecord.values())
@@ -38,7 +59,7 @@ export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({ex
                     defaultValue={TabKey.FileTree}
                     options={options}
                     value={activeTab}
-                    onChange={({target}) => setActiveTab(target.value as TabKey)}
+                    onChange={({target}) => handleTabChange(target.value as TabKey)}
                 />
             </div>
 

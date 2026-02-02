@@ -289,7 +289,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 case AITabsEnum.Task_Content:
                     return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
                 case AITabsEnum.File_System:
-                    return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} />
+                    return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} setActiveKey={setFileSystemKey} />
                 case AITabsEnum.Risk:
                     return !!runTimeIDs.length ? (
                         <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
