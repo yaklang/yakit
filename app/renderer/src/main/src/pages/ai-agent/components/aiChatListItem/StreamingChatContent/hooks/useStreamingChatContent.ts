@@ -8,9 +8,16 @@ export interface UseStreamingChatContentParams {
   token: string
 }
 
+export interface UseStreamingChatContentResult {
+  /** 流数据 */
+  stream: ChatStream | null
+  /** 是否需要打字效果（经历过 start 状态） */
+  shouldType: boolean
+}
+
 export function useStreamingChatContent(
   params: UseStreamingChatContentParams
-): ChatStream | null {
+): UseStreamingChatContentResult {
   const { chatType, token } = params
   const { getChatContentMap } = useAIChatUIData()
 
@@ -24,6 +31,9 @@ export function useStreamingChatContent(
   )
 
   const isRunningRef = useRef<boolean>(true)
+  // 记录是否经历过 start 状态
+  const hasStartedRef = useRef<boolean>(false)
+  const [shouldType, setShouldType] = useState<boolean>(false)
 
   useRafInterval(
     () => {
@@ -33,6 +43,10 @@ export function useStreamingChatContent(
       const status = chatItem.data.status
 
       if (status === "start") {
+        if (!hasStartedRef.current) {
+          hasStartedRef.current = true
+          setShouldType(true)
+        }
         isRunningRef.current = true
         setRenderData(chatItem)
         return
@@ -46,5 +60,5 @@ export function useStreamingChatContent(
     isRunningRef.current ? 200 : undefined
   )
 
-  return renderData
+  return { stream: renderData, shouldType }
 }

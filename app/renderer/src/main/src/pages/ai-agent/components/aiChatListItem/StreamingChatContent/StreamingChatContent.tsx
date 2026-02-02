@@ -1,7 +1,7 @@
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import type {ReActChatElement, ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
 import {memo, type FC} from "react"
-import {useStreamingChatContent} from "./hooks/useStreamingChatContent"
+import {useTypedStream} from "./hooks/useTypedStream"
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
 
 type StreamCls = {className: string} | {aiMarkdownProps?: {className: string}}
@@ -18,9 +18,10 @@ type SingleStreamProps = {
 }
 
 const AIStreamCard: FC<SingleStreamProps> = ({chatType, token, streamClassName}) => {
-    const renderData = useStreamingChatContent({chatType, token})
-    if (!renderData) return null
-    return <AIStreamNode {...streamClassName} stream={renderData} />
+    const {stream} = useTypedStream({chatType, token})
+    if (!stream) return null
+
+    return <AIStreamNode {...streamClassName} stream={stream} />
 }
 
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
