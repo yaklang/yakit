@@ -128,8 +128,8 @@ function createEngineLinkWindow() {
         printLogOutputFile("[engineLinkWin] did-stop-loading")
     })
 
-    engineLinkWin.webContents.on("render-process-gone", async (event, details) => {
-        const snapshot = await collectDevicePerformanceSnapshot()
+    engineLinkWin.webContents.on("render-process-gone", (event, details) => {
+        const snapshot = collectDevicePerformanceSnapshot()
         renderLogOutputFile(`----- engineLinkWin Render gone ------`)
         renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
         renderLogOutputFile(`snapshot: ${JSON.stringify(snapshot)}`)
@@ -228,8 +228,8 @@ function createWindow() {
         printLogOutputFile(`[mainWin] did-stop-loading`)
     })
 
-    win.webContents.on("render-process-gone", async (event, details) => {
-        const snapshot = await collectDevicePerformanceSnapshot()
+    win.webContents.on("render-process-gone", (event, details) => {
+        const snapshot = collectDevicePerformanceSnapshot()
         renderLogOutputFile(`----- Render gone ------`)
         renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
         renderLogOutputFile(`snapshot: ${JSON.stringify(snapshot)}`)
@@ -400,13 +400,13 @@ function analyzeGPUStatus(gpuFeatureStatus) {
         badFeatures
     }
 }
-async function collectDevicePerformanceSnapshot() {
+function collectDevicePerformanceSnapshot() {
     return {
         time: new Date().toISOString(),
         base: getBaseSystemInfo(),
         gpu: getGPUInfo(),
         gpuFlags: getGPUFlags(),
-        processes: await getProcessMetrics()
+        processes: getProcessMetrics()
     }
 }
 
@@ -601,14 +601,12 @@ app.whenReady().then(async () => {
     })
 
     // 收集 设备 / 性能
-    try {
-        const snapshot = await collectDevicePerformanceSnapshot()
-        const {hasIssue, badFeatures} = analyzeGPUStatus(snapshot.gpu.gpuFeatureStatus)
-        if (hasIssue) {
-            printLogOutputFile(`hasIssue: ${JSON.stringify(badFeatures)}`)
-        }
-        printLogOutputFile(`after whenReady snapshot: ${JSON.stringify(snapshot)}`)
-    } catch (error) {}
+    const snapshot = collectDevicePerformanceSnapshot()
+    const {hasIssue, badFeatures} = analyzeGPUStatus(snapshot.gpu.gpuFeatureStatus)
+    if (hasIssue) {
+        printLogOutputFile(`hasIssue: ${JSON.stringify(badFeatures)}`)
+    }
+    printLogOutputFile(`after whenReady snapshot: ${JSON.stringify(snapshot)}`)
 
     createEngineLinkWindow()
     createWindow()
@@ -626,8 +624,8 @@ app.whenReady().then(async () => {
 })
 
 app.on("child-process-gone", async (_e, killed) => {
-    const snapshot = await collectDevicePerformanceSnapshot()
-    printLogOutputFile(`child-process-gone snapshot: ${JSON.stringify(snapshot)}, killed: ${killed}`)
+    const snapshot = collectDevicePerformanceSnapshot()
+    printLogOutputFile(`child-process-gone snapshot: ${JSON.stringify(snapshot)}, killed: ${JSON.stringify(killed)}`)
 })
 
 /**
