@@ -449,6 +449,18 @@ export declare namespace AIAgentGrpcApi {
         summary?: string
         /** 工具名和工具描述 */
         tool?: {name?: string; description?: string}
+        /** 间隔时间(ms) */
+        duration_ms: number
+        /** 间隔时间(s) */
+        duration_seconds: number
+        /** 结束时间戳(s) */
+        end_time: number
+        /** 结束时间戳(ms) */
+        end_time_ms: number
+        /** 开始时间戳(s) */
+        start_time: number
+        /** 开始时间戳(ms) */
+        start_time_ms: number
     }
     /** 工具执行时的可选操作(tool_call_watcher) */
     export interface AIToolCallWatcher {
@@ -643,7 +655,7 @@ export interface AIEventDeleteRequest {
     ClearAll?: boolean
 }
 
-export interface AITaskDeleteRequest{
+export interface AITaskDeleteRequest {
     Filter?: AIEventFilter
 }
 

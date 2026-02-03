@@ -54,6 +54,18 @@ export interface AIToolResult {
     execError: string
     /** 执行涉及的文件目录 */
     dirPath: string
+    /** 间隔时间(ms) */
+    durationMS: AIAgentGrpcApi.AIToolCall["duration_ms"]
+    /** 间隔时间(s) */
+    durationSeconds: AIAgentGrpcApi.AIToolCall["duration_seconds"]
+    /** 结束时间戳(s) */
+    endTime: AIAgentGrpcApi.AIToolCall["end_time"]
+    /** 结束时间戳(ms) */
+    endTimeMS: AIAgentGrpcApi.AIToolCall["end_time_ms"]
+    /** 开始时间戳(s) */
+    startTime: AIAgentGrpcApi.AIToolCall["start_time"]
+    /** 开始时间戳(ms) */
+    startTimeMS: AIAgentGrpcApi.AIToolCall["start_time_ms"]
 }
 
 /** 任务开始节点的信息 */

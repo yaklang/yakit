@@ -14,7 +14,13 @@ export const DefaultAIToolResult: AIToolResult = {
         isShowAll: false
     },
     execError: "",
-    dirPath: ""
+    dirPath: "",
+    startTime: 0,
+    startTimeMS: 0,
+    endTime: 0,
+    endTimeMS: 0,
+    durationMS: 0,
+    durationSeconds: 0
 }
 /** 工作执行结果总结-不同阶段的默认展示内容 */
 export const DefaultToolResultSummary: Record<string, {wait: string; result: string}> = {
