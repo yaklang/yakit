@@ -901,6 +901,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 })()
                 ;(() => {
                     try {
+                        if (!props.showHostHint) return
                         const hostRegex = /\nHost:\s*?([^\r\n]+)/
                         const hostMatch = hostRegex.exec(text)
                         if (!hostMatch) return
