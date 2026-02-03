@@ -108,7 +108,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         casualStatus: {loading, title},
         systemStream
     } = useChatIPCStore().chatIPCData
-    const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
+    const {virtuosoRef, setScrollerRef, handleTotalListHeightChanged} = useVirtuosoAutoScroll({
+        total: chats.elements.length,
+        atBottomThreshold: 50
+    })
 
     const renderItem = (index: number, item?: ReActChatRenderItem) => {
         if (!item?.token) return null
@@ -160,9 +163,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         <div className={styles["ai-re-act-chat-contents"]}>
             <Virtuoso
                 ref={virtuosoRef}
-                atBottomStateChange={setIsAtBottomRef}
+                scrollerRef={setScrollerRef}
+                // atBottomStateChange={setIsAtBottomRef}
                 data={chats.elements}
-                followOutput={followOutput}
+                totalListHeightChanged={handleTotalListHeightChanged}
                 itemContent={(index, item) => renderItem(index, item)}
                 initialTopMostItemIndex={{index: "LAST"}}
                 components={components}
