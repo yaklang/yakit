@@ -8,6 +8,7 @@ import {
     useDebounceEffect,
     useInViewport,
     useMemoizedFn,
+    useSafeState,
     useUpdateEffect
 } from "ahooks"
 import {useStore} from "@/store/mitmState"
@@ -18,7 +19,13 @@ import {v4 as uuidv4} from "uuid"
 import classNames from "classnames"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
-import {OutlineLog2Icon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {
+    OutlineBotIcon,
+    OutlineLog2Icon,
+    OutlineMicroscopeIcon,
+    OutlineTerminalIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {YakitInput} from "./yakitUI/YakitInput/YakitInput"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
@@ -55,7 +62,7 @@ import {
 } from "@/assets/commonProcessIcons"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
-import {RefreshIcon} from "@/assets/newIcon"
+import {OutlinePlusIcon, RefreshIcon} from "@/assets/newIcon"
 import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
 import ReactResizeDetector from "react-resize-detector"
 import {RemoteHistoryGV} from "@/enums/history"
@@ -67,7 +74,36 @@ import {cloneDeep} from "lodash"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitSideTab} from "./yakitSideTab/YakitSideTab"
 import {YakitTabsProps} from "./yakitSideTab/YakitSideTabType"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
+import ChatIPCContent, {
+    AIChatIPCSendParams,
+    AISendConfigHotpatchParams,
+    AISendSyncMessageParams,
+    ChatIPCContextDispatcher,
+    ChatIPCContextStore,
+    defaultDispatcherOfChatIPC
+} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
+import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
+import {AIChatInfo, AIChatData} from "@/pages/ai-agent/type/aiChat"
+import {
+    AIReActChatRefProps,
+    AIHandleStartParams,
+    AIHandleStartExtraProps,
+    AIHandleStartResProps,
+    AISendParams,
+    AISendResProps
+} from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
+import {AIInputEvent} from "@/pages/ai-re-act/hooks/grpcApi"
+import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
+import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
+import {Tooltip} from "antd"
+
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -106,6 +142,11 @@ export const HistoryTab: YakitTabsProps[] = [
         icon: <OutlineTerminalIcon />,
         label: "HTTPHistory.process",
         value: "process"
+    },
+    {
+        icon: <OutlineBotIcon />,
+        label: "HTTPHistory.AI",
+        value: "ai"
     }
 ]
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
@@ -118,7 +159,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         getRemoteValue(RemoteHistoryGV.HistoryLeftTabs).then((setting: string) => {
             if (setting) {
                 try {
-                    const tabs = JSONParseLog(setting,{page:"HTTPHistory", fun:"RemoteHistoryGV.HistoryLeftTabs"})
+                    const tabs = JSONParseLog(setting, {page: "HTTPHistory", fun: "RemoteHistoryGV.HistoryLeftTabs"})
                     setOpenTabsFlag(tabs.contShow)
                     onActiveKey(tabs.key)
                 } catch (error) {}
@@ -127,6 +168,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [])
 
     const onActiveKey = useMemoizedFn((key) => {
+        if (key === "ai") {
+            setShowFreeChat(true)
+        }
         setActiveKey(key)
     })
 
@@ -193,7 +237,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 跳转网站树指定节点
     const onJumpWebTree = useMemoizedFn((value) => {
         if (webTreeRef.current) {
-            const val = JSONParseLog(value,{page:"HTTPHistory", fun:"onJumpWebTree"})
+            const val = JSONParseLog(value, {page: "HTTPHistory", fun: "onJumpWebTree"})
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
             setOpenTabsFlag(true)
@@ -214,89 +258,361 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
     // #endregion
 
+    // TODO  AI 召回逻辑
+    // #region 问题相关逻辑
+    const aiReActChatRef = useRef<AIReActChatRefProps>(null)
+    const [showFreeChat, setShowFreeChat] = useSafeState(false)
+    const refRef = useRef<HTMLDivElement>(null)
+
+    const [inViewport = true] = useInViewport(refRef)
+
+    const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+
+    // 历史对话
+    const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
+    // 当前展示对话
+    const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
+
+    const handleChatingEnd = useMemoizedFn(() => {
+        handleSaveChatInfo()
+    })
+
+    const [chatIPCData, events] = useChatIPC({
+        onEnd: handleChatingEnd,
+        getRequest: getSetting,
+        saveChatDataStore: aiChatDataStore.set
+    })
+
+    const {
+        execute,
+        runTimeIDs,
+        aiPerfData,
+        casualChat,
+        taskChat,
+        yakExecResult,
+        grpcFolders,
+        reActTimelines,
+        coordinatorIDs
+    } = chatIPCData
+
+    const handleSaveChatInfo = useMemoizedFn(() => {
+        const showID = activeID
+        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
+        if (showID && events.fetchToken() && showID === events.fetchToken()) {
+            const answer: AIChatData = {
+                runTimeIDs: cloneDeep(runTimeIDs),
+                coordinatorIDs: cloneDeep(coordinatorIDs),
+                yakExecResult: cloneDeep(yakExecResult),
+                aiPerfData: cloneDeep(aiPerfData),
+                casualChat: cloneDeep(casualChat),
+                taskChat: cloneDeep(taskChat),
+                grpcFolders: cloneDeep(grpcFolders),
+                reActTimelines: cloneDeep(reActTimelines)
+            }
+            aiChatDataStore.set(showID, answer)
+        }
+    })
+
+    useEffect(() => {
+        if (inViewport) {
+            // 获取缓存的全局配置数据
+            getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+                .then((res) => {
+                    if (!res) return
+                    try {
+                        const cache = JSON.parse(res) as AIAgentSetting
+                        if (typeof cache !== "object") return
+                        setSetting(cache)
+                    } catch (error) {}
+                })
+                .catch(() => {})
+        }
+        return () => {}
+    }, [inViewport])
+
+    /** 当前对话唯一ID */
+    const activeID = useCreation(() => {
+        return activeChat?.session
+    }, [activeChat])
+
+    const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
+        const targetParams = {...params, FocusModeLoop: "http_flow_analyze"}
+        handleSendInteractiveMessage(targetParams, "casual")
+    })
+
+    const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
+        const newChat: AIHandleStartExtraProps = {
+            chatId: activeChat?.id
+        }
+        return new Promise<AIHandleStartResProps>((resolve) => {
+            const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
+            resolve({
+                params,
+                extraParams: newChat,
+                onChatFromHistory
+            })
+        })
+    })
+    const onChatFromHistory = useMemoizedFn((session: string) => {
+        aiChatDataStore.remove(session)
+    })
+
+    const onStop = useMemoizedFn(() => {
+        if (execute && activeID) {
+            events.onClose(activeID)
+            aiChatDataStore.set(activeID, chatIPCData)
+        }
+    })
+
+    /**发送 IsInteractiveMessage 消息 */
+    const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
+        const {value, id, optionValue} = params
+        if (!activeID) return
+        if (!id) return
+
+        const info: AIInputEvent = {
+            IsInteractiveMessage: true,
+            InteractiveId: id,
+            InteractiveJSONInput: value
+        }
+        events.onSend({token: activeID, type, params: info, optionValue})
+    })
+
+    const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
+        const targetParams = {...params, FocusModeLoop: "http_flow_analyze"}
+        handleSendInteractiveMessage(targetParams, "")
+    })
+
+    const onSendRequest = useMemoizedFn((data: AISendParams) => {
+        const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
+        return new Promise<AISendResProps>((resolve) => {
+            resolve({
+                params
+            })
+        })
+    })
+
+    /**发送 IsSyncMessage 消息 */
+    const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
+        if (!activeID) return
+        const {syncType, SyncJsonInput} = data
+        const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
+        const info: AIInputEvent = {
+            IsSyncMessage: true,
+            SyncType: syncType,
+            SyncJsonInput,
+            Params: params
+        }
+        events.onSend({token: activeID, type: "", params: info})
+    })
+
+    /**发送 IsConfigHotpatch 消息 */
+    const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
+        if (!activeID) return
+        const {hotpatchType} = data
+
+        const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
+        const info: AIInputEvent = {
+            IsConfigHotpatch: true,
+            HotpatchType: hotpatchType,
+            Params: params
+        }
+        events.onSend({token: activeID, type: "", params: info})
+    })
+
+    const store: ChatIPCContextStore = useCreation(() => {
+        return {
+            chatIPCData,
+            planReviewTreeKeywordsMap: new Map(),
+            reviewExpand: false
+        }
+    }, [chatIPCData])
+
+    const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
+        return {
+            ...defaultDispatcherOfChatIPC,
+            chatIPCEvents: events,
+            handleSendCasual,
+            handleSaveChatInfo,
+            handleStop: onStop,
+            handleSend,
+            handleSendSyncMessage,
+            handleSendConfigHotpatch
+        }
+    }, [events])
+
+    const stores: AIAgentContextStore = useMemo(() => {
+        return {
+            setting: setting,
+            chats: chats,
+            activeChat: activeChat
+        }
+    }, [setting, chats, activeChat])
+
+    const dispatchers: AIAgentContextDispatcher = useMemo(() => {
+        return {
+            getSetting: getSetting,
+            setSetting: setSetting,
+            setChats: setChats,
+            getChats: getChats,
+            setActiveChat: setActiveChat,
+
+            getChatData: aiChatDataStore.get
+        }
+    }, [])
+
     return (
-        <div className={styles.hTTPHistory}>
-            <YakitResizeBox
-                isVer={false}
-                freeze={openTabsFlag}
-                isRecalculateWH={openTabsFlag}
-                firstNode={() => (
-                    <div className={styles["hTTPHistory-left"]}>
-                        <YakitSideTab
-                            key={i18n.language}
-                            t={t}
-                            yakitTabs={HistoryTab}
-                            activeKey={activeKey}
-                            onActiveKey={onActiveKey}
-                            show={openTabsFlag}
-                            setShow={setOpenTabsFlag}
-                        />
-                        <div className={styles["tab-content"]}>
-                            <ReactResizeDetector
-                                onResize={(width, height) => {
-                                    if (!width || !height) return
-                                    setTreeWrapHeight(height)
-                                }}
-                                handleWidth={true}
-                                handleHeight={true}
-                                refreshMode={"debounce"}
-                                refreshRate={50}
-                            />
-                            <div
-                                className={styles["webTree-wrapper"]}
-                                style={{display: activeKey === "web-tree" ? "block" : "none"}}
-                            >
-                                <WebTree
-                                    ref={webTreeRef}
-                                    height={treeWrapHeight - 30}
-                                    searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
-                                    treeExtraQueryparams={treeQueryparams}
-                                    refreshTreeFlag={refreshFlag}
-                                    multiple
-                                    onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ""))}
-                                ></WebTree>
+        <AIAgentContext.Provider value={{store: stores, dispatcher: dispatchers}}>
+            <ChatIPCContent.Provider value={{store, dispatcher}}>
+                <div className={styles.hTTPHistory}>
+                    <YakitResizeBox
+                        isVer={false}
+                        freeze={openTabsFlag}
+                        isRecalculateWH={openTabsFlag}
+                        firstNode={() => (
+                            <div className={styles["hTTPHistory-left"]}>
+                                <YakitSideTab
+                                    key={i18n.language}
+                                    t={t}
+                                    yakitTabs={HistoryTab}
+                                    activeKey={activeKey}
+                                    onActiveKey={onActiveKey}
+                                    show={openTabsFlag}
+                                    setShow={setOpenTabsFlag}
+                                />
+                                <div className={styles["tab-content"]}>
+                                    <ReactResizeDetector
+                                        onResize={(width, height) => {
+                                            if (!width || !height) return
+                                            setTreeWrapHeight(height)
+                                        }}
+                                        handleWidth={true}
+                                        handleHeight={true}
+                                        refreshMode={"debounce"}
+                                        refreshRate={50}
+                                    />
+                                    <div
+                                        className={styles["webTree-wrapper"]}
+                                        style={{display: activeKey === "web-tree" ? "block" : "none"}}
+                                    >
+                                        <WebTree
+                                            ref={webTreeRef}
+                                            height={treeWrapHeight - 30}
+                                            searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
+                                            treeExtraQueryparams={treeQueryparams}
+                                            refreshTreeFlag={refreshFlag}
+                                            multiple
+                                            onSelectNodesKeys={(selectKeys) =>
+                                                setIncludeInUrl(selectKeys.map((i) => i + ""))
+                                            }
+                                        ></WebTree>
+                                    </div>
+                                    <div
+                                        className={styles["process-wrapper"]}
+                                        style={{display: activeKey === "process" ? "block" : "none"}}
+                                    >
+                                        <HistoryProcess
+                                            queryparamsStr={processQueryparams}
+                                            refreshProcessFlag={refreshFlag}
+                                            curProcess={curProcess}
+                                            onSetCurProcess={setCurProcess}
+                                            resetTableAndEditorShow={(table, editor) => {
+                                                setOnlyShowFirstNode(table)
+                                                setSecondNodeVisible(editor)
+                                            }}
+                                        ></HistoryProcess>
+                                    </div>
+
+                                    <div
+                                        ref={refRef}
+                                        className={styles["ai-wrapper"]}
+                                        style={{display: activeKey === "ai" ? "block" : "none"}}
+                                    >
+                                        <AIReActChat
+                                            mode={"task"}
+                                            showFreeChat={showFreeChat}
+                                            setShowFreeChat={setShowFreeChat}
+                                            title='AI'
+                                            ref={aiReActChatRef}
+                                            startRequest={onStartRequest}
+                                            sendRequest={onSendRequest}
+                                            chatContainerHeaderClassName={styles["history-ai-header"]}
+                                            externalParameters={{
+                                                rightIcon: (
+                                                    <React.Fragment>
+                                                        <Tooltip title='新建对话'>
+                                                            <YakitButton
+                                                                type='text2'
+                                                                icon={<OutlinePlusIcon />}
+                                                                onClick={() => {
+                                                                    if (activeID) {
+                                                                        events.onClose(activeID)
+                                                                        aiChatDataStore.set(activeID, chatIPCData)
+                                                                        events.onReset()
+                                                                        onChatFromHistory(activeID)
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                        <YakitButton
+                                                            type='text2'
+                                                            icon={<OutlineXIcon />}
+                                                            onClick={() => setOpenTabsFlag(false)}
+                                                        />
+                                                    </React.Fragment>
+                                                ),
+                                                defaultAIFocusMode: {
+                                                    children: (
+                                                        <div
+                                                            className={classNames([
+                                                                styles["select-option"],
+                                                                styles["defualt-focus-mode"]
+                                                            ])}
+                                                        >
+                                                            <OutlineMicroscopeIcon />
+                                                            {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
+                                                            <span
+                                                                data-label='true'
+                                                                className={styles["select-option-text"]}
+                                                                title={`http_flow_analyze`}
+                                                            >
+                                                                http_flow_analyze
+                                                            </span>
+                                                        </div>
+                                                    ),
+                                                    filterMode: ["focusMode"]
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div
-                                className={styles["process-wrapper"]}
-                                style={{display: activeKey === "process" ? "block" : "none"}}
-                            >
-                                <HistoryProcess
-                                    queryparamsStr={processQueryparams}
-                                    refreshProcessFlag={refreshFlag}
+                        )}
+                        lineStyle={{display: ""}}
+                        firstMinSize={openTabsFlag ? "325px" : "24px"}
+                        secondMinSize={720}
+                        secondNode={
+                            <div className={styles["hTTPHistory-right"]}>
+                                <HTTPFlowRealTimeTableAndEditor
+                                    includeInUrl={includeInUrl}
                                     curProcess={curProcess}
-                                    onSetCurProcess={setCurProcess}
-                                    resetTableAndEditorShow={(table, editor) => {
-                                        setOnlyShowFirstNode(table)
-                                        setSecondNodeVisible(editor)
-                                    }}
-                                ></HistoryProcess>
+                                    onQueryParams={onQueryParams}
+                                    setOnlyShowFirstNode={setOnlyShowFirstNode}
+                                    setSecondNodeVisible={setSecondNodeVisible}
+                                    showHistoryAnalysisBtn
+                                    {...props}
+                                />
                             </div>
-                        </div>
-                    </div>
-                )}
-                lineStyle={{display: ""}}
-                firstMinSize={openTabsFlag ? "325px" : "24px"}
-                secondMinSize={720}
-                secondNode={
-                    <div className={styles["hTTPHistory-right"]}>
-                        <HTTPFlowRealTimeTableAndEditor
-                            includeInUrl={includeInUrl}
-                            curProcess={curProcess}
-                            onQueryParams={onQueryParams}
-                            setOnlyShowFirstNode={setOnlyShowFirstNode}
-                            setSecondNodeVisible={setSecondNodeVisible}
-                            showHistoryAnalysisBtn
-                            {...props}
-                        />
-                    </div>
-                }
-                secondNodeStyle={{
-                    padding: undefined,
-                    display: ""
-                }}
-                {...ResizeBoxProps}
-            />
-        </div>
+                        }
+                        secondNodeStyle={{
+                            padding: undefined,
+                            display: ""
+                        }}
+                        {...ResizeBoxProps}
+                    />
+                </div>
+            </ChatIPCContent.Provider>
+        </AIAgentContext.Provider>
     )
 }
 
@@ -423,7 +739,10 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         getRemoteValue(RemoteGV.historyTableYakitResizeBox).then((res) => {
             if (res) {
                 try {
-                    const {firstSizePercent, secondSizePercent} = JSONParseLog(res,{page:"HTTPHistory", fun:"RemoteGV.historyTableYakitResizeBox"})
+                    const {firstSizePercent, secondSizePercent} = JSONParseLog(res, {
+                        page: "HTTPHistory",
+                        fun: "RemoteGV.historyTableYakitResizeBox"
+                    })
                     lastRatioRef.current = {
                         firstRatio: firstSizePercent,
                         secondRatio: secondSizePercent
@@ -518,8 +837,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                     padding: !secondNodeVisible ? 0 : undefined
                 }}
                 lineStyle={{
-                    display: !secondNodeVisible ? "none" : "", 
-                    marginTop: pageType === 'MITM'? 6 : 0 // MITM列表需要和拖拽线有间距
+                    display: !secondNodeVisible ? "none" : "",
+                    marginTop: pageType === "MITM" ? 6 : 0 // MITM列表需要和拖拽线有间距
                 }}
                 lineDirection='top'
                 onMouseUp={({firstSizePercent, secondSizePercent}) => {
@@ -737,7 +1056,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         setProcessLoading(true)
         onSetCurProcess([])
         try {
-            const query = JSONParseLog(queryparamsStr,{page:"HTTPHistory", fun:"refreshProcess"})
+            const query = JSONParseLog(queryparamsStr, {page: "HTTPHistory", fun: "refreshProcess"})
             ipcRenderer
                 .invoke("QueryHTTPFlowsProcessNames", query)
                 .then((res) => {

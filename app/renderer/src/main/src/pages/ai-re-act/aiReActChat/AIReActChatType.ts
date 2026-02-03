@@ -1,8 +1,9 @@
 import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {AIChatQSData} from "../hooks/aiRender"
 import {AIInputEvent} from "../hooks/grpcApi"
-import React from "react"
+import React, {ReactNode} from "react"
 import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
+import {iconMapType} from "@/pages/ai-agent/components/aiChatMention/type"
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
     handleStart: (value: HandleStartParams) => void
@@ -37,6 +38,10 @@ export interface AIReActChatProps {
     sendRequest?: (v: AISendParams) => Promise<AISendResProps>
     externalParameters?: {
         rightIcon?: string | React.ReactNode
+        defaultAIFocusMode?: {
+            children: ReactNode
+            filterMode?: iconMapType[]
+        }
     }
 }
 

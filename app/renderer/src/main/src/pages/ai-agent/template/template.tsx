@@ -47,7 +47,16 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
  */
 export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     forwardRef((props, ref) => {
-        const {loading, extraFooterLeft, extraFooterRight, onSubmit, className, children, defaultValue} = props
+        const {
+            loading,
+            extraFooterLeft,
+            extraFooterRight,
+            onSubmit,
+            className,
+            children,
+            defaultValue,
+            defaultAIFocusMode
+        } = props
 
         const [disabled, setDisabled] = useState<boolean>(false)
 
@@ -211,6 +220,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         onUpdateEditor={onUpdateEditor}
                         onUpdateContent={onUpdateContent}
                         onMemfitExtra={onMemfitExtra}
+                        filterMode={defaultAIFocusMode?.filterMode}
                     />
                 </div>
 
@@ -226,7 +236,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                             <React.Suspense fallback={<div>loading...</div>}>
                                 <AIReviewRuleSelect />
                             </React.Suspense>
-                            {focusMode && <AIFocusMode value={focusMode} onChange={setFocusMode} />}
+                            {defaultAIFocusMode?.children ??
+                                (focusMode && <AIFocusMode value={focusMode} onChange={setFocusMode} />)}
                         </div>
                         {extraFooterLeft || null}
                     </div>
