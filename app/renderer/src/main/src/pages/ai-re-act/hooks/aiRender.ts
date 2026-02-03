@@ -170,7 +170,7 @@ export enum AIChatQSDataTypeEnum {
 }
 
 /** 控制UI渲染的数据数组元素 */
-interface ReActChatBaseInfo {
+export interface ReActChatBaseInfo {
     chatType: "reAct" | "task"
     token: string
     type: AIChatQSDataTypeEnum

@@ -1,18 +1,33 @@
 import {UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
-import {AIChatQSData} from '@/pages/ai-re-act/hooks/aiRender'
+import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface AIChatData {
-    coordinatorIDs: UseChatIPCState["coordinatorIDs"]
+    /** 记录数据里所有的coordinatorIDs */
+    coordinatorIDs: string[]
+    /** 记录数据里所有的runTimeIDs */
     runTimeIDs: UseChatIPCState["runTimeIDs"]
     yakExecResult: UseChatIPCState["yakExecResult"]
-    aiPerfData: UseChatIPCState["aiPerfData"]
-    casualChat: UseChatIPCState["casualChat"]
-    taskChat: UseChatIPCState["taskChat"]
+    /** 性能相关数据 */
+    aiPerfData: {
+        /** 消耗Token */
+        consumption: AITokenConsumption
+        /** 上下文压力 */
+        pressure: AIAgentGrpcApi.Pressure[]
+        /** 首字符响应耗时 */
+        firstCost: AIAgentGrpcApi.AICostMS[]
+        /** 总对话耗时 */
+        totalCost: AIAgentGrpcApi.AICostMS[]
+    }
+    /** 自由对话(ReAct)会话 */
+    casualChat: UseChatIPCState["casualChat"] & {
+        /** 会话内每条信息的详情 */
+        contents: Map<string, AIChatQSData>
+    }
+    taskChat: UseChatIPCState["taskChat"] & {contents: Map<string, AIChatQSData>}
     grpcFolders: UseChatIPCState["grpcFolders"]
     reActTimelines: UseChatIPCState["reActTimelines"]
-    getChatContentMap?: (chatType: ReActChatRenderItem["chatType"], mapKey: string) => AIChatQSData | undefined
 }
 
 /** UI-chat 信息 */

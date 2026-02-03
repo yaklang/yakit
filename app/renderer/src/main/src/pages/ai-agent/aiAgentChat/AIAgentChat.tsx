@@ -173,7 +173,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskStart: handleTaskStart,
         getRequest: getSetting,
         setSessionChatName,
-        saveChatDataStore: aiChatDataStore.set
+        cacheDataStore: aiChatDataStore
     })
     const {execute} = chatIPCData
 
@@ -269,7 +269,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 switch (data.type as ReActChatEventEnum) {
                     // 新开聊天对话窗
                     case ReActChatEventEnum.NEW_CHAT:
-                        onStop()
                         setActiveChat?.(undefined)
                         setTimeout(() => {
                             setMode("welcome")
@@ -301,15 +300,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     useUpdateEffect(() => {
         onHistoryAfter()
-    }, [activeChat, execute])
+        events.onSwitchChat(activeChat?.session)
+    }, [activeChat])
 
     /**切换历史后的处理逻辑 */
     const onHistoryAfter = useMemoizedFn(() => {
-        const token = events.fetchToken()
         if (mode === "welcome") setMode("re-act")
-        if (execute && activeChat?.session !== token) {
-            events.onClose(token)
-        }
     })
 
     //#region 使用 AI-Forge 模板/Tool 相关逻辑

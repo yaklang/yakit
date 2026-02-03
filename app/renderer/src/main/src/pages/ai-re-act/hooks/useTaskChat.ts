@@ -20,22 +20,29 @@ import useChatContent from "./useChatContent"
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
+    const {pushLog, getChatDataStore, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
     })
 
     const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
-    const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
+    const handleSetElements = useMemoizedFn((newElements: ReActChatRenderItem[]) => {
+        setElements(newElements)
+    })
+
     const getContentMap = useMemoizedFn((mapKey: string) => {
-        return contentMap.current.get(mapKey)
+        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        if (!contentMap) return undefined
+        return contentMap.get(mapKey)
     })
     const setContentMap = useMemoizedFn((mapKey: string, value: AIChatQSData) => {
-        contentMap.current.set(mapKey, value)
+        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        contentMap && contentMap.set(mapKey, value)
     })
     const deleteContentMap = useMemoizedFn((mapKey: string) => {
-        contentMap.current.delete(mapKey)
+        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        contentMap && contentMap.delete(mapKey)
     })
 
     // #region 任务树相关逻辑
@@ -520,7 +527,6 @@ function useTaskChat(params?: UseTaskChatParams) {
         handleResetPlanTree()
         handleResetReview()
         chatContentEvent.handleResetData()
-        contentMap.current.clear()
         setElements([])
     })
 
@@ -564,7 +570,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     const state: UseTaskChatState = useCreation(() => {
-        return {plan, elements, contents: contentMap}
+        return {plan, elements}
     }, [plan, elements])
 
     const events: UseTaskChatEvents = useCreation(() => {
@@ -575,7 +581,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             handleSend,
             handleCloseGrpc,
             handlePlanExecEnd,
-            handleGetContentMap: getContentMap
+            handleSetElements
         }
     }, [])
 

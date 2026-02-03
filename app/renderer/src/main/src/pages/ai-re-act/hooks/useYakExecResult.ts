@@ -150,12 +150,18 @@ function useYakExecResult(params?: UseYakExecResultParams) {
         setExecFileRecord(new Map())
     })
 
+    const handleSetYakResult = useMemoizedFn((newData: UseYakExecResultState) => {
+        setCard(newData.card || [])
+        setExecFileRecord(newData.execFileRecord || new Map())
+        setYakExecResultLogs(newData.yakExecResultLogs || [])
+    })
+
     const state: UseYakExecResultState = useCreation(() => {
         return {card, execFileRecord, yakExecResultLogs}
     }, [card, execFileRecord, yakExecResultLogs])
 
     const events: UseYakExecResultEvents = useCreation(() => {
-        return {handleSetData, handleResetData}
+        return {handleSetData, handleResetData, handleSetYakResult}
     }, [])
 
     return [state, events] as const
