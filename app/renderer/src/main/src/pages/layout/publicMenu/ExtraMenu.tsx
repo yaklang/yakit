@@ -3,7 +3,6 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {configManagementTabType, useConfigManagementTab} from "@/store"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
@@ -17,27 +16,26 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
-import {isYakitOrEnpriTrace, isYakit} from "@/utils/envfile"
+import {isYakit} from "@/utils/envfile"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import classNames from "classnames"
 import {ExtraMenuItem, getExtraMenu} from "@/routes/newRoute"
 import {useSoftMode} from "@/store/softMode"
-import { SolidPayloadIcon } from "@/assets/icon/solid"
+import {ManagementTab} from "@/components/managementTab"
 
 const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
+    isSecurityExpert?: boolean
 }
 
 export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
-    const {onMenuSelect} = props
+    const {onMenuSelect, isSecurityExpert} = props
     const {t, i18n} = useI18nNamespaces(["yakitRoute", "yakitUi", "layout"])
     const {softMode} = useSoftMode()
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>("giturl")
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
-    const {configManagementActiveTab, setConfigManagementActiveTab} = useConfigManagementTab()
-    const [payloadMenuShow, setPayloadMenuShow] = useState<boolean>(false)
     const [form] = Form.useForm()
     const [importHistoryharToken, setImportHistoryharToken] = useState<string>("")
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
@@ -125,26 +123,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         }
     })
 
-    const payloadMenuSelect = useMemoizedFn((key: string) => {
-        const tab = key as configManagementTabType
-        setConfigManagementActiveTab(tab)
-        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.ConfigManagement}))
-        setPayloadMenuShow(false)
-    })
-
-    const managementTitle = useMemo(() => {
-        switch (configManagementActiveTab) {
-            case "payload":
-                return t("YakitRoute.Payload")
-            case "proxy":
-                return t("Layout.ExtraMenu.proxyManagement")
-            case "hotPatch":
-                return t("Layout.ExtraMenu.hotPatchManagement")
-            default:
-                return t("YakitRoute.Payload")
-        }
-    }, [configManagementActiveTab, i18n.language])
-
     const importMenu = useMemo(
         () => (
             <YakitMenu
@@ -228,28 +206,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         )}
                     </>
                 )}
-                {isYakitOrEnpriTrace() ?
-                <YakitPopover
-                    placement={"bottom"}
-                    overlayClassName={styles["management-menu-wrapper"]}
-                    content={
-                        <YakitMenu
-                            selectedKeys={[configManagementActiveTab]}
-                            data={[
-                                {key: "payload", label: t("YakitRoute.Payload")},
-                                {key: "proxy", label: t("Layout.ExtraMenu.proxyManagement")},
-                                {key: "hotPatch", label: t("Layout.ExtraMenu.hotPatchManagement")}
-                            ]}
-                            onClick={({key}) => payloadMenuSelect(key)}
-                        />
-                    }
-                    visible={payloadMenuShow}
-                    onVisibleChange={(visible) => setPayloadMenuShow(visible)}
-                >
-                    <YakitButton type='secondary2' icon={<SolidPayloadIcon />}>
-                        {managementTitle}
-                    </YakitButton>
-                </YakitPopover> : null}
+                {!isSecurityExpert ? <ManagementTab /> : null}
                 <OrdinaryMenu menuList={getExtraMenu(softMode)} onMenuSelect={onMenuSelect} />
             </>
         )
