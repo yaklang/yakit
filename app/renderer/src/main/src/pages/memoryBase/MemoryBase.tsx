@@ -92,10 +92,10 @@ const MemoryBase: React.FC<MemoryBaseProps> = React.memo((props) => {
 export default MemoryBase
 
 const searchOptions: YakitCombinationSearchProps["addonBeforeOption"] = [
-    // {
-    //     label: "语义搜索",
-    //     value: "ai"
-    // },
+    {
+        label: "语义搜索",
+        value: "ai"
+    },
     {
         label: "关键字",
         value: "keyword"
@@ -195,11 +195,11 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             emiter.off("onRefreshQueryAIMemoryEntity", onStartInterval)
         }
     }, [])
-    // 语义(AI)搜索时关闭轮询，避免 offsetData 重复堆积；退出语义搜索后(仅在无推送模式)恢复轮询
+    // 语义(AI)搜索时关闭轮询，避免 offsetData 重复堆积；退出语义搜索后恢复轮询
     useEffect(() => {
-        if (search.type === "ai" && !!search.aiInput) {
+        if (search.type === "ai") {
             debugVirtualTableEvent.stopT()
-        } else if (!serverPushStatus) {
+        } else {
             debugVirtualTableEvent.startT()
         }
     }, [search.type, search.aiInput])
