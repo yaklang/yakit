@@ -190,5 +190,9 @@
     "SNI_extra":"为空表示不发送SNI，映射规则优先级大于强制SNI",
     "mandatory_SNI":"强制 SNI:",
     "add_message":"请设置完成后再添加"
+  },
+  "MITMPage":{
+    "passive_plugin" :"被动插件",
+    "MITMPage_tips": "交互插件请点击“劫持启动”后再勾选使用"
   }
 }

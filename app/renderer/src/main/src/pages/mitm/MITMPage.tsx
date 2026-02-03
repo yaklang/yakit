@@ -491,12 +491,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 }
 
 const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
-const MITMIdleTab: YakitTabsProps[] = [
-    {
-        label: "插件",
-        value: "plugin"
-    }
-]
 export interface ExtraMITMServerProps {
     /**@name 国密劫持*/
     enableGMTLS?: boolean
@@ -579,6 +573,14 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }, [mitmContent.mitmStore.version])
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
+
+    const {t, i18n} = useI18nNamespaces(["mitm"])
+
+    const MITMIdleTab: YakitTabsProps[] = useMemo(()=>([
+    {
+        label: t("MITMPage.passive_plugin"),
+        value: "plugin"
+    }]),[i18n.language])
 
     /**
      * @description 插件勾选
@@ -873,6 +875,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 allChecked={isSelectAll}
                                 checkedPlugin={isSelectAll ? [] : noParamsCheckList}
                             />
+
+                            <div className={style["mitm-idle-tab-tips"]}>{t("MITMPage.MITMPage_tips")}</div>
                             <div style={{paddingRight: 9}}>
                                 <PluginSearch
                                     tag={tags}
