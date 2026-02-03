@@ -2412,7 +2412,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     />
                                 )}
 
-                                <UIOpUpdateYakit
+                                {/* <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -2422,7 +2422,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     onUpdateEdit={UpdateContentEdit}
                                     isUpdate={isUpdateYakit}
                                     onResetUpdateWait={() => setIsYakitUpdateWait(false)}
-                                />
+                                /> */}
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}
                                     lastVersion={yaklangLastVersion}

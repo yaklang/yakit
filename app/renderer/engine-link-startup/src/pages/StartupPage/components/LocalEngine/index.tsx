@@ -153,7 +153,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 startYakEngine()
             } else if (checkVersion) {
                 // SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
-                if (isEnpriTraceAgent()) {
+                if (isEnpriTraceAgent() || true) {
                     handleCheckEngineVersion()
                 } else {
                     setLog(["检查软件是否有更新..."])
