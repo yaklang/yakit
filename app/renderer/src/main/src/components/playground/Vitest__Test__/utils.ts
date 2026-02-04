@@ -8,7 +8,7 @@ import {KnowledgeBaseItem} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 const compareKnowledgeBaseChange = (
     prev: KnowledgeBaseItem[] | null | undefined,
     next: KnowledgeBaseItem[] | null | undefined
-): {delete: KnowledgeBaseItem | null; increase: KnowledgeBaseItem | null} | true => {
+): {delete: KnowledgeBaseItem | null; increase: KnowledgeBaseItem | null} | true | number => {
     // 如果任意一方为空，则无法比较，直接返回 true（表示无变化或无法判断）
     if (!Array.isArray(prev) || !Array.isArray(next)) return true
 
@@ -24,7 +24,7 @@ const compareKnowledgeBaseChange = (
     if (increased) return {delete: null, increase: increased}
 
     // 没有变化
-    return true
+    return 1
 }
 
 export {compareKnowledgeBaseChange}
