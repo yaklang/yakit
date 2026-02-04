@@ -32,16 +32,16 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     const getContentMap = useMemoizedFn((mapKey: string) => {
-        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        const contentMap = getChatDataStore?.()?.taskChat?.contents
         if (!contentMap) return undefined
         return contentMap.get(mapKey)
     })
     const setContentMap = useMemoizedFn((mapKey: string, value: AIChatQSData) => {
-        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        const contentMap = getChatDataStore?.()?.taskChat?.contents
         contentMap && contentMap.set(mapKey, value)
     })
     const deleteContentMap = useMemoizedFn((mapKey: string) => {
-        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        const contentMap = getChatDataStore?.()?.taskChat?.contents
         contentMap && contentMap.delete(mapKey)
     })
 
@@ -546,7 +546,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             handleResetReview()
             handleRviewDataToUI(chatData)
             setContentMap(chatData.id, chatData)
-            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}])
+            setElements((old) => old.concat({token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}))
 
             cb && cb()
         } catch (error) {}

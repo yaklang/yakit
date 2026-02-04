@@ -405,6 +405,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 获取历史时间线 */
     const fetchHistoryTimelines = useMemoizedFn(async () => {
         try {
+            setReActTimelines([])
             const {Events, Total} = await grpcQueryAIEvent({
                 Filter: {
                     SessionID: chatID.current,
@@ -427,7 +428,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         } catch (error) {}
     })
 
-    /** 是否 */
     /** 保存state类型的数据 */
     const saveStateDataOfEnd = useMemoizedFn(() => {
         const answer: DeepPartial<AIChatData> = {
@@ -448,7 +448,12 @@ function useChatIPC(params?: UseChatIPCParams) {
             yakitNotify("warning", "useChatIPC AI任务正在执行中，请稍后再试！")
             return
         }
-        if (chatID.current !== token) onReset()
+        if (chatID.current !== token) {
+            onReset()
+            try {
+                cacheDataStore?.create(token)
+            } catch (error) {}
+        }
         setExecute(true)
         chatID.current = token
         fetchHistoryTimelines()
@@ -779,7 +784,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const handleSwitchSessionData = useMemoizedFn((session: string) => {
         if (!session) {
             setTimeout(() => {
-                setSwitchLoading(true)
+                setSwitchLoading(false)
             }, 200)
             return
         }
@@ -788,7 +793,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (session === "clear") {
             setTimeout(() => {
-                setSwitchLoading(true)
+                setSwitchLoading(false)
             }, 200)
             endAfterSession.current = ""
             return
@@ -803,12 +808,10 @@ function useChatIPC(params?: UseChatIPCParams) {
             yakExecResultEvent.handleSetYakResult(chatData.yakExecResult || {})
             casualChatEvent.handleSetElements(chatData.casualChat?.elements || [])
             taskChatEvent.handleSetElements(chatData.taskChat?.elements || [])
-        } else {
-            yakitNotify("warning", "切换的session会话不存在历史数据记录")
         }
         endAfterSession.current = ""
         setTimeout(() => {
-            setSwitchLoading(true)
+            setSwitchLoading(false)
         }, 200)
     })
 
