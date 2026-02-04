@@ -126,6 +126,7 @@ import {useDownloadYakit} from "./update/DownloadYakit"
 import i18n from "@/i18n/i18n"
 import { JSONParseLog } from "@/utils/tool"
 import {useSoftMode, YakitModeEnum} from "@/store/softMode"
+import { getAllYakitColorVars } from "@/utils/monacoSpec/theme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -172,7 +173,20 @@ export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dyn
 
 /** 随机头像颜色 */
 export const randomAvatarColor = () => {
-    const colorArr: string[] = ["#8863F7", "#DA5FDD", "#4A94F8", "#35D8EE", "#56C991", "#F4736B", "#FFB660", "#B4BBCA"]
+    // const colorArr: string[] = ["#8863F7", "#DA5FDD", "#4A94F8", "#35D8EE", "#56C991", "#F4736B", "#FFB660", "#B4BBCA"]
+    const vars = getAllYakitColorVars()
+    const var_color_list = [
+        "--Colors-Use-Purple-Primary", 
+        "--Colors-Use-Magenta-Primary",
+        "--Colors-Use-Blue-Primary",
+        "--Colors-Use-Cyan-Primary",
+        "--Colors-Use-Green-Primary",
+        "--Colors-Use-Red-Primary",
+        "--Colors-Use-Orange-Primary",
+        "--Colors-Use-Grey-Primary"
+    ]
+
+    const colorArr: string[] = var_color_list.map(it => vars[it])
     let color: string = colorArr[Math.round(Math.random() * 7)]
     return color
 }
