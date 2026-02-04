@@ -540,14 +540,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             handleResetReview()
             handleRviewDataToUI(chatData)
             setContentMap(chatData.id, chatData)
-            setElements((old) => {
-                return old.map((item) => {
-                    if (item.token === chatData.id && item.type === chatData.type) {
-                        item.renderNum += 1
-                    }
-                    return item
-                })
-            })
+            setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}])
 
             cb && cb()
         } catch (error) {}
