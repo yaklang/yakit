@@ -26,20 +26,21 @@ const collectOSSFiles = (doc, schema): Set<string> => {
 
     doc.descendants((node) => {
         let url = ""
-        switch (node.type.name) {
-            case fileCustomId:
-                url = node.attrs?.fileId !== "0" ? node.attrs?.fileId : ""
-                break
+        try {
+            switch (node.type.name) {
+                case fileCustomId:
+                    url = node.attrs?.fileId !== "0" ? node.attrs?.fileId : ""
+                    break
 
-            case schema.nodes.image?.name:
-            case schema.nodes["image-block"]?.name:
-                url = node.attrs?.src
-                break
+                case schema.nodes.image?.name:
+                case schema.nodes["image-block"]?.name:
+                    url = node.attrs?.src
+                    break
 
-            default:
-                break
-        }
-
+                default:
+                    break
+            }
+        } catch (error) {}
         const fileName = getFileNameByUrl(url)
         if (fileName) {
             set.add(fileName)

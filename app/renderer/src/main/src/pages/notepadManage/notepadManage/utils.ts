@@ -164,19 +164,19 @@ export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, string> = (
 }
 
 export const onBaseNotepadDown: APIFunc<API.NotepadDownloadRequest, SaveDialogResponse> = (value) => {
-    return new Promise((resolve, reject) => {
-        const params: API.NotepadDownloadRequest = {
-            ...value
+    return new Promise(async (resolve, reject) => {
+        try {
+            const params: API.NotepadDownloadRequest = {
+                ...value
+            }
+            const res = await apiDownloadNotepad(params)
+            const filePath = await apiDownloadStorageType(res)
+            const data = await saveDialogAndGetLocalFileInfo((filePath) || "")
+            resolve(data)
+        } catch (error) {
+            reject(error)
         }
-        apiDownloadNotepad(params)
-            .then((res) => {
-                apiDownloadStorageType(res).then((filePath) => {
-                    saveDialogAndGetLocalFileInfo((filePath) || "")
-                        .then(resolve)
-                        .catch(reject)
-                })
-            })
-            .catch(reject)
+        
     })
 }
 
@@ -187,8 +187,6 @@ export const apiDownloadStorageType: APIFunc<string, string> = (filePath) => {
             url: "storage",
         })
             .then((type)=>{
-                console.log("apiDownloadStorageType type", type);
-
                 if (["oss", "s3"].includes(type)) {
                     resolve(filePath)
                 }else{
