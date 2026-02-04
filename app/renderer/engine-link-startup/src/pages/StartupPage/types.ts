@@ -37,8 +37,8 @@ export type YakitStatusType =
     | "install" // 解压内置引擎
     | "installNetWork" // 初始内置引擎不存在，联网安装
     | "check_timeout" // 引擎check超时
-    | "old_version" // 检查随机密码模式失败(引擎版本低)
-    | "current_version" // 使用当前版本 直接跳旧的yakit连接逻辑 后续可能会被下掉
+    | "old_version" // 检查随机密码模式失败(引擎版本低) 后续可能会被下掉
+    | "current_version" // 使用当前版本 直接跳旧的yakit连接逻辑
     | "skipAgreement_InstallNetWork" // 下载yak引擎 不需要勾选用户协议
     | "skipAgreement_Install" // 重置yak引擎 不需要勾选用户协议
     | "port_occupied_prev" // 端口被占用前操作
@@ -58,6 +58,9 @@ export type YakitStatusType =
     | "link_countdown" // 引擎连接成功，倒计时进入
     | "link" // 引擎连接成功
     | "break" // 小风车主动断开本地连接的引擎
+    | "reclaimDatabaseSpace_start" // 开始回收数据库空间
+    | "reclaimDatabaseSpace_success" // 回收数据库空间完成
+    | "reclaimDatabaseSpace_error" // 回收错误
     | ""
 
 /** 下载进度条-时间数据 */
@@ -123,4 +126,5 @@ export interface StartLocalEngine {
 
 export interface TypeCallbackExtra {
     message?: string
+    dbPath?: string[]
 }

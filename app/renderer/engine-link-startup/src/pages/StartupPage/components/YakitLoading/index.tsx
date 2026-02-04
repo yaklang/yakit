@@ -521,6 +521,36 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        if (yakitStatus === "reclaimDatabaseSpace_success") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("reclaimDatabaseSpace_success")}
+                    >
+                        手动连接引擎
+                    </YakitButton>
+                </>
+            )
+        }
+
+        if (yakitStatus === "reclaimDatabaseSpace_error") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("reclaimDatabaseSpace_error")}
+                    >
+                        手动连接引擎
+                    </YakitButton>
+                </>
+            )
+        }
+
         if (yakitStatus === "error") {
             return (
                 <>
@@ -566,9 +596,30 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         if (!yakitStatus) {
             return false
         }
-        return !["install", "installNetWork", "init", "softwareBasics", "ready", "link", "link_countdown"].includes(
-            yakitStatus
-        )
+        return [
+            "check_timeout",
+            "old_version",
+            "skipAgreement_InstallNetWork",
+            "skipAgreement_Install",
+            "port_occupied_prev",
+            "port_occupied",
+            "database_error",
+            "fix_database_timeout",
+            "fix_database_error",
+            "reclaimDatabaseSpace_error",
+            "antivirus_blocked",
+            "allow-secret-error",
+            "check_yak_version_error",
+            "start_timeout",
+            "error",
+            "break"
+        ].includes(yakitStatus)
+    }, [yakitStatus])
+    const logSuccess = useMemo(() => {
+        if (!yakitStatus) {
+            return false
+        }
+        return ["reclaimDatabaseSpace_success"].includes(yakitStatus)
     }, [yakitStatus])
 
     useEffect(() => {
@@ -591,7 +642,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     <div
                         className={classNames(styles["log-wrapper"], {
                             [styles["log-default-color"]]: !logError,
-                            [styles["log-error-color"]]: logError
+                            [styles["log-error-color"]]: logError,
+                            [styles["log-success-color"]]: logSuccess
                         })}
                     >
                         <div className={styles["log-body"]}>
@@ -657,7 +709,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             {yakitStatus !== "link_countdown" && (
                                 <>
                                     <Divider type='vertical'></Divider>
-                                    <span className={styles["open-engine-path"]} onClick={() => grpcOpenYaklangPath()}>
+                                    <span className={styles["secondary-btn"]} onClick={() => grpcOpenYaklangPath()}>
                                         打开引擎文件
                                     </span>
                                     {/* 中断连接按钮：在空状态或连接状态成功 时显示 */}
@@ -665,7 +717,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                         <>
                                             <Divider type='vertical'></Divider>
                                             <span
-                                                className={classNames(styles["go-remote"])}
+                                                className={classNames(styles["primary-btn"])}
                                                 onClick={() => {
                                                     btnClickCallback("break")
                                                 }}
@@ -674,13 +726,32 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                             </span>
                                         </>
                                     )}
+                                    {/* 回收数据库空间：在非连接状态时显示 */}
+                                    {/* {yakitStatus && !["link", "ready", "init"].includes(yakitStatus) && (
+                                        <>
+                                            <Divider type='vertical'></Divider>
+                                            <span
+                                                className={classNames(styles["secondary-btn"], {
+                                                    [styles["secondary-btn-disable"]]: restartLoading
+                                                })}
+                                                onClick={() => {
+                                                    if (restartLoading) {
+                                                        return
+                                                    }
+                                                    btnClickCallback("reclaimDatabaseSpace_start")
+                                                }}
+                                            >
+                                                回收数据库空间
+                                            </span>
+                                        </>
+                                    )} */}
                                     {/* 远程连接按钮：在非连接状态时显示 */}
                                     {yakitStatus && !["link", "ready", "init"].includes(yakitStatus) && (
                                         <>
                                             <Divider type='vertical'></Divider>
                                             <span
-                                                className={classNames(styles["go-remote"], {
-                                                    [styles["go-remote-disable"]]: restartLoading
+                                                className={classNames(styles["primary-btn"], {
+                                                    [styles["primary-btn-disable"]]: restartLoading
                                                 })}
                                                 onClick={() => {
                                                     if (restartLoading) {

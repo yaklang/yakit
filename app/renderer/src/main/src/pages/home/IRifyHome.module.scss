@@ -113,6 +113,16 @@
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .database-warning-icon {
+                        cursor: pointer;
+                        margin-top: 2px;
+                        svg {
+                            width: 18px;
+                            height: 18px;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);;
+                        }
+                    }
+
+                    .reclaim-icon {
                         margin-top: 2px;
                         svg {
                             width: 18px;

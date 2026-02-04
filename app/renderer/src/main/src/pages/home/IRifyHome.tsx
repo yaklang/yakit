@@ -22,6 +22,8 @@ import {QueryGeneralResponse} from "../invoker/schema"
 import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {apiGetSSARiskFieldGroupEx} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {SystemInfo} from "@/constants/hardware"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 const {ipcRenderer} = window.require("electron")
 interface IRifyHomeProps {}
 const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
@@ -31,6 +33,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
     const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
     const [riskLevelData, setRiskLevelData] = useState<FieldName[]>([])
     const [total, setTotal] = useState<number>()
+    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
@@ -90,7 +93,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
         <div className={styles["irify-home"]} ref={homeRef}>
             <div className={styles["main"]}>
                 <div className={styles["header"]}>{t("IRifyHome.securityFirst")}</div>
-                
+
                 <div className={styles["card-list"]}>
                     <div className={styles["card-item"]}>
                         <div className={styles["img"]}>
@@ -172,11 +175,31 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     <span className={styles["data-preview-item-number"]} style={{color: "#d33a30"}}>
                                         {curProjectInfo?.FileSize}
                                     </span>
-                                    <Tooltip title={t("HomeCom.databaseTooLarge")}>
+                                    <Tooltip title={t("HomeCom.databaseTooLarge")} placement='topRight'>
                                         <SolidExclamationIcon className={styles["database-warning-icon"]} />
                                     </Tooltip>
                                 </>
                             )}
+                            {SystemInfo.mode === "local" && (
+                                <Tooltip title={t("HomeCom.reclaimDatabaseSpaceTip")} placement='topRight'>
+                                    <SolidExclamationIcon
+                                        className={styles["reclaim-icon"]}
+                                        onClick={() => setReclaimHint(true)}
+                                    />
+                                </Tooltip>
+                            )}
+                            <YakitHint
+                                visible={reclaimHint}
+                                title={t("HomeCom.reclaimDatabaseSpaceTitle")}
+                                content={t("HomeCom.reclaimDatabaseSpaceCont")}
+                                onOk={() => {
+                                    setReclaimHint(false)
+                                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
+                                }}
+                                onCancel={() => {
+                                    setReclaimHint(false)
+                                }}
+                            />
                         </div>
                     </div>
                     <div className={styles["divider"]} />

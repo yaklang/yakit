@@ -7,6 +7,7 @@ import {
     ExecResult,
     FixupDatabase,
     FixupDatabaseExecResult,
+    ReclaimDatabaseSpace,
     WriteEngineKeyToYakitProjects
 } from "./components/LocalEngine/LocalEngineType"
 import {StartLocalEngine} from "./types"
@@ -232,6 +233,20 @@ export const grpcFixupDatabase: APIFunc<FixupDatabase, FixupDatabaseExecResult> 
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke(ipcEventPre + "fixup-database", params)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}
+
+/** @name 回收数据库空间 */
+export const grpcReclaimDatabaseSpace: APIFunc<ReclaimDatabaseSpace, ExecResult> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke(ipcEventPre + "reclaimDatabaseSpace", params)
             .then((res) => {
                 resolve(res)
             })

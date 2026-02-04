@@ -866,7 +866,16 @@
                     svg {
                         width: 22px;
                         height: 22px;
-                        color: var(--Colors-Use-Error-Primary);;
+                        color: var(--Colors-Use-Error-Primary);
+                    }
+                }
+
+                .reclaim-icon {
+                    cursor: pointer;
+                    svg {
+                        width: 22px;
+                        height: 22px;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);;
                     }
                 }
             }
@@ -1397,6 +1406,13 @@
                             height: 14px;
                         }
                     }
+                    
+                    .reclaim-icon {
+                        svg {
+                            width: 14px;
+                            height: 14px;
+                        }
+                    }
                 }
 
                 .risk-tag-wrapper {
@@ -1822,6 +1838,13 @@
                             height: 18px;
                         }
                     }
+
+                    .reclaim-icon {
+                        svg {
+                            width: 18px;
+                            height: 18px;
+                        }
+                    }
                 }
 
                 .risk-tag-wrapper {
@@ -2241,6 +2264,13 @@
                     }
 
                     .database-warning-icon {
+                        svg {
+                            width: 22px;
+                            height: 22px;
+                        }
+                    }
+
+                    .reclaim-icon {
                         svg {
                             width: 22px;
                             height: 22px;

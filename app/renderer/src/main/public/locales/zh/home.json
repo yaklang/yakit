@@ -84,6 +84,9 @@
     "HomeCom": {
         "projectDatabase": "项目数据库",
         "databaseTooLarge": "数据库过大，为避免影响使用，建议创建新项目。",
-        "vulnerabilityData": "漏洞数据"
+        "vulnerabilityData": "漏洞数据",
+        "reclaimDatabaseSpaceTip": "回收数据库空间：删除数据后可点击此按钮回收数据库空间",
+        "reclaimDatabaseSpaceTitle": "回收数据库空间",
+        "reclaimDatabaseSpaceCont": "删除数据后数据库的空间未被回收，是否确认要回收数据库空间，确认回收将会退出到欢迎页面进行回收"
     }
 }

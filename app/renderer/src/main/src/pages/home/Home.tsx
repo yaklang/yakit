@@ -103,6 +103,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {getNotepadNameByEdition} from "../layout/NotepadMenu/utils"
 import styles from "./home.module.scss"
+import {SystemInfo} from "@/constants/hardware"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -313,8 +314,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 onClick: () => onMenu({route: YakitRoute.Notepad_Manage})
             },
             {
-                label:
-                    i18n.language === "en" ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`,
+                label: i18n.language === "en" ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`,
                 icon: <PublicNotepadIcon />,
                 desc: t("YakitRoute.penetrationRecordDescription"),
                 rightIcon: <OutlineArrowrightIcon />,
@@ -349,6 +349,7 @@ const Home: React.FC<HomeProp> = (props) => {
     const [portTotal, setPortTotal] = useState<number>(0)
     const [localPluginTotal, setLocalPluginTotal] = useState<number>(0)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
 
     const isScanMode = useMemo(() => {
         return isCommunityYakit() && softMode === YakitModeEnum.Scan
@@ -1888,11 +1889,31 @@ const Home: React.FC<HomeProp> = (props) => {
                                             >
                                                 {curProjectInfo?.FileSize}
                                             </span>
-                                            <Tooltip title={t("HomeCom.databaseTooLarge")}>
+                                            <Tooltip title={t("HomeCom.databaseTooLarge")} placement='topRight'>
                                                 <SolidExclamationIcon className={styles["database-warning-icon"]} />
                                             </Tooltip>
                                         </>
                                     )}
+                                    {SystemInfo.mode === "local" && (
+                                        <Tooltip title={t("HomeCom.reclaimDatabaseSpaceTip")} placement='topRight'>
+                                            <SolidExclamationIcon
+                                                className={styles["reclaim-icon"]}
+                                                onClick={() => setReclaimHint(true)}
+                                            />
+                                        </Tooltip>
+                                    )}
+                                    <YakitHint
+                                        visible={reclaimHint}
+                                        title={t("HomeCom.reclaimDatabaseSpaceTitle")}
+                                        content={t("HomeCom.reclaimDatabaseSpaceCont")}
+                                        onOk={() => {
+                                            setReclaimHint(false)
+                                            emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
+                                        }}
+                                        onCancel={() => {
+                                            setReclaimHint(false)
+                                        }}
+                                    />
                                 </div>
                             </div>
                             <div className={styles["data-preview-item"]}>
