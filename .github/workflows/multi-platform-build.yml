@@ -64,7 +64,7 @@ jobs:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
-                  node-version: 18.18.2
+                  node-version: 20.19.2
                   # 缓存 yarn 依赖包 ↓↓↓
                   cache: "yarn"
                   cache-dependency-path: |

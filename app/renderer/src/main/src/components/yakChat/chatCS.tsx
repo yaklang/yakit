@@ -71,7 +71,6 @@ import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {chatCS, chatCSPlugin, chatGrade, getPromptList} from "@/services/yakChat"
 import {CopyComponents, YakitTag} from "../yakitUI/YakitTag/YakitTag"
-import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
@@ -128,6 +127,7 @@ import {
 } from "@/utils/globalShortcutKey/events/page/chatCS"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import { JSONParseLog } from "@/utils/tool"
+import { StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -2257,7 +2257,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                                     data={item.content}
                                                                 />
                                                             ) : (
-                                                                <ChatMarkdown content={item.content} />
+                                                                <StreamMarkdown content={item.content} />
                                                             )}
                                                         </>
                                                     </>
@@ -2809,7 +2809,7 @@ const ExampleCard: React.FC<ExampleCardProps> = memo((props) => {
             <div className={styles["example"]}>示例</div>
             {/* markdown显示 */}
             <div className={styles["detail-content"]}>
-                <ChatMarkdown content={highlightStr(content)} />
+                <StreamMarkdown content={highlightStr(content)} />
             </div>
         </div>
     )
@@ -3339,7 +3339,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                         <>
                             <div className={styles["content-style"]}>
                                 <React.Fragment>
-                                    <ChatMarkdown content={info.content} />
+                                    <StreamMarkdown content={info.content} />
                                 </React.Fragment>
                             </div>
                         </>
@@ -3362,7 +3362,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                     <div className={styles["content-style"]}>
                         {info.content && info.content.length !== 0 ? (
                             <React.Fragment>
-                                <ChatMarkdown content={info.content} />
+                                <StreamMarkdown content={info.content} />
                             </React.Fragment>
                         ) : (
                             "请求出现错误，请稍候再试"

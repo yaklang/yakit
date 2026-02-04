@@ -1,11 +1,8 @@
 import React, {useEffect, useRef, useState} from "react"
 import {DataProps, YakHelpDocItemLoadProps, YakHelpDocProps} from "./YakHelpDocType"
-
 import styles from "./YakHelpDoc.module.scss"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
-import {yakitFailed} from "@/utils/notification"
 import {CollapseList} from "../CollapseList/CollapseList"
-import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OutlineGlobealtIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -14,8 +11,7 @@ import {Tooltip} from "antd"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {WebsiteGV} from "@/enums/website"
-
-const {ipcRenderer} = window.require("electron")
+import { SafeMarkdown, StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
 
 const titleRender = (info: DataProps) => {
     return <div className={styles["title-render"]}>{info.data.ResourceName}</div>
@@ -29,7 +25,7 @@ const renderItem = (info: DataProps) => {
             if (item.length > 0) {
                 return (
                     <div className={styles["render"]}>
-                        <ChatMarkdown content={item[0].Value} />
+                        <SafeMarkdown source={item[0].Value} />
                     </div>
                 )
             } else {
