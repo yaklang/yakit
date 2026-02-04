@@ -12,4 +12,5 @@ export interface AISingHaveColorTextProps extends ChatCardProps {
     subTitle: ReactNode
     tip: ReactNode
     modalInfo?: ModalInfoProps
+    children?: ReactNode
 }
