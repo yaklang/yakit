@@ -501,6 +501,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                 debugVirtualTableEvent.setP(newParams)
             } else {
                 debugVirtualTableEvent.setP(newParams)
+                debugVirtualTableEvent.onReset()
                 debugVirtualTableEvent.startT()
             }
         }),

@@ -13,6 +13,7 @@ import {serverPushStatus} from "@/utils/duplex/duplex"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {yakitNotify} from "@/utils/notification"
 import {genDefaultPagination} from "@/pages/invoker/schema"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
@@ -254,6 +255,11 @@ export default function useVirtualTableHook<
         getDataByGrpc(query, "bottom")
     })
 
+    const onReset = useMemoizedFn(() => {
+        setOffsetData([])
+        maxIdRef.current = 0
+        minIdRef.current = 0
+    })
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
@@ -446,6 +452,6 @@ export default function useVirtualTableHook<
         pagination,
         loading,
         offsetData,
-        {startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, setP}
+        {startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, setP,onReset}
     ] as const
 }
