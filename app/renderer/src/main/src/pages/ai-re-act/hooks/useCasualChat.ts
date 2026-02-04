@@ -375,6 +375,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     AIModelName: "",
                     extraValue: extraValue
                 }
+
                 setContentMap(chatData.id, chatData)
                 setElements((old) => [
                     ...old,

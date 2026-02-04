@@ -23,9 +23,10 @@ const AIStreamNode: FC<{
     chatType: ReActChatElement["chatType"]
     token: string
     index: number
+    session: string
     nodeLabel?: string
-}> = ({chatType, token, index, nodeLabel}) => {
-    const {stream} = useTypedStream({chatType, token})
+}> = ({chatType, token, index, session, nodeLabel}) => {
+    const {stream} = useTypedStream({chatType, token, session})
     const [open, setOpen] = useState(false)
     const [openPopover, setOpenPopover] = useState(false)
 
@@ -85,9 +86,10 @@ const BOTTOM_THRESHOLD = 10
 const AIGroupStreamCard: FC<{
     elements: ReActChatElement[]
     hasNext?: boolean
-}> = ({elements, hasNext}) => {
+    session: string
+}> = ({elements, hasNext, session}) => {
     const lastElement = elements[elements.length - 1]
-    const {stream} = useTypedStream({chatType: lastElement.chatType, token: lastElement.token})
+    const {stream} = useTypedStream({chatType: lastElement.chatType, token: lastElement.token, session})
     const {nodeLabel} = useAINodeLabel(stream?.data.NodeIdVerbose)
     const [expand, setExpand] = useState(true)
     const contentRef = useRef<HTMLDivElement>(null)
@@ -135,7 +137,7 @@ const AIGroupStreamCard: FC<{
         const el = contentRef.current
         if (!el || !expand) return
         if (!allowAutoScrollRef.current) return
-        if (hasNext) return 
+        if (hasNext) return
         requestAnimationFrame(() => {
             el.scrollTo({top: el.scrollHeight, behavior: "smooth"})
         })
@@ -189,6 +191,7 @@ const AIGroupStreamCard: FC<{
                 <div className={styles["content-inner"]}>
                     {elements.map((el, index) => (
                         <AIStreamNode
+                            session={session}
                             nodeLabel={nodeLabel}
                             key={el.token}
                             chatType={el.chatType}

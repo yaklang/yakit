@@ -6,6 +6,12 @@ export type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
 }
 
+interface GetContentMapParams {
+    session: string
+    chatType: ReActChatBaseInfo["chatType"]
+    mapKey: string
+}
+
 /** 获取精确类型 */
 const getExactType: (value: any) => string = (value: any) => {
     return Object.prototype.toString.call(value).slice(8, -1)
@@ -62,10 +68,9 @@ export class ChatDataStore {
     }
 
     /** 获取会话聊天列表的数据 */
-    getContentMap(session: string, chatType: ReActChatBaseInfo["chatType"], mapKey: string): AIChatQSData | undefined {
+    getContentMap({session, chatType, mapKey}: GetContentMapParams): AIChatQSData | undefined {
         const chatData = this.get(session)
         if (!chatData) return undefined
-
         try {
             if (chatType === "reAct") {
                 return chatData.casualChat.contents.get(mapKey)
@@ -84,6 +89,7 @@ export class ChatDataStore {
             throw new Error(`Session: ${session} does not exist`)
         }
 
+        console.log('prev:', prev, value);
         const next = typeof value === "function" ? value(prev) : value
         this.map.set(session, next)
     }
@@ -119,11 +125,13 @@ export class ChatDataStore {
             }
         }
 
+        console.log('1111111', session, updateData, result)
         this.map.set(session, result)
     }
 
     /** 删除指定聊天数据 */
     remove(session: string): void {
+        console.log('delete session:', session);
         this.map.delete(session)
     }
 

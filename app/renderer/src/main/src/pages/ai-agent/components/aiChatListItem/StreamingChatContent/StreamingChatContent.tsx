@@ -9,27 +9,29 @@ type StreamCls = {className: string} | {aiMarkdownProps?: {className: string}}
 type StreamingChatContentProps = ReActChatRenderItem & {
     streamClassName?: StreamCls
     hasNext?: boolean
+    session: string
 }
 
 type SingleStreamProps = {
     chatType: ReActChatElement["chatType"]
     token: string
     streamClassName?: StreamCls
+    session: string
 }
 
-const AIStreamCard: FC<SingleStreamProps> = ({chatType, token, streamClassName}) => {
-    const {stream} = useTypedStream({chatType, token})
+const AIStreamCard: FC<SingleStreamProps> = ({chatType, token, streamClassName, session}) => {
+    const {stream} = useTypedStream({chatType, token, session})
     if (!stream) return null
 
     return <AIStreamNode {...streamClassName} stream={stream} />
 }
 
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
-    const {streamClassName, chatType, token, hasNext} = props
+    const {streamClassName, chatType, token, hasNext, session} = props
 
     if (props.isGroup === true) {
-        return <AIGroupStreamCard elements={props.children} hasNext={hasNext} />
+        return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />
     }
-    return <AIStreamCard chatType={chatType} token={token} streamClassName={streamClassName} />
+    return <AIStreamCard session={session} chatType={chatType} token={token} streamClassName={streamClassName} />
 }
 export default memo(StreamingChatContent)

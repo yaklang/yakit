@@ -7,6 +7,7 @@ import {useStreamingChatContent} from "./useStreamingChatContent"
 export interface UseTypedStreamOptions {
     chatType: ReActChatRenderItem["chatType"]
     token: string
+    session: string
     /** 每次输出的字符数，默认 3（更快更流畅） */
     step?: number
     /** 打字间隔时间（毫秒），默认 20（稍慢一点，更自然） */
@@ -26,10 +27,10 @@ export interface UseTypedStreamResult {
  * - 历史记录（直接 end）：禁用打字效果，直接显示
  */
 export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamResult {
-    const {chatType, token, step = 3, interval = 20} = options
+    const {chatType, token, session, step = 3, interval = 20} = options
 
     // 获取流数据和是否需要打字效果
-    const {stream: rawStream, shouldType} = useStreamingChatContent({chatType, token})
+    const {stream: rawStream, shouldType} = useStreamingChatContent({chatType, token, session})
 
     const content = rawStream?.data?.content || ""
 

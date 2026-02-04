@@ -32,11 +32,12 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
                     const info = consumption[onlyId]
                     if (
                         info &&
-                        (info.input_consumption !== data.input_consumption ||
-                            info.output_consumption !== data.output_consumption)
+                        info.input_consumption === data.input_consumption &&
+                        info.output_consumption === data.output_consumption
                     ) {
-                        consumption[onlyId] = data
+                        return
                     }
+                    consumption[onlyId] = data
                 }
                 return
             }

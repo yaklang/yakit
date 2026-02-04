@@ -17,7 +17,6 @@ import {AIEventQueryRequest} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
 import StreamCard from "../components/StreamCard"
-import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
@@ -32,6 +31,7 @@ import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import TaskLoading from "./TaskLoading/TaskLoading"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {aiChatDataStore} from "../store/ChatDataStore"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -41,8 +41,8 @@ export enum AIChatLeft {
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
-    const {chatIPCData} = useChatIPCStore()
-    const {taskChat} = useAIChatUIData()
+    const {taskChat, memoryList} = useChatIPCStore().chatIPCData
+    // const {taskChat} = useAIChatUIData()
     const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -50,8 +50,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         trigger: "setExpand"
     })
     const length = useCreation(() => {
-        return chatIPCData?.memoryList?.memories?.length
-    }, [chatIPCData?.memoryList?.memories?.length])
+        return memoryList?.memories?.length
+    }, [memoryList?.memories?.length])
     const handleCancelExpand = useMemoizedFn(() => {
         setExpand(false)
     })
@@ -144,7 +144,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {streams, scrollToBottom, taskStatus, getChatContentMap} = props
+    const {streams, scrollToBottom, taskStatus, session} = props
     const {virtuosoRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged} = useVirtuosoAutoScroll({
         total: streams.length,
         atBottomThreshold: 100
@@ -188,7 +188,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const onScrollToIndex = useMemoizedFn((id) => {
         const index = streams.findIndex((item) => {
             if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
-                const chatItem = getChatContentMap(item.chatType, item.token)
+                const chatItem = aiChatDataStore.getContentMap({session, chatType: item.chatType, mapKey: item.token})
                 if (!chatItem) return false
                 const taskIndex = (chatItem.data as AITaskStartInfo).taskIndex
                 return taskIndex === id
@@ -235,7 +235,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         getList()
     }, [])
 
-    const {yakExecResult} = useAIChatUIData()
+    const {yakExecResult} = useChatIPCStore().chatIPCData
 
     const getList = useMemoizedFn(() => {
         if (!callToolId) return

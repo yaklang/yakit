@@ -15,7 +15,6 @@ import {
     OutlinePositionIcon,
     RedoDotIcon
 } from "@/assets/icon/outline"
-import useAIChatUIData from "../hooks/useAIChatUIData"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {AIReviewType} from "../hooks/aiRender"
@@ -23,10 +22,11 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {AIInputEventSyncTypeEnum} from "../hooks/grpcApi"
 import {Tooltip} from "antd"
 import {AIReActTaskChatReviewProps} from "@/pages/ai-agent/aiAgentChat/type"
+import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat, setTimeLine} = props
-    const {taskChat} = useAIChatUIData()
+    const {taskChat} = useChatIPCStore().chatIPCData
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
 
@@ -69,7 +69,10 @@ export default AIReActTaskChat
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
     const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
-    const {taskChat} = useAIChatUIData()
+
+    const {activeChat} = useAIAgentStore()
+    const {taskChat} = chatIPCData
+
     const {handleSendSyncMessage, chatIPCEvents} = useChatIPCDispatcher()
 
     const streams = useCreation(() => {
@@ -122,7 +125,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             <div className={styles["tab-content"]}>
                 <AIAgentChatStream
                     streams={streams}
-                    getChatContentMap={chatIPCEvents.getChatContentMap}
+                    session={activeChat?.session || ""}
                     scrollToBottom={scrollToBottom}
                     taskStatus={chatIPCData.taskStatus}
                 />
@@ -192,7 +195,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
 })
 
 export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
-    const {taskChat} = useAIChatUIData()
+    const {taskChat} = useChatIPCStore().chatIPCData
     const [leftExpand, setLeftExpand] = useControllableValue(props, {
         defaultValue: true,
         valuePropName: "leftExpand",

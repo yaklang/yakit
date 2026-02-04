@@ -101,7 +101,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         if (!chatID.current) {
             throw new Error("session is empty")
         }
-
         return cacheDataStore?.get(chatID.current)
     })
 
