@@ -89,6 +89,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                     loading={isExecuting}
                     defaultActiveKey={plugin.Type === "yak" ? "日志" : undefined}
                     pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
+                    isCrawler={plugin.ScriptName === "基础爬虫"}
                 />
             )}
         </YakitSpin>

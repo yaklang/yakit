@@ -9,6 +9,7 @@ export interface PluginExecuteResultProps {
     defaultActiveKey?: string
     pluginExecuteResultWrapper?: string
     PluginTabsRightNode?: React.ReactNode
+    isCrawler?: boolean
 }
 
 export interface VulnerabilitiesRisksTableProps {
@@ -40,6 +41,7 @@ export interface PluginExecuteWebsiteTreeProps {
     runtimeId: string
     website?: boolean
     filterTagDom?: React.ReactNode
+    isCrawler?: boolean
 }
 export interface PluginExecutePortTableProps {
     runtimeId: string
