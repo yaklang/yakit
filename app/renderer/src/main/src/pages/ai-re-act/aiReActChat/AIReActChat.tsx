@@ -1,11 +1,11 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react"
+import React, {forwardRef, useImperativeHandle, useRef} from "react"
 
 import styles from "./AIReActChat.module.scss"
 import {AIHandleStartResProps, AIReActChatProps, AISendResProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "@/pages/ai-agent/template/type"
-import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {ColorsChatIcon} from "@/assets/icon/colors"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
@@ -16,8 +16,6 @@ import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButto
 import {AIInputEvent, AIStartParams} from "../hooks/grpcApi"
 import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
-import emiter from "@/utils/eventBus/eventBus"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {formatAIAgentSetting, getAIReActRequestParams} from "@/pages/ai-agent/utils"
@@ -25,9 +23,6 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {v4 as uuidv4} from "uuid"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {shallow} from "zustand/shallow"
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     forwardRef((props, ref) => {
