@@ -7,6 +7,7 @@
     "data_type": "Data Type:",
     "filter_traffic": "Filter Traffic",
     "packet": "Packet",
+    "select_traffic_to_view_packet": "Please select traffic to view packet content",
     "filter_traffic_analysis_tip": "Check the traffic above to analyze; if nothing is checked, all traffic will be analyzed by default",
     "concurrency": "Concurrency:",
     "deduplicate_within_single_record": "Deduplicate data within a single record:",
