@@ -35,7 +35,7 @@ function PreCode(props: {children?: React.ReactNode}) {
             observer.observe(ref.current, {childList: true, subtree: true})
             return () => observer.disconnect()
         }
-    }, [props.children])
+    }, [])
 
     return (
         <pre ref={ref}>
