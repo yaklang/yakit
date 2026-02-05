@@ -20,26 +20,30 @@ export interface UseRafPollingOptions<T> {
      * 返回 true 才会触发 setData。
      */
     shouldUpdate?: (prev: T | null, next: T) => boolean
+    /**
+     * 数据克隆策略。
+     * 如果传入，会在 setData 前执行。
+     * 解决数据引用 导致的组件不更新问题。
+     */
+    clone?: (data: T) => T
 }
 
 /**
  * 基于 requestAnimationFrame 的轮询 Hook。
- * @param options 轮询配置
- * @returns 最新的数据（可能为 null）
  */
 export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
-    const {getData, interval = 200, shouldStop, shouldUpdate} = options
+    const {getData, interval = 200, shouldStop, shouldUpdate, clone} = options
 
     const [data, setData] = useState<T | null>(() => getData())
-    const [running, setRunning] = useState(true)
+    const [running, setRunning] = useState<boolean>(true)
 
-    const runningRef = useRef(true)
+    const runningRef = useRef<boolean>(true)
     runningRef.current = running
 
     const dataRef = useRef<T | null>(data)
 
     const getDataRef = useRef(getData)
-    getDataRef.current = getData  
+    getDataRef.current = getData
 
     const shouldStopRef = useRef(shouldStop)
     shouldStopRef.current = shouldStop
@@ -47,26 +51,31 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
     const shouldUpdateRef = useRef(shouldUpdate)
     shouldUpdateRef.current = shouldUpdate
 
+    const cloneRef = useRef(clone)
+    cloneRef.current = clone
+
     const tick = useCallback(() => {
-        if (!running) return
+        if (!runningRef.current) return
+
         const result = getDataRef.current()
-        // console.log('1111111:', result,running);
         if (!result) return
 
         if (shouldStopRef.current?.(result)) {
             runningRef.current = false
-            // console.log('111111:', 111111);
             setRunning(false)
         }
+        // 进行数据克隆，确保引用变化
+        const clonedResult = cloneRef.current ? cloneRef.current(result) : result
 
         const needUpdate = shouldUpdateRef.current
-            ? shouldUpdateRef.current(dataRef.current, result)
+            ? shouldUpdateRef.current(dataRef.current, clonedResult)
             : true
 
-        dataRef.current = result
+        // 存储 clone 后的数据，确保下次比较时引用不同
+        dataRef.current = clonedResult
 
         if (needUpdate) {
-            setData(result)
+            setData(clonedResult)
         }
     }, [])
 

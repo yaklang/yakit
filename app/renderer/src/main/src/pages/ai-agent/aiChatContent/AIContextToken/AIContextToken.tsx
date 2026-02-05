@@ -1,11 +1,11 @@
-import {useCreation} from "ahooks"
+import {useCreation, useDeepCompareEffect} from "ahooks"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "../../chatTemplate/AIEcharts"
 import styles from "../AIChatContent.module.scss"
 import {formatTime} from "@/utils/timeUtil"
-import {FC, memo, useCallback} from "react"
+import {FC, memo, useCallback, useEffect, useState} from "react"
 import {aiChatDataStore} from "../../store/ChatDataStore"
 import {formatNumberUnits} from "../../utils"
-import { OutlineArrowupIcon } from "@/assets/icon/outline"
+import {OutlineArrowupIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useRafPolling} from "@/hook/useRafPolling/useRafPolling"
 
@@ -13,20 +13,33 @@ const AIContextToken: FC<{
     session?: string
     execute: boolean
 }> = ({session, execute}) => {
-    const getPerfData = () => {
+    const getPerfData = useCallback(() => {
         return aiChatDataStore.get(session ?? "")?.aiPerfData ?? null
-    }
+    }, [session])
 
-    // const aiPerfData = useRafPolling({
-    //     getData: getPerfData,
-    //     interval: 200,
-    //     shouldStop: () => !execute,
-    // })
-    const aiPerfData = getPerfData();
-    console.log('execute:', execute );
+    const aiPerfData = useRafPolling({
+        getData: getPerfData,
+        interval: 2000,
+        shouldStop: () => !execute,
+        // 优化：如果是一样的数据结构就不更新
+        shouldUpdate: (prev, next) => {
+          if (!prev) return !!next
+            return (
+                prev.pressure?.length !== next.pressure?.length ||
+                prev.firstCost?.length !== next.firstCost?.length ||
+                Object.keys(prev.consumption || {}).length !== Object.keys(next.consumption || {}).length
+            )
+        },
+        // 进行数据克隆，确保引用变化
+        clone: (data) => ({
+            ...data,
+            pressure: [...data.pressure],
+            firstCost: [...data.firstCost],
+            consumption: {...data.consumption}
+        })
+    })
     // 上下文压力集合
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
-      console.log('aiPerfData:','currentPressuresEcharts',aiPerfData);
         const data: number[] = []
         const xAxis: string[] = []
         aiPerfData?.pressure.forEach((item) => {
@@ -41,7 +54,7 @@ const AIContextToken: FC<{
         if (length === 0) return 0
         return currentPressuresEcharts.data[length - 1] || 0
     }, [currentPressuresEcharts.data])
-        console.log('aiPerfData:', aiPerfData, currentPressuresEcharts, lastPressure);
+
     // 上下文压力预设值
     const pressureThreshold = useCreation(() => {
         const length = aiPerfData?.pressure.length || 0
