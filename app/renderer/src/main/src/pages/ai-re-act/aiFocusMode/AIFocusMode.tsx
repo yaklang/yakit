@@ -63,7 +63,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                         value={item.value}
                         label={
                             <div className={styles["select-option"]}>
-                                <OutlineMicroscopeIcon />
+                                <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
                                 {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
                                 <span
                                     data-label='true'
@@ -72,7 +72,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                                 >
                                     {item.label}
                                 </span>
-                                <OutlineXIcon onClick={() => onChange(undefined)} />
+                                <OutlineXIcon className={styles["icon-wrapper"]} onClick={() => onChange(undefined)} />
                             </div>
                         }
                     >
