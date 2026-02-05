@@ -39,6 +39,7 @@ import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
+import { failed } from "@/utils/notification"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
@@ -290,6 +291,9 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             .then((res) => {
                 setBatchDownInfo(res)
             })
+            .catch((err)=>{
+                failed(`下载失败：${err?.message || err}`)
+            })
             .finally(() =>
                 setTimeout(() => {
                     setPageLoading(false)
@@ -391,11 +395,11 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             selectedRowKeys,
                             onSelectAll: onSelectAll,
                             onChangeCheckboxSingle: onSelectChange,
-                            getCheckboxProps: (record) => {
-                                return {
-                                    disabled: record.userName !== userInfo.companyName
-                                }
-                            }
+                            // getCheckboxProps: (record) => {
+                            //     return {
+                            //         disabled: record.userName !== userInfo.companyName
+                            //     }
+                            // }
                         }}
                     />
                 )}
@@ -408,7 +412,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                         onSuccess={onSuccessDownload}
                         visible={!!batchDownInfo.url}
                         setVisible={onCancelDownload}
-                        isEncodeURI={false}
+                        // isEncodeURI={false}
                     />
                 )}
             </div>

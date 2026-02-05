@@ -11,6 +11,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {isCommunityEdition} from "@/utils/envfile"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {useGoEditNotepad} from "../hook/useGoEditNotepad"
+import { failed } from "@/utils/notification"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 const NotepadManageOnline = React.lazy(() => import("./notepadManageOnline/NotepadManageOnline"))
@@ -52,6 +53,9 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
         onBaseNotepadDown(downParams)
             .then((res) => {
                 onSingleDownAfter(res)
+            })
+            .catch((err) => {
+                failed(`下载失败：${err?.message || err}`)
             })
             .finally(() =>
                 setTimeout(() => {

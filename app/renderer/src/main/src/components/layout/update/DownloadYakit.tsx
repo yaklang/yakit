@@ -24,13 +24,14 @@ import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
+import {apiDownloadStorageType} from "@/pages/notepadManage/notepadManage/utils"
 
 const {ipcRenderer} = window.require("electron")
 
 interface useDownloadYakitProps {
     intranetYakit?: boolean
     setVisible?: (v: boolean) => void
-    onDownloadFinish?: (filePath: string,status:boolean) => void
+    onDownloadFinish?: (filePath: string, status: boolean) => void
 }
 
 /** @name Yakit软件更新下载 */
@@ -46,52 +47,52 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
      * 2. 监听本地下载软件进度数据
      */
 
-    const onDownloadStart = () => {
+    const onDownloadStart = useMemoizedFn(async () => {
         if (isCommunityEdition() || isEnpriTrace()) {
             isBreakRef.current = true
             setDownloadProgress(undefined)
             if (intranetYakit) {
-                // 处理内网版本
-                grpcFetchIntranetYakitVersion()
-                    .then((filePath: string) => {
-                        ipcRenderer
-                            .invoke("download-latest-intranet-yakit", filePath)
-                            .then((isAlready) => {
-                                if (!isBreakRef.current) return
-                                if (onDownloadFinish) {
-                                    onDownloadFinish(filePath,true)
-                                    return
-                                }
-                                success("下载完毕")
-                                if (!isAlready) {
-                                    if (!getDownloadProgress()?.size) return
-                                    setDownloadProgress({
-                                        time: {
-                                            elapsed: downloadProgress?.time.elapsed || 0,
-                                            remaining: 0
-                                        },
-                                        speed: 0,
-                                        percent: 100,
-                                        // @ts-ignore
-                                        size: getDownloadProgress().size
-                                    })
-                                }
-                                ipcRenderer.invoke("open-yakit-path")
-                                emiter.emit("downloadedYakitIntranetFlag")
-                            })
-                            .catch((e: any) => {
-                                if (!isBreakRef.current) return
-                                onDownloadFinish?.(filePath,false)
-                                failed(`下载失败: ${e}`)
-                            })
-                            .finally(() => {
-                                setVisible?.(false)
-                            })
-                    })
-                    .catch((e: any) => {
-                        if (!isBreakRef.current) return
-                        setVisible?.(false)
-                    })
+                try {
+                    // 处理内网版本
+                    const filePath = await grpcFetchIntranetYakitVersion()
+                    const newFilePath = await apiDownloadStorageType(filePath)
+                    ipcRenderer
+                        .invoke("download-latest-intranet-yakit", newFilePath)
+                        .then((isAlready) => {
+                            if (!isBreakRef.current) return
+                            if (onDownloadFinish) {
+                                onDownloadFinish(newFilePath, true)
+                                return
+                            }
+                            success("下载完毕")
+                            if (!isAlready) {
+                                if (!getDownloadProgress()?.size) return
+                                setDownloadProgress({
+                                    time: {
+                                        elapsed: downloadProgress?.time.elapsed || 0,
+                                        remaining: 0
+                                    },
+                                    speed: 0,
+                                    percent: 100,
+                                    // @ts-ignore
+                                    size: getDownloadProgress().size
+                                })
+                            }
+                            ipcRenderer.invoke("open-yakit-path")
+                            emiter.emit("downloadedYakitIntranetFlag")
+                        })
+                        .catch((e: any) => {
+                            if (!isBreakRef.current) return
+                            onDownloadFinish?.(newFilePath, false)
+                            failed(`下载失败: ${e}`)
+                        })
+                        .finally(() => {
+                            setVisible?.(false)
+                        })
+                } catch (error) {
+                    if (!isBreakRef.current) return
+                    setVisible?.(false)
+                }
             } else {
                 grpcFetchLatestYakitVersion()
                     .then((data: string) => {
@@ -138,10 +139,13 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
             if (!isBreakRef.current) return
             setDownloadProgress(safeFormatDownloadProcessState(state))
         })
+    })
+
+    useEffect(() => {
         return () => {
             ipcRenderer.removeAllListeners("download-yakit-engine-progress")
         }
-    }
+    }, [])
 
     /** 取消下载事件 */
     const onCancel = useMemoizedFn(() => {

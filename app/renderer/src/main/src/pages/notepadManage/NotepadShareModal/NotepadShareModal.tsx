@@ -28,9 +28,11 @@ import {
     NotepadShareModalProps,
     NotepadPermissionType,
     SelectUserProps,
-    NotepadCollaboratorInfoProps
+    NotepadCollaboratorInfoProps,
+    UserListProps
 } from "./NotepadShareModalType"
 import {notepadRole} from "./constants"
+import { Avatar } from "antd"
 
 const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) => {
     const {notepadInfo, onClose} = props
@@ -44,7 +46,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingManage, setLoadingManage] = useState<boolean>(false)
     const [shareText, setShareText] = useState<string>("")
-    const [userList, setUserList] = useState<API.UserList[]>([])
+    const [userList, setUserList] = useState<UserListProps[]>([])
     const [selectUserList, setSelectUserList] = useState<SelectUserProps[]>([])
     const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo?.collaborator || [])
 
@@ -67,7 +69,13 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
             setLoading(true)
             apiGetUserSearch({keywords: value})
                 .then((res) => {
-                    setUserList([...(res.data || [])])
+                    const newUserList = [...(res.data || [])].map((ele) => {
+                        if (!ele.head_img) {
+                            return {...ele, avatarColor: randomAvatarColor()} // 默认头像处理
+                        }
+                        return ele
+                    }) as UserListProps[]
+                    setUserList(newUserList)
                 })
                 .finally(() => setLoading(false))
         }),
@@ -156,7 +164,11 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                 title: ele.name,
                 label: (
                     <div className={styles["user-item"]}>
-                        <img src={ele.head_img} alt={ele.name} className={styles["user-img"]} />
+                        {ele.head_img?
+                            <img src={ele.head_img} alt={ele.name} className={styles["user-img"]} />:
+                            <Avatar className={styles["user-avatar"]} size={28} style={{backgroundColor: ele.avatarColor || randomAvatarColor(), cursor: "pointer"}}>
+                                {ele.name && ele.name.slice(0, 1)}
+                            </Avatar>}
                         <span className={styles["user-name"]}>{ele.name}</span>
                     </div>
                 )
@@ -218,7 +230,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                                 ) : (
                                     <div key={item.user_id} className={styles["manage-item"]}>
                                         <div className={styles["user-item"]}>
-                                            <img src={item.head_img} alt='作者' className={styles["user-img"]} />
+                                            {item.imgNode}
                                             <span className={styles["user-name"]}>{item.user_name}</span>
                                         </div>
                                         <AuthPopover

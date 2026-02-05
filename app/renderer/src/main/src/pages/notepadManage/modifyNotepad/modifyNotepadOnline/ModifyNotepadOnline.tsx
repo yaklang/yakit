@@ -14,7 +14,7 @@ import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/stor
 import {shallow} from "zustand/shallow"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {API} from "@/services/swagger/resposeType"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -81,7 +81,6 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
     const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
 
     const [onlineUsers, setOnlineUsers] = useState<CollabUserInfo[]>([])
-    const [shareVisible, setShareVisible] = useState<boolean>(false)
 
     const [tabName, setTabName] = useState<string>(initTabName())
     const [composedTabName, setComposedTabName] = useState<string>(initTabName()) // 不会保存拼音的中间状态
@@ -237,11 +236,14 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                                     onOpenLocalFileByPath(res?.path)
                                     m.destroy()
                                 }}
-                                isEncodeURI={false}
+                                // isEncodeURI={false}
                             />
                         ),
                         bodyStyle: {padding: 0}
                     })
+                })
+                .catch((err) => {
+                    failed(`下载失败：${err?.message || err}`)
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -260,6 +262,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (!inViewport) {
             notepadContentRef.current = editor?.action(getMarkdown()) || ""
             onSaveNewContent(notepadContentRef.current)
+            setNotepadDetail((v) => ({...v, content: notepadContentRef.current}))
         }
     }, [inViewport])
     /**保存最新的文档内容 */
@@ -399,6 +402,24 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (enableCollab) return loading
         return false
     }, [loading, currentRole])
+
+    const onShare = useMemoizedFn((record: API.GetNotepadList) => {
+            const m = showYakitModal({
+                hiddenHeader: true,
+                content: (
+                    <NotepadShareModal
+                        notepadInfo={record}
+                        onClose={() => {
+                            m.destroy()
+                        }}
+                    />
+                ),
+                onCancel: () => {
+                    m.destroy()
+                },
+                footer: null
+            })
+        })
     return (
         <ModifyNotepadContent
             ref={modifyNotepadContentRef}
@@ -425,24 +446,9 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         ))}
                     </div>
                     {currentRole === notepadRole.adminPermission && (
-                        <YakitPopover
-                            content={
-                                <React.Suspense fallback={"loading"}>
-                                    <NotepadShareModal
-                                        notepadInfo={notepadDetail}
-                                        onClose={() => setShareVisible(false)}
-                                    />
-                                </React.Suspense>
-                            }
-                            visible={shareVisible}
-                            onVisibleChange={setShareVisible}
-                            overlayClassName={styles["share-popover"]}
-                            placement='bottom'
-                        >
-                            <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large'>
-                                分享
-                            </YakitButton>
-                        </YakitPopover>
+                        <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large' onClick={() => onShare(notepadDetail)}>
+                            分享
+                        </YakitButton>
                     )}
                     <YakitButton
                         type='primary'
