@@ -37,7 +37,7 @@ import { SolidDotsverticalIcon } from "@/assets/icon/solid"
 
 const { ipcRenderer } = window.require("electron")
 
-export const ConfigManagement: React.FC = memo(() => {
+const ConfigManagement: React.FC = memo(() => {
     const { t, i18n } = useI18nNamespaces(["yakitUi", "yakitRoute", "layout"])
     const { configManagementActiveTab, setConfigManagementActiveTab } = useConfigManagementTab()
 
@@ -106,6 +106,8 @@ export const ConfigManagement: React.FC = memo(() => {
         </YakitSideTab>
     )
 })
+
+export default ConfigManagement
 
 type HotCodeType = "fuzzer" | "mitm"
 
