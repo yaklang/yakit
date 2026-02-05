@@ -495,6 +495,22 @@
     }
 }
 
+.etcHosts-btns{
+    display: flex;
+    justify-content: space-between;
+}
+
+.etcHosts-config {
+    margin-top: 8px;
+    padding: 8px;
+    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+}
+
 .sni-rules {
     padding-top: 8px;
     &-header {

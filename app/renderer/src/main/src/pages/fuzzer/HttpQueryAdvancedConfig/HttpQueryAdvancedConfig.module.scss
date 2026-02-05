@@ -98,8 +98,21 @@
         padding: 12px 12px 0;
     }
 
+    .etcHosts-config {
+        margin-top: 12px;
+        margin-left: 30px;
+        padding: 8px;
+        gap: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Basic-Background);
+    }
+
     .etcHostsText {
-        max-width: 123px;
+        max-width: 160px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;

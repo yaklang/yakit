@@ -452,7 +452,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         />
                     </Form.Item>
                     <Form.Item label={"Hosts配置"} name='etcHosts'>
-                        <Space direction={"horizontal"} wrap>
+                        <div className={styles["etcHosts-btns"]}>
                             <YakitButton
                                 onClick={() => {
                                     inputHTTPFuzzerHostConfigItem((obj) => {
@@ -473,6 +473,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             >
                                 添加 Hosts 映射
                             </YakitButton>
+                            {!!etcHosts.length && <YakitButton
+                                type='text' 
+                                danger
+                                onClick={() => setEtcHosts([])}
+                            >
+                               {t("YakitButton.reset")}
+                            </YakitButton>}
+                        </div>
+                        <div className={classNames({[styles["etcHosts-config"]]: !!etcHosts.length })}>
                             {etcHosts.map((i, n) => (
                                 <YakitTag
                                     closable={true}
@@ -484,7 +493,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                     {`${i.Key} => ${i.Value}`}
                                 </YakitTag>
                             ))}
-                        </Space>
+                        </div>
                     </Form.Item>
                     <Form.Item
                         label={t("HttpQueryAdvancedConfig.disable_system_proxy")}
