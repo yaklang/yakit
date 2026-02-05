@@ -62,7 +62,8 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
         onSend: () => {},
         onClose: () => {},
         onReset: () => {},
-        handleTaskReviewRelease: () => {}
+        handleTaskReviewRelease: () => {},
+        fetchChatDataStore: () => undefined
     },
     handleSendCasual: () => {},
     handleSendTask: () => {},

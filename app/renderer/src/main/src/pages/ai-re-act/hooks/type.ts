@@ -211,6 +211,8 @@ export interface UseChatIPCEvents {
     fetchToken: () => string
     /** 获取当前执行任务规划的问题id */
     fetchTaskChatID: () => string
+    /** 获取当前外界传入的数据类实例 */
+    fetchChatDataStore: () => UseChatIPCParams["cacheDataStore"]
     /** 切换历史会话展示 */
     onSwitchChat: (session?: string) => void
     /** 开始执行接口流 */

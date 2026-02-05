@@ -312,35 +312,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             }
         })
 
-        // 首字符延迟集合
-        // const currentCostEcharts = useCreation(() => {
-        //     const data: number[] = []
-        //     const xAxis: string[] = []
-        //     aiPerfData?.firstCost.forEach((item) => {
-        //         data.push(item.ms)
-        //         xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-        //     })
-        //     return {data, xAxis}
-        // }, [aiPerfData?.firstCost])
-        // // 最新的首字符延迟
-        // const lastFirstCost = useCreation(() => {
-        //     const length = currentCostEcharts.data.length
-        //     if (length === 0) return 0
-        //     return currentCostEcharts.data[length - 1] || 0
-        // }, [currentCostEcharts])
-        // // AI的Token消耗
-        // const token = useCreation(() => {
-        //     let input = 0
-        //     let output = 0
-        //     const {consumption} = aiPerfData || {}
-        //     const keys = Object.keys(consumption || {})
-        //     for (let name of keys) {
-        //         input += consumption[name]?.input_consumption || 0
-        //         output += consumption[name]?.output_consumption || 0
-        //     }
-        //     return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-        // }, [aiPerfData?.consumption])
-
         const {onOpenLogWindow} = useAiChatLog()
 
         const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
@@ -411,43 +382,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                                 <SideSettingButton />
                             </div>
                             <div className={styles["extra"]}>
-                                {/* {currentPressuresEcharts?.data?.length > 0 && (
-                                    <div className={styles["echarts-wrapper"]}>
-                                        <div className={styles["title"]}>
-                                            上下文压力：
-                                            <span className={styles["pressure"]}>
-                                                {formatNumberUnits(lastPressure)}
-                                            </span>
-                                        </div>
-                                        <ContextPressureEcharts
-                                            dataEcharts={currentPressuresEcharts}
-                                            threshold={pressureThreshold}
-                                        />
-                                    </div>
-                                )}
-                                {currentCostEcharts?.data?.length > 0 && (
-                                    <div className={styles["echarts-wrapper"]}>
-                                        <div className={styles["title"]}>
-                                            响应速度
-                                            <span className={styles["cost"]}>{`${
-                                                lastFirstCost < 0 ? "-" : lastFirstCost
-                                            }ms`}</span>
-                                        </div>
-                                        <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
-                                    </div>
-                                )}
-                                <div className={styles["info-token"]}>
-                                    <div className={styles["token"]}>Tokens:</div>
-                                    <div className={classNames(styles["token-tag"], styles["upload-token"])}>
-                                        <OutlineArrowupIcon />
-                                        {token[0]}
-                                    </div>
-                                    <div className={classNames(styles["token-tag"], styles["download-token"])}>
-                                        <OutlineArrowdownIcon />
-                                        {token[1]}
-                                    </div>
-                                    <div className={styles["divider-style"]}></div>
-                                </div> */}
                                 <AIContextToken execute={execute} session={activeChat?.session}/>
                                 <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                     日志

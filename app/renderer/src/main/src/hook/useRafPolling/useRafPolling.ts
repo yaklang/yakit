@@ -1,5 +1,5 @@
-import {useRef, useState, useCallback} from "react"
-import {useRafInterval} from "ahooks"
+import {useRef, useState, useCallback, type DependencyList} from "react"
+import {useRafInterval, useUpdateEffect} from "ahooks"
 
 export interface UseRafPollingOptions<T> {
     /**
@@ -26,13 +26,18 @@ export interface UseRafPollingOptions<T> {
      * 解决数据引用 导致的组件不更新问题。
      */
     clone?: (data: T) => T
+    /**
+     * 重启依赖数组。
+     * 当依赖变化时，重新启动轮询。
+     */
+    resetDeps?: DependencyList
 }
 
 /**
  * 基于 requestAnimationFrame 的轮询 Hook。
  */
 export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
-    const {getData, interval = 200, shouldStop, shouldUpdate, clone} = options
+    const {getData, interval = 200, shouldStop, shouldUpdate, clone, resetDeps = []} = options
 
     const [data, setData] = useState<T | null>(() => getData())
     const [running, setRunning] = useState<boolean>(true)
@@ -67,9 +72,7 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
         // 进行数据克隆，确保引用变化
         const clonedResult = cloneRef.current ? cloneRef.current(result) : result
 
-        const needUpdate = shouldUpdateRef.current
-            ? shouldUpdateRef.current(dataRef.current, clonedResult)
-            : true
+        const needUpdate = shouldUpdateRef.current ? shouldUpdateRef.current(dataRef.current, clonedResult) : true
 
         // 存储 clone 后的数据，确保下次比较时引用不同
         dataRef.current = clonedResult
@@ -78,6 +81,17 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
             setData(clonedResult)
         }
     }, [])
+
+    useUpdateEffect(() => {
+        const initial = getDataRef.current()
+        const cloned = initial && cloneRef.current ? cloneRef.current(initial) : initial
+
+        dataRef.current = cloned ?? null
+        setData(cloned ?? null)
+
+        runningRef.current = true
+        setRunning(true)
+    }, resetDeps)
 
     useRafInterval(tick, running ? interval : undefined)
 

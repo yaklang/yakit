@@ -125,13 +125,11 @@ export class ChatDataStore {
             }
         }
 
-        console.log('1111111', session, updateData, result)
         this.map.set(session, result)
     }
 
     /** 删除指定聊天数据 */
     remove(session: string): void {
-        console.log('delete session:', session);
         this.map.delete(session)
     }
 

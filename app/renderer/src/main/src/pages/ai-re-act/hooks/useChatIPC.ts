@@ -848,6 +848,10 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
     })
 
+    const fetchChatDataStore = useMemoizedFn(() => {
+        return cacheDataStore
+    })
+
     useInterval(
         () => {
             handleStartQuestionQueue()
@@ -903,6 +907,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         return {
             fetchToken,
             fetchTaskChatID,
+            fetchChatDataStore,
             onSwitchChat,
             onStart,
             onSend,

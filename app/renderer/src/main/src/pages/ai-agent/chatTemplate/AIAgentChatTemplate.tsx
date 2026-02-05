@@ -31,7 +31,7 @@ import AIMemoryList from "./aiMemoryList/AIMemoryList"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import TaskLoading from "./TaskLoading/TaskLoading"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {aiChatDataStore} from "../store/ChatDataStore"
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
@@ -156,7 +156,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const {
         chatIPCData: {systemStream}
     } = useChatIPCStore()
-
+    const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
     const renderItem = (index: number, stream: ReActChatRenderItem) => {
         if (!stream.token) return null
         const hasNext = streams.length - index > 1
@@ -188,7 +188,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const onScrollToIndex = useMemoizedFn((id) => {
         const index = streams.findIndex((item) => {
             if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
-                const chatItem = aiChatDataStore.getContentMap({session, chatType: item.chatType, mapKey: item.token})
+                const chatItem = fetchChatDataStore()?.getContentMap({session, chatType: item.chatType, mapKey: item.token})
                 if (!chatItem) return false
                 const taskIndex = (chatItem.data as AITaskStartInfo).taskIndex
                 return taskIndex === id

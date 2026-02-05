@@ -1,8 +1,8 @@
-import {useCreation, useDeepCompareEffect} from "ahooks"
+import {useCreation} from "ahooks"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "../../chatTemplate/AIEcharts"
 import styles from "../AIChatContent.module.scss"
 import {formatTime} from "@/utils/timeUtil"
-import {FC, memo, useCallback, useEffect, useState} from "react"
+import {FC, memo, useCallback} from "react"
 import {aiChatDataStore} from "../../store/ChatDataStore"
 import {formatNumberUnits} from "../../utils"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
@@ -21,6 +21,7 @@ const AIContextToken: FC<{
         getData: getPerfData,
         interval: 2000,
         shouldStop: () => !execute,
+        resetDeps: [execute],
         // 优化：如果是一样的数据结构就不更新
         shouldUpdate: (prev, next) => {
           if (!prev) return !!next
