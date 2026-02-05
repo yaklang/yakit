@@ -19,17 +19,8 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {apiQueryRisksTotalByRuntimeIds} from "@/pages/risks/YakitRiskTable/utils"
 import AIReActTaskChat from "@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat"
 import emiter from "@/utils/eventBus/eventBus"
-import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "../chatTemplate/AIEcharts"
-import {formatTime} from "@/utils/timeUtil"
-import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    OutlineArrowdownIcon,
-    OutlineArrowupIcon,
-    OutlineClouddownloadIcon,
-    OutlineNewspaperIcon,
-    OutlinePlussmIcon
-} from "@/assets/icon/outline"
+import {OutlineClouddownloadIcon, OutlineNewspaperIcon, OutlinePlussmIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -55,11 +46,9 @@ import AIContextToken from "./AIContextToken/AIContextToken"
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
-        // const {runTimeIDs: initRunTimeIDs, yakExecResult, aiPerfData, taskChat, grpcFolders} = useAIChatUIData()
         const {chatIPCData} = useChatIPCStore()
         const {runTimeIDs: initRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
         const {activeChat} = useAIAgentStore()
-        // const aiPerfData =aiChatDataStore.get(activeChat?.session ?? "")?.aiPerfData
         const [isExpand, setIsExpand] = useState<boolean>(true)
         const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
@@ -382,7 +371,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                                 <SideSettingButton />
                             </div>
                             <div className={styles["extra"]}>
-                                <AIContextToken execute={execute} session={activeChat?.session}/>
+                                <AIContextToken execute={execute} session={activeChat?.session} />
                                 <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                     日志
                                 </YakitButton>

@@ -42,7 +42,6 @@ export enum AIChatLeft {
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
     const {taskChat, memoryList} = useChatIPCStore().chatIPCData
-    // const {taskChat} = useAIChatUIData()
     const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
