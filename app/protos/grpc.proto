@@ -3271,7 +3271,7 @@ message NewProjectRequest {
   string Database = 7;
   string ExternalModule = 8;
   string ExternalProjectCode = 9;
-  bool OnlineTask = 10;
+  string OnlineSubTaskID = 10;
 }
 
 message NewProjectResponse {
@@ -3314,7 +3314,7 @@ message ProjectDescription {
   string FileSize = 12;
   string ExternalModule = 13;
   string ExternalProjectCode = 14;
-  bool OnlineTask = 15;
+  string OnlineSubTaskID = 15;
 }
 
 message GetProjectsResponse {
