@@ -457,6 +457,17 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 onClick={() => {
                                     inputHTTPFuzzerHostConfigItem((obj) => {
                                         setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                                    },
+                                    // 批量添加
+                                    (items) => {
+                                        let newEtcHosts = [...etcHosts]
+                                        for (const item of items) {
+                                            newEtcHosts = [
+                                                ...newEtcHosts.filter((i) => i.Key !== item.Key),
+                                                item
+                                            ]
+                                        }
+                                        setEtcHosts(newEtcHosts)
                                     })
                                 }}
                             >

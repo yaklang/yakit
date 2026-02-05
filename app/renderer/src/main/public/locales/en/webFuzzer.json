@@ -669,5 +669,13 @@
   },
   "WebsocketFuzzer": {
     "clear_send_data": "Clear Send Data"
+  },
+  "HTTPFuzzerHosts": {
+    "modalTitle": "Add DNS Hosts Configuration",
+    "inputConfig": "Input Config",
+    "uploadFile": "Upload File",
+    "hostsConfig": "hosts config",
+    "dragOrUpload": "Drag file here or",
+    "example":"Sample Template"
   }
 }

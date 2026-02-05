@@ -1202,6 +1202,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                         ...v,
                                                         etcHosts: newEtcHosts
                                                     })
+                                                },
+                                                (items) => {
+                                                    // 批量添加
+                                                    let newEtcHosts = [...etcHosts]
+                                                    for (const item of items) {
+                                                        newEtcHosts = [
+                                                            ...newEtcHosts.filter((i) => i.Key !== item.Key),
+                                                            item
+                                                        ]
+                                                    }
+                                                    const v = form.getFieldsValue()
+                                                    onSetValue({
+                                                        ...v,
+                                                        etcHosts: newEtcHosts
+                                                    })
                                                 })
                                             }}
                                         >
