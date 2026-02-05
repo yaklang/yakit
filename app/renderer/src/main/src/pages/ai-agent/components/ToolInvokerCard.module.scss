@@ -1,7 +1,16 @@
 .tool-invoker-card-extra {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     font-size: 12px;
     font-weight: 400;
     line-height: 16px;
+    &-time {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 8px;
+    }
     span {
         margin-left: 4px;
         color: var(--Colors-Use-Main-Primary);

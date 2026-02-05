@@ -19,6 +19,7 @@ import {OutlineRefreshIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Tooltip} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {formatTimestamp} from "@/utils/timeUtil"
 interface ToolInvokerCardProps {
     titleText?: string
     fileList?: AIYakExecFileRecord[]
@@ -123,15 +124,28 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
         })
         return desc.join("\n")
     }, [toolList])
+
+    const duration = useCreation(() => {
+        return Math.round(data.durationSeconds * 10) / 10
+    }, [data.durationSeconds])
+    const startTime = useCreation(() => {
+        return formatTimestamp(data.startTime)
+    }, [data.startTime])
     return (
         <ChatCard
             titleText={titleText}
             titleIcon={<SolidToolIcon />}
             titleExtra={
                 <div className={styles["tool-invoker-card-extra"]}>
-                    <Tooltip title='刷新代码块数据'>
-                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={() => getListToolList()} />
-                    </Tooltip>
+                    <div className={styles["tool-invoker-card-extra-time"]}>
+                        <div>
+                            开始时间:<span>{startTime}</span>
+                        </div>
+                        <div>
+                            执行时长:<span>{duration}</span>s
+                        </div>
+                    </div>
+
                     {!!risksLen && (
                         <>
                             <label
@@ -153,6 +167,9 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
                             HTTP 流量 <span>{trafficLen}</span>
                         </label>
                     )}
+                    <Tooltip title='刷新代码块数据'>
+                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={() => getListToolList()} />
+                    </Tooltip>
                 </div>
             }
             footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
@@ -195,8 +212,7 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
 
         const handleScroll = () => {
             const threshold = 20
-            const atBottom =
-                el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+            const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
             setIsAtBottom(atBottom)
         }
 
