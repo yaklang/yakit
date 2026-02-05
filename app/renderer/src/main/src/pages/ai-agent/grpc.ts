@@ -22,6 +22,10 @@ import {
 } from "./type/forge"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
+import {AIChatQSData, AIChatQSDataTypeEnum} from "../ai-re-act/hooks/aiRender"
+import {genBaseAIChatData, isToolExecStream} from "../ai-re-act/hooks/utils"
+import {Uint8ArrayToString} from "@/utils/str"
+import {convertNodeIdToVerbose} from "../ai-re-act/hooks/defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,6 +40,51 @@ export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询QueryAIEvent失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/**
+ * @name 查询工具详情前端显示数据
+ * - 查执行工具的 call_tool 和 tool_stdout
+ */
+export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        grpcQueryAIEvent(param)
+            .then((res: AIEventQueryResponse) => {
+                const {Events} = res
+                const list: AIChatQSData[] = []
+                Events.filter((ele) => {
+                    if (ele.Type === AIChatQSDataTypeEnum.STREAM && isToolExecStream(ele.NodeId)) return true
+                    if (ele.Type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT) return true
+                    return false
+                }).forEach((item) => {
+                    let ipcContent = ""
+                    let ipcStreamDelta = ""
+                    try {
+                        ipcContent = Uint8ArrayToString(item.Content) || ""
+                        ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
+                    } catch (error) {}
+                    const current: AIChatQSData = {
+                        ...genBaseAIChatData(item),
+                        type: AIChatQSDataTypeEnum.STREAM,
+                        data: {
+                            CallToolID: item.CallToolID,
+                            NodeId: item.NodeId,
+                            NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
+                            content: ipcContent + ipcStreamDelta,
+                            ContentType: item.ContentType,
+                            EventUUID: item.EventUUID,
+                            status: "end"
+                        }
+                    }
+                    list.push(current)
+                })
+                resolve(list)
+            })
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询 grpcQueryAIToolDetails 失败:" + e)
                 reject(e)
             })
     })
