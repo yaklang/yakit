@@ -67,7 +67,9 @@ import {apiQuerySSAPrograms} from "./yakRunnerScanHistory/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {IRifyUpdateProjectManagerModal} from "./YakRunnerProjectManager/YakRunnerProjectManager"
 import {parseUrl} from "@/hook/useProxy"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import {apiGetGlobalNetworkConfig} from "./spaceEngine/utils"
+import {setAIModal} from "./ai-agent/aiModelList/AIModelList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -400,7 +402,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
-                const total = JSONParseLog(completionJson, {page:"MainOperator", fun:"GetYakitCompletionRaw"}) as CompletionTotal
+                const total = JSONParseLog(completionJson, {
+                    page: "MainOperator",
+                    fun: "GetYakitCompletionRaw"
+                }) as CompletionTotal
                 setYaklangCompletions(total)
                 setUpYaklangMonaco()
                 setUpSyntaxFlowMonaco()
@@ -518,7 +523,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
             if (!result) setDefaultExpand(true)
             try {
-                const expandResult: boolean = JSONParseLog(result, {page:"MainOperator", fun:"MenuExpand"})
+                const expandResult: boolean = JSONParseLog(result, {page: "MainOperator", fun: "MenuExpand"})
                 setDefaultExpand(expandResult)
             } catch (e) {
                 setDefaultExpand(true)
@@ -686,6 +691,31 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     >
                         <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                     </YakitModal>
+
+                    {/* <YakitModal
+                        visible={true}
+                        title={"AI 模型未配置"}
+                        destroyOnClose={true}
+                        maskClosable={false}
+                        width={420}
+                        onCancel={() => setPasswordShow(false)}
+                        okText='去配置'
+                        onOk={() => {
+                            apiGetGlobalNetworkConfig().then((obj) => {
+                                setAIModal({
+                                    config: obj,
+                                    onSuccess: () => {
+                                        setTimeout(() => {
+                                            emiter.emit("onRefreshAIModelList")
+                                        }, 200)
+                                    }
+                                })
+                            })
+                        }}
+                    >
+                        <div>无可使用AI模型，请配置后使用</div>
+                    </YakitModal> */}
+
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />
                     )}

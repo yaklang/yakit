@@ -27,6 +27,7 @@ import {
     grpcStopLocalModel,
     reorderApplicationConfig
 } from "./utils"
+import {resetForcedAIModalFlag} from "./utils"
 import {LocalModelConfig} from "../type/aiModel"
 import {Divider, Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
@@ -83,8 +84,9 @@ export const setAIModal = (params: {
     config: GlobalNetworkConfig
     item?: ThirdPartyApplicationConfig
     onSuccess: () => void
+    mountContainer
 }) => {
-    const {config, item, onSuccess} = params
+    const {config, item, onSuccess, mountContainer} = params
     let formValues
     if (!!item) {
         const extraParams: Record<string, any> = {}
@@ -103,6 +105,9 @@ export const setAIModal = (params: {
         footer: null,
         closable: true,
         maskClosable: false,
+        keyboard: false,
+        cancelButtonProps: {style: {display: "none"}},
+        getContainer: mountContainer,
         onCancel: () => {
             // if (config?.AppConfigs?.length === 0) {
             //     emiter.emit("onRefreshAvailableAIModelList", "false")
@@ -115,6 +120,7 @@ export const setAIModal = (params: {
                     isOnlyShowAiType={true}
                     formValues={formValues}
                     disabledType={!!formValues}
+                    footerProps={{hiddenCancel: true}}
                     onAdd={(data) => {
                         // 新增，有影响ai优化级
                         const params = handleAIConfig(
@@ -129,6 +135,7 @@ export const setAIModal = (params: {
                             return
                         }
                         apiSetGlobalNetworkConfig({...config, ...params}).then(() => {
+                            resetForcedAIModalFlag()
                             onSuccess()
                             emiter.emit("onRefreshAvailableAIModelList", isAdd)
                             emiter.emit(
@@ -178,7 +185,7 @@ const modelTypeOptions: YakitRadioButtonsProps["options"] = [
         value: "local"
     }
 ]
-const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
+const AIModelList: React.FC<AIModelListProps> = React.memo((props, mountContainer) => {
     const [modelType, setModelType] = useState<AIModelType>("online")
 
     const [onlineTotal, setOnlineTotal] = useState<number>(0)
@@ -258,6 +265,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         apiGetGlobalNetworkConfig().then((obj) => {
             setAIModal({
                 config: obj,
+                mountContainer,
                 onSuccess: () => {
                     onlineRef.current?.onRefresh()
                 }
@@ -322,7 +330,12 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                 </div>
             </div>
             {modelType === "online" ? (
-                <AIOnlineModelList ref={onlineRef} setOnlineTotal={setOnlineTotal} onAdd={onAdd} />
+                <AIOnlineModelList
+                    ref={onlineRef}
+                    setOnlineTotal={setOnlineTotal}
+                    onAdd={onAdd}
+                    mountContainer={mountContainer}
+                />
             ) : (
                 <AILocalModelList ref={localRef} setLocalTotal={setLocalTotal} />
             )}
@@ -344,7 +357,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
         const {setting} = useAIAgentStore()
         const {setSetting} = useAIAgentDispatcher()
-        const {setOnlineTotal, onAdd} = props
+        const {setOnlineTotal, onAdd, mountContainer} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
         const noAiAppConfigRef = useRef<ThirdPartyApplicationConfig[]>([])
@@ -395,6 +408,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             if (!configRef.current) return
             setAIModal({
                 config: configRef.current,
+                mountContainer,
                 item,
                 onSuccess: () => {
                     getList()
@@ -1067,7 +1081,7 @@ export const OutlineAtomIconByStatus: React.FC<OutlineAtomIconByStatusProps> = R
                 {
                     [styles["ai-local-model-icon-ready"]]: isReady,
                     [styles["ai-local-model-icon-running"]]: isRunning,
-                    [styles["ai-local-model-icon-small"]]: size==='small',
+                    [styles["ai-local-model-icon-small"]]: size === "small"
                 },
                 iconClassName
             )}

@@ -6,6 +6,7 @@ import {
     useControllableValue,
     useCreation,
     useDebounceEffect,
+    useDebounceFn,
     useInViewport,
     useMemoizedFn,
     useSafeState,
@@ -19,14 +20,7 @@ import {v4 as uuidv4} from "uuid"
 import classNames from "classnames"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
-import {
-    OutlineBotIcon,
-    OutlineLog2Icon,
-    OutlineMicroscopeIcon,
-    OutlineTerminalIcon,
-    OutlineXIcon
-} from "@/assets/icon/outline"
-import {MITMConsts} from "@/pages/mitm/MITMConsts"
+import {OutlineBotIcon, OutlineLog2Icon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {YakitInput} from "./yakitUI/YakitInput/YakitInput"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import {
@@ -62,7 +56,7 @@ import {
 } from "@/assets/commonProcessIcons"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
-import {OutlinePlusIcon, RefreshIcon} from "@/assets/newIcon"
+import {RefreshIcon} from "@/assets/newIcon"
 import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
 import ReactResizeDetector from "react-resize-detector"
 import {RemoteHistoryGV} from "@/enums/history"
@@ -84,10 +78,9 @@ import ChatIPCContent, {
     ChatIPCContextStore,
     defaultDispatcherOfChatIPC
 } from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
-import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
+import {aiChatDataStore, aiChatDataStore as histroyAiStore} from "@/pages/ai-agent/store/ChatDataStore"
 import {AIChatInfo, AIChatData} from "@/pages/ai-agent/type/aiChat"
 import {
     AIReActChatRefProps,
@@ -101,8 +94,8 @@ import {AIInputEvent} from "@/pages/ai-re-act/hooks/grpcApi"
 import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
-import {Tooltip} from "antd"
+
+import {HistroryAIReActChat} from "./HistroryAIReActChat"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -273,62 +266,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 当前展示对话
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
-    const handleChatingEnd = useMemoizedFn(() => {
-        handleSaveChatInfo()
-    })
-
     const [chatIPCData, events] = useChatIPC({
-        onEnd: handleChatingEnd,
         getRequest: getSetting,
-        saveChatDataStore: aiChatDataStore.set
+        cacheDataStore: aiChatDataStore
     })
 
-    const {
-        execute,
-        runTimeIDs,
-        aiPerfData,
-        casualChat,
-        taskChat,
-        yakExecResult,
-        grpcFolders,
-        reActTimelines,
-        coordinatorIDs
-    } = chatIPCData
-
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const showID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatData = {
-                runTimeIDs: cloneDeep(runTimeIDs),
-                coordinatorIDs: cloneDeep(coordinatorIDs),
-                yakExecResult: cloneDeep(yakExecResult),
-                aiPerfData: cloneDeep(aiPerfData),
-                casualChat: cloneDeep(casualChat),
-                taskChat: cloneDeep(taskChat),
-                grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines)
-            }
-            aiChatDataStore.set(showID, answer)
-        }
-    })
-
-    useEffect(() => {
-        if (inViewport) {
-            // 获取缓存的全局配置数据
-            getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-                .then((res) => {
-                    if (!res) return
-                    try {
-                        const cache = JSON.parse(res) as AIAgentSetting
-                        if (typeof cache !== "object") return
-                        setSetting(cache)
-                    } catch (error) {}
-                })
-                .catch(() => {})
-        }
-        return () => {}
-    }, [inViewport])
+    const {execute} = chatIPCData
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
@@ -342,8 +285,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
         const newChat: AIHandleStartExtraProps = {
-            chatId: activeChat?.id
+            chatId: activeChat?.session
         }
+
         return new Promise<AIHandleStartResProps>((resolve) => {
             const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
             resolve({
@@ -354,13 +298,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         })
     })
     const onChatFromHistory = useMemoizedFn((session: string) => {
-        aiChatDataStore.remove(session)
+        histroyAiStore.remove(session)
     })
 
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
             events.onClose(activeID)
-            aiChatDataStore.set(activeID, chatIPCData)
         }
     })
 
@@ -385,6 +328,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const onSendRequest = useMemoizedFn((data: AISendParams) => {
         const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
+
         return new Promise<AISendResProps>((resolve) => {
             resolve({
                 params
@@ -433,7 +377,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             ...defaultDispatcherOfChatIPC,
             chatIPCEvents: events,
             handleSendCasual,
-            handleSaveChatInfo,
             handleStop: onStop,
             handleSend,
             handleSendSyncMessage,
@@ -456,8 +399,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setChats: setChats,
             getChats: getChats,
             setActiveChat: setActiveChat,
-
-            getChatData: aiChatDataStore.get
+            getChatData: histroyAiStore.get
         }
     }, [])
 
@@ -522,69 +464,24 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             }}
                                         ></HistoryProcess>
                                     </div>
-
-                                    <div
-                                        ref={refRef}
-                                        className={styles["ai-wrapper"]}
-                                        style={{display: activeKey === "ai" ? "block" : "none"}}
-                                    >
-                                        <AIReActChat
-                                            mode={"task"}
+                                    {activeKey === "ai" && (
+                                        <HistroryAIReActChat
+                                            refRef={refRef}
                                             showFreeChat={showFreeChat}
                                             setShowFreeChat={setShowFreeChat}
-                                            title='AI'
-                                            ref={aiReActChatRef}
-                                            startRequest={onStartRequest}
-                                            sendRequest={onSendRequest}
-                                            chatContainerHeaderClassName={styles["history-ai-header"]}
-                                            externalParameters={{
-                                                rightIcon: (
-                                                    <React.Fragment>
-                                                        <Tooltip title='新建对话'>
-                                                            <YakitButton
-                                                                type='text2'
-                                                                icon={<OutlinePlusIcon />}
-                                                                onClick={() => {
-                                                                    if (activeID) {
-                                                                        events.onClose(activeID)
-                                                                        aiChatDataStore.set(activeID, chatIPCData)
-                                                                        events.onReset()
-                                                                        onChatFromHistory(activeID)
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </Tooltip>
-                                                        <YakitButton
-                                                            type='text2'
-                                                            icon={<OutlineXIcon />}
-                                                            onClick={() => setOpenTabsFlag(false)}
-                                                        />
-                                                    </React.Fragment>
-                                                ),
-                                                defaultAIFocusMode: {
-                                                    children: (
-                                                        <div
-                                                            className={classNames([
-                                                                styles["select-option"],
-                                                                styles["defualt-focus-mode"]
-                                                            ])}
-                                                        >
-                                                            <OutlineMicroscopeIcon />
-                                                            {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
-                                                            <span
-                                                                data-label='true'
-                                                                className={styles["select-option-text"]}
-                                                                title={`http_flow_analyze`}
-                                                            >
-                                                                http_flow_analyze
-                                                            </span>
-                                                        </div>
-                                                    ),
-                                                    filterMode: ["focusMode"]
-                                                }
-                                            }}
+                                            aiReActChatRef={aiReActChatRef}
+                                            onStartRequest={onStartRequest}
+                                            onSendRequest={onSendRequest}
+                                            activeID={activeID}
+                                            onStop={onStop}
+                                            events={events}
+                                            onChatFromHistory={onChatFromHistory}
+                                            setActiveChat={setActiveChat}
+                                            setOpenTabsFlag={setOpenTabsFlag}
+                                            inViewport={inViewport}
+                                            setSetting={setSetting}
                                         />
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}

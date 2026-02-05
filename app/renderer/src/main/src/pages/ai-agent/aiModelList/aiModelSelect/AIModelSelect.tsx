@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {AIModelItemProps, AIModelSelectProps, AISelectType} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState} from "ahooks"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {grpcListAiModel, isForcedSetAIModal} from "../utils"
 import styles from "./AIModelSelect.module.scss"
@@ -31,21 +31,23 @@ import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/con
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {LoadingOutlined} from "@ant-design/icons"
-import {Tooltip} from "antd"
 
-export const onOpenConfigModal = () => {
+export const onOpenConfigModal = (mountContainer) => {
     const m = YakitModalConfirm({
         title: "AI 模型未配置",
         width: 420,
         onOkText: "去配置",
-        cancelButtonProps: {style: {display: "none"}},
         content: <div>无可使用AI模型，请配置后使用</div>,
         closable: false,
         maskClosable: false,
+        keyboard: false,
+        cancelButtonProps: {style: {display: "none"}},
+        getContainer: mountContainer,
         onOk: () => {
             apiGetGlobalNetworkConfig().then((obj) => {
                 setAIModal({
                     config: obj,
+                    mountContainer,
                     onSuccess: () => {
                         setTimeout(() => {
                             emiter.emit("onRefreshAIModelList")
@@ -59,6 +61,7 @@ export const onOpenConfigModal = () => {
 }
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
+    const {isOpen = true} = props
     //#region AI model
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
@@ -97,7 +100,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 try {
                     const cache = JSON.parse(res) as AIAgentSetting
                     if (typeof cache !== "object") return
-                    getAIModelListOption(!cache.AIModelName)
+                    getAIModelListOption(!cache.AIModelName) // false
                 } catch (error) {}
             })
             .catch(() => {})
@@ -179,23 +182,28 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     })
     const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
         getGlobalConfig()
+
         getAIModelListOption(data === "true")
     })
     const getAIModelListOption = useDebounceFn(
         (refreshValue?: boolean) => {
             isForcedSetAIModal({
                 noDataCall: () => {
-                    setSetting &&
+                    if (setSetting) {
                         setSetting((old) => ({
                             ...old,
                             AIService: "",
                             AIModelName: ""
                         }))
+                    }
                 },
                 haveDataCall: (res) => {
                     setAIModelOptions(res)
                     refreshValue && onInitValue(res)
-                }
+                },
+                pageKey: "ai-agent",
+                isOpen: isOpen,
+                mountContainer: document.getElementById("main-operator-page-body-ai-agent")
             })
         },
         {wait: 200, leading: true}

@@ -11,6 +11,7 @@ export interface AIOnlineModelListProps {
     ref: React.ForwardedRef<AIOnlineModelListRefProps>
     setOnlineTotal: (total: number) => void
     onAdd: () => void
+    mountContainer: HTMLElement | null
 }
 
 export interface AIOnlineModelListRefProps {

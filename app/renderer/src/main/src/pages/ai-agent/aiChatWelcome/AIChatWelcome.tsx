@@ -57,6 +57,8 @@ import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {KnowledgeSidebarList} from "./KnowledgeSidebarList/KnowledgeSidebarList"
+import {AIAgentSetting} from "../aiAgentType"
+import {isForcedSetAIModal} from "../aiModelList/utils"
 
 const sideberRadioOptions = [
     {

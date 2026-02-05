@@ -2,8 +2,9 @@
   "HTTPHistory": {
     "websiteTree": "网站树",
     "process": "进程",
-    "AI":"AI",
-    "pleaseEnterDomainToSearch": "请输入域名进行搜索，例baidu.com"
+    "pleaseEnterDomainToSearch": "请输入域名进行搜索，例baidu.com",
+    "AI": "AI"
+
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到该请求详情",

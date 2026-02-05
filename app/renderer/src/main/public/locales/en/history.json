@@ -2,7 +2,8 @@
   "HTTPHistory": {
     "websiteTree": "Website Tree",
     "process": "Process",
-    "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com"
+    "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com",
+    "AI": "AI"
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "Request details not found",

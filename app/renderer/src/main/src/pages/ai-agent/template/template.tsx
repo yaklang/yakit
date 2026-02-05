@@ -232,7 +232,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         }}
                     >
                         <div className={styles["footer-left-btns-default"]}>
-                            <AIModelSelect />
+                            <AIModelSelect isOpen={props?.isOpen} />
                             <React.Suspense fallback={<div>loading...</div>}>
                                 <AIReviewRuleSelect />
                             </React.Suspense>

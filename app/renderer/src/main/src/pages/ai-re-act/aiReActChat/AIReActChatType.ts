@@ -38,6 +38,7 @@ export interface AIReActChatProps {
     sendRequest?: (v: AISendParams) => Promise<AISendResProps>
     externalParameters?: {
         rightIcon?: string | React.ReactNode
+        isOpen?: boolean
         defaultAIFocusMode?: {
             children: ReactNode
             filterMode?: iconMapType[]

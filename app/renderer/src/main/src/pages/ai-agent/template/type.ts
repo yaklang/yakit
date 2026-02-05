@@ -33,6 +33,7 @@ export interface AIChatTextareaProps {
     children?: ReactNode
     defaultValue?: string
     defaultAIFocusMode?: DefaultAIFocusMode
+    isOpen?: boolean
 }
 export interface FileToChatQuestionList {
     path: string

@@ -89,7 +89,7 @@ export class ChatDataStore {
             throw new Error(`Session: ${session} does not exist`)
         }
 
-        console.log('prev:', prev, value);
+        console.log("prev:", prev, value)
         const next = typeof value === "function" ? value(prev) : value
         this.map.set(session, next)
     }
@@ -141,3 +141,4 @@ export class ChatDataStore {
 
 export const aiChatDataStore = new ChatDataStore()
 export const knowledgeBaseDataStore = new ChatDataStore()
+export const histroyAiStore = new ChatDataStore()

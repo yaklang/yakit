@@ -255,6 +255,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                             loading={false}
                                             onSubmit={handleSubmit}
                                             defaultAIFocusMode={externalParameters?.defaultAIFocusMode}
+                                            isOpen={externalParameters?.isOpen}
                                             extraFooterRight={
                                                 <div className={styles["extra-footer-right"]}>
                                                     <OpenFileDropdown

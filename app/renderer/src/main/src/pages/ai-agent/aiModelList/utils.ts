@@ -167,10 +167,10 @@ export const getAIModelList: APINoRequestFunc<GetAIModelListResponse> = (hiddenE
             if (!!config) {
                 onlineModels = config.AppConfigs.filter((ele) => config.AiApiPriority.includes(ele.Type)) || []
             }
-            const localModelsRes = await grpcGetAllStartedLocalModels()
-            if (!!localModelsRes) {
-                localModels = localModelsRes.Models.filter((ele) => ele.ModelType === AILocalModelTypeEnum.AIChat) || []
-            }
+            // const localModelsRes = await grpcGetAllStartedLocalModels()
+            // if (!!localModelsRes) {
+            //     localModels = localModelsRes.Models.filter((ele) => ele.ModelType === AILocalModelTypeEnum.AIChat) || []
+            // }
             resolve({onlineModels, localModels})
         } catch (error) {
             if (!hiddenError) yakitNotify("error", "getAIModelList 失败:" + error)
@@ -250,23 +250,44 @@ export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse>
     })
 }
 
-export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest, null> = (params, hiddenError) => {
+const openedAIModalMap = new Map<string, boolean>()
+
+export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean}, null> = (
+    params,
+    hiddenError
+) => {
     return new Promise((resolve, reject) => {
-        const {noDataCall, haveDataCall} = params
+        const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true} = params
+
         getAIModelList(hiddenError)
             .then((res) => {
-                if (res.localModels.length === 0 && res.onlineModels.length === 0) {
-                    onOpenConfigModal()
+                const noModel = res.localModels.length === 0 && res.onlineModels.length === 0
+
+                if (noModel) {
+                    // 每个 tab / 页面只弹一次
+                    if (!openedAIModalMap.get(pageKey)) {
+                        openedAIModalMap.set(pageKey, true)
+                        isOpen && onOpenConfigModal(mountContainer)
+                    }
                     noDataCall(res)
                 } else {
                     haveDataCall(res)
                 }
+
                 resolve(null)
             })
             .catch(reject)
     })
 }
 
+// 配置成功 / 删除配置时调用
+export const resetForcedAIModalFlag = (pageKey?: string) => {
+    if (pageKey) {
+        openedAIModalMap.delete(pageKey)
+    } else {
+        openedAIModalMap.clear()
+    }
+}
 export interface ListAiModelResponse {
     ModelName: string[]
 }
