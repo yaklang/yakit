@@ -10,7 +10,9 @@ import {
     OutlineBookOpenTextIcon,
     OutlineBotIcon,
     OutlineDocumenttextIcon,
-    OutlineFolderopenIcon
+    OutlineFolderopenIcon,
+    OutlinePointerIcon,
+    OutlineEarOffIcon
 } from "@/assets/icon/outline"
 import {YakitSideTabProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
@@ -39,6 +41,7 @@ import {
 } from "@/assets/icon/solid"
 import {MCPServerType} from "./type/aiMCP"
 import {DefaultMemoryList} from "../ai-re-act/hooks/defaultConstant"
+import {ColorsAIIcon} from "@/assets/icon/colors"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -223,7 +226,13 @@ export const AIReviewRuleOptions = [
         label: "AI",
         describe: "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
     }
-]
+] as const
+type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]["value"]
+export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, ReactNode> = {
+    manual: <OutlinePointerIcon />,
+    yolo: <OutlineEarOffIcon style={{color: "var(--Colors-Use-Error-Primary)"}} />,
+    ai: <ColorsAIIcon />
+}
 export enum AIMCPServerTypeEnum {
     SSE = "sse",
     Stdio = "stdio"

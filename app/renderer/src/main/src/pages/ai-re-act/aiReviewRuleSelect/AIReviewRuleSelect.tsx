@@ -6,7 +6,7 @@ import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
 import classNames from "classnames"
 import {useClickAway, useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {AIAgentSettingDefault, AIReviewRuleOptions} from "@/pages/ai-agent/defaultConstant"
+import {AIAgentSettingDefault, AIReviewRuleIconMap, AIReviewRuleOptions} from "@/pages/ai-agent/defaultConstant"
 import {OutlineCodepenIcon, OutlineSirenIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {FormItemSlider} from "@/pages/ai-agent/AIChatSetting/AIChatSetting"
@@ -100,7 +100,7 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                         value={item.value}
                         label={
                             <div className={styles["select-option"]}>
-                                <OutlineCodepenIcon />
+                                <div className={styles["icon-wrapper"]}>{AIReviewRuleIconMap[item.value]}</div>
                                 {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
                                 <span
                                     data-label='true'
@@ -114,11 +114,14 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                     >
                         <div
                             className={classNames(styles["select-option-wrapper"], {
-                                [styles["select-option-active-wrapper"]]: item.value === selectReviewPolicyRef.current
+                                [styles["select-option-active-wrapper"]]: item.value === modelValue
                             })}
                         >
-                            <div className={styles["text"]}>{item.label}</div>
-                            <div className={styles["describe"]}> {item.describe}</div>
+                            <div className={styles["icon-wrapper"]}>{AIReviewRuleIconMap[item.value]}</div>
+                            <div className={styles["text-wrapper"]}>
+                                <div className={styles["text"]}>{item.label}</div>
+                                <div className={styles["describe"]}> {item.describe}</div>
+                            </div>
                         </div>
                     </YakitSelect.Option>
                 ))}
