@@ -10,6 +10,13 @@ import {
 import {FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
 import {FieldName} from "@/pages/risks/RiskTable"
 import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
+import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
+import {GetAIForgeRequest} from "@/pages/ai-agent/type/forge"
+import {JSONParseLog, JSONParseLogOption} from "@/utils/tool"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {ReActChatEventEnum} from "@/pages/ai-agent/defaultConstant"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
@@ -245,4 +252,40 @@ export const cancelExportSSARisk = (token: string) => {
 /** 取消导入SSA风险 */
 export const cancelImportSSARisk = (token: string) => {
     return ipcRenderer.invoke("cancel-ImportSSARisk", token)
+}
+
+export const openAIForge = (params: {
+    query: GetAIForgeRequest
+    handleParamsUIConfig: (v: YakParamProps) => YakParamProps
+    jsonParseLogParams: JSONParseLogOption
+}) => {
+    const {query, handleParamsUIConfig, jsonParseLogParams} = params
+    grpcGetAIForge(query, true)
+        .then((res) => {
+            if (!res) {
+                yakitNotify("warning", "暂无ForgeName匹配项")
+                return
+            }
+            if (!res.ParamsUIConfig) {
+                yakitNotify("warning", "暂无ParamsUIConfig配置项")
+                return
+            }
+            let paramsUIConfig: YakParamProps = JSONParseLog(res.ParamsUIConfig, jsonParseLogParams)
+            paramsUIConfig = handleParamsUIConfig(paramsUIConfig)
+            let newRes = {...res, ParamsUIConfig: JSON.stringify(paramsUIConfig)}
+            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+            setTimeout(() => {
+                emiter.emit(
+                    "onReActChatEvent",
+                    JSON.stringify({
+                        type: ReActChatEventEnum.OPEN_FORGE_FORM,
+                        params: {value: newRes},
+                        useForge: true
+                    })
+                )
+            }, 100)
+        })
+        .catch((e) => {
+            yakitNotify("error", "匹配ForgeName异常:" + e)
+        })
 }

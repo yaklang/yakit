@@ -1,7 +1,7 @@
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 import {FileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import { AuditCodePageInfoProps } from "@/store/pageInfo"
+import {AuditCodePageInfoProps} from "@/store/pageInfo"
 export interface YakRunnerAuditCodeProps {
     auditCodePageInfo?: AuditCodePageInfoProps
 }
@@ -68,4 +68,6 @@ export interface AuditCodeStatusInfoProps {
     autoClose?: boolean
     // 关闭
     onClose?: () => void
+    /**项目路径 */
+    path: string
 }

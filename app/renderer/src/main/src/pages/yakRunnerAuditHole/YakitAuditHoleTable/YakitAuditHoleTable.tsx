@@ -51,7 +51,8 @@ import {
     ExportSSARiskRequest,
     ImportSSARiskRequest,
     apiExportSSARisk,
-    apiImportSSARisk
+    apiImportSSARisk,
+    openAIForge
 } from "./utils"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -95,7 +96,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import importExportStyles from "@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss"
 import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
 import {ReActChatEventEnum} from "@/pages/ai-agent/defaultConstant"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1544,42 +1545,25 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                             icon={<OutlineBotIcon />}
                             onClick={(e) => {
                                 e.stopPropagation()
-                                grpcGetAIForge({
-                                    ForgeName: "ssapoc"
-                                },true)
-                                    .then((res) => {
-                                        if (!res) {
-                                            yakitNotify("warning", "暂无ForgeName匹配项")
-                                            return
-                                        }
-                                        if(!res.ParamsUIConfig){
-                                            yakitNotify("warning", "暂无ParamsUIConfig配置项")
-                                            return
-                                        }
-                                        let paramsUIConfig = JSONParseLog(res.ParamsUIConfig, { page: "YakitAuditHoleTable", fun: "onClick" })
-                                        // 给予默认值
-                                        paramsUIConfig.map((item) => {
+                                const params = {
+                                    query: {
+                                        ForgeName: "ssapoc"
+                                    },
+                                    handleParamsUIConfig: (paramsUIConfig) => {
+                                        const data = paramsUIConfig.map((item) => {
                                             if (item.Field === "risk_id") {
                                                 item.DefaultValue = info.Id
                                             }
                                             return item
                                         })
-                                        let newRes = {...res, ParamsUIConfig: JSON.stringify(paramsUIConfig)}
-                                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
-                                        setTimeout(() => {
-                                            emiter.emit(
-                                                "onReActChatEvent",
-                                                JSON.stringify({
-                                                    type: ReActChatEventEnum.OPEN_FORGE_FORM,
-                                                    params: {value: newRes},
-                                                    useForge: true
-                                                })
-                                            )
-                                        }, 100)
-                                    })
-                                    .catch((e) => {
-                                        yakitNotify("error", "匹配ForgeName异常:" + e)
-                                    })
+                                        return data
+                                    },
+                                    jsonParseLogParams: {
+                                        page: "YakitAuditRiskDetails",
+                                        fun: "onClick"
+                                    }
+                                }
+                                openAIForge(params)
                             }}
                         >
                             在AIAgent中打开

@@ -53,15 +53,13 @@ export const isValidURL = (url: string) => {
 /**将 CSS 变量名转换为对应的值 */
 export const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
+export interface JSONParseLogOption {
+    page?: string
+    fun?: string
+    reviver?: (key: string, value: any) => any
+}
 /**JSON.parse安全记录 */
-export function JSONParseLog(
-    text: string,
-    option?: {
-        page?: string
-        fun?: string
-        reviver?: (key: string, value: any) => any
-    }
-) {
+export function JSONParseLog(text: string, option?: JSONParseLogOption) {
     try {
         const result = JSON.parse(text, option?.reviver)
         return result

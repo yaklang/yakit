@@ -129,7 +129,7 @@ import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRules
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1852,6 +1852,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 
     const projectIdCacheRef = useRef<number>()
     const jsonCacheRef = useRef<string>("")
+    const path = useRef<string>("")
 
     // 执行审计
     const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
@@ -1859,6 +1860,8 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         setRuntimeId("")
 
         apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
+            const targetItem = requestParams.ExecParams.find((param) => param.Key === "target")
+            if (targetItem) path.current = targetItem.Value
             isRealStartRef.current = false
             debugPluginStreamEvent.start()
             setVerifyForm(true)
@@ -2104,6 +2107,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     }}
                     logInfo={logInfoRef.current}
                     showDownloadDetail={false}
+                    path={path.current}
                 />
             </YakitModal>
         </>
@@ -2114,6 +2118,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
     const {nameOrConfig, setNameOrConfig, onSuccee, warrpId, type = "afresh_compile"} = props
     const tokenRef = useRef<string>(randomString(40))
+    const pathRef = useRef<string>("")
     /** 是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
@@ -2146,6 +2151,14 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
     useEffect(() => {
         // 初次打开时带参执行
         if (nameOrConfig) {
+            let paramsUIConfig = JSONParseLog(nameOrConfig, {
+                page: "AfreshAuditModal",
+                fun: "useEffect"
+            })
+            if (!!paramsUIConfig?.CodeSource?.local_file) {
+                pathRef.current = paramsUIConfig?.CodeSource?.local_file || ""
+            } 
+
             const requestParams: DebugPluginRequest = {
                 Code: "",
                 PluginType: "yak",
@@ -2222,6 +2235,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
                     }}
                     logInfo={logInfoRef.current}
                     showDownloadDetail={false}
+                    path={pathRef.current}
                 />
             </YakitModal>
         </>
