@@ -131,11 +131,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 label: "关闭 JAR",
                 disabled: !projectName
             },
-            // {
-            //     key: "downloadZip",
-            //     label: "下载为 ZIP",
-            //     disabled: !projectName
-            // },
+            {
+                key: "downloadZip",
+                label: "下载为 ZIP",
+                disabled: !projectName
+            },
             {
                 key: "importPorjectAndCompile",
                 label: "导入并编译",
