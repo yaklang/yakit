@@ -3376,7 +3376,8 @@ message YaklangShellResponse {
 }
 
 message ResetAndInvalidUserDataRequest {
-
+  // 若为 true，仅清理缓存（GeneralStorage 等），不删库、不退出进程；默认 false 为原有「清理数据库并退出」行为。
+  bool OnlyClearCache = 1;
 }
 
 message RegisterFacadesHTTPRequest {

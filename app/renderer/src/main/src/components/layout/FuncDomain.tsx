@@ -974,10 +974,17 @@ const DBCacheManager = () => {
         return {
             key: "db-cache-manager",
             label: "数据库与缓存管理",
-            children: [{key: "reclaimDatabaseSpace", label: "回收数据库空间"}]
+            children: [
+                {key: "invalidCache", label: "删除缓存数据"},
+                {key: "reclaimDatabaseSpace", label: "回收数据库空间"}
+            ]
         }
     }
-    return null
+    return {
+        key: "db-cache-manager",
+        label: "数据库与缓存管理",
+        children: [{key: "invalidCache", label: "删除缓存数据"}]
+    }
 }
 
 const GetUIOpSettingMenu = () => {
@@ -991,11 +998,6 @@ const GetUIOpSettingMenu = () => {
             {
                 key: "store",
                 label: "配置插件源"
-            },
-            {
-                key: "system-manager",
-                label: "进程与缓存管理",
-                children: [{key: "invalidCache", label: "删除缓存数据"}]
             },
             DBCacheManager(),
             {
@@ -1118,11 +1120,6 @@ const GetUIOpSettingMenu = () => {
             ]
         },
         {type: "divider"},
-        {
-            key: "system-manager",
-            label: "进程与缓存管理",
-            children: [{key: "invalidCache", label: "删除缓存数据"}]
-        },
         DBCacheManager(),
         {
             key: "store",

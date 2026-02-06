@@ -694,7 +694,7 @@ export const StartupPage: React.FC = () => {
     // 回收数据库空间
     const reclaimDbSpacePath = useRef<string[]>([])
     const handleReclaimDatabaseSpace = useMemoizedFn(async () => {
-        setCheckLog(["回收数据库空间中，请勿关闭软件..."])
+        setCheckLog(["回收数据库空间中，请勿关闭软件...", "退出或关闭可能会造成数据库损坏"])
         try {
             const res = await grpcReclaimDatabaseSpace({dbPath: reclaimDbSpacePath.current})
             setRestartLoading(false)

@@ -87,6 +87,6 @@
         "vulnerabilityData": "Vulnerability Data",
         "reclaimDatabaseSpaceTip": "Reclaim database space: After deleting data, you can click this button to reclaim database space.",
         "reclaimDatabaseSpaceTitle": "Reclaim database space",
-        "reclaimDatabaseSpaceCont": "After deleting data, the database space has not been reclaimed yet.Do you want to reclaim the database space now?Confirming will return you to the Welcome page to perform the reclamation."
+        "reclaimDatabaseSpaceCont": "Are you sure you want to reclaim the database space?Confirming will return you to the Welcome page to perform the reclamation."
     }
 }
