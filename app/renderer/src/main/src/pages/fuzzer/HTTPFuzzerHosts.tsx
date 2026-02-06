@@ -14,7 +14,7 @@ const {ipcRenderer} = window.require("electron")
 
 interface HTTPFuzzerHostInputProp {
     onAdd: (obj: {Key: string; Value: string}) => any
-    onBatchAdd?: (items: {Key: string; Value: string}[]) => any
+    onBatchAdd?: (items: {Key: string; Value: string}[]) => void
     onClose: () => any
 }
 

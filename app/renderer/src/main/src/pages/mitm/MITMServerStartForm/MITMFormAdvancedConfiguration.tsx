@@ -460,13 +460,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                     },
                                     // 批量添加
                                     (items) => {
-                                        let newEtcHosts = [...etcHosts]
-                                        for (const item of items) {
-                                            newEtcHosts = [
-                                                ...newEtcHosts.filter((i) => i.Key !== item.Key),
-                                                item
-                                            ]
-                                        }
+                                        const newKeys = items.map(({Key})=>Key);
+                                        let newEtcHosts = [
+                                            ...etcHosts.filter(({ Key }) => !newKeys.includes(Key)),
+                                            ...items
+                                        ]
                                         setEtcHosts(newEtcHosts)
                                     })
                                 }}
