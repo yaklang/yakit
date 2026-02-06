@@ -1,5 +1,7 @@
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import {AIMentionCommandParams} from "./aiMilkdownMention/aiMentionPlugin"
+import {DefaultAIFocusMode} from "../../template/type"
+import {iconMapType} from "../aiChatMention/type"
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
@@ -18,4 +20,6 @@ export interface AIMilkdownInputBaseProps {
     onUpdateEditor?: (s: EditorMilkdownProps) => void
     /** 额外的提及处理 */
     onMemfitExtra?: (v: AIMentionCommandParams) => void
+    // 外部传入需要筛选掉的选项
+    filterMode?: iconMapType[]
 }

@@ -2,6 +2,7 @@ import {ReactNode} from "react"
 import {TextAreaProps} from "antd/lib/input"
 import {AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
+import {AIReActChatProps} from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, "bordered" | "autoSize"> {}
 
@@ -19,6 +20,8 @@ export interface AIChatTextareaRefProps {
     getValue: () => void
     editorMilkdown?: EditorMilkdownProps
 }
+
+export type DefaultAIFocusMode = NonNullable<AIReActChatProps["externalParameters"]>["defaultAIFocusMode"]
 export interface AIChatTextareaProps {
     ref?: React.ForwardedRef<AIChatTextareaRefProps>
     /** 提交按钮的 loading 状态 */
@@ -29,6 +32,8 @@ export interface AIChatTextareaProps {
     className?: string
     children?: ReactNode
     defaultValue?: string
+    defaultAIFocusMode?: DefaultAIFocusMode
+    isOpen?: boolean
 }
 export interface FileToChatQuestionList {
     path: string

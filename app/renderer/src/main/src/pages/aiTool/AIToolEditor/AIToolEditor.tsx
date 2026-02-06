@@ -609,7 +609,7 @@ export default AIToolEditor
 
 const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
     forwardRef((props, ref) => {
-        const {content} = props
+        const {content, mountContainer} = props
         const [expand, setExpand] = useState(true)
 
         const [form] = Form.useForm<SaveAIToolRequest>()
@@ -718,6 +718,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
             apiGetGlobalNetworkConfig().then((obj) => {
                 setAIModal({
                     config: obj,
+                    mountContainer,
                     onSuccess: () => {}
                 })
             })

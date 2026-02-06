@@ -13,17 +13,19 @@ import {aiMentionCommand, AIMentionCommandParams} from "./aiMentionPlugin"
 import classNames from "classnames"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {removeAIOffsetCommand} from "../customPlugin"
+import {AIMilkdownInputBaseProps} from "../type"
 
 export const aiMentionFactory = slashFactory("ai-mention-commands")
 
 interface AIMilkdownMentionProps {
     onMemfitExtra?: (v: AIMentionCommandParams) => void
+    filterMode?: AIMilkdownInputBaseProps["filterMode"]
 }
 const mentionWidth = 300
 const mentionTarget = "@"
 
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
-    const {onMemfitExtra} = props
+    const {onMemfitExtra, filterMode} = props
     const ref = useRef<HTMLDivElement>(null)
     const slashProvider = useRef<SlashProvider>()
 
@@ -117,7 +119,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
             }}
             ref={ref}
         >
-            <AIChatMention onSelect={onSure} />
+            <AIChatMention onSelect={onSure} filterMode={filterMode} />
         </div>
     )
 }

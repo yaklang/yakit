@@ -3,6 +3,7 @@ import {AIForge} from "../../type/forge"
 import {AIMentionTabsEnum, iconMap} from "../../defaultConstant"
 import {AIMentionCommandParams} from "../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 import {KnowledgeBaseItem} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
+import {AIMilkdownInputBaseProps} from "../aiMilkdownInput/type"
 
 export type AIMentionTypeItem = AIMentionCommandParams["mentionType"]
 export type iconMapType = keyof typeof iconMap
@@ -13,6 +14,7 @@ export interface AIChatMentionSelectItem {
 export interface AIChatMentionProps {
     defaultActiveTab?: AIMentionTabsEnum
     onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
+    filterMode?: AIMilkdownInputBaseProps["filterMode"]
 }
 interface AIChatMention {
     keyWord: string
@@ -45,6 +47,6 @@ export interface FileSystemTreeOfMentionProps {
     onSelect: (path: string, isFolder: boolean) => void
 }
 
-export interface FocusModeOfMentionProps extends AIChatMention, AIChatMentionRef{
-    onSelect: (v) => void;
+export interface FocusModeOfMentionProps extends AIChatMention, AIChatMentionRef {
+    onSelect: (v) => void
 }

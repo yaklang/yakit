@@ -15,6 +15,7 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import styles from "./ConfigNetworkPage.module.scss"
 import {isMemfit} from "@/utils/envfile"
+import {FormLayout} from "antd/lib/form/Form"
 const {ipcRenderer} = window.require("electron")
 
 interface ThirdPartyAppConfigItemTemplate {
@@ -46,6 +47,14 @@ export interface ThirdPartyApplicationConfigProp {
     isOnlyShowAiType?: boolean
     onAdd: (i: ThirdPartyApplicationConfig) => void
     onCancel: () => void
+    FormProps?: {
+        layout: FormLayout
+        labelCol: number
+        wrapperCol: number
+    }
+    footerProps?: {
+        hiddenCancel: boolean
+    }
 }
 
 const defautFormValues = {
@@ -83,7 +92,9 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         canAddType = true,
         isOnlyShowAiType = false,
         onAdd,
-        onCancel
+        onCancel,
+        footerProps,
+        FormProps
     } = props
     const [form] = Form.useForm()
     const typeVal = Form.useWatch("Type", form)
@@ -298,9 +309,9 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         <div className={styles["config-form-wrapper"]}>
             <Form
                 form={form}
-                layout={"horizontal"}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 18}}
+                layout={FormProps?.layout ?? "horizontal"}
+                labelCol={{span: FormProps?.labelCol ?? 5}}
+                wrapperCol={{span: FormProps?.wrapperCol ?? 18}}
                 initialValues={initialValues}
                 onValuesChange={(changedValues, allValues) => {
                     // 当类型改变时，表单项的值采用默认值
@@ -343,9 +354,11 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                 )}
             </Form>
             <div className={styles["config-footer"]}>
-                <YakitButton size='large' type='outline2' onClick={onCancel}>
-                    取消
-                </YakitButton>
+                {!footerProps?.hiddenCancel && (
+                    <YakitButton size='large' type='outline2' onClick={onCancel}>
+                        取消
+                    </YakitButton>
+                )}
                 <YakitButton
                     size='large'
                     type={"primary"}

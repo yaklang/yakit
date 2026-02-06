@@ -31,7 +31,8 @@ const remarkDirective = $remark(`remark-directive`, () => directive)
 
 export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper, onMemfitExtra} = props
+        const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper, onMemfitExtra, filterMode} =
+            props
         const nodeViewFactory = useNodeViewFactory()
         const pluginViewFactory = usePluginViewFactory()
         useImperativeHandle(
@@ -56,7 +57,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                     (ctx: Ctx) => () => {
                         ctx.set(aiMentionFactory.key, {
                             view: pluginViewFactory({
-                                component: () => <AIMilkdownMention onMemfitExtra={onMemfitExtra} />
+                                component: () => (
+                                    <AIMilkdownMention onMemfitExtra={onMemfitExtra} filterMode={filterMode} />
+                                )
                             })
                         })
                     }

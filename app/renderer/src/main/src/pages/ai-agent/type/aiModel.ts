@@ -97,4 +97,5 @@ export interface GetAIModelListResponse {
 export interface IsForcedSetAIModalRequest {
     noDataCall: (v: GetAIModelListResponse) => void
     haveDataCall: (v: GetAIModelListResponse) => void
+    mountContainer?: HTMLElement | null
 }

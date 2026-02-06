@@ -47,8 +47,8 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {checkProxyVersion} from "@/utils/proxyConfigUtil"
 import {useProxy} from "@/hook/useProxy"
 import {handleAIConfig} from "@/pages/spaceEngine/utils"
-import { isIRify } from "@/utils/envfile"
-import { JSONParseLog } from "@/utils/tool"
+import {isIRify} from "@/utils/envfile"
+import {JSONParseLog} from "@/utils/tool"
 
 export interface ConfigNetworkPageProp {}
 
@@ -190,7 +190,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
     const {t, i18n} = useI18nNamespaces(["mitm"])
-    const { proxyConfig: { Routes = [], Endpoints = [] }} = useProxy()
+    const {
+        proxyConfig: {Routes = [], Endpoints = []}
+    } = useProxy()
     const originGlobalConfigRef = useRef<GlobalNetworkConfig>(cloneDeep(defaultParams))
     /** ---------- 是否删除私密插件逻辑 Start ---------- */
     const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
@@ -603,7 +605,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     onSetChromePath(chromePath)
                 })
             } else {
-                const values: string = JSONParseLog(setting,{page:"ConfigNetworkPage", fun:"GlobalChromePath"})
+                const values: string = JSONParseLog(setting, {page: "ConfigNetworkPage", fun: "GlobalChromePath"})
                 setChromePath(values)
             }
         })
@@ -695,7 +697,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             console.error("error:", error)
         }
     })
-    const hideRules = useMemo(() => isIRify(), []);
+    const hideRules = useMemo(() => isIRify(), [])
 
     return (
         <>
@@ -1099,15 +1101,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }
                                     />
                                 </Form.Item>
-                                <Form.Item label={t(hideRules ? "AgentConfigModal.proxy_configuration" : "ProxyConfig.title")}>
+                                <Form.Item
+                                    label={t(hideRules ? "AgentConfigModal.proxy_configuration" : "ProxyConfig.title")}
+                                >
                                     <div className={styles["form-rule-body"]}>
-                                        <div
-                                            className={styles["form-rule"]}
-                                            onClick={onClickDownstreamProxy}
-                                        >
+                                        <div className={styles["form-rule"]} onClick={onClickDownstreamProxy}>
                                             <div className={styles["form-rule-text"]}>
                                                 {t("ProxyConfig.recordPointsCount", {i: Endpoints.length})}
-                                                {!hideRules ? `,${t("ProxyConfig.recordRoutesCount", {i: Routes.length})}`: null}
+                                                {!hideRules
+                                                    ? `,${t("ProxyConfig.recordRoutesCount", {i: Routes.length})}`
+                                                    : null}
                                             </div>
                                             <div className={styles["form-rule-icon"]}>
                                                 <OutlineCogIcon />

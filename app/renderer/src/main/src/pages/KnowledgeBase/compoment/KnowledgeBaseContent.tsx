@@ -8,6 +8,7 @@ import {KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
 import {
     useAsyncEffect,
     useCreation,
+    useDebounceEffect,
     useDeepCompareEffect,
     useInViewport,
     useMemoizedFn,
@@ -80,6 +81,7 @@ import {GuideFooter} from "./GuideFooter"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {OutlinePlusIcon} from "@/assets/newIcon"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -95,6 +97,14 @@ interface KnowledgeBaseContentProps {
     inViewport: boolean
     streamsRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["streams"] | undefined>
     loading: boolean
+}
+
+const hasStatusError = (state: HoldGRPCStreamInfo): boolean => {
+    return (
+        state?.cardState
+            ?.find((item) => item.tag === "status")
+            ?.info?.some((it) => typeof it.Data === "string" && it.Data.includes("ERR:")) ?? false
+    )
 }
 
 const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(function KnowledgeBaseContent(props, ref) {
@@ -157,11 +167,18 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         }
     })
 
-    useUpdateEffect(() => {
+    useDebounceEffect(() => {
         if (streams[aIModelAvailableTokens]?.progressState?.[0]?.progress) {
             setProgress(Math.round(streams[aIModelAvailableTokens]?.progressState?.[0]?.progress * 100))
         }
     }, [streams[aIModelAvailableTokens]?.progressState?.[0]?.progress])
+
+    useDebounceEffect(() => {
+        if (hasStatusError(streams[aIModelAvailableTokens])) {
+            setProgress(100)
+        }
+    }, [streams[aIModelAvailableTokens]?.cardState])
+
     useUpdateEffect(() => {
         if (progress === 100 && !isAIModelAvailable) {
             api.removeStream && api.removeStream(aIModelAvailableTokens)
@@ -751,7 +768,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                                             icon={<OutlinePlusIcon />}
                                                             onClick={() => {
                                                                 if (activeID) {
-                                                                    events.onClose(activeID)
+                                                                    onStop()
                                                                     events.onReset()
                                                                     onChatFromHistory(activeID)
                                                                 }

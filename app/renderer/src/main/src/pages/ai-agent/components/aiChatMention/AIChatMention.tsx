@@ -6,6 +6,7 @@ import {
     FileSystemTreeOfMentionProps,
     FocusModeOfMentionProps,
     ForgeNameListOfMentionProps,
+    iconMapType,
     KnowledgeBaseListOfMentionProps,
     ToolListOfMentionProps
 } from "./type"
@@ -49,7 +50,7 @@ const alphanumericKeys = [
     ...Array.from({length: 10}, (_, i) => `numpad${i}`) //小键盘数字键
 ]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
-    const {onSelect, defaultActiveTab} = props
+    const {onSelect, defaultActiveTab, filterMode} = props
     const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
         defaultActiveTab || AIMentionTabsEnum.Forge_Name
     )
@@ -127,8 +128,8 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             if (!inViewport) return
             let newValue = getActiveKey()
             const index = getActiveIndex()
-            if (index >= 0 && index < AIMentionTabs.length) {
-                newValue = (AIMentionTabs[index - 1]?.value as AIMentionTabsEnum) || getActiveKey()
+            if (index >= 0 && index < mentionTabs.length) {
+                newValue = (mentionTabs[index - 1]?.value as AIMentionTabsEnum) || getActiveKey()
             }
             setActiveKey(newValue)
         },
@@ -140,15 +141,15 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             if (!inViewport) return
             let newValue = getActiveKey()
             const index = getActiveIndex()
-            if (index >= 0 && index < AIMentionTabs.length) {
-                newValue = (AIMentionTabs[index + 1]?.value as AIMentionTabsEnum) || getActiveKey()
+            if (index >= 0 && index < mentionTabs.length) {
+                newValue = (mentionTabs[index + 1]?.value as AIMentionTabsEnum) || getActiveKey()
             }
             setActiveKey(newValue)
         },
         {wait: 100, leading: true}
     ).run
     const getActiveIndex = useMemoizedFn(() => {
-        return AIMentionTabs.findIndex((ele) => ele.value === getActiveKey())
+        return mentionTabs.findIndex((ele) => ele.value === getActiveKey())
     })
     const onActiveKey = useMemoizedFn((k) => {
         setKeyWord("")
@@ -277,11 +278,21 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     // 用户文件夹
     const customFolder = useCustomFolder()
     const mentionTabs = useCreation(() => {
+        let tabs = AIMentionTabs
+
+        // 处理 customFolder
         if (!customFolder?.length) {
-            return AIMentionTabs.filter((item) => item.value !== AIMentionTabsEnum.File_System)
+            tabs = tabs.filter((item) => item.value !== AIMentionTabsEnum.File_System)
         }
-        return AIMentionTabs
-    }, [customFolder.length])
+
+        // 处理 filterMode
+        if (filterMode?.length) {
+            tabs = tabs.filter((item) => !filterMode.includes(item.value as iconMapType))
+        }
+
+        return tabs
+    }, [customFolder?.length, filterMode])
+
     return (
         <div className={styles["ai-chat-mention"]} tabIndex={0} ref={mentionRef} onClick={(e) => e.stopPropagation()}>
             <YakitSideTab

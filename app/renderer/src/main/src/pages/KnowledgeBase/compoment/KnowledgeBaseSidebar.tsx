@@ -636,23 +636,43 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                                                 正在下载..（{downloadingProgress}%）
                                                                             </div>
                                                                         ) : !isDownloaded ? (
-                                                                            <YakitButton
-                                                                                type='outline1'
-                                                                                onClick={() =>
-                                                                                    onDownloadOnlineRag(items)
-                                                                                }
-                                                                            >
-                                                                                下载
-                                                                            </YakitButton>
+                                                                            (() => {
+                                                                                const isLoading =
+                                                                                    installOnlineRagsTokens.includes(
+                                                                                        items.installToken
+                                                                                    )
+                                                                                return (
+                                                                                    <YakitButton
+                                                                                        type='outline1'
+                                                                                        loading={isLoading}
+                                                                                        disabled={isLoading}
+                                                                                        onClick={() =>
+                                                                                            onDownloadOnlineRag(items)
+                                                                                        }
+                                                                                    >
+                                                                                        下载
+                                                                                    </YakitButton>
+                                                                                )
+                                                                            })()
                                                                         ) : !isLatest ? (
-                                                                            <YakitButton
-                                                                                type='outline1'
-                                                                                onClick={() =>
-                                                                                    onDownloadOnlineRag(items)
-                                                                                }
-                                                                            >
-                                                                                更新
-                                                                            </YakitButton>
+                                                                            (() => {
+                                                                                const isLoading =
+                                                                                    installOnlineRagsTokens.includes(
+                                                                                        items.installToken
+                                                                                    )
+                                                                                return (
+                                                                                    <YakitButton
+                                                                                        type='outline1'
+                                                                                        loading={isLoading}
+                                                                                        disabled={isLoading}
+                                                                                        onClick={() =>
+                                                                                            onDownloadOnlineRag(items)
+                                                                                        }
+                                                                                    >
+                                                                                        更新
+                                                                                    </YakitButton>
+                                                                                )
+                                                                            })()
                                                                         ) : (
                                                                             <div
                                                                                 style={{

@@ -14,7 +14,7 @@ import {API} from "@/services/swagger/resposeType"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 import styles from "./UpdateYakitAndYaklang.module.scss"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -72,7 +72,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                 try {
                     data.forEach((item) => {
                         if (item.type === "yakit") {
-                            const content: UpdateContentProp = JSONParseLog(item.content,{page:"UpdateYakitAndYaklang", fun:"fetchYakitUpdateContent"})
+                            const content: UpdateContentProp = JSONParseLog(item.content, {
+                                page: "UpdateYakitAndYaklang",
+                                fun: "fetchYakitUpdateContent"
+                            })
                             if (removePrefixV(content.version) === removePrefixV(latest)) {
                                 setYakitUpdateContent({...content})
                             }
@@ -106,7 +109,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
             .invoke("download-latest-yakit", version, {
                 isEnterprise: isEnterpriseEdition(),
                 isIRify: isIRify(),
-                isMemfit: isMemfit(),
+                isMemfit: isMemfit()
             })
             .then(() => {
                 success("下载完毕")

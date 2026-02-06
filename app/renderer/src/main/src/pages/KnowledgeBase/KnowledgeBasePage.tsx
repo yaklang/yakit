@@ -20,7 +20,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
+import {getAIModelList, isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -197,22 +197,26 @@ const KnowledgeBase: FC = () => {
     const [aiModelOptions, setAIModelOptions] = useSafeState<string>("")
     const [inViewport = true] = useInViewport(refRef)
 
+    // getAIModelListOption mirror AIModelSelect trigger
     const getAIModelListOption = useDebounceFn(
-        (_) => {
+        () => {
             isForcedSetAIModal({
+                pageKey: "ai-repository",
                 noDataCall: () => {
                     setAIModelOptions("")
                 },
-                haveDataCall: (_) => {}
+                haveDataCall: () => {},
+                mountContainer: document.getElementById("main-operator-page-body-ai-repository")
             })
         },
-        {wait: 200, leading: true}
+        {leading: true}
     ).run
 
     useEffect(() => {
-        inViewport && getAIModelListOption(!aiModelOptions)
+        if (!inViewport) return
+        getAIModelListOption()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [aiModelOptions, inViewport])
+    }, [inViewport])
 
     const knowledgeBaseEntrance = useMemo(() => {
         switch (true) {

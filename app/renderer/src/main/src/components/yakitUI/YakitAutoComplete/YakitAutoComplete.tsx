@@ -125,11 +125,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                     setMouseEnterItem("")
                 }}
             >
-                <div
-                    className={styles["yakit-option-item-label"]}
-                >
-                    {copyItem.label}
-                </div>
+                <div className={styles["yakit-option-item-label"]}>{copyItem.label}</div>
                 <OutlineXIcon
                     style={{display: mouseEnterItem === item.value && item.value !== props.value ? "block" : "none"}}
                     className={styles["option-item-close"]}
@@ -156,7 +152,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                 [styles["yakit-auto-complete-wrapper-small"]]: size === "small",
                 [styles["yakit-auto-complete-disabled"]]: !!props.disabled
             })}
-            style={{...wrapperStyle||{}}}
+            style={{...(wrapperStyle || {})}}
         >
             {loading ? (
                 <></>
