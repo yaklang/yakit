@@ -122,7 +122,6 @@ import {
     isCommunityYakit
 } from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
-import {ConfigManagement} from "@/pages/configManagement/ConfigManagement"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
 import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
@@ -198,6 +197,7 @@ const AIToolEditor = React.lazy(() => import("@/pages/aiTool/AIToolEditor/AITool
 const YakRunnerScanHistory = React.lazy(() => import("@/pages/yakRunnerScanHistory/YakRunnerScanHistory"))
 const SSACompileHistory = React.lazy(() => import("@/pages/ssaCompileHistory/SSACompileHistory"))
 const MemoryBase = React.lazy(() => import("@/pages/memoryBase/MemoryBase"))
+const ConfigManagement = React.lazy(() => import("@/pages/configManagement/ConfigManagement"))
 
 /**
  * @description 页面路由对应的页面信息

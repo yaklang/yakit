@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect } from "react"
+import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from "react"
 import { Button, Space } from "antd"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import { AutoCard } from "../../components/AutoCard"
@@ -11,8 +11,11 @@ import { useHttpFlowStore } from "@/store/httpFlow"
 import { useTheme } from "@/hook/useTheme"
 import { applyYakitMonacoTheme } from "@/utils/monacoSpec/theme"
 import { randomString } from "@/utils/randomUtil"
-import { useEditorFontSize } from "@/store/editorFontSize"
-import { useUpdateEffect } from "ahooks"
+import { useEditorFontSize, fontSizeOptions } from "@/store/editorFontSize"
+import { useUpdateEffect, useMemoizedFn } from "ahooks"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {yakitNotify} from "@/utils/notification"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -117,7 +120,8 @@ interface CodeComparisonProps {
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
     const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly } = props;
-    const { fontSize, initFontSize } = useEditorFontSize()
+    const {t} = useI18nNamespaces(["yakitUi"])
+    const { fontSize, initFontSize, setFontSize } = useEditorFontSize()
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
@@ -125,6 +129,73 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     // 从store获取对比数据
     const { token, dataMap } = useHttpFlowStore()
     const { theme } = useTheme()
+
+    // 构建右键菜单数据
+    const rightContextMenu = useMemo<YakitMenuItemType[]>(
+        () => [
+            {
+                key: "font-size",
+                label: t("YakitEditor.fontSize"),
+                children: fontSizeOptions.map((size) => ({
+                    key: `font-size-${size}`,
+                    label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0✓" : ""}`
+                }))
+            },
+            {key: "change-all-occurrences", label: "Change All Occurrences", keyDesc: "Ctrl+F2"},
+            {type: "divider"},
+            {key: "cut", label: "Cut"},
+            {key: "copy", label: "Copy"},
+            {key: "paste", label: "Paste"},
+            {type: "divider"},
+            {key: "command-palette", label: "Command Palette", keyDesc: "F1"}
+        ],
+        [fontSize, t]
+    )
+
+    // 右键菜单点击处理
+    const handleContextMenuClick = useMemoizedFn((key: string, editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+        if (key.startsWith("font-size-")) {
+            const size = parseInt(key.replace("font-size-", ""))
+            if (!isNaN(size) && fontSizeOptions.includes(size)) {
+                setFontSize(size)
+            }
+            return
+        }
+        switch (key) {
+            case "change-all-occurrences":
+                editor.focus()
+                editor.trigger("keyboard", "editor.action.changeAll", null)
+                break
+            case "cut":
+                editor.focus()
+                document.execCommand("cut")
+                break
+            case "copy":
+                editor.focus()
+                document.execCommand("copy")
+                break
+            case "paste":
+                editor.focus()
+                navigator.clipboard.readText().then((text) => {
+                    const selection = editor.getSelection()
+                    if (selection) {
+                        editor.executeEdits("paste", [
+                            {
+                                range: selection,
+                                text: text,
+                                forceMoveMarkers: true
+                            }
+                        ])
+                    }
+                })
+                break
+            case "command-palette":
+                editor.focus()
+                editor.trigger("keyboard", "editor.action.quickCommand", null)
+                break
+        }
+    })
+
     useImperativeHandle(ref, () => ({
         // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
         onChangeLineConversion: (newVal) => {
@@ -154,8 +225,10 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
             automaticLayout: true,
             wordWrap: isWrap ? "off" : "on",
             readOnly,
-            fontSize
+            fontSize,
+            contextmenu: false
         })
+
         if (setNoWrap) setNoWrap(!noWrap)
         setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
     }
@@ -203,7 +276,8 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     automaticLayout: true,
                     wordWrap: noWrap ? "off" : "on",
                     readOnly,
-                    fontSize
+                    fontSize,
+                    contextmenu: false
                 })
 
                 if (!!res.info) {
@@ -252,6 +326,40 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     useUpdateEffect(() => {
         diffEditorRef.current?.updateOptions({ fontSize })
     }, [fontSize])
+
+    // 注册自定义右键菜单
+    useEffect(() => {
+        if (!diffEditorRef.current) return
+
+        const originalEditor = diffEditorRef.current.getOriginalEditor()
+        const modifiedEditor = diffEditorRef.current.getModifiedEditor()
+
+        const disposables: monacoEditor.IDisposable[] = []
+
+        ;[originalEditor, modifiedEditor].forEach((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+            const disposable = editor.onContextMenu((e) => {
+                e.event.preventDefault()
+                e.event.stopPropagation()
+
+                showByRightContext(
+                    {
+                        data: rightContextMenu,
+                        onClick: ({key}) => {
+                            handleContextMenuClick(key, editor)
+                        }
+                    },
+                    e.event.posx,
+                    e.event.posy,
+                    true
+                )
+            })
+            disposables.push(disposable)
+        })
+
+        return () => {
+            disposables.forEach((d) => d.dispose())
+        }
+    }, [rightContextMenu])
 
     return <div ref={diffDivRef} style={{ width: "100%", height: "100%" }}></div>
 })

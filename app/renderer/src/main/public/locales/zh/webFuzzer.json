@@ -669,5 +669,13 @@
   },
   "WebsocketFuzzer": {
     "clear_send_data": "清空发送数据"
+  },
+  "HTTPFuzzerHosts": {
+    "modalTitle": "添加 DNS Hosts 配置",
+    "inputConfig": "输入配置",
+    "uploadFile": "上传文件",
+    "hostsConfig": "hosts 配置",
+    "dragOrUpload": "可将文件拖入框内或",
+    "example":"示例模板"
   }
 }

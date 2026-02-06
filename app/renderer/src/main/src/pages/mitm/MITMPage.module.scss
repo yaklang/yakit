@@ -38,6 +38,12 @@
             display: flex;
             flex-direction: column;
         }
+
+        .mitm-idle-tab-tips{
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
     }
 
     .empty-button {
@@ -402,7 +408,6 @@
         font-size: 12px;
 
         svg {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
             margin-right: 4px;
             stroke-width: 1.5px;
         }

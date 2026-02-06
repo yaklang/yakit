@@ -176,7 +176,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 extraEditorProps={{
                     isShowSelectRangeMenu: true,
                     pageId,
-                    privacy
+                    privacy,
+                    showHostHint: true
                 }}
                 title={
                     <span style={{fontSize: 12}}>

@@ -1163,39 +1163,25 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     style={{marginBottom: 0}}
                                 >
                                     <Space direction={"vertical"}>
-                                        {(etcHosts || []).map((i, n) => (
-                                            <Tooltip
-                                                title={
-                                                    getTextWidth(`${i.Key} => ${i.Value}`) >= 123
-                                                        ? `${i.Key} => ${i.Value}`
-                                                        : ""
-                                                }
-                                                key={`${i.Key} => ${i.Value}`}
-                                            >
-                                                <YakitTag
-                                                    closable={true}
-                                                    onClose={() => {
-                                                        const newEtcHosts = etcHosts.filter((j) => j.Key !== i.Key)
-                                                        const v = form.getFieldsValue()
-                                                        onSetValue({
-                                                            ...v,
-                                                            etcHosts: newEtcHosts
-                                                        })
-                                                    }}
-                                                    key={`${i.Key}-${n}`}
-                                                >
-                                                    <div
-                                                        className={styles.etcHostsText}
-                                                    >{`${i.Key} => ${i.Value}`}</div>
-                                                </YakitTag>
-                                            </Tooltip>
-                                        ))}
                                         <YakitButton
                                             onClick={() => {
                                                 inputHTTPFuzzerHostConfigItem((obj) => {
                                                     const newEtcHosts = [
                                                         ...etcHosts.filter((i) => i.Key !== obj.Key),
                                                         obj
+                                                    ]
+                                                    const v = form.getFieldsValue()
+                                                    onSetValue({
+                                                        ...v,
+                                                        etcHosts: newEtcHosts
+                                                    })
+                                                },
+                                                (items) => {
+                                                    // 批量添加
+                                                    const newKeys = items.map(({Key})=>Key);
+                                                    let newEtcHosts = [
+                                                        ...etcHosts.filter(({ Key }) => !newKeys.includes(Key)),
+                                                        ...items
                                                     ]
                                                     const v = form.getFieldsValue()
                                                     onSetValue({
@@ -1209,6 +1195,35 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         </YakitButton>
                                     </Space>
                                 </Form.Item>
+                                <div className={classNames({[styles["etcHosts-config"]]: etcHosts.length })}>
+                                    {(etcHosts || []).map((i, n) => (
+                                        <Tooltip
+                                            title={
+                                                getTextWidth(`${i.Key} => ${i.Value}`) >= 123
+                                                ? `${i.Key} => ${i.Value}`
+                                                : ""
+                                            }
+                                            key={`${i.Key} => ${i.Value}`}
+                                        >
+                                            <YakitTag
+                                                closable={true}
+                                                onClose={() => {
+                                                    const newEtcHosts = etcHosts.filter((j) => j.Key !== i.Key)
+                                                    const v = form.getFieldsValue()
+                                                    onSetValue({
+                                                        ...v,
+                                                        etcHosts: newEtcHosts
+                                                    })
+                                                }}
+                                                key={`${i.Key}-${n}`}
+                                            >
+                                                <div
+                                                    className={styles.etcHostsText}
+                                                >{`${i.Key} => ${i.Value}`}</div>
+                                            </YakitTag>
+                                        </Tooltip>
+                                    ))}
+                                </div>
                             </YakitPanel>
                         </YakitCollapse>
                     </>

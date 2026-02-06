@@ -1,10 +1,12 @@
-import React, {memo, useEffect, useRef} from "react"
+import React, {memo, useEffect, useMemo, useRef} from "react"
 import {YakitDiffEditorProps} from "./YakitDiffEditorType"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {yakitNotify} from "@/utils/notification"
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
-
-import { useEditorFontSize } from "@/store/editorFontSize"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {useEditorFontSize, fontSizeOptions} from "@/store/editorFontSize"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import styles from "./YakitDiffEditor.module.scss"
 
 /** @name monaco-editor对比器 */
@@ -18,10 +20,11 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
         language = "text/plain",
         noWrap,
         leftReadOnly = false,
-        rightReadOnly = false,
+        rightReadOnly = false
     } = props
 
-    const { fontSize, initFontSize } = useEditorFontSize();
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    const {fontSize, initFontSize, setFontSize} = useEditorFontSize()
 
     useEffect(() => {
         initFontSize()
@@ -32,6 +35,45 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
     const leftEditorRef = useRef<monacoEditor.editor.ITextModel>()
     const rightEditorRef = useRef<monacoEditor.editor.ITextModel>()
+
+    // 构建右键菜单数据
+    const rightContextMenu = useMemo<YakitMenuItemType[]>(
+        () => [
+            {
+                key: "font-size",
+                label: t("YakitEditor.fontSize"),
+                children: fontSizeOptions.map((size) => ({
+                    key: `font-size-${size}`,
+                    label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0✓" : ""}`
+                }))
+            },
+            {key: "copy", label: "Copy"},
+            {type: "divider"},
+            {key: "command-palette", label: "Command Palette", keyDesc: "F1"}
+        ],
+        [fontSize, i18n.language]
+    )
+
+    // 右键菜单点击处理
+    const handleContextMenuClick = useMemoizedFn((key: string, editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+        if (key.startsWith("font-size-")) {
+            const size = parseInt(key.replace("font-size-", ""))
+            if (!isNaN(size) && fontSizeOptions.includes(size)) {
+                setFontSize(size)
+            }
+            return
+        }
+        switch (key) {
+            case "copy":
+                editor.focus()
+                document.execCommand("copy")
+                break
+            case "command-palette":
+                editor.focus()
+                editor.trigger("keyboard", "editor.action.quickCommand", null)
+                break
+        }
+    })
 
     // 左侧编辑器更新事件
     const {run: onLeftChange} = useDebounceFn(
@@ -81,7 +123,9 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
             readOnly: rightReadOnly,
             automaticLayout: true,
             wordWrap: !!noWrap ? "off" : "on",
-            fontSize: fontSize
+            fontSize: fontSize,
+            // 禁用默认右键菜单
+            contextmenu: false
         })
 
         leftEditorRef.current = monaco.createModel(leftDefaultCode, language)
@@ -101,6 +145,41 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
             if (rightEditorRef.current) rightEditorRef.current.dispose()
         }
     }, [])
+
+    // 注册自定义右键菜单
+    useEffect(() => {
+        if (!diffEditorRef.current) return
+
+        const originalEditor = diffEditorRef.current.getOriginalEditor()
+        const modifiedEditor = diffEditorRef.current.getModifiedEditor()
+
+        const disposables: monacoEditor.IDisposable[] = []
+
+        // 为每个编辑器绑定右键事件
+        ;[originalEditor, modifiedEditor].forEach((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+            const disposable = editor.onContextMenu((e) => {
+                e.event.preventDefault()
+                e.event.stopPropagation()
+
+                showByRightContext(
+                    {
+                        data: rightContextMenu,
+                        onClick: ({key}) => {
+                            handleContextMenuClick(key, editor)
+                        }
+                    },
+                    e.event.posx,
+                    e.event.posy,
+                    true
+                )
+            })
+            disposables.push(disposable)
+        })
+
+        return () => {
+            disposables.forEach((d) => d.dispose())
+        }
+    }, [rightContextMenu])
 
     // 更新对比器配置信息
     useUpdateEffect(() => {

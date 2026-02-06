@@ -100,6 +100,8 @@ export interface YakitEditorProps {
     keepSearchName?: string
     /** @name 隐私模式 */
     privacy?: boolean
+    /** @name 是否显示Host提示装饰器（WebFuzzer） */
+    showHostHint?: boolean
 }
 
 /**

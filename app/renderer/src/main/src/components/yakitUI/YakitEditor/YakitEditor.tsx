@@ -140,7 +140,7 @@ const DefaultMenuTop: (t: (text: string) => string, nowFontsize: number) => Edit
         {
             key: "font-size",
             label: t("YakitEditor.fontSize"),
-            children: fontSizeOptions.map((val)=> ({ key: val+'', label: `${val}${(nowFontsize === val ? '\u00A0\u00A0\u00A0√': '')}` }))
+            children: fontSizeOptions.map((val)=> ({ key: val+'', label: `${val}${(nowFontsize === val ? '\u00A0\u00A0\u00A0✓': '')}` }))
         }
     ]
 }
@@ -901,6 +901,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 })()
                 ;(() => {
                     try {
+                        if (!props.showHostHint) return
                         const hostRegex = /\nHost:\s*?([^\r\n]+)/
                         const hostMatch = hostRegex.exec(text)
                         if (!hostMatch) return

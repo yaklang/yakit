@@ -49,6 +49,7 @@ import { JSONParseLog } from "@/utils/tool"
 import {isCommunityYakit, isMemfit} from "@/utils/envfile"
 import {useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {toMITMHacker} from "@/pages/hacker/httpHacker"
+import { ManagementTab } from "@/components/managementTab"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -540,6 +541,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 {isSecurityExpert ? (
                     <div className={styles["menu-wrapper-left"]}>
                         <OrdinaryMenu menuList={getSecurityExpertLeftMenu()} onMenuSelect={onClickSecurityExpertMenu} />
+                        <ManagementTab hideIcon />
                     </div>
                 ) : (
                     <>
@@ -566,7 +568,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     </>
                 )}
                 <div className={styles["first-menu-extra-wrapper"]}>
-                    <ExtraMenu onMenuSelect={onClickExtraMenu} />
+                    <ExtraMenu onMenuSelect={onClickExtraMenu} isSecurityExpert={isSecurityExpert}/>
                     {!isMemfit() && !isExpand && (
                         <div className={styles["no-expand-wrapper"]} onClick={(e) => onSetIsExpand(true)}>
                             <SortDescendingIcon />
