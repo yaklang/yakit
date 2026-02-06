@@ -4,18 +4,18 @@ import {useEffect, useMemo, useRef, useState} from "react"
 import FilePreview from "../FilePreview/FilePreview"
 import FileTreeSystemListWapper from "../FileTreeSystemListWapper/FileTreeSystemListWapper"
 import {useMemoizedFn} from "ahooks"
-import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
 import {useCustomFolder} from "../store/useCustomFolder"
 import styles from "./FileTreeSystem.module.scss"
 import FileTreeDrop from "@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop"
 import {Divider} from "antd"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 
 const FileTreeSystem = () => {
     // 单选
     const [selected, setSelected] = useState<FileNodeProps>()
     // ai的文件夹
-    const {grpcFolders} = useAIChatUIData()
+    const {grpcFolders} = useChatIPCStore().chatIPCData
     // 打开的本地文件夹history
     const historyFolder = useHistoryItems()
     // 用户文件夹

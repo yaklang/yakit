@@ -9,7 +9,6 @@ import styles from "./AIChatListItem.module.scss"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import DividerCard from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
-import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {AIChatQSData, AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import AiFailPlanCard from "../aiFailPlanCard/AiFailPlanCard"
 import classNames from "classnames"
@@ -20,6 +19,8 @@ import {AITaskStatus} from "@/pages/ai-re-act/hooks/grpcApi"
 import {FileToChatQuestionList} from "../../template/type"
 import StreamingChatContent from "./StreamingChatContent/StreamingChatContent"
 import StaticChatContent from "./StaticChatContent/StaticChatContent"
+import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
+import useAIAgentStore from "../../useContext/useStore"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -65,8 +66,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     const {item, type, hasNext} = props
 
     const {handleSendCasual} = useChatIPCDispatcher()
-    const {taskChat, yakExecResult} = useAIChatUIData()
-
+    const {taskChat, yakExecResult} = useChatIPCStore().chatIPCData
+     const {activeChat} = useAIAgentStore()
     const aiStreamNodeProps = useCreation(() => {
         switch (type) {
             case "re-act":
@@ -176,13 +177,9 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     })
 
     const renderContent = useMemoizedFn(() => {
-        if (isStream) return <StreamingChatContent {...item} hasNext={hasNext} streamClassName={aiStreamNodeProps} />
-        return (
-            <StaticChatContent
-                {...item}
-                render={(contentItem) => ChatItemRenderer(contentItem)}
-            />
-        )
+        if (activeChat?.session === undefined) return null
+        if (isStream) return <StreamingChatContent {...item} session={activeChat?.session} hasNext={hasNext} streamClassName={aiStreamNodeProps} />
+        return <StaticChatContent {...item} session={activeChat?.session} render={(contentItem) => ChatItemRenderer(contentItem)} />
     })
     return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

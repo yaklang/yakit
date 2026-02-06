@@ -46,7 +46,7 @@ import ChatIPCContent, {
 import {ChatIPCSendType} from "../../ai-re-act/hooks/type"
 import {AIInputEvent} from "../../ai-re-act/hooks/grpcApi"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
-import {AIChatData, AIChatInfo} from "@/pages/ai-agent/type/aiChat"
+import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {cloneDeep} from "lodash"
 import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "@/pages/ai-agent/useContext/AIAgentContext"
@@ -378,45 +378,12 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     // 当前展示对话
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
-    const handleChatingEnd = useMemoizedFn(() => {
-        handleSaveChatInfo()
-    })
-
     const [chatIPCData, events] = useChatIPC({
-        onEnd: handleChatingEnd,
         getRequest: getSetting,
-        saveChatDataStore: knowledgeBaseDataStore.set
+        cacheDataStore: knowledgeBaseDataStore
     })
 
-    const {
-        execute,
-        runTimeIDs,
-        aiPerfData,
-        casualChat,
-        taskChat,
-        yakExecResult,
-        grpcFolders,
-        reActTimelines,
-        coordinatorIDs
-    } = chatIPCData
-
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const showID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIChatData = {
-                runTimeIDs: cloneDeep(runTimeIDs),
-                coordinatorIDs: cloneDeep(coordinatorIDs),
-                yakExecResult: cloneDeep(yakExecResult),
-                aiPerfData: cloneDeep(aiPerfData),
-                casualChat: cloneDeep(casualChat),
-                taskChat: cloneDeep(taskChat),
-                grpcFolders: cloneDeep(grpcFolders),
-                reActTimelines: cloneDeep(reActTimelines)
-            }
-            knowledgeBaseDataStore.set(showID, answer)
-        }
-    })
+    const {execute} = chatIPCData
 
     useEffect(() => {
         if (inViewport) {
@@ -460,14 +427,11 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             })
         })
     })
-    const onChatFromHistory = useMemoizedFn((session: string) => {
-        knowledgeBaseDataStore.remove(session)
-    })
+    const onChatFromHistory = useMemoizedFn((session: string) => {})
 
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
             events.onClose(activeID)
-            knowledgeBaseDataStore.set(activeID, chatIPCData)
         }
     })
 
@@ -527,7 +491,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             ...defaultDispatcherOfChatIPC,
             chatIPCEvents: events,
             handleSendCasual,
-            handleSaveChatInfo,
             handleStop: onStop,
             handleSend,
             handleSendSyncMessage,
@@ -549,9 +512,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat,
-
-            getChatData: knowledgeBaseDataStore.get
+            setActiveChat: setActiveChat
         }
     }, [])
 
@@ -559,7 +520,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         setKnowledgeBaseID(id)
         onStop()
         const findChatsItems = chats.find((it) => it.id === id)
-        handleSaveChatInfo()
         events.onReset()
         if (findChatsItems) {
             setActiveChat({...findChatsItems})
@@ -792,7 +752,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                                             onClick={() => {
                                                                 if (activeID) {
                                                                     events.onClose(activeID)
-                                                                    knowledgeBaseDataStore.set(activeID, chatIPCData)
                                                                     events.onReset()
                                                                     onChatFromHistory(activeID)
                                                                 }

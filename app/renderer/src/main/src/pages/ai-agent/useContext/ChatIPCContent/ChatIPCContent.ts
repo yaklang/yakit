@@ -53,16 +53,17 @@ export interface ChatIPCContextValue {
     store: ChatIPCContextStore
     dispatcher: ChatIPCContextDispatcher
 }
-export const defaultDispatcherOfChatIPC:ChatIPCContextDispatcher = {
+export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     chatIPCEvents: {
         fetchToken: () => "",
         fetchTaskChatID: () => "",
+        onSwitchChat: () => {},
         onStart: () => {},
         onSend: () => {},
         onClose: () => {},
         onReset: () => {},
         handleTaskReviewRelease: () => {},
-        getChatContentMap: () => undefined
+        fetchChatDataStore: () => undefined
     },
     handleSendCasual: () => {},
     handleSendTask: () => {},

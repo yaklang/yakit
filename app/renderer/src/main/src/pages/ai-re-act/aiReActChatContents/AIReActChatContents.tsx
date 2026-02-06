@@ -9,7 +9,6 @@ import StreamCard from "@/pages/ai-agent/components/StreamCard"
 import {taskAnswerToIconMap} from "@/pages/ai-agent/defaultConstant"
 import useAINodeLabel from "../hooks/useAINodeLabel"
 import {AIChatListItem} from "@/pages/ai-agent/components/aiChatListItem/AIChatListItem"
-import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AIYaklangCode} from "@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode"
 import {ModalInfoProps} from "@/pages/ai-agent/components/ModelInfo"
 import {AIStreamContentType} from "../hooks/defaultConstant"
@@ -44,7 +43,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
     const {reference} = stream
     const {NodeId, content, NodeIdVerbose, CallToolID, ContentType} = stream.data
-    const {yakExecResult} = useAIChatUIData()
+    const {yakExecResult} = useChatIPCStore().chatIPCData
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
     const modalInfo: ModalInfoProps = useCreation(() => {
@@ -113,12 +112,11 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         atBottomThreshold: 50
     })
 
-    const renderItem = (index: number, item?: ReActChatRenderItem) => {
+    const renderItem = useCallback((index: number, item?: ReActChatRenderItem) => {
         if (!item?.token) return null
-        // 下一个内容存在
         const hasNext = chats.elements.length - index > 1
         return <AIChatListItem key={item.token} hasNext={hasNext} item={item} type='re-act' />
-    }
+    },[chats.elements.length])
 
     const Item = useCallback(
         ({children, style, "data-index": dataIndex}) => (
@@ -159,6 +157,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         }),
         [Footer, Item]
     )
+
     return (
         <div className={styles["ai-re-act-chat-contents"]}>
             <Virtuoso

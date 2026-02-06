@@ -11,7 +11,6 @@ import {AITabsEnumType} from "../aiAgentType"
 import {YakitSideTabProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import {AIFileSystemList} from "../components/aiFileSystemList/AIFileSystemList"
-import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import {
     PluginExecuteHttpFlow,
     VulnerabilitiesRisksTable
@@ -20,17 +19,8 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {apiQueryRisksTotalByRuntimeIds} from "@/pages/risks/YakitRiskTable/utils"
 import AIReActTaskChat from "@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat"
 import emiter from "@/utils/eventBus/eventBus"
-import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "../chatTemplate/AIEcharts"
-import {formatTime} from "@/utils/timeUtil"
-import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    OutlineArrowdownIcon,
-    OutlineArrowupIcon,
-    OutlineClouddownloadIcon,
-    OutlineNewspaperIcon,
-    OutlinePlussmIcon
-} from "@/assets/icon/outline"
+import {OutlineClouddownloadIcon, OutlineNewspaperIcon, OutlinePlussmIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -50,19 +40,14 @@ import {
     AIHandleStartResProps,
     AIReActChatRefProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
+import {aiChatDataStore} from "../store/ChatDataStore"
+import AIContextToken from "./AIContextToken/AIContextToken"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
-        const {
-            runTimeIDs: initRunTimeIDs,
-            yakExecResult,
-            aiPerfData,
-            taskChat,
-            grpcFolders,
-            coordinatorIDs
-        } = useAIChatUIData()
         const {chatIPCData} = useChatIPCStore()
+        const {runTimeIDs: initRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
         const {activeChat} = useAIAgentStore()
         const [isExpand, setIsExpand] = useState<boolean>(true)
         const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
@@ -116,10 +101,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             }
             setExportLoading(true)
             try {
+                const ids = aiChatDataStore.get(activeChat.request.TimelineSessionID || "default")?.coordinatorIDs || []
                 await grpcExportAILogs(
                     {
                         SessionID: activeChat.request.TimelineSessionID || "default",
-                        CoordinatorIDs: coordinatorIDs,
+                        CoordinatorIDs: ids,
                         ExportDataTypes: data.types,
                         OutputPath: data.outputPath
                     },
@@ -314,56 +300,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                     return <></>
             }
         })
-        // 上下文压力集合
-        const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
-            const data: number[] = []
-            const xAxis: string[] = []
-            aiPerfData.pressure.forEach((item) => {
-                data.push(item.current_cost_token_size)
-                xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-            })
-            return {data, xAxis}
-        }, [aiPerfData.pressure])
-        // 最新的上下文压力
-        const lastPressure = useCreation(() => {
-            const length = currentPressuresEcharts.data.length
-            if (length === 0) return 0
-            return currentPressuresEcharts.data[length - 1] || 0
-        }, [currentPressuresEcharts.data])
-        // 上下文压力预设值
-        const pressureThreshold = useCreation(() => {
-            const length = aiPerfData.pressure.length
-            if (length === 0) return 0
-            return aiPerfData.pressure[length - 1].pressure_token_size || 0
-        }, [aiPerfData.pressure])
-        // 首字符延迟集合
-        const currentCostEcharts = useCreation(() => {
-            const data: number[] = []
-            const xAxis: string[] = []
-            aiPerfData.firstCost.forEach((item) => {
-                data.push(item.ms)
-                xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-            })
-            return {data, xAxis}
-        }, [aiPerfData.firstCost])
-        // 最新的首字符延迟
-        const lastFirstCost = useCreation(() => {
-            const length = currentCostEcharts.data.length
-            if (length === 0) return 0
-            return currentCostEcharts.data[length - 1] || 0
-        }, [currentCostEcharts])
-        // AI的Token消耗
-        const token = useCreation(() => {
-            let input = 0
-            let output = 0
-            const {consumption} = aiPerfData
-            const keys = Object.keys(consumption || {})
-            for (let name of keys) {
-                input += consumption[name]?.input_consumption || 0
-                output += consumption[name]?.output_consumption || 0
-            }
-            return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-        }, [aiPerfData.consumption])
 
         const {onOpenLogWindow} = useAiChatLog()
 
@@ -435,43 +371,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                                 <SideSettingButton />
                             </div>
                             <div className={styles["extra"]}>
-                                {currentPressuresEcharts?.data?.length > 0 && (
-                                    <div className={styles["echarts-wrapper"]}>
-                                        <div className={styles["title"]}>
-                                            上下文压力：
-                                            <span className={styles["pressure"]}>
-                                                {formatNumberUnits(lastPressure)}
-                                            </span>
-                                        </div>
-                                        <ContextPressureEcharts
-                                            dataEcharts={currentPressuresEcharts}
-                                            threshold={pressureThreshold}
-                                        />
-                                    </div>
-                                )}
-                                {currentCostEcharts?.data?.length > 0 && (
-                                    <div className={styles["echarts-wrapper"]}>
-                                        <div className={styles["title"]}>
-                                            响应速度
-                                            <span className={styles["cost"]}>{`${
-                                                lastFirstCost < 0 ? "-" : lastFirstCost
-                                            }ms`}</span>
-                                        </div>
-                                        <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
-                                    </div>
-                                )}
-                                <div className={styles["info-token"]}>
-                                    <div className={styles["token"]}>Tokens:</div>
-                                    <div className={classNames(styles["token-tag"], styles["upload-token"])}>
-                                        <OutlineArrowupIcon />
-                                        {token[0]}
-                                    </div>
-                                    <div className={classNames(styles["token-tag"], styles["download-token"])}>
-                                        <OutlineArrowdownIcon />
-                                        {token[1]}
-                                    </div>
-                                    <div className={styles["divider-style"]}></div>
-                                </div>
+                                <AIContextToken execute={execute} session={activeChat?.session} />
                                 <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                     日志
                                 </YakitButton>

@@ -1,64 +1,48 @@
-import { useCallback, useRef, useState } from "react"
-import {useRafInterval} from "ahooks"
-import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
-import { ChatStream, ReActChatRenderItem } from "@/pages/ai-re-act/hooks/aiRender"
+import {useCallback, useRef, useState} from "react"
+import {ChatStream, ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
+import {useRafPolling} from "@/hook/useRafPolling/useRafPolling"
+import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 
 export interface UseStreamingChatContentParams {
-  chatType:  ReActChatRenderItem['chatType']
-  token: string
+    chatType: ReActChatRenderItem["chatType"]
+    token: string
+    session: string
 }
 
 export interface UseStreamingChatContentResult {
-  /** 流数据 */
-  stream: ChatStream | null
-  /** 是否需要打字效果（经历过 start 状态） */
-  shouldType: boolean
+    /** 流数据 */
+    stream: ChatStream | null
+    /** 是否需要打字效果（经历过 start 状态） */
+    shouldType: boolean
 }
 
-export function useStreamingChatContent(
-  params: UseStreamingChatContentParams
-): UseStreamingChatContentResult {
-  const { chatType, token } = params
-  const { getChatContentMap } = useAIChatUIData()
+export function useStreamingChatContent(params: UseStreamingChatContentParams): UseStreamingChatContentResult {
+    const {chatType, token, session} = params
 
-  const getChatContent = useCallback((): ChatStream | null => {
-    if (!getChatContentMap) return null
-    return getChatContentMap(chatType, token) as ChatStream
-  }, [chatType, token, getChatContentMap])
+    const hasStartedRef = useRef<boolean>(false)
+    const [shouldType, setShouldType] = useState<boolean>(false)
+    const fetchChatDataStore = useChatIPCDispatcher().chatIPCEvents.fetchChatDataStore()
+    const {execute} = useChatIPCStore().chatIPCData
 
-  const [renderData, setRenderData] = useState<ChatStream | null>(
-    getChatContent()
-  )
+    const getData = useCallback((): ChatStream | null => {
+        return fetchChatDataStore?.getContentMap({session, chatType, mapKey: token}) as ChatStream
+    }, [fetchChatDataStore, session, chatType, token])
 
-  const isRunningRef = useRef<boolean>(true)
-  // 记录是否经历过 start 状态
-  const hasStartedRef = useRef<boolean>(false)
-  const [shouldType, setShouldType] = useState<boolean>(false)
-
-  useRafInterval(
-    () => {
-      const chatItem = getChatContent()
-      if (!chatItem) return
-
-      const status = chatItem.data.status
-
-      if (status === "start") {
-        if (!hasStartedRef.current) {
-          hasStartedRef.current = true
-          setShouldType(true)
+    const stream = useRafPolling<ChatStream>({
+        getData,
+        interval: 200,
+        shouldStop: (data) => {
+            if (data.data.status === "start") {
+                hasStartedRef.current = true
+                setShouldType(true)
+            }
+            return data.data.status === "end"
+        },
+        shouldUpdate: (prev, next) => {
+            if (!prev) return true
+            return prev.data.content !== next.data.content || prev.data.status !== next.data.status
         }
-        isRunningRef.current = true
-        setRenderData(chatItem)
-        return
-      }
-
-      if (status === "end") {
-        setRenderData(chatItem)
-        isRunningRef.current = false
-      }
-    },
-    isRunningRef.current ? 200 : undefined
-  )
-
-  return { stream: renderData, shouldType }
+    })
+    return {stream, shouldType}
 }

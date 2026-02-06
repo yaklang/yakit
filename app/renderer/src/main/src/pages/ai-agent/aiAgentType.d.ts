@@ -53,7 +53,7 @@ export type AITabsEnumType = `${AITabsEnum}`
 
 export interface AIAgentChatStreamProps {
     streams: ReActChatRenderItem[]
-    getChatContentMap: UseChatIPCEvents["getChatContentMap"]
+    session: string
     defaultExpand?: boolean
     scrollToBottom: boolean
     taskStatus: PlanLoadingStatus

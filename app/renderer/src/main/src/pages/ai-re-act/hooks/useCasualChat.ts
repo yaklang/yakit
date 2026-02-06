@@ -1,4 +1,4 @@
-import {useEffect, useRef} from "react"
+import {useRef} from "react"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
@@ -15,22 +15,29 @@ import useChatContent from "./useChatContent"
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, getRequest, onReviewRelease} = params || {}
+    const {pushLog, getChatDataStore, getRequest, onReviewRelease} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
     })
 
     const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
-    const contentMap = useRef<Map<string, AIChatQSData>>(new Map())
+    const handleSetElements = useMemoizedFn((newElements: ReActChatRenderItem[]) => {
+        setElements(newElements)
+    })
+
     const getContentMap = useMemoizedFn((mapKey: string) => {
-        return contentMap.current.get(mapKey)
+        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        if (!contentMap) return undefined
+        return contentMap.get(mapKey)
     })
     const setContentMap = useMemoizedFn((mapKey: string, value: AIChatQSData) => {
-        contentMap.current.set(mapKey, value)
+        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        contentMap && contentMap.set(mapKey, value)
     })
     const deleteContentMap = useMemoizedFn((mapKey: string) => {
-        contentMap.current.delete(mapKey)
+        const contentMap = getChatDataStore?.()?.casualChat?.contents
+        contentMap && contentMap.delete(mapKey)
     })
 
     // #region review事件转换成UI处理逻辑
@@ -368,6 +375,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     AIModelName: "",
                     extraValue: extraValue
                 }
+
                 setContentMap(chatData.id, chatData)
                 setElements((old) => [
                     ...old,
@@ -382,16 +390,15 @@ function useCasualChat(params?: UseCasualChatParams) {
     const handleResetData = useMemoizedFn(() => {
         review.current = undefined
         chatContentEvent.handleResetData()
-        contentMap.current.clear()
         setElements([])
     })
 
     const state: UseCasualChatState = useCreation(() => {
-        return {elements, contents: contentMap}
+        return {elements}
     }, [elements])
 
     const events: UseCasualChatEvents = useCreation(() => {
-        return {handleSetData, handleResetData, handleSend, handleGetContentMap: getContentMap}
+        return {handleSetData, handleResetData, handleSend, handleSetElements}
     }, [])
 
     return [state, events] as const

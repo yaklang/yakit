@@ -14,7 +14,6 @@ import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButton} from "./AIReActComponent"
 import {AIInputEvent, AIStartParams} from "../hooks/grpcApi"
-import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
@@ -35,9 +34,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             startRequest,
             externalParameters
         } = props
-        const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
+        const {setChats, setActiveChat} = useAIAgentDispatcher()
 
-        const {casualChat} = useAIChatUIData()
         const {chatIPCData} = useChatIPCStore()
         const {chatIPCEvents, handleStop, handleSendSyncMessage} = useChatIPCDispatcher()
         const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
@@ -245,7 +243,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                         ))}
                                 </div>
                             </div>
-                            <AIReActChatContents chats={casualChat} />
+                            <AIReActChatContents chats={chatIPCData.casualChat} />
                         </div>
                         <div className={classNames(styles["chat-footer"])}>
                             <div className={styles["footer-body"]}>

@@ -108,7 +108,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             getChats: getChats,
             setActiveChat: setActiveChat,
 
-            getChatData: aiChatDataStore.get
+            // getChatData: aiChatDataStore.get
         }
     }, [])
 
