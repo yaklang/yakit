@@ -55,6 +55,7 @@ import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {getStorageAuditCodeShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/yakRunnerAuditCode"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {getCodeByPath, getCodeSizeByPath, getNameByPath, monacaLanguageType} from "../yakRunner/utils"
+import {openAIForge} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -850,13 +851,38 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
 // 代码审计进度信息
 export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) => {
-    const {title, streamData, logInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
+    const {title, streamData, logInfo, cancelRun, onClose, showDownloadDetail = true, autoClose, path} = props
     useEffect(() => {
         if (autoClose && streamData.Progress === 1) {
             onClose && onClose()
         }
     }, [autoClose, streamData.Progress])
-
+    const toAI = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!path) {
+            yakitNotify("error", "未找到项目路径，无法进行AI审计")
+            return
+        }
+        const params = {
+            query: {
+                ForgeName: "code_audit"
+            },
+            handleParamsUIConfig: (paramsUIConfig) => {
+                paramsUIConfig.map((item) => {
+                    if (item.Field === "project_path") {
+                        item.DefaultValue = path
+                    }
+                    return item
+                })
+                return paramsUIConfig
+            },
+            jsonParseLogParams: {
+                page: "AuditCodeStatusInfo",
+                fun: "toAI"
+            }
+        }
+        openAIForge(params)
+    })
     return (
         <div className={styles["audit-code-status-info"]}>
             <div className={styles["hint-left-wrapper"]}>
@@ -908,6 +934,9 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
                     <div className={styles["download-btn"]}>
                         <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
                             取消
+                        </YakitButton>
+                        <YakitButton size='large' type='primary' onClick={toAI}>
+                            进行AI审计
                         </YakitButton>
                     </div>
                 </div>
