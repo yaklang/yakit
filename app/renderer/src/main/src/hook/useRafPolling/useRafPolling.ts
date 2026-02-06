@@ -1,5 +1,5 @@
 import {useRef, useState, type DependencyList} from "react"
-import {useMemoizedFn, useInterval, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useInterval, useUpdateEffect, useLatest} from "ahooks"
 
 export interface UseRafPollingOptions<T> {
     /**
@@ -44,17 +44,10 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>){
 
     const dataRef = useRef<T | null>(data)
 
-    const getDataRef = useRef(getData)
-    getDataRef.current = getData
-
-    const shouldStopRef = useRef(shouldStop)
-    shouldStopRef.current = shouldStop
-
-    const shouldUpdateRef = useRef(shouldUpdate)
-    shouldUpdateRef.current = shouldUpdate
-
-    const cloneRef = useRef(clone)
-    cloneRef.current = clone
+    const getDataRef = useLatest(getData)
+    const shouldStopRef = useLatest(shouldStop)
+    const shouldUpdateRef = useLatest(shouldUpdate)
+    const cloneRef = useLatest(clone)
 
     const tick = useMemoizedFn(() => {
         if (!running) return
