@@ -230,6 +230,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...advancedConfigValue, ...allFields}
+        // 关闭强制HTTPS按钮
+        if(allFields.isHttps !== advancedConfigValue.isHttps && !allFields.isHttps){
+            newValue = {...newValue, isGmTLS: false, randomJA3: false}
+        }
         if (newValue.isGmTLS) {
             newValue.isHttps = true
         }

@@ -2416,9 +2416,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </span>
                                 <YakitCheckbox
                                     checked={advancedConfigValue.isHttps}
-                                    onChange={(e) =>
-                                        setAdvancedConfigValue({ ...advancedConfigValue, isHttps: e.target.checked })
-                                    }
+                                    onChange={(e) =>{
+                                        const isHttps = e.target.checked;
+                                        setAdvancedConfigValue({ 
+                                            ...advancedConfigValue,
+                                            isHttps,
+                                            ...!isHttps ? {
+                                                isGmTLS: false,
+                                                randomJA3: false
+                                            }: {}
+                                         })
+                                    }}
                                 />
                             </div>
                             <Divider type='vertical' style={{ margin: 0, top: 1 }} />
