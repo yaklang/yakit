@@ -1,4 +1,5 @@
 import {failed, yakitNotify} from "@/utils/notification"
+import {openABSFileLocated} from "@/utils/openWebsite"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
@@ -134,7 +135,6 @@ export const getJavaDecompilerCodeByPath = (path: string): Promise<string> => {
  */
 export const downloadAsZip = (path: string, projectName: string): Promise<null> => {
     return new Promise(async (resolve, reject) => {
-        // local
         const params = {
             Method: "GET",
             Url: {
@@ -149,36 +149,38 @@ export const downloadAsZip = (path: string, projectName: string): Promise<null> 
         }
 
         try {
+            yakitNotify("info", "正在后台导出，请等待")
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            if (res.Resources && res.Resources.length > 0) {
-                const exportHex = res.Resources[0].Extra.find((kv) => kv.Key === "content")
-                if (exportHex) {
-                    try {
-                        const content = Buffer.from(exportHex.Value, "hex")
-
-                        // 创建并下载ZIP文件
-                        const fileName = projectName.split("/").pop() || "decompiled.zip"
-                        const a = document.createElement("a")
-                        const blob = new Blob([content], {type: "application/zip"})
-                        a.href = URL.createObjectURL(blob)
-                        a.download = `${fileName.replace(/\.(jar|war|ear)$/, "")}_decompiled.zip`
-                        document.body.appendChild(a)
-                        a.click()
-                        document.body.removeChild(a)
-
-                        yakitNotify("success", "已导出反编译ZIP文件")
-                        resolve(null)
-                    } catch (err) {
-                        failed(`导出ZIP文件失败: ${err}`)
-                        reject(err)
-                    }
-                } else {
-                    failed("导出内容不可用")
-                    reject("导出内容不可用")
-                }
-            } else {
+            if (!res.Resources || res.Resources.length === 0) {
                 failed("导出内容不可用")
-                reject("导出内容不可用")
+                reject("no resources")
+                return
+            }
+
+            const first = res.Resources[0]
+            const zipPath =
+                first.Path || first.Extra.find((e) => e.Key === "path")?.Value
+
+            if (!zipPath) {
+                failed("导出ZIP文件路径不可用")
+                reject("no zip path")
+                return
+            }
+
+            try {
+                const exists: boolean = await ipcRenderer.invoke("is-file-exists", zipPath)
+                if (!exists) {
+                    failed("导出的ZIP文件不存在")
+                    reject("zip not exists")
+                    return
+                }
+
+                yakitNotify("success", "导出成功，正在打开文件位置")
+                openABSFileLocated(zipPath)
+                resolve(null)
+            } catch (err) {
+                failed(`打开ZIP文件失败: ${err}`)
+                reject(err)
             }
         } catch (error) {
             reject(error)
