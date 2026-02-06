@@ -55,7 +55,8 @@
             display: flex;
 
             .header-tab-item {
-                padding: 4px 16px;
+                font-size: 12px;
+                padding: 2px 12px;
                 cursor: pointer;
                 border-right: 1px solid var(--Colors-Use-Neutral-Border);
             }
@@ -194,7 +195,6 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                height: 30px;
                 margin-top: 2px;
                 border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 

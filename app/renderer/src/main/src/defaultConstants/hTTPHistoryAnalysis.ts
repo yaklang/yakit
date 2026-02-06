@@ -45,6 +45,7 @@ onAnalyzeHTTPFlowFinish = func(totalCount, matchedCount) {
 
 export const footerTabs = (t: (text: string) => string) => {
     return [
+        {key: "packet", label: t("AnalysisMain.packet")},
         {key: "rule", label: t("AnalysisMain.rule")},
         {key: "hot-patch", label: t("AnalysisMain.hot_reload")}
     ]

@@ -86,6 +86,8 @@ import {Divider, Tooltip} from "antd"
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getAction, ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {HTTPFlowDetailMini} from "@/components/HTTPFlowDetail"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 import styles from "./HTTPHistoryAnalysis.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
@@ -201,6 +203,14 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
         setCurBottomTab(key)
     }
 
+    const onSetClickedHttpFlow = useMemoizedFn((flow)=>{
+        setClickedHttpFlow(flow)
+        if (flow?.Id) {
+            setOpenBottomTabsFlag(true)
+            setCurBottomTab("packet")
+        }
+    })
+
     return (
         <div className={styles["HTTPHistoryAnalysis"]} ref={hTTPHistoryAnalysisRef}>
             <YakitResizeBox
@@ -210,7 +220,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                 firstNode={
                     <div className={styles["HTTPHistoryAnalysis-top"]}>
                         <HTTPHistoryFilter
-                            onSetClickedHttpFlow={setClickedHttpFlow}
+                            onSetClickedHttpFlow={onSetClickedHttpFlow}
                             onSetFirstHttpFlow={setFirstHttpFlow}
                             onSetSelectedHttpFlowIds={setSelectedHttpFlowIds}
                             onSetHTTPFlowFilter={onSetHTTPFlowFilter}
@@ -265,7 +275,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     )
 })
 
-type TabKeys = "hot-patch" | "rule"
+type TabKeys = "packet" | "hot-patch" | "rule"
 type TabRenderState = {
     [K in TabKeys]: boolean
 }
@@ -399,6 +409,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     }, [previousBottomTab])
 
     const [initRenderTabCont, setInitRenderTabCont] = useState<TabRenderState>({
+        "packet": false,
         rule: false,
         "hot-patch": false
     }) // 初次页面渲染的时候，非当前tab的内容是否不加载
@@ -783,6 +794,21 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 </div>
             </div>
             <div style={{height: "calc(100% - 30px)"}}>
+                {curBottomTab === "packet" && initRenderTabCont["packet"] && (
+                    <>
+                        {clickHttpFlow?.Id ? 
+                            <HTTPFlowDetailMini
+                                noHeader={true}
+                                id={clickHttpFlow.Id}
+                                selectedFlow={clickHttpFlow}
+                                sendToWebFuzzer={true}
+                            />
+                         : 
+                            <YakitEmpty title={t("AnalysisMain.select_traffic_to_view_packet")} />
+                        }
+                    </>
+                )}
+                {curBottomTab !== "packet" && (
                 <YakitResizeBox
                     isVer={false}
                     freeze={true}
@@ -1274,6 +1300,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                     onMouseUp={onMouseUp}
                     {...ResizeBoxProps}
                 />
+                )}
             </div>
         </div>
     )
