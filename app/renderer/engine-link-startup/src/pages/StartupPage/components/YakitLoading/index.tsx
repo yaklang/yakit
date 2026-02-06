@@ -746,7 +746,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                         </>
                                     )} */}
                                     {/* 远程连接按钮：在非连接状态时显示 */}
-                                    {yakitStatus && !["link", "ready", "init"].includes(yakitStatus) && (
+                                    {yakitStatus && !["link", "ready", "init", "reclaimDatabaseSpace_start"].includes(yakitStatus) && (
                                         <>
                                             <Divider type='vertical'></Divider>
                                             <span
