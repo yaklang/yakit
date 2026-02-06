@@ -1,6 +1,6 @@
 import React, {useMemo} from "react"
 import {AIFileSystemListProps, TabKey} from "./type"
-import {useControllableValue, useCreation} from "ahooks"
+import {useControllableValue, useCreation, useMount} from "ahooks"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import styles from "./AIFileSystemList.module.scss"
 import FileTreeSystem from "./FileTreeSystem/FileTreeSystem"
@@ -17,6 +17,11 @@ export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({ex
         defaultValue: TabKey.FileTree,
         valuePropName: "activeKey",
         trigger: "setActiveKey"
+    })
+    useMount(() => {
+      if(!activeTab){
+        setActiveTab(TabKey.FileTree)
+      }
     })
 
     const list = useCreation(() => {
