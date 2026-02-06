@@ -472,7 +472,7 @@ module.exports = {
                                 if (db.saved_bytes > 0) {
                                     logs.push(`空间变化：减少 ${delta}`)
                                 } else if (db.saved_bytes < 0) {
-                                    logs.push(`空间变化：增加 ${formatBytes(-db.saved_bytes)}（SQLite 重建属正常现象）`)
+                                    logs.push(`空间变化：增加 ${formatBytes(-db.saved_bytes)}`)
                                 } else {
                                     logs.push("空间变化：无变化")
                                 }
@@ -488,7 +488,7 @@ module.exports = {
                             if (result.total_saved_bytes > 0) {
                                 logs.push(`总体空间变化：减少 ${totalDelta}`)
                             } else if (result.total_saved_bytes < 0) {
-                                logs.push(`总体空间变化：增加 ${formatBytes(-result.total_saved_bytes)}（正常）`)
+                                logs.push(`总体空间变化：增加 ${formatBytes(-result.total_saved_bytes)}`)
                             } else {
                                 logs.push("总体空间变化：无变化")
                             }
