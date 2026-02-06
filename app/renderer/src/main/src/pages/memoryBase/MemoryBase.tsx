@@ -302,7 +302,14 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     const onBatchRemove = useMemoizedFn(() => {
         let filterParams: AIMemoryEntityFilter = {}
         if (allCheck) {
-            filterParams = getAIMemoryEntityFilter({query: queryParams, search})
+            const query = getAIMemoryEntityFilter({query: queryParams, search})
+            if (!!query.SemanticQuery) {
+                filterParams = {
+                    MemoryID: selectList.map((ele) => ele.MemoryID)
+                }
+            } else {
+                filterParams = getAIMemoryEntityFilter({query: queryParams, search})
+            }
         } else {
             filterParams = {
                 MemoryID: selectList.map((ele) => ele.MemoryID)
