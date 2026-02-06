@@ -1495,6 +1495,28 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
         }
     })
 
+    const goAI=useMemoizedFn((e)=>{
+        e.stopPropagation()
+        const params = {
+            query: {
+                ForgeName: "ssapoc"
+            },
+            handleParamsUIConfig: (paramsUIConfig) => {
+                const data = paramsUIConfig.map((item) => {
+                    if (item.Field === "risk_id") {
+                        item.DefaultValue = info.Id
+                    }
+                    return item
+                })
+                return data
+            },
+            jsonParseLogParams: {
+                page: "YakitAuditHoleTable",
+                fun: "goAI"
+            }
+        }
+        openAIForge(params)
+    })
     return (
         <div
             className={classNames(
@@ -1543,28 +1565,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                             style={{marginRight: 8}}
                             type='outline2'
                             icon={<OutlineBotIcon />}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                const params = {
-                                    query: {
-                                        ForgeName: "ssapoc"
-                                    },
-                                    handleParamsUIConfig: (paramsUIConfig) => {
-                                        const data = paramsUIConfig.map((item) => {
-                                            if (item.Field === "risk_id") {
-                                                item.DefaultValue = info.Id
-                                            }
-                                            return item
-                                        })
-                                        return data
-                                    },
-                                    jsonParseLogParams: {
-                                        page: "YakitAuditRiskDetails",
-                                        fun: "onClick"
-                                    }
-                                }
-                                openAIForge(params)
-                            }}
+                            onClick={goAI}
                         >
                             在AIAgent中打开
                         </YakitButton>
