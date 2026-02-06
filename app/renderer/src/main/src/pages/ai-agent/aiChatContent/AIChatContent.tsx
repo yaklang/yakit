@@ -289,7 +289,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 case AITabsEnum.Task_Content:
                     return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
                 case AITabsEnum.File_System:
-                    return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} />
+                    return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} activeKey={fileSystemKey} setActiveKey={setFileSystemKey} />
                 case AITabsEnum.Risk:
                     return !!runTimeIDs.length ? (
                         <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
@@ -427,7 +427,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                         <div className={styles["header"]}>
                             <div className={styles["title"]}>
                                 <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
-                                <span>新会话</span>
+                                <div className={styles["chat-title"]}>{activeChat?.name || '新会话'}</div>
                                 <Divider type='vertical' />
                                 <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
                                     新建会话

@@ -111,7 +111,7 @@ const getTimeline = async (session: string) => {
 
 const TimelineCard: FC = () => {
     const {reActTimelines} = useAIChatUIData()
-    const {virtuosoRef, setIsAtBottomRef, followOutput} = useVirtuosoAutoScroll()
+    const {virtuosoRef, setScrollerRef, handleTotalListHeightChanged} = useVirtuosoAutoScroll({ total: reActTimelines.length || 0, atBottomThreshold: 100 })
     const {activeChat} = useAIAgentStore()
     const containerRef = useRef<HTMLDivElement>(null)
     const size = useSize(containerRef)
@@ -159,8 +159,9 @@ const TimelineCard: FC = () => {
                 ref={virtuosoRef}
                 data={displayTimelines}
                 components={components}
-                followOutput={followOutput}
-                atBottomStateChange={setIsAtBottomRef}
+                scrollerRef={setScrollerRef}
+                totalListHeightChanged={handleTotalListHeightChanged}
+                // atBottomStateChange={setIsAtBottomRef}
                 style={{height: "100%", width: "100%"}}
                 increaseViewportBy={{top: 300, bottom: 300}}
                 overscan={200}

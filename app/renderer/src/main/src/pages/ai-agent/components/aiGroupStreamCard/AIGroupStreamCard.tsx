@@ -1,6 +1,5 @@
 import {ChatReferenceMaterialPayload, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
 import {type CSSProperties, useState, type FC, useRef, useEffect} from "react"
-import {useStreamingChatContent} from "../aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent"
 import styles from "./AIGroupStreamCard.module.scss"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
@@ -8,6 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowsexpandIcon, OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {useTypedStream} from "../aiChatListItem/StreamingChatContent/hooks/useTypedStream"
 
 const Code: FC<{code: ChatReferenceMaterialPayload; style: CSSProperties}> = ({code, style}) => {
     return (
@@ -25,7 +25,7 @@ const AIStreamNode: FC<{
     index: number
     nodeLabel?: string
 }> = ({chatType, token, index, nodeLabel}) => {
-    const renderData = useStreamingChatContent({chatType, token})
+    const {stream} = useTypedStream({chatType, token})
     const [open, setOpen] = useState(false)
     const [openPopover, setOpenPopover] = useState(false)
 
@@ -33,7 +33,7 @@ const AIStreamNode: FC<{
         setOpen(false)
     }
 
-    if (!renderData) return null
+    if (!stream) return null
     return (
         <div className={styles["single-stream-text"]}>
             <YakitModal
@@ -43,9 +43,9 @@ const AIStreamNode: FC<{
                 onOk={onClose}
                 onCloseX={onClose}
             >
-                <Code code={renderData.reference || []} style={{maxHeight: "500px"}} />
+                <Code code={stream.reference || []} style={{maxHeight: "500px"}} />
             </YakitModal>
-            {index}. {renderData.data.content}
+            {index}. {stream.data.content}
             <YakitPopover
                 trigger={"click"}
                 visible={openPopover}
@@ -63,12 +63,12 @@ const AIStreamNode: FC<{
                                 icon={<OutlineArrowsexpandIcon />}
                             />
                         </div>
-                        {!!renderData.reference && <Code code={renderData.reference} style={{maxHeight: "200px"}} />}
+                        {!!stream.reference && <Code code={stream.reference} style={{maxHeight: "200px"}} />}
                     </div>
                 }
             >
                 <YakitButton
-                    hidden={!renderData.reference || renderData.reference.length === 0}
+                    hidden={!stream.reference || stream.reference.length === 0}
                     className={styles.button}
                     type='text'
                     colors='primary'
@@ -87,8 +87,8 @@ const AIGroupStreamCard: FC<{
     hasNext?: boolean
 }> = ({elements, hasNext}) => {
     const lastElement = elements[elements.length - 1]
-    const renderData = useStreamingChatContent({chatType: lastElement.chatType, token: lastElement.token})
-    const {nodeLabel} = useAINodeLabel(renderData?.data.NodeIdVerbose)
+    const {stream} = useTypedStream({chatType: lastElement.chatType, token: lastElement.token})
+    const {nodeLabel} = useAINodeLabel(stream?.data.NodeIdVerbose)
     const [expand, setExpand] = useState(true)
     const contentRef = useRef<HTMLDivElement>(null)
     const [isScroll, setIsScroll] = useState(false)
@@ -161,7 +161,7 @@ const AIGroupStreamCard: FC<{
         }
     }, [hasNext])
 
-    if (!renderData) return null
+    if (!stream) return null
     return (
         <div className={styles.container}>
             <div className={styles.title}>
@@ -170,7 +170,7 @@ const AIGroupStreamCard: FC<{
                     <span> {nodeLabel}</span>
                 </div>
                 <div className={styles["stream-text"]}>
-                    <p>{!expand && <span>{renderData.data.content}</span>}</p>
+                    <p>{!expand && <span>{stream.data.content}</span>}</p>
                 </div>
                 <YakitButton
                     onClick={() => setExpand(!expand)}

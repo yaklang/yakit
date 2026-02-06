@@ -145,7 +145,10 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {streams, scrollToBottom, taskStatus, getChatContentMap} = props
-    const {virtuosoRef, setIsAtBottomRef, scrollToIndex, followOutput} = useVirtuosoAutoScroll()
+    const {virtuosoRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged} = useVirtuosoAutoScroll({
+        total: streams.length,
+        atBottomThreshold: 100
+    })
     useUpdateEffect(() => {
         scrollToIndex("LAST")
     }, [scrollToBottom])
@@ -207,10 +210,11 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso<ReActChatRenderItem>
                 ref={virtuosoRef}
-                atBottomStateChange={setIsAtBottomRef}
+                scrollerRef={setScrollerRef}
+                // atBottomStateChange={setIsAtBottomRef}
                 style={{height: "100%", width: "100%"}}
                 data={streams}
-                followOutput={followOutput}
+                totalListHeightChanged={handleTotalListHeightChanged}
                 totalCount={streams.length}
                 itemContent={(index, item) => renderItem(index, item)}
                 atBottomThreshold={100}
@@ -272,7 +276,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                             time: Timestamp,
                                             title: info.AIModelName,
                                             icon: info.AIService,
-                                            aiFilePath,
+                                            aiFilePath
                                         }}
                                         fileList={fileList}
                                     />

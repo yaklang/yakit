@@ -1,6 +1,6 @@
-import React, {useMemo, useState} from "react"
+import React, {useMemo} from "react"
 import {AIFileSystemListProps, TabKey} from "./type"
-import {useCreation} from "ahooks"
+import {useControllableValue, useCreation} from "ahooks"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import styles from "./AIFileSystemList.module.scss"
 import FileTreeSystem from "./FileTreeSystem/FileTreeSystem"
@@ -12,8 +12,12 @@ const options = [
     {label: "读写日志", value: TabKey.OperationLog}
 ]
 
-export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({execFileRecord, activeKey}) => {
-    const [activeTab, setActiveTab] = useState<TabKey>(activeKey ?? TabKey.FileTree)
+export const AIFileSystemList: React.FC<AIFileSystemListProps> = React.memo(({execFileRecord, ...rest}) => {
+    const [activeTab, setActiveTab] = useControllableValue<TabKey>(rest, {
+        defaultValue: TabKey.FileTree,
+        valuePropName: "activeKey",
+        trigger: "setActiveKey"
+    })
 
     const list = useCreation(() => {
         return Array.from(execFileRecord.values())

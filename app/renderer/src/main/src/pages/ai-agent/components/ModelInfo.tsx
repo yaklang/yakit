@@ -12,6 +12,7 @@ import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {OutlineAtomIconByStatus} from "../aiModelList/AIModelList"
 import emiter from "@/utils/eventBus/eventBus"
+import { TabKey } from "./aiFileSystemList/type"
 
 export interface ModalInfoProps {
     icon?: string
@@ -41,7 +42,7 @@ const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr, 
     const handleViewFile = useMemoizedFn(() => {
         if (!aiFilePath) return
 
-        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
+        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System, value: TabKey.FileTree}))
         setTimeout(() => {
             emiter.emit("fileSystemDefaultExpand", aiFilePath)
         }, 800)

@@ -1,3 +1,5 @@
+@use '../../../styles/mixin.scss' as mixin;
+
 %display-flex-center {
     display: flex;
     align-items: center;
@@ -52,6 +54,10 @@
                     height: 16px;
                     color: var(--Colors-Use-Neutral-Disable);
                 }
+            }
+            .chat-title{
+                max-width: 250px;
+                @include mixin.text-ellipsis();
             }
         }
         .extra {
