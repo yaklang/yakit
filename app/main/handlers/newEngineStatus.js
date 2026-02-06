@@ -395,7 +395,7 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 try {
                     const command = getLocalYaklangEngine()
-                    const args = ["vacuum-sqlite", "--json"]
+                    const args = ["vacuum-sqlite"]
                     dbPath.forEach((item) => {
                         args.push("--db-file")
                         args.push(item)
@@ -405,7 +405,8 @@ module.exports = {
                     engineLogOutputFileAndUI(win, `执行命令: ${command} ${args.join(" ")}`)
 
                     const subprocess = childProcess.spawn(command, args, {
-                        stdio: ["ignore", "pipe", "pipe"]
+                        stdio: ["ignore", "pipe", "pipe"],
+                        env: {YAK_VACUUM_SQLITE_JSON: true}
                     })
 
                     let stdout = ""
@@ -432,11 +433,23 @@ module.exports = {
                         reject({status: "process_error", message: error.message})
                     })
 
-                    const formatBytes = (bytes) => {
+                    const formatBytes = (bytes, fractionDigits = 2) => {
+                        if (bytes === 0) return "0 B"
+                    
                         const abs = Math.abs(bytes)
-                        if (abs < 1024) return `${bytes} B`
-                        if (abs < 1024 ** 2) return `${(bytes / 1024).toFixed(2)} KB`
-                        return `${(bytes / 1024 ** 2).toFixed(2)} MB`
+                        const units = ["B", "KB", "MB", "GB", "TB", "PB"]
+                    
+                        let unitIndex = 0
+                        let value = abs
+                    
+                        while (value >= 1024 && unitIndex < units.length - 1) {
+                            value /= 1024
+                            unitIndex++
+                        }
+                    
+                        const sign = bytes < 0 ? "-" : ""
+                    
+                        return `${sign}${value.toFixed(fractionDigits)} ${units[unitIndex]}`
                     }
 
                     const formatVacuumResultToHumanLog = (result) => {
