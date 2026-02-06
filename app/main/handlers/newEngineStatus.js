@@ -462,10 +462,8 @@ module.exports = {
                         logs.push("")
 
                         result.databases.forEach((db) => {
-                            const fileName = db.path.split("/").pop() || db.path
                             const delta = formatBytes(db.saved_bytes)
 
-                            logs.push(`数据库: ${fileName}`)
                             logs.push(`路径：${db.path}`)
 
                             if (db.success) {

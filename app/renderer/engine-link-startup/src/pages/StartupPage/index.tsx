@@ -706,7 +706,7 @@ export const StartupPage: React.FC = () => {
             setCheckLog(["回收失败，可将日志信息发送给工作人员处理..."])
             safeSetYakitStatus("reclaimDatabaseSpace_error")
         } catch (error) {
-            // 如果意外情况，重置引擎版本
+            // 如果意外情况，重新连接引擎
             outputToWelcomeConsole(`回收出现意外情况：${error}`)
             setCheckLog(["回收出现意外情况，可查看日志详细信息..."])
             safeSetYakitStatus("reclaimDatabaseSpace_error")
