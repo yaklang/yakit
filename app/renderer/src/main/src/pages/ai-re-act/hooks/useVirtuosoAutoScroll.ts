@@ -43,11 +43,14 @@ const useVirtuosoAutoScroll = <T>(options: UseVirtuosoAutoScrollOptions<T>) => {
     )
 
     // scroll 事件处理（只在用户拖动滚动条时更新状态）
-    const onScroll = useCallback(() => {
-        if (isUserDraggingRef.current) {
-            isAtBottomRef.current = checkIsAtBottom()
-        }
-    }, [checkIsAtBottom])
+    const {run: onScroll} = useThrottleFn(
+        () => {
+            if (isUserDraggingRef.current) {
+                isAtBottomRef.current = checkIsAtBottom()
+            }
+        },
+        {wait: 50}
+    )
 
     // 鼠标按下（检测是否点击在滚动条区域）
     const onMouseDown = useCallback((e: MouseEvent) => {
