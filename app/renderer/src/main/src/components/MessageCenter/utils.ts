@@ -10,6 +10,8 @@ export interface MessageQueryDataProps {
     afterId?: number
     beforeId?: number
     isRead?: string
+    logType?: string
+    status?: number
 }
 
 interface MessageQueryProps {}
@@ -42,6 +44,7 @@ export const apiFetchQueryMessage: (
 interface MessageQueryReadProps {
     isAll: boolean
     hash: string
+    excludeHash?: string
 }
 /** 消息中心已读操作 */
 export const apiFetchMessageRead: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
@@ -77,6 +80,35 @@ export const apiFetchMessageClear: (data: MessageQueryReadProps) => Promise<bool
             })
                 .then((res) => {
                     resolve(res.ok)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+                .finally(() => {})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/** 获取需要通知的所有任务（未读的） */
+export const apiFetchQueryAllTask: () => Promise<API.MessageLogResponse> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<MessageQueryProps, API.MessageLogResponse>({
+                method: "get",
+                url: "message/log",
+                params: {
+                    page: 1,
+                    limit: -1
+                },
+                data: {
+                    isRead:"false",
+                    logType: "task",
+                }
+            })
+                .then((res) => {
+                    resolve(res)
                 })
                 .catch((err) => {
                     reject(err)
