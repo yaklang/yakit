@@ -25,7 +25,7 @@ import {
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {Badge, Divider, Slider, Tooltip} from "antd"
+import {Badge, Divider, RadioChangeEvent, Slider, Tooltip} from "antd"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -195,14 +195,6 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             emiter.off("onRefreshQueryAIMemoryEntity", onStartInterval)
         }
     }, [])
-    // 语义(AI)搜索时关闭轮询，避免 offsetData 重复堆积；退出语义搜索后恢复轮询
-    useEffect(() => {
-        if (search.type === "ai") {
-            debugVirtualTableEvent.stopT()
-        } else {
-            debugVirtualTableEvent.startT()
-        }
-    }, [search.type, search.aiInput])
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn(() => {
         if (search.type === "ai") return
@@ -506,8 +498,12 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             }
             if (!!filter.SemanticQuery) {
                 debugVirtualTableEvent.stopT()
+                debugVirtualTableEvent.setP(newParams)
+            } else {
+                debugVirtualTableEvent.setP(newParams)
+                debugVirtualTableEvent.onReset()
+                debugVirtualTableEvent.startT()
             }
-            debugVirtualTableEvent.setP(newParams)
         }),
         {wait: 200}
     ).run
@@ -757,6 +753,15 @@ const rateOption: YakitSelectProps["options"] = [
     }
 ]
 
+const COREPAT_DATA = [
+    {l: "C", en: "Connectivity", cn: "关联度"},
+    {l: "O", en: "Origin", cn: "来源与确定性"},
+    {l: "R", en: "Relevance", cn: "相关性"},
+    {l: "E", en: "Emotion", cn: "情感"},
+    {l: "P", en: "Preference", cn: "个人偏好"},
+    {l: "A", en: "Actionability", cn: "可操作性"},
+    {l: "T", en: "Temporality", cn: "时效性"}
+]
 const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(true)
     const [tags, setTags] = useState<CountAIMemoryEntityTagsResponse["TagsCount"]>([])
@@ -767,6 +772,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         valuePropName: "selectQuery"
     })
     const [rateMode, setRateMode] = useState<RateModeType>("none")
+    const [tagMatchAll, setTagMatchAll] = useState<boolean>(selectQuery.tagMatchAll)
     const [selectRateList, setSelectRateList] = useState<MemorySelectQuery["rate"]>(cloneDeep(ratingList))
     const [selectAllRate, setSelectAllRate] = useState<boolean>(false)
 
@@ -824,21 +830,26 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         if (checked) {
             setSelectQuery((prev) => ({
                 ...prev,
-                tags: [...prev.tags, item]
+                tags: [...prev.tags, item],
+                tagMatchAll
             }))
         } else {
             setSelectQuery((prev) => ({
                 ...prev,
-                tags: prev.tags.filter((ele) => ele.Value !== item.Value)
+                tags: prev.tags.filter((ele) => ele.Value !== item.Value),
+                tagMatchAll
             }))
         }
     })
-    const onTagMatchAll = useMemoizedFn((e: {target: {value?: boolean}}) => {
-        const value = e?.target?.value ?? false
-        setSelectQuery((prev) => ({
-            ...prev,
-            tagMatchAll: value
-        }))
+    const onTagMatchAll = useMemoizedFn((e: RadioChangeEvent) => {
+        const {value} = e.target
+        setTagMatchAll(value)
+        if (selectQuery?.tags?.length > 0) {
+            setSelectQuery((prev) => ({
+                ...prev,
+                tagMatchAll: value
+            }))
+        }
     })
     const onSliderChange = useMemoizedFn((val: number[], item: RatingListItem) => {
         const [min, max] = val
@@ -873,35 +884,10 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
     })
     const onResetRate = useMemoizedFn((e) => {
         e.stopPropagation()
-
-        let r, p
-        ratingList.forEach((ele) => {
-            if (ele.keyName === "RScore") {
-                r = ele
-            }
-            if (ele.keyName === "PScore") {
-                p = ele
-            }
-        })
-        const newRateQuery = [
-            {
-                ...r,
-                min: 0.7,
-                max: 1.0
-            },
-            {
-                ...p,
-                min: 0.75,
-                max: 1.0
-            }
-        ]
         const newSelectRateList = ratingList
-            .filter((ele) => ele.keyName !== "RScore" && ele.keyName !== "PScore")
-            .concat(newRateQuery)
         setSelectQuery((prev) => ({
             ...prev,
-            rate: [...newRateQuery],
-            tagMatchAll: false
+            rate: []
         }))
         setSelectRateList([...newSelectRateList])
         setRateMode("none")
@@ -911,23 +897,15 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
         e.stopPropagation()
         setSelectQuery((prev) => ({
             ...prev,
-            tags: []
+            tags: [],
+            tagMatchAll: false
         }))
+        setTagMatchAll(false)
     })
 
-    const COREPAT_DATA = [
-        {l: "C", en: "Connectivity", cn: "关联度"},
-        {l: "O", en: "Origin", cn: "来源与确定性"},
-        {l: "R", en: "Relevance", cn: "相关性"},
-        {l: "E", en: "Emotion", cn: "情感"},
-        {l: "P", en: "Preference", cn: "个人偏好"},
-        {l: "A", en: "Actionability", cn: "可操作性"},
-        {l: "T", en: "Temporality", cn: "时效性"}
-    ]
-
     const indeterminate = useCreation(() => {
-        return selectAllRate && selectQuery.rate.length > 0
-    }, [selectAllRate, selectQuery.rate])
+        return !!selectQuery.rate.length && selectQuery.rate.length < ratingList.length
+    }, [selectQuery.rate])
 
     const onSelectAllRate = useMemoizedFn((e) => {
         const {checked} = e.target
@@ -1174,8 +1152,8 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                         key='Tags'
                         extra={
                             <>
-                                {/* <YakitRadioButtons
-                                    value={selectQuery.tagMatchAll}
+                                <YakitRadioButtons
+                                    value={tagMatchAll}
                                     onChange={onTagMatchAll}
                                     buttonStyle='solid'
                                     options={[
@@ -1184,7 +1162,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                                     ]}
                                     size='small'
                                     className={styles["tag-match-radio"]}
-                                /> */}
+                                />
                                 <YakitButton
                                     type='text'
                                     colors='danger'
