@@ -59,7 +59,8 @@ import {
     OutlineDatabaseIcon,
     OutlineDesktopcomputerIcon,
     OutlineModScanPortDataIcon,
-    OutlineQuestionmarkcircleIcon
+    OutlineQuestionmarkcircleIcon,
+    OutlineTrashSecondIcon
 } from "@/assets/icon/outline"
 import {SequenceAnimationAemonstration} from "../fuzzer/FuzzerSequence/FuzzerSequence"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -1896,7 +1897,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                     )}
                                     {SystemInfo.mode === "local" && (
                                         <Tooltip title={t("HomeCom.reclaimDatabaseSpaceTip")} placement='topRight'>
-                                            <SolidExclamationIcon
+                                            <OutlineTrashSecondIcon
                                                 className={styles["reclaim-icon"]}
                                                 onClick={() => setReclaimHint(true)}
                                             />

@@ -6,7 +6,8 @@ import {
     OutlineBugIcon,
     OutlineDatabaseIcon,
     OutlineDocumentsearchIcon,
-    OutlineScanIcon
+    OutlineScanIcon,
+    OutlineTrashSecondIcon
 } from "@/assets/icon/outline"
 import {PublicAuditCodeIcon, PublicCodeScanIcon, PublicRuleManagementIcon} from "@/routes/publicIcon"
 import {SolidExclamationIcon, SolidPlayIcon} from "@/assets/icon/solid"
@@ -182,7 +183,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                             )}
                             {SystemInfo.mode === "local" && (
                                 <Tooltip title={t("HomeCom.reclaimDatabaseSpaceTip")} placement='topRight'>
-                                    <SolidExclamationIcon
+                                    <OutlineTrashSecondIcon
                                         className={styles["reclaim-icon"]}
                                         onClick={() => setReclaimHint(true)}
                                     />
