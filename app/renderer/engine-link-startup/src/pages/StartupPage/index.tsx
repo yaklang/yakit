@@ -7,6 +7,7 @@ import {
     grpcFetchYakInstallResult,
     grpcFixupDatabase,
     grpcInitCVEDatabase,
+    grpcReclaimDatabaseSpace,
     grpcRelaunch,
     grpcUnpackBuildInYak,
     grpcWriteEngineKeyToYakitProjects
@@ -23,7 +24,7 @@ import {
     YaklangEngineMode,
     YaklangEngineWatchDogCredential
 } from "./types"
-import {getLocalValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {getLocalValue, setLocalValue} from "@/utils/kv"
 import useGetSetState from "@/hooks/useGetSetState"
 import {yakitNotify} from "@/utils/notification"
 import {YakitLoading} from "./components/YakitLoading"
@@ -116,6 +117,8 @@ export const StartupPage: React.FC = () => {
     const [credential, setCredential, getCredential] = useGetSetState<YaklangEngineWatchDogCredential>({
         ...DefaultCredential
     })
+    /** 阻止接收主窗口发送过来的error状态 */
+    const stopErrorStatusRef = useRef<boolean>(false)
     // 是否持续监听引擎进程的连接状态
     const [keepalive, setKeepalive, getKeepalive] = useGetSetState<boolean>(false)
     /** 本地连接自定义端口号 */
@@ -156,6 +159,7 @@ export const StartupPage: React.FC = () => {
      * 4、引擎是否存在
      * 5、内置引擎版本
      * 6、本地软件版本号、更新yak版本检测状态
+     * 7、获取本地缓存连接端口号
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
         debugToPrintLog(`------ 获取系统基础信息 ------`)
@@ -275,7 +279,7 @@ export const StartupPage: React.FC = () => {
                     debugToPrintLog(`------ 连接引擎的模式: remote ------`)
                     setTimeout(() => {
                         handleChangeLinkMode(true)
-                    }, 1000)
+                    }, 500)
 
                     return
                 case "local":
@@ -308,7 +312,7 @@ export const StartupPage: React.FC = () => {
 
     // 本地连接的两种模式
     const handleStartLocalLink = useMemoizedFn((isInit: boolean) => {
-        debugToPrintLog(`------ 开始执行本地${isInit ? "初始化" : "连接"} ------`)
+        debugToPrintLog(`------ 开始执行本地连接 ------`)
         if (isInit) {
             if (localEngineRef.current) localEngineRef.current.init(getCustomPort())
         } else {
@@ -333,7 +337,7 @@ export const StartupPage: React.FC = () => {
         setTimeout(() => {
             handleStartLocalLink(isCheckVersion.current)
             isInitLocalLink.current = false
-        }, 300)
+        }, 500)
     })
 
     // 切换本地模式
@@ -521,6 +525,28 @@ export const StartupPage: React.FC = () => {
                     isCheckVersion.current = false
                     setKeepalive(false)
                     return
+                case "reclaimDatabaseSpace_start":
+                    // TODO 连接窗口的回收按钮暂时屏蔽
+                    setRestartLoading(true)
+                    cancelCountdownLinkRef.current = false
+                    breakHandleRef.current = false
+                    outputToWelcomeConsole("手动触发回收数据库空间")
+                    debugToPrintLog(`------ 手动触发回收数据库空间 ------`)
+                    onDisconnect()
+                    safeSetYakitStatus("reclaimDatabaseSpace_start")
+                    killCurrentProcess(() => {
+                        handleReclaimDatabaseSpace()
+                    }, [getCustomPort()])
+                    break
+                case "reclaimDatabaseSpace_success":
+                case "reclaimDatabaseSpace_error":
+                    // 回收数据库空间成功或者失败
+                    setRestartLoading(true)
+                    safeSetYakitStatus("")
+                    setTimeout(() => {
+                        handleStartLocalLink(isCheckVersion.current)
+                    }, 500)
+                    break
                 case "break":
                     // 用户点中断连接 或 手动连接引擎
                     if (extra?.linkAgain) {
@@ -533,16 +559,19 @@ export const StartupPage: React.FC = () => {
                         } else {
                             breakHandleRef.current = false
                             safeSetYakitStatus("")
-                            // 需要等 yakitStatus 状态更新
-                            setTimeout(() => {
-                                handleStartLocalLink(isCheckVersion.current)
-                            }, 300)
+                            killCurrentProcess(() => {
+                                setTimeout(() => {
+                                    handleStartLocalLink(isCheckVersion.current)
+                                }, 500)
+                            }, [getCustomPort()])
                         }
                     } else {
                         // 否则执行断开
                         outputToWelcomeConsole("手动触发中断连接")
                         debugToPrintLog(`------ 手动触发中断连接 ------`)
-                        handleOperations("break")
+                        safeSetYakitStatus("break")
+                        onDisconnect()
+                        setCheckLog(["已主动断开, 请点击手动连接引擎"])
                         breakHandleRef.current = true
                         setYakitLoadingTip("中断中...")
                         setRestartLoading(false)
@@ -644,7 +673,7 @@ export const StartupPage: React.FC = () => {
                     break
                 default:
                     setDbPath(res.json.path)
-                    setCheckLog((arr) => arr.concat(["修复失败，可将日志信息发送给工作人员处理..."]))
+                    setCheckLog(["修复失败，可将日志信息发送给工作人员处理..."])
                     safeSetYakitStatus("fix_database_error")
             }
         } catch (error) {
@@ -659,6 +688,28 @@ export const StartupPage: React.FC = () => {
                 setCheckLog(["已主动断开, 请点击手动连接引擎"])
                 safeSetYakitStatus("break")
             }
+        }
+    })
+
+    // 回收数据库空间
+    const reclaimDbSpacePath = useRef<string[]>([])
+    const handleReclaimDatabaseSpace = useMemoizedFn(async () => {
+        setCheckLog(["回收数据库空间中，请勿关闭软件...", "退出或关闭可能会造成数据库损坏"])
+        try {
+            const res = await grpcReclaimDatabaseSpace({dbPath: reclaimDbSpacePath.current})
+            setRestartLoading(false)
+            if (res.ok && res.status === "success") {
+                setCheckLog(["回收完成，请点击手动连接引擎"])
+                safeSetYakitStatus("reclaimDatabaseSpace_success")
+                return
+            }
+            setCheckLog(["回收失败，可将日志信息发送给工作人员处理..."])
+            safeSetYakitStatus("reclaimDatabaseSpace_error")
+        } catch (error) {
+            // 如果意外情况，重新连接引擎
+            outputToWelcomeConsole(`回收出现意外情况：${error}`)
+            setCheckLog(["回收出现意外情况，可查看日志详细信息..."])
+            safeSetYakitStatus("reclaimDatabaseSpace_error")
         }
     })
     // #endregion
@@ -865,6 +916,8 @@ export const StartupPage: React.FC = () => {
             setCheckLog([])
             setRemoteLinkLoading(false)
 
+            stopErrorStatusRef.current = false
+
             setLocalValue(LocalGVS.YaklangEngineMode, getEngineMode())
 
             // 缓存连接端口
@@ -923,7 +976,7 @@ export const StartupPage: React.FC = () => {
                 yakitNotify("error", "远程连接已断开")
                 onDisconnect()
                 safeSetYakitStatus("")
-                handleOperations("remote")
+                handleLinkRemoteMode()
             } else if (getEngineMode() === "local") {
                 setCheckLog(["引擎连接未成功, 正在尝试重连"])
                 if (count > 4) {
@@ -938,7 +991,7 @@ export const StartupPage: React.FC = () => {
         ipcRenderer.on("from-win", (e, data) => {
             const type = data.yakitStatus
             if (type) {
-                handleOperations(type)
+                handleOperations(type, data)
             }
         })
         return () => {
@@ -962,6 +1015,13 @@ export const StartupPage: React.FC = () => {
                 onDisconnect()
                 setCheckLog(["已主动断开, 请点击手动连接引擎"])
                 break
+            case "reclaimDatabaseSpace_start":
+                stopErrorStatusRef.current = true
+                reclaimDbSpacePath.current = extra?.dbPath || []
+                onDisconnect()
+                safeSetYakitStatus("reclaimDatabaseSpace_start")
+                handleReclaimDatabaseSpace()
+                break
             case "install": // 下载的yaklang时候，或切换本地时 --- 本地引擎不存在
                 onDisconnect()
                 isEngineInstalled.current = false
@@ -975,6 +1035,7 @@ export const StartupPage: React.FC = () => {
                 safeSetYakitStatus("skipAgreement_InstallNetWork")
                 return
             case "error":
+                if (stopErrorStatusRef.current) return
                 setEngineLink(false)
                 safeSetYakitStatus("error")
                 break

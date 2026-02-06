@@ -63,19 +63,17 @@ export interface ExecResult {
 }
 
 export interface AllowSecretLocalExecResult extends ExecResult {
-    ok: boolean
-    status: string
-    message: string
     json: null | AllowSecretLocalJson
 }
 
 export interface FixupDatabaseExecResult extends ExecResult {
-    ok: boolean
-    status: string
-    message: string
     json: null | FixupDatabaseJson
 }
 
 export interface WriteEngineKeyToYakitProjects {
     version?: string
+}
+
+export interface ReclaimDatabaseSpace {
+    dbPath: string[]
 }

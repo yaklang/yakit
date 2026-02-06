@@ -138,6 +138,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 引擎连接断开或下载其他版本引擎，不检查版本，直接连接引擎
          * - 开发环境直接连接引擎，不检查版本
          * - 先进行 yakit 检查，在进行引擎检查
+         * - 最后软件基础设置（目前只有Yakit支持）
          */
         const handlePreCheckForLinkEngine = useMemoizedFn((checkVersion: boolean) => {
             // 中断连接 后续不执行
@@ -346,7 +347,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /**
          * @name 软件基础设置
-         * - 更新校验完毕之后，用户第一次使用时（目前只有社区版yakit支持设置）
+         * - 更新校验完毕之后（目前只有社区版yakit支持设置）
          */
         const softwareBasics = useMemoizedFn(async () => {
             // 中断连接 后续不执行

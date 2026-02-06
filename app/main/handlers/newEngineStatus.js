@@ -80,7 +80,7 @@ module.exports = {
                     }
 
                     const timeoutId = setTimeout(() => {
-                        if (checkId !== currentStartId || successDetected || killed) return
+                        if (checkId !== currentCheckId || successDetected || killed) return
                         killFun(true)
                         engineLogOutputFileAndUI(win, `----- 检查随机密码模式超时 -----`)
                         reject({status: "timeout", message: "检查随机密码模式超时"})
@@ -226,17 +226,6 @@ module.exports = {
                     reject({status: "exception", message: e.message || String(e)})
                 }
             }).catch(async (err) => {
-                // 超时重试逻辑
-                // if (err.status === "timeout" && attempt < maxRetry) {
-                //     const nextAttempt = attempt + 1
-                //     engineLogOutputFileAndUI(
-                //         win,
-                //         `----- 第 ${attempt} 次超时，1 秒后重试（剩余 ${maxRetry - attempt} 次） -----`
-                //     )
-                //     await new Promise((r) => setTimeout(r, 1000))
-                //     return asyncAllowSecretLocal(win, params, nextAttempt, maxRetry)
-                // }
-
                 return Promise.reject({ok: false, ...err})
             })
         }
@@ -307,7 +296,7 @@ module.exports = {
                     }
 
                     const timeoutId = setTimeout(() => {
-                        if (checkId !== currentStartId || successDetected || killed) return
+                        if (checkId !== currentFixId || successDetected || killed) return
                         killFun(true)
                         engineLogOutputFileAndUI(win, `----- 修复数据库超时 -----`)
                         reject({status: "timeout", message: "修复数据库超时"})
@@ -380,23 +369,175 @@ module.exports = {
                     reject({status: "exception", message: e.message || String(e)})
                 }
             }).catch(async (err) => {
-                // 超时重试逻辑
-                // if (err.status === "timeout" && attempt < maxRetry) {
-                //     const nextAttempt = attempt + 1
-                //     engineLogOutputFileAndUI(
-                //         win,
-                //         `----- 第 ${attempt} 次超时，1 秒后重试（剩余 ${maxRetry - attempt} 次） -----`
-                //     )
-                //     await new Promise((r) => setTimeout(r, 1000))
-                //     return asyncFixupDatabase(win, params, nextAttempt, maxRetry)
-                // }
-
                 return Promise.reject({ok: false, ...err})
             })
         }
         ipcMain.handle(ipcEventPre + "fixup-database", async (e, params) => {
             try {
                 const result = await asyncFixupDatabase(win, params)
+                return {ok: true, ...result}
+            } catch (err) {
+                const safeError = typeof err === "object" && err !== null ? err : {message: String(err)}
+                return {
+                    ok: false,
+                    status: safeError.status,
+                    message: safeError.message,
+                    json: safeError.json || null
+                }
+            }
+        })
+
+        let currentReclaimId = 0 // 全局任务标识
+        const asyncReclaimDatabaseSpace = async (win, params, attempt = 1, maxRetry = 3) => {
+            const checkId = ++currentReclaimId // 本次任务唯一 ID
+            const {dbPath} = params
+
+            return new Promise((resolve, reject) => {
+                try {
+                    const command = getLocalYaklangEngine()
+                    const args = ["vacuum-sqlite"]
+                    dbPath.forEach((item) => {
+                        args.push("--db-file")
+                        args.push(item)
+                    })
+
+                    engineLogOutputFileAndUI(win, `----- 回收数据库空间 -----`)
+                    engineLogOutputFileAndUI(win, `执行命令: ${command} ${args.join(" ")}`)
+
+                    const subprocess = childProcess.spawn(command, args, {
+                        stdio: ["ignore", "pipe", "pipe"],
+                        env: {YAK_VACUUM_SQLITE_JSON: true}
+                    })
+
+                    let stdout = ""
+                    let stderr = ""
+
+                    subprocess.stdout.on("data", (data) => {
+                        if (checkId !== currentReclaimId) return // 已过期任务不打印
+                        const output = data.toString("utf-8")
+                        stdout += output
+                        engineLogOutputFileAndUI(win, output)
+                    })
+
+                    subprocess.stderr.on("data", (data) => {
+                        if (checkId !== currentReclaimId) return
+                        const output = data.toString("utf-8")
+                        stderr += output
+                        engineLogOutputFileAndUI(win, output)
+                    })
+
+                    subprocess.on("error", (error) => {
+                        if (checkId !== currentReclaimId) return
+                        engineLogOutputFileAndUI(win, `----- 回收数据库空间失败 -----`)
+                        engineLogOutputFileAndUI(win, `process_error: ${error.message}`)
+                        reject({status: "process_error", message: error.message})
+                    })
+
+                    const formatBytes = (bytes, fractionDigits = 2) => {
+                        if (bytes === 0) return "0 B"
+                    
+                        const abs = Math.abs(bytes)
+                        const units = ["B", "KB", "MB", "GB", "TB", "PB"]
+                    
+                        let unitIndex = 0
+                        let value = abs
+                    
+                        while (value >= 1024 && unitIndex < units.length - 1) {
+                            value /= 1024
+                            unitIndex++
+                        }
+                    
+                        const sign = bytes < 0 ? "-" : ""
+                    
+                        return `${sign}${value.toFixed(fractionDigits)} ${units[unitIndex]}`
+                    }
+
+                    const formatVacuumResultToHumanLog = (result) => {
+                        const logs = []
+
+                        logs.push("----- 数据库空间回收已完成 -----")
+                        logs.push(`数据库数量：${result.total_databases}`)
+                        logs.push(`成功处理：${result.successful}`)
+                        logs.push(`失败：${result.failed}`)
+                        logs.push("")
+
+                        result.databases.forEach((db) => {
+                            const delta = formatBytes(db.saved_bytes)
+
+                            logs.push(`路径：${db.path}`)
+
+                            if (db.success) {
+                                if (db.saved_bytes > 0) {
+                                    logs.push(`空间变化：减少 ${delta}`)
+                                } else if (db.saved_bytes < 0) {
+                                    logs.push(`空间变化：增加 ${formatBytes(-db.saved_bytes)}`)
+                                } else {
+                                    logs.push("空间变化：无变化")
+                                }
+                            } else {
+                                logs.push("状态：处理失败")
+                            }
+
+                            logs.push("")
+                        })
+
+                        if (result.total_databases > 1) {
+                            const totalDelta = formatBytes(result.total_saved_bytes)
+                            if (result.total_saved_bytes > 0) {
+                                logs.push(`总体空间变化：减少 ${totalDelta}`)
+                            } else if (result.total_saved_bytes < 0) {
+                                logs.push(`总体空间变化：增加 ${formatBytes(-result.total_saved_bytes)}`)
+                            } else {
+                                logs.push("总体空间变化：无变化")
+                            }
+                        }
+
+                        logs.push("--------------------------------------")
+
+                        return logs
+                    }
+
+                    subprocess.on("close", (code) => {
+                        if (checkId !== currentReclaimId) return
+                        const combinedOutput = (stdout + stderr).trim()
+                        engineLogOutputFileAndUI(win, `----- 回收数据库空间结束，退出码: ${code} -----`)
+                        // 提取 JSON
+                        const match = combinedOutput.match(
+                            /<52ed804604e783e3b12860e8676f78a1>\s*(\{[\s\S]*?\})\s*<52ed804604e783e3b12860e8676f78a1>/
+                        )
+                        let json = null
+                        if (match) {
+                            try {
+                                json = JSON.parse(match[1].trim())
+                            } catch (e) {
+                                engineLogOutputFileAndUI(win, `JSON 解析失败: ${e.message}`)
+                            }
+                        }
+
+                        if (json) {
+                            const humanLogs = formatVacuumResultToHumanLog(json)
+                            humanLogs.forEach((line) => {
+                                engineLogOutputFileAndUI(win, line)
+                            })
+                            return resolve({status: "success", json})
+                        }
+
+                        engineLogOutputFileAndUI(win, `----- 回收数据库空间失败 -----`)
+                        reject({status: "unknown", message: "未知错误，请查看详细日志信息"})
+                    })
+                } catch (e) {
+                    if (checkId !== currentReclaimId) return
+                    engineLogOutputFileAndUI(win, `----- 执行回收数据库空间发生异常 -----`)
+                    engineLogOutputFileAndUI(win, `exception：${e}`)
+                    reject({status: "exception", message: e.message || String(e)})
+                }
+            }).catch(async (err) => {
+                return Promise.reject({ok: false, ...err})
+            })
+        }
+        ipcMain.handle(ipcEventPre + "reclaimDatabaseSpace", async (e, params) => {
+            try {
+                const result = await asyncReclaimDatabaseSpace(win, params)
                 return {ok: true, ...result}
             } catch (err) {
                 const safeError = typeof err === "object" && err !== null ? err : {message: String(err)}

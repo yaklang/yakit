@@ -764,13 +764,23 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setTimeout(() => {
                 // 先销毁 antd 消息通知 弹窗
                 emiter.emit("destroyMainWinAntdUiEvent")
-                ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type})
+                if (type === "reclaimDatabaseSpace_start") {
+                    ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type, dbPath: currentProject?.DatabasePath ? [currentProject?.DatabasePath] : []})
+                } else {
+                    ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type})
+                }
             }, 1500)
             setTimeout(() => {
                 setNewCheckLog([])
             }, 2000)
         }, [GetConnectPort()])
     })
+    useEffect(() => {
+        emiter.on("openEngineLinkWin", openEngineLinkWin)
+        return () => {
+            emiter.off("openEngineLinkWin", openEngineLinkWin)
+        }
+    }, [])
     const killCurrentProcess = useMemoizedFn(async (callback: () => void, extraPorts?: number[]) => {
         let finalPorts: number[] = []
 

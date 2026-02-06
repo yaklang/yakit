@@ -42,7 +42,7 @@ import {
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV} from "@/yakitGV"
-import {getLocalValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {GithubSvgIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -126,7 +126,9 @@ import {useDownloadYakit} from "./update/DownloadYakit"
 import i18n from "@/i18n/i18n"
 import { JSONParseLog } from "@/utils/tool"
 import {useSoftMode, YakitModeEnum} from "@/store/softMode"
-import { getAllYakitColorVars } from "@/utils/monacoSpec/theme"
+import {getAllYakitColorVars} from "@/utils/monacoSpec/theme"
+import {SystemInfo} from "@/constants/hardware"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -966,6 +968,25 @@ const ModeSwitch = () => {
 
     return null
 }
+
+const DBCacheManager = () => {
+    if (SystemInfo.mode === "local") {
+        return {
+            key: "db-cache-manager",
+            label: "数据库与缓存管理",
+            children: [
+                {key: "invalidCache", label: "删除缓存数据"},
+                {key: "reclaimDatabaseSpace", label: "回收数据库空间"}
+            ]
+        }
+    }
+    return {
+        key: "db-cache-manager",
+        label: "数据库与缓存管理",
+        children: [{key: "invalidCache", label: "删除缓存数据"}]
+    }
+}
+
 const GetUIOpSettingMenu = () => {
     // 便携版
     if (isEnpriTraceAgent()) {
@@ -978,11 +999,7 @@ const GetUIOpSettingMenu = () => {
                 key: "store",
                 label: "配置插件源"
             },
-            {
-                key: "system-manager",
-                label: "进程与缓存管理",
-                children: [{key: "invalidCache", label: "删除缓存数据"}]
-            },
+            DBCacheManager(),
             {
                 key: "diagnose-network",
                 label: "网络诊断"
@@ -1103,11 +1120,7 @@ const GetUIOpSettingMenu = () => {
             ]
         },
         {type: "divider"},
-        {
-            key: "system-manager",
-            label: "进程与缓存管理",
-            children: [{key: "invalidCache", label: "删除缓存数据"}]
-        },
+        DBCacheManager(),
         {
             key: "store",
             label: "配置插件源"
@@ -1175,6 +1188,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     /** 当前主题 */
     const {setTheme} = useTheme()
     const {softMode, setSoftMode} = useSoftMode()
+    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
+    const {t, i18n} = useI18nNamespaces(["home"])
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1288,6 +1303,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "invalidCache":
                 invalidCacheAndUserData(delTemporaryProject)
                 return
+            case "reclaimDatabaseSpace":
+                setReclaimHint(true)
+                return
             case "pcapfix":
                 showPcapPermission()
                 return
@@ -1391,6 +1409,18 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             />
             <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
             {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
+            <YakitHint
+                visible={reclaimHint}
+                title={t("HomeCom.reclaimDatabaseSpaceTitle")}
+                content={t("HomeCom.reclaimDatabaseSpaceCont")}
+                onOk={() => {
+                    setReclaimHint(false)
+                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
+                }}
+                onCancel={() => {
+                    setReclaimHint(false)
+                }}
+            />
         </>
     )
 })

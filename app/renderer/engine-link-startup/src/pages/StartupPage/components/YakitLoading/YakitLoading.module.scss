@@ -91,6 +91,10 @@
     color: var(--Colors-Use-Error-Primary);
   }
 
+  .log-success-color {
+    color: var(--Colors-Use-Main-Primary);
+  }
+
   .engine-log-btn {
     display: flex;
     flex-direction: column;
@@ -142,7 +146,7 @@
       align-items: center;
       font-size: 12px;
 
-      .open-engine-path {
+      .secondary-btn {
         cursor: pointer;
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
@@ -150,8 +154,12 @@
           color: var(--Colors-Use-Main-Primary);
         }
       }
+      .secondary-btn-disable {
+        color: var(--Colors-Use-Neutral-Disable);
+        cursor: not-allowed;
+      }
 
-      .go-remote {
+      .primary-btn {
         display: flex;
         align-items: center;
         gap: 4px;
@@ -166,7 +174,7 @@
         }
       }
 
-      .go-remote-disable {
+      .primary-btn-disable {
         color: var(--Colors-Use-Neutral-Disable);
         cursor: not-allowed;
       }

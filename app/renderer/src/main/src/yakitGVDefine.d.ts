@@ -39,6 +39,7 @@ export type YakitStatusType =
     | "control-remote" // 远程控制中(不是远程连接)
     | "control-remote-timeout" // 远程控制连接超时
     | "engine-error" // 引擎文件问题
+    | "reclaimDatabaseSpace_start" // 开始回收数据库空间
     | ""
 /** @name 引擎其他操作 */
 export type EngineOtherOperation = "changePort" | ""

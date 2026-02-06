@@ -138,6 +138,8 @@ import {
     HTTPFlowTableFormConfiguration,
     HTTPFlowTableFormConsts
 } from "./HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {SystemInfo} from "@/constants/hardware"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -660,7 +662,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         onSetHasNewData,
         showHistoryAnalysisBtn = false
     } = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history", "home"])
 
     // 导出字段映射配置
     const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
@@ -2381,10 +2383,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     //删除
-    const onRemoveHttpHistory = useMemoizedFn((query) => {
+    const onRemoveHttpHistory = useMemoizedFn((query, reclaim?: boolean) => {
+        const len1 = query?.Filter?.IncludeInUrl?.length ?? 0
+        const len2 = query?.Id?.length ?? 0
+        const flag = len1 >= 2 || len2 >= 2
+        // TODO 暂时不弹回收数据空间
+        if (SystemInfo.mode === "local" && !reclaimHint && flag && false) {
+            delFun.current = "onRemoveHttpHistory"
+            delQuery.current = query
+            setReclaimHint(true)
+            return
+        }
         setLoading(true)
         if (isAllSelect) {
-            onRemoveHttpHistoryAll(true, query)
+            onRemoveHttpHistoryAll(true, query, reclaim)
             return
         }
         ipcRenderer
@@ -2396,7 +2408,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 refreshTabsContRef.current = true
                 updateData()
             })
-            .finally(() => setTimeout(() => setLoading(false), 100))
+            .finally(() => {
+                setTimeout(() => setLoading(false), 100)
+                if (reclaim) {
+                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
+                }
+            })
     })
 
     const onDeleteToUpdateEvent = useMemoizedFn((v: string) => {
@@ -2423,7 +2440,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     //删除 重置请求 ID
-    const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
+    const onRemoveHttpHistoryAllAndResetId = useMemoizedFn((reclaim?: boolean) => {
         setLoading(true)
         ipcRenderer
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
@@ -2437,10 +2454,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .finally(() => {
                 onUpdateOtherPage()
                 setTimeout(() => setLoading(false), 500)
+                if (reclaim) {
+                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
+                }
             })
     })
     // 不重置请求 ID
-    const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any) => {
+    const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any, reclaim?: boolean) => {
         let newParams = {
             Filter: {},
             DeleteAll: false
@@ -2467,8 +2487,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .finally(() => {
                 onUpdateOtherPage()
                 setTimeout(() => setLoading(false), 300)
+                if (reclaim) {
+                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
+                }
             })
-        setLoading(true)
         yakitNotify("info", t("HTTPFlowTable.deletingPleaseRefresh"))
         setCompareLeft({content: "", language: "http"})
         setCompareRight({content: "", language: "http"})
@@ -2477,6 +2499,36 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (props.onSelected) props.onSelected(undefined)
         }, 400)
     })
+
+    // 回收数据库空间
+    const delFun = useRef<string>("")
+    const delQuery = useRef<any>()
+    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
+    const execDelFun = useMemoizedFn((reclaim: boolean) => {
+        switch (delFun.current) {
+            case "resetId":
+                onRemoveHttpHistoryAllAndResetId(reclaim)
+                break
+            case "noResetId":
+                onRemoveHttpHistoryAll(undefined, undefined, reclaim)
+                break
+            case "onRemoveHttpHistory":
+                onRemoveHttpHistory(delQuery.current, reclaim)
+                break
+            default:
+                break
+        }
+    })
+    const reclaimDatabaseSpace = useMemoizedFn(() => {
+        execDelFun(true)
+        resetReclaimInfo()
+    })
+    const resetReclaimInfo = useMemoizedFn(() => {
+        delFun.current = ""
+        delQuery.current = undefined
+        setReclaimHint(false)
+    })
+
     const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
         const length = selectedRows.length
         if (length <= 0) {
@@ -4350,10 +4402,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     onClick: ({key}) => {
                                                         switch (key) {
                                                             case "resetId":
-                                                                onRemoveHttpHistoryAllAndResetId()
+                                                                // TODO 暂时不弹回收数据空间
+                                                                if (SystemInfo.mode === "local" && false) {
+                                                                    delFun.current = "resetId"
+                                                                    setReclaimHint(true)
+                                                                } else {
+                                                                    onRemoveHttpHistoryAllAndResetId()
+                                                                }
                                                                 break
                                                             case "noResetId":
-                                                                onRemoveHttpHistoryAll()
+                                                                // TODO 暂时不弹回收数据空间
+                                                                if (SystemInfo.mode === "local" && false) {
+                                                                    delFun.current = "noResetId"
+                                                                    setReclaimHint(true)
+                                                                } else {
+                                                                    onRemoveHttpHistoryAll()
+                                                                }
                                                                 break
                                                             default:
                                                                 break
@@ -4526,6 +4590,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     defalutColumnsOrder={defalutColumnsOrderRef.current}
                 ></AdvancedSet>
             )}
+            <YakitHint
+                visible={reclaimHint}
+                title={t("HomeCom.reclaimDatabaseSpaceTitle")}
+                content={t("HomeCom.reclaimDatabaseSpaceCont")}
+                onOk={reclaimDatabaseSpace}
+                onCancel={() => {
+                    execDelFun(false)
+                    resetReclaimInfo()
+                }}
+            />
         </div>
     )
 })

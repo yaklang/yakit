@@ -84,6 +84,9 @@
     "HomeCom": {
         "projectDatabase": "Project Database",
         "databaseTooLarge": "The database is too large. To avoid performance issues, it is recommended to create a new project.",
-        "vulnerabilityData": "Vulnerability Data"
+        "vulnerabilityData": "Vulnerability Data",
+        "reclaimDatabaseSpaceTip": "Reclaim database space: After deleting data, you can click this button to reclaim database space.",
+        "reclaimDatabaseSpaceTitle": "Reclaim database space",
+        "reclaimDatabaseSpaceCont": "Are you sure you want to reclaim the database space?Confirming will return you to the Welcome page to perform the reclamation."
     }
 }
