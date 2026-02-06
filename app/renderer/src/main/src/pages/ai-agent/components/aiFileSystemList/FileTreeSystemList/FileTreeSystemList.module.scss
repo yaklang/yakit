@@ -5,4 +5,8 @@
     :global( .ant-tree-list-holder .ant-tree-list-holder-inner .ant-tree-treenode.dragging)::after {
         border-color: var(--Colors-Use-Main-Primary);
     }
+    :global(.ant-tree-switcher){
+        display: flex;
+        align-items: center;
+    }
 }
