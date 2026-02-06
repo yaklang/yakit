@@ -44,7 +44,7 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
                 label: t("YakitEditor.fontSize"),
                 children: fontSizeOptions.map((size) => ({
                     key: `font-size-${size}`,
-                    label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0√" : ""}`
+                    label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0✓" : ""}`
                 }))
             },
             {key: "copy", label: "Copy"},

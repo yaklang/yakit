@@ -138,7 +138,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                 label: t("YakitEditor.fontSize"),
                 children: fontSizeOptions.map((size) => ({
                     key: `font-size-${size}`,
-                    label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0√" : ""}`
+                    label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0✓" : ""}`
                 }))
             },
             {key: "change-all-occurrences", label: "Change All Occurrences", keyDesc: "Ctrl+F2"},
