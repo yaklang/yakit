@@ -121,6 +121,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                 },
                 true
             )
+            aiChatDataStore.remove(session)
         } catch (error) {
             yakitNotify("error", "删除会话失败:" + error)
         } finally {

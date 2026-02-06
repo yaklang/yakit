@@ -1,5 +1,5 @@
-import {useRef, useState, useCallback, type DependencyList} from "react"
-import {useRafInterval, useUpdateEffect} from "ahooks"
+import {useRef, useState, type DependencyList} from "react"
+import {useMemoizedFn, useInterval, useUpdateEffect} from "ahooks"
 
 export interface UseRafPollingOptions<T> {
     /**
@@ -36,14 +36,11 @@ export interface UseRafPollingOptions<T> {
 /**
  * 基于 requestAnimationFrame 的轮询 Hook。
  */
-export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
+export function useRafPolling<T>(options: UseRafPollingOptions<T>){
     const {getData, interval = 200, shouldStop, shouldUpdate, clone, resetDeps = []} = options
 
     const [data, setData] = useState<T | null>(() => getData())
     const [running, setRunning] = useState<boolean>(true)
-
-    const runningRef = useRef<boolean>(true)
-    runningRef.current = running
 
     const dataRef = useRef<T | null>(data)
 
@@ -59,14 +56,12 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
     const cloneRef = useRef(clone)
     cloneRef.current = clone
 
-    const tick = useCallback(() => {
-        if (!runningRef.current) return
-
+    const tick = useMemoizedFn(() => {
+        if (!running) return
         const result = getDataRef.current()
         if (!result) return
 
         if (shouldStopRef.current?.(result)) {
-            runningRef.current = false
             setRunning(false)
         }
         // 进行数据克隆，确保引用变化
@@ -80,7 +75,7 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
         if (needUpdate) {
             setData(clonedResult)
         }
-    }, [])
+    })
 
     useUpdateEffect(() => {
         const initial = getDataRef.current()
@@ -89,11 +84,10 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>): T | null {
         dataRef.current = cloned ?? null
         setData(cloned ?? null)
 
-        runningRef.current = true
         setRunning(true)
     }, resetDeps)
 
-    useRafInterval(tick, running ? interval : undefined)
+    useInterval(tick, running ? interval : undefined)
 
     return data
 }
