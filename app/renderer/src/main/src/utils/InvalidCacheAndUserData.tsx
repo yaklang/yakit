@@ -18,7 +18,7 @@ export const invalidCacheAndUserData = (delTemporaryProject) => {
                     message={`如果你的 ${getReleaseEditionName()} 出现异常，可使用此功能删除所有本地缓存和用户数据，重连重启。`}
                 />
                 <Alert type='success' message='注意，本操作将永久删除缓存数据，难以恢复，请谨慎操作' />
-                <YakitCheckbox onChange={(e) => (checked = e.target.checked)}>同步删除所有数据库内的数据，默认不勾选</YakitCheckbox>
+                <YakitCheckbox onChange={(e) => (checked = e.target.checked)}>同步删除所有数据库内的数据</YakitCheckbox>
             </Space>
         ),
         width: 700,
