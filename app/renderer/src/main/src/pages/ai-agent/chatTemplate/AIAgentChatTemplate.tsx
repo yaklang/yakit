@@ -6,16 +6,14 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AITree} from "../aiTree/AITree"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {grpcQueryAIEvent} from "../grpc"
-import {Uint8ArrayToString} from "@/utils/str"
-import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {grpcQueryAIToolDetails} from "../grpc"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,
     AITaskStartInfo,
     ReActChatRenderItem
 } from "@/pages/ai-re-act/hooks/aiRender"
-import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIEventQueryRequest} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
 import StreamCard from "../components/StreamCard"
@@ -23,7 +21,6 @@ import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
-import {genBaseAIChatData, isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
@@ -242,38 +239,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             ProcessID: callToolId
         }
         setLoading(true)
-        grpcQueryAIEvent(params)
-            .then((res: AIEventQueryResponse) => {
-                const {Events} = res
-                const list: AIChatQSData[] = []
-                Events.filter((ele) => {
-                    if (ele.Type === AIChatQSDataTypeEnum.STREAM && isToolExecStream(ele.NodeId)) return true
-                    if (ele.Type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT) return true
-                    return false
-                }).forEach((item) => {
-                    let ipcContent = ""
-                    let ipcStreamDelta = ""
-                    try {
-                        ipcContent = Uint8ArrayToString(item.Content) || ""
-                        ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
-                    } catch (error) {}
-                    const current: AIChatQSData = {
-                        ...genBaseAIChatData(item),
-                        type: AIChatQSDataTypeEnum.STREAM,
-                        data: {
-                            CallToolID: item.CallToolID,
-                            NodeId: item.NodeId,
-                            NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
-                            content: ipcContent + ipcStreamDelta,
-                            ContentType: item.ContentType,
-                            EventUUID: item.EventUUID,
-                            status: "end"
-                        }
-                    }
-                    list.push(current)
-                })
-                setToolList(list)
-            })
+        grpcQueryAIToolDetails(params)
+            .then(setToolList)
             .finally(() => {
                 setTimeout(() => {
                     setLoading(false)

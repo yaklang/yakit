@@ -1,11 +1,12 @@
 import {memo} from "react"
 import {AIReviewResultProps, AISingHaveColorTextProps} from "./type"
 import {SolidHandIcon} from "@/assets/icon/solid"
-import {useCreation} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import styles from "./AIReviewResult.module.scss"
 import React from "react"
 import ChatCard from "../ChatCard"
 import ModalInfo from "../ModelInfo"
+import {PreWrapper} from "../ToolInvokerCard"
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     const {info, timestamp} = props
@@ -62,23 +63,39 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
             userInput
         }
     }, [type, data])
+    const renderContent = useMemoizedFn(() => {
+        let paramsValue = userAction.userInput
+        switch (type) {
+            case "tool_use_review_require":
+                const {params} = data
+                try {
+                    paramsValue = !!paramsValue ? paramsValue : JSON.stringify(params, null, 2)
+                } catch (error) {}
+                break
+            default:
+                break
+        }
+        return !!paramsValue ? <PreWrapper code={paramsValue} /> : null
+    })
     return (
         <AISingHaveColorText
             titleIcon={<SolidHandIcon />}
             title={title}
             subTitle={userAction.btnText}
-            tip={userAction.userInput}
+            tip=''
             modalInfo={{
                 title: info.AIModelName,
                 time: timestamp,
                 icon: info.AIService
             }}
-        />
+        >
+            {renderContent()}
+        </AISingHaveColorText>
     )
 })
 
 export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.memo((props) => {
-    const {title, subTitle, tip, titleIcon, modalInfo, ...reset} = props
+    const {title, subTitle, tip, titleIcon, modalInfo, children, ...reset} = props
     return (
         <ChatCard
             footer={modalInfo && <ModalInfo {...modalInfo} />}
@@ -93,6 +110,8 @@ export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.mem
                 </div>
             }
             {...reset}
-        />
+        >
+            {children}
+        </ChatCard>
     )
 })

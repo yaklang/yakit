@@ -1,7 +1,6 @@
 %icon {
     width: 16px;
     height: 16px;
-    color: var(--Colors-Use-Neutral-Text-2-Primary);
 }
 
 .ai-chat-select-wrapper {
@@ -25,6 +24,9 @@
         .ant-select-item-option-grouped {
             padding-left: 8px;
         }
+        .ant-select-item {
+            margin-bottom: 4px;
+        }
     }
     .select-title {
         display: flex;
@@ -34,7 +36,9 @@
         font-size: 12px;
         font-weight: 600;
         padding: 2px 12px 4px 12px;
+
         svg {
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
             @extend %icon;
         }
     }
@@ -42,15 +46,29 @@
 
 .select-option-wrapper {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     font-size: 12px;
+    .icon-wrapper {
+        width: 16px;
+        height: 16px;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .text-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        line-height: 16px;
+    }
 
     .text {
         color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .describe {
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        text-wrap: wrap;
     }
 }
 .select-option-active-wrapper {
@@ -67,6 +85,7 @@
     font-size: 12px;
     font-style: normal;
     font-weight: 400;
+    line-height: 16px;
 
     .select-option-text {
         max-width: 120px;
@@ -75,8 +94,13 @@
         overflow: hidden;
         word-break: break-all;
     }
-    svg {
-        @extend %icon;
+    .icon-wrapper {
+        width: 16px;
+        height: 16px;
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
+        svg {
+            @extend %icon;
+        }
     }
 }
 

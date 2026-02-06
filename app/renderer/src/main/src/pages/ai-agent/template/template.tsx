@@ -108,7 +108,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 showQS: qs,
                 focusMode
             }
-            setFocusMode("")
             onSubmit && onSubmit(value)
         })
         // #endregion

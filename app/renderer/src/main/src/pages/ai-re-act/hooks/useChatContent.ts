@@ -446,7 +446,7 @@ function useChatContent(params: UseChatContentParams) {
     const handleStartTool = useMemoizedFn((res: AIOutputEvent) => {
         try {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
-            const {call_tool_id, tool} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+            const {call_tool_id, tool, start_time, start_time_ms} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
             if (!call_tool_id) {
                 pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
                 return
@@ -456,7 +456,9 @@ function useChatContent(params: UseChatContentParams) {
                 ...DefaultAIToolResult,
                 callToolId: call_tool_id,
                 toolName: tool?.name || "-",
-                toolDescription: tool?.description || ""
+                toolDescription: tool?.description || "",
+                startTime: start_time || 0,
+                startTimeMS: start_time_ms || 0
             }
 
             setContentMap(call_tool_id, {
@@ -580,7 +582,7 @@ function useChatContent(params: UseChatContentParams) {
     const handleToolResult = useMemoizedFn((res: AIOutputEvent, status: "success" | "failed" | "user_cancelled") => {
         try {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
-            const {call_tool_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+            const {call_tool_id, ...rest} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
             if (!call_tool_id) {
                 pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
@@ -598,7 +600,15 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
+            // 设置工具执行的开始时间、结束时间和持续时间等数据
             toolResult.data.status = status
+            toolResult.data.startTime = rest.start_time || 0
+            toolResult.data.startTimeMS = rest.start_time_ms || 0
+            toolResult.data.endTime = rest.end_time || 0
+            toolResult.data.endTimeMS = rest.end_time_ms || 0
+            toolResult.data.durationMS = rest.duration_ms || 0
+            toolResult.data.durationSeconds = rest.duration_seconds || 0
+
             // 设置总结内容，没有就设置成获取中，有就使用获取到的内容
             toolResult.data.summary = toolResult.data.summary || DefaultToolResultSummary[status]?.wait || ""
             // 设置执行结果错误数据内容(std_xxx_stderr)

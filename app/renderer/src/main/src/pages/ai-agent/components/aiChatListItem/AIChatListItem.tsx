@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, {useMemo} from "react"
 import {AIChatListItemProps} from "./type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
@@ -114,11 +114,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return (
                     <ToolInvokerCard
                         titleText={"工具调用"}
-                        name={data.toolName}
-                        status={data.status}
-                        desc={data.summary}
-                        content={data.toolStdoutContent.content}
-                        params={data.callToolId}
                         fileList={fileList}
                         modalInfo={{
                             time: Timestamp,
@@ -127,7 +122,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                             title: item.AIModelName,
                             icon: item.AIService
                         }}
-                        execError={data.execError}
+                        data={data}
                     />
                 )
             case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
