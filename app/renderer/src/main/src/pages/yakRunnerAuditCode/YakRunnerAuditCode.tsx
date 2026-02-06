@@ -877,7 +877,7 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
                 return paramsUIConfig
             },
             jsonParseLogParams: {
-                page: "AuditCodeStatusInfo",
+                page: "YakRunnerAuditCode",
                 fun: "toAI"
             }
         }
