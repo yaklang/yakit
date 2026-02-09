@@ -10,3 +10,4 @@
 @tailwind utilities;
 
 /* 需使用npx tailwindcss -i ./src/styles/index.css -o ./src/styles/output.css --watch进行编译 */
+/* 最后的使用路径app\renderer\src\main\src\pages\assetViewer\reportRenders\markdownRender.scss */

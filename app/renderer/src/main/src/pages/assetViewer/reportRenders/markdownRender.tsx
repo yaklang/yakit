@@ -5,6 +5,7 @@ import {useTheme} from "@/hook/useTheme"
 import {ErrorBoundary} from "react-error-boundary"
 import {StreamdownProps, Streamdown, MathPlugin} from "streamdown"
 import styles from "./markdownRender.module.scss"
+import "./markdownRender.scss"
 import classNames from "classnames"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 // 代码高亮
@@ -114,7 +115,7 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
     return (
         <>
             {/* caret="block"|"circle" isAnimating={true} */}
-            <div className={classNames(styles["stream-markdown"], wrapperClassName)}>
+            <div className={classNames("stream-markdown", wrapperClassName)}>
                 <Streamdown
                     plugins={plugins}
                     shikiTheme={["github-light", "github-dark"]}
