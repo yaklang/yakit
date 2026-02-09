@@ -51,9 +51,9 @@
     .icon-wrapper {
         width: 16px;
         height: 16px;
+        display: flex;
         svg {
-            width: 16px;
-            height: 16px;
+            @extend %icon;
         }
     }
     .text-wrapper {
@@ -95,6 +95,7 @@
         word-break: break-all;
     }
     .icon-wrapper {
+        display: flex;
         width: 16px;
         height: 16px;
         color: var(--Colors-Use-Neutral-Text-2-Primary);
