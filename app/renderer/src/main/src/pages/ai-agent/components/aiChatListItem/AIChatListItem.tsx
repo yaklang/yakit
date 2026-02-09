@@ -67,7 +67,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
 
     const {handleSendCasual} = useChatIPCDispatcher()
     const {taskChat, yakExecResult} = useChatIPCStore().chatIPCData
-     const {activeChat} = useAIAgentStore()
+    const {activeChat} = useAIAgentStore()
     const aiStreamNodeProps = useCreation(() => {
         switch (type) {
             case "re-act":
@@ -118,10 +118,12 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         fileList={fileList}
                         modalInfo={{
                             time: Timestamp,
-                            callToolId: data.callToolId,
-                            aiFilePath: data.dirPath,
                             title: item.AIModelName,
                             icon: item.AIService
+                        }}
+                        operationInfo={{
+                            callToolId: data.callToolId,
+                            aiFilePath: data.dirPath
                         }}
                         data={data}
                     />
@@ -178,8 +180,22 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
 
     const renderContent = useMemoizedFn(() => {
         if (activeChat?.session === undefined) return null
-        if (isStream) return <StreamingChatContent {...item} session={activeChat?.session} hasNext={hasNext} streamClassName={aiStreamNodeProps} />
-        return <StaticChatContent {...item} session={activeChat?.session} render={(contentItem) => ChatItemRenderer(contentItem)} />
+        if (isStream)
+            return (
+                <StreamingChatContent
+                    {...item}
+                    session={activeChat?.session}
+                    hasNext={hasNext}
+                    streamClassName={aiStreamNodeProps}
+                />
+            )
+        return (
+            <StaticChatContent
+                {...item}
+                session={activeChat?.session}
+                render={(contentItem) => ChatItemRenderer(contentItem)}
+            />
+        )
     })
     return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

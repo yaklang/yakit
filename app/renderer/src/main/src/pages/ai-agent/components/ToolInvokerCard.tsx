@@ -20,18 +20,20 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Tooltip} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {formatTimestamp} from "@/utils/timeUtil"
+import { OperationCardFooter, OperationCardFooterProps } from "./OperationCardFooter/OperationCardFooter"
+
 interface ToolInvokerCardProps {
     titleText?: string
     fileList?: AIYakExecFileRecord[]
     modalInfo?: ModalInfoProps
-
+    operationInfo: OperationCardFooterProps
     data: AIToolResult
 }
 interface PreWrapperProps {
     code: ReactNode
     autoScrollBottom?: boolean
 }
-const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalInfo, data}) => {
+const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalInfo, operationInfo, data}) => {
     const [toolList, setToolList] = useState<AIChatQSData[]>([])
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -135,7 +137,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
         <ChatCard
             titleText={titleText}
             titleIcon={<SolidToolIcon />}
-            titleExtra={
+            titleMore={
                 <div className={styles["tool-invoker-card-extra"]}>
                     <div className={styles["tool-invoker-card-extra-time"]}>
                         <div>
@@ -172,7 +174,8 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
                     </Tooltip>
                 </div>
             }
-            footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+            titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+            footer={<OperationCardFooter {...operationInfo} />}
         >
             <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
                 <div className={styles["file-system-title"]}>
@@ -245,3 +248,4 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
         </pre>
     )
 })
+

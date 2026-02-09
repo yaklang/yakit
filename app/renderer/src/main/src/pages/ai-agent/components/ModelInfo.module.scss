@@ -5,21 +5,21 @@
     align-items: center;
     justify-content: space-between;
     &-title {
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
         font-size: 11px;
         font-weight: 400;
         line-height: 14px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
         padding: 3px 6px;
         display: flex;
         align-items: center;
 
         svg {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             margin-right: 2px;
         }
         &-time {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            color: var(--Colors-Use-Neutral-Disable);
             margin-left: 6px;
         }
         .icon-small {

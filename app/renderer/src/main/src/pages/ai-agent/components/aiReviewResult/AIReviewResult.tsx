@@ -79,7 +79,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     })
     return (
         <AISingHaveColorText
-            titleIcon={<SolidHandIcon />}
+            // titleIcon={<SolidHandIcon />}
             title={title}
             subTitle={userAction.btnText}
             tip=''
@@ -98,7 +98,7 @@ export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.mem
     const {title, subTitle, tip, titleIcon, modalInfo, children, ...reset} = props
     return (
         <ChatCard
-            footer={modalInfo && <ModalInfo {...modalInfo} />}
+            titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
             titleText={
                 <div className={styles["title-wrapper"]}>
                     <div className={styles["title-main"]}>
