@@ -665,13 +665,6 @@ const PluginBaseInfoForm: React.FC<PluginBaseInfoFormProps> = memo(
                         rows={2}
                         placeholder='请输入...'
                         disabled={allDisabled}
-                        onKeyDown={(e) => {
-                            const keyCode = e.keyCode ? e.keyCode : e.key
-                            if (keyCode === 13) {
-                                e.stopPropagation()
-                                e.preventDefault()
-                            }
-                        }}
                     />
                 </Form.Item>
 
