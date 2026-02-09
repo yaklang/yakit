@@ -7,6 +7,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import { useUploadInfoByEnpriTrace } from "@/components/layout/utils"
 import { JSONParseLog } from "@/utils/tool"
+import { SystemInfo } from "@/constants/hardware"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
@@ -16,7 +17,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     const {setJudgeLicense, setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-    const [activateLicense, setActivateLicense] = useState<boolean>(false)
+    const [activateLicense, setActivateLicense] = useState<boolean>(!!SystemInfo.isDev)
     const [loading, setLoading] = useState<boolean>(true)
     const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
     useEffect(() => {

@@ -936,7 +936,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
         visible: false,
         loading: false,
         title: "创建任务项目异常",
-        data: reNames,
+        data: [],
         okButtonText: "覆盖项目",
         cancelButtonText: "稍后处理"
     })
@@ -1086,7 +1086,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
             setTaskModalInfo((v) => ({...v, visible: false, loading: false, data: []}))
             // 如若存在重名项目
             if (reNames.length > 0) {
-                setTaskErrModalInfo((v) => ({...v, visible: true}))
+                setTaskErrModalInfo((v) => ({...v, visible: true, data: reNames}))
             }
 
             // PS: 目前第一版仅处理新建任务项目，后续可考虑结束任务项目等操作
