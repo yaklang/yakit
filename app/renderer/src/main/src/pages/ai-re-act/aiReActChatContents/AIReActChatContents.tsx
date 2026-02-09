@@ -16,13 +16,11 @@ import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
 import {ReActChatRenderItem} from "../hooks/aiRender"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
-import classNames from "classnames"
-import {PreWrapper} from "@/pages/ai-agent/components/ToolInvokerCard"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 import Loading from "@/components/Loading/Loading"
 import useAISystemStream from "../hooks/useAISystemStream"
 import {ScrollText} from "@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {Code} from "@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard"
 
 const getAIReferenceNodeByType = (contentType?: string) => {
     switch (contentType) {
@@ -178,31 +176,35 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 })
 
 const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
-    const {referenceList, className} = props
+    const {referenceList} = props
     const [expand, setExpand] = useState<boolean>(false)
+
     return (
-        <div className={classNames(styles["ai-reference-node"], className)}>
-            <div className={styles["reference-title"]} onClick={() => setExpand((v) => !v)}>
-                <span>参考资料({referenceList.length})</span>
-                <YakitButton type='text' icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />} />
-            </div>
-            {expand && (
-                <PreWrapper
-                    code={
-                        <div className={styles["reference-list"]}>
-                            {referenceList.map((item, index) => (
-                                <div
-                                    key={index}
-                                    className={classNames(styles["reference-list-item"])}
-                                    title={item.payload}
-                                >
-                                    {item.payload}
-                                </div>
-                            ))}
-                        </div>
-                    }
-                />
-            )}
-        </div>
+        <>
+            <YakitModal
+                visible={expand}
+                title={`参考资料(${referenceList.length})`}
+                cancelButtonProps={{style: {display: "none"}}}
+                onOk={(e) => {
+                    e.stopPropagation()
+                    setExpand(false)
+                }}
+                onCloseX={(e) => {
+                    e.stopPropagation()
+                    setExpand(false)
+                }}
+            >
+                <Code code={referenceList || []} style={{maxHeight: "500px"}} />
+            </YakitModal>
+            <span
+                className={styles["ai-reference-node"]}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    setExpand(true)
+                }}
+            >
+                [参考文献]
+            </span>
+        </>
     )
 })

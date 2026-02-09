@@ -25,6 +25,9 @@
     .mpb-color-text {
         @include mixin.mpb-color-text();
         @include mixin.text-ellipsis(1, false, false, false);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
     }
 }
 .title-extra {

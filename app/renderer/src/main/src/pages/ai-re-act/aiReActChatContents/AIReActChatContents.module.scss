@@ -19,10 +19,18 @@
         max-width: 784px;
         margin: 0 auto;
         .item-inner {
-            padding: 2px 0;
+            padding-top: 4px;
         }
         &:last-child {
             padding-bottom: 0;
+        }
+    }
+    // 后代类名ai-stream-chat-content-wrapper且下一个也是 的不要 padding-top
+    .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
+        & + .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
+            .item-inner:has(:global(.ai-stream-chat-content-wrapper)) {
+                padding-top: 0;
+            }
         }
     }
     .spin {
@@ -39,39 +47,25 @@
     }
 }
 .ai-reference-node {
-    display: flex;
-    flex-direction: column;
-    max-height: 300px;
-    overflow-y: auto;
-    .reference-title {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 16px;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        width: fit-content;
-    }
-    .reference-list {
-        .reference-list-item {
-            line-height: 16px;
-            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-            &:last-child {
-                border-color: transparent;
-            }
-        }
-    }
+    color: var(--Colors-Use-Main-Primary);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 14px;
+    margin-left: 4px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    z-index: 1;
 }
-.ai-text-markdown-reference-node {
-}
-.ai-yaklang-reference-node {
-    padding-top: 8px;
-}
-.ai-text-plain-reference-node {
-}
-.ai-log-tool-reference-node {
-}
-.ai-stream-chat-reference-node {
-    padding: 0 12px 8px 12px;
-}
+// .ai-text-markdown-reference-node {
+// }
+// .ai-yaklang-reference-node {
+//     padding-top: 8px;
+// }
+// .ai-text-plain-reference-node {
+// }
+// .ai-log-tool-reference-node {
+// }
+// .ai-stream-chat-reference-node {
+//     padding: 0 12px 8px 12px;
+// }

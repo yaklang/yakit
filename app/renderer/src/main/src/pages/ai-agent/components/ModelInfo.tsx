@@ -30,7 +30,7 @@ const ModalInfo: FC<ModalInfoProps> = ({icon, title, time}) => {
         <div className={styles["modal-info"]}>
             <div className={styles["modal-info-title"]}>
                 {iconSvg}
-                {title}
+                <span className={styles["modal-info-title-text"]}>{title}</span>
                 {time && <span className={styles["modal-info-title-time"]}>{formatTimestamp(time)}</span>}
             </div>
 

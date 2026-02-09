@@ -2,12 +2,12 @@
 
 .chat-card {
     width: 100%;
-    padding: 8px 12px;
+    padding: 4px 8px;
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    // gap: 4px;
 
     &-title {
         width: 100%;
@@ -21,7 +21,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            padding: 4px 8px 0 0;
+            // padding: 4px 8px 0 0;
             flex: 1 1 auto;
             min-width: 0;
         }

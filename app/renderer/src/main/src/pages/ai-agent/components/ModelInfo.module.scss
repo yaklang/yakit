@@ -18,9 +18,13 @@
             height: 14px;
             margin-right: 2px;
         }
+        &-text{
+            margin-left: 2px;
+        }
+
         &-time {
             color: var(--Colors-Use-Neutral-Disable);
-            margin-left: 6px;
+            margin-left: 10px;
         }
         .icon-small {
             width: 12px;

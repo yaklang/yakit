@@ -127,7 +127,12 @@ const TimelineCard: FC = () => {
         [displayTimelines.length]
     )
     return (
-        <div className={styles["timeline-card-wrapper"]} ref={containerRef}>
+        <div
+            className={classNames(styles["timeline-card-wrapper"], {
+                [styles["timeline-card-empty"]]: displayTimelines.length === 0
+            })}
+            ref={containerRef}
+        >
             <Virtuoso
                 ref={virtuosoRef}
                 data={displayTimelines}
