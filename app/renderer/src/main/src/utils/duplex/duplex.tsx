@@ -1,9 +1,10 @@
-import React from "react"
-import {info, yakitFailed, yakitNotify} from "@/utils/notification"
+import {info, yakitFailed} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "../eventBus/eventBus"
 import {Uint8ArrayToString} from "../str"
 import {JSONParseLog} from "../tool"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineTrashSecondIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 let id = randomString(40)
@@ -120,13 +121,24 @@ export const startupDuplexConn = () => {
                 case "er_model_relationship":
                     emiter.emit("onErModelRelationship", JSON.stringify(obj))
                     break
-                case 'httpflow_slow_insert_sql':
-                    yakitFailed(`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后使用"yak vacuum-sqlite"这个命令，来回收数据库空间。`)
+                case "httpflow_slow_insert_sql":
+                case "httpflow_slow_query_sql":
+                    yakitFailed({
+                        message: (
+                            <div>
+                                {`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后使用"yak vacuum-sqlite"这个命令，来回收数据库空间。`}
+                                <YakitButton
+                                    icon={<OutlineTrashSecondIcon />}
+                                    danger
+                                    type='text'
+                                    size='small'
+                                    onClick={() => emiter.emit("onUIOpSettingMenuSelect", "reclaimDatabaseSpace")}
+                                ></YakitButton>
+                            </div>
+                        )
+                    })
                     break
-                case 'httpflow_slow_query_sql':
-                    yakitFailed(`检测到查询数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后使用"yak vacuum-sqlite"这个命令，来回收数据库空间。`)
-                    break
-                case 'mitm_slow_rule_hook':
+                case "mitm_slow_rule_hook":
                     emiter.emit("onMitmRuleMoreLimt")
                     break
             }

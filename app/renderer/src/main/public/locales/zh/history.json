@@ -88,7 +88,9 @@
       "securityProduct": "安全产品",
       "remoteCodeExecutionScan": "远程代码执行（扫描）",
       "sQLInjection": "SQL注入"
-    }
+    },
+    "reclaimDatabaseSpaceTitle": "回收数据库空间",
+    "reclaimDatabaseSpaceCont": "删除数据后数据库的空间未被回收，是否确认要回收数据库空间，确认回收将会退出到欢迎页面进行回收"
   },
   "ImportExportProgress": {
     "exportHARData": "导出HAR流量数据"

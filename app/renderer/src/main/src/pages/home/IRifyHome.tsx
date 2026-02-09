@@ -34,7 +34,6 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
     const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
     const [riskLevelData, setRiskLevelData] = useState<FieldName[]>([])
     const [total, setTotal] = useState<number>()
-    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
@@ -185,22 +184,10 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                 <Tooltip title={t("HomeCom.reclaimDatabaseSpaceTip")} placement='topRight'>
                                     <OutlineTrashSecondIcon
                                         className={styles["reclaim-icon"]}
-                                        onClick={() => setReclaimHint(true)}
+                                        onClick={() => emiter.emit("onUIOpSettingMenuSelect", "reclaimDatabaseSpace")}
                                     />
                                 </Tooltip>
                             )}
-                            <YakitHint
-                                visible={reclaimHint}
-                                title={t("HomeCom.reclaimDatabaseSpaceTitle")}
-                                content={t("HomeCom.reclaimDatabaseSpaceCont")}
-                                onOk={() => {
-                                    setReclaimHint(false)
-                                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
-                                }}
-                                onCancel={() => {
-                                    setReclaimHint(false)
-                                }}
-                            />
                         </div>
                     </div>
                     <div className={styles["divider"]} />

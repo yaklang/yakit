@@ -121,12 +121,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             } catch (error) {
                 // 旧调用直接跳过
                 if (callId !== latestCheckCallIdRef.current) return
-                if (yakitStatusRef.current !== "break") {
-                    // 未知意外情况则重置引擎
-                    outputToWelcomeConsole(`check出现意外情况：${error}`)
-                    setLog(["check出现意外情况，可查看日志详细信息..."])
-                    setYakitStatus("skipAgreement_Install")
-                } else {
+                if (yakitStatusRef.current === "break") {
                     setLog(["已主动断开, 请点击手动连接引擎"])
                     setYakitStatus("break")
                 }

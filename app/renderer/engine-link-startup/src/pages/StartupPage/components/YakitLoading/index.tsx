@@ -726,47 +726,63 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                             </span>
                                         </>
                                     )}
-                                    {/* 回收数据库空间：在非连接状态时显示 */}
-                                    {/* {yakitStatus && !["link", "ready", "init"].includes(yakitStatus) && (
-                                        <>
-                                            <Divider type='vertical'></Divider>
-                                            <span
-                                                className={classNames(styles["secondary-btn"], {
-                                                    [styles["secondary-btn-disable"]]: restartLoading
-                                                })}
-                                                onClick={() => {
-                                                    if (restartLoading) {
-                                                        return
-                                                    }
-                                                    btnClickCallback("reclaimDatabaseSpace_start")
-                                                }}
-                                            >
-                                                回收数据库空间
-                                            </span>
-                                        </>
-                                    )} */}
+                                    {/* 回收数据库空间：部分状态下不显示 */}
+                                    {yakitStatus &&
+                                        ![
+                                            "link",
+                                            "install",
+                                            "installNetWork",
+                                            "old_version",
+                                            "softwareBasics",
+                                            "reclaimDatabaseSpace_start",
+                                            "ready",
+                                            "init"
+                                        ].includes(yakitStatus) && (
+                                            <>
+                                                <Divider type='vertical'></Divider>
+                                                <Tooltip
+                                                    title='回收所有数据库空间，预计耗时较长'
+                                                    align={{offset: [0, 5]}}
+                                                >
+                                                    <span
+                                                        className={classNames(styles["secondary-btn"])}
+                                                        onClick={() => {
+                                                            if (restartLoading) {
+                                                                return
+                                                            }
+                                                            btnClickCallback("reclaimDatabaseSpace_start")
+                                                        }}
+                                                    >
+                                                        回收数据库空间
+                                                    </span>
+                                                </Tooltip>
+                                            </>
+                                        )}
                                     {/* 远程连接按钮：在非连接状态时显示 */}
-                                    {yakitStatus && !["link", "ready", "init", "reclaimDatabaseSpace_start"].includes(yakitStatus) && (
-                                        <>
-                                            <Divider type='vertical'></Divider>
-                                            <span
-                                                className={classNames(styles["primary-btn"], {
-                                                    [styles["primary-btn-disable"]]: restartLoading
-                                                })}
-                                                onClick={() => {
-                                                    if (restartLoading) {
-                                                        return
-                                                    }
-                                                    btnClickCallback("remote")
-                                                }}
-                                            >
-                                                {EngineModeVerbose("remote")}{" "}
-                                                <OutlineArrowcirclerightIcon
-                                                    className={styles["arrow-circle-right-icon"]}
-                                                />
-                                            </span>
-                                        </>
-                                    )}
+                                    {yakitStatus &&
+                                        !["link", "ready", "init", "reclaimDatabaseSpace_start"].includes(
+                                            yakitStatus
+                                        ) && (
+                                            <>
+                                                <Divider type='vertical'></Divider>
+                                                <span
+                                                    className={classNames(styles["primary-btn"], {
+                                                        [styles["primary-btn-disable"]]: restartLoading
+                                                    })}
+                                                    onClick={() => {
+                                                        if (restartLoading) {
+                                                            return
+                                                        }
+                                                        btnClickCallback("remote")
+                                                    }}
+                                                >
+                                                    {EngineModeVerbose("remote")}{" "}
+                                                    <OutlineArrowcirclerightIcon
+                                                        className={styles["arrow-circle-right-icon"]}
+                                                    />
+                                                </span>
+                                            </>
+                                        )}
                                 </>
                             )}
                         </div>

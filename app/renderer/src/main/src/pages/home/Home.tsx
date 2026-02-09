@@ -350,7 +350,6 @@ const Home: React.FC<HomeProp> = (props) => {
     const [portTotal, setPortTotal] = useState<number>(0)
     const [localPluginTotal, setLocalPluginTotal] = useState<number>(0)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
-    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
 
     const isScanMode = useMemo(() => {
         return isCommunityYakit() && softMode === YakitModeEnum.Scan
@@ -1899,22 +1898,10 @@ const Home: React.FC<HomeProp> = (props) => {
                                         <Tooltip title={t("HomeCom.reclaimDatabaseSpaceTip")} placement='topRight'>
                                             <OutlineTrashSecondIcon
                                                 className={styles["reclaim-icon"]}
-                                                onClick={() => setReclaimHint(true)}
+                                                onClick={() => emiter.emit("onUIOpSettingMenuSelect", "reclaimDatabaseSpace")}
                                             />
                                         </Tooltip>
                                     )}
-                                    <YakitHint
-                                        visible={reclaimHint}
-                                        title={t("HomeCom.reclaimDatabaseSpaceTitle")}
-                                        content={t("HomeCom.reclaimDatabaseSpaceCont")}
-                                        onOk={() => {
-                                            setReclaimHint(false)
-                                            emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
-                                        }}
-                                        onCancel={() => {
-                                            setReclaimHint(false)
-                                        }}
-                                    />
                                 </div>
                             </div>
                             <div className={styles["data-preview-item"]}>

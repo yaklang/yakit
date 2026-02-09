@@ -380,6 +380,9 @@ export const StartupPage: React.FC = () => {
         } else {
             isCheckVersion.current = false
         }
+        if (isOk) {
+            isEngineInstalled.current = true
+        }
         setLinkLocalEngine()
     })
 
@@ -526,12 +529,12 @@ export const StartupPage: React.FC = () => {
                     setKeepalive(false)
                     return
                 case "reclaimDatabaseSpace_start":
-                    // TODO 连接窗口的回收按钮暂时屏蔽
                     setRestartLoading(true)
                     cancelCountdownLinkRef.current = false
                     breakHandleRef.current = false
-                    outputToWelcomeConsole("手动触发回收数据库空间")
-                    debugToPrintLog(`------ 手动触发回收数据库空间 ------`)
+                    reclaimDbSpacePath.current = []
+                    outputToWelcomeConsole("手动触发回收所有数据库空间")
+                    debugToPrintLog(`------ 手动触发回收所有数据库空间 ------`)
                     onDisconnect()
                     safeSetYakitStatus("reclaimDatabaseSpace_start")
                     killCurrentProcess(() => {
@@ -645,16 +648,7 @@ export const StartupPage: React.FC = () => {
 
     // 数据库修复
     const [dbPath, setDbPath] = useState<string[]>([])
-    const latestFixDBCallIdRef = useRef(0)
     const handleFixupDatabase = useMemoizedFn(async () => {
-        const callId = ++latestFixDBCallIdRef.current
-        // 中断连接 后续不执行
-        if (breakHandleRef.current) {
-            debugToPrintLog(`------ 开始修复数据库 被阻止 ------`)
-            setCheckLog([])
-            return
-        }
-
         setCheckLog(["开始修复数据库中..."])
         try {
             const res = await grpcFixupDatabase({softwareVersion: FetchSoftwareVersion()})
@@ -677,24 +671,21 @@ export const StartupPage: React.FC = () => {
                     safeSetYakitStatus("fix_database_error")
             }
         } catch (error) {
-            // 旧调用直接跳过
-            if (callId !== latestFixDBCallIdRef.current) return
             // 如果意外情况则按照修复失败处理
-            if (!breakHandleRef.current) {
-                outputToWelcomeConsole(`修复数据库出现意外情况：${error}`)
-                setCheckLog(["修复数据库出现意外情况，可查看日志详细信息..."])
-                safeSetYakitStatus("fix_database_error")
-            } else {
-                setCheckLog(["已主动断开, 请点击手动连接引擎"])
-                safeSetYakitStatus("break")
-            }
+            outputToWelcomeConsole(`修复数据库出现意外情况：${error}`)
+            setCheckLog(["修复数据库出现意外情况，可查看日志详细信息..."])
+            safeSetYakitStatus("fix_database_error")
         }
     })
 
     // 回收数据库空间
     const reclaimDbSpacePath = useRef<string[]>([])
     const handleReclaimDatabaseSpace = useMemoizedFn(async () => {
-        setCheckLog(["回收数据库空间中，请勿关闭软件...", "退出或关闭可能会造成数据库损坏"])
+        const allDb = reclaimDbSpacePath.current.length === 0
+        setCheckLog([
+            `回收${allDb ? "所有" : ""}数据库空间中，请勿关闭软件${allDb ? "，预计耗时较长" : ""}`,
+            "退出或关闭可能会造成数据库损坏"
+        ])
         try {
             const res = await grpcReclaimDatabaseSpace({dbPath: reclaimDbSpacePath.current})
             setRestartLoading(false)
