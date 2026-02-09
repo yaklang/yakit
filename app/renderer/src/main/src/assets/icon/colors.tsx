@@ -2139,3 +2139,139 @@ const ColorsAI = () => {
 export const ColorsAIIcon = (props: Partial<IconProps>) => {
     return <Icon component={ColorsAI} {...props} />
 }
+
+const ColorsSourceCode = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <mask id={id} style={{maskType: "alpha"}} maskUnits='userSpaceOnUse' x='0' y='0' width='16' height='16'>
+                <rect width='16' height='16' fill='#D9D9D9' />
+            </mask>
+            <g mask={`url(#${id})`}>
+                <path
+                    d='M2 4.66699C2 3.56242 2.89543 2.66699 4 2.66699H8V13.3337H4C2.89543 13.3337 2 12.4382 2 11.3337V4.66699Z'
+                    stroke='var(--Colors-Use-Main-Primary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M7.33398 5.33301H5.33398'
+                    stroke='var(--Colors-Use-Main-Primary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M7.33398 8H4.66732'
+                    stroke='var(--Colors-Use-Main-Primary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M7.33398 10.667H4.66732'
+                    stroke='var(--Colors-Use-Main-Primary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M8.16699 13.834H8C7.72407 13.834 7.50035 13.6098 7.5 13.334V2.66699C7.5 2.39085 7.72386 2.16699 8 2.16699H8.16699V13.834ZM12 2.16699C13.3807 2.16699 14.5 3.28628 14.5 4.66699V11.334C14.4996 12.7144 13.3805 13.834 12 13.834H9.16699V12.834H12C12.8282 12.834 13.4996 12.1621 13.5 11.334V4.66699C13.5 3.83857 12.8284 3.16699 12 3.16699H9.16699V2.16699H12Z'
+                    fill='var(--Colors-Use-Main-Border)'
+                />
+                <path
+                    d='M12 5.33301H10'
+                    stroke='var(--Colors-Use-Main-Border)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M10.666 8H9.99935'
+                    stroke='var(--Colors-Use-Main-Border)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M11.334 10.667H10.0007'
+                    stroke='var(--Colors-Use-Main-Border)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path d='M8 1.33301V14.6663' stroke='var(--Colors-Use-Main-Primary)' strokeLinecap='round' />
+            </g>
+        </svg>
+    )
+}
+/**
+ * @description Outlin
+ */
+export const ColorsSourceCodeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsSourceCode} {...props} />
+}
+
+const ColorsPreViewMD = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <mask id={id} style={{maskType: "alpha"}} maskUnits='userSpaceOnUse' x='0' y='0' width='16' height='16'>
+                <rect width='16' height='16' fill='#D9D9D9' />
+            </mask>
+            <g mask={`url(#${id})`}>
+                <path
+                    d='M2 4.66699C2 3.56242 2.89543 2.66699 4 2.66699H8V13.3337H4C2.89543 13.3337 2 12.4382 2 11.3337V4.66699Z'
+                    stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M7.33398 5.33301H5.33398'
+                    stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M7.33398 8H4.66732'
+                    stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M7.33398 10.667H4.66732'
+                    stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M8.16699 13.834H8C7.72407 13.834 7.50035 13.6098 7.5 13.334V2.66699C7.5 2.39085 7.72386 2.16699 8 2.16699H8.16699V13.834ZM12 2.16699C13.3807 2.16699 14.5 3.28628 14.5 4.66699V11.334C14.4996 12.7144 13.3805 13.834 12 13.834H9.16699V12.834H12C12.8282 12.834 13.4996 12.1621 13.5 11.334V4.66699C13.5 3.83857 12.8284 3.16699 12 3.16699H9.16699V2.16699H12Z'
+                    fill='var(--Colors-Use-Neutral-Disable)'
+                />
+                <path
+                    d='M12 5.33301H10'
+                    stroke='var(--Colors-Use-Neutral-Disable)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M10.666 8H9.99935'
+                    stroke='var(--Colors-Use-Neutral-Disable)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M11.334 10.667H10.0007'
+                    stroke='var(--Colors-Use-Neutral-Disable)'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+                <path
+                    d='M8 1.33301V14.6663'
+                    stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+                    strokeLinecap='round'
+                />
+            </g>
+        </svg>
+    )
+}
+/**
+ * @description Outlin
+ */
+export const ColorsPreViewMDIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsPreViewMD} {...props} />
+}

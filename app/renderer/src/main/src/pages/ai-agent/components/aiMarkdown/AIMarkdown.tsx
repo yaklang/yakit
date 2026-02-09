@@ -3,13 +3,15 @@ import {AIMarkdownProps} from "./type"
 import React, {ReactNode, useState} from "react"
 import {ReportItem} from "@/pages/assetViewer/reportRenders/schema"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {SafeMarkdown, StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 import classNames from "classnames"
 import styles from "./AIMarkdown.module.scss"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
+import {OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon} from "@/assets/icon/outline"
 import ModalInfo from "../ModelInfo"
+import {ColorsPreViewMDIcon, ColorsSourceCodeIcon} from "@/assets/icon/colors"
+import ChatCard from "../ChatCard"
+import {Tooltip} from "antd"
+import {StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
     {
         label: "预览",
@@ -21,7 +23,7 @@ const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
     }
 ]
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-    const {content, nodeLabel, className, modalInfo,referenceNode} = props
+    const {content, nodeLabel, className, modalInfo, referenceNode} = props
     const [type, setType] = useState<"preview" | "code">("preview")
     const [expand, setExpand] = useState<boolean>(true)
     const item: ReportItem = useCreation(() => {
@@ -46,25 +48,29 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
         return content
     })
     return (
-        <div className={classNames(styles["ai-milkdown-wrapper"], className)}>
-            <div className={styles["milkdown-header"]}>
-                <div className={styles["header-name"]}>{nodeLabel}</div>
+        <ChatCard
+            titleText={nodeLabel}
+            titleExtra={<ModalInfo {...modalInfo} />}
+            titleMore={
                 <div className={styles["header-extra"]}>
-                    <YakitRadioButtons
-                        buttonStyle='solid'
-                        value={type}
-                        options={aiMilkdownOptions}
-                        onChange={(e) => {
-                            setType(e.target.value)
-                        }}
-                    />
-                    <YakitButton
-                        type='text'
-                        onClick={() => setExpand((v) => !v)}
-                        icon={expand ? <OutlineChevrondoubleupIcon /> : <OutlineChevrondoubledownIcon />}
-                    />
+                    <Tooltip title={type === "code" ? "切换预览模式" : "切换源码模式"}>
+                        <YakitButton
+                            type='text'
+                            icon={type === "code" ? <ColorsSourceCodeIcon /> : <ColorsPreViewMDIcon />}
+                            onClick={() => setType(type === "code" ? "preview" : "code")}
+                        />
+                    </Tooltip>
+                    <Tooltip title={expand ? "收起" : "展开"}>
+                        <YakitButton
+                            type='text2'
+                            onClick={() => setExpand((v) => !v)}
+                            icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+                        />
+                    </Tooltip>
                 </div>
-            </div>
+            }
+            className={classNames(styles["ai-milkdown-wrapper"], className)}
+        >
             <div
                 className={classNames({
                     [styles["ai-milkdown-mini"]]: !expand
@@ -73,7 +79,6 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
                 {renderContent()}
             </div>
             {referenceNode}
-            <ModalInfo {...modalInfo} />
-        </div>
+        </ChatCard>
     )
 })
