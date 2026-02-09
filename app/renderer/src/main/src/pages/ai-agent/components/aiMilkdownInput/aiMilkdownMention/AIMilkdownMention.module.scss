@@ -22,8 +22,8 @@
     visibility: hidden;
 }
 .mention-custom {
-    // height: 18px;
-    padding: 2px 4px;
+    height: 18px;
+    padding: 2px 6px;
 
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     text-align: center;
@@ -31,17 +31,20 @@
     font-weight: 400;
     line-height: 16px;
     letter-spacing: 0.5px;
-    border-radius: 2px;
-    background: var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
     width: max-content;
     cursor: pointer;
     user-select: none;
     display: inline-flex;
     align-items: center;
-    margin: 0 4px;
+    margin-right: 4px;
     overflow: hidden;
     max-width: 150px;
     gap: 4px;
+
+    border-radius: 9999px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+
     &:hover {
         color: var(--Colors-Use-Main-Hover);
         svg {
@@ -54,7 +57,7 @@
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
-
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
         svg {
             width: 12px;
             height: 12px;
