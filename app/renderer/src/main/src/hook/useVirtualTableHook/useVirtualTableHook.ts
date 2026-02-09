@@ -13,7 +13,6 @@ import {serverPushStatus} from "@/utils/duplex/duplex"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {yakitNotify} from "@/utils/notification"
 import {genDefaultPagination} from "@/pages/invoker/schema"
-import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
@@ -102,6 +101,8 @@ export default function useVirtualTableHook<
     const loopPausedRef = useRef<boolean>(false)
     // 表格是否可见
     const [inViewport] = useInViewport(tableBoxRef)
+    // 是否允许更改endLoop
+    const isAllowSetEndLoopRef = useRef<boolean>(false)
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
@@ -116,11 +117,10 @@ export default function useVirtualTableHook<
         // 倒序时需要额外处理传给后端顺序
         const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
         finalParams.Pagination = verifyResult.pagination
-        // console.log("finalParams---", finalParams)
-
+        console.log("finalParams---", finalParams, type)
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT, DataKey>) => {
-                // console.log("rsp---", rsp)
+                console.log("rsp---", rsp)
                 let newData: DataT[] = verifyResult.isReverse ? rsp[responseKey.data].reverse() : rsp[responseKey.data]
                 if (initResDataFun) {
                     newData = initResDataFun(newData)
@@ -172,6 +172,10 @@ export default function useVirtualTableHook<
                         // 没有数据
                         serverPushStatus && setIsLoop(false)
                     }
+                    if (typeof finalParams.endLoop === "boolean" && isAllowSetEndLoopRef.current) {
+                        finalParams.endLoop ? startT() : stopT()
+                        isAllowSetEndLoopRef.current = false
+                    }
                     setIsRefresh(!isRefresh)
                     setPagination(rsp.Pagination)
                     setData([...newData])
@@ -209,6 +213,8 @@ export default function useVirtualTableHook<
         }
         // 如无偏移 则直接请求数据
         if (maxIdRef.current === 0) {
+            console.log("111")
+
             updateData()
             return
         }
@@ -231,6 +237,7 @@ export default function useVirtualTableHook<
     const updateBottomData = useMemoizedFn(() => {
         // 如无偏移 则直接请求数据
         if (minIdRef.current === 0) {
+            console.log("222")
             updateData()
             return
         }
@@ -255,11 +262,6 @@ export default function useVirtualTableHook<
         getDataByGrpc(query, "bottom")
     })
 
-    const onReset = useMemoizedFn(() => {
-        setOffsetData([])
-        maxIdRef.current = 0
-        minIdRef.current = 0
-    })
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
@@ -268,7 +270,7 @@ export default function useVirtualTableHook<
             setLoading(true)
             maxIdRef.current = 0
             minIdRef.current = 0
-            const limitCount: number = Math.ceil(boxHeightRef.current / 28)
+            const limitCount: number = params.Pagination?.FixedLimit || Math.ceil(boxHeightRef.current / 28)
             const paginationProps = {
                 Page: 1,
                 Limit: limitCount,
@@ -327,6 +329,7 @@ export default function useVirtualTableHook<
         // 滚动条在中间 增量
         else {
             if (data.length === 0) {
+                console.log("333")
                 updateData()
             } else {
                 // 倒序的时候才需要掉接口拿偏移数据
@@ -356,7 +359,7 @@ export default function useVirtualTableHook<
 
     useEffect(() => {
         if (inViewport) {
-            scrollUpdate()
+            // scrollUpdate()
             if (isLoop) {
                 if (idRef.current) {
                     clearInterval(idRef.current)
@@ -370,6 +373,7 @@ export default function useVirtualTableHook<
     useDebounceEffect(
         () => {
             isGrpcRef.current = false
+            console.log("444")
             updateData()
         },
         [params],
@@ -394,6 +398,7 @@ export default function useVirtualTableHook<
         })
         setTimeout(() => {
             isGrpcRef.current = false
+            console.log("555")
             updateData()
         }, 100)
     })
@@ -401,6 +406,7 @@ export default function useVirtualTableHook<
     /** @name 仅刷新新表格 */
     const noResetRefreshT = useMemoizedFn(() => {
         isGrpcRef.current = false
+        console.log("666")
         updateData()
     })
 
@@ -430,6 +436,7 @@ export default function useVirtualTableHook<
     /** @name 设置params */
     const setP = useMemoizedFn((newParams: ParamsTProps) => {
         const data: ParamsTProps = {
+            ...newParams,
             Pagination: {
                 ...params.Pagination,
                 ...newParams.Pagination
@@ -442,6 +449,12 @@ export default function useVirtualTableHook<
         if (data.Pagination.Order) {
             sortRef.current.order = data.Pagination.Order as "none" | "asc" | "desc"
         }
+        if (typeof newParams.startLoop === "boolean") {
+            newParams.startLoop ? startT() : stopT()
+        }
+        if (typeof newParams.endLoop === "boolean") {
+            isAllowSetEndLoopRef.current = true
+        }
         setParams(data)
     })
 
@@ -452,6 +465,6 @@ export default function useVirtualTableHook<
         pagination,
         loading,
         offsetData,
-        {startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, setP,onReset}
+        {startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, setP}
     ] as const
 }

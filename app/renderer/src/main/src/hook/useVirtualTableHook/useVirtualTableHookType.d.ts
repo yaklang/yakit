@@ -31,6 +31,8 @@ export type VirtualPaging = {
     OrderBy: "created_at" | "updated_at" | string
     AfterId?: number
     BeforeId?: number
+    // 特定需求场景下 加载时Limit固定，不需要根据页面计算
+    FixedLimit?: number
 }
 
 export interface FilterProps {
@@ -42,6 +44,10 @@ export interface ParamsTProps {
     // 确保 ParamsType 包含 Pagination
     Pagination: VirtualPaging
     Filter: FilterProps
+    // 是否在接口请求前控制轮询
+    startLoop?: boolean
+    // 是否在接口请求结束后控制轮询
+    endLoop?: boolean
 }
 
 export type DataResponseProps<T, K extends string = "Data"> = {
