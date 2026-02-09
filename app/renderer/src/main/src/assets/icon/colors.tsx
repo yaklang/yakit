@@ -1879,34 +1879,55 @@ const ColorsChat = () => {
     return (
         <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
             <path
-                d='M6.66667 10.0002H6.675M10 10.0002H10.0083M13.3333 10.0002H13.3417M17.5 10.0002C17.5 13.6821 14.1421 16.6668 10 16.6668C8.71728 16.6668 7.50976 16.3806 6.45389 15.8761L2.5 16.6668L3.66249 13.5669C2.9263 12.5355 2.5 11.3121 2.5 10.0002C2.5 6.31826 5.85786 3.3335 10 3.3335C14.1421 3.3335 17.5 6.31826 17.5 10.0002Z'
+                d='M6.66667 9.99967H6.675M10 9.99967H10.0083M13.3333 9.99967H13.3417M17.5 9.99967C17.5 13.6816 14.1421 16.6663 10 16.6663C8.71728 16.6663 7.50976 16.3801 6.45389 15.8756L2.5 16.6663L3.66249 13.5664C2.9263 12.535 2.5 11.3116 2.5 9.99967C2.5 6.31778 5.85786 3.33301 10 3.33301C14.1421 3.33301 17.5 6.31778 17.5 9.99967Z'
                 stroke={`url(#${id})`}
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <ellipse cx='6.66683' cy='9.99984' rx='0.833333' ry='0.833333' fill={`url(#${id1})`} />
-            <circle cx='9.99984' cy='9.99984' r='0.833333' fill={`url(#${id2})`} />
-            <ellipse cx='13.3333' cy='9.99984' rx='0.833333' ry='0.833333' fill={`url(#${id3})`} />
+            <circle cx='6.66732' cy='10.0003' r='0.833333' fill={`url(#${id1})`} />
+            <circle cx='9.99935' cy='10.0003' r='0.833333' fill={`url(#${id2})`} />
+            <circle cx='13.3333' cy='10.0003' r='0.833333' fill={`url(#${id3})`} />
             <defs>
-                <linearGradient id={id} x1='2.5' y1='3.3335' x2='20.0335' y2='9.85069' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                <linearGradient id={id} x1='2.5' y1='3.33301' x2='20.0335' y2='9.8502' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#F28C45' />
+                    <stop offset='0.639423' stopColor='#11A976' />
+                    <stop offset='1' stopColor='#129166' />
                 </linearGradient>
-                <linearGradient id={id1} x1='5.8335' y1='9.1665' x2='7.8326' y2='9.827' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                <linearGradient
+                    id={id1}
+                    x1='5.83398'
+                    y1='9.16699'
+                    x2='7.83309'
+                    y2='9.82749'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#F28C45' />
+                    <stop offset='0.639423' stopColor='#11A976' />
+                    <stop offset='1' stopColor='#129166' />
                 </linearGradient>
-                <linearGradient id={id2} x1='9.1665' y1='9.1665' x2='11.1656' y2='9.827' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                <linearGradient
+                    id={id2}
+                    x1='9.16602'
+                    y1='9.16699'
+                    x2='11.1651'
+                    y2='9.82749'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#F28C45' />
+                    <stop offset='0.639423' stopColor='#11A976' />
+                    <stop offset='1' stopColor='#129166' />
                 </linearGradient>
-                <linearGradient id={id3} x1='12.5' y1='9.1665' x2='14.4991' y2='9.82701' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                <linearGradient
+                    id={id3}
+                    x1='12.5'
+                    y1='9.16699'
+                    x2='14.4991'
+                    y2='9.82749'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#F28C45' />
+                    <stop offset='0.639423' stopColor='#11A976' />
+                    <stop offset='1' stopColor='#129166' />
                 </linearGradient>
             </defs>
         </svg>
