@@ -197,7 +197,8 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     }, [])
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn(() => {
-        if (search.type === "ai") return
+        const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({query: queryParams, search})
+        if (!!filter.SemanticQuery)return
         debugVirtualTableEvent.startT()
     })
     const onFirst = useMemoizedFn(() => {
