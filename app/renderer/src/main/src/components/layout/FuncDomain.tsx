@@ -2627,6 +2627,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 onOk={debugTaskEvent.sureT}
                 cancelButtonProps={taskModalInfo.cancelButtonProps}
                 okButtonProps={{loading: taskModalInfo.loading}}
+                wrapClassName={styles["task-notification-wrap"]}
                 width={600}
             />
             {/* 创建任务重名 */}
@@ -2638,6 +2639,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 cancelButtonText={taskErrModalInfo.cancelButtonText}
                 onOk={debugTaskEvent.coverP}
                 onCancel={debugTaskEvent.waitP}
+                wrapClassName={styles["task-notification-wrap"]}
                 width={600}
             />
         </YakitPopover>

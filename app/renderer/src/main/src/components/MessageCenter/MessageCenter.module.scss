@@ -210,6 +210,8 @@
 }
 
 .task-notification {
+    max-height: 400px;
+    overflow: auto;
     .new-task,
     .end-task {
         .title {
@@ -230,6 +232,8 @@
 }
 
 .task-err-notification {
+    max-height: 400px;
+    overflow: auto;
     .title {
         padding-left: 2px;
         height: 24px;
@@ -247,4 +251,8 @@
     .hint{
         margin-top: 8px;
     }
+}
+
+.task-notification-wrap{
+    top: 15vh;
 }

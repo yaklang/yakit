@@ -496,6 +496,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                 onOk={debugTaskEvent.sureT}
                 cancelButtonProps={taskModalInfo.cancelButtonProps}
                 okButtonProps={{loading: taskModalInfo.loading}}
+                wrapClassName={styles["task-notification-wrap"]}
                 width={600}
             />
             {/* 创建任务重名 */}
@@ -507,6 +508,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                 cancelButtonText={taskErrModalInfo.cancelButtonText}
                 onOk={debugTaskEvent.coverP}
                 onCancel={debugTaskEvent.waitP}
+                wrapClassName={styles["task-notification-wrap"]}
                 width={600}
             />
         </>
@@ -525,6 +527,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     const [activeKey, setActiveKey] = useState<"unread" | "all">("unread")
     const [dataSorce, setDataSorce] = useState<API.MessageLogDetail[]>([])
     const [noRedDataTotal, setNoRedDataTotal] = useState<number>()
+    const [isRef, setIsRef] = useState<boolean>(false)
 
     const refresh = useMemoizedFn(() => {
         update()
@@ -615,6 +618,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     return [obj, ...prev]
                 })
             }
+            setIsRef((is) => !is)
         } catch (error) {}
     })
 
@@ -642,6 +646,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         return (
             <div className={styles["tab-item-box"]}>
                 <RollingLoadList<API.MessageLogDetail>
+                    isRef={isRef}
                     data={dataSorce}
                     loadMoreData={loadMore}
                     renderRow={(rowData: API.MessageLogDetail, index: number) => {
@@ -671,6 +676,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     onOk={debugTaskEvent.sureT}
                     cancelButtonProps={taskModalInfo.cancelButtonProps}
                     okButtonProps={{loading: taskModalInfo.loading}}
+                    wrapClassName={styles["task-notification-wrap"]}
                     width={600}
                 />
                 {/* 创建任务重名 */}
@@ -682,6 +688,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     cancelButtonText={taskErrModalInfo.cancelButtonText}
                     onOk={debugTaskEvent.coverP}
                     onCancel={debugTaskEvent.waitP}
+                    wrapClassName={styles["task-notification-wrap"]}
                     width={600}
                 />
             </div>
@@ -854,7 +861,7 @@ export const TaskNotification: React.FC<TaskNotificationProps> = (props) => {
                 </div>
             )}
             {endTaskList.length > 0 && (
-                <div className={styles["end-task"]}>
+                <div className={styles["end-task"]} style={{marginTop: newTaskList.length > 0 ? 8 : 0}}>
                     <div className={styles["title"]}>结束任务：</div>
                     <div className={styles["content"]}>
                         {endTaskList.map((item) => (
@@ -980,17 +987,25 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
             }
             // 全部已读其余消息
             if (isReadAllOther) {
+                // 已取消的任务直接进行已读操作
+                const excludeHash = data
+                    .filter((task) => task.status !== 3)
+                    .map((i) => i.hash)
+                    .join(",")
                 await apiFetchMessageRead({
                     isAll: true,
                     hash: "",
-                    excludeHash: data.map((i) => i.hash).join(",")
+                    excludeHash
                 })
                 setLoading(false)
             }
             const newTaskList = data.filter((task) => task.status === 1)
             const endTaskList = data.filter((task) => task.status === 2)
             // 如若没有数据则无需进行任务通知
-            if (newTaskList.length === 0 && endTaskList.length === 0) return
+            if (newTaskList.length === 0 && endTaskList.length === 0) {
+                refresh?.()
+                return
+            }
 
             setTaskList(data)
             // 此处还需校验新任务是否在项目管理中已存在，如若存在后续还将提示用户存在重名项目
