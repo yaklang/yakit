@@ -250,6 +250,8 @@
             "copyToClipboard": "复制到剪贴板",
             "copyUrl": "复制 URL",
             "copyAsCsrfPoc": "复制为 CSRF PoC",
+            "copyAsCsrfPocBasic": "复制基础 POC",
+            "copyAsCsrfPocAutoSubmit": "复制自动提交 POC",
             "autoGenerateCsrfFailed": "自动生成 CSRF 失败",
             "copyTo": "复制到",
             "pleaseLogin": "请登录",

@@ -181,7 +181,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "csrfpoc",
-                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc")
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -193,7 +193,29 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         }
                         generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
                             setClipboardText(code)
-                        })
+                        },false)
+                    } catch (e) {
+                        failed(t("YakitEditor.HTTPPacketYakitEditor.autoGenerateCsrfFailed"))
+                    }
+                }
+            },
+            autoSubmitCSRF: {
+                menu: [
+                    {
+                        key: "auto-submit-csrf-poc",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit")
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    try {
+                        const text = editor.getModel()?.getValue() || ""
+                        if (!text) {
+                            info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
+                            return
+                        }
+                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
+                            setClipboardText(code)
+                        },true)
                     } catch (e) {
                         failed(t("YakitEditor.HTTPPacketYakitEditor.autoGenerateCsrfFailed"))
                     }

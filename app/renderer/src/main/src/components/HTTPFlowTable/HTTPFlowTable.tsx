@@ -3167,7 +3167,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             },
             {
                 key: "复制为 CSRF Poc",
-                label: t("HTTPFlowTable.RowContextMenu.copyAsCSRFPoc"),
+                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic"),
                 default: true,
                 webSocket: false,
                 onClickSingle: (v) => {
@@ -3175,7 +3175,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (!flow) return
                     generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
                         setClipboardText(e)
-                    })
+                    },false)
+                }
+            },
+            {
+                key: "auto-submit-csrf-poc",
+                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit"),
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    const flow = v as HTTPFlow
+                    if (!flow) return
+                    generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
+                        setClipboardText(e)
+                    },true)
                 }
             },
             {
