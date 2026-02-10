@@ -2,13 +2,6 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n} from "./grpcApi"
 import {AIChatIPCStartParams} from "./type"
 
-// #region 基础通用数据字段
-interface AIOutputBaseInfo {
-    NodeId: AIOutputEvent["NodeId"]
-    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
-}
-// #endregion
-
 /** AI Token 消耗量(上传/下载) */
 export interface AITokenConsumption {
     [key: string]: AIAgentGrpcApi.Consumption
@@ -22,10 +15,12 @@ export interface ToolStreamSelectors {
 }
 
 /** 流式输出的信息内容 */
-export interface AIStreamOutput extends AIOutputBaseInfo {
+export interface AIStreamOutput {
     TaskIndex?: AIOutputEvent["TaskIndex"]
     CallToolID: AIOutputEvent["CallToolID"]
     EventUUID: AIOutputEvent["EventUUID"]
+    NodeId: AIOutputEvent["NodeId"]
+    NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
     status: "start" | "end"
     content: string
     ContentType: AIOutputEvent["ContentType"]
@@ -34,26 +29,13 @@ export interface AIStreamOutput extends AIOutputBaseInfo {
 
 /** 工具结果的信息内容 */
 export interface AIToolResult {
+    type: "" | "stream" | "result"
     TaskIndex?: AIOutputEvent["TaskIndex"]
     callToolId: string
     /**工具名称 */
     toolName: string
     /** 工具介绍 */
     toolDescription: string
-    /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
-    status: "default" | "success" | "failed" | "user_cancelled"
-    /**执行完后的总结 */
-    summary: string
-    /**tool stdout 内容展示前200个字符 */
-    toolStdoutContent: {
-        content: string
-        /**@deprecated UI展示不显示 */
-        isShowAll: boolean
-    }
-    /** 执行错误相关信息 */
-    execError: string
-    /** 执行涉及的文件目录 */
-    dirPath: string
     /** 间隔时间(ms) */
     durationMS: AIAgentGrpcApi.AIToolCall["duration_ms"]
     /** 间隔时间(s) */
@@ -66,6 +48,33 @@ export interface AIToolResult {
     startTime: AIAgentGrpcApi.AIToolCall["start_time"]
     /** 开始时间戳(ms) */
     startTimeMS: AIAgentGrpcApi.AIToolCall["start_time_ms"]
+    stream: {
+        EventUUID: AIOutputEvent["EventUUID"]
+        NodeId: AIOutputEvent["NodeId"]
+        NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+        status: "start" | "end"
+        content: string
+        ContentType: AIOutputEvent["ContentType"]
+        selectors?: ToolStreamSelectors
+    }
+    tool: {
+        /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
+        status: "default" | "success" | "failed" | "user_cancelled"
+        /**执行完后的总结 */
+        summary: string
+        /**tool stdout 内容展示前200个字符 */
+        // toolStdoutContent: {
+        //     content: string
+        //     /**@deprecated UI展示不显示 */
+        //     isShowAll: boolean
+        // }
+        /** 执行错误相关信息 */
+        execError: string
+        /** 执行涉及的文件目录 */
+        dirPath: string
+        /** 工具执行结果详情数据 */
+        resultDetails: string
+    }
 }
 
 /** 任务开始节点的信息 */
@@ -194,6 +203,7 @@ interface AIChatQSDataBase<T extends string, U> {
     type: T
     data: U
     id: string
+    chatType: ReActChatBaseInfo["chatType"]
     AIService: AIOutputEvent["AIService"]
     AIModelName: AIOutputEvent["AIModelName"]
     Timestamp: AIOutputEvent["Timestamp"]

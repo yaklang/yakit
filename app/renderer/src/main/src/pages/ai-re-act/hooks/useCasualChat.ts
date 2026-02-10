@@ -63,6 +63,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             const isAuto = isAutoExecuteReviewContinue({type: res.Type, getFunc: getRequest})
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "reAct",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
                 data: {
@@ -101,6 +102,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             const isAuto = isAutoExecuteReviewContinue({type: res.Type, getFunc: getRequest})
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "reAct",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
                 data: {
@@ -131,6 +133,7 @@ function useCasualChat(params?: UseCasualChatParams) {
 
             review.current = {
                 ...genBaseAIChatData(res),
+                chatType: "reAct",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
                 data: cloneDeep(data)
@@ -368,6 +371,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 // 用户问题
                 const chatData: AIChatQSData = {
                     id: uuidv4(),
+                    chatType: "reAct",
                     type: AIChatQSDataTypeEnum.QUESTION,
                     Timestamp: Date.now(),
                     data: {qs: FreeInput || "", setting: request},

@@ -5,7 +5,6 @@ import {
     genBaseAIChatData,
     genErrorLogData,
     handleGrpcDataPushLog,
-    isToolExecStream,
     isToolStderrStream,
     isToolStdoutStream
 } from "./utils"
@@ -17,7 +16,7 @@ import {
     DefaultToolResultSummary
 } from "./defaultConstant"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement, ToolStreamSelectors} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement} from "./aiRender"
 import cloneDeep from "lodash/cloneDeep"
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
@@ -79,17 +78,17 @@ function useChatContent(params: UseChatContentParams) {
         }
     )
     /** 删除触发渲染的UI数据项 */
-    const deleteElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
-        // 先判断该项是否存在
-        const target = getElements().findIndex((item) => item.token === token && item.type === type)
-        if (target >= 0) {
-            setElements((old) => {
-                const newArr = [...old]
-                newArr.splice(target, 1)
-                return newArr
-            })
-        }
-    })
+    // const deleteElements = useMemoizedFn((token: string, type: AIChatQSDataTypeEnum) => {
+    //     // 先判断该项是否存在
+    //     const target = getElements().findIndex((item) => item.token === token && item.type === type)
+    //     if (target >= 0) {
+    //         setElements((old) => {
+    //             const newArr = [...old]
+    //             newArr.splice(target, 1)
+    //             return newArr
+    //         })
+    //     }
+    // })
 
     /**
      * - 存放 CallTollId 对应的stream类型集合({eventUUID, nodeID}[])
@@ -97,13 +96,6 @@ function useChatContent(params: UseChatContentParams) {
      * - 一般由stream-start类型进行记录，如果没有则由stream类型进行补充
      */
     const callToolIDToUUIDMap = useRef<Map<string, {eventUUID: string; nodeID: string}[]>>(new Map())
-
-    /**
-     * - 存放 call_tool_id => stream-(tool-xxx-stdout) 类型对应的可操作选项数据
-     * - 当tool_call_watcher触发后，如果对应tool_xxx_stdout的stream数据已存在，则直接设置到对应的数据中
-     * - 如果对应的stream数据不存在，则存放到该集合中，等待stream数据初始化后，再进行设置并销毁该数据
-     */
-    const streamStdOutSelectors = useRef<Map<string, ToolStreamSelectors>>(new Map())
 
     /**
      * - 存放 Type:stream NodeId:tool-xxx-stderr 的UUID对应的CallToolID
@@ -216,6 +208,36 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
+            // tool-xxx-stdout 数据单独初始化逻辑
+            if (isToolStdoutStream(NodeId) && !!CallToolID) {
+                let toolResult = getContentMap(CallToolID)
+                if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+                    pushLog(
+                        genErrorLogData(
+                            res.Timestamp,
+                            `NodeID: ${NodeId} 的stream数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`
+                        )
+                    )
+                    return
+                }
+
+                setContentMap(CallToolID, {
+                    ...toolResult,
+                    data: {
+                        ...toolResult.data,
+                        type: "stream",
+                        stream: {
+                            EventUUID: event_writer_id,
+                            NodeId,
+                            NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(NodeId),
+                            status: "start",
+                            content: "",
+                            ContentType: res.ContentType
+                        }
+                    }
+                })
+                return
+            }
             // tool-xxx-stderr 数据单独初始化逻辑
             if (isToolStderrStream(NodeId) && !!CallToolID) {
                 if (!toolResultErrorUUIDToCallToolID.current.has(event_writer_id)) {
@@ -259,6 +281,7 @@ function useChatContent(params: UseChatContentParams) {
             setContentMap(event_writer_id, {
                 ...genBaseAIChatData(res),
                 id: event_writer_id,
+                chatType,
                 type: AIChatQSDataTypeEnum.STREAM,
                 data: {
                     NodeId,
@@ -302,6 +325,26 @@ function useChatContent(params: UseChatContentParams) {
                 }
                 return
             }
+            // tool-xxx-stdout 数据单独处理逻辑
+            if (!!CallToolID && isToolStdoutStream(NodeId)) {
+                const tool_result = getContentMap(CallToolID)
+                if (!tool_result || tool_result.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+                    pushLog(
+                        genErrorLogData(
+                            res.Timestamp,
+                            `NodeID: ${NodeId} 的stream数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`
+                        )
+                    )
+                    return
+                }
+                const isRender = !tool_result.data.stream.content
+                // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+                tool_result.data.stream.content += content
+                if (isRender) {
+                    updateElements({mapKey: tool_result.id, type: tool_result.type})
+                }
+                return
+            }
 
             // 数据集合中对应的数据
             const streamData = getContentMap(EventUUID)
@@ -333,26 +376,9 @@ function useChatContent(params: UseChatContentParams) {
                 }
             }
 
-            // tool-xxx-stdout类型数据，判断可操作选项是否已经输出
-            if (isToolStdoutStream(NodeId) && !!CallToolID && streamStdOutSelectors.current.has(CallToolID)) {
-                const selectors = streamStdOutSelectors.current.get(CallToolID)
-                newStream.data.selectors = selectors
-                streamStdOutSelectors.current.delete(CallToolID)
-            }
-            // tool-xxx-stdout类型出现时，需要将前面的call-tools类型数据删除
-            if (isRender && isToolStdoutStream(NodeId) && !!CallToolID) {
-                const ids = callToolIDToUUIDMap.current.get(CallToolID) || []
-                const idFind = ids.find((item) => item.nodeID === "call-tools")
-                const filterIds = ids.filter((item) => item.nodeID !== "call-tools")
-                callToolIDToUUIDMap.current.set(CallToolID, filterIds)
-                !!idFind && deleteContentMap(idFind.eventUUID)
-                !!idFind && deleteElements(idFind.eventUUID, AIChatQSDataTypeEnum.STREAM)
-            }
-
             setContentMap(EventUUID, newStream)
             if (isRender) {
                 // 如果折叠写不完，则打开注释，然后将注释的下一个方法调用注释
-                // updateElements({mapKey: EventUUID, type: newStream.type})
                 handleIsGroupDisplay({
                     mapKey: EventUUID,
                     type: newStream.type,
@@ -372,15 +398,26 @@ function useChatContent(params: UseChatContentParams) {
     const handleEndStream = useMemoizedFn((res: AIOutputEvent) => {
         try {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
-            const {event_writer_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
+            const {event_writer_id, node_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
             if (!event_writer_id) {
                 pushLog(genErrorLogData(res.Timestamp, `stream-finished数据, event_writer_id 为空`))
                 return
             }
 
             // tool-xxx-stderr 数据单独结束逻辑
-            if (toolResultErrorUUIDToCallToolID.current.has(event_writer_id)) {
+            if (isToolStderrStream(node_id)) {
                 handleToolResultErrorEnd(event_writer_id)
+                return
+            }
+            // tool-xxx-stdout 数据单独结束逻辑
+            if (isToolStdoutStream(node_id)) {
+                const tool_result = getContentMap(res.CallToolID)
+                if (!tool_result || tool_result.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !tool_result.data.stream) {
+                    return
+                }
+                // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+                tool_result.data.stream.status = "end"
+                updateElements({mapKey: tool_result.id, type: tool_result.type})
                 return
             }
 
@@ -389,13 +426,15 @@ function useChatContent(params: UseChatContentParams) {
             // 数据不存在 不输出到日志，因为日志的流数据也有该类型数据
             if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) return
 
-            setContentMap(event_writer_id, {
-                ...streamData,
-                data: {
-                    ...streamData.data,
-                    status: "end"
-                }
-            })
+            // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+            streamData.data.status = "end"
+            // setContentMap(event_writer_id, {
+            //     ...streamData,
+            //     data: {
+            //         ...streamData.data,
+            //         status: "end"
+            //     }
+            // })
             if (streamData.parentGroupKey) {
                 updateElements(
                     {mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP},
@@ -429,11 +468,8 @@ function useChatContent(params: UseChatContentParams) {
                 getElements().findIndex(
                     (item) => item.token === call_tool_id && item.type === AIChatQSDataTypeEnum.TOOL_RESULT
                 ) >= 0
-            toolResult.data.execError = errorResult.content
-            setContentMap(call_tool_id, {
-                ...toolResult,
-                data: {...toolResult.data}
-            })
+            // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+            toolResult.data.tool.execError = errorResult.content
             if (showUI) updateElements({mapKey: toolResult.id, type: toolResult.type})
             streamToToolResultError.current.delete(call_tool_id)
             toolResultErrorUUIDToCallToolID.current.delete(uuid)
@@ -453,7 +489,8 @@ function useChatContent(params: UseChatContentParams) {
             }
 
             const toolResult: AIToolResult = {
-                ...DefaultAIToolResult,
+                ...cloneDeep(DefaultAIToolResult),
+                TaskIndex: res.TaskIndex || undefined,
                 callToolId: call_tool_id,
                 toolName: tool?.name || "-",
                 toolDescription: tool?.description || "",
@@ -464,6 +501,7 @@ function useChatContent(params: UseChatContentParams) {
             setContentMap(call_tool_id, {
                 ...genBaseAIChatData(res),
                 id: call_tool_id,
+                chatType,
                 type: AIChatQSDataTypeEnum.TOOL_RESULT,
                 data: toolResult
             })
@@ -491,41 +529,23 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
-            const ids = callToolIDToUUIDMap.current.get(call_tool_id) || []
-            const idFind = ids.find((item) => isToolStdoutStream(item.nodeID))
-
-            const list: ToolStreamSelectors = {
+            const tool_result = getContentMap(call_tool_id)
+            if (!tool_result || tool_result.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+                pushLog(
+                    genErrorLogData(
+                        res.Timestamp,
+                        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应输出的tool_call_start类型初始化`
+                    )
+                )
+                return
+            }
+            // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+            tool_result.data.stream.selectors = {
                 callToolId: call_tool_id,
                 InteractiveId: id,
                 selectors: selectors
             }
-
-            if (idFind) {
-                const streamData = getContentMap(idFind.eventUUID)
-
-                if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
-                    pushLog(
-                        genErrorLogData(
-                            res.Timestamp,
-                            `${res.Type}数据中, 对应的stream数据不存在(call_tool_id:${call_tool_id})`
-                        )
-                    )
-                    return
-                }
-
-                setContentMap(idFind.eventUUID, {
-                    ...streamData,
-                    data: {...streamData.data, selectors: list}
-                })
-                const showUI =
-                    getElements().findIndex(
-                        (item) => item.token === idFind.eventUUID && item.type === streamData.type
-                    ) >= 0
-                showUI && updateElements({mapKey: idFind.eventUUID, type: streamData.type})
-            } else {
-                // 对应的stream类型数据还未输出
-                streamStdOutSelectors.current.set(call_tool_id, list)
-            }
+            updateElements({mapKey: tool_result.id, type: tool_result.type})
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -555,7 +575,7 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
-            if (toolResult.data.dirPath) {
+            if (toolResult.data.tool.dirPath) {
                 pushLog(
                     genErrorLogData(
                         res.Timestamp,
@@ -565,11 +585,11 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
-            setContentMap(call_tool_id, {
-                ...toolResult,
-                data: {...toolResult.data, dirPath: dir_path || ""}
-            })
-            if (toolResult.data.status !== "default") updateElements({mapKey: toolResult.id, type: toolResult.type})
+            // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+            toolResult.data.tool.dirPath = dir_path || ""
+            if (toolResult.data.tool.status !== "default") {
+                updateElements({mapKey: toolResult.id, type: toolResult.type})
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -579,7 +599,7 @@ function useChatContent(params: UseChatContentParams) {
     })
 
     /** 工具执行的结果 */
-    const handleToolResult = useMemoizedFn((res: AIOutputEvent, status: "success" | "failed" | "user_cancelled") => {
+    const handleToolResult = useMemoizedFn((res: AIOutputEvent, status:AIToolResult["tool"]["status"]) => {
         try {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const {call_tool_id, ...rest} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
@@ -600,52 +620,28 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
+            // 下面的设置: 是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+
             // 设置工具执行的开始时间、结束时间和持续时间等数据
-            toolResult.data.status = status
+            toolResult.data.type = "result"
             toolResult.data.startTime = rest.start_time || 0
             toolResult.data.startTimeMS = rest.start_time_ms || 0
             toolResult.data.endTime = rest.end_time || 0
             toolResult.data.endTimeMS = rest.end_time_ms || 0
             toolResult.data.durationMS = rest.duration_ms || 0
             toolResult.data.durationSeconds = rest.duration_seconds || 0
+            toolResult.data.tool.status = status
 
             // 设置总结内容，没有就设置成获取中，有就使用获取到的内容
-            toolResult.data.summary = toolResult.data.summary || DefaultToolResultSummary[status]?.wait || ""
+            toolResult.data.tool.summary = toolResult.data.tool.summary || DefaultToolResultSummary[status]?.wait || ""
             // 设置执行结果错误数据内容(std_xxx_stderr)
             const errorResult = streamToToolResultError.current.get(call_tool_id)
             if (errorResult && errorResult.status === "end") {
-                toolResult.data.execError = errorResult.content
+                toolResult.data.tool.execError = errorResult.content
                 // error数据先出但未存在对应的工具执行结果，工具结果出现后直接使用并删除map中的缓存数据
                 streamToToolResultError.current.delete(call_tool_id)
                 toolResultErrorUUIDToCallToolID.current.delete(errorResult.uuid)
             }
-            // 获取call_tool_id对应的stream=>tool-xxx-stdout数据内容, 并设置到工具结果-toolStdoutContent字段
-            const ids = callToolIDToUUIDMap.current.get(call_tool_id) || []
-            const idFind = ids.find((item) => isToolStdoutStream(item.nodeID))
-            if (idFind) {
-                const streamStdOut = getContentMap(idFind.eventUUID)
-                if (streamStdOut && streamStdOut.type === AIChatQSDataTypeEnum.STREAM) {
-                    const stdoutContent = streamStdOut.data.content || ""
-                    const isShowAll = stdoutContent.length > 200
-                    const displayContent = isShowAll ? stdoutContent.substring(0, 200) + "..." : stdoutContent
-                    toolResult.data.toolStdoutContent = {content: displayContent, isShowAll}
-                }
-            }
-            // 删除call_tool_id对应的stream类型集合(符合isToolExecStream方法)
-            const idDelete = ids.filter((item) => isToolExecStream(item.nodeID))
-            if (idDelete.length > 0) {
-                const idFileter = ids.filter((item) => !isToolExecStream(item.nodeID))
-                callToolIDToUUIDMap.current.set(call_tool_id, idFileter)
-                idDelete.forEach(({eventUUID}) => {
-                    deleteContentMap(eventUUID)
-                    deleteElements(eventUUID, AIChatQSDataTypeEnum.STREAM)
-                })
-            }
-
-            setContentMap(call_tool_id, {
-                ...toolResult,
-                data: toolResult.data
-            })
             updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
@@ -677,25 +673,22 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
-            const statusInfo = toolResult.data.status
+            const statusInfo = toolResult.data.tool.status
             const summaryContent = !summary || summary === "null" ? "" : summary
+            // 下面的设置: 是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
             // 设置总结内容，没有就设置成默认的状态展示内容，有就使用获取到的内容
-            toolResult.data.summary =
+            toolResult.data.tool.summary =
                 statusInfo === "user_cancelled"
                     ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
-                    : summaryContent || DefaultToolResultSummary[toolResult.data.status]?.result || ""
+                    : summaryContent || DefaultToolResultSummary[toolResult.data.tool.status]?.result || ""
             // 设置执行结果错误数据内容(std_xxx_stderr)
             const errorResult = streamToToolResultError.current.get(call_tool_id)
             if (errorResult && errorResult.status === "end") {
-                toolResult.data.execError = errorResult.content
+                toolResult.data.tool.execError = errorResult.content
                 // error数据先出但未存在对应的工具执行结果，工具结果出现后直接使用并删除map中的缓存数据
                 streamToToolResultError.current.delete(call_tool_id)
                 toolResultErrorUUIDToCallToolID.current.delete(errorResult.uuid)
             }
-            setContentMap(call_tool_id, {
-                ...toolResult,
-                data: toolResult.data
-            })
             if (statusInfo !== "default") updateElements({mapKey: toolResult.id, type: toolResult.type})
         } catch (error) {
             handleGrpcDataPushLog({
@@ -714,6 +707,7 @@ function useChatContent(params: UseChatContentParams) {
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReferenceMaterialPayload
 
             const chatData = getContentMap(data.event_uuid)
+            const toolResult = getContentMap(res.CallToolID || "")
             if (chatData) {
                 const references = (chatData.reference || []).concat([data])
                 setContentMap(data.event_uuid, {...chatData, reference: references})
@@ -732,10 +726,18 @@ function useChatContent(params: UseChatContentParams) {
                 } else {
                     updateElements({mapKey: data.event_uuid, type: chatData.type})
                 }
+            } else if (
+                !!toolResult &&
+                toolResult.type === AIChatQSDataTypeEnum.TOOL_RESULT &&
+                toolResult.data.stream.EventUUID === data.event_uuid
+            ) {
+                toolResult.reference = (toolResult.reference || []).concat([data])
+                updateElements({mapKey: toolResult.id, type: toolResult.type})
             } else {
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
                     id: data.event_uuid,
+                    chatType,
                     type: AIChatQSDataTypeEnum.Reference_Material,
                     data: {
                         NodeId: res.NodeId,
@@ -767,6 +769,7 @@ function useChatContent(params: UseChatContentParams) {
 
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
+                    chatType,
                     type: AIChatQSDataTypeEnum.THOUGHT,
                     data: thought || ""
                 }
@@ -782,6 +785,7 @@ function useChatContent(params: UseChatContentParams) {
 
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
+                    chatType,
                     type: AIChatQSDataTypeEnum.THOUGHT,
                     data: result || ""
                 }
@@ -794,6 +798,7 @@ function useChatContent(params: UseChatContentParams) {
             if (res.Type === "fail_react_task") {
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
+                    chatType,
                     type: AIChatQSDataTypeEnum.FAIL_REACT,
                     data: {
                         content: ipcContent,
@@ -876,6 +881,7 @@ function useChatContent(params: UseChatContentParams) {
                 const i18n = data?.i18n || {zh: data.action, en: data.action}
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
+                    chatType,
                     type: AIChatQSDataTypeEnum.TOOL_CALL_DECISION,
                     data: {
                         ...data,
@@ -894,6 +900,7 @@ function useChatContent(params: UseChatContentParams) {
             if (res.Type === "fail_plan_and_execution") {
                 const chatData: AIChatQSData = {
                     ...genBaseAIChatData(res),
+                    chatType,
                     type: AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION,
                     data: {
                         content: ipcContent,
@@ -925,7 +932,6 @@ function useChatContent(params: UseChatContentParams) {
     /** reset */
     const handleResetData = useMemoizedFn(() => {
         callToolIDToUUIDMap.current.clear()
-        streamStdOutSelectors.current.clear()
         toolResultErrorUUIDToCallToolID.current.clear()
         streamToToolResultError.current.clear()
     })

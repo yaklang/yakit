@@ -38,16 +38,16 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
     const [loading, setLoading] = useState<boolean>(false)
 
     const status = useCreation(() => {
-        return data.status
-    }, [data.status])
+        return data.tool.status
+    }, [data.tool.status])
 
     const params = useCreation(() => {
         return data.callToolId
     }, [data.callToolId])
 
     const summary = useCreation(() => {
-        return data.summary
-    }, [data.summary])
+        return data.tool.summary
+    }, [data.tool.summary])
 
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]

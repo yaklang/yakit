@@ -123,7 +123,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         }}
                         operationInfo={{
                             callToolId: data.callToolId,
-                            aiFilePath: data.dirPath
+                            aiFilePath: data.tool.dirPath
                         }}
                         data={data}
                     />
