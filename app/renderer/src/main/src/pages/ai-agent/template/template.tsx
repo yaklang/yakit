@@ -188,33 +188,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 ref={dropRef}
             >
                 {isHovering && <div className={styles["drag-hint"]}>松开以添加到对话</div>}
-                <div className={styles["textarea-body"]} onKeyDown={handleTextareaKeyDown}>
-                    <div className={styles["textarea-icon"]}>
-                        {/* 先直接使用 svg，后期这里会替换成一个动画 icon */}
-                        <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>
-                            <path
-                                d='M3.83333 2V4.66667M2.5 3.33333H5.16667M4.5 11.3333V14M3.16667 12.6667H5.83333M9.16667 2L10.6905 6.57143L14.5 8L10.6905 9.42857L9.16667 14L7.64286 9.42857L3.83333 8L7.64286 6.57143L9.16667 2Z'
-                                stroke={`url(#${iconId.current})`}
-                                strokeLinecap='round'
-                                strokeLinejoin='round'
-                            />
-                            <defs>
-                                <linearGradient
-                                    id={iconId.current}
-                                    x1='2.5'
-                                    y1='2'
-                                    x2='16.8935'
-                                    y2='6.75561'
-                                    gradientUnits='userSpaceOnUse'
-                                >
-                                    <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
-                                    <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
-                                    <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                    </div>
-
+                <div className={styles["textarea-wrapper"]} onKeyDown={handleTextareaKeyDown}>
                     <AIMilkdownInput
                         defaultValue={defaultValue}
                         onUpdateEditor={onUpdateEditor}
@@ -222,9 +196,31 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         onMemfitExtra={onMemfitExtra}
                         filterMode={defaultAIFocusMode?.filterMode}
                     />
+                    <div className={styles["footer"]}>
+                        <div className={styles["footer-left"]}>left</div>
+                        <div className={styles["footer-right"]}>
+                            <YakitButton
+                                className={styles["round-btn"]}
+                                radius='50%'
+                                loading={loading}
+                                disabled={disabled}
+                                icon={<OutlineArrowupIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleSubmit()
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <AIModelSelect isOpen={props?.isOpen} />
+                    <React.Suspense fallback={<div>loading...</div>}>
+                        <AIReviewRuleSelect />
+                    </React.Suspense>
                 </div>
 
-                <div className={styles["textarea-footer"]}>
+                {/* <div className={styles["textarea-footer"]}>
                     <div
                         className={styles["footer-left"]}
                         onClick={(e) => {
@@ -260,7 +256,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                             }}
                         />
                     </div>
-                </div>
+                </div> */}
                 {children}
             </div>
         )

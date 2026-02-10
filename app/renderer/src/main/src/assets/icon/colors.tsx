@@ -1889,9 +1889,9 @@ const ColorsChat = () => {
             <circle cx='13.3333' cy='10.0003' r='0.833333' fill={`url(#${id3})`} />
             <defs>
                 <linearGradient id={id} x1='2.5' y1='3.33301' x2='20.0335' y2='9.8502' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#F28C45' />
-                    <stop offset='0.639423' stopColor='#11A976' />
-                    <stop offset='1' stopColor='#129166' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
                 <linearGradient
                     id={id1}
@@ -1901,9 +1901,9 @@ const ColorsChat = () => {
                     y2='9.82749'
                     gradientUnits='userSpaceOnUse'
                 >
-                    <stop stopColor='#F28C45' />
-                    <stop offset='0.639423' stopColor='#11A976' />
-                    <stop offset='1' stopColor='#129166' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
                 <linearGradient
                     id={id2}
@@ -1913,9 +1913,9 @@ const ColorsChat = () => {
                     y2='9.82749'
                     gradientUnits='userSpaceOnUse'
                 >
-                    <stop stopColor='#F28C45' />
-                    <stop offset='0.639423' stopColor='#11A976' />
-                    <stop offset='1' stopColor='#129166' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
                 <linearGradient
                     id={id3}
@@ -1925,9 +1925,9 @@ const ColorsChat = () => {
                     y2='9.82749'
                     gradientUnits='userSpaceOnUse'
                 >
-                    <stop stopColor='#F28C45' />
-                    <stop offset='0.639423' stopColor='#11A976' />
-                    <stop offset='1' stopColor='#129166' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
             </defs>
         </svg>
@@ -1959,9 +1959,9 @@ const ColorsBrainCircuit = () => {
                     y2='8.43865'
                     gradientUnits='userSpaceOnUse'
                 >
-                    <stop stopColor='#F28C45' />
-                    <stop offset='0.639423' stopColor='#11A976' />
-                    <stop offset='1' stopColor='#129166' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
             </defs>
         </svg>
@@ -2115,19 +2115,19 @@ const ColorsAI = () => {
             />
             <defs>
                 <linearGradient id={id} x1='4' y1='4.73633' x2='21.059' y2='9.90595' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
                 <linearGradient id={id1} x1='14' y1='0' x2='26.2031' y2='3.66534' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
                 <linearGradient id={id2} x1='14' y1='0' x2='26.2031' y2='3.66534' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
+                    <stop stopColor='var(--Colors-Use-Main-Primary)' />
+                    <stop offset='0.639423' stopColor='var(--Colors-Use-Success-Pressed)' />
+                    <stop offset='1' stopColor='var(--yakit-colors-Success-80)' />
                 </linearGradient>
             </defs>
         </svg>
