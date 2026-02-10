@@ -180,8 +180,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             copyCSRF: {
                 menu: [
                     {
-                        key: "csrfpoc",
-                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc")
+                        key: "csrfPocBasic",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic")
+                    },
+                    {
+                        key: "csrfPocAutoSubmit",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -191,9 +195,10 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                             return
                         }
+                        const autoSubmit = key === "csrfPocAutoSubmit"
                         generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
                             setClipboardText(code)
-                        })
+                        }, autoSubmit)
                     } catch (e) {
                         failed(t("YakitEditor.HTTPPacketYakitEditor.autoGenerateCsrfFailed"))
                     }

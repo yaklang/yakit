@@ -59,6 +59,8 @@
       "openURLInBrowser": "Open URL in Browser",
       "viewResponseInBrowser": "View Response in Browser",
       "copyAsCSRFPoc": "Copy as CSRF PoC",
+      "copyAsCSRFPocBasic": "Copy Basic PoC",
+      "copyAsCSRFPocAutoSubmit": "Copy Auto-Submit PoC",
       "copyAsYakPoCTemplate": "Copy as Yak PoC Template",
       "packetPoCTemplate": "Packet PoC Template",
       "batchTestPoCTemplate": "Batch Test PoC Template",

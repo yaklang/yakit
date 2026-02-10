@@ -3170,13 +3170,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 label: t("HTTPFlowTable.RowContextMenu.copyAsCSRFPoc"),
                 default: true,
                 webSocket: false,
-                onClickSingle: (v) => {
-                    const flow = v as HTTPFlow
-                    if (!flow) return
-                    generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
-                        setClipboardText(e)
-                    })
-                }
+                onClickSingle: () => {},
+                children: [
+                    {
+                        key: "复制基础 POC",
+                        label: t("HTTPFlowTable.RowContextMenu.copyAsCSRFPocBasic")
+                    },
+                    {
+                        key: "复制自动提交 POC",
+                        label: t("HTTPFlowTable.RowContextMenu.copyAsCSRFPocAutoSubmit")
+                    }
+                ]
             },
             {
                 key: "复制为 Yak PoC 模版",
@@ -3506,6 +3510,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         return
                     }
                     switch (key) {
+                        case "复制基础 POC":
+                            generateCSRFPocByRequest(rowData.Request, rowData.IsHTTPS, (e) => setClipboardText(e), false)
+                            break
+                        case "复制自动提交 POC":
+                            generateCSRFPocByRequest(rowData.Request, rowData.IsHTTPS, (e) => setClipboardText(e), true)
+                            break
                         case "数据包 PoC 模版":
                             onPocMould(rowData)
                             break

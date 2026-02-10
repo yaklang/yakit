@@ -250,6 +250,8 @@
             "copyToClipboard": "Copy to Clipboard",
             "copyUrl": "Copy URL",
             "copyAsCsrfPoc": "Copy as CSRF PoC",
+            "copyAsCsrfPocBasic": "Copy Basic PoC",
+            "copyAsCsrfPocAutoSubmit": "Copy Auto-Submit PoC",
             "autoGenerateCsrfFailed": "Failed to auto-generate CSRF",
             "copyTo": "Copy to",
             "pleaseLogin": "Please log in",

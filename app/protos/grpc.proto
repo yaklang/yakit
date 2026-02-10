@@ -4164,6 +4164,8 @@ message GenerateYakCodeByPacketRequest {
 message GenerateCSRFPocByPacketRequest {
   bool IsHttps = 1;
   bytes Request = 2;
+  // 为 true 时在返回的 HTML 中注入自动提交脚本（页面加载后自动提交表单）
+  bool AutoSubmit = 3;
 }
 
 message GenerateCSRFPocByPacketResponse {
