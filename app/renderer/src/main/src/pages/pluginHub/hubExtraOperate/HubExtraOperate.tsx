@@ -44,6 +44,7 @@ import {setClipboardText} from "@/utils/clipboard"
 import {PluginSourceType} from "../type"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {Tooltip} from "antd"
+import {PublicCommonPlugins} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
@@ -97,6 +98,14 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             return Number(online.updated_at || 0) > Number(local.UpdatedAt || 0)
         }, [online, local])
 
+        // 插件是否在预定义公共菜单中
+        const isInMenu = useMemo(() => {
+            if (!local?.ScriptName) return false
+            return PublicCommonPlugins.some((group) =>
+                (group.children || []).some((child) => child.yakScripName === local.ScriptName)
+            )
+        }, [local])
+
         const menuData = useMemo(() => {
             // 内置插件功能
             if (isCorePlugin) {
@@ -111,7 +120,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         key: "removeMenu",
                         label: "移出菜单栏",
                         itemIcon: <OutlineMinuscircleIcon />,
-                        type: !!local ? undefined : "info"
+                        type: !!local ? undefined : "info",
+                        disabled: isInMenu
                     },
                     {
                         key: "export",
@@ -154,7 +164,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     key: "removeMenu",
                     label: "移出菜单栏",
                     itemIcon: <OutlineMinuscircleIcon />,
-                    type: isLocal ? undefined : "info"
+                    disabled: isInMenu
                 },
                 {
                     key: "export",
@@ -177,7 +187,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (second.length > 0) menus = [...menus, {type: "divider"}, ...second]
 
             return menus
-        }, [isCorePlugin, online, local])
+        }, [isCorePlugin, online, local, isInMenu])
 
         useEffect(() => {
             getRemoteValue(RemotePluginGV.AutoDownloadPlugin)
