@@ -417,6 +417,11 @@ function useChatContent(params: UseChatContentParams) {
                 }
                 // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
                 tool_result.data.stream.status = "end"
+                const isShowAll = tool_result.data.stream.content.length > 200
+                const displayContent = isShowAll
+                    ? tool_result.data.stream.content.substring(0, 200) + "..."
+                    : tool_result.data.stream.content
+                tool_result.data.tool.toolStdoutContent = {content: displayContent, isShowAll}
                 updateElements({mapKey: tool_result.id, type: tool_result.type})
                 return
             }
@@ -599,7 +604,7 @@ function useChatContent(params: UseChatContentParams) {
     })
 
     /** 工具执行的结果 */
-    const handleToolResult = useMemoizedFn((res: AIOutputEvent, status:AIToolResult["tool"]["status"]) => {
+    const handleToolResult = useMemoizedFn((res: AIOutputEvent, status: AIToolResult["tool"]["status"]) => {
         try {
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const {call_tool_id, ...rest} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall

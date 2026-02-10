@@ -25,6 +25,10 @@ export const DefaultAIToolResult: AIToolResult = {
     tool: {
         status: "default",
         summary: "",
+        toolStdoutContent: {
+            content: "",
+            isShowAll: false
+        },
         execError: "",
         dirPath: "",
         resultDetails: ""

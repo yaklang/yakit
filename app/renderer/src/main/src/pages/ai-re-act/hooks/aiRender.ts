@@ -63,11 +63,11 @@ export interface AIToolResult {
         /**执行完后的总结 */
         summary: string
         /**tool stdout 内容展示前200个字符 */
-        // toolStdoutContent: {
-        //     content: string
-        //     /**@deprecated UI展示不显示 */
-        //     isShowAll: boolean
-        // }
+        toolStdoutContent: {
+            content: string
+            /**@deprecated UI展示不显示 */
+            isShowAll: boolean
+        }
         /** 执行错误相关信息 */
         execError: string
         /** 执行涉及的文件目录 */
