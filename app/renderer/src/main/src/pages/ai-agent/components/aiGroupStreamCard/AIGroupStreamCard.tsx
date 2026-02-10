@@ -2,14 +2,14 @@ import {ChatReferenceMaterialPayload, ReActChatElement} from "@/pages/ai-re-act/
 import {type CSSProperties, useState, type FC, useRef, useEffect} from "react"
 import styles from "./AIGroupStreamCard.module.scss"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
-import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowsexpandIcon, OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {useTypedStream} from "../aiChatListItem/StreamingChatContent/hooks/useTypedStream"
+import classNames from "classnames"
 
-const Code: FC<{code: ChatReferenceMaterialPayload; style: CSSProperties}> = ({code, style}) => {
+export const Code: FC<{code: ChatReferenceMaterialPayload; style: CSSProperties}> = ({code, style}) => {
     return (
         <pre className={styles["code-wrapper"]} style={style}>
             {code.map((item) => (
@@ -166,29 +166,30 @@ const AIGroupStreamCard: FC<{
     if (!stream) return null
     return (
         <div className={styles.container}>
-            <div className={styles.title}>
+            <div className={styles.title} onClick={() => setExpand(!expand)}>
                 <div>
-                    <OutlineSparklesColorsIcon />
+                    {/* <OutlineSparklesColorsIcon /> */}
                     <span> {nodeLabel}</span>
                 </div>
-                <div className={styles["stream-text"]}>
+                <div className={classNames(styles["stream-text"], expand ? styles.collapsed : "")}>
                     <p>{!expand && <span>{stream.data.content}</span>}</p>
                 </div>
                 <YakitButton
-                    onClick={() => setExpand(!expand)}
                     type='text'
                     icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
                 />
             </div>
             <div
+                className={`${styles.content} ${expand ? styles.expand : ""}`}
+                >
+                <div
                 ref={contentRef}
                 onClick={() => setIsScroll(true)}
-                style={{
-                    overflow: isScroll ? "overlay" : "hidden"
-                }}
-                className={`${styles.content} ${expand ? styles.expand : ""}`}
-            >
-                <div className={styles["content-inner"]}>
+                    className={styles["content-inner"]}
+                    style={{
+                        overflow: isScroll ? "overlay" : "hidden"
+                    }}
+                >
                     {elements.map((el, index) => (
                         <AIStreamNode
                             session={session}

@@ -5,6 +5,7 @@ import FileList from "./FileList"
 import styles from "./StreamCard.module.scss"
 import ModalInfo, {type ModalInfoProps} from "./ModelInfo"
 import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
+import { OperationCardFooter, OperationCardFooterProps } from "./OperationCardFooter/OperationCardFooter"
 
 interface StreamCardProps {
     content?: ReactNode
@@ -18,6 +19,7 @@ interface StreamCardProps {
     contentExtra?: ReactNode
     /**参考资料 */
     referenceNode?: ReactNode
+    operationInfo?: OperationCardFooterProps
 }
 
 const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
@@ -39,6 +41,7 @@ const StreamCard: FC<StreamCardProps> = ({
     fileList,
     prompt,
     modalInfo,
+    operationInfo,
     contentExtra,
     referenceNode
 }) => {
@@ -54,12 +57,8 @@ const StreamCard: FC<StreamCardProps> = ({
         <ChatCard
             titleText={titleText}
             titleIcon={<div className={styles["stream-icon"]}>{titleIcon ?? <SolidHashtagIcon />}</div>}
-            footer={
-                <>
-                    {modalInfo && <ModalInfo {...modalInfo} />}
-                    {prompt && <PromptCard prompt={prompt} />}
-                </>
-            }
+            titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
+            footer={prompt && <PromptCard prompt={prompt} />}
         >
             <div
                 className={styles["stream-content"]}
@@ -73,6 +72,7 @@ const StreamCard: FC<StreamCardProps> = ({
             {contentExtra}
             {!!fileList?.length && <FileList fileList={fileList} />}
             {referenceNode}
+            {operationInfo && <OperationCardFooter {...operationInfo} />}
         </ChatCard>
     )
 }

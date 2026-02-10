@@ -275,8 +275,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                             time: Timestamp,
                                             title: info.AIModelName,
                                             icon: info.AIService,
-                                            aiFilePath
                                         }}
+                                        operationInfo={{aiFilePath}}
                                         fileList={fileList}
                                     />
                                 )

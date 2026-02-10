@@ -203,7 +203,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                     defaultAIFocusMode: {
                         children: (
                             <div className={classNames([styles["select-option"], styles["defualt-focus-mode"]])}>
-                                <OutlineMicroscopeIcon />
+                                <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
                                 <span
                                     data-label='true'
                                     className={styles["select-option-text"]}

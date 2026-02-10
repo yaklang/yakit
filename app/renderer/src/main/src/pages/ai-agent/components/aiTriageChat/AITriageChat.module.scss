@@ -3,13 +3,13 @@
     display: flex;
     .content-wrapper {
         max-width: 80%;
-        padding: 8px 12px;
-        border-radius: 12px;
+        padding: 4px 8px;
+        border-radius: 8px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 400;
-        line-height: 20px;
-        letter-spacing: 0.1px;
+        line-height: 16px;
+        letter-spacing: 0.5px;
         word-break: break-all;
         white-space: pre-wrap;
         .loading-wrapper {

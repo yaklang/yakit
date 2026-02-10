@@ -1,5 +1,5 @@
-import {useMemoizedFn, useThrottleFn} from "ahooks"
-import {useEffect, useRef} from "react"
+import {useMemoizedFn, useMount, useThrottleFn} from "ahooks"
+import {useRef} from "react"
 import type {VirtuosoHandle} from "react-virtuoso"
 
 interface UseVirtuosoAutoScrollOptions<T> {
@@ -119,7 +119,7 @@ const useVirtuosoAutoScroll = <T>(options: UseVirtuosoAutoScrollOptions<T>) => {
     })
 
     // 组件卸载时清理事件
-    useEffect(() => {
+    useMount(() => {
         return () => {
             if (scrollerRef.current && scrollerRef.current instanceof HTMLElement) {
                 scrollerRef.current.removeEventListener("wheel", onWheel as EventListener)
@@ -131,7 +131,7 @@ const useVirtuosoAutoScroll = <T>(options: UseVirtuosoAutoScrollOptions<T>) => {
             }
             document.removeEventListener("mouseup", onMouseUp)
         }
-    }, [])
+    })
 
     const scrollToIndex = useMemoizedFn((index: "LAST" | number, behavior?: "auto" | "smooth") => {
         if (index === "LAST" || index === total! - 1) {

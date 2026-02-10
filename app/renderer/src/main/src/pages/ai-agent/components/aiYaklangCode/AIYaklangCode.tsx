@@ -33,7 +33,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
         <ChatCard
             titleText={nodeLabel}
             titleIcon={<OutlinCompileTwoIcon />}
-            footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+            titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
         >
             <div className={styles["ai-yaklang-code"]}>{renderCode()}</div>
             {referenceNode}

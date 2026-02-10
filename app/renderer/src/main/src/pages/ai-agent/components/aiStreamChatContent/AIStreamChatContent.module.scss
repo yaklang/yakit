@@ -1,7 +1,7 @@
 @use "../../../../styles/mixin.scss" as mixin;
 .ai-stream-chat-content-wrapper {
     border-radius: 8px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+    // background: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .ai-stream-chat-content {
     display: flex;
@@ -9,23 +9,28 @@
     justify-content: flex-start;
     max-width: 100%;
     gap: 4px;
-
+    border-left: 2px solid var(--Colors-Use-Neutral-Disable);
+    padding-left: 8px;
     .title {
-        padding: 8px 0px 8px 12px;
+        padding: 4px 0px;
         border-radius: 8px 0 0 8px;
         display: flex;
         align-items: center;
         flex-shrink: 0;
         gap: 4px;
-        @include mixin.mpb-color-text();
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 14px;
+        // @include mixin.mpb-color-text();
     }
     .ai-stream-content {
-        padding: 8px 12px 8px 0;
+        padding: 4px 12px 4px 0;
         border-radius: 0 8px 8px 0;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        font-size: 11px;
         font-weight: 400;
-        line-height: 20px;
+        line-height: 14px;
         white-space: nowrap;
         overflow: hidden;
         display: flex;
@@ -38,7 +43,7 @@
             top: 0;
             background: linear-gradient(
                 to right,
-                var(--Colors-Use-Neutral-Bg-Hover) 0%,
+                var(--Colors-Use-Basic-Background) 0%,
                 rgba(255, 255, 255, 0) 20%,
                 rgba(255, 255, 255, 0) 80%,
                 transparent 100%

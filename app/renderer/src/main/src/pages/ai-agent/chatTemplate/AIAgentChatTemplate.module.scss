@@ -166,10 +166,18 @@
         box-sizing: border-box;
         padding-right: 12px;
         .item-inner {
-            padding: 2px 0;
+            padding-top: 4px;
         }
         &:first-child {
             padding-top: 12px;
+        }
+    }
+    // 后代类名ai-stream-chat-content-wrapper且下一个也是 的不要 padding-top
+    .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
+        & + .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
+            .item-inner:has(:global(.ai-stream-chat-content-wrapper)) {
+                padding-top: 0;
+            }
         }
     }
     .spin {

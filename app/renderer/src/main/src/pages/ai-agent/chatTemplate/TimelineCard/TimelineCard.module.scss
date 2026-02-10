@@ -134,6 +134,12 @@
     }
 }
 
+.timeline-card-empty {
+    .virtuoso-item-list::before {
+        display: none;
+    }
+}
+
 .timeline-popover {
     max-width: 500px;
 }

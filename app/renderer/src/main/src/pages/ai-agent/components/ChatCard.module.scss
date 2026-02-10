@@ -2,12 +2,12 @@
 
 .chat-card {
     width: 100%;
-    padding: 8px 12px;
+    padding: 4px 8px;
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    // gap: 4px;
 
     &-title {
         width: 100%;
@@ -21,9 +21,9 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            padding: 4px 8px 0 0;
-            flex: 1 1 auto; 
-            min-width: 0; 
+            // padding: 4px 8px 0 0;
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         &-icon {
@@ -39,10 +39,19 @@
         }
 
         &-text {
-            font-size: 16px;
-            line-height: 24px;
+            min-width: 0;
+            max-width: 20em;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 16px; 
+            letter-spacing: 0.5px;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            @include mixin.text-ellipsis(1, false, false, true);
+        }
+
+        &-extra {
             flex: 1;
-            min-width: 0; 
             @include mixin.text-ellipsis(1, false, false, true);
         }
 
