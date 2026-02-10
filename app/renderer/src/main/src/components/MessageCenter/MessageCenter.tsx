@@ -944,6 +944,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
     /** @name 校验任务重名 */
     const onJudgeRepeat: (names: string[]) => Promise<string[]> = useMemoizedFn((names: string[]) => {
         return new Promise(async (resolve, reject) => {
+            if (names.length === 0) return resolve([])
             const param: ProjectParamsProp = {
                 ...getParams(),
                 Pagination: {
@@ -984,6 +985,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
                     hash: "",
                     excludeHash: data.map((i) => i.hash).join(",")
                 })
+                setLoading(false)
             }
             const newTaskList = data.filter((task) => task.status === 1)
             const endTaskList = data.filter((task) => task.status === 2)
@@ -992,7 +994,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
 
             setTaskList(data)
             // 此处还需校验新任务是否在项目管理中已存在，如若存在后续还将提示用户存在重名项目
-            let names = data.map((item) => item.taskName || "").filter((name) => name !== "")
+            let names = newTaskList.map((item) => item.taskName || "").filter((name) => name !== "")
             const newReNames = await onJudgeRepeat(names)
             setReNames(newReNames)
             // 打开任务通知Modal
@@ -1081,6 +1083,15 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
                     item.status === 1 && (item.taskName || "").length > 0 && !reNames.includes(item.taskName || "")
             )
             await createP(projectList)
+            // 将结束的任务已读
+            const endTaskList = taskList.filter((item) => item.status === 2 && (item.taskName || "").length > 0)
+            if (endTaskList.length > 0) {
+                await apiFetchMessageRead({
+                    isAll: false,
+                    hash: endTaskList.map((item) => item.hash).join(",")
+                })
+                refresh?.()
+            }
 
             // 新建完成后才考虑关闭
             setTaskModalInfo((v) => ({...v, visible: false, loading: false, data: []}))
