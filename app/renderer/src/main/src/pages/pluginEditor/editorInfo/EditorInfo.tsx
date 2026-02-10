@@ -388,13 +388,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         <YakitInput.TextArea
                             rows={2}
                             placeholder='请输入...'
-                            onKeyDown={(e) => {
-                                const keyCode = e.keyCode ? e.keyCode : e.key
-                                if (keyCode === 13) {
-                                    e.stopPropagation()
-                                    e.preventDefault()
-                                }
-                            }}
                         />
                     </Form.Item>
 

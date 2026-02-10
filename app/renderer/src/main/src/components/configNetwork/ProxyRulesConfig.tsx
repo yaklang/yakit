@@ -479,6 +479,8 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                                 }
                                 name='Patterns'
                                 rules={[{required: true, message: t("ProxyConfig.please_enter_destination_address")}]}
+                                extra={t("ProxyConfig.destination_address_tips")}
+                                className={styles["destination-address"]}
                             >
                                 <YakitSelect
                                     mode='tags'

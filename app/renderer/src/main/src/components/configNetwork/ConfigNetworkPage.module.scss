@@ -592,6 +592,15 @@
     }
 }
 
+.destination-address {
+    margin-bottom: 0 !important;
+    :global {
+        .ant-form-item-extra{
+            color: var(--Colors-Use-Neutral-Text-4-Help-text)
+        }
+    }
+}
+
 .proxy-test-title {
     color: var(--Colors-Use-Main-Primary);
     display: inline-flex;

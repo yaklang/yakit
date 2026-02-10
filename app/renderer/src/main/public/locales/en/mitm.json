@@ -173,7 +173,8 @@
     "disable_point_title": "Disable Points",
     "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?",
     "downstream_agent": "Downstream Agent",
-    "select_disabled_tip":"The selected proxy has been disabled. We recommend using a different, available proxy."
+    "select_disabled_tip":"The selected proxy has been disabled. We recommend using a different, available proxy.",
+    "destination_address_tips": "To specify a lightning strike area that doesn't use a proxy, add an exclamation mark (!) indicating a distant location, for example: !*.example.com"
   },
   "RegexTester": {
     "test_content": "Test Content",
