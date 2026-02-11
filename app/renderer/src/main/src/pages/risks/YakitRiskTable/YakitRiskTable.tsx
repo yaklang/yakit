@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     QueryRisksRequest,
     QueryRisksResponse,
@@ -11,8 +11,8 @@ import {
 } from "./YakitRiskTableType"
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {Risk} from "../schema"
-import {Badge, CollapseProps, Descriptions, Divider, Form, Tooltip} from "antd"
+import {PacketHistory, Risk} from "../schema"
+import {Badge, CollapseProps, Descriptions, Divider, Form, Tooltip, Typography} from "antd"
 import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -23,11 +23,15 @@ import {
     useDebounceFn,
     useInViewport,
     useInterval,
-    useMemoizedFn
+    useMemoizedFn,
+    useUpdateEffect
 } from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
+    OutlineChevronleftIcon,
+    OutlineChevronrightIcon,
+    OutlineClockIcon,
     OutlineExportIcon,
     OutlineEyeIcon,
     OutlineOpenIcon,
@@ -41,7 +45,6 @@ import {
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -102,7 +105,6 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
-import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
@@ -110,14 +112,17 @@ import {getRemoteValue} from "@/utils/kv"
 import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
-import {minWinSendToChildWin, openPacketNewWindow, openRiskNewWindow} from "@/utils/openWebsite"
+import {minWinSendToChildWin, openRiskNewWindow} from "@/utils/openWebsite"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
+import {SafeMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
+import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
+
+const {ipcRenderer} = window.require("electron")
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -1602,26 +1607,72 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         detailClassName = ""
     } = props
     const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
-    // 目前可展示的请求和响应类型
-    const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
     const descriptionsRef = useRef<HTMLDivElement>(null)
     const descriptionsDivWidth = useListenWidth(descriptionsRef)
+    const [packetIndex, setPacketIndex] = useState<number>(0)
+    const [packetHistory, setPacketHistory] = useState<PacketHistory[]>([])
 
     useEffect(() => {
+        let cancelled = false
+        const initHistory = async () => {
+            const baseArr: PacketHistory[] = [
+                {
+                    Id: info.Id,
+                    Url: info.Url,
+                    Request: info.Request,
+                    Response: info.Response
+                }
+            ]
+
+            if (!info.PacketPairs?.length) {
+                if (!cancelled) {
+                    setPacketHistory(baseArr)
+                }
+                return
+            }
+
+            try {
+                const results = await Promise.all(
+                    info.PacketPairs.filter((item) => item.HttpflowId).map((item) =>
+                        ipcRenderer
+                            .invoke("GetHTTPFlowById", {Id: item.HttpflowId})
+                            .then((data: HTTPFlow) => ({
+                                HttpflowId: item.HttpflowId,
+                                Url: item.Url,
+                                Request: data.Request,
+                                Response: data.Response
+                            }))
+                            .catch(() => ({
+                                HttpflowId: item.HttpflowId,
+                                Url: item.Url
+                            }))
+                    )
+                )
+
+                if (!cancelled) {
+                    setPacketHistory([...baseArr, ...(results as PacketHistory[])])
+                }
+            } catch (e) {
+                if (!cancelled) {
+                    info.PacketPairs.filter((item) => item.HttpflowId).map((item) => {
+                        baseArr.push(item)
+                    })
+                    setPacketHistory(baseArr)
+                }
+            }
+        }
         const isRequestString = !!requestString(info)
         const isResponseString = !!responseString(info)
-        let showType: ("request" | "response")[] = []
-        if (isRequestString) {
-            showType.push("request")
-        } else if (isResponseString) {
-            showType.push("response")
-        }
-        setCurrentShowType(showType)
         if (isRequestString || isResponseString) {
+            setPacketIndex(0)
+            initHistory()
             setIsShowCode(true)
         } else {
             setIsShowCode(false)
+        }
+        return () => {
+            cancelled = true
         }
     }, [info])
 
@@ -1639,32 +1690,93 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     }, [descriptionsDivWidth])
 
     const codeNode = useMemoizedFn((isRequest: boolean) => {
-        const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
+        const showPacket = packetHistory[packetIndex]
         const extraParams = {
-            originValue: isRequest ? requestString(info) : responseString(info),
-            originalPackage: isRequest ? info.Request : info.Response,
-            webFuzzerValue: isRequest ? "" : requestString(info)
+            originValue: isRequest ? requestString(showPacket) : responseString(showPacket),
+            originalPackage: isRequest ? showPacket?.Request : showPacket?.Response,
+            webFuzzerValue: isRequest ? "" : requestString(showPacket),
+            defaultHttps: !!showPacket.Url && showPacket.Url?.length > 0 && showPacket.Url.includes("https"),
+            url: showPacket.Url || "",
+            downbodyParams: showPacket.HttpflowId
+                ? {Id: showPacket.HttpflowId, IsRequest: isRequest}
+                : {IsRisk: true, Id: showPacket.Id, IsRequest: isRequest}
         }
         return (
             <NewHTTPPacketEditor
-                defaultHttps={isHttps}
-                url={info.Url || ""}
                 readOnly={true}
                 isShowBeautifyRender={true}
                 bordered={true}
                 isResponse={!isRequest}
-                downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: isRequest}}
+                title={
+                    <div>
+                        {isRequest ? (
+                            <div className={styles["content-resize-first-heard"]}>
+                                <span>Request</span>
+                                <Tooltip title={t("YakitRiskDetails.prev")} align={{targetOffset: [0, -10]}}>
+                                    <YakitButton
+                                        type='text'
+                                        disabled={packetIndex <= 0}
+                                        icon={<OutlineChevronleftIcon />}
+                                        onClick={() => {
+                                            setPacketIndex((prev) => prev - 1)
+                                        }}
+                                    ></YakitButton>
+                                </Tooltip>
+                                <Tooltip title={t("YakitRiskDetails.next")} align={{targetOffset: [0, -10]}}>
+                                    <YakitButton
+                                        type='text'
+                                        disabled={packetIndex + 1 === packetHistory.length}
+                                        icon={<OutlineChevronrightIcon />}
+                                        onClick={() => {
+                                            setPacketIndex((prev) => prev + 1)
+                                        }}
+                                    ></YakitButton>
+                                </Tooltip>
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: packetHistory.map((item, index) => {
+                                            const urlNode = (
+                                                <Typography.Text ellipsis={{tooltip: item.Url}} style={{maxWidth: 300}}>
+                                                    {item.Url || "-"}
+                                                </Typography.Text>
+                                            )
+                                            if (index === 0) {
+                                                return {
+                                                    key: index + "",
+                                                    label: (
+                                                        <>
+                                                            {urlNode}
+                                                            <YakitTag color='warning' size='small' border={false}>
+                                                                {t("YakitRiskDetails.originReq")}
+                                                            </YakitTag>
+                                                        </>
+                                                    )
+                                                }
+                                            }
+                                            return {
+                                                key: index + "",
+                                                label: urlNode
+                                            }
+                                        }),
+                                        onClick: ({key}) => {
+                                            setPacketIndex(Number(key))
+                                        }
+                                    }}
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottomLeft"
+                                    }}
+                                >
+                                    <YakitButton type='text' icon={<OutlineClockIcon />}></YakitButton>
+                                </YakitDropdownMenu>
+                            </div>
+                        ) : (
+                            <span>Response</span>
+                        )}
+                    </div>
+                }
                 onClickOpenPacketNewWindowMenu={() => {
-                    openPacketNewWindow({
-                        request: {
-                            originValue: requestString(info),
-                            originalPackage: info.Request
-                        },
-                        response: {
-                            originValue: responseString(info),
-                            originalPackage: info.Response
-                        }
-                    })
+                    openRiskNewWindow(info)
                 }}
                 {...extraParams}
             />
@@ -1706,22 +1818,8 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             lineStyle: {height: "auto"},
             firstNodeStyle: {height: "auto"}
         }
-        if (currentShowType.length === 0 && currentShowType.includes("request")) {
-            p.firstRatio = "100%"
-            p.secondRatio = "0%"
-            p.lineStyle = {display: "none"}
-            p.firstNodeStyle = {padding: 0}
-            p.secondNodeStyle = {display: "none"}
-        }
-        if (currentShowType.length === 0 && currentShowType.includes("response")) {
-            p.firstRatio = "0%"
-            p.secondRatio = "100%"
-            p.lineStyle = {display: "none"}
-            p.firstNodeStyle = {display: "none"}
-            p.secondNodeStyle = {padding: 0}
-        }
         return p
-    }, [currentShowType])
+    }, [])
     return (
         <>
             <div

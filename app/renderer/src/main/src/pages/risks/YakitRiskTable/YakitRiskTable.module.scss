@@ -362,6 +362,7 @@ $keyColor: map-keys($tagColor);
     overflow: hidden;
     &-heard {
         @extend %display-flex-center;
+        gap: 8px;
     }
 }
 .content-resize-second {

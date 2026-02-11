@@ -73,7 +73,10 @@
     "not_verified": "未验证",
     "vulnerability_description": "漏洞描述",
     "solution": "解决方案",
-    "details": "详情"
+    "details": "详情",
+    "next": "下一个",
+    "prev": "上一个",
+    "originReq": "原始请求"
   },
   "YakitRiskDetailContent": {
     "related_code_snippet": "相关代码段"
