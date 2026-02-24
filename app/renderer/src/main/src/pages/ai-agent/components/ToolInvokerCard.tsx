@@ -211,7 +211,9 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
                 return (
                     <ToolStatusCard status={"purple"} title={<div>{data.toolName}</div>}>
                         <div className={styles["file-system-content"]}>
-                            <PreWrapper code={data?.stream?.content || ""} autoScrollBottom />
+                            {data?.stream?.content && (
+                                <PreWrapper code={data?.stream?.content || ""} autoScrollBottom />
+                            )}
                         </div>
                     </ToolStatusCard>
                 )
