@@ -14,14 +14,7 @@ export const DefaultAIToolResult: AIToolResult = {
     endTimeMS: 0,
     durationMS: 0,
     durationSeconds: 0,
-    stream: {
-        EventUUID: "",
-        NodeId: "",
-        NodeIdVerbose: {Zh: "", En: ""},
-        status: "start",
-        content: "",
-        ContentType: ""
-    },
+    stream: {EventUUID: ""},
     tool: {
         status: "default",
         summary: "",

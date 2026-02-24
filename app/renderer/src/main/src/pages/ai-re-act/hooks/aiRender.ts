@@ -48,15 +48,7 @@ export interface AIToolResult {
     startTime: AIAgentGrpcApi.AIToolCall["start_time"]
     /** 开始时间戳(ms) */
     startTimeMS: AIAgentGrpcApi.AIToolCall["start_time_ms"]
-    stream: {
-        EventUUID: AIOutputEvent["EventUUID"]
-        NodeId: AIOutputEvent["NodeId"]
-        NodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
-        status: "start" | "end"
-        content: string
-        ContentType: AIOutputEvent["ContentType"]
-        selectors?: ToolStreamSelectors
-    }
+    stream: {EventUUID: AIOutputEvent["EventUUID"]}
     tool: {
         /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
         status: "default" | "success" | "failed" | "user_cancelled"
