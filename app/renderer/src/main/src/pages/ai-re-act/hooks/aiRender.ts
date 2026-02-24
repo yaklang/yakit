@@ -199,7 +199,7 @@ export interface ReActChatGroupElement extends ReActChatBaseInfo {
 export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
-interface AIChatQSDataBase<T extends string, U> {
+export interface AIChatQSDataBase<T extends string, U> {
     type: T
     data: U
     id: string

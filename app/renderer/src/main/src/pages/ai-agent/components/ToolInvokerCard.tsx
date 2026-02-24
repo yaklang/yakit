@@ -7,7 +7,13 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import type {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {grpcQueryAIToolDetails, grpcQueryHTTPFlows} from "../grpc"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
-import {AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
+import {
+    AIChatQSData,
+    AIChatQSDataTypeEnum,
+    AIToolResult,
+    AIYakExecFileRecord,
+    ReActChatBaseInfo
+} from "@/pages/ai-re-act/hooks/aiRender"
 import FileList from "./FileList"
 import ModalInfo, {ModalInfoProps} from "./ModelInfo"
 import emiter from "@/utils/eventBus/eventBus"
@@ -20,7 +26,9 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Tooltip} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {formatTimestamp} from "@/utils/timeUtil"
-import { OperationCardFooter, OperationCardFooterProps } from "./OperationCardFooter/OperationCardFooter"
+import {OperationCardFooter, OperationCardFooterProps} from "./OperationCardFooter/OperationCardFooter"
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import useAIAgentStore from "../useContext/useStore"
 
 interface ToolInvokerCardProps {
     titleText?: string
@@ -28,26 +36,46 @@ interface ToolInvokerCardProps {
     modalInfo?: ModalInfoProps
     operationInfo: OperationCardFooterProps
     data: AIToolResult
+    chatType: ReActChatBaseInfo["chatType"]
+    token: string
 }
 interface PreWrapperProps {
     code: ReactNode
     autoScrollBottom?: boolean
 }
-const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalInfo, operationInfo, data}) => {
-    const [toolList, setToolList] = useState<AIChatQSData[]>([])
+const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
+    titleText,
+    fileList,
+    modalInfo,
+    operationInfo,
+    data,
+    chatType,
+    token
+}) => {
     const [loading, setLoading] = useState<boolean>(false)
 
+    const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
+    const {activeChat} = useAIAgentStore()
+
     const status = useCreation(() => {
-        return data.tool.status
-    }, [data.tool.status])
+        return data?.tool?.status
+    }, [data?.tool?.status])
 
     const params = useCreation(() => {
-        return data.callToolId
-    }, [data.callToolId])
+        return data?.callToolId
+    }, [data?.callToolId])
 
     const summary = useCreation(() => {
-        return data.tool.summary
-    }, [data.tool.summary])
+        return data?.tool?.summary || ""
+    }, [data?.tool?.summary])
+
+    const content = useCreation(() => {
+        return data?.tool?.toolStdoutContent?.content || ""
+    }, [data?.tool?.toolStdoutContent?.content])
+
+    const resultDetails = useCreation(() => {
+        return data?.tool?.resultDetails || ""
+    }, [data?.tool?.resultDetails])
 
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
@@ -58,24 +86,29 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
     const [trafficLen, setTrafficLen] = useState<number>(0)
     const [risksLen, setRisksLen] = useState<number>(0)
 
-    const getListToolList = useCallback(() => {
-        if (!data.callToolId) return
+    const getListToolList = useMemoizedFn(() => {
+        if (!data?.callToolId || !activeChat) return
         setLoading(true)
         const params: AIEventQueryRequest = {
             ProcessID: data.callToolId
         }
         grpcQueryAIToolDetails(params)
-            .then(setToolList)
+            .then((res) => {
+                const chatItem = fetchChatDataStore()?.getContentMap({
+                    session: activeChat?.session,
+                    chatType,
+                    mapKey: token
+                })
+                if (!!chatItem && chatItem.type === AIChatQSDataTypeEnum.TOOL_RESULT) {
+                    chatItem.data.tool.resultDetails = getResultDetails(res)
+                }
+            })
             .finally(() =>
                 setTimeout(() => {
                     setLoading(false)
                 }, 100)
             )
-    }, [data.callToolId])
-
-    useEffect(() => {
-        getListToolList()
-    }, [])
+    })
 
     //  HTTP 流量
     const getHTTPTraffic = useCallback(async () => {
@@ -105,9 +138,9 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
         )
     }
 
-    const preCode = useCreation(() => {
+    const getResultDetails = useMemoizedFn((list: AIChatQSData[]) => {
         let desc: string[] = []
-        toolList.forEach((ele) => {
+        list.forEach((ele) => {
             const {type, data} = ele
             switch (type) {
                 case AIChatQSDataTypeEnum.STREAM:
@@ -125,7 +158,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
             }
         })
         return desc.join("\n")
-    }, [toolList])
+    })
 
     const duration = useCreation(() => {
         return Math.round(data.durationSeconds * 10) / 10
@@ -170,7 +203,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
                         </label>
                     )}
                     <Tooltip title='刷新代码块数据'>
-                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={() => getListToolList()} />
+                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={getListToolList} />
                     </Tooltip>
                 </div>
             }
@@ -188,8 +221,14 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, fileList, modalIn
                 </div>
                 <YakitSpin spinning={loading}>
                     <div className={styles["file-system-content"]}>
-                        <div>{summary}</div>
-                        {preCode && <PreWrapper code={preCode} />}
+                        {!!resultDetails ? (
+                            <PreWrapper code={resultDetails} />
+                        ) : (
+                            <>
+                                <div>{summary}</div>
+                                {content && <PreWrapper code={content} />}
+                            </>
+                        )}
                     </div>
                 </YakitSpin>
             </div>
@@ -248,4 +287,3 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
         </pre>
     )
 })
-

@@ -88,8 +88,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         return item.type === AIChatQSDataTypeEnum.STREAM || item.type === AIChatQSDataTypeEnum.STREAM_GROUP
     }, [item.type])
 
-    const ChatItemRenderer = useMemoizedFn((item: AIChatQSData) => {
-        const {type, Timestamp, data, extraValue} = item
+    const ChatItemRenderer = useMemoizedFn((itemData: AIChatQSData) => {
+        const {type, Timestamp, data, extraValue} = itemData
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
                 return (
@@ -118,14 +118,16 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         fileList={fileList}
                         modalInfo={{
                             time: Timestamp,
-                            title: item.AIModelName,
-                            icon: item.AIService
+                            title: itemData.AIModelName,
+                            icon: itemData.AIService
                         }}
                         operationInfo={{
                             callToolId: data.callToolId,
                             aiFilePath: data.tool.dirPath
                         }}
                         data={data}
+                        chatType={item.chatType}
+                        token={item.token}
                     />
                 )
             case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
@@ -133,12 +135,12 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
             case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
             case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
-                if (!!item.data.selected) {
-                    return <AIReviewResult info={item} timestamp={Timestamp} />
+                if (!!itemData.data.selected) {
+                    return <AIReviewResult info={itemData} timestamp={Timestamp} />
                 } else {
                     return (
                         <AIReActChatReview
-                            info={item}
+                            info={itemData}
                             onSendAI={handleSendCasual}
                             isEmbedded={true}
                             expand={true}
@@ -158,7 +160,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 return <DividerCard {...dividerCardProps} />
 
             case AIChatQSDataTypeEnum.TOOL_CALL_DECISION:
-                return <AIToolDecision item={item} />
+                return <AIToolDecision item={itemData} />
 
             case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
                 return (

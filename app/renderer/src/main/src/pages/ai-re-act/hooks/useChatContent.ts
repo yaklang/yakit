@@ -419,7 +419,7 @@ function useChatContent(params: UseChatContentParams) {
                 tool_result.data.stream.status = "end"
                 const isShowAll = tool_result.data.stream.content.length > 200
                 const displayContent = isShowAll
-                    ? tool_result.data.stream.content.substring(0, 200) + "..."
+                    ? "..." + tool_result.data.stream.content.slice(-200) + "..."
                     : tool_result.data.stream.content
                 tool_result.data.tool.toolStdoutContent = {content: displayContent, isShowAll}
                 updateElements({mapKey: tool_result.id, type: tool_result.type})
