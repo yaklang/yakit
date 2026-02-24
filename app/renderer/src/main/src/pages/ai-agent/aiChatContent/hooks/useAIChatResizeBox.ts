@@ -72,7 +72,7 @@ export function useAIChatResizeBox(params: Params) {
             secondMinSize: showFreeChat ? 400 : 30,
             secondRatio,
             lineDirection: "left",
-            lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined,
+            // lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined,
             firstNodeStyle: {
                 padding: 0,
                 ...(!showFreeChat && {width: "100%"}),
