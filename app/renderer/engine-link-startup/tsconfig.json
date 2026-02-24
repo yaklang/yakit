@@ -21,7 +21,7 @@
   },
   "include": [
     "src"
-  ],
+, "scripts/cli.cjs"  ],
   "exclude": [
     "node_modules",
     "dist",

@@ -29,42 +29,24 @@ const resolvedBuild = () => {
     return false
 }
 
-const resolvedDevtools = () => {
-    const cliBuild = process.env.CLIDevtools
-    if (cliBuild === "true") return true
-    return false
-}
-
 const version = resolvedVersion()
 const build = resolvedBuild()
-const devtools = resolvedDevtools()
 
 // 未知参数, 退出命令执行
 if (!version) process.exit(1)
 
-const envs = {
-    ...process.env,
-    REACT_APP_PLATFORM: version
-}
-
-if (build) {
-    envs.GENERATE_SOURCEMAP = false
-    if (devtools) envs.REACT_APP_DEVTOOL = "true"
-} else {
-    envs.BROWSER = "none"
-    envs.REACT_APP_DEVTOOL = "true"
-}
-
 console.log("Execute UI version: ", version)
 console.log("Is it a build command: ", build ? "Yes" : "No")
-console.log("Is it a devtools command: ", devtools ? "Yes" : "No")
 
-const scriptName = build ? "react-app-rewired build" : "react-app-rewired start"
+const scriptName = build ? "tsc --noEmit && vite build" : "vite"
 
 try {
     execSync(scriptName, {
         stdio: "inherit",
-        env: {...envs}
+        env: {
+            ...process.env,
+            VITE_PLATFORM: version
+        }
     })
 } catch (error) {
     console.error(`Failed to execute script: ${scriptName}`)

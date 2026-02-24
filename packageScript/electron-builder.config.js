@@ -131,7 +131,9 @@ const configOption = {
         "!buildHooks/**/*",
         "!build/**/*",
         "!backups/**/*",
-        "!app/renderer/src/**/*"
+        "!app/renderer/src/**/*",
+        "!cli/*",
+        "!env/*"
     ],
     asar: true,
     publish: [
