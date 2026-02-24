@@ -117,10 +117,8 @@ export default function useVirtualTableHook<
         // 倒序时需要额外处理传给后端顺序
         const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
         finalParams.Pagination = verifyResult.pagination
-        console.log("finalParams---", finalParams, type)
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT, DataKey>) => {
-                console.log("rsp---", rsp)
                 let newData: DataT[] = verifyResult.isReverse ? rsp[responseKey.data].reverse() : rsp[responseKey.data]
                 if (initResDataFun) {
                     newData = initResDataFun(newData)
@@ -213,8 +211,6 @@ export default function useVirtualTableHook<
         }
         // 如无偏移 则直接请求数据
         if (maxIdRef.current === 0) {
-            console.log("111")
-
             updateData()
             return
         }
@@ -237,7 +233,6 @@ export default function useVirtualTableHook<
     const updateBottomData = useMemoizedFn(() => {
         // 如无偏移 则直接请求数据
         if (minIdRef.current === 0) {
-            console.log("222")
             updateData()
             return
         }
@@ -329,7 +324,6 @@ export default function useVirtualTableHook<
         // 滚动条在中间 增量
         else {
             if (data.length === 0) {
-                console.log("333")
                 updateData()
             } else {
                 // 倒序的时候才需要掉接口拿偏移数据
@@ -373,7 +367,6 @@ export default function useVirtualTableHook<
     useDebounceEffect(
         () => {
             isGrpcRef.current = false
-            console.log("444")
             updateData()
         },
         [params],
@@ -398,7 +391,6 @@ export default function useVirtualTableHook<
         })
         setTimeout(() => {
             isGrpcRef.current = false
-            console.log("555")
             updateData()
         }, 100)
     })
@@ -406,7 +398,6 @@ export default function useVirtualTableHook<
     /** @name 仅刷新新表格 */
     const noResetRefreshT = useMemoizedFn(() => {
         isGrpcRef.current = false
-        console.log("666")
         updateData()
     })
 

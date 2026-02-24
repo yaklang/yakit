@@ -504,8 +504,6 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                     ...filter
                 }
             }
-            console.log("filter.SemanticQuery---", filter.SemanticQuery);
-            
             if (!!filter.SemanticQuery) {
                 // debugVirtualTableEvent.stopT()
                 //ai 搜索限制200条
