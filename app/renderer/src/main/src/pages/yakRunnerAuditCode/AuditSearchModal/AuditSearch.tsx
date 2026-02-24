@@ -449,7 +449,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                                 <Progress
                                     size='small'
                                     strokeColor='var(--Colors-Use-Main-Primary)'
-                                    trailColor='var(--Colors-Use-Neutral-Bg)'
+                                    trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                                     percent={Math.floor(
                                         (streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100
                                     )}

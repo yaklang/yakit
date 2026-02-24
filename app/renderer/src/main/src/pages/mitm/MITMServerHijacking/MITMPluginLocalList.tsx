@@ -416,7 +416,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'
-                trailColor='var(--Colors-Use-Neutral-Bg)'
+                trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                 percent={percent}
                 format={(percent) => `已下载 ${percent}%`}
             />
@@ -504,7 +504,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'
-                trailColor='var(--Colors-Use-Neutral-Bg)'
+                trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                 percent={percent}
                 format={(percent) => `已更新 ${percent}%`}
             />

@@ -638,7 +638,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                         <div className={styles["download-progress"]}>
                             <Progress
                                 strokeColor='var(--Colors-Use-Main-Primary)'
-                                trailColor='var(--Colors-Use-Neutral-Bg)'
+                                trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                                 percent={percent}
                                 format={(percent) => `已下载 ${percent}%`}
                             />
