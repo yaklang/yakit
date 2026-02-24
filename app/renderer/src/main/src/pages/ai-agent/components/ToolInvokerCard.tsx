@@ -19,9 +19,9 @@ import ModalInfo, {ModalInfoProps} from "./ModelInfo"
 import emiter from "@/utils/eventBus/eventBus"
 import {AITabsEnum} from "../defaultConstant"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {AIEventQueryRequest} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIEventQueryRequest} from "@/pages/ai-re-act/hooks/grpcApi"
 import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
-import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineArrownarrowrightIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Tooltip} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -29,6 +29,13 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {OperationCardFooter, OperationCardFooterProps} from "./OperationCardFooter/OperationCardFooter"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useAIAgentStore from "../useContext/useStore"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
+
+/** @name AI工具按钮对应图标 */
+const AIToolToIconMap: Record<string, ReactNode> = {
+    "enough-cancel": <OutlineArrownarrowrightIcon />
+}
 
 interface ToolInvokerCardProps {
     titleText?: string
@@ -43,6 +50,11 @@ interface PreWrapperProps {
     code: ReactNode
     autoScrollBottom?: boolean
 }
+interface ToolStatusCardProps {
+    status: AIToolResult["tool"]["status"] | "purple"
+    title: ReactNode
+    children?: ReactNode
+}
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
     fileList,
@@ -55,6 +67,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     const [loading, setLoading] = useState<boolean>(false)
 
     const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
+    const {handleSend} = useChatIPCDispatcher()
     const {activeChat} = useAIAgentStore()
 
     const status = useCreation(() => {
@@ -76,6 +89,10 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     const resultDetails = useCreation(() => {
         return data?.tool?.resultDetails || ""
     }, [data?.tool?.resultDetails])
+
+    const selectors = useCreation(() => {
+        return data?.stream?.selectors
+    }, [data?.stream?.selectors])
 
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
@@ -166,78 +183,166 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     const startTime = useCreation(() => {
         return formatTimestamp(data.startTime)
     }, [data.startTime])
+
+    const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
+        switch (item.value) {
+            case "enough-cancel":
+                onSkip(item)
+                break
+            default:
+                break
+        }
+    })
+    const onSkip = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
+        if (!selectors?.InteractiveId) return
+        const jsonInput = {
+            suggestion: item.value
+        }
+        const params: AIChatIPCSendParams = {
+            value: JSON.stringify(jsonInput),
+            id: selectors.InteractiveId
+        }
+        handleSend(params)
+    })
+
+    const renderContent = useMemoizedFn(() => {
+        switch (data.type) {
+            case "stream":
+                return (
+                    <ToolStatusCard status={"purple"} title={<div>{data.toolName}</div>}>
+                        <div className={styles["file-system-content"]}>
+                            <PreWrapper code={data?.stream?.content || ""} autoScrollBottom />
+                        </div>
+                    </ToolStatusCard>
+                )
+            case "result":
+                return (
+                    <ToolStatusCard
+                        status={status}
+                        title={
+                            <div>
+                                {data.toolName}
+                                <YakitTag size='small' fullRadius color={statusColor as YakitTagColor}>
+                                    {statusText}
+                                </YakitTag>
+                            </div>
+                        }
+                    >
+                        <YakitSpin spinning={loading}>
+                            <div className={styles["file-system-content"]}>
+                                {!!resultDetails ? (
+                                    <PreWrapper code={resultDetails} />
+                                ) : (
+                                    <>
+                                        <div>{summary}</div>
+                                        {content && <PreWrapper code={content} />}
+                                    </>
+                                )}
+                            </div>
+                        </YakitSpin>
+                    </ToolStatusCard>
+                )
+            default:
+                return null
+        }
+    })
+
+    const renderTitleMore = useMemoizedFn(() => {
+        switch (data.type) {
+            case "stream":
+                return (
+                    <div className={styles["tool-invoker-card-extra"]}>
+                        {selectors?.selectors && (
+                            <div className={styles["stdout-card-extra"]}>
+                                {selectors?.selectors?.map((item) => {
+                                    return (
+                                        <YakitPopconfirm
+                                            title='跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过'
+                                            key={item.value}
+                                            onConfirm={() => onToolExtra(item)}
+                                        >
+                                            <div key={item.value} className={styles["extra-btn"]}>
+                                                <span>{item.prompt}</span>
+                                                {AIToolToIconMap[item.value]}
+                                            </div>
+                                        </YakitPopconfirm>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )
+            case "result":
+                return (
+                    <div className={styles["tool-invoker-card-extra"]}>
+                        <div className={styles["tool-invoker-card-extra-time"]}>
+                            {!!startTime && (
+                                <div>
+                                    开始时间:<span>{startTime}</span>
+                                </div>
+                            )}
+                            {!!duration && (
+                                <div>
+                                    执行时长:<span>{duration}</span>s
+                                </div>
+                            )}
+                        </div>
+
+                        {!!risksLen && (
+                            <>
+                                <label
+                                    onClick={() => {
+                                        switchAIActTab(AITabsEnum.Risk)
+                                    }}
+                                >
+                                    相关漏洞 <span>{risksLen}</span>
+                                </label>
+                                <Divider type='vertical' />
+                            </>
+                        )}
+                        {!!trafficLen && (
+                            <label
+                                onClick={() => {
+                                    switchAIActTab(AITabsEnum.HTTP)
+                                }}
+                            >
+                                HTTP 流量 <span>{trafficLen}</span>
+                            </label>
+                        )}
+                        <Tooltip title='刷新代码块数据'>
+                            <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={getListToolList} />
+                        </Tooltip>
+                    </div>
+                )
+            default:
+                return null
+        }
+    })
     return (
         <ChatCard
             titleText={titleText}
             titleIcon={<SolidToolIcon />}
-            titleMore={
-                <div className={styles["tool-invoker-card-extra"]}>
-                    <div className={styles["tool-invoker-card-extra-time"]}>
-                        <div>
-                            开始时间:<span>{startTime}</span>
-                        </div>
-                        <div>
-                            执行时长:<span>{duration}</span>s
-                        </div>
-                    </div>
-
-                    {!!risksLen && (
-                        <>
-                            <label
-                                onClick={() => {
-                                    switchAIActTab(AITabsEnum.Risk)
-                                }}
-                            >
-                                相关漏洞 <span>{risksLen}</span>
-                            </label>
-                            <Divider type='vertical' />
-                        </>
-                    )}
-                    {!!trafficLen && (
-                        <label
-                            onClick={() => {
-                                switchAIActTab(AITabsEnum.HTTP)
-                            }}
-                        >
-                            HTTP 流量 <span>{trafficLen}</span>
-                        </label>
-                    )}
-                    <Tooltip title='刷新代码块数据'>
-                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={getListToolList} />
-                    </Tooltip>
-                </div>
-            }
+            titleMore={renderTitleMore()}
             titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
             footer={<OperationCardFooter {...operationInfo} />}
         >
-            <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
-                <div className={styles["file-system-title"]}>
-                    <div>
-                        {data.toolName}
-                        <YakitTag size='small' fullRadius color={statusColor as YakitTagColor}>
-                            {statusText}
-                        </YakitTag>
-                    </div>
-                </div>
-                <YakitSpin spinning={loading}>
-                    <div className={styles["file-system-content"]}>
-                        {!!resultDetails ? (
-                            <PreWrapper code={resultDetails} />
-                        ) : (
-                            <>
-                                <div>{summary}</div>
-                                {content && <PreWrapper code={content} />}
-                            </>
-                        )}
-                    </div>
-                </YakitSpin>
-            </div>
+            {renderContent()}
             {!!fileList?.length && <FileList fileList={fileList} />}
         </ChatCard>
     )
 }
 
 export default memo(ToolInvokerCard)
+
+const ToolStatusCard: React.FC<ToolStatusCardProps> = memo((props) => {
+    const {status, title, children} = props
+    return (
+        <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
+            <div className={styles["file-system-title"]}>{title}</div>
+            {children}
+        </div>
+    )
+})
 
 export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
     const {code, autoScrollBottom = false} = props

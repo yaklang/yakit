@@ -11,11 +11,13 @@ import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
 import {PreWrapper} from "../ToolInvokerCard"
 
-/** @name AI工具按钮对应图标 */
+/**
+ * @deprecated
+ * @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
     "enough-cancel": <OutlineArrownarrowrightIcon />
 }
-
+/**@deprecated */
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {handleSend} = useChatIPCDispatcher()
     const {toolCall, referenceNode} = props
