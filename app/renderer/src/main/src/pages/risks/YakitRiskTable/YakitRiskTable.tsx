@@ -23,8 +23,7 @@ import {
     useDebounceFn,
     useInViewport,
     useInterval,
-    useMemoizedFn,
-    useUpdateEffect
+    useMemoizedFn
 } from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {

@@ -1,5 +1,4 @@
 export interface PacketHistory extends PacketOrigin, PacketPair {
-    loading?: boolean
     Request?: Uint8Array
     Response?: Uint8Array
 }
