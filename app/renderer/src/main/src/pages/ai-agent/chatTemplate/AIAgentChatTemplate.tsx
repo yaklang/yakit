@@ -268,6 +268,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                 const nodeLabel = NodeIdVerbose[language]
                                 return (
                                     <StreamCard
+                                        key={id}
                                         titleText={nodeLabel}
                                         titleIcon={taskAnswerToIconMap[NodeId]}
                                         content={<PreWrapper code={content} />}
