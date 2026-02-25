@@ -6,7 +6,6 @@ import {
     useControllableValue,
     useCreation,
     useDebounceEffect,
-    useDebounceFn,
     useInViewport,
     useMemoizedFn,
     useSafeState,
@@ -80,8 +79,8 @@ import ChatIPCContent, {
 } from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
-import {aiChatDataStore, aiChatDataStore as histroyAiStore} from "@/pages/ai-agent/store/ChatDataStore"
-import {AIChatInfo, AIChatData} from "@/pages/ai-agent/type/aiChat"
+import {histroyAiStore} from "@/pages/ai-agent/store/ChatDataStore"
+import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {
     AIReActChatRefProps,
     AIHandleStartParams,
@@ -268,7 +267,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const [chatIPCData, events] = useChatIPC({
         getRequest: getSetting,
-        cacheDataStore: aiChatDataStore
+        cacheDataStore: histroyAiStore
     })
 
     const {execute} = chatIPCData
