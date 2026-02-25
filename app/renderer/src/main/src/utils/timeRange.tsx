@@ -37,16 +37,17 @@ export const TimePoint: React.FC<TimePointProps> = ({value, placeholder, setValu
 }
 
 const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
+    const { onStart, onEnd } = props;
     const [start, setStart] = useState(props.start);
     const [end, setEnd] = useState(props.end);
 
     useEffect(() => {
-        props.onStart && props.onStart(start || 0);
-    }, [start]);
+        onStart && onStart(start || 0);
+    }, [start, onStart]);
 
     useEffect(() => {
-        props.onEnd && props.onEnd(end || 0);
-    }, [end]);
+        onEnd && onEnd(end || 0);
+    }, [end, onEnd]);
 
     return <div className={"div-left"}>
         <Row>

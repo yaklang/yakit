@@ -37,7 +37,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
         let content: ReactNode = <></>
         switch (type) {
             case "preview":
-                content = <StreamMarkdown className={classNames(styles["ai-milkdown"])} content={item.content} />
+                content = <StreamMarkdown wrapperClassName={classNames(styles["ai-milkdown"])} content={item.content} />
                 break
             case "code":
                 content = <div className={styles["ai-milkdown-code"]}>{item.content}</div>

@@ -7524,6 +7524,11 @@ message SSAProgram{
   int64 LowRiskNumber = 12;
   int64 InfoRiskNumber = 14;
   uint64  SSAProjectID = 15;
+  // incremental compilation info
+  bool IsIncrementalCompile = 16; // 是否是增量编译
+  string IncrementalGroupId = 17; // 增量编译组ID（基于最基础的base program name）
+  string HeadProgramName = 18; // 该增量编译组的最新（头部）program名称
+  repeated string OverlayLayers = 19; // 该program所属的overlay layers（如果存在）
 }
 
 message SSARiskDiffItem{

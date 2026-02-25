@@ -1,33 +1,33 @@
-import React, {useEffect, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
-import {failed, success, yakitFailed} from "@/utils/notification"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
-import {formatTimestamp} from "@/utils/timeUtil"
+import React, { useEffect, useRef, useState } from "react"
+import { useMemoizedFn } from "ahooks"
+import { failed, success, yakitFailed } from "@/utils/notification"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { genDefaultPagination, QueryGeneralResponse } from "../invoker/schema"
+import { formatTimestamp } from "@/utils/timeUtil"
 import classNames from "classnames"
-import {Divider, Tooltip} from "antd"
+import { Divider, Tooltip } from "antd"
 import {
     OutlineArrowcirclerightIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {TrashIcon} from "@/assets/newIcon"
-import {YakitRoute} from "@/enums/yakitRoute"
+import { TrashIcon } from "@/assets/newIcon"
+import { YakitRoute } from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
-import {SSAProgram} from "../yakRunnerScanHistory/YakRunnerScanHistory"
-import {AuditCodePageInfoProps} from "@/store/pageInfo"
+import { SSAProgram } from "../yakRunnerScanHistory/YakRunnerScanHistory"
+import { AuditCodePageInfoProps } from "@/store/pageInfo"
 import styles from "./SSACompileHistory.module.scss"
-import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
-import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {Paging} from "@/utils/yakQueryHTTPFlow"
-import {IRifyUpdateProjectManagerModal} from "../YakRunnerProjectManager/YakRunnerProjectManager"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { YakitVirtualList } from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
+import { VirtualListColumns } from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
+import { Paging } from "@/utils/yakQueryHTTPFlow"
+import { IRifyUpdateProjectManagerModal } from "../YakRunnerProjectManager/YakRunnerProjectManager"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 interface SSAProgramFilter {
     ProgramNames?: string[]
@@ -51,7 +51,7 @@ interface DeleteSSAProgramRequest {
     Filter?: SSAProgramFilter
 }
 
-interface SSACompileHistoryProps {}
+interface SSACompileHistoryProps { }
 
 const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
     const [params, setParams] = useState<SSAProgramFilter>({
@@ -120,13 +120,13 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
 
         const finalParams = {
             ...params,
-            ...(filterNoProject ? {ProjectIds: [0]} : {})
+            ...(filterNoProject ? { ProjectIds: [0] } : {})
         }
 
         ipcRenderer
             .invoke("QuerySSAPrograms", {
                 Filter: finalParams,
-                Pagination: {...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + "")}
+                Pagination: { ...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + "") }
             })
             .then((item: QueryGeneralResponse<SSAProgram>) => {
                 const newData = reload ? item.Data : data.concat(item.Data)
@@ -160,7 +160,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
         }
         const finalParams = {
             ...params,
-            ...(filterNoProject ? {ProjectIds: [0]} : {})
+            ...(filterNoProject ? { ProjectIds: [0] } : {})
         }
         ipcRenderer
             .invoke("QuerySSAPrograms", {
@@ -344,7 +344,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
                         <div className={styles["text"]}>Total</div>
                         <div className={styles["number"]}>{total}</div>
                     </div>
-                    <Divider type={"vertical"} style={{margin: 0}} />
+                    <Divider type={"vertical"} style={{ margin: 0 }} />
                     <div className={styles["sub-title"]}>
                         <div className={styles["text"]}>Selected</div>
                         <div className={styles["number"]}>{selectedRowKeys.length}</div>
@@ -368,7 +368,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
                         placeholder='请输入关键词搜索'
                         value={params.Keyword}
                         onChange={(e) => {
-                            setParams({...params, Keyword: e.target.value})
+                            setParams({ ...params, Keyword: e.target.value })
                         }}
                         onSearch={() => {
                             setTimeout(() => {
@@ -386,12 +386,12 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
                                 title: selectedRowKeys.length === 0 ? "确认清空列表数据？" : "确认删除勾选数据？",
                                 params:
                                     selectedRowKeys.length === 0
-                                        ? {DeleteAll: true}
+                                        ? { DeleteAll: true }
                                         : {
-                                              Filter: {
-                                                  Ids: selectedRowKeys
-                                              }
-                                          }
+                                            Filter: {
+                                                Ids: selectedRowKeys
+                                            }
+                                        }
                             })
                         }}
                     >
