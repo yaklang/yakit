@@ -18,7 +18,7 @@ import FileList from "./FileList"
 import ModalInfo, {ModalInfoProps} from "./ModelInfo"
 import emiter from "@/utils/eventBus/eventBus"
 import {AITabsEnum} from "../defaultConstant"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useClickAway, useCreation, useMemoizedFn} from "ahooks"
 import {AIAgentGrpcApi, AIEventQueryRequest} from "@/pages/ai-re-act/hooks/grpcApi"
 import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
 import {OutlineArrownarrowrightIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
@@ -331,13 +331,15 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             >
                 <YakitSpin spinning={loading}>
                     <div className={styles["file-system-content"]}>
+                        <div className={styles["summary"]} title={summary}>
+                            {summary}
+                        </div>
                         {!!resultDetails ? (
-                            <PreWrapper code={resultDetails} />
-                        ) : (
                             <>
-                                <div>{summary}</div>
-                                {content && <PreWrapper code={content} />}
+                                <PreWrapper code={resultDetails} autoScrollBottom />
                             </>
+                        ) : (
+                            <>{content && <PreWrapper code={content} autoScrollBottom />}</>
                         )}
                     </div>
                 </YakitSpin>
@@ -362,6 +364,11 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
 
     const containerRef = useRef<HTMLPreElement>(null)
     const [isAtBottom, setIsAtBottom] = useState(true)
+    const [isScroll, setIsScroll] = useState(false)
+
+    useClickAway(() => {
+        setIsScroll(false)
+    }, containerRef)
 
     // 只有开启 autoScrollBottom 才监听滚动
     useEffect(() => {
@@ -398,8 +405,9 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
             className={styles["file-system-wrapper"]}
             style={{
                 maxHeight: 100,
-                overflowY: "auto"
+                overflow: isScroll ? "auto" : "hidden"
             }}
+            onClick={() => setIsScroll(true)}
         >
             <code>{code}</code>
         </pre>
