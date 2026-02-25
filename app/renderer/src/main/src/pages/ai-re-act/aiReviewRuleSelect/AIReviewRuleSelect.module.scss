@@ -5,15 +5,35 @@
 
 .ai-chat-select-wrapper {
     width: fit-content;
+    height: 24px;
     :global {
         .ant-select {
             border-radius: 20px;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: transparent;
+        }
+        .ant-select-selection-search {
+            display: none;
+        }
+        .ant-select-single:hover {
+            background-color: var(--Colors-Use-Basic-Shadow);
         }
         .ant-select-single .ant-select-selector .ant-select-selection-item {
             font-size: 11px;
             display: flex;
             align-items: center;
+            height: 16px;
+            line-height: 16px;
+        }
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .ant-select .ant-select-arrow {
+            right: 0;
+            height: 16px;
+            padding: 0 4px;
+            top: 10px;
         }
     }
 }
@@ -93,6 +113,7 @@
         text-overflow: ellipsis;
         overflow: hidden;
         word-break: break-all;
+        line-height: 16px;
     }
     .icon-wrapper {
         display: flex;
@@ -109,4 +130,49 @@
     width: 200px;
     display: flex;
     align-items: center;
+}
+
+.review-rule-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    .siren-icon {
+        svg {
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
+        }
+    }
+}
+.yakit-segmented-wrapper {
+    .segmented {
+        padding: 1px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        background-color: var(--Colors-Use-Basic-Shadow);
+        border-radius: 999px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+    :global {
+        .ant-segmented-group {
+            height: 22px;
+        }
+        .ant-segmented-thumb {
+            border-radius: 50%;
+        }
+        .ant-segmented.ant-segmented-sm .ant-segmented-item-label {
+            height: 22px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .ant-segmented-item-icon {
+            svg {
+                width: 14px;
+                height: 14px;
+            }
+        }
+        .ant-segmented-item {
+            border-radius: 50%;
+        }
+    }
 }

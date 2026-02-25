@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useRef, useState} from "react"
 import {AIChatSelectProps, AIReviewRuleSelectProps, ReviewRuleSelectProps} from "./type"
 import styles from "./AIReviewRuleSelect.module.scss"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
@@ -6,8 +6,13 @@ import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
 import classNames from "classnames"
 import {useClickAway, useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {AIAgentSettingDefault, AIReviewRuleIconMap, AIReviewRuleOptions} from "@/pages/ai-agent/defaultConstant"
-import {OutlineCodepenIcon, OutlineSirenIcon} from "@/assets/icon/outline"
+import {
+    AIAgentSettingDefault,
+    AIReviewRuleIconMap,
+    AIReviewRuleOptions,
+    AIReviewRuleOptionsType
+} from "@/pages/ai-agent/defaultConstant"
+import {OutlineSirenIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {FormItemSlider} from "@/pages/ai-agent/AIChatSetting/AIChatSetting"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -18,6 +23,9 @@ import isEqual from "lodash/isEqual"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {Tooltip} from "antd"
 
 const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
     const {setting} = useAIAgentStore()
@@ -43,6 +51,15 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
 
     const onSelectModel = useMemoizedFn((value: AIStartParams["ReviewPolicy"]) => {
         setSetting && setSetting((old) => ({...old, ReviewPolicy: value}))
+        if (chatIPCData.execute && !isEqual(selectReviewPolicyRef.current, modelValue)) {
+            handleSendConfigHotpatch({
+                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
+                params: {
+                    ReviewPolicy: modelValue
+                }
+            })
+        }
+        selectReviewPolicyRef.current = modelValue
     })
 
     const onSetAIReviewRiskControlScore = useMemoizedFn((value?: number) => {
@@ -62,21 +79,27 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
         }
         if (v) setAIReviewRiskControlScore(aiReviewRiskControlScore)
     })
-    const onSetOpen = useMemoizedFn((v: boolean) => {
-        setOpen(v)
-        if (!v && chatIPCData.execute && !isEqual(selectReviewPolicyRef.current, modelValue)) {
-            handleSendConfigHotpatch({
-                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-                params: {
-                    ReviewPolicy: modelValue
-                }
-            })
+    // const onSetOpen = useMemoizedFn((v: boolean) => {
+    //     setOpen(v)
+    //     if (!v && chatIPCData.execute && !isEqual(selectReviewPolicyRef.current, modelValue)) {
+    //         handleSendConfigHotpatch({
+    //             hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
+    //             params: {
+    //                 ReviewPolicy: modelValue
+    //             }
+    //         })
+    //     }
+    //     if (v) selectReviewPolicyRef.current = modelValue
+    // })
+    const getIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
+        if (modelValue === value) {
+            return AIReviewRuleIconMap[value]?.activeIcon
         }
-        if (v) selectReviewPolicyRef.current = modelValue
+        return AIReviewRuleIconMap[value]?.icon
     })
     return (
-        <>
-            <AIChatSelect
+        <div className={styles["review-rule-select-wrapper"]}>
+            {/* <AIChatSelect
                 dropdownRender={(menu) => {
                     return (
                         <div className={styles["drop-select-wrapper"]}>
@@ -101,7 +124,7 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                         label={
                             <div className={styles["select-option"]}>
                                 <div className={styles["icon-wrapper"]}>{AIReviewRuleIconMap[item.value]}</div>
-                                {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
+                                // data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求
                                 <span
                                     data-label='true'
                                     className={styles["select-option-text"]}
@@ -125,7 +148,21 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                         </div>
                     </YakitSelect.Option>
                 ))}
-            </AIChatSelect>
+            </AIChatSelect> */}
+            <YakitSegmented
+                value={modelValue}
+                onChange={(v) => {
+                    const showType = v as AIAgentSetting["ReviewPolicy"]
+                    onSelectModel(showType)
+                }}
+                options={AIReviewRuleOptions.map((item) => ({
+                    icon: <Tooltip title={item.describe}>{getIcon(item.value)}</Tooltip>,
+                    value: item.value
+                }))}
+                size='small'
+                wrapClassName={styles["yakit-segmented-wrapper"]}
+                className={styles["segmented"]}
+            />
             {modelValue === "ai" && (
                 <YakitPopover
                     content={
@@ -147,14 +184,14 @@ const ReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => 
                     <YakitButton
                         type='text2'
                         isHover={visible}
-                        icon={<OutlineSirenIcon />}
+                        icon={<OutlineSirenIcon className={styles["siren-icon"]} />}
                         onClick={(e) => {
                             e.stopPropagation()
                         }}
                     />
                 </YakitPopover>
             )}
-        </>
+        </div>
     )
 })
 /**

@@ -14,24 +14,34 @@ textarea.qs-input-textarea {
 // #region QSInputTextarea
 .ai-chat-textarea {
     width: 100%;
+    min-height: 124px;
     display: flex;
     flex-direction: column;
     gap: 2px;
 
-    background: var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     padding: 2px;
     border-radius: 8px;
     position: relative;
-    &:hover,
-    &:focus-within,
-    &:focus {
-        background: linear-gradient(
-            135deg,
-            var(--Colors-Use-Success-Border) 0%,
-            var(--Colors-Use-Success-Focus) 40.44%,
-            var(--Colors-Use-Main-Focus) 80%
-        );
+    .ai-chat-textarea-footer {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 24px;
     }
+    .divider-style {
+        width: 1px;
+        height: 12px;
+        background-color: var(--Colors-Use-Basic-Shadow);
+    }
+}
+.ai-review-chat {
+    background: linear-gradient(
+        135deg,
+        var(--Colors-Use-Success-Border) 0%,
+        var(--Colors-Use-Success-Focus) 40.44%,
+        var(--Colors-Use-Main-Focus) 80%
+    );
 }
 .dragging-from-tree {
     outline: 1px dashed var(--Colors-Use-Main-Primary);
@@ -62,6 +72,7 @@ textarea.qs-input-textarea {
     background: var(--Colors-Use-Basic-Background);
     padding: 8px;
     border-radius: 6px;
+    min-height: 94px;
     .textarea-textarea {
         max-height: 100px !important;
         color: var(--Colors-Use-Neutral-Text-1-Title);

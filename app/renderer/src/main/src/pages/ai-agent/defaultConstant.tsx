@@ -12,7 +12,8 @@ import {
     OutlineDocumenttextIcon,
     OutlineFolderopenIcon,
     OutlinePointerIcon,
-    OutlineEarOffIcon
+    OutlineEarOffIcon,
+    OutlineAIIcon
 } from "@/assets/icon/outline"
 import {YakitSideTabProps, YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
@@ -229,11 +230,20 @@ export const AIReviewRuleOptions = [
         describe: "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
     }
 ] as const
-type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]["value"]
-export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, ReactNode> = {
-    manual: <OutlinePointerIcon />,
-    yolo: <OutlineEarOffIcon style={{color: "var(--Colors-Use-Error-Primary)"}} />,
-    ai: <ColorsAIIcon />
+export type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]["value"]
+export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, {icon: ReactNode; activeIcon: ReactNode}> = {
+    manual: {
+        icon: <OutlinePointerIcon />,
+        activeIcon: <OutlinePointerIcon style={{color: "var(--Colors-Use-Neutral-Text-2-Primary)"}} />
+    },
+    yolo: {
+        icon: <OutlineEarOffIcon />,
+        activeIcon: <OutlineEarOffIcon style={{color: "var(--Colors-Use-Error-Primary)"}} />
+    },
+    ai: {
+        icon: <OutlineAIIcon />,
+        activeIcon: <ColorsAIIcon />
+    }
 }
 export enum AIMCPServerTypeEnum {
     SSE = "sse",

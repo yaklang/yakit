@@ -1,6 +1,6 @@
 import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
-import {Input} from "antd"
+import {Divider, Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
 import {useInViewport, useMemoizedFn} from "ahooks"
@@ -23,6 +23,7 @@ import {YakitKeyBoard} from "@/utils/globalShortcutKey/keyboard"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {AIFocusMode} from "@/pages/ai-re-act/aiFocusMode/AIFocusMode"
+import useAIAgentStore from "../useContext/useStore"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -57,6 +58,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             defaultValue,
             defaultAIFocusMode
         } = props
+
+        const {setting} = useAIAgentStore()
 
         const [disabled, setDisabled] = useState<boolean>(false)
 
@@ -180,7 +183,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 className={classNames(
                     styles["ai-chat-textarea"],
                     {
-                        [styles["dragging-from-tree"]]: isHovering
+                        [styles["dragging-from-tree"]]: isHovering,
+                        [styles["ai-review-chat"]]: setting.ReviewPolicy === "ai"
                     },
                     className
                 )}
@@ -188,7 +192,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 ref={dropRef}
             >
                 {isHovering && <div className={styles["drag-hint"]}>松开以添加到对话</div>}
-                <div className={styles["textarea-wrapper"]} onKeyDown={handleTextareaKeyDown}>
+                <div className={classNames(styles["textarea-wrapper"])} onKeyDown={handleTextareaKeyDown}>
                     <AIMilkdownInput
                         defaultValue={defaultValue}
                         onUpdateEditor={onUpdateEditor}
@@ -213,11 +217,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         </div>
                     </div>
                 </div>
-                <div>
+                <div className={styles["ai-chat-textarea-footer"]}>
+                    <AIReviewRuleSelect />
+                    <div className={styles["divider-style"]} />
                     <AIModelSelect isOpen={props?.isOpen} />
-                    <React.Suspense fallback={<div>loading...</div>}>
-                        <AIReviewRuleSelect />
-                    </React.Suspense>
+                    <div className={styles["divider-style"]} />
+                    <AIFocusMode value={focusMode} onChange={setFocusMode} />
                 </div>
 
                 {/* <div className={styles["textarea-footer"]}>
