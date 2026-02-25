@@ -1749,6 +1749,7 @@ message AIOutputEvent {
 
   string AIService = 20; // 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称
   string AIModelName = 22; // AI 模型名称
+  string AIModelVerboseName = 23; // AI 模型展示名称（美化后的模型名）
 
   string TaskUUID = 21; // 任务的唯一ID
 }
@@ -4166,7 +4167,6 @@ message GenerateYakCodeByPacketRequest {
 message GenerateCSRFPocByPacketRequest {
   bool IsHttps = 1;
   bytes Request = 2;
-  // 为 true 时在返回的 HTML 中注入自动提交脚本（页面加载后自动提交表单）
   bool AutoSubmit = 3;
 }
 
