@@ -132,7 +132,7 @@
             cursor: pointer;
 
             &.history-item-box-child {
-                padding-left: 24px;
+                padding-left: 38px;
             }
 
             .header {
@@ -153,6 +153,12 @@
                         width: 12px;
                         height: 12px;
                     }
+                }
+                .chevron-icon{
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                }
+                .chevron-icon-active{
+                    color: var(--Colors-Use-Basic-White);
                 }
                 .expand-placeholder {
                     cursor: default;

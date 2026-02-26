@@ -220,7 +220,6 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
             onCancel: () => {
                 m.destroy()
             },
-            showConfirmLoading: true,
             onOk: () => {
                 ipcRenderer
                     .invoke("GenerateSSAReport", {
@@ -673,10 +672,16 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
     })
 
     // 单个删除
-    const onDelete = useMemoizedFn((params: DeleteSSAProgramRequest) => {
+    const onDelete = useMemoizedFn((params: DeleteSSAProgramRequest, isHasChildren: boolean) => {
         try {
             setLoading(true)
             ipcRenderer.invoke("DeleteSSAPrograms", params).then(() => {
+                if(isHasChildren){
+                    update(1)
+                    setCheckedList([])
+                    success("删除成功")
+                    return
+                }
                 setResponse((prevResponse) => {
                     const newData = prevResponse.Data.filter(
                         (item) => item.Id !== (params.Filter?.Ids ? params.Filter.Ids[0] : -1)
@@ -687,6 +692,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                         Total: prevResponse.Total - 1
                     }
                 })
+                setCheckedList([])
                 setLoading(false)
                 success("删除成功")
             })
@@ -741,19 +747,27 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                 }}
                             >
                                 {isExpanded ? (
-                                    <OutlineChevrondownIcon />
+                                    <OutlineChevrondownIcon
+                                        className={classNames(styles["chevron-icon"], {
+                                            [styles["chevron-icon-active"]]: isClick,
+                                        })}
+                                    />
                                 ) : (
-                                    <OutlineChevronrightIcon />
+                                    <OutlineChevronrightIcon
+                                        className={classNames(styles["chevron-icon"], {
+                                            [styles["chevron-icon-active"]]: isClick,
+                                        })}
+                                    />
                                 )}
                             </div>
                         ) : (
                             <div className={styles["expand-placeholder"]} />
                         )}
-                        <YakitCheckbox
+                        {!rowData.isGroupChild && <YakitCheckbox
                             checked={isChecked}
                             onChange={(e) => handleCheckboxChange(e, program.Id)}
                             onClick={(e) => e.stopPropagation()}
-                        />
+                        />}
                         <div
                             className={classNames(styles["time"], {
                                 [styles["time-active"]]: isClick
@@ -824,17 +838,18 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                 <OutlineArrowcirclerightIcon />
                             </div>
                         </Tooltip>
-                        <div
+                        {!rowData.isGroupChild && <div
                             className={classNames(styles["icon-wrapper"], styles["icon-wrapper-error"], {
                                 [styles["icon-wrapper-active"]]: isClick
                             })}
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onDelete({ Filter: { Ids: [program.Id] } })
+                                const isHasChildren = !!(rowData.isGroupRoot && hasChildren)
+                                onDelete({ Filter: { Ids: [program.Id] } }, isHasChildren)
                             }}
                         >
                             <OutlineTrashIcon />
-                        </div>
+                        </div>}
                     </div>
                 </div>
             )
