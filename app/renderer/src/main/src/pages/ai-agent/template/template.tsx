@@ -1,12 +1,27 @@
-import React, {forwardRef, memo, Ref, RefAttributes, useEffect, useImperativeHandle, useRef, useState} from "react"
-import {AIChatTextareaProps, AIChatTextareaSubmit, FileToChatQuestionList, QSInputTextareaProps} from "./type"
+import React, {
+    forwardRef,
+    memo,
+    ReactNode,
+    Ref,
+    RefAttributes,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState
+} from "react"
+import {
+    AIChatTextareaProps,
+    AIChatTextareaSubmit,
+    AIInputInnerFeatureEnum,
+    FileToChatQuestionList,
+    FooterLeftTypesComponentProps,
+    QSInputTextareaProps
+} from "./type"
 import {Divider, Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowupIcon} from "@/assets/icon/outline"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
-import {v4 as uuidv4} from "uuid"
-
 import classNames from "classnames"
 import styles from "./template.module.scss"
 import {AIMilkdownInput} from "../components/aiMilkdownInput/AIMilkdownInput"
@@ -24,6 +39,7 @@ import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import {AIFocusMode} from "@/pages/ai-re-act/aiFocusMode/AIFocusMode"
 import useAIAgentStore from "../useContext/useStore"
+import {isString} from "lodash"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -50,21 +66,54 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     forwardRef((props, ref) => {
         const {
             loading,
-            extraFooterLeft,
-            extraFooterRight,
+            inputFooterLeft,
+            inputFooterRight,
+            footer,
             onSubmit,
             className,
             children,
             defaultValue,
-            defaultAIFocusMode
+            isOpen,
+            filterMentionType
         } = props
+
+        const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
+            if (!!props.footerLeftTypes?.length) {
+                const list = props.footerLeftTypes
+                    .map((item) => {
+                        let node: FooterLeftTypesComponentProps = {} as FooterLeftTypesComponentProps
+                        if (isString(item)) {
+                            switch (item) {
+                                case AIInputInnerFeatureEnum.AIReviewRuleSelect:
+                                    node = {type: AIInputInnerFeatureEnum.AIReviewRuleSelect}
+                                    break
+                                case AIInputInnerFeatureEnum.AIModelSelect:
+                                    node = {type: AIInputInnerFeatureEnum.AIModelSelect, props: {isOpen}}
+                                    break
+                                case AIInputInnerFeatureEnum.AIFocusMode:
+                                    node = {type: AIInputInnerFeatureEnum.AIFocusMode}
+                                    break
+                                default:
+                                    break
+                            }
+                        } else {
+                            node = item
+                        }
+                        return node
+                    })
+                    .filter((ele) => !!ele?.type)
+                return list
+            }
+            return [
+                {type: AIInputInnerFeatureEnum.AIReviewRuleSelect},
+                {type: AIInputInnerFeatureEnum.AIModelSelect, props: {isOpen}},
+                {type: AIInputInnerFeatureEnum.AIFocusMode}
+            ]
+        }, [props.footerLeftTypes, isOpen])
 
         const {setting} = useAIAgentStore()
 
         const [disabled, setDisabled] = useState<boolean>(false)
-
-        // icon的唯一id生成
-        const iconId = useRef(uuidv4())
 
         const {isHovering, dropRef} = useAIChatDrop({
             onFilesChange: (v) => onFilesChange(v)
@@ -178,6 +227,37 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             setFocusMode(value.mentionName)
         })
 
+        const renderFooterLeftTypes = useMemoizedFn((types: FooterLeftTypesComponentProps[]) => {
+            let node: ReactNode[] = []
+            types?.forEach((item, index) => {
+                if (index > 0 && index < types.length - 1) {
+                    node.push(<div className={styles["divider-style"]} key={`divider-${index}`} />)
+                }
+                switch (item.type) {
+                    case AIInputInnerFeatureEnum.AIReviewRuleSelect:
+                        node.push(item.component || <AIReviewRuleSelect key={item.type} {...item.props} />)
+                        break
+                    case AIInputInnerFeatureEnum.AIModelSelect:
+                        node.push(item.component || <AIModelSelect key={item.type} {...item.props} />)
+                        break
+                    case AIInputInnerFeatureEnum.AIFocusMode:
+                        node.push(
+                            item.component || (
+                                <AIFocusMode
+                                    key={item.type}
+                                    value={focusMode}
+                                    onChange={setFocusMode}
+                                    {...item.props}
+                                />
+                            )
+                        )
+                        break
+                    default:
+                        break
+                }
+            })
+            return node
+        })
         return (
             <div
                 className={classNames(
@@ -198,11 +278,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         onUpdateEditor={onUpdateEditor}
                         onUpdateContent={onUpdateContent}
                         onMemfitExtra={onMemfitExtra}
-                        filterMode={defaultAIFocusMode?.filterMode}
+                        filterMode={filterMentionType}
                     />
                     <div className={styles["footer"]}>
-                        <div className={styles["footer-left"]}>left</div>
+                        {inputFooterLeft ?? <div className={styles["footer-left"]}>left</div>}
+
                         <div className={styles["footer-right"]}>
+                            {inputFooterRight}
                             <YakitButton
                                 className={styles["round-btn"]}
                                 radius='50%'
@@ -218,11 +300,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     </div>
                 </div>
                 <div className={styles["ai-chat-textarea-footer"]}>
-                    <AIReviewRuleSelect />
-                    <div className={styles["divider-style"]} />
-                    <AIModelSelect isOpen={props?.isOpen} />
-                    <div className={styles["divider-style"]} />
-                    <AIFocusMode value={focusMode} onChange={setFocusMode} />
+                    {footer ?? <>{renderFooterLeftTypes(footerLeftTypes)}</>}
                 </div>
 
                 {/* <div className={styles["textarea-footer"]}>

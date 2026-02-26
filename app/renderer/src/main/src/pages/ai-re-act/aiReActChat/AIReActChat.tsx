@@ -254,9 +254,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                             ref={aiChatTextareaRef}
                                             loading={false}
                                             onSubmit={handleSubmit}
-                                            defaultAIFocusMode={externalParameters?.defaultAIFocusMode}
+                                            filterMentionType={externalParameters?.filterMentionType}
                                             isOpen={externalParameters?.isOpen}
-                                            extraFooterRight={
+                                            inputFooterRight={
                                                 <div className={styles["extra-footer-right"]}>
                                                     <OpenFileDropdown
                                                         cb={(data) => {
@@ -279,6 +279,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                                     )}
                                                 </div>
                                             }
+                                            footerLeftTypes={externalParameters?.footerLeftTypes}
                                         />
                                     </div>
                                 </div>

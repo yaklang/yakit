@@ -7,7 +7,7 @@ import {useClickAway, useCreation, useDebounceEffect, useKeyPress, useMemoizedFn
 import styles from "./AIMilkdownMention.module.scss"
 import {iconMap} from "@/pages/ai-agent/defaultConstant"
 import {AIChatMention} from "../../aiChatMention/AIChatMention"
-import {AIChatMentionSelectItem, AIMentionTypeItem, iconMapType} from "../../aiChatMention/type"
+import {AIChatMentionProps, AIChatMentionSelectItem, AIMentionTypeItem, iconMapType} from "../../aiChatMention/type"
 import {callCommand} from "@milkdown/kit/utils"
 import {aiMentionCommand, AIMentionCommandParams} from "./aiMentionPlugin"
 import classNames from "classnames"
@@ -19,7 +19,7 @@ export const aiMentionFactory = slashFactory("ai-mention-commands")
 
 interface AIMilkdownMentionProps {
     onMemfitExtra?: (v: AIMentionCommandParams) => void
-    filterMode?: AIMilkdownInputBaseProps["filterMode"]
+    filterMode?: AIChatMentionProps["filterMode"]
 }
 const mentionWidth = 300
 const mentionTarget = "@"

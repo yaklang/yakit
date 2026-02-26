@@ -287,7 +287,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
 
         // 处理 filterMode
         if (filterMode?.length) {
-            tabs = tabs.filter((item) => !filterMode.includes(item.value as iconMapType))
+            tabs = tabs.filter((item) => !filterMode.includes(item.value as `${AIMentionTabsEnum}`))
         }
 
         return tabs

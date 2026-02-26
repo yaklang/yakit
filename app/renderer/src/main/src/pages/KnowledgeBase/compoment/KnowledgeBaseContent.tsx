@@ -82,6 +82,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {OutlinePlusIcon} from "@/assets/newIcon"
 import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -781,7 +782,11 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                                         onClick={() => setShowFreeChat(false)}
                                                     />
                                                 </React.Fragment>
-                                            )
+                                            ),
+                                            footerLeftTypes: [
+                                                AIInputInnerFeatureEnum.AIModelSelect,
+                                                AIInputInnerFeatureEnum.AIFocusMode
+                                            ]
                                         }}
                                     />
                                 </div>
