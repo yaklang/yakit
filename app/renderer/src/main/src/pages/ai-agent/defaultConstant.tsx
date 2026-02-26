@@ -58,8 +58,8 @@ export enum AIAgentTabListEnum {
 export const AiAgentTabList: YakitTabsProps[] = [
     {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
     {value: AIAgentTabListEnum.Setting, label: "配置", icon: <OutlineCogIcon />},
-    {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
-    {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
+    // {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
+    // {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
     {value: AIAgentTabListEnum.AI_Model, label: "AI模型", icon: <OutlineChipIcon />},
     {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
 ]

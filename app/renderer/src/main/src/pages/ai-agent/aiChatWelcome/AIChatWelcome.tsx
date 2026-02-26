@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useId, useImperativeHandle, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     AIChatWelcomeProps,
     AIMaterialsData,
@@ -15,9 +15,13 @@ import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "../template/type"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowrightIcon,
+    OutlineCloseIcon,
+    OutlineImportIcon,
     OutlineInformationcircleIcon,
+    OutlineOpenIcon,
     OutlinePinIcon,
     OutlinePinOffIcon,
+    OutlinePluscircleIcon,
     OutlineRefreshIcon
 } from "@/assets/icon/outline"
 import {
@@ -55,21 +59,23 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {KnowledgeSidebarList} from "./KnowledgeSidebarList/KnowledgeSidebarList"
-import {AIAgentSetting} from "../aiAgentType"
-import {isForcedSetAIModal} from "../aiModelList/utils"
+import KnowledgeSidebarList, {KnowledgeModalRef} from "./KnowledgeSidebarList/KnowledgeSidebarList"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import Tabs from "./Tabs/Tabs"
+import ForgeName, {ForgeNameRef} from "../forgeName/ForgeName"
+import AIToolList from "../aiToolList/AIToolList"
 
-const sideberRadioOptions = [
-    {
-        value: "fileTree",
-        label: "文件树"
-    },
-    {
-        value: "knoledge",
-        label: "知识库"
-    }
-]
+// const sideberRadioOptions = [
+//     {
+//         value: "fileTree",
+//         label: "文件树"
+//     },
+//     {
+//         value: "knoledge",
+//         label: "知识库"
+//     }
+// ]
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -110,14 +116,14 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             []
         )
 
-        const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
-            (s) => ({
-                queryPagesDataById: s.queryPagesDataById,
-                updatePagesDataCacheById: s.updatePagesDataCacheById,
-                removePagesDataCacheById: s.removePagesDataCacheById
-            }),
-            shallow
-        )
+        // const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+        //     (s) => ({
+        //         queryPagesDataById: s.queryPagesDataById,
+        //         updatePagesDataCacheById: s.updatePagesDataCacheById,
+        //         removePagesDataCacheById: s.removePagesDataCacheById
+        //     }),
+        //     shallow
+        // )
 
         // #region 问题相关逻辑
 
@@ -135,7 +141,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const questionListAllRef = useRef<StreamResult.Log[]>([])
         const [inViewPort = true] = useInViewport(welcomeRef)
 
-        const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
+        // const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
 
         const tokenRef = useRef<string>(randomString(40))
         const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
@@ -357,33 +363,112 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             setCheckItems([])
             setQuestionList(getRandomItems(questionListAllRef.current))
         })
+
+        const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
+        const forgeNameRef = useRef<ForgeNameRef>(null)
+
+        const items = useMemo(() => {
+            return [
+                {
+                    label: "知识库",
+                    key: "knowledge",
+                    children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
+                    extra: [
+                        <YakitButton
+                            key='import'
+                            onClick={() => {
+                                knowledgeSidebarListRef.current?.openImport()
+                            }}
+                            type='text2'
+                            icon={<OutlineImportIcon />}
+                        />,
+                        <YakitButton
+                            key='add'
+                            onClick={() => {
+                                knowledgeSidebarListRef.current?.openAdd()
+                            }}
+                            type='text2'
+                            icon={<OutlinePluscircleIcon />}
+                        />
+                    ]
+                },
+                {
+                    label: "技能库",
+                    key: "skills",
+                    children: <ForgeName ref={forgeNameRef} />,
+                    extra: [
+                        <YakitButton
+                            key='import'
+                            onClick={() => {
+                                forgeNameRef.current?.openImport()
+                            }}
+                            type='text2'
+                            icon={<OutlineImportIcon />}
+                        />,
+                        <YakitButton
+                            key='add'
+                            onClick={() => {
+                                forgeNameRef.current?.openAdd()
+                            }}
+                            type='text2'
+                            icon={<OutlinePluscircleIcon />}
+                        />
+                    ]
+                },
+                {
+                    label: "工具库",
+                    key: "tools",
+                    children: <AIToolList />,
+                    extra: [
+                        <YakitButton
+                            key='add'
+                            onClick={() => {
+                                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAITool}))
+                            }}
+                            type='text2'
+                            icon={<OutlinePluscircleIcon />}
+                        />
+                    ]
+                }
+            ]
+        }, [api, streams])
+
         return (
             <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
-                <div className={styles["open-file-tree-button"]}>
-                    <YakitButton onClick={() => setOpenDrawer(!openDrawer)} type='outline1'>
-                        {openDrawer ? "收起" : "展开"}
-                    </YakitButton>
-                    <Divider type='vertical' />
-                    <SideSettingButton />
+                <div className={styles["open-file-tree-button"]} onClick={() => setOpenDrawer(!openDrawer)}>
+                    扩展资源
+                    <YakitButton type='text2' icon={<OutlineOpenIcon />} />
                 </div>
-                <div className={`${styles["file-tree-list"]} ${openDrawer ? styles["open"] : styles["close"]}`}>
-                    <YakitRadioButtons
-                        value={sidebarSelected}
-                        onChange={(e) => setSidebarSelected(e.target.value)}
-                        buttonStyle='solid'
-                        options={sideberRadioOptions}
-                        className={styles["sidebar-radio"]}
+
+                <YakitDrawer
+                    width={310}
+                    visible={openDrawer}
+                    getContainer={false}
+                    className={styles["drawer"]}
+                    mask={false}
+                    placement='left'
+                    onClose={() => setOpenDrawer(false)}
+                    closable={false}
+                    title={
+                        <div className={styles["drawer-title"]}>
+                            <span>扩展资源</span>
+                            <YakitButton
+                                onClick={() => setOpenDrawer(false)}
+                                type='text2'
+                                icon={<OutlineCloseIcon />}
+                            />
+                        </div>
+                    }
+                >
+                    <YakitResizeBox
+                        isVer
+                        firstNodeStyle={{
+                            padding: "0 12px"
+                        }}
+                        firstNode={<FileTreeList />}
+                        secondNode={<Tabs items={items} />}
                     />
-                    {sidebarSelected === "fileTree" ? (
-                        <div className={styles["file-tree-list-inner"]}>
-                            <FileTreeList />
-                        </div>
-                    ) : (
-                        <div className={styles["knowledge-base-list-inner"]}>
-                            <KnowledgeSidebarList api={api} streams={streams} />
-                        </div>
-                    )}
-                </div>
+                </YakitDrawer>
                 <div className={styles["content"]}>
                     <div className={styles["content-absolute"]}>
                         <div className={styles["input-wrapper"]}>

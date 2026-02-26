@@ -80,7 +80,7 @@ const FileTreeSystem = () => {
                                 <FileTreeSystemListWapper
                                     isOpen
                                     key='customFolder'
-                                    title='已打开文件/文件夹'
+                                    title='我打开的文件'
                                     selected={selected}
                                     historyFolder={historyFolder}
                                     path={customFolder}

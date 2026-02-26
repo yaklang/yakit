@@ -183,7 +183,7 @@ const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
         <>
             <YakitModal
                 visible={expand}
-                title={`参考资料(${referenceList.length})`}
+                title={`参考资料`}
                 cancelButtonProps={{style: {display: "none"}}}
                 onOk={(e) => {
                     e.stopPropagation()
@@ -203,7 +203,7 @@ const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
                     setExpand(true)
                 }}
             >
-                [参考文献]
+                [参考资料]
             </span>
         </>
     )

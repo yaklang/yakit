@@ -1,18 +1,17 @@
-import React, {useEffect, useRef, type FC} from "react"
+import React, {forwardRef, Ref, useEffect, useImperativeHandle, useRef, type FC} from "react"
 
-import {useAsyncEffect, useDebounceFn, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useRequest, useSafeState} from "ahooks"
 
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {
     BuildingKnowledgeBase,
     BuildingKnowledgeBaseEntry,
-    compareKnowledgeBaseChange,
     insertModaOptions,
     prioritizeProcessingItems,
     targetIcon,
     targetInstallList
 } from "@/pages/KnowledgeBase/utils"
-import {OutlineLoadingIcon} from "@/assets/icon/outline"
+import {OutlineLoadingIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {OperateKnowledgenBaseItem} from "@/pages/KnowledgeBase/compoment/OperateKnowledgenBaseItem"
 
@@ -20,16 +19,18 @@ import classNames from "classnames"
 import styles from "./knowledgeSidebarList.module.scss"
 import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import {PropertyIcon} from "@/pages/payloadManager/icon"
-import Dragger from "antd/lib/upload/Dragger"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteDetailDrawer} from "@/pages/KnowledgeBase/compoment/PluginExecuteDetailDrawer"
 import {KnowledgeBaseTableHeaderProps} from "@/pages/KnowledgeBase/compoment/KnowledgeBaseTableHeader"
 import AllInstallPlugins from "@/pages/KnowledgeBase/compoment/AllInstallPlugins"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIMentionCommandParams} from "../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
+import {KnowledgeBaseFormModal} from "@/pages/KnowledgeBase/compoment/KnowledgeBaseFormModal"
+import {ImportModal} from "@/pages/KnowledgeBase/compoment/ImportModal"
+import {Form} from "antd"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -38,10 +39,15 @@ interface KnowledgeSidebarListProps {
     streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
 }
 
-const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => {
+export interface KnowledgeModalRef {
+    openAdd: () => void
+    openImport: () => void
+}
+
+const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Ref<KnowledgeModalRef>) => {
     const [installPlug, setInstallPlug] = useSafeState(false)
 
-    const {knowledgeBases, addKnowledgeBase, editKnowledgeBase} = useKnowledgeBase()
+    const {knowledgeBases, editKnowledgeBase} = useKnowledgeBase()
 
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
@@ -101,35 +107,6 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         }
     )
 
-    const {runAsync, loading} = useRequest(
-        async (params) => {
-            const result = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
-                Name: params.KnowledgeBaseName,
-                Description: params.KnowledgeBaseDescription,
-                Type: params.KnowledgeBaseType,
-                Tags: params.Tags,
-                IsDefault: params.IsDefault,
-                CreatedFromUI: params.CreatedFromUI ?? true
-            })
-            const KnowledgeBaseID = result?.KnowledgeBase?.ID
-            const hasKnowledgeBaseById = knowledgeBases.find((it) => it.ID === KnowledgeBaseID)
-            if (hasKnowledgeBaseById) {
-                editKnowledgeBase(KnowledgeBaseID, {
-                    ...params
-                })
-            } else {
-                addKnowledgeBase({...result.KnowledgeBase, ...params})
-            }
-
-            return "suecess"
-        },
-        {
-            manual: true,
-            onSuccess: () => success("创建知识库成功"),
-            onError: (err) => failed(`创建知识库失败: ${err}`)
-        }
-    )
-
     const onCloseViewBuildProcess = useMemoizedFn(() => {
         setBuildingDrawer({visible: false, streamToken: "", type: ""})
     })
@@ -138,54 +115,6 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         setKnowledgeBase(knowledgeBases)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases])
-
-    const beforeUploadFun = useDebounceFn(
-        async (fileList: Array<File & {path: string}>) => {
-            let arr: {
-                path: string
-                name: string
-            }[] = []
-            fileList.forEach((f) => {
-                let name = f.name.split(".")[0]
-                arr.push({
-                    path: f.path,
-                    name
-                })
-            })
-            const findDefaultKnowledgeBase = knowledgeBases.find((it) => it.IsDefault)
-
-            try {
-                await runAsync({
-                    ...findDefaultKnowledgeBase,
-                    streamstep: 1,
-                    streamToken: randomString(50),
-                    KnowledgeBaseFile: arr.map((it) => {
-                        const fileName = it.path.split(/[\\/]/).pop() || ""
-                        const ext = fileName.includes(".")
-                            ? fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase()
-                            : ""
-
-                        return {
-                            fileType: ext,
-                            path: it.path
-                        }
-                    }),
-                    KnowledgeBaseName: findDefaultKnowledgeBase?.KnowledgeBaseName ?? "default",
-                    KnowledgeBaseDescription:
-                        findDefaultKnowledgeBase?.KnowledgeBaseDescription ??
-                        "系统默认知识库，存储常用知识内容，为AI对话提供上下文增强。",
-                    Tags: findDefaultKnowledgeBase?.Tags ?? [],
-                    IsDefault: findDefaultKnowledgeBase?.IsDefault ?? true,
-                    CreatedFromUI: findDefaultKnowledgeBase?.CreatedFromUI ?? true
-                })
-            } catch (error) {
-                failed(`知识库创建失败:` + error)
-            }
-        },
-        {
-            wait: 200
-        }
-    ).run
 
     const buildingRef = useRef<Set<string>>(new Set())
 
@@ -276,7 +205,7 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         }
     })
 
-    useEffect(() => {
+    const processed = useMemoizedFn(() => {
         const isExternal = (it) => it.IsImported === true && (it.CreatedFromUI ?? false) === false
         const isManual = (it) => it.IsImported === false && it.CreatedFromUI === true
         const isOther = (it) => it.IsImported === false && (it.CreatedFromUI ?? false) === false
@@ -290,8 +219,11 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                       if (addMode.includes("other") && isOther(it)) return true
                       return false
                   })
-        const processed = prioritizeProcessingItems(result)
-        setKnowledgeBase(processed)
+        return prioritizeProcessingItems(result)
+    })
+
+    useEffect(() => {
+        setKnowledgeBase(processed())
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases, addMode])
 
@@ -321,6 +253,50 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
         )
     })
 
+    // 新增、导入知识库modal状态管理
+    const [visible, setVisible] = useSafeState(false)
+    const [importVisible, setImportVisible] = useSafeState(false)
+    const [form] = Form.useForm()
+    const handOpenKnowledgeBasesModal = useMemoizedFn(() => {
+        form.resetFields()
+        setVisible((preValue) => !preValue)
+    })
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            openAdd() {
+                form.resetFields()
+                setVisible(true)
+            },
+            openImport() {
+                form.resetFields()
+                setImportVisible(true)
+            }
+        }),
+        [form, setVisible, setImportVisible]
+    )
+
+    // 搜索和筛选
+    const [search, setSearch] = useSafeState("")
+    const [loading, setLoading] = useSafeState(false)
+    useDebounceEffect(
+        () => {
+            setLoading(true)
+            if (search.trim() === "") {
+                setKnowledgeBase(processed())
+            } else {
+                const filtered = processed().filter((kb) => kb.KnowledgeBaseName.includes(search.trim()))
+                setKnowledgeBase(filtered)
+            }
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
+        },
+        [search],
+        {wait: 300}
+    )
+
     return (
         <React.Fragment>
             {installPlug ? (
@@ -332,6 +308,15 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                 />
             ) : (
                 <div className={styles["knowledge-base-info-body"]}>
+                    <div className={styles["knowledge-base-search"]}>
+                        <YakitInput
+                            prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                            allowClear
+                            placeholder='请输入关键词搜索'
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
                     <div className={styles["knowledge-base-filter-tags"]}>
                         {insertModaOptions.map((tag) => (
                             <YakitCheckableTag
@@ -348,109 +333,96 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
                         ))}
                     </div>
                     <div className={styles["knowledge-base-info-list"]}>
-                        {knowledgeBase.length > 0 ? (
-                            knowledgeBase.map((items, index) => {
-                                const Icon = targetIcon(index)
-                                return (
-                                    <div
-                                        className={classNames(styles["knowledge-base-info-card"])}
-                                        key={items.ID}
-                                        onClick={() => onSelectItem(items)}
-                                    >
+                        <YakitSpin spinning={loading}>
+                            {knowledgeBase.length > 0 ? (
+                                knowledgeBase.map((items, index) => {
+                                    const Icon = targetIcon(index)
+                                    return (
                                         <div
-                                            className={classNames({
-                                                [styles["initial"]]: items.streamstep !== "success",
-                                                [styles["content"]]: items.streamstep === "success"
-                                            })}
+                                            className={classNames(styles["knowledge-base-info-card"])}
+                                            key={items.ID}
+                                            onClick={() => onSelectItem(items)}
                                         >
                                             <div
-                                                className={classNames([styles["header"]], {
-                                                    [styles["operate-dropdown-menu-open"]]: menuSelectedId === items.ID
+                                                className={classNames({
+                                                    [styles["initial"]]: items.streamstep !== "success",
+                                                    [styles["content"]]: items.streamstep === "success"
                                                 })}
                                             >
-                                                <Icon className={styles["icon"]} />
-                                                <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
-                                                {api?.tokens?.includes(items.streamToken) &&
-                                                items.streamstep !== "success" ? (
+                                                <div
+                                                    className={classNames([styles["header"]], {
+                                                        [styles["operate-dropdown-menu-open"]]:
+                                                            menuSelectedId === items.ID
+                                                    })}
+                                                >
+                                                    <Icon className={styles["icon"]} />
+                                                    <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
+                                                    {api?.tokens?.includes(items.streamToken) &&
+                                                    items.streamstep !== "success" ? (
+                                                        <div
+                                                            className={styles["tag"]}
+                                                            onClick={(e) => {
+                                                                setSelectedKnowledgeBaseItems(
+                                                                    items as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
+                                                                )
+                                                                onViewBuildProcess(e, items.streamToken, "routine")
+                                                            }}
+                                                        >
+                                                            <OutlineLoadingIcon className={styles["loading-icon"]} />
+                                                            生成中,点击查看进度
+                                                        </div>
+                                                    ) : items.IsDefault ? (
+                                                        <div className={styles["default-tag"]}>默认知识库</div>
+                                                    ) : (
+                                                        <div className={styles["type-tag"]}>
+                                                            {items.CreatedFromUI
+                                                                ? "手动创建"
+                                                                : items.IsImported
+                                                                ? "外部导入"
+                                                                : "其他"}
+                                                        </div>
+                                                    )}
+
                                                     <div
-                                                        className={styles["tag"]}
+                                                        className={classNames([styles["operate"]])}
                                                         onClick={(e) => {
-                                                            setSelectedKnowledgeBaseItems(
-                                                                items as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
-                                                            )
-                                                            onViewBuildProcess(e, items.streamToken, "routine")
+                                                            e.stopPropagation()
                                                         }}
                                                     >
-                                                        <OutlineLoadingIcon className={styles["loading-icon"]} />
-                                                        生成中,点击查看进度
+                                                        <OperateKnowledgenBaseItem
+                                                            items={items}
+                                                            setMenuSelectedId={setMenuSelectedId}
+                                                            knowledgeBase={knowledgeBase}
+                                                            api={api}
+                                                            addMode={addMode}
+                                                        />
                                                     </div>
-                                                ) : items.IsDefault ? (
-                                                    <div className={styles["default-tag"]}>默认知识库</div>
-                                                ) : (
-                                                    <div className={styles["type-tag"]}>
-                                                        {items.CreatedFromUI
-                                                            ? "手动创建"
-                                                            : items.IsImported
-                                                            ? "外部导入"
-                                                            : "其他"}
-                                                    </div>
-                                                )}
+                                                </div>
 
-                                                <div
-                                                    className={classNames([styles["operate"]])}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                    }}
-                                                >
-                                                    <OperateKnowledgenBaseItem
-                                                        items={items}
-                                                        setMenuSelectedId={setMenuSelectedId}
-                                                        knowledgeBase={knowledgeBase}
-                                                        api={api}
-                                                        addMode={addMode}
-                                                    />
+                                                <div className={styles["description"]}>
+                                                    {items.KnowledgeBaseDescription?.trim() || "-"}
                                                 </div>
                                             </div>
-
-                                            <div className={styles["description"]}>
-                                                {items.KnowledgeBaseDescription?.trim() || "-"}
-                                            </div>
                                         </div>
-                                    </div>
-                                )
-                            })
-                        ) : (
-                            <YakitEmpty style={{width: "100%", margin: 0}} />
-                        )}
-                    </div>
-
-                    <div className={styles["upload-dragger-box"]}>
-                        <YakitSpin spinning={loading}>
-                            <Dragger
-                                className={styles["upload-dragger"]}
-                                multiple={true}
-                                showUploadList={false}
-                                beforeUpload={(_, fileList: any) => {
-                                    beforeUploadFun(fileList)
-                                    return false
-                                }}
-                            >
-                                <div className={styles["upload-info"]}>
-                                    <div className={styles["add-file-icon"]}>
-                                        <PropertyIcon />
-                                    </div>
-                                    <div className={styles["content"]}>
-                                        <div className={styles["title"]}>
-                                            可将文件拖入框内，或
-                                            <span className={styles["hight-light"]}>点击此处导入</span>
-                                            即可开始创建知识库
-                                        </div>
-                                        <div className={styles["sub-title"]}>数据会存到默认库，可选择多个文件</div>
-                                    </div>
-                                </div>
-                            </Dragger>
+                                    )
+                                })
+                            ) : (
+                                <YakitEmpty style={{width: "100%", margin: 0}} />
+                            )}
                         </YakitSpin>
+                        <div className={styles["min-reached"]}>已经到低啦~</div>
                     </div>
+
+                    <KnowledgeBaseFormModal
+                        visible={visible}
+                        title='新增知识库'
+                        handOpenKnowledgeBasesModal={handOpenKnowledgeBasesModal}
+                        form={form}
+                        setAddMode={setAddMode}
+                    />
+
+                    <ImportModal visible={importVisible} onVisible={setImportVisible} setAddMode={setAddMode} />
+
                     {buildingDrawer.visible ? (
                         <PluginExecuteDetailDrawer
                             buildingDrawer={buildingDrawer}
@@ -467,4 +439,4 @@ const KnowledgeSidebarList: FC<KnowledgeSidebarListProps> = ({api, streams}) => 
     )
 }
 
-export {KnowledgeSidebarList}
+export default forwardRef<KnowledgeModalRef, KnowledgeSidebarListProps>(KnowledgeSidebarList)

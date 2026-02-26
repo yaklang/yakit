@@ -71,20 +71,20 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                     </React.Suspense>
                 )
                 break
-            case AIAgentTabListEnum.Forge_Name:
-                content = (
-                    <React.Suspense>
-                        <ForgeName />
-                    </React.Suspense>
-                )
-                break
-            case AIAgentTabListEnum.Tool:
-                content = (
-                    <React.Suspense>
-                        <AIToolList />
-                    </React.Suspense>
-                )
-                break
+            // case AIAgentTabListEnum.Forge_Name:
+            //     content = (
+            //         <React.Suspense>
+            //             <ForgeName />
+            //         </React.Suspense>
+            //     )
+            //     break
+            // case AIAgentTabListEnum.Tool:
+            //     content = (
+            //         <React.Suspense>
+            //             <AIToolList />
+            //         </React.Suspense>
+            //     )
+            //     break
             case AIAgentTabListEnum.AI_Model:
                 content = (
                     <React.Suspense>

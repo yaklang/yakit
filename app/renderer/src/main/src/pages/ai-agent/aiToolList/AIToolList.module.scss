@@ -22,6 +22,18 @@
             gap: 4px;
         }
     }
+    .ai-tool-list-search{
+        padding: 0 12px 4px 12px;
+        .search-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Disable);
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
     .ai-tool-list {
         .tool-icon {
             width: 16px;
