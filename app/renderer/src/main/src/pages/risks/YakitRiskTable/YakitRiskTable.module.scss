@@ -392,3 +392,18 @@ div.md-content {
         color: var(--Colors-Use-Main-Primary);
     }
 }
+
+.packetHistoryDropdownMenu {
+    :global {
+        .ant-dropdown-menu-item {
+            .ant-typography {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+        .ant-dropdown-menu-item-active {
+            .ant-typography {
+                color: var(--Colors-Use-Basic-White);
+            }
+        }
+    }
+}

@@ -1733,6 +1733,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                 </Tooltip>
                                 <YakitDropdownMenu
                                     menu={{
+                                        className: styles['packetHistoryDropdownMenu'],
                                         data: packetHistory.map((item, index) => {
                                             const urlNode = (
                                                 <Typography.Text ellipsis={{tooltip: item.Url}} style={{maxWidth: 300}}>
