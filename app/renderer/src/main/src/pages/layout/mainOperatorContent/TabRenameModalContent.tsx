@@ -4,14 +4,15 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {TextAreaRef} from "antd/lib/input/TextArea"
-import {useMemoizedFn} from "ahooks"
+import {useControllableValue, useMemoizedFn} from "ahooks"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {QueryFuzzerConfigRequest} from "./utils"
 import {APIFunc} from "@/apiUtils/type"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {getRemoteValue} from "@/utils/kv"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
-import { yakitNotify } from "@/utils/notification"
+import {yakitNotify} from "@/utils/notification"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 interface TabRenameModalProps {
     title: string
     onClose: () => void
@@ -78,12 +79,15 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
 
 export default TabRenameModalContent
 
+export type RecoveryModel = "coverage" | "new"
 interface RestoreTabContentProps {
+    setRecoveryModel: React.Dispatch<React.SetStateAction<RecoveryModel>>
+    setSecondaryTabsNum: React.Dispatch<React.SetStateAction<number>>
     onClose: () => void
     onRestore: APIFunc<QueryFuzzerConfigRequest, null>
 }
 export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((props) => {
-    const {onClose, onRestore} = props
+    const {setRecoveryModel, onClose, onRestore} = props
     const [number, setNumber] = useState<number>(20)
     const [loading, setLoading] = useState<boolean>(false)
     const onOK = useMemoizedFn(() => {
@@ -105,7 +109,11 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
             onClose()
         })
     })
-    const [secondaryTabsNum, setSecondaryTabsNum] = useState<number>(100)
+    const [secondaryTabsNum, setSecondaryTabsNum] = useControllableValue<number>(props, {
+        defaultValue: 100,
+        valuePropName: "secondaryTabsNum",
+        trigger: "setSecondaryTabsNum"
+    })
     useEffect(() => {
         getRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum).then((set) => {
             if (set) {
@@ -127,6 +135,20 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
                 <span>个标签页</span>
             </div>
             <div className={styles["item-tip"]}>恢复标签页不能超过{secondaryTabsNum}个</div>
+            <div className={styles["item"]}>
+                <span>恢复模式</span>
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    defaultValue='coverage'
+                    options={[
+                        {value: "coverage", label: "覆盖当前标签"},
+                        {value: "new", label: "新增恢复标签页"}
+                    ]}
+                    onChange={(e) => {
+                        setRecoveryModel(e.target.value)
+                    }}
+                ></YakitRadioButtons>
+            </div>
             <div className={styles["footer"]}>
                 <YakitButton type='outline2' onClick={onClose}>
                     取消

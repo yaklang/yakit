@@ -145,7 +145,7 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {useMenuHeight} from "@/store/menuHeight"
 import {HybridScanInputTarget} from "@/models/HybridScan"
 import {defaultWebsocketFuzzerPageInfo} from "@/defaultConstants/WebsocketFuzzer"
-import {RestoreTabContent} from "./TabRenameModalContent"
+import {RecoveryModel, RestoreTabContent} from "./TabRenameModalContent"
 import {
     FuzzerConfig,
     QueryFuzzerConfigRequest,
@@ -316,6 +316,70 @@ const containsId = (data: MultipleNodeInfo[], targetId: string) => {
         }
     }
     return false
+}
+
+/**
+ * 更新MultipleNodeList id groupId
+ */
+const rebuildMultipleNodeTree = (key: string, cache: MultipleNodeInfo[]): MultipleNodeInfo[] => {
+    const groupIdMap = new Map<string, string>()
+
+    // 1. 收集所有 groupId（排除 0）
+    const allGroupIds = new Set<string>()
+    cache.forEach((node) => {
+        if (node.groupId !== "0") {
+            allGroupIds.add(node.groupId)
+        }
+    })
+
+    // 2. 收集所有 id
+    const allIds = new Set<string>()
+    cache.forEach((node) => {
+        allIds.add(node.id)
+    })
+
+    // 3. 生成新组id
+    allGroupIds.forEach((gid) => {
+        groupIdMap.set(gid, generateGroupId())
+    })
+
+    // 4. 递归更新
+    const updateNode = (node: MultipleNodeInfo): MultipleNodeInfo => {
+        let newId = node.id
+        let newGroupId = node.groupId
+
+        // 1. 组节点（id 被当 groupId 使用）
+        if (groupIdMap.has(node.id)) {
+            newId = groupIdMap.get(node.id)!
+            newGroupId = "0"
+        } else {
+            // 2. 普通节点
+            const time = new Date().getTime().toString()
+            const tabId = `${key}-[${randomString(6)}]-${time}`
+            newId = tabId
+        }
+
+        // 3. 修复 groupId
+        if (node.groupId !== "0" && groupIdMap.has(node.groupId)) {
+            newGroupId = groupIdMap.get(node.groupId)!
+        }
+
+        return {
+            ...node,
+            id: newId,
+            groupId: newGroupId,
+            pageParams: node.pageParams
+                ? {
+                      ...node.pageParams,
+                      id: newId,
+                      groupId: newGroupId
+                  }
+                : undefined,
+            groupChildren: node.groupChildren ? node.groupChildren.map(updateNode) : undefined
+        }
+    }
+
+    return cache.map(updateNode)
 }
 
 /**
@@ -2431,7 +2495,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     setLoading(true)
                     const res = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerCache)
                     const cache = JSONParseLog(res || "[]", {page: "MainOperatorContent", fun: "onInitFuzzer"})
-                    await fetchFuzzerList(cache)
+                    await fetchFuzzerList(cache, false)
                     await getFuzzerSequenceCache()
                 } catch (error) {
                     setLoading(false)
@@ -2475,7 +2539,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     // 获取数据库中缓存的web-fuzzer页面信息
-    const fetchFuzzerList = useMemoizedFn(async (cache) => {
+    const fetchFuzzerList = useMemoizedFn(async (cache, add) => {
         try {
             const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
                 proxy: [],
@@ -2494,7 +2558,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 noSystemProxy: cacheData.noSystemProxy,
                 disableUseConnPool: cacheData.disableUseConnPool
             }
-            clearAllData()
+
+            if (!add) {
+                clearAllData()
+            }
+
             // 菜单在代码内的名字
             const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
             const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
@@ -2505,11 +2573,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 routeKey: YakitRoute.HTTPFuzzer
             }
             let multipleNodeListLength: number = 0
-            const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
+            const newCache = add ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache
+            const multipleNodeList: MultipleNodeInfo[] = newCache.filter((ele) => ele.groupId === "0")
             const pLength = multipleNodeList.length
             for (let index = 0; index < pLength; index++) {
                 const parentItem: MultipleNodeInfo = multipleNodeList[index]
-                const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
+                const childrenList = newCache.filter((ele) => ele.groupId === parentItem.id)
                 const cLength = childrenList.length
                 const groupChildrenList: MultipleNodeInfo[] = []
 
@@ -2583,6 +2652,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (newMultipleNodeList.length === 0) return
             // console.log("multipleNodeList", multipleNodeList)
             // console.log("pageNodeInfo", pageNodeInfo)
+
+            if (add) {
+                const oldPageNodeInfo = pages.get(YakitRoute.HTTPFuzzer)
+                if (oldPageNodeInfo) {
+                    pageNodeInfo.pageList.unshift(...oldPageNodeInfo.pageList)
+                }
+            }
+
             const webFuzzerPage = {
                 routeKey: key,
                 verbose: tabName,
@@ -2594,12 +2671,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 multipleNode: multipleNodeList,
                 multipleLength: multipleNodeListLength
             }
-            const oldPageCache = [...pageCache]
+            const oldPageCache = cloneDeep(pageCache)
             const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
             if (index === -1) {
                 oldPageCache.push(webFuzzerPage)
             } else {
-                oldPageCache.splice(index, 1, webFuzzerPage)
+                if (add) {
+                    oldPageCache[index].multipleNode.push(...multipleNodeList)
+                    oldPageCache[index].multipleLength =
+                        (oldPageCache[index]?.multipleLength || 0) + multipleNodeListLength
+                    if (getSubPageTotal(oldPageCache[index].multipleNode) >= secondaryTabsNum) {
+                        yakitNotify("info", "超过标签页数量限制")
+                    }
+                } else {
+                    oldPageCache.splice(index, 1, webFuzzerPage)
+                }
             }
             setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
             setPageCache(oldPageCache)
@@ -2923,13 +3009,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [pageCache])
     /**从历史记录中恢复数据 */
+    const [recoveryModel, setRecoveryModel] = useState<RecoveryModel>("coverage")
+    const [secondaryTabsNum, setSecondaryTabsNum] = useState<number>(100)
     const onRestoreHistory = useMemoizedFn((routeKey: YakitRoute) => {
         switch (routeKey) {
             case YakitRoute.HTTPFuzzer:
+                setRecoveryModel("coverage")
                 const m = showYakitModal({
                     title: "恢复标签页",
                     footer: null,
-                    content: <RestoreTabContent onClose={() => m.destroy()} onRestore={onRestoreHTTPFuzzer} />
+                    content: (
+                        <RestoreTabContent
+                            setSecondaryTabsNum={setSecondaryTabsNum}
+                            setRecoveryModel={setRecoveryModel}
+                            onClose={() => m.destroy()}
+                            onRestore={onRestoreHTTPFuzzer}
+                        />
+                    )
                 })
                 break
 
@@ -2946,7 +3042,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             ...JSONParseLog(ele.Config, {page: "MainOperatorContent", fun: "onRestoreHTTPFuzzer"})
                         })) || []
                     if (pageList.length > 0) {
-                        await fetchFuzzerList(pageList)
+                        await fetchFuzzerList(pageList, recoveryModel === "new")
                         // FuzzerSequence
                         const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList)
                         if (!!resSequence) {
@@ -3491,7 +3587,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     useEffect(() => {
         // 处理外部新增一个二级tab
-        setSubPage(pageItem.multipleNode || [])
+        setSubPage(pageItem.multipleNode.slice() || [])
     }, [pageItem.multipleNode])
 
     useEffect(() => {
