@@ -31,9 +31,12 @@ import {
     grpcMITMFilterWebsocket,
     grpcMITMHotPort,
     grpcMITMSetDownstreamProxy,
+    grpcMITMGetFilter,
     grpcMITMSetDisableSystemProxy,
     grpcMITMStopCall
 } from "../MITMHacker/utils"
+import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
+import {getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
@@ -43,6 +46,7 @@ import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil
 import { useStore } from "@/store/mitmState"
 import {useProxy} from "@/hook/useProxy"
 import { debugToPrintLogs } from "@/utils/logCollection"
+import { OutlineCheckIcon } from "@/assets/icon/outline"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -133,6 +137,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
+    const [isFilter, setIsFilter] = useState(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
     const [disableSystemProxy, setDisableSystemProxy] = useState<boolean>(false)
     const {t, i18n} = useI18nNamespaces(["webFuzzer",'mitm'])
@@ -262,6 +267,21 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         })
     }, [])
 
+    useEffect(() => {
+        grpcMITMGetFilter(true)
+            .then((res) => {
+                const fd = res?.FilterData
+                if (!fd) { setIsFilter(false); return }
+                const {baseFilter, advancedFilters} = convertMITMFilterUI(fd)
+                setIsFilter(getMitmHijackFilter(baseFilter, advancedFilters))
+            })
+            .catch(() => setIsFilter(false))
+    }, [])
+
+    const onSetFilterFlag = useMemoizedFn((flag: boolean) => {
+        setIsFilter(flag)
+    })
+
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
 
     const downStreamTagClose = useMemoizedFn(() => {
@@ -365,6 +385,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         <div className={style["link-item"]} onClick={() => setFiltersVisible(true)}>
                             过滤器
                         </div>
+                        {isFilter && (
+                            <YakitTag color={"success"} style={{margin: '0 4px'}}>
+                                {t("HttpQueryAdvancedConfig.configured")}
+                                <OutlineCheckIcon className={style["check-icon"]} />
+                            </YakitTag>
+                        )}
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
                             证书下载
@@ -423,6 +449,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     visible={filtersVisible}
                     setVisible={setFiltersVisible}
                     isStartMITM={true}
+                    onSetFilterFlag={onSetFilterFlag}
                 />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
             </React.Suspense>

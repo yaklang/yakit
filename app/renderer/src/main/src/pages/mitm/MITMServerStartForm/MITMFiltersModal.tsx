@@ -51,6 +51,7 @@ interface MITMFiltersModalProps {
     visible: boolean
     setVisible: (b: boolean) => void
     onSetHijackFilterFlag?: (b: boolean) => void // 是否配置过条件劫持
+    onSetFilterFlag?: (b: boolean) => void // 是否配置过过滤器
 }
 interface SaveObjProps {
     filterName: string
@@ -82,7 +83,7 @@ export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilter
     )
 }
 const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => {
-    const {filterType, visible, setVisible, isStartMITM, onSetHijackFilterFlag} = props
+    const {filterType, visible, setVisible, isStartMITM, onSetHijackFilterFlag, onSetFilterFlag} = props
     const filtersRef = useRef<any>()
     const [type, setType] = useState<FilterSettingType>("base-setting")
     // filter 过滤器
@@ -101,6 +102,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         function resetFilterOk() {
             info("MITM 过滤器重置命令已发送")
             emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
+            onSetFilterFlag?.(false)
             setVisible(false)
         }
         if (isStartMITM) {
@@ -173,6 +175,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             grpcMITMSetFilter(value)
                 .then(() => {
                     emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
+                    onSetFilterFlag?.(getMitmHijackFilter(baseFilter, advancedFilters))
                     setVisible(false)
                     info("更新 MITM 过滤器状态")
                 })

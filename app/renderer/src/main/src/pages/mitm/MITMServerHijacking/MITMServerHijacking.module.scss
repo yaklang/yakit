@@ -51,6 +51,12 @@
                         color: var(--Colors-Use-Main-Pressed);
                     }
                 }
+                .check-icon {
+                    svg {
+                        width: 14px;
+                        height: 14px;
+                    }
+                }
             }
         }
         .mitm-server-extra {
