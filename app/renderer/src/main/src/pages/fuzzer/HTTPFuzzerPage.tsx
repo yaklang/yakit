@@ -1081,6 +1081,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRedirectedResponse(undefined)
         setSuccessCount(0)
         setFailedCount(0)
+        setCurrentSelectId(undefined)
         if (!retryRef.current) {
             runtimeIdRef.current = ""
         }
@@ -1136,6 +1137,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         }
                         setAdvancedConfigValue({
                             ...defaultAdvancedConfigValue,
+                            resNumlimit: advancedConfigValue.resNumlimit,
                             actualHost: item.actualHost,
                             params: item.params,
                             extractors: item.extractors,
