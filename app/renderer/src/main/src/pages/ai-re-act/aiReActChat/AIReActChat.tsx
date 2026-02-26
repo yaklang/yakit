@@ -258,19 +258,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                             isOpen={externalParameters?.isOpen}
                                             inputFooterRight={
                                                 <div className={styles["extra-footer-right"]}>
-                                                    <OpenFileDropdown
-                                                        cb={(data) => {
-                                                            aiChatTextareaRef?.current?.setMention({
-                                                                mentionId: data.path,
-                                                                mentionType: data.isFolder ? "folder" : "file",
-                                                                mentionName: data.path
-                                                            })
-                                                        }}
-                                                    >
-                                                        <UploadFileButton title='打开文件夹' />
-                                                    </OpenFileDropdown>
-
-                                                    <div className={styles["extra-footer-right-divider"]} />
                                                     {execute && (
                                                         <RoundedStopButton
                                                             onClick={handleStop}

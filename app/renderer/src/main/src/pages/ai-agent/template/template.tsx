@@ -17,9 +17,9 @@ import {
     FooterLeftTypesComponentProps,
     QSInputTextareaProps
 } from "./type"
-import {Divider, Input} from "antd"
+import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowupIcon} from "@/assets/icon/outline"
+import {OutlineArrowupIcon, OutlineAtsymbolIcon} from "@/assets/icon/outline"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import classNames from "classnames"
@@ -40,6 +40,9 @@ import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRul
 import {AIFocusMode} from "@/pages/ai-re-act/aiFocusMode/AIFocusMode"
 import useAIAgentStore from "../useContext/useStore"
 import {isString} from "lodash"
+import OpenFileDropdown, {OpenFileDropdownItem} from "../aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
+import {UploadFileButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
+import {insertAtCurrentPosition} from "../components/aiMilkdownInput/customPlugin"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -258,6 +261,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             })
             return node
         })
+        const onSetFileMention = useMemoizedFn((data: OpenFileDropdownItem) => {
+            onSetMention({
+                mentionId: data.path,
+                mentionType: data.isFolder ? "folder" : "file",
+                mentionName: data.path
+            })
+        })
+        const onMention = useMemoizedFn(() => {
+            editorMilkdown.current?.action(callCommand<string>(insertAtCurrentPosition.key, "@"))
+        })
         return (
             <div
                 className={classNames(
@@ -281,7 +294,19 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                         filterMode={filterMentionType}
                     />
                     <div className={styles["footer"]}>
-                        {inputFooterLeft ?? <div className={styles["footer-left"]}>left</div>}
+                        {inputFooterLeft ?? (
+                            <div className={styles["footer-left"]}>
+                                <YakitButton
+                                    type='text2'
+                                    radius='50%'
+                                    icon={<OutlineAtsymbolIcon />}
+                                    onClick={onMention}
+                                />
+                                <OpenFileDropdown cb={onSetFileMention}>
+                                    <UploadFileButton title='打开文件夹' />
+                                </OpenFileDropdown>
+                            </div>
+                        )}
 
                         <div className={styles["footer-right"]}>
                             {inputFooterRight}
@@ -302,44 +327,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 <div className={styles["ai-chat-textarea-footer"]}>
                     {footer ?? <>{renderFooterLeftTypes(footerLeftTypes)}</>}
                 </div>
-
-                {/* <div className={styles["textarea-footer"]}>
-                    <div
-                        className={styles["footer-left"]}
-                        onClick={(e) => {
-                            if (!!extraFooterLeft) e.stopPropagation()
-                        }}
-                    >
-                        <div className={styles["footer-left-btns-default"]}>
-                            <AIModelSelect isOpen={props?.isOpen} />
-                            <React.Suspense fallback={<div>loading...</div>}>
-                                <AIReviewRuleSelect />
-                            </React.Suspense>
-                            {defaultAIFocusMode?.children ??
-                                (focusMode && <AIFocusMode value={focusMode} onChange={setFocusMode} />)}
-                        </div>
-                        {extraFooterLeft || null}
-                    </div>
-                    <div
-                        className={styles["footer-right"]}
-                        onClick={(e) => {
-                            if (!!extraFooterRight) e.stopPropagation()
-                        }}
-                    >
-                        {extraFooterRight || null}
-                        <YakitButton
-                            className={styles["round-btn"]}
-                            radius='50%'
-                            loading={loading}
-                            disabled={disabled}
-                            icon={<OutlineArrowupIcon />}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                handleSubmit()
-                            }}
-                        />
-                    </div>
-                </div> */}
                 {children}
             </div>
         )
