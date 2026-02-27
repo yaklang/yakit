@@ -853,7 +853,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
                             // 不为空判断
                             if (query?.ExtractedResultsNotEmpty) {
-                                isHaveDataIsPush = extractedResultsString.trim().length > 0
+                                isHaveDataIsPush = !!extractedMap.size ? extractedResultsString.trim().length > 0 
+                                : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
                             }
 
                             // 关键字匹配判断（如果有关键字）
