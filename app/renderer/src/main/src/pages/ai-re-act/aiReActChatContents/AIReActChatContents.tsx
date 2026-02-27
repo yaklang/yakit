@@ -165,7 +165,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 data={chats.elements}
                 totalListHeightChanged={handleTotalListHeightChanged}
                 itemContent={(index, item) => renderItem(index, item)}
-                initialTopMostItemIndex={{index: "LAST"}}
+                initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
                 components={components}
                 atBottomThreshold={50}
                 increaseViewportBy={{top: 300, bottom: 300}}
