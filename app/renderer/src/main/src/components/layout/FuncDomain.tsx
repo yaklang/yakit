@@ -99,7 +99,7 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
-import {MessageCenter} from "../MessageCenter/MessageCenter"
+import {MessageCenter, TaskErrNotification, TaskNotification, useEETaskNotificationHook} from "../MessageCenter/MessageCenter"
 import {apiFetchMessageRead, apiFetchQueryMessage} from "../MessageCenter/utils"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {randomString} from "@/utils/randomUtil"
@@ -2528,6 +2528,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         isIntranetYakitUpdateWait,
     ])
 
+    const [__, taskModalInfo, taskErrModalInfo, debugTaskEvent] = useEETaskNotificationHook({})
+    useEffect(()=>{
+        debugTaskEvent.startT()
+    },[userInfo.isLogin])
+
     return (
         <YakitPopover
             overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
@@ -2611,6 +2616,31 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                         </YakitButton>
                     </div>
                 }
+            />
+
+            {/* 任务通知 */}
+            <YakitHint
+                visible={taskModalInfo.visible}
+                title={taskModalInfo.title}
+                content={<TaskNotification taskList={taskModalInfo.data} />}
+                okButtonText={taskModalInfo.okButtonText}
+                onOk={debugTaskEvent.sureT}
+                cancelButtonProps={taskModalInfo.cancelButtonProps}
+                okButtonProps={{loading: taskModalInfo.loading}}
+                wrapClassName={styles["task-notification-wrap"]}
+                width={600}
+            />
+            {/* 创建任务重名 */}
+            <YakitHint
+                visible={taskErrModalInfo.visible}
+                title={taskErrModalInfo.title}
+                content={<TaskErrNotification reNames={taskErrModalInfo.data} />}
+                okButtonText={taskErrModalInfo.okButtonText}
+                cancelButtonText={taskErrModalInfo.cancelButtonText}
+                onOk={debugTaskEvent.coverP}
+                onCancel={debugTaskEvent.waitP}
+                wrapClassName={styles["task-notification-wrap"]}
+                width={600}
             />
         </YakitPopover>
     )

@@ -3271,6 +3271,7 @@ message NewProjectRequest {
   string Database = 7;
   string ExternalModule = 8;
   string ExternalProjectCode = 9;
+  string OnlineSubTaskID = 10;
 }
 
 message NewProjectResponse {
@@ -3313,6 +3314,7 @@ message ProjectDescription {
   string FileSize = 12;
   string ExternalModule = 13;
   string ExternalProjectCode = 14;
+  string OnlineSubTaskID = 15;
 }
 
 message GetProjectsResponse {
@@ -8546,7 +8548,7 @@ message MITMV2Request{
   // 3. 清空模式：OverwriteSNI=true, SNI=""，不发送 SNI
   string SNI = 51;           // SNI 值
   bool OverwriteSNI = 52;    // 是否覆盖自动推断的 SNI
-  repeated KVPair SNIMapping = 53;
+  repeated KVPair SNIMapping = 53; // SNI 映射表，支持 glob 通配符
 }
 
 message MITMV2Response {

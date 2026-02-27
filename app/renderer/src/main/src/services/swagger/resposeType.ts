@@ -1244,6 +1244,14 @@ export declare namespace API {
      * 定位艾特位置
      */
     mentionId?: string;
+    /**
+     * 任务名称
+     */
+    taskName?: string;
+    /**
+     * 子任务ID
+     */
+    subTaskId?: string;
   }
   export interface LogsRequest {
     uuid: string;

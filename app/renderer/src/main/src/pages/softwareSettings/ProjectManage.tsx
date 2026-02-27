@@ -29,7 +29,7 @@ import {
     TemporaryProjectSvgIcon
 } from "./icon"
 import ReactResizeDetector from "react-resize-detector"
-import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Tooltip, Upload} from "antd"
 import {YakitMenu, YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
@@ -111,6 +111,7 @@ export interface ProjectDescription {
     FileSize: string
     ExternalModule: string
     ExternalProjectCode: string
+    OnlineSubTaskID: string
 }
 export interface ProjectsResponse {
     Pagination: {Page: number; Limit: number}
@@ -195,7 +196,8 @@ const DefaultProjectInfo: ProjectDescription = {
     Type: "",
     FileSize: "",
     ExternalModule: "",
-    ExternalProjectCode: ""
+    ExternalProjectCode: "",
+    OnlineSubTaskID: ""
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
@@ -331,6 +333,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             <div className={styles["project-style"]} title={data.ProjectName}>
                                 {data.ProjectName}
                             </div>
+                            {(data?.OnlineSubTaskID || "").length > 0 && <YakitTag color="info">服务端</YakitTag>}
                         </div>
                     )
                 }
@@ -571,7 +574,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     </DropdownMenu>
                 )}
 
-                {info.ProjectName !== "[default]" && (
+                {info.ProjectName !== "[default]" && (info?.OnlineSubTaskID || "").length === 0 && (
                     <>
                         <div className={styles["divider-style"]}>
                             <div className={styles["boder-style"]}></div>
@@ -1212,7 +1215,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             {
                                                 key: "edit",
                                                 label: "编辑",
-                                                disabled: latestProject?.ProjectName === "[default]",
+                                                disabled: latestProject?.ProjectName === "[default]" || (latestProject?.OnlineSubTaskID || "").length > 0 ,
                                                 itemIcon: <OutlinePencilaltIcon />
                                             },
                                             {

@@ -12,7 +12,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    img{
+    img {
         height: 100px;
         width: 100px;
     }
@@ -173,7 +173,7 @@
         :global {
             .ant-tabs-nav {
                 padding: 0px 16px 0px;
-                &::before{
+                &::before {
                     border-color: var(--Colors-Use-Neutral-Border);
                 }
             }
@@ -207,4 +207,52 @@
             }
         }
     }
+}
+
+.task-notification {
+    max-height: 400px;
+    overflow: auto;
+    .new-task,
+    .end-task {
+        .title {
+            padding-left: 2px;
+            height: 24px;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            margin-bottom: 8px;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+    }
+}
+
+.task-err-notification {
+    max-height: 400px;
+    overflow: auto;
+    .title {
+        padding-left: 2px;
+        height: 24px;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        margin-bottom: 8px;
+    }
+    .content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .hint{
+        margin-top: 8px;
+    }
+}
+
+.task-notification-wrap{
+    top: 15vh;
 }
