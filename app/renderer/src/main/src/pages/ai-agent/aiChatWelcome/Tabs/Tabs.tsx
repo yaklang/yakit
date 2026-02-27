@@ -70,7 +70,7 @@ const Tabs: FC<TabsProps> = (props) => {
                 {destroyInactive
                     ? activeItem?.children
                     : items.map((item) => (
-                          <div key={item.key} hidden={item.key !== currentKey}>
+                          <div key={item.key} hidden={item.key !== currentKey} className={styles["tabs-content-item"]}>
                               {item.children}
                           </div>
                       ))}
