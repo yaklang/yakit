@@ -233,15 +233,31 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         const renderFooterLeftTypes = useMemoizedFn((types: FooterLeftTypesComponentProps[]) => {
             let node: ReactNode[] = []
             types?.forEach((item, index) => {
-                if (index > 0 && index < types.length - 1) {
+                if (index > 0 && index < types.length) {
                     node.push(<div className={styles["divider-style"]} key={`divider-${index}`} />)
                 }
                 switch (item.type) {
                     case AIInputInnerFeatureEnum.AIReviewRuleSelect:
-                        node.push(item.component || <AIReviewRuleSelect key={item.type} {...item.props} />)
+                        node.push(
+                            item.component || (
+                                <AIReviewRuleSelect
+                                    key={item.type}
+                                    {...item.props}
+                                    className={classNames(styles["review-rule-self-adaptive"], item.props?.className)}
+                                />
+                            )
+                        )
                         break
                     case AIInputInnerFeatureEnum.AIModelSelect:
-                        node.push(item.component || <AIModelSelect key={item.type} {...item.props} />)
+                        node.push(
+                            item.component || (
+                                <AIModelSelect
+                                    key={item.type}
+                                    {...item.props}
+                                    className={classNames(styles["model-self-adaptive"], item.props?.className)}
+                                />
+                            )
+                        )
                         break
                     case AIInputInnerFeatureEnum.AIFocusMode:
                         node.push(
@@ -251,6 +267,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                                     value={focusMode}
                                     onChange={setFocusMode}
                                     {...item.props}
+                                    className={classNames(styles["focus-mode-self-adaptive"], item.props?.className)}
                                 />
                             )
                         )

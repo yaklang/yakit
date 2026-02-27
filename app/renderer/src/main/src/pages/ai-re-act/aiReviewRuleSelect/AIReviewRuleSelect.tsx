@@ -95,57 +95,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         return AIReviewRuleIconMap[value]?.icon
     })
     return (
-        <div className={styles["review-rule-select-wrapper"]}>
-            {/* <AIChatSelect
-                dropdownRender={(menu) => {
-                    return (
-                        <div className={styles["drop-select-wrapper"]}>
-                            <div className={styles["select-title"]}>
-                                <OutlineCodepenIcon />
-                                回答模式
-                            </div>
-                            {menu}
-                        </div>
-                    )
-                }}
-                value={modelValue}
-                onSelect={onSelectModel}
-                optionLabelProp='label'
-                open={open}
-                setOpen={onSetOpen}
-            >
-                {AIReviewRuleOptions.map((item) => (
-                    <YakitSelect.Option
-                        key={item.value}
-                        value={item.value}
-                        label={
-                            <div className={styles["select-option"]}>
-                                <div className={styles["icon-wrapper"]}>{AIReviewRuleIconMap[item.value]}</div>
-                                // data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求
-                                <span
-                                    data-label='true'
-                                    className={styles["select-option-text"]}
-                                    title={`${item.label}`}
-                                >
-                                    {item.label}
-                                </span>
-                            </div>
-                        }
-                    >
-                        <div
-                            className={classNames(styles["select-option-wrapper"], {
-                                [styles["select-option-active-wrapper"]]: item.value === modelValue
-                            })}
-                        >
-                            <div className={styles["icon-wrapper"]}>{AIReviewRuleIconMap[item.value]}</div>
-                            <div className={styles["text-wrapper"]}>
-                                <div className={styles["text"]}>{item.label}</div>
-                                <div className={styles["describe"]}> {item.describe}</div>
-                            </div>
-                        </div>
-                    </YakitSelect.Option>
-                ))}
-            </AIChatSelect> */}
+        <div className={classNames(styles["review-rule-select-wrapper"],props.className)}>
             <YakitSegmented
                 value={modelValue}
                 onChange={(v) => {

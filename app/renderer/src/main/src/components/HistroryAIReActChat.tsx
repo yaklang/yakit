@@ -207,11 +207,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                             component: (
                                 <div className={classNames([styles["select-option"], styles["defualt-focus-mode"]])}>
                                     <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
-                                    <span
-                                        data-label='true'
-                                        className={styles["select-option-text"]}
-                                        title={`http_flow_analyze`}
-                                    >
+                                    <span className={styles["select-option-text"]} title={`http_flow_analyze`}>
                                         http_flow_analyze
                                     </span>
                                 </div>

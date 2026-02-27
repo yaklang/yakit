@@ -6,6 +6,7 @@
 .ai-chat-select-wrapper {
     width: fit-content;
     height: 24px;
+    overflow: hidden;
     :global {
         .ant-select {
             border-radius: 20px;
@@ -106,9 +107,9 @@
     font-style: normal;
     font-weight: 400;
     line-height: 16px;
+    overflow: hidden;
 
     .select-option-text {
-        max-width: 120px;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -136,6 +137,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
     .siren-icon {
         svg {
             color: var(--Colors-Use-Neutral-Text-2-Primary);
