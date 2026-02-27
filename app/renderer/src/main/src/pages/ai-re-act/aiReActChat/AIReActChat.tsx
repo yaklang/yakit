@@ -12,16 +12,16 @@ import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
-import {ChevrondownButton, ChevronleftButton, RoundedStopButton, UploadFileButton} from "./AIReActComponent"
+import {ChevrondownButton, ChevronleftButton, RoundedStopButton} from "./AIReActComponent"
 import {AIInputEvent, AIStartParams} from "../hooks/grpcApi"
 import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
-import OpenFileDropdown from "@/pages/ai-agent/aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
 import {formatAIAgentSetting, getAIReActRequestParams} from "@/pages/ai-agent/utils"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {v4 as uuidv4} from "uuid"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
+import {randomString} from "@/utils/randomUtil"
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     forwardRef((props, ref) => {
@@ -134,6 +134,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     // 历史中的额外操作
                     onChatFromHistory?.(sessionID)
                 }
+                aiChatTextareaRef.current.setMention({
+                    mentionId: params.FocusModeLoop || randomString(8),
+                    mentionType: "focusMode",
+                    mentionName: params.FocusModeLoop || ""
+                })
                 chatIPCEvents.onStart({token: request.TimelineSessionID!, params, extraValue: extra})
             }
             if (!!startRequest) {

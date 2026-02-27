@@ -200,7 +200,14 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         })
         /**插入提及数据 */
         const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
-            editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+            switch (params.mentionType) {
+                case "focusMode":
+                    onMemfitExtra(params)
+                    break
+                default:
+                    editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+                    break
+            }
         })
         /**设置编辑器值 */
         const onSetValue = useMemoizedFn((value: string) => {
