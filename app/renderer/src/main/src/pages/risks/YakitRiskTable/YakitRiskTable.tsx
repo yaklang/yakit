@@ -1733,7 +1733,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                 </Tooltip>
                                 <YakitDropdownMenu
                                     menu={{
-                                        className: styles['packetHistoryDropdownMenu'],
+                                        className: styles["packetHistoryDropdownMenu"],
                                         data: packetHistory.map((item, index) => {
                                             const urlNode = (
                                                 <Typography.Text ellipsis={{tooltip: item.Url}} style={{maxWidth: 300}}>
@@ -1755,7 +1755,11 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                             }
                                             return {
                                                 key: index + "",
-                                                label: urlNode
+                                                label: (
+                                                    <>
+                                                        {index}&nbsp;&nbsp;{urlNode}
+                                                    </>
+                                                )
                                             }
                                         }),
                                         onClick: ({key}) => {
@@ -1767,7 +1771,9 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                         placement: "bottomLeft"
                                     }}
                                 >
-                                    <YakitButton type="outline1" size="small" icon={<OutlineClockIcon />}>{t("YakitRiskDetails.verificationRecord")}</YakitButton>
+                                    <YakitButton type='outline1' size='small' icon={<OutlineClockIcon />}>
+                                        {t("YakitRiskDetails.verificationRecord")}
+                                    </YakitButton>
                                 </YakitDropdownMenu>
                             </div>
                         ) : (
