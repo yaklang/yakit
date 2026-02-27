@@ -22,23 +22,19 @@ export const apiFetchQueryMessage: (
     data?: MessageQueryDataProps
 ) => Promise<API.MessageLogResponse> = (params, data) => {
     return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<MessageQueryProps, API.MessageLogResponse>({
-                method: "get",
-                url: "message/log",
-                params,
-                data
+        NetWorkApi<MessageQueryProps, API.MessageLogResponse>({
+            method: "get",
+            url: "message/log",
+            params,
+            data
+        })
+            .then((res) => {
+                resolve(res)
             })
-                .then((res) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-                .finally(() => {})
-        } catch (error) {
-            reject(error)
-        }
+            .catch((err) => {
+                reject(err)
+            })
+            .finally(() => {})
     })
 }
 interface MessageQueryReadProps {
@@ -49,73 +45,60 @@ interface MessageQueryReadProps {
 /** 消息中心已读操作 */
 export const apiFetchMessageRead: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
     return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<MessageQueryProps, API.ActionSucceeded>({
-                method: "post",
-                url: "message/log",
-                data
+        NetWorkApi<MessageQueryProps, API.ActionSucceeded>({
+            method: "post",
+            url: "message/log",
+            data
+        })
+            .then((res) => {
+                resolve(res.ok)
             })
-                .then((res) => {
-                    resolve(res.ok)
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-                .finally(() => {})
-        } catch (error) {
-            reject(error)
-        }
+            .catch((err) => {
+                reject(err)
+            })
+            .finally(() => {})
     })
 }
-
 
 /** 消息中心删除操作 */
 export const apiFetchMessageClear: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
     return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<MessageQueryProps, API.ActionSucceeded>({
-                method: "delete",
-                url: "message/log",
-                data
+        NetWorkApi<MessageQueryProps, API.ActionSucceeded>({
+            method: "delete",
+            url: "message/log",
+            data
+        })
+            .then((res) => {
+                resolve(res.ok)
             })
-                .then((res) => {
-                    resolve(res.ok)
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-                .finally(() => {})
-        } catch (error) {
-            reject(error)
-        }
+            .catch((err) => {
+                reject(err)
+            })
+            .finally(() => {})
     })
 }
 
 /** 获取需要通知的所有任务（未读的） */
 export const apiFetchQueryAllTask: () => Promise<API.MessageLogResponse> = () => {
     return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<MessageQueryProps, API.MessageLogResponse>({
-                method: "get",
-                url: "message/log",
-                params: {
-                    page: 1,
-                    limit: -1
-                },
-                data: {
-                    isRead:"false",
-                    logType: "task",
-                }
+        NetWorkApi<MessageQueryProps, API.MessageLogResponse>({
+            method: "get",
+            url: "message/log",
+            params: {
+                page: 1,
+                limit: -1
+            },
+            data: {
+                isRead: "false",
+                logType: "task"
+            }
+        })
+            .then((res) => {
+                resolve(res)
             })
-                .then((res) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-                .finally(() => {})
-        } catch (error) {
-            reject(error)
-        }
+            .catch((err) => {
+                reject(err)
+            })
+            .finally(() => {})
     })
 }
