@@ -70,8 +70,8 @@ const DefaultOnlinePaging: API.Pagination = {page: 1, limit: 20, order_by: "upda
 /** @name 规则管理 */
 export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const {ruleManagementPageInfo} = props
-    
-    const [pageInfo,setPageInfo] = useState<RuleManagementPageInfoProps | undefined>(ruleManagementPageInfo)
+
+    const [pageInfo, setPageInfo] = useState<RuleManagementPageInfoProps | undefined>(ruleManagementPageInfo)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const userInfo = useStore((s) => s.userInfo)
     const {currentPageTabRouteKey} = usePageInfo(
@@ -110,19 +110,22 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         }
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         // 参数打开编辑规则
-        if(pageInfo?.RuleNames){
+        if (pageInfo?.RuleNames) {
             setEditHint(false)
-            grpcFetchLocalRuleList({Pagination: DefaultPaging, Filter: {
-                RuleNames: pageInfo.RuleNames
-            }}).then((res)=>{
-                if(res.Rule.length>0){
+            grpcFetchLocalRuleList({
+                Pagination: DefaultPaging,
+                Filter: {
+                    RuleNames: pageInfo.RuleNames
+                }
+            }).then((res) => {
+                if (res.Rule.length > 0) {
                     handleOpenEditHint(res.Rule[0])
                 }
             })
         }
-    },[pageInfo?.RuleNames])
+    }, [pageInfo?.RuleNames])
 
     const handleCheckLib = useMemoizedFn((isChecked) => {
         setFilters((filters) => {
@@ -385,11 +388,11 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         }
     })
 
-    useUpdateEffect(()=>{
-        if(allCheck){
+    useUpdateEffect(() => {
+        if (allCheck) {
             setSelectList(data.Rule)
         }
-    },[data.Rule])
+    }, [data.Rule])
 
     const handleCheckboxChange = useMemoizedFn((checked: boolean, key: string, row: SyntaxFlowRule) => {
         if (checked) {
@@ -1239,7 +1242,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                     getContainer={
                         document.getElementById(`main-operator-page-body-${YakitRoute.Rule_Management}`) || undefined
                     }
-                    wrapClassName={styles['updateRuleModal']}
+                    wrapClassName={styles["updateRuleModal"]}
                 />
 
                 {/* 上传、下载提示 */}

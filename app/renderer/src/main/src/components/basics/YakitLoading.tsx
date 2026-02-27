@@ -2,13 +2,24 @@ import React, {useMemo} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {EngineOtherOperation, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {
+    fetchEnv,
+    getReleaseEditionName,
+    isCommunityEdition,
+    isEnpriTrace,
+    isEnpriTraceAgent,
+    isIRify
+} from "@/utils/envfile"
 import {DynamicStatusProps} from "@/store"
 import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {setLocalValue} from "@/utils/kv"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
+
+import IRifyPrimaryBg from "../../assets/uiLayout/IRifyPrimaryBg.png"
+import MemfitAIPrimaryBg from "@/assets/uiLayout/MemfitAIPrimaryBg.png"
+import YakitPrimaryBg from "@/assets/uiLayout/YakitPrimaryBg.png"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
@@ -329,10 +340,26 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         [yakitStatus]
     )
 
+    const primaryBg = useMemo(() => {
+        switch (fetchEnv()) {
+            case "irify":
+            case "irify-enterprise":
+                return `url(${IRifyPrimaryBg})`
+            case "memfit":
+                return `url(${MemfitAIPrimaryBg})`
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return `url(${YakitPrimaryBg})`
+            default:
+                break
+        }
+    }, [])
+
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
-                <div className={styles["body-content"]}>
+                <div className={styles["body-content"]} style={{backgroundImage: primaryBg}}>
                     <div className={styles["yakit-loading-title"]}>
                         <div className={styles["title-style"]}>{Title}</div>
                         {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}

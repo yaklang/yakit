@@ -106,8 +106,8 @@ import styles from "./RuleManagement.module.scss"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CodeScoreModal} from "../plugins/funcTemplate"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
-import { apiQuerySSAPrograms } from "../yakRunnerScanHistory/utils"
-import { MilkdownEditorLocal } from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
+import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
+import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -2183,9 +2183,9 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
         >
             <div className={styles["progressTitle"]}>
                 {type === "upload" ? (
-                    <SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />
+                    <SolidClouduploadIcon style={{color: "var(--Colors-Use-Orange-Primary)"}} />
                 ) : (
-                    <SolidClouddownloadIcon style={{color: "var(--yakit-warning-5)"}} />
+                    <SolidClouddownloadIcon style={{color: "var(--Colors-Use-Orange-Primary)"}} />
                 )}
                 <span className={styles["text"]}>规则{type === "upload" ? "上传" : "下载"}</span>
             </div>
@@ -2200,7 +2200,12 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
                     <div
                         key={index}
                         className={styles["log-item"]}
-                        style={{color: item.MessageType === "error" ? "#f00" : "#85899e"}}
+                        style={{
+                            color:
+                                item.MessageType === "error"
+                                    ? "var(--Colors-Use-Red-Primary)"
+                                    : "var(--Colors-Use-Neutral-Text-3-Secondary)"
+                        }}
                     >
                         {item.Message}
                     </div>
@@ -2642,10 +2647,9 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                     bordered
                                     size='small'
                                     labelStyle={{
-                                        width: 120,
-                                      
+                                        width: 120
                                     }}
-                                    className="yakit-descriptions"
+                                    className='yakit-descriptions'
                                 >
                                     <Descriptions.Item label='类型' span={3}>
                                         <YakitInput

@@ -16,10 +16,17 @@ import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSe
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
-import EmptyPng from "@/components/yakitUI/YakitEmpty/EmptyPng.png"
-import DarkEmptyPng from "@/components/yakitUI/YakitEmpty/DarkEmptyPng.png"
+
+import YakitEmptyPng from "@/components/yakitUI/YakitEmpty/YakitEmptyPng.png"
+import YakitDarkEmptyPng from "@/components/yakitUI/YakitEmpty/YakitDarkEmptyPng.png"
+import IrifyDarkEmptyPng from "@/components/yakitUI/YakitEmpty/IrifyDarkEmptyPng.png"
+import IrifyEmptyPng from "@/components/yakitUI/YakitEmpty/IrifyEmptyPng.png"
+import MemfitEmptyPng from "@/components/yakitUI/YakitEmpty/MemfitEmptyPng.png"
+import MemfitDarkEmptyPng from "@/components/yakitUI/YakitEmpty/MemfitDarkEmptyPng.png"
+
 import {useTheme} from "@/hook/useTheme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {fetchEnv} from "@/utils/envfile"
 
 const {Option, OptGroup} = Select
 
@@ -72,10 +79,19 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     )
 
     const emptyImageTarget = useMemo(() => {
-        if (theme === "dark") {
-            return DarkEmptyPng
-        } else {
-            return EmptyPng
+        switch (fetchEnv()) {
+            case "irify":
+            case "irify-enterprise":
+                return theme === "dark" ? IrifyDarkEmptyPng : IrifyEmptyPng
+            case "memfit":
+                return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
+
+            default:
+                break
         }
     }, [theme])
 
@@ -107,7 +123,10 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     })
                 })
                 .catch((e) => {
-                    yakitNotify("error", `${cacheHistoryDataKey}${t("YakitSelect.YakitSelectCustom.cache_field_save_error")}` + e)
+                    yakitNotify(
+                        "error",
+                        `${cacheHistoryDataKey}${t("YakitSelect.YakitSelectCustom.cache_field_save_error")}` + e
+                    )
                 })
         } else if (props.mode === "multiple") {
             // 多选;该情况下label和value 大多数时候不一样;暂不支持缓存
@@ -170,7 +189,10 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                         })
                     })
                     .catch((e) => {
-                        yakitNotify("error", `${cacheHistoryDataKey}${t("YakitSelect.YakitSelectCustom.cache_field_save_error")}` + e)
+                        yakitNotify(
+                            "error",
+                            `${cacheHistoryDataKey}${t("YakitSelect.YakitSelectCustom.cache_field_save_error")}` + e
+                        )
                     })
             } else if (props.mode === "multiple") {
                 // 暂不支持删除缓存项

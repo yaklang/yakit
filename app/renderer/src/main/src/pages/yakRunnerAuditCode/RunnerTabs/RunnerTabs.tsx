@@ -91,7 +91,8 @@ import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {onSetSelectedSearchVal} from "../AuditSearchModal/AuditSearch"
 import {ConvertAuditStaticAnalyzeErrorToMarker, IMonacoEditorMarker} from "@/utils/editorMarkers"
 import {getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType} from "@/pages/yakRunner/utils"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import {SolidIrifyMiniLogoIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -957,7 +958,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             }
             setEditorInfo(newEditorInfo)
         }
-        if(content !== editorInfo?.code){
+        if (content !== editorInfo?.code) {
             updateAreaFun(content)
         }
     })
@@ -1170,100 +1171,102 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     })
 
     // 代码扫描编辑器提示
-    const editerMenuFun = useDebounceFn((editor: YakitIMonacoEditor) => {
-        // 编辑器选中弹窗的唯一Id
-        const rangeId: string = `monaco.range.code.scan.widget`
+    const editerMenuFun = useDebounceFn(
+        (editor: YakitIMonacoEditor) => {
+            // 编辑器选中弹窗的唯一Id
+            const rangeId: string = `monaco.range.code.scan.widget`
 
-        // 动态计算Widget显示位置 尽可能显示齐全
-        const editorContainer = editor.getDomNode()
-        // 获取特定行和列的坐标
-        let lineNumber: number = editorInfo?.highLightRange?.endLineNumber || 0
-        let column: number = editorInfo?.highLightRange?.endColumn || 0
-        const position = {lineNumber, column}
-        const visiblePosition = editor.getScrolledVisiblePosition(position)
-        // 位置信息
-        let direction: CountDirectionProps = {}
-        if (editorContainer && visiblePosition) {
-            // editorContainerInfo为编辑器在页面中的位置
-            const editorContainerInfo = editorContainer.getBoundingClientRect()
-            const {top, bottom, left, right} = editorContainerInfo
-            // visiblePosition为具体位置
-            const {left: x, top: y} = visiblePosition
-            // 判断焦点位置
-            const isTopHalf = y < (bottom - top) / 2
-            const isLeftHalf = x < (right - left) / 2
-            if (isTopHalf) {
-                // 位于编辑器上半部分
-                direction.y = "top"
-            } else {
-                // 位于编辑器下半部分
-                direction.y = "bottom"
-            }
-            if (Math.abs(x - (right - left) / 2) < 50) {
-                // 位于编辑器中间部分
-                direction.x = "middle"
-            } else if (isLeftHalf) {
-                // 位于编辑器左半部分
-                direction.x = "left"
-            } else {
-                // 位于编辑器右半部分
-                direction.x = "right"
-            }
-        }
-
-        if (direction.x === "right" || direction.y === "bottom") {
-            lineNumber = editorInfo?.highLightRange?.startLineNumber || 0
-            column = editorInfo?.highLightRange?.startColumn || 0
-        }
-
-        // 编辑器选中显示的内容
-        const fizzRangeWidget: newEditor.IContentWidget = {
-            // 在可能溢出编辑器视图dom节点的位置呈现此内容小部件
-            allowEditorOverflow: true,
-            getId: function () {
-                return rangeId
-            },
-            getDomNode: function () {
-                // 将TSX转换为DOM节点
-                const domNode = document.createElement("div")
-                domNode.style.height= "100px";
-                createRoot(domNode).render(
-                    <CodeScanMonacoWidget
-                        source={editorInfo?.highLightRange?.source}
-                        closeFizzRangeWidget={closeFizzRangeWidget}
-                    />
-                )
-                return domNode
-            },
-            getPosition: function () {
-                return {
-                    position: {
-                        lineNumber,
-                        column
-                    },
-                    preference: [1]
+            // 动态计算Widget显示位置 尽可能显示齐全
+            const editorContainer = editor.getDomNode()
+            // 获取特定行和列的坐标
+            let lineNumber: number = editorInfo?.highLightRange?.endLineNumber || 0
+            let column: number = editorInfo?.highLightRange?.endColumn || 0
+            const position = {lineNumber, column}
+            const visiblePosition = editor.getScrolledVisiblePosition(position)
+            // 位置信息
+            let direction: CountDirectionProps = {}
+            if (editorContainer && visiblePosition) {
+                // editorContainerInfo为编辑器在页面中的位置
+                const editorContainerInfo = editorContainer.getBoundingClientRect()
+                const {top, bottom, left, right} = editorContainerInfo
+                // visiblePosition为具体位置
+                const {left: x, top: y} = visiblePosition
+                // 判断焦点位置
+                const isTopHalf = y < (bottom - top) / 2
+                const isLeftHalf = x < (right - left) / 2
+                if (isTopHalf) {
+                    // 位于编辑器上半部分
+                    direction.y = "top"
+                } else {
+                    // 位于编辑器下半部分
+                    direction.y = "bottom"
+                }
+                if (Math.abs(x - (right - left) / 2) < 50) {
+                    // 位于编辑器中间部分
+                    direction.x = "middle"
+                } else if (isLeftHalf) {
+                    // 位于编辑器左半部分
+                    direction.x = "left"
+                } else {
+                    // 位于编辑器右半部分
+                    direction.x = "right"
                 }
             }
-        }
-        // 关闭选中的内容
-        const closeFizzRangeWidget = () => {
-            editor.removeContentWidget(fizzRangeWidget)
-        }
 
-        // 打开选中的内容
-        const openFizzRangeWidget = () => {
+            if (direction.x === "right" || direction.y === "bottom") {
+                lineNumber = editorInfo?.highLightRange?.startLineNumber || 0
+                column = editorInfo?.highLightRange?.startColumn || 0
+            }
+
+            // 编辑器选中显示的内容
+            const fizzRangeWidget: newEditor.IContentWidget = {
+                // 在可能溢出编辑器视图dom节点的位置呈现此内容小部件
+                allowEditorOverflow: true,
+                getId: function () {
+                    return rangeId
+                },
+                getDomNode: function () {
+                    // 将TSX转换为DOM节点
+                    const domNode = document.createElement("div")
+                    domNode.style.height = "100px"
+                    createRoot(domNode).render(
+                        <CodeScanMonacoWidget
+                            source={editorInfo?.highLightRange?.source}
+                            closeFizzRangeWidget={closeFizzRangeWidget}
+                        />
+                    )
+                    return domNode
+                },
+                getPosition: function () {
+                    return {
+                        position: {
+                            lineNumber,
+                            column
+                        },
+                        preference: [1]
+                    }
+                }
+            }
+            // 关闭选中的内容
+            const closeFizzRangeWidget = () => {
+                editor.removeContentWidget(fizzRangeWidget)
+            }
+
+            // 打开选中的内容
+            const openFizzRangeWidget = () => {
+                closeFizzRangeWidget()
+                editor.addContentWidget(fizzRangeWidget)
+            }
+
+            // 编辑器更新 关闭之前展示
             closeFizzRangeWidget()
-            editor.addContentWidget(fizzRangeWidget)
-        }
-
-        // 编辑器更新 关闭之前展示
-        closeFizzRangeWidget()
-        // 当文件切换时没有必要数据时则无需打开
-        if (!editorInfo?.highLightRange || !editorInfo?.highLightRange?.source) return
-        openFizzRangeWidget()
-        editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
-    },
-        {wait: 300}).run
+            // 当文件切换时没有必要数据时则无需打开
+            if (!editorInfo?.highLightRange || !editorInfo?.highLightRange?.source) return
+            openFizzRangeWidget()
+            editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
+        },
+        {wait: 300}
+    ).run
 
     const onRefreshWidgetFun = useMemoizedFn((value) => {
         try {
@@ -1287,9 +1290,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 )
                 // PS:行列更行可能会导致此刷新在行列刷新前,导致Widget无法正常显示（line:1138）
                 // 添加定时器等待一下吧
-                setTimeout(()=>{
+                setTimeout(() => {
                     setAreaInfo && setAreaInfo(newAreaInfo)
-                },200)
+                }, 200)
             }
         } catch (error) {}
     })
@@ -1411,7 +1414,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
         <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
                 <div className={styles["icon-style"]}>
-                    <img style={{height: "100%"}} src={yakitSSMiniProject} alt='暂无图片' />
+                    <SolidIrifyMiniLogoIcon />
                 </div>
                 <div className={styles["header-style"]}>欢迎使用SyntaxFlow代码审计</div>
             </div>

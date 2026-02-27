@@ -14,7 +14,7 @@
 
         .body-content {
             width: 1387px;
-            background-image: url("../../assets/uiLayout/primaryBg.png");
+            // background-image: url("../../assets/uiLayout/primaryBg.png");
             background-repeat: no-repeat;
             background-size: 100% auto;
         }
@@ -102,7 +102,7 @@
                     width: 500px;
                     max-height: 180px;
                     overflow: hidden auto;
-                    .log-item{
+                    .log-item {
                         white-space: break-spaces;
                     }
                 }

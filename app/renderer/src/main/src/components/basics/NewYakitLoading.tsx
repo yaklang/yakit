@@ -1,6 +1,7 @@
 import React, {useMemo} from "react"
 import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {
+    fetchEnv,
     getReleaseEditionName,
     isCommunityEdition,
     isCommunityMemfit,
@@ -20,6 +21,10 @@ import styles from "./newYakitLoading.module.scss"
 import {useTheme} from "@/hook/useTheme"
 import classNames from "classnames"
 import {SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon} from "@/assets/icon/colors"
+
+import IRifyPrimaryBg from "../../assets/uiLayout/IRifyPrimaryBg.png"
+import MemfitAIPrimaryBg from "@/assets/uiLayout/MemfitAIPrimaryBg.png"
+import YakitPrimaryBg from "@/assets/uiLayout/YakitPrimaryBg.png"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -98,7 +103,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                 </YakitButton>
             )
         }
-        
+
         return null
     }, [yakitStatus, remoteControlRefreshLoading, restartLoading])
 
@@ -183,10 +188,26 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
         return null
     }, [])
 
+    const primaryBg = useMemo(() => {
+        switch (fetchEnv()) {
+            case "irify":
+            case "irify-enterprise":
+                return `url(${IRifyPrimaryBg})`
+            case "memfit":
+                return `url(${MemfitAIPrimaryBg})`
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return `url(${YakitPrimaryBg})`
+            default:
+                break
+        }
+    }, [])
+
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
-                <div className={styles["body-content"]}>
+                <div className={styles["body-content"]} style={{backgroundImage: primaryBg}}>
                     {startLogo}
 
                     <div className={styles["yakit-loading-title"]}>
@@ -195,16 +216,8 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                     </div>
 
                     <div className={styles["yakit-loading-content"]}>
-                        <div
-                            className={classNames(styles["loading-box-wrapper"], {
-                                [styles["light-boder"]]: theme === "light"
-                            })}
-                        >
-                            <div
-                                className={classNames(styles["loading-box"], {
-                                    [styles["light-bg"]]: theme === "light"
-                                })}
-                            >
+                        <div className={classNames(styles["loading-box-wrapper"], styles["light-boder"])}>
+                            <div className={classNames(styles["loading-box"], styles["light-bg"])}>
                                 <div className={styles["loading-bar"]}>
                                     <div className={styles["shine"]}></div>
                                 </div>

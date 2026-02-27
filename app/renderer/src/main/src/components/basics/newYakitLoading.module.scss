@@ -14,7 +14,7 @@
 
         .body-content {
             width: 1387px;
-            background-image: url("../../assets/uiLayout/primaryBg.png");
+            // background-image: url("../../assets/uiLayout/primaryBg.png");
             background-repeat: no-repeat;
             background-size: 100% auto;
         }
@@ -87,13 +87,13 @@
                     top: 0;
                     left: 0;
                 }
-                svg{
+                svg {
                     width: 120px;
                     height: 120px;
-                     position: absolute;
+                    position: absolute;
                     top: 50%;
                     left: 50%;
-                    transform: translate(-50%,-50%);
+                    transform: translate(-50%, -50%);
                 }
             }
         }
@@ -108,7 +108,7 @@
             .loading-box-wrapper {
                 display: inline-block;
                 margin: 0 auto 16px;
-                border-radius: 9px;
+                border-radius: 6px;
             }
 
             .light-boder {
@@ -118,24 +118,26 @@
             .loading-box {
                 width: 290px;
                 padding: 6px;
-                border-radius: 9px;
+                border-radius: 6px;
             }
 
             .light-bg {
                 /* 左灰右白渐变 */
-                background: linear-gradient(123deg, #F4F4F4 10.58%, #FBFBFB 50.46%);
+                background: linear-gradient(
+                    123deg,
+                    var(--Colors-Use-Neutral-Bg) 10.58%,
+                    var(--Colors-Use-Neutral-Bg) 50.46%
+                );
             }
 
             .loading-bar {
                 position: relative;
                 width: 100%;
                 height: 22px;
-                background: var(--Colors-Use-Neutral-Bg-Hover);
+                background: var(--Colors-Use-Basic-Shadow);
                 overflow: hidden;
 
-                mask-image: repeating-linear-gradient(to right,
-                        black 0 6px,
-                        transparent 6px 10px);
+                mask-image: repeating-linear-gradient(to right, black 0 6px, transparent 6px 10px);
             }
 
             .shine {
@@ -144,12 +146,15 @@
                 left: 0;
                 width: 60%;
                 height: 100%;
-                background: linear-gradient(to right,
-                        rgba(255, 136, 0, 0) 0%,
-                        rgba(255, 136, 0, 0.45) 40%,
-                        rgba(255, 136, 0, 0.6) 60%,
-                        rgba(255, 136, 0, 0.45) 80%,
-                        rgba(255, 136, 0, 0) 100%);
+
+                background: linear-gradient(
+                    to right,
+                    var(--Colors-Use-Basic-Shadow) 0%,
+                    var(--Colors-Use-Main-Border) 40%,
+                    var(--Colors-Use-Main-Hover) 60%,
+                    var(--Colors-Use-Main-Border) 80%,
+                    var(--Colors-Use-Basic-Shadow) 100%
+                );
                 animation: shine-move 1.6s linear infinite;
             }
 
