@@ -76,7 +76,8 @@
     "details": "详情",
     "next": "下一个",
     "prev": "上一个",
-    "originReq": "原始请求"
+    "originReq": "原始请求",
+    "verificationRecord": "验证记录"
   },
   "YakitRiskDetailContent": {
     "related_code_snippet": "相关代码段"

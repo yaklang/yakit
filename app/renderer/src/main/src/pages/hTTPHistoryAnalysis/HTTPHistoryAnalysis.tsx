@@ -793,7 +793,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                     ></YakitButton>
                 </div>
             </div>
-            <div style={{height: "calc(100% - 30px)"}}>
+            <div style={{height: "calc(100% - 30px)", marginTop: '-1px'}}>
                 {curBottomTab === "packet" && initRenderTabCont["packet"] && (
                     <>
                         {clickHttpFlow?.Id ? 
@@ -802,6 +802,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 id={clickHttpFlow.Id}
                                 selectedFlow={clickHttpFlow}
                                 sendToWebFuzzer={true}
+                                showEditTag={false}
+                                showJumpTree={false}
                             />
                          : 
                             <YakitEmpty title={t("AnalysisMain.select_traffic_to_view_packet")} />
@@ -1404,7 +1406,7 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
             scrollID: v?.Id,
             showEditTag: false,
             showJumpTree: false
-        } as HTTPFlowDetailProp
+        } satisfies HTTPFlowDetailProp
     }
 
     // 双击表格行打开新窗口数据包

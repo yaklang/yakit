@@ -1603,7 +1603,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     pageType: pageType,
                     showEditTag: false,
                     showJumpTree: false
-                }
+                } satisfies HTTPFlowDetailProp
             }
         })
     }

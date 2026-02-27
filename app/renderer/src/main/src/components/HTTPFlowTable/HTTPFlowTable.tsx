@@ -2824,7 +2824,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     showEditTag: false,
                     showJumpTree: false,
                     showFlod: !["Plugin"].includes(pageType || "")
-                } as HTTPFlowDetailProp
+                } satisfies HTTPFlowDetailProp
             }
         }
     })

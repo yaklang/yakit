@@ -1767,7 +1767,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                         placement: "bottomLeft"
                                     }}
                                 >
-                                    <YakitButton type='text' icon={<OutlineClockIcon />}></YakitButton>
+                                    <YakitButton type="outline1" size="small" icon={<OutlineClockIcon />}>{t("YakitRiskDetails.verificationRecord")}</YakitButton>
                                 </YakitDropdownMenu>
                             </div>
                         ) : (
