@@ -746,6 +746,11 @@ service Yak {
   // AI相关
   rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
   rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
+  rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
+  rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
+  rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
+  rpc UpsertAIProvider(UpsertAIProviderRequest) returns (UpsertAIProviderResponse);
+  rpc DeleteAIProvider(DeleteAIProviderRequest) returns (Empty);
 
   // 指纹库
   rpc GetFingerprint(GetFingerprintRequest) returns (GetFingerprintResponse);
@@ -8354,6 +8359,45 @@ message ListAiModelRequest{
 
 message ListAiModelResponse{
   repeated string ModelName = 1;
+}
+
+message AIProvider {
+  int64 Id = 1;
+  ThirdPartyApplicationConfig Config = 2;
+}
+
+message ListAIProvidersResponse {
+  repeated AIProvider Providers = 1;
+}
+
+message UpsertAIProviderRequest {
+  AIProvider Provider = 1;
+}
+
+message UpsertAIProviderResponse {
+  AIProvider Provider = 1;
+}
+
+message DeleteAIProviderRequest {
+  int64 Id = 1;
+}
+
+message AIModelConfig {
+  int64 ProviderId = 1;
+  ThirdPartyApplicationConfig Provider = 2;
+  string ModelName = 3;
+  repeated KVPair ExtraParams = 4;
+}
+
+message AIGlobalConfig {
+  bool Enabled = 1;
+  string RoutingPolicy = 2;
+  bool DisableFallback = 3;
+  string DefaultModelId = 4;
+  double GlobalWeight = 5;
+  repeated AIModelConfig IntelligentModels = 6;
+  repeated AIModelConfig LightweightModels = 7;
+  repeated AIModelConfig VisionModels = 8;
 }
 
 // Local Model Messages
