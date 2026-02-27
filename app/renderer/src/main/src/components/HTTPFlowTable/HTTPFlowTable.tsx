@@ -5394,6 +5394,7 @@ const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
             title={t("EditTagsModal.editTag")}
             width={600}
             destroyOnClose={true}
+            maskClosable={false}
             okText={t("YakitButton.save")}
             onCancel={onCancel}
             onOk={handleOk}
