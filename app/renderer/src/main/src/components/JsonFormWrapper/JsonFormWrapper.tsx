@@ -79,7 +79,6 @@ export interface JsonFormWrapperProps {
 /** 创建一个包装组件来处理 JsonForm */
 export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props) => {
     const {jsonSchemaListRef, field, value, schema, uiSchema, disabled} = props
-    console.log(uiSchema, props, "uiSchema")
 
     const [formData, setFormData, getFormData] = useGetState<any>(value || {})
     const jsonSchemaRef = useRef<any>()
