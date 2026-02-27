@@ -16,16 +16,16 @@
 
     :global {
         .ant-tag-close-icon {
-            margin-left: 8px;
+            margin-left: 4px;
             display: inline-flex;
             align-items: center;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
             width: 12px;
             height: 12px;
-
+            flex-shrink: 0;
             svg {
                 width: 12px;
                 height: 12px;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
 
             .anticon {
@@ -138,7 +138,7 @@
 }
 
 .yakit-tag-purple {
-    background: var(--Colors-Use-Purple-Bg);
+    background: var(--Colors-Use-Purple-Bg-Hover);
     border-color: var(--Colors-Use-Purple-Border);
     color: var(--Colors-Use-Purple-Primary);
 
@@ -160,10 +160,10 @@
 .yakit-tag-cyan {
     background: var(--Colors-Use-Cyan-Bg);
     border-color: var(--Colors-Use-Cyan-Border);
-    color: var(--Colors-Use-Cyan-Primary);
+    color: var(--yakit-colors-Cyan-80);
 
     svg {
-        color: var(--Colors-Use-Cyan-Primary);
+        color: var(--yakit-colors-Cyan-80);
     }
 }
 
@@ -178,12 +178,12 @@
 }
 
 .yakit-tag-yellow {
-    color: var(--Colors-Use-Yellow-Primary);
+    color: var(--yakit-colors-Yellow-80);
     border-color: var(--Colors-Use-Yellow-Border);
     background-color: var(--Colors-Use-Yellow-Bg);
 
     svg {
-        color: var(--Colors-Use-Yellow-Primary);
+        color: var(--yakit-colors-Yellow-80);
     }
 }
 
@@ -191,6 +191,15 @@
     background: var(--Colors-Use-Neutral-Bg-Hover);
     border-color: var(--Colors-Use-Neutral-Border);
     color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.yakit-tag-lakeBlue {
+    background: var(--Colors-Use-Lake-blue-Bg-Hover);
+    border-color: var(--Colors-Use-Lake-blue-Border);
+    color: var(--yakit-colors-Lake-blue-80);
+    svg {
+        color: var(--yakit-colors-Lake-blue-80);
+    }
 }
 
 .yakit-tag-disable {
