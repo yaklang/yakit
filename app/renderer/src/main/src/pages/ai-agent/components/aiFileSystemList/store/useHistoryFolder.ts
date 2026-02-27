@@ -31,10 +31,15 @@ export const historyStore = {
             const trimmedPath = path.trim()
             const filtered = prevList.filter((item) => item.path.trim() !== "" && item.path !== trimmedPath)
             const newItem: HistoryItem = {path, isFolder}
-            const nextList = [...filtered, newItem]
-
+            const existingIndex = prevList.findIndex((item) => item.path === trimmedPath)
+            let nextList
+            if (existingIndex !== -1) {
+                nextList = [...filtered]
+                nextList.splice(existingIndex, 0, newItem)
+            } else {
+                nextList = [...filtered, newItem]
+            }
             const finalResult = nextList.length > RECENT_COUNT ? nextList.slice(-RECENT_COUNT) : nextList
-
             setRemoteValue(REMOTE_KEY, JSON.stringify(finalResult)).catch(console.error)
             customFolderStore.addCustomFolderItem(newItem)
             return finalResult

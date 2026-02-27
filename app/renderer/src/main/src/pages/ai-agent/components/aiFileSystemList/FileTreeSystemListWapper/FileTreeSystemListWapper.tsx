@@ -8,7 +8,7 @@ import FileTreeSystemList from "../FileTreeSystemList/FileTreeSystemList"
 import {OutlineChevrondownIcon, OutlineDocumentaddIcon, OutlineFolderaddIcon, OutlinePluscircleIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {checkPathIncludeRelation, mergePathArray} from "../utils"
+import {checkPathIncludeRelation, mergePathArray, onOpenFileFolder} from "../utils"
 import {yakitNotify} from "@/utils/notification"
 
 interface OpFileNotifyParams {
@@ -44,8 +44,6 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
     title,
     isOpen,
     selected,
-    // historyFolder,
-    setOpenFolder,
     setSelected,
     onTreeDragStart,
     onTreeDragEnd
@@ -55,17 +53,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
 
     // 去重path
     const [uniquePaths, setUniquePaths, getUniquePaths] = useGetSetState<HistoryItem[]>([])
-    const onOpenFileFolder = async (flag) => {
-        try {
-            const label = flag ? "文件夹" : "文件"
-            const args: OpenDialogOptions["properties"] = flag ? ["openDirectory"] : ["openFile"]
-            const {filePaths} = await handleOpenFileSystemDialog({title: `请选择${label}`, properties: args})
-            if (!filePaths.length) return
-            let absolutePath: string = filePaths[0].replace(/\\/g, "\\")
-            await opfileNotify({uniquePaths, incoming: {path: absolutePath, isFolder: flag}, label, path: absolutePath})
-            setOpenFolder?.(absolutePath, flag)
-        } catch {}
-    }
+    
     const renderContent = useMemoizedFn(() => {
         if (isOpen && uniquePaths.length === 0) {
             return (
@@ -120,40 +108,8 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
         }
     }, [getUniquePaths, path, setUniquePaths])
 
-    // 菜单选择
-    // const menuData = useMemo(() => {
-    //     if (!isOpen) return []
-    //     let menu: YakitMenuItemType[] = [
-    //         {
-    //             key: FileListTileMenu.OpenFile,
-    //             label: `打开文件`
-    //         },
-    //         {
-    //             key: FileListTileMenu.OpenFolder,
-    //             label: `打开文件夹`
-    //         }
-    //     ]
-    //     if (historyFolder?.length) {
-    //         menu.push({
-    //             key: FileListTileMenu.History,
-    //             label: "最近打开",
-    //             children: [
-    //                 ...(historyFolder?.map(({path}) => {
-    //                     return {key: path, label: path}
-    //                 }) || [])
-    //             ]
-    //         })
-    //     }
-
-    //     return menu
-    // }, [historyFolder, isOpen])
-
     // 菜单选择事件
     const menuSelect = useMemoizedFn((key: FileListTileMenu) => {
-        // let menuKey = key
-        // if (keyPath.length === 2) {
-        //     menuKey = keyPath[1] as FileListTileMenu
-        // }
         switch (key) {
             case FileListTileMenu.OpenFile:
                 onOpenFileFolder(false)
@@ -161,11 +117,6 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
             case FileListTileMenu.OpenFolder:
                 onOpenFileFolder(true)
                 break
-            // case FileListTileMenu.History:
-            //     const folderPath = keyPath[0]
-            //     const isFolder = historyFolder?.find((i) => i.path === key)?.isFolder ?? true
-            //     setOpenFolder?.(folderPath, isFolder)
-            //     break
             default:
                 break
         }
@@ -179,24 +130,6 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                     <span style={{marginLeft: 4}}>{title}</span>
                 </div>
 
-                {/* <YakitDropdownMenu
-                    menu={{
-                        data: menuData,
-                        onClick: ({key, keyPath}) => menuSelect(key as FileListTileMenu, keyPath)
-                    }}
-                    dropdown={{
-                        trigger: ["click"],
-                        placement: "bottomLeft"
-                    }}
-                >
-                    <YakitButton
-                        className={styles["file-tree-system-title-icon"]}
-                        hidden={!isOpen}
-                        type='text2'
-                        title={`打开文件夹`}
-                        icon={<OutlinePluscircleIcon />}
-                    />
-                </YakitDropdownMenu> */}
                 <div className={styles["file-tree-system-title-icon"]}>
                     <YakitButton
                         hidden={!isOpen}
@@ -212,14 +145,6 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                         onClick={()=>menuSelect(FileListTileMenu.OpenFolder)}
                         icon={<OutlineFolderaddIcon />}
                     />
-                    {/* <YakitButton
-                        className={styles["file-tree-system-title-icon"]}
-                        hidden={!isOpen}
-                        type='text2'
-                        title='最近打开'
-                        onClick={()=>menuSelect()}
-                        icon={<OutlinePluscircleIcon />}
-                    /> */}
                 </div>
             </div>
             <div hidden={!expanded} className={styles["file-tree-system-list"]}>

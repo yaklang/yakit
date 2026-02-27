@@ -42,6 +42,7 @@ import {
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
 import {aiChatDataStore} from "../store/ChatDataStore"
 import AIContextToken from "./AIContextToken/AIContextToken"
+import OperationLog from "../components/aiFileSystemList/OperationLog/OperationLog"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
@@ -60,8 +61,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
         const [timeLine, setTimeLine] = useState<boolean>(true)
         const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
-
-        const [fileSystemKey, setFileSystemKey] = useState<TabKey>()
 
         const [exportModalVisible, setExportModalVisible] = useState(false)
         const [exportLoading, setExportLoading] = useState(false)
@@ -125,15 +124,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             setActiveKey(key)
             if (!value) {
                 setRunTimeIDs(initRunTimeIDs)
-                setFileSystemKey(undefined)
                 return
             }
-            if (key === AITabsEnum.File_System) {
-                setFileSystemKey(value as TabKey)
-            } else {
-                setRunTimeIDs([value])
-                setFileSystemKey(undefined)
-            }
+            setRunTimeIDs([value])
         })
 
         const onSwitchAIAgentTab = useMemoizedFn((data) => {
@@ -222,8 +215,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             if (!!tempRiskTotal) {
                 tab.push(AITabs[AITabsEnum.Risk])
             }
+            if (yakExecResult.execFileRecord.size > 0) {
+                tab.push(AITabs[AITabsEnum.Operation_Log])
+            }
             return tab
-        }, [tempRiskTotal, tempHTTPTotal, taskChat?.elements?.length])
+        }, [tempRiskTotal, tempHTTPTotal, yakExecResult.execFileRecord, taskChat?.elements?.length])
 
         const [showHot, setShowHot] = useState(false)
         const prevRef = useRef<{
@@ -271,18 +267,18 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             return finalLabel
         })
 
+        const OperationLogList = useCreation(() => {
+            return Array.from(yakExecResult.execFileRecord.values())
+                .flat()
+                .sort((a, b) => b.order - a.order)
+        }, [yakExecResult.execFileRecord])
+
         const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
             switch (key) {
                 case AITabsEnum.Task_Content:
                     return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
                 case AITabsEnum.File_System:
-                    return (
-                        <AIFileSystemList
-                            execFileRecord={yakExecResult.execFileRecord}
-                            activeKey={fileSystemKey}
-                            setActiveKey={setFileSystemKey}
-                        />
-                    )
+                    return <AIFileSystemList />
                 case AITabsEnum.Risk:
                     return !!runTimeIDs.length ? (
                         <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
@@ -303,6 +299,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                             <YakitEmpty style={{paddingTop: 48}} />
                         </>
                     )
+                case AITabsEnum.Operation_Log:
+                    return <OperationLog loading={false} list={OperationLogList} />
                 default:
                     return <></>
             }
