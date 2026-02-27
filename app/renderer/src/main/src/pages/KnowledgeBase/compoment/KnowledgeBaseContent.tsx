@@ -708,7 +708,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                             backgroundColor: !!showFreeChat ? "var(--Colors-Use-Neutral-Bg)" : "none",
                             display: !!showFreeChat ? "" : "none"
                         }}
-                        secondMinSize={0}
+                        secondMinSize={!!showFreeChat ? 300 : 0}
                         style={{display: "flex"}}
                         lineDirection='left'
                         secondNodeStyle={{
