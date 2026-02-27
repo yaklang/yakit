@@ -643,6 +643,51 @@ module.exports = (win, getClient) => {
         return await asyncQueryHotPatchTemplateList(params)
     })
 
+    const asyncGetGlobalHotPatchConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetGlobalHotPatchConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetGlobalHotPatchConfig", async (e, params) => {
+        return await asyncGetGlobalHotPatchConfig(params)
+    })
+
+    const asyncSetGlobalHotPatchConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetGlobalHotPatchConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetGlobalHotPatchConfig", async (e, params) => {
+        return await asyncSetGlobalHotPatchConfig(params)
+    })
+
+    const asyncResetGlobalHotPatchConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ResetGlobalHotPatchConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ResetGlobalHotPatchConfig", async (e, params) => {
+        return await asyncResetGlobalHotPatchConfig(params)
+    })
+
     const asyncQueryHotPatchTemplate = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryHotPatchTemplate(params, (err, data) => {

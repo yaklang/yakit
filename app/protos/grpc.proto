@@ -861,6 +861,11 @@ service Yak {
   rpc QueryHotPatchTemplate(HotPatchTemplateRequest) returns (QueryHotPatchTemplateResponse);
   rpc QueryHotPatchTemplateList(QueryHotPatchTemplateListRequest) returns (QueryHotPatchTemplateListResponse);
 
+  // global hot-patch config (Global HotPatch)
+  rpc GetGlobalHotPatchConfig(Empty) returns (GlobalHotPatchConfig);
+  rpc SetGlobalHotPatchConfig(SetGlobalHotPatchConfigRequest) returns (GlobalHotPatchConfig);
+  rpc ResetGlobalHotPatchConfig(Empty) returns (GlobalHotPatchConfig);
+
   // db common rpc
   rpc GroupTableColumn(GroupTableColumnRequest) returns (GroupTableColumnResponse);
 
@@ -8211,13 +8216,34 @@ message QueryHotPatchTemplateResponse {
 }
 
 message QueryHotPatchTemplateListRequest {
-  string Type = 1; // fuzzer/mitm/httpflow-analyze
+  string Type = 1; // fuzzer/mitm/httpflow-analyze/global
 }
 
 message QueryHotPatchTemplateListResponse {
   Paging Pagination = 1;
   repeated string Name = 2;
   int64 Total = 3;
+}
+
+// Global HotPatch Config
+//
+// v1: 服务端可限制 Items 最多 1 个（全局只允许一个）。
+// v2+: 放开限制后，Items 的顺序即执行顺序（从前到后）。
+message GlobalHotPatchTemplateRef {
+  string Name = 1;
+  string Type = 2;   // Should be "global" (HotPatchTemplate.Type)
+  bool Enabled = 3;  // Future: per-item enable/disable
+}
+
+message GlobalHotPatchConfig {
+  bool Enabled = 1;  // Global switch
+  int64 Version = 2; // Monotonic version for optimistic concurrency
+  repeated GlobalHotPatchTemplateRef Items = 3; // Ordered execution pipeline
+}
+
+message SetGlobalHotPatchConfigRequest {
+  GlobalHotPatchConfig Config = 1;
+  int64 ExpectedVersion = 2; // Optional optimistic lock (0/empty means skip)
 }
 
 message GroupTableColumnRequest {

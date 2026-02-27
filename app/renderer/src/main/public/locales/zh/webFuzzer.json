@@ -527,11 +527,25 @@
     "save_hot_reload_template": "保存热加载模板",
     "MITM_hot_template": "MITM",
     "WebFuzzer_hot_template": "Web Fuzzer",
+    "Global_hot_template": "全局",
     "add_template": "新建模板",
     "template_empty_message": "模板名称不能为空",
     "template_repeat_message": "模板名称已存在",
     "add_template_success": "新建模板成功",
     "template_list":"模板列表"
+  },
+  "GlobalHotPatch": {
+    "status": "全局热加载",
+    "enabled": "已启用",
+    "disabled": "未启用",
+    "current": "当前全局",
+    "refresh": "刷新",
+    "enable_selected": "启用为全局",
+    "disable": "关闭全局",
+    "enabled_tag": "全局启用中",
+    "select_template_first": "请先选择一个全局热加载模板",
+    "enable_success": "全局热加载启用成功",
+    "disable_success": "全局热加载已关闭"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "是否应用修改的内容",
