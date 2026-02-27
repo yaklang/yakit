@@ -111,6 +111,81 @@ module.exports = (win, getClient) => {
         return await asyncListAiModel(params)
     })
 
+    const asyncGetAIGlobalConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAIGlobalConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAIGlobalConfig", async (e, params) => {
+        return await asyncGetAIGlobalConfig(params)
+    })
+
+    const asyncSetAIGlobalConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetAIGlobalConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetAIGlobalConfig", async (e, params) => {
+        return await asyncSetAIGlobalConfig(params)
+    })
+
+    const asyncListAIProviders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ListAIProviders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ListAIProviders", async (e, params) => {
+        return await asyncListAIProviders(params)
+    })
+
+    const asyncUpsertAIProvider = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpsertAIProvider(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpsertAIProvider", async (e, params) => {
+        return await asyncUpsertAIProvider(params)
+    })
+
+    const asyncDeleteAIProvider = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAIProvider(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteAIProvider", async (e, params) => {
+        return await asyncDeleteAIProvider(params)
+    })
+
     // 查询自定义代码片段
     const asyncQuerySnippets = (params) => {
         return new Promise((resolve, reject) => {
