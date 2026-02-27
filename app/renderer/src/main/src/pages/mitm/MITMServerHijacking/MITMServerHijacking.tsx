@@ -305,8 +305,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             <div className={style["mitm-server-heard"]}>
                 <div className={style["mitm-server-title"]}>
                     <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
-                    <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
-                        <span style={{marginRight: 8}}>{addr}</span>
+                    <div className={style["mitm-server-heard-addr"]}>
+                        <span className={style["mitm-server-heard-addr-text"]}>{addr}</span>
+                        <div className={style["mitm-server-heard-addr-tags"]}>
                         {tip
                             .split("|")
                             .filter((item) => item)
@@ -321,6 +322,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                     </YakitTag>
                                 )
                             )}
+                    </div>
                     </div>
                 </div>
                 <div className={style["mitm-server-extra"]}>
