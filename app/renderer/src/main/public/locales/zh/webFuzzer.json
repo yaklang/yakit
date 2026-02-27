@@ -545,7 +545,8 @@
     "enabled_tag": "全局启用中",
     "select_template_first": "请先选择一个全局热加载模板",
     "enable_success": "全局热加载启用成功",
-    "disable_success": "全局热加载已关闭"
+    "disable_success": "全局热加载已关闭",
+    "default_template_created": "已初始化默认全局模板：{name}"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "是否应用修改的内容",

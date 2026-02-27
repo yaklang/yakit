@@ -545,7 +545,8 @@
     "enabled_tag": "Global Enabled",
     "select_template_first": "Please select a global hotpatch template first",
     "enable_success": "Global HotPatch enabled",
-    "disable_success": "Global HotPatch disabled"
+    "disable_success": "Global HotPatch disabled",
+    "default_template_created": "Default global template created: {name}"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "Apply the modified content?",

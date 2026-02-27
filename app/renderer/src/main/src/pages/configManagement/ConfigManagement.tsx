@@ -155,6 +155,27 @@ const INPUT_MAX_LENGTH = 50
 const DEBUG_TIMEOUT_SECONDS = 20
 const DEBUG_LIMIT = 300
 const DEFAULT_TEMPLATE_CONTENT = `{{yak(handle|{{params(test)}})}}`
+const DEFAULT_GLOBAL_TEMPLATE_NAME = "全局默认模板"
+const DEFAULT_GLOBAL_TEMPLATE_CONTENT = `// 全局 HotPatch 示例（默认模板）
+// - MITM / WebFuzzer 都会优先执行全局模板
+// - 执行顺序：全局 HotPatch -> 模块 HotPatch
+//
+// 你可以通过观察请求头中是否出现 X-Yakit-Global-HotPatch 来确认是否生效
+
+hijackHTTPRequest = func(isHttps, url, req, forward, drop) {
+    req = poc.AppendHTTPPacketHeader(req, "X-Yakit-Global-HotPatch", "1")
+    forward(req)
+}
+
+beforeRequest = func(https, originReq, req) {
+    req = poc.AppendHTTPPacketHeader(req, "X-Yakit-Global-HotPatch", "1")
+    return req
+}
+
+hijackSaveHTTPFlow = func(flow, modify, drop) {
+    flow.AddTag("global-hotpatch")
+    modify(flow)
+}`
 const HOT_PATCH_PARAMS_GETTER_DEFAULT = `__getParams__ = func() {
     /*
         __getParams__ 是一个用户可控生成复杂数据初始数据的参数：
@@ -192,6 +213,7 @@ export const HotPatchManagement: React.FC = () => {
     const [editorTab, setEditorTab] = useState<"source" | "result">("source")
     const [debugResult, setDebugResult] = useState("")
     const tokenRef = useRef("")
+    const globalDefaultTemplateInitedOnceRef = useRef(false)
     const userInfo = useStore((s) => s.userInfo)
     const selectRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(selectRef)
@@ -282,6 +304,30 @@ export const HotPatchManagement: React.FC = () => {
         }
     })
 
+    const ensureDefaultGlobalTemplate = useMemoizedFn(async () => {
+        if (activeType !== "global") return
+        if (globalDefaultTemplateInitedOnceRef.current) return
+
+        globalDefaultTemplateInitedOnceRef.current = true
+        try {
+            const listRes: QueryHotPatchTemplateListResponse = await ipcRenderer.invoke("QueryHotPatchTemplateList", {
+                Type: "global"
+            })
+            const names = listRes?.Name || []
+            if (names.includes(DEFAULT_GLOBAL_TEMPLATE_NAME)) return
+
+            await ipcRenderer.invoke("CreateHotPatchTemplate", {
+                Type: "global",
+                Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,
+                Name: DEFAULT_GLOBAL_TEMPLATE_NAME
+            })
+            yakitNotify("success", t("GlobalHotPatch.default_template_created", {name: DEFAULT_GLOBAL_TEMPLATE_NAME}))
+        } catch (error) {
+            globalDefaultTemplateInitedOnceRef.current = false
+            yakitFailed(error + "")
+        }
+    })
+
     const loadTemplateList = useMemoizedFn((autoSelectFirst = false) => {
         const isWebFuzzer = activeType === "fuzzer"
         const isMITM = activeType === "mitm"
@@ -341,10 +387,14 @@ export const HotPatchManagement: React.FC = () => {
 
     useEffect(() => {
         if(!inViewport) return
-        loadTemplateList(true)
         if (activeType === "global") {
-            loadGlobalHotPatchConfig()
+            ensureDefaultGlobalTemplate().finally(() => {
+                loadTemplateList(true)
+                loadGlobalHotPatchConfig()
+            })
+            return
         }
+        loadTemplateList(true)
     }, [activeType, inViewport])
 
     const resetDebug = useMemoizedFn(() => {
