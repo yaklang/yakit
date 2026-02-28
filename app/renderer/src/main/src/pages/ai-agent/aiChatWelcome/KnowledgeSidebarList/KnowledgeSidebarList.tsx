@@ -333,9 +333,10 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                         ))}
                     </div>
                     <div className={styles["knowledge-base-info-list"]}>
-                        <YakitSpin spinning={loading}>
+                        <YakitSpin wrapperClassName={styles["knowledge-base-info-list-spin"]} spinning={loading}>
                             {knowledgeBase.length > 0 ? (
-                                knowledgeBase.map((items, index) => {
+                              <>
+                                {knowledgeBase.map((items, index) => {
                                     const Icon = targetIcon(index)
                                     return (
                                         <div
@@ -405,12 +406,13 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                                             </div>
                                         </div>
                                     )
-                                })
+                                })}
+                                 <div className={styles["min-reached"]}>已经到底啦~</div>
+                              </>
                             ) : (
                                 <YakitEmpty style={{width: "100%", margin: 0}} />
                             )}
                         </YakitSpin>
-                        <div className={styles["min-reached"]}>已经到低啦~</div>
                     </div>
 
                     <KnowledgeBaseFormModal
