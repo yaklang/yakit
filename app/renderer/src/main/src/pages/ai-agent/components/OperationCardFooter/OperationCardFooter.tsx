@@ -33,7 +33,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({copyStr
     const handleViewFile = useMemoizedFn(() => {
         if (!aiFilePath) return
 
-        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System, value: TabKey.FileTree}))
+        emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.File_System}))
         setTimeout(() => {
             emiter.emit("fileSystemDefaultExpand", aiFilePath)
         }, 800)

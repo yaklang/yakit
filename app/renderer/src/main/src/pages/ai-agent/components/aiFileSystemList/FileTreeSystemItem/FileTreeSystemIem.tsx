@@ -5,11 +5,11 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {setClipboardText} from "@/utils/clipboard"
 import {FileTreeSystemItemProps} from "../type"
-import {historyStore} from "../store/useHistoryFolder"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitProtoCheckbox} from "@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox"
 import {AIMentionCommandParams} from "../../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 import emiter from "@/utils/eventBus/eventBus"
+import { customFolderStore } from "../store/useCustomFolder"
 
 const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     data,
@@ -68,7 +68,8 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     const handleDropdown = (key: string) => {
         switch (key) {
             case "closeFolder":
-                historyStore.removeHistoryItem(data.path)
+                // historyStore.removeHistoryItem(data.path)
+                customFolderStore.removeCustomFolderItem(data.path)
                 break
             case "openFolder":
                 onOpenLocalFileByPath(data.path)

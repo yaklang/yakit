@@ -174,17 +174,17 @@ const AIGroupStreamCard: FC<{
                 <div className={classNames(styles["stream-text"], expand ? styles.collapsed : "")}>
                     <p>{!expand && <span>{stream.data.content}</span>}</p>
                 </div>
-                <YakitButton
-                    type='text'
-                    icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
-                />
+                <YakitButton type='text' icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />} />
             </div>
             <div
-                className={`${styles.content} ${expand ? styles.expand : ""}`}
-                >
+                className={classNames(styles.content, {
+                    [styles.expand]: expand,
+                    [styles.noMask]: isScroll
+                })}
+            >
                 <div
-                ref={contentRef}
-                onClick={() => setIsScroll(true)}
+                    ref={contentRef}
+                    onClick={() => setIsScroll(true)}
                     className={styles["content-inner"]}
                     style={{
                         overflow: isScroll ? "overlay" : "hidden"

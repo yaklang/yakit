@@ -1,4 +1,6 @@
+import { handleOpenFileSystemDialog, OpenDialogOptions } from "@/utils/fileSystemDialog"
 import {HistoryItem, PathIncludeResult} from "./type"
+import { historyStore } from "./store/useHistoryFolder"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -87,4 +89,15 @@ export const checkPathIncludeRelation = async (
     }
 
     return PathIncludeResult.None
+}
+
+export const onOpenFileFolder = async (flag) => {
+    try {
+        const label = flag ? "文件夹" : "文件"
+        const args: OpenDialogOptions["properties"] = flag ? ["openDirectory"] : ["openFile"]
+        const {filePaths} = await handleOpenFileSystemDialog({title: `请选择${label}`, properties: args})
+        if (!filePaths.length) return
+        let absolutePath: string = filePaths[0].replace(/\\/g, "\\")
+        historyStore.addHistoryItem({path: absolutePath, isFolder: flag})
+    } catch {}
 }

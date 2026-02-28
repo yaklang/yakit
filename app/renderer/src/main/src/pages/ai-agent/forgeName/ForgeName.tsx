@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {forwardRef, memo, Ref, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     ExportAIForgeFormValues,
     ExportAIForgeRequest,
@@ -53,7 +53,12 @@ import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
 const {ipcRenderer} = window.require("electron")
 
-const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
+export interface ForgeNameRef {
+    openAdd: () => void
+    openImport: () => void
+}
+
+const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
     // const {} = props
 
     // #region AIForge 模板增删改功能 使用功能
@@ -393,10 +398,20 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     }
     // #endregion
 
+    useImperativeHandle(ref, () => ({
+        openAdd: handleNewAIForge,
+        openImport: () =>
+            handleOpenImportExportHint({
+                title: "导入技能",
+                type: "import",
+                apiKey: "ImportAIForge"
+            })
+    }))
+
     return (
         <div ref={wrapper} className={styles["forge-name"]}>
             <div className={styles["header-wrapper"]}>
-                <div className={styles["haeder-first"]}>
+                {/* <div className={styles["haeder-first"]}>
                     <div className={styles["first-title"]}>
                         技能库
                         <YakitRoundCornerTag>{total}</YakitRoundCornerTag>
@@ -414,7 +429,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                         />
                         <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
                     </div>
-                </div>
+                </div> */}
 
                 <div className={styles["header-second"]}>
                     <YakitInput
@@ -564,7 +579,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
                         {!isMore.current && !loading && (
                             <div className={styles["forge-list-no-more"]}>
-                                <div className={styles["no-more-title"]}>已经到底了</div>
+                                <div className={styles["no-more-title"]}>已经到底啦~</div>
                             </div>
                         )}
                         {loading && (
@@ -672,6 +687,8 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             )}
         </div>
     )
-})
+}
 
-export default ForgeName
+const ForwardForgeName = forwardRef<ForgeNameRef, {}>(ForgeName)
+
+export default memo(ForwardForgeName)

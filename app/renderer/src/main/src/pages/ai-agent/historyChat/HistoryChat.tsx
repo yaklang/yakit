@@ -8,7 +8,12 @@ import {AIChatInfo} from "../type/aiChat"
 import {EditChatNameModal} from "../UtilModals"
 import {ReActChatEventEnum, YakitAIAgentPageID} from "../defaultConstant"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
-import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineMessageCirclePlusIcon,
+    OutlinePencilaltIcon,
+    OutlineSearchIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
@@ -21,6 +26,7 @@ import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
 import {grpcDeleteAIEvent, grpcDeleteAITask} from "../grpc"
 import {aiChatDataStore} from "../store/ChatDataStore"
+import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 
 /** 向对话框组件进行事件触发的通信 */
 export const onNewChat = () => {
@@ -149,8 +155,9 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                             </Tooltip>
                         </YakitPopconfirm>
                         <Tooltip title='新建会话' placement='topRight'>
-                            <YakitButton icon={<OutlinePlussmIcon />} onClick={() => onNewChat()} />
+                            <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={() => onNewChat()} />
                         </Tooltip>
+                        <SideSettingButton />
                     </div>
                 </div>
 

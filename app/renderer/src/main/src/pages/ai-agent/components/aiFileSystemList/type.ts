@@ -16,9 +16,7 @@ export interface FileTreeSystemListWapperProps {
     title: string
     isOpen?: boolean
     selected?: FileNodeProps
-    historyFolder?: HistoryItem[]
     setSelected: (v?: FileNodeProps) => void
-    setOpenFolder?: (v: string, isFolder: boolean) => void
     onTreeDragStart?: () => void
     onTreeDragEnd?: () => void
 }

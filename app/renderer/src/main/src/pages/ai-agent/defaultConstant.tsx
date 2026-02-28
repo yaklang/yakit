@@ -58,8 +58,8 @@ export enum AIAgentTabListEnum {
 export const AiAgentTabList: YakitTabsProps[] = [
     {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
     {value: AIAgentTabListEnum.Setting, label: "配置", icon: <OutlineCogIcon />},
-    {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
-    {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
+    // {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
+    // {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
     {value: AIAgentTabListEnum.AI_Model, label: "AI模型", icon: <OutlineChipIcon />},
     {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
 ]
@@ -158,14 +158,16 @@ export enum AITabsEnum {
     Task_Content = "task-content",
     File_System = "file-system",
     HTTP = "http",
-    Risk = "risk"
+    Risk = "risk",
+    Operation_Log = "operation-log",
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {
     "task-content": {label: "任务内容", value: AITabsEnum.Task_Content},
     "file-system": {label: "文件系统", value: AITabsEnum.File_System},
     http: {label: "HTTP 流量", value: AITabsEnum.HTTP},
-    risk: {label: "漏洞与风险", value: AITabsEnum.Risk}
+    risk: {label: "漏洞与风险", value: AITabsEnum.Risk},
+    "operation-log": {label: "读写日志", value: AITabsEnum.Operation_Log}
 }
 
 /** AI-Forge 列表查询条件里的页码默认条件 */

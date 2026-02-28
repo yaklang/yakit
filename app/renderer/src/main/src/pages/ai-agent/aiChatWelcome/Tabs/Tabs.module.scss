@@ -1,0 +1,72 @@
+.tabs {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--Colors-Use-Neutral-Bg);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        &-items {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            width: 0;
+            cursor: pointer;
+            .tab {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                text-align: center;
+                font-size: 11px;
+                font-weight: 500;
+                line-height: 16px;
+                letter-spacing: 0.5px;
+                padding: 8px;
+                border: 1px solid transparent;
+                border-top-width: 2px;
+            }
+        }
+
+        &-extra {
+            margin-right: 12px;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            svg {
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+        }
+    }
+    &-content {
+        width: 100%;
+        height: 0;
+        flex: 1;
+        &-item {
+            width: 100%;
+            height: 100%;
+        }
+    }
+    .tab-active {
+        background-color: var(--Colors-Use-Basic-Background);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-top-color: var(--Colors-Use-Main-Primary);
+        border-top-width: 2px;
+        border-bottom: none;
+        position: relative;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -2px;
+            height: 2px;
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+    }
+}

@@ -2,20 +2,91 @@ import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {useEffect, useMemo, useState, type FC} from "react"
 import styles from "./FilePreview.module.scss"
-import {OutlineFolderopenIcon} from "@/assets/icon/outline"
+import {OutlineDocumentaddIcon, OutlineFolderaddIcon, OutlineFolderopenIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {getCodeByPath, getCodeSizeByPath, MAX_FILE_SIZE_BYTES, monacaLanguageType} from "@/pages/yakRunner/utils"
+import {
+    getCodeByPath,
+    getCodeSizeByPath,
+    getNameByPath,
+    MAX_FILE_SIZE_BYTES,
+    monacaLanguageType
+} from "@/pages/yakRunner/utils"
 import {useMemoizedFn} from "ahooks"
 import {Result} from "antd"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {yakitNotify} from "@/utils/notification"
-import {FileInfo} from "../type"
+import type {FileInfo} from "../type"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
+import {onOpenFileFolder} from "../utils"
+import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
+
+const FilePreviewEmpty: FC = () => {
+    // 历史文件夹
+    const historyItems = useHistoryItems()
+    const [fileNames, setFileNames] = useState<string[]>([])
+
+    // 在组件挂载时获取所有文件名
+    useEffect(() => {
+        const fetchFileNames = async () => {
+            const names = await Promise.all(
+                historyItems.map(async (item) => {
+                    return getNameByPath(item.path || "")
+                })
+            )
+            setFileNames(names)
+        }
+        fetchFileNames()
+    }, [historyItems])
+    
+    return (
+        <div className={styles["file-preview-empty"]}>
+            <div className={styles["file-preview-empty-title"]}>
+                <div className={styles["file-preview-empty-title-text"]}>文件系统</div>
+                <div className={styles["file-preview-empty-title-subtitle"]}>请在左侧选择文件</div>
+            </div>
+            <div className={styles["file-preview-empty-content"]}>
+                <YakitButton
+                    className={styles["file-preview-empty-content-button"]}
+                    icon={<OutlineDocumentaddIcon />}
+                    size='large'
+                    type='secondary2'
+                    onClick={() => onOpenFileFolder(false)}
+                >
+                    打开文件
+                </YakitButton>
+                <YakitButton
+                    className={styles["file-preview-empty-content-button"]}
+                    icon={<OutlineFolderaddIcon />}
+                    size='large'
+                    type='secondary2'
+                    onClick={() => onOpenFileFolder(true)}
+                >
+                    打开文件夹
+                </YakitButton>
+                <div className={styles["file-preview-empty-content-recent"]}>
+                    <div className={styles["file-preview-empty-content-recent-title"]}>最近打开</div>
+                    <div className={styles["file-preview-empty-content-recent-list"]}>
+                        {historyItems.map((item, index) => {
+                            return (
+                                <div
+                                    key={item.path}
+                                    className={styles["file-preview-empty-content-recent-list-item"]}
+                                    onClick={() => historyStore.addHistoryItem(item)}
+                                >
+                                    {fileNames[index]} <span> {item.path}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
     const path = data?.path ?? ""
@@ -61,7 +132,7 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
     }, [path])
 
     if (!data) {
-        return <YakitEmpty style={{paddingTop: 48}} title='请在左侧选择文件打开' />
+        return <FilePreviewEmpty />
     }
     return (
         <div className={styles["file-preview"]}>

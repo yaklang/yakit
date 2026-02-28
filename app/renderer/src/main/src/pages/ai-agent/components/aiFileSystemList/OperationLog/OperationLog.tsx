@@ -1,4 +1,4 @@
-import {FC, forwardRef, ReactNode, useCallback, useMemo, useState} from "react"
+import {FC, forwardRef, ReactNode, useMemo, useState} from "react"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import styles from "./OperationLog.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -182,7 +182,7 @@ const OperationLog: FC<OperationLogProps> = ({loading, list}) => {
                                 style={{height: "100%"}}
                                 data={logsByDate[day]}
                                 components={components}
-                                initialTopMostItemIndex={{index: "LAST"}}
+                                initialTopMostItemIndex={logsByDate[day].length > 1 ? logsByDate[day].length - 1 : 0}
                                 itemContent={(index) => (
                                     <TimelineCard
                                         key={logsByDate[day][index].id}

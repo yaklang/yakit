@@ -13,7 +13,7 @@ import {
     OutlineClipboardcopyIcon,
     OutlineDotsverticalIcon,
     OutlinePencilaltIcon,
-    OutlinePlussmIcon,
+    OutlineSearchIcon,
     OutlineStarIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
@@ -106,9 +106,9 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
             getList()
         }, 200)
     })
-    const onPressEnter = useMemoizedFn((e) => {
-        onSearch(e.target.value)
-    })
+    // const onPressEnter = useMemoizedFn((e) => {
+    //     onSearch(e.target.value)
+    // })
     const loadMoreData = useMemoizedFn(() => {
         getList(+response.Pagination.Page + 1)
     })
@@ -132,9 +132,9 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
         setRecalculation((v) => !v)
     })
     // 新建 Tool 模板
-    const handleNewAITool = useMemoizedFn(() => {
-        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAITool}))
-    })
+    // const handleNewAITool = useMemoizedFn(() => {
+    //     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAITool}))
+    // })
     const onSelect = useMemoizedFn((record) => {
         emiter.emit(
             "onReActChatEvent",
@@ -157,43 +157,54 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     />
                     <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
                 </div>
-                <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAITool} />
+                {/* <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAITool} /> */}
             </div>
-            <YakitInput.Search
+            <div className={styles["ai-tool-list-search"]}>
+                {/* <YakitInput.Search
                 value={keyWord}
                 onChange={(e) => setKeyWord(e.target.value)}
                 onSearch={onSearch}
                 onPressEnter={onPressEnter}
                 wrapperStyle={{margin: "0 12px"}}
                 allowClear
-            />
-            <YakitSpin spinning={spinning}>
-                <RollingLoadList<AITool>
-                    data={response.Tools}
-                    loadMoreData={loadMoreData}
-                    renderRow={(rowData: AITool, index: number) => {
-                        return (
-                            <React.Fragment key={rowData.Name}>
-                                <AIToolListItem
-                                    item={rowData}
-                                    onSetData={onSetData}
-                                    onRefresh={getList}
-                                    onSelect={onSelect}
-                                />
-                            </React.Fragment>
-                        )
-                    }}
-                    classNameRow={styles["ai-tool-list-item"]}
-                    classNameList={styles["ai-tool-list"]}
-                    page={+response.Pagination.Page}
-                    hasMore={hasMore}
-                    loading={loading}
-                    defItemHeight={120}
-                    rowKey='Name'
-                    isRef={isRef}
-                    recalculation={recalculation}
+            /> */}
+                <YakitInput
+                    prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                    allowClear
+                    placeholder='请输入关键词搜索'
+                    value={keyWord}
+                    onChange={(e) => onSearch(e.target.value)}
                 />
-            </YakitSpin>
+            </div>
+            <div style={{flex: 1, height: 0}}>
+                <YakitSpin spinning={spinning}>
+                    <RollingLoadList<AITool>
+                        data={response.Tools}
+                        loadMoreData={loadMoreData}
+                        renderRow={(rowData: AITool, index: number) => {
+                            return (
+                                <React.Fragment key={rowData.Name}>
+                                    <AIToolListItem
+                                        item={rowData}
+                                        onSetData={onSetData}
+                                        onRefresh={getList}
+                                        onSelect={onSelect}
+                                    />
+                                </React.Fragment>
+                            )
+                        }}
+                        classNameRow={styles["ai-tool-list-item"]}
+                        classNameList={styles["ai-tool-list"]}
+                        page={+response.Pagination.Page}
+                        hasMore={hasMore}
+                        loading={loading}
+                        defItemHeight={120}
+                        rowKey='Name'
+                        isRef={isRef}
+                        recalculation={recalculation}
+                    />
+                </YakitSpin>
+            </div>
         </div>
     )
 })

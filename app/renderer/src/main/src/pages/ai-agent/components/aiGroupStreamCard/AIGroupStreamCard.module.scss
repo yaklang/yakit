@@ -39,7 +39,7 @@
         position: relative;
         overflow: hidden;
 
-        &::before {
+        &:not(.noMask)::before {
             content: "";
             position: absolute;
             top: 0;
@@ -56,7 +56,7 @@
             z-index: 1;
         }
 
-        &::after {
+        &:not(.noMask)::after {
             content: "";
             position: absolute;
             bottom: 0;
@@ -90,6 +90,7 @@
                 font-size: 12px;
                 font-weight: 400;
                 letter-spacing: 0.5px;
+                scrollbar-gutter: stable;
             }
         }
     }

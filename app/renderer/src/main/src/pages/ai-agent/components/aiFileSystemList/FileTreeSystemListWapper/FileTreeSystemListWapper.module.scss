@@ -11,7 +11,31 @@
         align-items: center;
         color: var(--Colors-Use-Neutral-Text-1-Title);
         line-height: 16px;
-        &-btn { 
+        &:hover &-icon {
+            display: flex;
+        }
+        &-toggle {
+            span {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+                letter-spacing: 0.5px;
+                transition: all 0.3s;
+                cursor: pointer;
+                svg {
+                    width: 12px;
+                    height: 12px;
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                }
+            }
+        }
+        &-icon {
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+        &-btn {
             margin-top: 8px;
             display: flex;
             align-items: center;
@@ -33,7 +57,7 @@
         .ant-tree-treenode {
             display: flex;
             align-items: center;
-            padding: 0 8px;
+            // padding: 0 8px;
             background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-tree-node-content-wrapper {
@@ -47,12 +71,12 @@
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
-        .ant-tree.ant-tree-directory .ant-tree-treenode:hover::before{
+        .ant-tree.ant-tree-directory .ant-tree-treenode:hover::before {
             background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
-         .ant-tree{
+        .ant-tree {
             background-color: transparent;
-         }
+        }
         .ant-tree.ant-tree-directory .ant-tree-treenode-selected:hover::before,
         .ant-tree.ant-tree-directory .ant-tree-treenode-selected::before {
             border: 1px solid var(--Colors-Use-Main-Primary);
@@ -66,7 +90,7 @@
     }
 }
 .dropdown-menu {
-  > div:first-of-type {
-    width: 100%;
-  }
+    > div:first-of-type {
+        width: 100%;
+    }
 }

@@ -15,27 +15,28 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
     }, [content])
     return (
         <div className={classNames(styles["ai-stream-chat-content-wrapper"], "ai-stream-chat-content-wrapper")}>
-            <Tooltip
-                title={
-                    <div className={styles["tooltip-stream-content"]}>
-                        {content}
-                        <CopyComponents copyText={content} />
-                    </div>
-                }
-                trigger={"click"}
-            >
-                <div className={styles["ai-stream-chat-content"]}>
-                    <div className={styles["title"]}>
-                        {/* <OutlineSparklesColorsIcon /> */}
-                        {nodeLabel}
-                    </div>
-                    <div className={styles["ai-stream-content"]}>
+            <div className={styles["ai-stream-chat-content"]}>
+                <div className={styles["title"]}>
+                    {/* <OutlineSparklesColorsIcon /> */}
+                    {nodeLabel}
+                </div>
+                <div className={styles["ai-stream-content"]}>
+                    <Tooltip
+                        placement='topRight'
+                        title={
+                            <div className={styles["tooltip-stream-content"]}>
+                                {content}
+                                <CopyComponents copyText={content} />
+                            </div>
+                        }
+                        trigger={"click"}
+                    >
                         {content.length > 100 && <div className={styles["ai-mask"]} />}
                         {showContent}
-                        {referenceNode}
-                    </div>
+                    </Tooltip>
+                    {referenceNode}
                 </div>
-            </Tooltip>
+            </div>
         </div>
     )
 })
