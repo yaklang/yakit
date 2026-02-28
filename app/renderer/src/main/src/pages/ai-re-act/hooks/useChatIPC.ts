@@ -200,6 +200,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const focusOfTaskID = useRef("")
     const [focusMode, setFocusMode] = useState<string>("")
     const handleFocusModeChange = useMemoizedFn((id: string, mode: string) => {
+        //NOTE - 在react_task_now_status没有完成得时候，断开流，新的对话没有设置专注模式，因为id不一样，导致设置不了专注模式
         if (focusOfTaskID.current && focusOfTaskID.current !== id) return
         focusOfTaskID.current = id
         setFocusMode(mode)
@@ -296,7 +297,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             const {Type, NodeId, NodeIdVerbose, Timestamp} = res
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-            if (NodeId === "react_task_dequeue" && data.focus_mode) {
+            if (NodeId === "react_task_dequeue" && data.hasOwnProperty("focus_mode")) {
                 // 记录专注模式状态
                 handleFocusModeChange(data.react_task_id, data.focus_mode)
             }
@@ -453,6 +454,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 cacheDataStore?.create(token)
             } catch (error) {}
         }
+        handleResetFocusMode()
         setExecute(true)
         chatID.current = token
         fetchHistoryTimelines()
