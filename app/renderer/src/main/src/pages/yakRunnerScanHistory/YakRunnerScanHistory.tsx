@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from "react"
-import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {failed, success, yakitNotify} from "@/utils/notification"
-import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import { useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from "ahooks"
+import { failed, success, yakitNotify } from "@/utils/notification"
+import { TableVirtualResize } from "@/components/TableVirtualResize/TableVirtualResize"
+import { ColumnsTypeProps } from "@/components/TableVirtualResize/TableVirtualResizeType"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     QuerySyntaxFlowScanTaskRequest,
     QuerySyntaxFlowScanTaskResponse,
@@ -15,43 +15,45 @@ import {
     usePageInfo,
     YakRunnerScanHistoryPageInfoProps
 } from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {defaultYakRunnerScanHistoryPageInfo} from "@/defaultConstants/yakRunnerScanHistory"
+import { shallow } from "zustand/shallow"
+import { YakitRoute } from "@/enums/yakitRoute"
+import { defaultYakRunnerScanHistoryPageInfo } from "@/defaultConstants/yakRunnerScanHistory"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
-import {formatTimestamp} from "@/utils/timeUtil"
+import { formatTimestamp } from "@/utils/timeUtil"
 import styles from "./YakRunnerScanHistory.module.scss"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {Tooltip} from "antd"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import { genDefaultPagination, QueryGeneralResponse } from "../invoker/schema"
+import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { Tooltip } from "antd"
 import {
     OutlineArrowcirclerightIcon,
+    OutlineChevrondownIcon,
+    OutlineChevronrightIcon,
     OutlineRefreshIcon,
     OutlineReloadScanIcon,
     OutlineScanIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {CheckboxChangeEvent} from "antd/lib/checkbox"
-import {apiQuerySSAPrograms} from "./utils"
-import {getGroupNamesTotal} from "../yakRunnerCodeScan/utils"
+import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
+import { VirtualPaging } from "@/hook/useVirtualTableHook/useVirtualTableHookType"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { CheckboxChangeEvent } from "antd/lib/checkbox"
+import { apiQuerySSAPrograms } from "./utils"
+import { getGroupNamesTotal } from "../yakRunnerCodeScan/utils"
 import { JSONParseLog } from "@/utils/tool"
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 export interface GenerateSSAReportResponse {
     Success: boolean
     Message: string
     ReportData: string
 }
 
-interface YakRunnerScanHistoryProp {}
+interface YakRunnerScanHistoryProp { }
 const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
-    const {queryPagesDataById} = usePageInfo(
+    const { queryPagesDataById } = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
         }),
@@ -63,9 +65,9 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
             YakitRoute.YakRunner_ScanHistory
         )
         if (currentItem && currentItem.pageParamsInfo.yakRunnerScanHistory) {
-            return {...currentItem.pageParamsInfo.yakRunnerScanHistory}
+            return { ...currentItem.pageParamsInfo.yakRunnerScanHistory }
         }
-        return {...defaultYakRunnerScanHistoryPageInfo}
+        return { ...defaultYakRunnerScanHistoryPageInfo }
     })
     const [pageInfo, setPageInfo] = useState<YakRunnerScanHistoryPageInfoProps>(initPageInfo())
 
@@ -75,7 +77,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
 
     const onYakRunnerScanHistoryPageInfo = useMemoizedFn((info) => {
         try {
-            const data = JSONParseLog(info,{page: "yakRunnerScanHistory", fun: "onYakRunnerScanHistoryPageInfo"}) as unknown as YakRunnerScanHistoryPageInfoProps
+            const data = JSONParseLog(info, { page: "yakRunnerScanHistory", fun: "onYakRunnerScanHistoryPageInfo" }) as unknown as YakRunnerScanHistoryPageInfoProps
             if (!data) return
             isInitRequestRef.current = true
             setQuery((prev) => ({
@@ -87,7 +89,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                 }
             }))
             setPageInfo(data)
-        } catch (error) {}
+        } catch (error) { }
     })
     useEffect(() => {
         emiter.on("onYakRunnerScanHistoryPageInfo", onYakRunnerScanHistoryPageInfo)
@@ -143,7 +145,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         () => {
             update(1)
         },
-        {wait: 300}
+        { wait: 300 }
     ).run
 
     useEffect(() => {
@@ -205,7 +207,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         const m = showYakitModal({
             title: "导出报告",
             content: (
-                <div style={{padding: 20}}>
+                <div style={{ padding: 20 }}>
                     <YakitInput
                         defaultValue={reportName}
                         placeholder='请输入报告名称'
@@ -218,7 +220,6 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
             onCancel: () => {
                 m.destroy()
             },
-            showConfirmLoading: true,
             onOk: () => {
                 ipcRenderer
                     .invoke("GenerateSSAReport", {
@@ -227,7 +228,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                     })
                     .then((res: GenerateSSAReportResponse) => {
                         yakitNotify("success", res.Message)
-                        emiter.emit("openPage", JSON.stringify({route: YakitRoute.DB_Report}))
+                        emiter.emit("openPage", JSON.stringify({ route: YakitRoute.DB_Report }))
                         m.destroy()
                     })
                     .catch((e) => {
@@ -460,6 +461,12 @@ export interface SSAProgram {
     InfoRiskNumber: number
 
     SSAProjectID: number
+
+    // incremental compilation info
+    IsIncrementalCompile?: boolean
+    IncrementalGroupId?: string
+    HeadProgramName?: string
+    OverlayLayers?: string[]
 }
 
 export type QuerySSAProgramResponse = QueryGeneralResponse<SSAProgram>
@@ -467,6 +474,77 @@ export type QuerySSAProgramResponse = QueryGeneralResponse<SSAProgram>
 export interface DeleteSSAProgramRequest {
     DeleteAll?: boolean
     Filter?: SSAProgramFilter
+}
+
+/** 编译历史展示项：增量编译组根节点 / 增量编译子节点 / 独立节点 */
+export interface CompileHistoryDisplayItem {
+    displayId: string
+    program: SSAProgram
+    isGroupRoot?: boolean
+    children?: SSAProgram[]
+    groupId?: string
+    isGroupChild?: boolean
+}
+
+/** 将 programs 聚合为展示列表：IsIncrementalCompile 且 IncrementalGroupId 相同的聚成 2 层树，HeadProgramName 为根 */
+export function buildCompileHistoryDisplayList(programs: SSAProgram[]): CompileHistoryDisplayItem[] {
+    if (!programs.length) return []
+    const incrementalGroups = new Map<string, SSAProgram[]>()
+    const nonIncremental: SSAProgram[] = []
+
+    for (const p of programs) {
+        if (p.IsIncrementalCompile && p.IncrementalGroupId) {
+            const group = incrementalGroups.get(p.IncrementalGroupId) || []
+            group.push(p)
+            incrementalGroups.set(p.IncrementalGroupId, group)
+        } else {
+            nonIncremental.push(p)
+        }
+    }
+
+    type GroupInfo = { groupId: string; root: SSAProgram; children: SSAProgram[] }
+    const groups: GroupInfo[] = []
+    for (const [groupId, groupPrograms] of incrementalGroups) {
+        const headName = groupPrograms[0]?.HeadProgramName || groupPrograms[0]?.Name
+        const rootProgram = groupPrograms.find((p) => p.Name === headName) || groupPrograms[0]
+        const childPrograms = groupPrograms.filter((p) => p.Name !== headName)
+        groups.push({ groupId, root: rootProgram, children: childPrograms })
+    }
+
+    const topLevel = [
+        ...groups.map((g) => ({ type: "group" as const, updateAt: g.root.UpdateAt, data: g })),
+        ...nonIncremental.map((p) => ({ type: "single" as const, updateAt: p.UpdateAt, data: p }))
+    ].sort((a, b) => b.updateAt - a.updateAt)
+
+    const result: CompileHistoryDisplayItem[] = []
+    for (const item of topLevel) {
+        if (item.type === "group") {
+            const { groupId, root, children } = item.data
+            result.push({
+                displayId: `group-root-${groupId}`,
+                program: root,
+                isGroupRoot: true,
+                children,
+                groupId
+            })
+            for (const child of children.sort((a, b) => b.UpdateAt - a.UpdateAt)) {
+                result.push({
+                    displayId: `group-child-${child.Id}`,
+                    program: child,
+                    isGroupChild: true,
+                    groupId
+                })
+            }
+        } else {
+            result.push({
+                displayId: `single-${item.data.Id}`,
+                program: item.data,
+                isGroupRoot: false,
+                isGroupChild: false
+            })
+        }
+    }
+    return result
 }
 
 interface CompileHistoryListProps {
@@ -477,10 +555,11 @@ interface CompileHistoryListProps {
 
 // 编译历史列表
 const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
-    const {pageInfo} = props
+    const { pageInfo } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
     const [checkedList, setCheckedList] = useState<number[]>([])
     const [clickItem, setClickItem] = useControllableValue<SSAProgram>(props, {
         defaultValue: undefined,
@@ -532,9 +611,12 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                             Page: +res.Pagination.Page
                         }
                     }))
-                    setClickItem(resData[0])
                 }
                 const d = isInit ? resData : (response?.Data || []).concat(resData)
+                const displayItems = buildCompileHistoryDisplayList(d)
+                if (displayItems.length > 0) {
+                    setClickItem(displayItems[0].program)
+                }
                 const isMore = resData.length < res.Pagination.Limit || d.length === response.Total
 
                 setHasMore(!isMore)
@@ -549,7 +631,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
             .finally(() => {
                 setLoading(false)
             })
-            .catch(() => {})
+            .catch(() => { })
     })
 
     const handleCheckboxChange = useMemoizedFn((e: CheckboxChangeEvent, id: number) => {
@@ -590,10 +672,16 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
     })
 
     // 单个删除
-    const onDelete = useMemoizedFn((params: DeleteSSAProgramRequest) => {
+    const onDelete = useMemoizedFn((params: DeleteSSAProgramRequest, isHasChildren: boolean) => {
         try {
             setLoading(true)
             ipcRenderer.invoke("DeleteSSAPrograms", params).then(() => {
+                if(isHasChildren){
+                    update(1)
+                    setCheckedList([])
+                    success("删除成功")
+                    return
+                }
                 setResponse((prevResponse) => {
                     const newData = prevResponse.Data.filter(
                         (item) => item.Id !== (params.Filter?.Ids ? params.Filter.Ids[0] : -1)
@@ -604,6 +692,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                         Total: prevResponse.Total - 1
                     }
                 })
+                setCheckedList([])
                 setLoading(false)
                 success("删除成功")
             })
@@ -612,6 +701,160 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
             failed(`删除失败${error}`)
         }
     })
+
+    const toggleGroupExpand = useMemoizedFn((groupId: string) => {
+        setCollapsedGroups((prev) => {
+            const next = new Set(prev)
+            if (next.has(groupId)) next.delete(groupId)
+            else next.add(groupId)
+            return next
+        })
+    })
+
+    const displayList = useMemo(() => {
+        const full = buildCompileHistoryDisplayList(response.Data)
+        return full.filter(
+            (item) =>
+                !item.isGroupChild || !(item.groupId && collapsedGroups.has(item.groupId))
+        )
+    }, [response.Data, collapsedGroups])
+
+    const renderProgramRow = useMemoizedFn(
+        (rowData: CompileHistoryDisplayItem) => {
+            const program = rowData.program
+            const isChecked = checkedList.includes(program.Id)
+            const isClick = clickItem?.Id === program.Id
+            const isExpanded = rowData.groupId ? !collapsedGroups.has(rowData.groupId) : false
+            const hasChildren = !!rowData.children?.length
+
+            return (
+                <div
+                    className={classNames(styles["history-item-box"], {
+                        [styles["history-item-box-active"]]: isClick,
+                        [styles["history-item-box-no-active"]]: !isClick,
+                        [styles["history-item-box-child"]]: rowData.isGroupChild
+                    })}
+                    key={rowData.displayId}
+                    onClick={() => setClickItem(program)}
+                >
+                    <div className={styles["header"]}>
+                        {rowData.isGroupRoot && hasChildren ? (
+                            <div
+                                className={styles["expand-icon"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleGroupExpand(rowData.groupId!)
+                                }}
+                            >
+                                {isExpanded ? (
+                                    <OutlineChevrondownIcon
+                                        className={classNames(styles["chevron-icon"], {
+                                            [styles["chevron-icon-active"]]: isClick,
+                                        })}
+                                    />
+                                ) : (
+                                    <OutlineChevronrightIcon
+                                        className={classNames(styles["chevron-icon"], {
+                                            [styles["chevron-icon-active"]]: isClick,
+                                        })}
+                                    />
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles["expand-placeholder"]} />
+                        )}
+                        {!rowData.isGroupChild && <YakitCheckbox
+                            checked={isChecked}
+                            onChange={(e) => handleCheckboxChange(e, program.Id)}
+                            onClick={(e) => e.stopPropagation()}
+                        />}
+                        <div
+                            className={classNames(styles["time"], {
+                                [styles["time-active"]]: isClick
+                            })}
+                        >
+                            {formatTimestamp(program.UpdateAt)}
+                        </div>
+                    </div>
+
+                    <div className={styles["option"]}>
+                        <Tooltip title={"代码扫描"}>
+                            <div
+                                className={classNames(styles["icon-wrapper"], {
+                                    [styles["icon-wrapper-active"]]: isClick
+                                })}
+                                onClick={async (e) => {
+                                    e.stopPropagation()
+                                    try {
+                                        const selectTotal = await getGroupNamesTotal([program.Language])
+                                        emiter.emit(
+                                            "openPage",
+                                            JSON.stringify({
+                                                route: YakitRoute.YakRunner_Code_Scan,
+                                                params: {
+                                                    projectName:
+                                                        pageInfo.Programs.length > 0
+                                                            ? pageInfo.Programs[0]
+                                                            : "项目名异常",
+                                                    projectId:
+                                                        pageInfo.ProjectIds.length > 0
+                                                            ? pageInfo.ProjectIds[0]
+                                                            : 0,
+                                                    historyName: [program.Name],
+                                                    GroupNames: [program.Language],
+                                                    selectTotal
+                                                }
+                                            })
+                                        )
+                                    } catch (error) {
+                                        failed(`跳转代码扫描页失败${error}`)
+                                    }
+                                }}
+                            >
+                                <OutlineScanIcon />
+                            </div>
+                        </Tooltip>
+                        <Tooltip title={"打开项目"}>
+                            <div
+                                className={classNames(styles["icon-wrapper"], {
+                                    [styles["icon-wrapper-active"]]: isClick
+                                })}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const params: AuditCodePageInfoProps = {
+                                        Schema: "syntaxflow",
+                                        Location: program.Name,
+                                        Path: `/`
+                                    }
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.YakRunner_Audit_Code,
+                                            params
+                                        })
+                                    )
+                                }}
+                            >
+                                <OutlineArrowcirclerightIcon />
+                            </div>
+                        </Tooltip>
+                        {!rowData.isGroupChild && <div
+                            className={classNames(styles["icon-wrapper"], styles["icon-wrapper-error"], {
+                                [styles["icon-wrapper-active"]]: isClick
+                            })}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                const isHasChildren = !!(rowData.isGroupRoot && hasChildren)
+                                onDelete({ Filter: { Ids: [program.Id] } }, isHasChildren)
+                            }}
+                        >
+                            <OutlineTrashIcon />
+                        </div>}
+                    </div>
+                </div>
+            )
+        }
+    )
 
     return (
         <div className={styles["compile-history"]}>
@@ -643,132 +886,18 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
             </div>
 
             <div className={styles["compile-history-list-container"]}>
-                <RollingLoadList<SSAProgram>
+                <RollingLoadList<CompileHistoryDisplayItem>
                     loading={loading}
                     isRef={isRefresh}
                     hasMore={hasMore}
-                    data={response.Data}
+                    data={displayList}
                     page={response.Pagination.Page}
                     loadMoreData={() => {
-                        // 请求下一页数据
                         update(+response.Pagination.Page + 1)
                     }}
-                    rowKey='ResultID'
+                    rowKey='displayId'
                     defItemHeight={36}
-                    renderRow={(rowData: SSAProgram, index: number) => {
-                        const isChecked = checkedList.includes(rowData.Id)
-                        const isClick = clickItem?.Id === rowData.Id
-                        return (
-                            <div
-                                className={classNames(styles["history-item-box"], {
-                                    [styles["history-item-box-active"]]: isClick,
-                                    [styles["history-item-box-no-active"]]: !isClick
-                                })}
-                                key={rowData.Id}
-                                onClick={() => {
-                                    setClickItem(rowData)
-                                }}
-                            >
-                                <div className={styles["header"]}>
-                                    <YakitCheckbox
-                                        checked={isChecked}
-                                        onChange={(e) => handleCheckboxChange(e, rowData.Id)}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                        }}
-                                    />
-                                    <div
-                                        className={classNames(styles["time"], {
-                                            [styles["time-active"]]: isClick
-                                        })}
-                                    >
-                                        {formatTimestamp(rowData.UpdateAt)}
-                                    </div>
-                                </div>
-
-                                <div className={styles["option"]}>
-                                    <Tooltip title={"代码扫描"}>
-                                        <div
-                                            className={classNames(styles["icon-wrapper"], {
-                                                [styles["icon-wrapper-active"]]: isClick
-                                            })}
-                                            onClick={async (e) => {
-                                                e.stopPropagation()
-                                                try {
-                                                    const selectTotal = await getGroupNamesTotal([rowData.Language])
-                                                    emiter.emit(
-                                                        "openPage",
-                                                        JSON.stringify({
-                                                            route: YakitRoute.YakRunner_Code_Scan,
-                                                            params: {
-                                                                projectName:
-                                                                    pageInfo.Programs.length > 0
-                                                                        ? pageInfo.Programs[0]
-                                                                        : "项目名异常",
-                                                                projectId:
-                                                                    pageInfo.ProjectIds.length > 0
-                                                                        ? pageInfo.ProjectIds[0]
-                                                                        : 0,
-                                                                historyName: [rowData.Name],
-                                                                GroupNames: [rowData.Language],
-                                                                selectTotal
-                                                            }
-                                                        })
-                                                    )
-                                                } catch (error) {
-                                                    failed(`跳转代码扫描页失败${error}`)
-                                                }
-                                            }}
-                                        >
-                                            <OutlineScanIcon />
-                                        </div>
-                                    </Tooltip>
-                                    {/* 此处的Tooltip会导致页面抖动(待处理) */}
-                                    <Tooltip title={"打开项目"}>
-                                        <div
-                                            className={classNames(styles["icon-wrapper"], {
-                                                [styles["icon-wrapper-active"]]: isClick
-                                            })}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                // if (pageType === "projectManager") {
-                                                // 跳转到审计页面的参数
-                                                const params: AuditCodePageInfoProps = {
-                                                    Schema: "syntaxflow",
-                                                    Location: rowData.Name,
-                                                    Path: `/`
-                                                }
-                                                emiter.emit(
-                                                    "openPage",
-                                                    JSON.stringify({
-                                                        route: YakitRoute.YakRunner_Audit_Code,
-                                                        params
-                                                    })
-                                                )
-                                                // } else {
-                                                //     onClose && onClose()
-                                                //     emiter.emit("onCodeAuditOpenAuditTree", rowData.Name)
-                                                // }
-                                            }}
-                                        >
-                                            <OutlineArrowcirclerightIcon />
-                                        </div>
-                                    </Tooltip>
-                                    <div
-                                        className={classNames(styles["icon-wrapper"], styles["icon-wrapper-error"], {
-                                            [styles["icon-wrapper-active"]]: isClick
-                                        })}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            onDelete({Filter: {Ids: [rowData.Id]}})
-                                        }}
-                                    >
-                                        <OutlineTrashIcon />
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    }}
+                    renderRow={(rowData) => renderProgramRow(rowData)}
                 />
             </div>
         </div>

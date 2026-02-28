@@ -131,11 +131,39 @@
             padding: 0px 16px;
             cursor: pointer;
 
+            &.history-item-box-child {
+                padding-left: 38px;
+            }
+
             .header {
                 display: flex;
                 gap: 6px;
                 flex-direction: row;
                 align-items: center;
+                .expand-icon,
+                .expand-placeholder {
+                    width: 16px;
+                    height: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    cursor: pointer;
+                    svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+                .chevron-icon{
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                }
+                .chevron-icon-active{
+                    color: var(--Colors-Use-Basic-White);
+                }
+                .expand-placeholder {
+                    cursor: default;
+                    visibility: hidden;
+                }
                 .time-active {
                     color: var(--Colors-Use-Basic-White);
                 }
