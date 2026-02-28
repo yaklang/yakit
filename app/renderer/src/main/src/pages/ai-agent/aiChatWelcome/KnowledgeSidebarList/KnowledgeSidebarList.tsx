@@ -333,10 +333,10 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                         ))}
                     </div>
                     <div className={styles["knowledge-base-info-list"]}>
-                        <YakitSpin spinning={loading}>
+                        <YakitSpin wrapperClassName={styles["knowledge-base-info-list-spin"]} spinning={loading}>
                             {knowledgeBase.length > 0 ? (
                               <>
-                              {  knowledgeBase.map((items, index) => {
+                                {knowledgeBase.map((items, index) => {
                                     const Icon = targetIcon(index)
                                     return (
                                         <div

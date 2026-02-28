@@ -61,6 +61,9 @@
         height: 0;
         flex: 1;
         overflow-y: auto;
+        &-spin {
+           overflow-y: auto;
+        }
         .knowledge-base-info-card {
             width: 100%;
             border-radius: 8px;
