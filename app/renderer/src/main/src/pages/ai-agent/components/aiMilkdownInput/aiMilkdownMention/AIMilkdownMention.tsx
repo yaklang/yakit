@@ -7,19 +7,19 @@ import {useClickAway, useCreation, useDebounceEffect, useKeyPress, useMemoizedFn
 import styles from "./AIMilkdownMention.module.scss"
 import {iconMap} from "@/pages/ai-agent/defaultConstant"
 import {AIChatMention} from "../../aiChatMention/AIChatMention"
-import {AIChatMentionSelectItem, AIMentionTypeItem, iconMapType} from "../../aiChatMention/type"
+import {AIChatMentionProps, AIChatMentionSelectItem, AIMentionTypeItem} from "../../aiChatMention/type"
 import {callCommand} from "@milkdown/kit/utils"
 import {aiMentionCommand, AIMentionCommandParams} from "./aiMentionPlugin"
 import classNames from "classnames"
-import {OutlineXIcon} from "@/assets/icon/outline"
 import {removeAIOffsetCommand} from "../customPlugin"
-import {AIMilkdownInputBaseProps} from "../type"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 
 export const aiMentionFactory = slashFactory("ai-mention-commands")
 
 interface AIMilkdownMentionProps {
     onMemfitExtra?: (v: AIMentionCommandParams) => void
-    filterMode?: AIMilkdownInputBaseProps["filterMode"]
+    filterMode?: AIChatMentionProps["filterMode"]
 }
 const mentionWidth = 300
 const mentionTarget = "@"
@@ -127,7 +127,12 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
 interface AICustomMentionProps {}
 export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
     const {node, selected, view, contentRef} = useNodeViewContext()
-    const locked = node?.attrs?.lock ?? false
+    const locked = useCreation(() => {
+        return node?.attrs?.lock ?? false
+    }, [node?.attrs?.lock])
+    const mentionType: AIMentionTypeItem = useCreation(() => {
+        return node?.attrs?.mentionType
+    }, [node?.attrs?.mentionType])
     const readonly = useCreation(() => {
         return !view.editable
     }, [view.editable])
@@ -145,18 +150,61 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
             }
         }
     })
+    const color = useCreation(() => {
+        let c: YakitTagColor | undefined = undefined
+        switch (mentionType) {
+            case "file":
+            case "folder":
+                c = "blue"
+                break
+            case "forge":
+                c = "purple"
+                break
+            case "knowledgeBase":
+                c = "yellow"
+                break
+            case "tool":
+                c = "lakeBlue"
+                break
+            default:
+                break
+        }
+        return c
+    }, [mentionType])
+    const closable = useCreation(() => {
+        return !readonly && !locked
+    }, [readonly, locked])
     return (
-        <div
+        <YakitTag
+            border={false}
+            closable={closable}
+            icon={<div className={styles["mention-icon-wrapper"]}>{iconMap[mentionType] || null}</div>}
+            onClose={onRemove}
             className={classNames(styles["mention-custom"], {
-                [styles["mention-custom-selected"]]: selected && !readonly
+                [styles["mention-custom-selected"]]: selected && !readonly,
+                [styles["mention-custom-readonly"]]: readonly,
+                [styles["mention-custom-no-effect"]]: !closable
             })}
+            color={color}
+            onClick={(e) => {
+                if (closable) {
+                    e.stopPropagation()
+                    e.preventDefault()
+                }
+            }}
             contentEditable={false}
         >
-            <div className={styles["mention-icon-wrapper"]}>
-                {iconMap[node?.attrs?.mentionType as iconMapType] || null}
-            </div>
-            <div className={styles["content"]} ref={contentRef} contentEditable={false}></div>
-            {!readonly && !locked && <OutlineXIcon className={styles["mention-icon-wrapper"]} onClick={onRemove} />}
-        </div>
+            <div
+                className={styles["mention-text"]}
+                contentEditable={false}
+                ref={contentRef}
+                onClick={(e) => {
+                    if (closable) {
+                        e.stopPropagation()
+                        e.preventDefault()
+                    }
+                }}
+            ></div>
+        </YakitTag>
     )
 }

@@ -61,7 +61,7 @@ export const onOpenConfigModal = (mountContainer) => {
 }
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-    const {isOpen = true} = props
+    const {isOpen = true, className} = props
     //#region AI model
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
@@ -338,12 +338,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                 label={
                                     <div className={styles["select-option"]}>
                                         {getIconByAI(setting?.AIService)}
-                                        {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
-                                        <span
-                                            data-label='true'
-                                            className={styles["select-option-text"]}
-                                            title={`${nodeItem.value}`}
-                                        >
+                                        <span className={styles["select-option-text"]} title={`${nodeItem.value}`}>
                                             {nodeItem.value}
                                         </span>
                                     </div>
@@ -370,7 +365,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         }
     })
     return (
-        <div ref={refRef}>
+        <div ref={refRef} className={className}>
             {isHaveData ? (
                 <AIChatSelect
                     value={modelValue}

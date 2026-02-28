@@ -58,6 +58,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                     [styles["yakit-tag-cyan"]]: color === "cyan",
                     [styles["yakit-tag-bluePurple"]]: color === "bluePurple",
                     [styles["yakit-tag-white"]]: color === "white",
+                    [styles["yakit-tag-lakeBlue"]]: color === "lakeBlue",
                     [styles["yakit-tag-border"]]: border !== false,
                     [styles["yakit-tag-fullRadius"]]: !!fullRadius
                 },

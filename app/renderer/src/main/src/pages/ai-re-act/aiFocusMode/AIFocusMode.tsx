@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from "react"
 import {AIFocusModeProps} from "./type"
 import {OutlineMicroscopeIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import {AIChatSelect} from "../aiReviewRuleSelect/AIReviewRuleSelect"
@@ -13,7 +12,7 @@ import {AIFocus} from "@/pages/ai-agent/type/forge"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
-    const {value, onChange} = props
+    const {value, onChange, className} = props
 
     const [focusModeList, setFocusModeList] = useState<YakitSelectProps["options"]>([])
     const [open, setOpen] = useState<boolean>(false)
@@ -37,8 +36,12 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
     const onSetOpen = useMemoizedFn((v: boolean) => {
         setOpen(v)
     })
+    const onRemove = useMemoizedFn(() => {
+        onChange(undefined)
+        setOpen(false)
+    })
     return (
-        <div ref={ref}>
+        <div ref={ref} className={className}>
             <AIChatSelect
                 dropdownRender={(menu) => {
                     return (
@@ -51,7 +54,18 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                         </div>
                     )
                 }}
-                value={value}
+                value={
+                    value || {
+                        label: (
+                            <div className={styles["select-option"]}>
+                                <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
+                                <span className={styles["select-option-text"]}>请选择</span>
+                            </div>
+                        ),
+                        value: ""
+                    }
+                }
+                // placeholder="请选择"
                 onSelect={onSelectModel}
                 optionLabelProp='label'
                 open={open}
@@ -64,15 +78,10 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                         label={
                             <div className={styles["select-option"]}>
                                 <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
-                                {/* data-label='true' 有该属性的元素，在footer-left-btns-default下有样式需求 */}
-                                <span
-                                    data-label='true'
-                                    className={styles["select-option-text"]}
-                                    title={`${item.label}`}
-                                >
+                                <span className={styles["select-option-text"]} title={`${item.label}`}>
                                     {item.label}
                                 </span>
-                                <OutlineXIcon className={styles["icon-wrapper"]} onClick={() => onChange(undefined)} />
+                                <OutlineXIcon className={styles["icon-wrapper"]} onClick={onRemove} />
                             </div>
                         }
                     >

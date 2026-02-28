@@ -14,14 +14,57 @@ textarea.qs-input-textarea {
 // #region QSInputTextarea
 .ai-chat-textarea {
     width: 100%;
+    min-height: 124px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    background: var(--Colors-Use-Basic-Background);
-    padding: 12px;
+    gap: 2px;
+
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    padding: 2px;
     border-radius: 8px;
     position: relative;
+
+    .ai-chat-textarea-footer {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 24px;
+        overflow: hidden;
+
+        %self-adaptive {
+            display: flex;
+            overflow: hidden;
+        }
+        .review-rule-self-adaptive {
+            @extend %self-adaptive;
+            flex-shrink: 0;
+        }
+        .model-self-adaptive {
+            @extend %self-adaptive;
+            flex-shrink: 1;
+            min-width: 46px;
+        }
+        .focus-mode-self-adaptive {
+            @extend %self-adaptive;
+            flex-shrink: 9;
+            min-width: 68px;
+        }
+    }
+
+    .divider-style {
+        width: 1px;
+        height: 12px;
+        background-color: var(--Colors-Use-Basic-Shadow);
+    }
+}
+
+.ai-review-chat {
+    background: linear-gradient(
+        135deg,
+        var(--Colors-Use-Success-Border) 0%,
+        var(--Colors-Use-Success-Focus) 40.44%,
+        var(--Colors-Use-Main-Focus) 80%
+    );
 }
 .dragging-from-tree {
     outline: 1px dashed var(--Colors-Use-Main-Primary);
@@ -44,105 +87,39 @@ textarea.qs-input-textarea {
         backdrop-filter: blur(2px);
     }
 }
-.textarea-body {
+.textarea-wrapper {
     display: flex;
-    gap: 4px;
-    .textarea-icon {
-        width: 20px;
-        display: flex;
-        justify-content: center;
-        padding-top: 2px;
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    padding: 8px;
+    border-radius: 6px;
+    min-height: 94px;
     .textarea-textarea {
         max-height: 100px !important;
         color: var(--Colors-Use-Neutral-Text-1-Title);
     }
-}
-
-.textarea-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    overflow: hidden;
-    height: 28px;
-
-    .footer-left {
+    .footer {
         display: flex;
+        gap: 4px;
+        justify-content: space-between;
         align-items: center;
-        justify-content: flex-start;
-        gap: 8px;
-        flex: 1;
         overflow: hidden;
-    }
-    .footer-left-btns-default {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex: 1;
-        width: 100%;
-        overflow: hidden;
-
-        container-type: inline-size;
-        container-name: textareaFooterLeftBtnsDefault;
-    }
-
-    @container textareaFooterLeftBtnsDefault (min-width: 401px) and (max-width: 500px) {
-        .footer-left-btns-default {
-            span[data-label="true"] {
-                max-width: 60px;
-            }
+        height: 28px;
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow: hidden;
         }
-    }
-    @container textareaFooterLeftBtnsDefault (min-width: 301px) and (max-width: 400px) {
-        .footer-left-btns-default {
-            & > :nth-child(3),
-            & > :nth-child(4) {
-                span[data-label="true"] {
-                    max-width: 0;
-                }
-            }
-            & > :nth-child(1) {
-                span[data-label="true"] {
-                    max-width: 40px;
-                }
-            }
-            // 仅仅只有一个元素时
-            &:has(> :only-child) {
-                span[data-label="true"] {
-                    max-width: 120px;
-                }
-            }
-            // 元素大于2且选中第一个元素
-            &:has(> :nth-child(2)) > :nth-child(1) {
-                span[data-label="true"] {
-                    max-width: 100px;
-                }
-            }
-            // 元素大于3且选中第一个元素
-            &:has(> :nth-child(3)) > :nth-child(1) {
-                span[data-label="true"] {
-                    max-width: 40px;
-                }
-            }
+        .footer-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            overflow: hidden;
         }
-    }
-    @container textareaFooterLeftBtnsDefault (max-width: 300px) {
-        .footer-left-btns-default {
-            span[data-label="true"] {
-                max-width: 0;
-            }
-        }
-    }
-    .footer-right {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        overflow: hidden;
     }
 }
 

@@ -1,1 +1,6 @@
-@use '../aiReviewRuleSelect/AIReviewRuleSelect.module.scss'
+@use "../aiReviewRuleSelect/AIReviewRuleSelect.module.scss";
+
+.focus-mode-default {
+    display: flex;
+    align-items: center;
+}

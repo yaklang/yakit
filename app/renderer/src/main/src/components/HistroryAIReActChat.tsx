@@ -25,10 +25,10 @@ import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import NewThirdPartyApplicationConfig from "./configNetwork/NewThirdPartyApplicationConfig"
 import {defaultParams, GlobalNetworkConfig} from "./configNetwork/ConfigNetworkPage"
-import loading from "@/alibaba/ali-react-table-dist/dist/base-table/loading"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {getRemoteValue} from "@/utils/kv"
+import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
 
 interface HistoryAIReActChatProps {
     refRef: React.RefObject<HTMLDivElement>
@@ -200,21 +200,21 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                             <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                         </>
                     ),
-                    defaultAIFocusMode: {
-                        children: (
-                            <div className={classNames([styles["select-option"], styles["defualt-focus-mode"]])}>
-                                <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
-                                <span
-                                    data-label='true'
-                                    className={styles["select-option-text"]}
-                                    title={`http_flow_analyze`}
-                                >
-                                    http_flow_analyze
-                                </span>
-                            </div>
-                        ),
-                        filterMode: ["focusMode"]
-                    }
+                    footerLeftTypes: [
+                        AIInputInnerFeatureEnum.AIModelSelect,
+                        {
+                            type: AIInputInnerFeatureEnum.AIFocusMode,
+                            component: (
+                                <div className={classNames([styles["select-option"], styles["defualt-focus-mode"]])}>
+                                    <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
+                                    <span className={styles["select-option-text"]} title={`http_flow_analyze`}>
+                                        http_flow_analyze
+                                    </span>
+                                </div>
+                            )
+                        }
+                    ],
+                    filterMentionType: ["focusMode"]
                 }}
             />
         )

@@ -182,7 +182,25 @@ export const removeAIOffsetCommand = $command(`command-remove-offset`, (ctx) => 
     return true
 })
 
+
+/** 在当前位置插入纯文本 */
+export const insertAtCurrentPosition = $command<string, string>("command-insertAtCurrentPosition", (ctx) => (props) => {
+    return (state, dispatch) => {
+        if (!props) return false
+
+        const textNode = state.schema.text(props || "")
+
+        // 插入节点
+        const transaction = state.tr.replaceSelectionWith(textNode)
+        if (dispatch) {
+            dispatch(transaction)
+        }
+
+        return true // 表示命令成功执行
+    }
+})
+
 /** 你的自定义插件集合 */
 export const aiCustomPlugin = () => {
-    return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin()]
+    return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin(),insertAtCurrentPosition]
 }

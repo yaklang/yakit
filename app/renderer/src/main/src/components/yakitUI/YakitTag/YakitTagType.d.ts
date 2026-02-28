@@ -28,6 +28,7 @@ export type YakitTagColor =
     | "cyan"
     | "bluePurple"
     | "white"
+    | "lakeBlue"
 
 export interface YakitTagProps extends Omit<TagProps, "color"> {
     size?: YakitSizeType

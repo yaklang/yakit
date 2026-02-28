@@ -2,7 +2,7 @@ import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/t
 import {AIChatQSData} from "../hooks/aiRender"
 import {AIInputEvent} from "../hooks/grpcApi"
 import React, {ReactNode} from "react"
-import {AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
+import {AIChatTextareaProps, AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
 import {iconMapType} from "@/pages/ai-agent/components/aiChatMention/type"
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
@@ -39,10 +39,8 @@ export interface AIReActChatProps {
     externalParameters?: {
         rightIcon?: string | React.ReactNode
         isOpen?: boolean
-        defaultAIFocusMode?: {
-            children: ReactNode
-            filterMode?: iconMapType[]
-        }
+        filterMentionType?: AIChatTextareaProps["filterMentionType"]
+        footerLeftTypes?: AIChatTextareaProps["footerLeftTypes"]
     }
 }
 
