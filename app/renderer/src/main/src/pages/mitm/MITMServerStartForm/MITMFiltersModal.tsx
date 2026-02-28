@@ -23,6 +23,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {defaultMITMAdvancedFilter, defaultMITMFilterData} from "@/defaultConstants/mitm"
 import cloneDeep from "lodash/cloneDeep"
+import isEqual from "lodash/isEqual"
 import {MITMFilterUIProps, convertLocalMITMFilterRequest, convertMITMFilterUI} from "./utils"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -92,6 +93,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [filterData, setFilterData] = useState<MITMAdvancedFilter[]>([cloneDeep(defaultMITMAdvancedFilter)])
     const [editFilterName, setEditFilterName] = useState<string>("")
+    /**弹窗打开时记录初始数据，保存时对比是否修改过 */
+    const initialFilterRef = useRef<{baseFilter: MITMFilterSchema; advancedFilters: MITMAdvancedFilter[]} | null>(null)
 
     const mitmContent = useContext(MITMContext)
 
@@ -167,6 +170,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
 
         // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
         const filter = convertLocalMITMFilterRequest({...params})
+        // 对比弹窗打开时的数据，没改过则不更新已配置标记
+        const isChanged = !initialFilterRef.current ||
+            !isEqual(baseFilter, initialFilterRef.current.baseFilter) ||
+            !isEqual(advancedFilters, initialFilterRef.current.advancedFilters)
         if (filterType === "filter") {
             const value: MITMSetFilterRequest = {
                 FilterData: filter,
@@ -175,7 +182,9 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             grpcMITMSetFilter(value)
                 .then(() => {
                     emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
-                    onSetFilterFlag?.(getMitmHijackFilter(baseFilter, advancedFilters))
+                    if (isChanged) {
+                        onSetFilterFlag?.(getMitmHijackFilter(baseFilter, advancedFilters))
+                    }
                     setVisible(false)
                     info("更新 MITM 过滤器状态")
                 })
@@ -190,7 +199,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             grpcMITMHijackSetFilter(value)
                 .then(() => {
                     // 是否配置过 劫持 过滤器
-                    if (onSetHijackFilterFlag) {
+                    if (isChanged && onSetHijackFilterFlag) {
                         onSetHijackFilterFlag(getMitmHijackFilter(baseFilter, advancedFilters))
                     }
                     setVisible(false)
@@ -208,6 +217,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
                     setFilterData(newValue.advancedFilters)
+                    initialFilterRef.current = {
+                        baseFilter: cloneDeep(newValue.baseFilter),
+                        advancedFilters: onFilterEmptyMITMAdvancedFilters(cloneDeep(newValue.advancedFilters))
+                    }
                 })
                 .catch((err) => {
                     yakitFailed("获取 MITM 过滤器失败：" + err)
@@ -218,6 +231,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
                     setFilterData(newValue.advancedFilters)
+                    initialFilterRef.current = {
+                        baseFilter: cloneDeep(newValue.baseFilter),
+                        advancedFilters: onFilterEmptyMITMAdvancedFilters(cloneDeep(newValue.advancedFilters))
+                    }
                 })
                 .catch((err) => {
                     yakitFailed("获取 劫持 过滤器失败：" + err)

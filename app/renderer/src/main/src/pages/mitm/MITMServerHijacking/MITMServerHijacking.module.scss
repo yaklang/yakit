@@ -96,6 +96,20 @@
     }
 }
 
+.more-popover {
+    :global {
+        .ant-popover-inner {
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
+
+            .ant-popover-inner-content {
+                padding: 6px 4px 4px 4px;
+            }
+        }
+    }
+}
+
 .mitm-hijacked-content {
     height: 100%;
     display: flex;

@@ -1454,11 +1454,11 @@ interface ExtraMenuGroup extends BaseExtraMenuItem {
 export type ExtraMenuItem = ExtraMenuLeaf | ExtraMenuGroup
 
 /** @name 靶场菜单项 */
-const getVulinboxMenuItem = (): ExtraMenuItem => ({
+const getVulinboxMenuItem = (hideIcon = false): ExtraMenuItem => ({
     page: YakitRoute.Beta_VulinboxManager,
-    icon: <PublicToolVulinboxIcon />,
     i18n: false,
     label: i18n.language === "en" ? "Range" : "靶场",
+    ...hideIcon ? {}:{ icon: <PublicToolVulinboxIcon /> }
 })
 
 /** @name yakit 安全专家模式 左侧菜单 */
@@ -1486,7 +1486,7 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
             page: YakitRoute.YakScript,
             ...YakitRouteToPageInfo[YakitRoute.YakScript]
         },
-        getVulinboxMenuItem()
+        getVulinboxMenuItem(true)
     ]
 }
 /** @name yakit 安全专家模式 记事本菜单 */

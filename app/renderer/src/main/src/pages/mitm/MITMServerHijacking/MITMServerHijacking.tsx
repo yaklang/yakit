@@ -3,7 +3,7 @@ import {Divider, Form, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useSize} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import {MITMServer} from "@/pages/mitm/MITMPage"
@@ -11,6 +11,7 @@ import style from "./MITMServerHijacking.module.scss"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
@@ -46,7 +47,8 @@ import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil
 import { useStore } from "@/store/mitmState"
 import {useProxy} from "@/hook/useProxy"
 import { debugToPrintLogs } from "@/utils/logCollection"
-import { OutlineCheckIcon } from "@/assets/icon/outline"
+import { OutlineCheckIcon, OutlineChevrondownIcon, OutlineChevronupIcon } from "@/assets/icon/outline"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -282,6 +284,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         setIsFilter(flag)
     })
 
+    const heardRef = useRef<HTMLDivElement>(null)
+    const heardSize = useSize(heardRef)
+    const isNarrow = useCreation(() => {
+        return (heardSize?.width || 0) < 1150
+    }, [heardSize?.width])
+
+    const [morePopoverVisible, setMorePopoverVisible] = useState<boolean>(false)
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
 
     const downStreamTagClose = useMemoizedFn(() => {
@@ -302,7 +311,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     return (
         <div className={style["mitm-server"]}>
-            <div className={style["mitm-server-heard"]}>
+            <div className={style["mitm-server-heard"]} ref={heardRef}>
                 <div className={style["mitm-server-title"]}>
                     <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
                     <div className={style["mitm-server-heard-addr"]}>
@@ -380,10 +389,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             <div className={style["link-item"]}>{t("AgentConfigModal.proxy_configuration")}</div>
                         </YakitPopover>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setVisible(true)}>
-                            规则配置
-                        </div>
-                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                        {!isNarrow && (
+                            <>
+                                <div className={style["link-item"]} onClick={() => setVisible(true)}>
+                                    规则配置
+                                </div>
+                                <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                            </>
+                        )}
                         <div className={style["link-item"]} onClick={() => setFiltersVisible(true)}>
                             过滤器
                         </div>
@@ -393,10 +406,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                 <OutlineCheckIcon className={style["check-icon"]} />
                             </YakitTag>
                         )}
-                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
-                            证书下载
-                        </div>
+                        {!isNarrow && (
+                            <>
+                                <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                                <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
+                                    证书下载
+                                </div>
+                            </>
+                        )}
                     </div>
                     {/*<YakitButton*/}
                     {/*    onClick={() => {*/}
@@ -414,6 +431,40 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             disableCACertPage={disableCACertPage}
                         />
                     </div>
+                    {isNarrow && (
+                        <YakitPopover
+                            overlayClassName={classNames(style["more-popover"])}
+                            placement='bottomRight'
+                            trigger='click'
+                            visible={morePopoverVisible}
+                            onVisibleChange={setMorePopoverVisible}
+                            content={
+                                <YakitMenu
+                                    selectedKeys={[]}
+                                    data={[
+                                        { key: "rule-config", label: "规则配置" },
+                                        { key: "cert-download", label: "证书下载" }
+                                    ]}
+                                    onClick={({ key }) => {
+                                        setMorePopoverVisible(false)
+                                        switch (key) {
+                                            case "rule-config":
+                                                setVisible(true)
+                                                break
+                                            case "cert-download":
+                                                setDownloadVisible(true)
+                                                break
+                                        }
+                                    }}
+                                />
+                            }
+                        >
+                            <YakitButton type='outline2' style={{ marginLeft: 8 }}>
+                                更多
+                                {morePopoverVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                            </YakitButton>
+                        </YakitPopover>
+                    )}
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />
                     </div>
