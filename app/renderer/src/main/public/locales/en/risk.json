@@ -72,7 +72,11 @@
     "not_verified": "Not Verified",
     "vulnerability_description": "Vulnerability Description",
     "solution": "Solution",
-    "details": "Details"
+    "details": "Details",
+    "next": "Next",
+    "prev": "Prev",
+    "originReq": "Raw request",
+    "verificationRecord": "Verification Record"
   },
   "YakitRiskDetailContent": {
     "related_code_snippet": "Related Code Snippet"

@@ -560,7 +560,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     selectedFlow: getHTTPFlowReqAndResToString(r),
                     showEditTag: false,
                     showJumpTree: false
-                } as HTTPFlowDetailProp
+                } satisfies HTTPFlowDetailProp
             }
         }
     })

@@ -2823,7 +2823,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     showEditTag: false,
                     showJumpTree: false,
                     showFlod: !["Plugin"].includes(pageType || "")
-                } as HTTPFlowDetailProp
+                } satisfies HTTPFlowDetailProp
             }
         }
     })
@@ -5391,6 +5391,7 @@ const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
             title={t("EditTagsModal.editTag")}
             width={600}
             destroyOnClose={true}
+            maskClosable={false}
             okText={t("YakitButton.save")}
             onCancel={onCancel}
             onOk={handleOk}

@@ -1,3 +1,16 @@
+export interface PacketHistory extends PacketOrigin, PacketPair {
+    Request?: Uint8Array
+    Response?: Uint8Array
+}
+
+interface PacketOrigin {
+    Id?: number
+    Url?: string
+}
+interface PacketPair {
+    HttpflowId?: number
+    Url?: string
+}
 export interface Risk {
     Hash: string
     IP: string
@@ -45,4 +58,7 @@ export interface Risk {
     ResultID?: number
     SyntaxFlowVariable?: string
     ProgramName?: string
+
+    // 关联的请求/响应报文对列表
+    PacketPairs?: PacketPair[]
 }
