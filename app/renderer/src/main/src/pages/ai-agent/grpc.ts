@@ -68,6 +68,7 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
                     } catch (error) {}
                     const current: AIChatQSData = {
                         ...genBaseAIChatData(item),
+                        chatType:"reAct", // 随机写的，后面需要开发UI时通过传入参数设置
                         type: AIChatQSDataTypeEnum.STREAM,
                         data: {
                             CallToolID: item.CallToolID,

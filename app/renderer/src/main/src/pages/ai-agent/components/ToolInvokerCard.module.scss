@@ -22,23 +22,56 @@
     label {
         cursor: pointer;
     }
+
+    .stdout-card-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        .extra-btn {
+            display: flex;
+            padding: 3px 6px;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            user-select: none;
+            color: var(--Colors-Use-Error-Primary);
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 14px;
+            letter-spacing: 0.5px;
+
+            &:hover {
+                background-color: var(--Colors-Use-Neutral-Bg);
+            }
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
 }
 
 .file-system {
     width: 100%;
-    margin: 0;
+    margin-top: 8px;
     --title-bg-color: var(--Colors-Use-Neutral-Border);
     --content-color: var(--Colors-Use-Neutral-Text-1-Title);
     &-success {
         --title-bg-color: var(--Colors-Use-Success-Focus);
         --content-color: var(--Colors-Use-Neutral-Text-4-Help-text);
     }
-    &-fail {
+    &-failed {
         --title-bg-color: var(--Colors-Use-Error-Focus);
         --content-color: var(--Colors-Use-Error-Primary);
     }
     &-cancel {
         --title-bg-color: var(--Colors-Use-Neutral-Border);
+        --content-color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+    &-purple {
+        --title-bg-color: var(--Colors-Use-Purple-Bg-Hover);
         --content-color: var(--Colors-Use-Neutral-Text-4-Help-text);
     }
     &-title {
@@ -71,6 +104,14 @@
         max-height: 200px;
         div {
             color: var(--content-color);
+        }
+        .summary {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
     }
     &-wrapper {

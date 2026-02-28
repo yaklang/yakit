@@ -6,6 +6,9 @@
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
     border-radius: 8px;
     padding: 8px;
+
+    overflow-wrap: break-word;
+    
     .milkdown-header {
         display: flex;
         align-items: center;

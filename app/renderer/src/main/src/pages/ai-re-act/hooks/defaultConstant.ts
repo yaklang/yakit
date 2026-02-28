@@ -4,23 +4,28 @@ import {AIQuestionQueues, CasualLoadingStatus, PlanLoadingStatus} from "./type"
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
+    type: "",
     callToolId: "",
     toolName: "-",
     toolDescription: "",
-    status: "default",
-    summary: "",
-    toolStdoutContent: {
-        content: "",
-        isShowAll: false
-    },
-    execError: "",
-    dirPath: "",
     startTime: 0,
     startTimeMS: 0,
     endTime: 0,
     endTimeMS: 0,
     durationMS: 0,
-    durationSeconds: 0
+    durationSeconds: 0,
+    stream: {EventUUID: ""},
+    tool: {
+        status: "default",
+        summary: "",
+        toolStdoutContent: {
+            content: "",
+            isShowAll: false
+        },
+        execError: "",
+        dirPath: "",
+        resultDetails: ""
+    }
 }
 /** 工作执行结果总结-不同阶段的默认展示内容 */
 export const DefaultToolResultSummary: Record<string, {wait: string; result: string}> = {

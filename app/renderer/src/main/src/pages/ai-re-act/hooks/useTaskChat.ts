@@ -66,6 +66,7 @@ function useTaskChat(params?: UseTaskChatParams) {
 
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "task",
                 type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
                 data: {
                     taskIndex: nodeInfo.task.index,
@@ -145,6 +146,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             const isAuto = isAutoExecuteReviewContinue({type: res.Type, getFunc: getRequest})
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "task",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
                 data: {
@@ -232,6 +234,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             const isAuto = isAutoExecuteReviewContinue({type: res.Type, getFunc: getRequest})
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "task",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
                 data: {
@@ -277,6 +280,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             const isAuto = isAutoExecuteReviewContinue({type: res.Type, getFunc: getRequest})
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "task",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
                 data: {
@@ -315,6 +319,7 @@ function useTaskChat(params?: UseTaskChatParams) {
 
             const chatData: AIChatQSData = {
                 ...genBaseAIChatData(res),
+                chatType: "task",
                 id: data.id,
                 type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
                 data: cloneDeep(data)
@@ -562,6 +567,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {
         const chatData: AIChatQSData = {
             ...genBaseAIChatData(res),
+            chatType: "task",
             type: AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION,
             data: ""
         }

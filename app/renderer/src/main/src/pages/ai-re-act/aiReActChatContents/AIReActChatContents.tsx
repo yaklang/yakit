@@ -175,7 +175,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     )
 })
 
-const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
+export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
     const {referenceList} = props
     const [expand, setExpand] = useState<boolean>(false)
 

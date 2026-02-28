@@ -5,7 +5,7 @@ import {formatTime} from "@/utils/timeUtil"
 import {FC, memo, useCallback} from "react"
 import {aiChatDataStore} from "../../store/ChatDataStore"
 import {formatNumberUnits} from "../../utils"
-import {OutlineArrowupIcon} from "@/assets/icon/outline"
+import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useRafPolling} from "@/hook/useRafPolling/useRafPolling"
 
@@ -119,7 +119,7 @@ const AIContextToken: FC<{
                     {token[0]}
                 </div>
                 <div className={classNames(styles["token-tag"], styles["download-token"])}>
-                    <OutlineArrowupIcon />
+                    <OutlineArrowdownIcon />
                     {token[1]}
                 </div>
                 <div className={styles["divider-style"]}></div>
