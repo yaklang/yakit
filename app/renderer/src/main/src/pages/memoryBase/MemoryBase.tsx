@@ -70,7 +70,7 @@ import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType
 import {yakitNotify} from "@/utils/notification"
 import {NoPromptHint} from "../pluginHub/utilsUI/UtilsTemplate"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-import {serverPushStatus} from "@/utils/duplex/duplex"
+import { ParamsTProps } from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 
 const {YakitPanel} = YakitCollapse
 
@@ -197,7 +197,8 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     }, [])
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn(() => {
-        if (search.type === "ai") return
+        const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({query: queryParams, search})
+        if (!!filter.SemanticQuery)return
         debugVirtualTableEvent.startT()
     })
     const onFirst = useMemoizedFn(() => {
@@ -493,10 +494,10 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
         useMemoizedFn(() => {
             const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({query: queryParams, search})
 
-            const newParams: QueryAIMemoryEntityRequest = {
+            const newParams: ParamsTProps = {
                 Pagination: {
                     ...tableParams.Pagination,
-                    Limit: !!filter.SemanticQuery ? 200 : tableParams.Pagination.Limit //ai 搜索限制200条
+                    FixedLimit: !!filter.SemanticQuery? 200 : undefined
                 },
                 Filter: {
                     ...tableParams.Filter,
@@ -504,12 +505,13 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                 }
             }
             if (!!filter.SemanticQuery) {
-                debugVirtualTableEvent.stopT()
-                debugVirtualTableEvent.setP(newParams)
+                // debugVirtualTableEvent.stopT()
+                //ai 搜索限制200条
+                debugVirtualTableEvent.setP({...newParams, startLoop: false})
             } else {
-                debugVirtualTableEvent.setP(newParams)
-                debugVirtualTableEvent.onReset()
-                debugVirtualTableEvent.startT()
+                debugVirtualTableEvent.setP({...newParams, endLoop: true})
+                // debugVirtualTableEvent.onReset()
+                // debugVirtualTableEvent.startT()
             }
         }),
         {wait: 200}
