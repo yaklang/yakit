@@ -66,7 +66,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                 return theme === "dark" ? screcorderDarkEmpty : screcorderEmpty
 
             default:
-                break
+                return theme === "dark" ? screcorderDarkEmpty : screcorderEmpty
         }
     }, [theme])
 
