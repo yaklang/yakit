@@ -109,7 +109,7 @@ const ConfigManagement: React.FC = memo(() => {
 
 export default ConfigManagement
 
-type HotCodeType = "fuzzer" | "mitm"
+type HotCodeType = "fuzzer" | "mitm" | "global"
 
 interface QueryHotPatchTemplateListResponse {
     Name: string[]
@@ -118,6 +118,18 @@ interface QueryHotPatchTemplateListResponse {
 
 interface QueryHotPatchTemplateResponse {
     Data: { Name: string; Content: string; Type: string }[]
+}
+
+interface GlobalHotPatchTemplateRef {
+    Name: string
+    Type: string
+    Enabled: boolean
+}
+
+interface GlobalHotPatchConfig {
+    Enabled: boolean
+    Version: string
+    Items: GlobalHotPatchTemplateRef[]
 }
 
 interface StringFuzzerParams {
@@ -143,6 +155,27 @@ const INPUT_MAX_LENGTH = 50
 const DEBUG_TIMEOUT_SECONDS = 20
 const DEBUG_LIMIT = 300
 const DEFAULT_TEMPLATE_CONTENT = `{{yak(handle|{{params(test)}})}}`
+const DEFAULT_GLOBAL_TEMPLATE_NAME = "全局默认模板"
+const DEFAULT_GLOBAL_TEMPLATE_CONTENT = `// 全局 HotPatch 示例（默认模板）
+// - MITM / WebFuzzer 都会优先执行全局模板
+// - 执行顺序：全局 HotPatch -> 模块 HotPatch
+//
+// 你可以通过观察请求头中是否出现 X-Yakit-Global-HotPatch 来确认是否生效
+
+hijackHTTPRequest = func(isHttps, url, req, forward, drop) {
+    req = poc.AppendHTTPPacketHeader(req, "X-Yakit-Global-HotPatch", "1")
+    forward(req)
+}
+
+beforeRequest = func(https, originReq, req) {
+    req = poc.AppendHTTPPacketHeader(req, "X-Yakit-Global-HotPatch", "1")
+    return req
+}
+
+hijackSaveHTTPFlow = func(flow, modify, drop) {
+    flow.AddTag("global-hotpatch")
+    modify(flow)
+}`
 const HOT_PATCH_PARAMS_GETTER_DEFAULT = `__getParams__ = func() {
     /*
         __getParams__ 是一个用户可控生成复杂数据初始数据的参数：
@@ -165,6 +198,12 @@ export const HotPatchManagement: React.FC = () => {
     const [selectedTemplateSource, setSelectedTemplateSource] = useState<"local" | "online">("local")
     const [code, setCode, getCode] = useGetState("")
     const [templateContent, setTemplateContent, getTemplateContent] = useGetState(DEFAULT_TEMPLATE_CONTENT)
+    const [globalHotPatchConfig, setGlobalHotPatchConfig] = useState<GlobalHotPatchConfig>({
+        Enabled: false,
+        Version: "0",
+        Items: []
+    })
+    const [globalConfigLoading, setGlobalConfigLoading] = useState(false)
     const [createModalVisible, setCreateModalVisible] = useState(false)
     const [createModalValue, setCreateModalValue] = useState("")
     const [editingTemplate, setEditingTemplate] = useState("")
@@ -174,11 +213,17 @@ export const HotPatchManagement: React.FC = () => {
     const [editorTab, setEditorTab] = useState<"source" | "result">("source")
     const [debugResult, setDebugResult] = useState("")
     const tokenRef = useRef("")
+    const globalDefaultTemplateInitedOnceRef = useRef(false)
     const userInfo = useStore((s) => s.userInfo)
     const selectRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(selectRef)
 
     const { t, i18n } = useI18nNamespaces(["yakitUi", "yakitRoute", "layout", "webFuzzer"])
+
+    const globalEnabledTemplateName = useMemo(() => {
+        if (!globalHotPatchConfig?.Enabled) return ""
+        return globalHotPatchConfig?.Items?.[0]?.Name || ""
+    }, [globalHotPatchConfig])
 
     // 验证模板名称
     const validateTemplateName = useMemoizedFn((name: string) => {
@@ -194,9 +239,99 @@ export const HotPatchManagement: React.FC = () => {
         return true
     })
 
+    const loadGlobalHotPatchConfig = useMemoizedFn(() => {
+        setGlobalConfigLoading(true)
+        ipcRenderer
+            .invoke("GetGlobalHotPatchConfig", {})
+            .then((res: GlobalHotPatchConfig) => {
+                setGlobalHotPatchConfig(res)
+            })
+            .catch((error) => {
+                yakitFailed(error + "")
+            })
+            .finally(() => {
+                setGlobalConfigLoading(false)
+            })
+    })
+
+    const onEnableSelectedAsGlobal = useMemoizedFn(async () => {
+        if (activeType !== "global") return
+        if (!selectedTemplate) {
+            yakitNotify("warning", t("GlobalHotPatch.select_template_first"))
+            return
+        }
+
+        const expectedVersion = globalHotPatchConfig?.Version || "0"
+
+        setGlobalConfigLoading(true)
+        try {
+            const res: GlobalHotPatchConfig = await ipcRenderer.invoke("SetGlobalHotPatchConfig", {
+                Config: {
+                    Enabled: true,
+                    Version: expectedVersion,
+                    Items: [
+                        {
+                            Name: selectedTemplate,
+                            Type: "global",
+                            Enabled: true
+                        }
+                    ]
+                },
+                ExpectedVersion: expectedVersion
+            })
+            setGlobalHotPatchConfig(res)
+            yakitNotify("success", t("GlobalHotPatch.enable_success"))
+        } catch (error) {
+            yakitFailed(error + "")
+            loadGlobalHotPatchConfig()
+        } finally {
+            setGlobalConfigLoading(false)
+        }
+    })
+
+    const onDisableGlobalHotPatch = useMemoizedFn(async () => {
+        if (activeType !== "global") return
+
+        setGlobalConfigLoading(true)
+        try {
+            const res: GlobalHotPatchConfig = await ipcRenderer.invoke("ResetGlobalHotPatchConfig", {})
+            setGlobalHotPatchConfig(res)
+            yakitNotify("success", t("GlobalHotPatch.disable_success"))
+        } catch (error) {
+            yakitFailed(error + "")
+        } finally {
+            setGlobalConfigLoading(false)
+        }
+    })
+
+    const ensureDefaultGlobalTemplate = useMemoizedFn(async () => {
+        if (activeType !== "global") return
+        if (globalDefaultTemplateInitedOnceRef.current) return
+
+        globalDefaultTemplateInitedOnceRef.current = true
+        try {
+            const listRes: QueryHotPatchTemplateListResponse = await ipcRenderer.invoke("QueryHotPatchTemplateList", {
+                Type: "global"
+            })
+            const names = listRes?.Name || []
+            if (names.includes(DEFAULT_GLOBAL_TEMPLATE_NAME)) return
+
+            await ipcRenderer.invoke("CreateHotPatchTemplate", {
+                Type: "global",
+                Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,
+                Name: DEFAULT_GLOBAL_TEMPLATE_NAME
+            })
+            yakitNotify("success", t("GlobalHotPatch.default_template_created", {name: DEFAULT_GLOBAL_TEMPLATE_NAME}))
+        } catch (error) {
+            globalDefaultTemplateInitedOnceRef.current = false
+            yakitFailed(error + "")
+        }
+    })
+
     const loadTemplateList = useMemoizedFn((autoSelectFirst = false) => {
         const isWebFuzzer = activeType === "fuzzer"
-        const defaultTemplates = cloneDeep(isWebFuzzer ? HotPatchTempDefault : MITMHotPatchTempDefault)
+        const isMITM = activeType === "mitm"
+        const defaultTemplates = cloneDeep(isWebFuzzer ? HotPatchTempDefault : isMITM ? MITMHotPatchTempDefault : [])
         // 加载本地模板
         ipcRenderer
             .invoke("QueryHotPatchTemplateList", { Type: activeType })
@@ -252,6 +387,13 @@ export const HotPatchManagement: React.FC = () => {
 
     useEffect(() => {
         if(!inViewport) return
+        if (activeType === "global") {
+            ensureDefaultGlobalTemplate().finally(() => {
+                loadTemplateList(true)
+                loadGlobalHotPatchConfig()
+            })
+            return
+        }
         loadTemplateList(true)
     }, [activeType, inViewport])
 
@@ -450,6 +592,10 @@ export const HotPatchManagement: React.FC = () => {
             {
                 label: t("AddHotCodeTemplate.WebFuzzer_hot_template"),
                 value: "fuzzer"
+            },
+            {
+                label: t("AddHotCodeTemplate.Global_hot_template"),
+                value: "global"
             }
         ],
         [i18n.language]
@@ -482,9 +628,14 @@ export const HotPatchManagement: React.FC = () => {
                 />
             ) : (
                 <>
-                    <span className={styles["template-name"]} title={item.name}>
-                        {item.name}
-                    </span>
+                    <div className={styles["template-name-wrapper"]}>
+                        <span className={styles["template-name"]} title={item.name}>
+                            {item.name}
+                        </span>
+                        {activeType === "global" && globalEnabledTemplateName === item.name && (
+                            <span className={styles["global-enabled-tag"]}>{t("GlobalHotPatch.enabled_tag")}</span>
+                        )}
+                    </div>
                     {((!item.isDefault && source === "local") || (source === "online" && hasPermissions)) && (
                         <YakitPopover
                             overlayClassName={styles["template-popover"]}
@@ -568,14 +719,72 @@ export const HotPatchManagement: React.FC = () => {
     }, [templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
 
     return (
-        <div className={styles["hot-patch-management"]} ref={selectRef}>
-            {renderMenu()}
-            <div className={styles["editor-panel"]}>
-                <div className={styles["editor-title"]}>{selectedTemplate}</div>
-                <div className={styles["editor-header"]}>
-                    <div>
-                        <YakitRadioButtons
-                            value={editorTab}
+	        <div className={styles["hot-patch-management"]} ref={selectRef}>
+	            {renderMenu()}
+	            <div className={styles["editor-panel"]}>
+	                <div className={styles["editor-title"]}>
+	                    {selectedTemplate}
+	                    {activeType === "global" &&
+	                        globalHotPatchConfig.Enabled &&
+	                        globalEnabledTemplateName === selectedTemplate && (
+	                            <span className={styles["global-enabled-tag-title"]}>
+	                                {t("GlobalHotPatch.enabled_tag")}
+	                            </span>
+	                        )}
+	                </div>
+	                {activeType === "global" && (
+	                    <div className={styles["global-status-bar"]}>
+	                        <div className={styles["global-status-left"]}>
+	                            <span className={styles["global-status-label"]}>{t("GlobalHotPatch.status")}：</span>
+	                            <span className={styles["global-status-value"]}>
+	                                {globalHotPatchConfig.Enabled
+	                                    ? t("GlobalHotPatch.enabled")
+	                                    : t("GlobalHotPatch.disabled")}
+	                            </span>
+	                            {globalHotPatchConfig.Enabled && globalEnabledTemplateName && (
+	                                <span className={styles["global-status-current"]}>
+	                                    {t("GlobalHotPatch.current")}：{globalEnabledTemplateName}
+	                                </span>
+	                            )}
+	                        </div>
+	                        <div className={styles["global-status-actions"]}>
+	                            <YakitButton
+	                                type='outline1'
+	                                size='small'
+	                                loading={globalConfigLoading}
+	                                onClick={loadGlobalHotPatchConfig}
+	                            >
+	                                {t("GlobalHotPatch.refresh")}
+	                            </YakitButton>
+	                            <YakitButton
+	                                type='primary'
+	                                size='small'
+	                                loading={globalConfigLoading}
+	                                disabled={
+	                                    !selectedTemplate ||
+	                                    selectedTemplateSource === "online" ||
+	                                    (globalHotPatchConfig.Enabled && globalEnabledTemplateName === selectedTemplate)
+	                                }
+	                                onClick={onEnableSelectedAsGlobal}
+	                            >
+	                                {t("GlobalHotPatch.enable_selected")}
+	                            </YakitButton>
+	                            <YakitButton
+	                                danger
+	                                size='small'
+	                                loading={globalConfigLoading}
+	                                disabled={!globalHotPatchConfig.Enabled}
+	                                onClick={onDisableGlobalHotPatch}
+	                            >
+	                                {t("GlobalHotPatch.disable")}
+	                            </YakitButton>
+	                        </div>
+	                    </div>
+	                )}
+	                <div className={styles["editor-header"]}>
+	                    <div>
+	                        <YakitRadioButtons
+	                            value={editorTab}
                             onChange={(e) => {
                                 setEditorTab(e.target.value)
                             }}

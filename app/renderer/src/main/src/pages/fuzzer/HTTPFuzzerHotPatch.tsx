@@ -514,7 +514,7 @@ interface DeleteHotPatchTemplateRequest {
 
 interface GetOnlineHotPatchTemplateRequest extends API.HotPatchTemplateRequest, PluginListPageMeta {}
 
-type HotCodeType = "fuzzer" | "mitm" | "httpflow-analyze"
+type HotCodeType = "fuzzer" | "mitm" | "httpflow-analyze" | "global"
 interface HotCodeTemplateProps {
     type: HotCodeType
     hotPatchTempLocal: HotPatchTempItem[]
