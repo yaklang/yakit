@@ -447,6 +447,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     className={styles["drawer"]}
                     mask={false}
                     placement='left'
+                    style={{transform: 'translateX(0)'}}
                     onClose={() => setOpenDrawer(false)}
                     closable={false}
                     title={

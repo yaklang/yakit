@@ -22,6 +22,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
                 </div>
                 <div className={styles["ai-stream-content"]}>
                     <Tooltip
+                        placement='topRight'
                         title={
                             <div className={styles["tooltip-stream-content"]}>
                                 {content}
