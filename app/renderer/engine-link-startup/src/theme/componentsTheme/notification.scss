@@ -125,7 +125,7 @@
 
 .yakit-notification-info {
     background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow, rgba(23, 23, 23, 0.08));
+    box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow);
     padding: 0;
 
     .ant-notification-notice-content {

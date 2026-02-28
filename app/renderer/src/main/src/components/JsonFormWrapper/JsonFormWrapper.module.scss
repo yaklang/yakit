@@ -10,8 +10,11 @@
             :not(.ant-input-affix-wrapper-disabled):not(
                 .ant-input-affix-wrapper-borderless
             ).ant-input-affix-wrapper-focused {
-            border-color: #ff4d4f;
+            border-color: var(--Colors-Use-Error-Border);
             // box-shadow: 0 0 0 2px var(--input-box-shadow-color);
+        }
+        .ant-form-item {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .json-schema-row-form {
@@ -45,10 +48,10 @@
                         margin-bottom: 20px;
                         text-align: left;
                         border: 0;
-                        border-bottom: 1px solid #e5e5e5;
+                        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                         label {
                             font-size: 21px !important;
-                            color: #333;
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                         }
                         label::after {
                             content: "";

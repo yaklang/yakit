@@ -1,20 +1,28 @@
-
 // ========================== Modal.confirm start ==========================
-.ant-modal-content{
+.ant-modal-content {
     background-color: var(--Colors-Use-Basic-Background);
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
     background: var(--Colors-Use-Neutral-Bg);
     box-shadow: 0px 2px 24px 0px var(--Colors-Use-Basic-Shadow);
     overflow: hidden;
-
-    .ant-modal-confirm-body{
-        .anticon{
-            color: var(--Colors-Use-Main-Primary);
-        }
-        .ant-modal-confirm-title{
+    .ant-modal-close {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    .ant-modal-header {
+        background: var(--Colors-Use-Basic-Background);
+        border-color: var(--Colors-Use-Neutral-Border);
+        .ant-modal-title {
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
-        .ant-modal-confirm-content{
+    }
+    .ant-modal-confirm-body {
+        .anticon {
+            color: var(--Colors-Use-Main-Primary);
+        }
+        .ant-modal-confirm-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-modal-confirm-content {
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
@@ -43,13 +51,13 @@
     &:hover {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         border-color: var(--Colors-Use-Neutral-Bg-Hover);
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);;
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 
     &:focus {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         border-color: var(--Colors-Use-Neutral-Bg-Hover);
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);;
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }
 

@@ -22,6 +22,7 @@ import yakitSE from "@/assets/yakitSE.png"
 import yakitSS from "@/assets/yakitSS.png"
 import classNames from "classnames"
 import styles from "./RemoteEngine.module.scss"
+import {SolidIrifyMiniLogoIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -138,7 +139,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                             <>
                                 {isIRify() ? (
                                     <div className={styles["logo-img"]}>
-                                        <img src={yakitSS} alt='暂无图片' />
+                                        {/* <img src={yakitSS} alt='暂无图片' /> */}
+                                        <SolidIrifyMiniLogoIcon />
                                     </div>
                                 ) : (
                                     <YakitThemeSvgIcon className={styles["logo-img"]} />
@@ -147,7 +149,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                         )}
                         {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
-                                <img src={isIRify() ? yakitSS : yakitEE} alt='暂无图片' />
+                                {isIRify() ? <SolidIrifyMiniLogoIcon /> : <img src={yakitEE} alt='暂无图片' />}
                             </div>
                         )}
                         {isEnpriTraceAgent() && (
@@ -167,9 +169,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                 options={auths.map((item) => {
                                     return {
                                         label: (
-                                            <div
-                                                className={styles["remote-history-label-wrapper"]}
-                                            >
+                                            <div className={styles["remote-history-label-wrapper"]}>
                                                 <div className={styles["remote-history-label"]}>{item.name}</div>
                                                 <OutlineXIcon
                                                     className={styles["option-item-close"]}

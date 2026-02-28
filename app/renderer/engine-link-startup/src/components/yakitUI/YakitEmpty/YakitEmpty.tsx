@@ -3,9 +3,16 @@ import React, {useMemo} from "react"
 import {YakitEmptyProps} from "./YakitEmptyType"
 import classNames from "classnames"
 import styles from "./YakitEmpty.module.scss"
-import EmptyPng from "./EmptyPng.png"
-import DarkEmptyPng from "./DarkEmptyPng.png"
+
+import YakitEmptyPng from "./YakitEmptyPng.png"
+import YakitDarkEmptyPng from "./YakitDarkEmptyPng.png"
+import IrifyDarkEmptyPng from "./IrifyDarkEmptyPng.png"
+import IrifyEmptyPng from "./IrifyEmptyPng.png"
+import MemfitEmptyPng from "./MemfitEmptyPng.png"
+import MemfitDarkEmptyPng from "./MemfitDarkEmptyPng.png"
+
 import {useTheme} from "@/hooks/useTheme"
+import {__PLATFORM__} from "@/utils/envfile"
 
 /**
  * @description:YakitEmpty
@@ -16,12 +23,22 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
     const {title, titleClassName, ...restProps} = props
 
     const emptyImageTarget = useMemo(() => {
-        if (theme === "dark") {
-            return DarkEmptyPng
-        } else {
-            return EmptyPng
+        switch (__PLATFORM__) {
+            case "irify":
+            case "irify-enterprise":
+                return theme === "dark" ? IrifyDarkEmptyPng : IrifyEmptyPng
+            case "memfit":
+                return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
+
+            default:
+                break
         }
     }, [theme])
+
     return (
         <Empty
             image={<img src={emptyImageTarget} alt='' />}

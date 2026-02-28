@@ -206,7 +206,7 @@
         }
 
         .total-style {
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -252,7 +252,7 @@
 
         .info-wrapper {
             svg {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Main-Primary);
             }
             .title-style {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -270,7 +270,7 @@
 // ---------- RuleImportExportModal ----------
 .rule-import-export-modal {
     .export-hint {
-        background: rgba(86, 201, 145, 0.1);
+        background: var(--Colors-Use-Green-Bg);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 8px 16px;
         margin-bottom: 15px;

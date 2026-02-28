@@ -141,7 +141,7 @@
     font-size: 11px;
     line-height: 22px;
     &:hover {
-        color: #f28b44;
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -183,7 +183,7 @@
             color: var(--Colors-Use-Main-Primary);
         }
     }
-    .node-error{
+    .node-error {
         svg {
             color: var(--Colors-Use-Error-Primary);
         }
@@ -220,7 +220,7 @@
                 }
             }
             .name {
-                color: #b4bbca;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 font-weight: 500;
                 line-height: 16px;
@@ -245,7 +245,7 @@
             color: var(--Colors-Use-Main-Primary);
         }
         .count {
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -258,11 +258,11 @@
     }
 
     &.node-selected {
-        background-color: rgba(242, 139, 68, 0.06);
+        background-color: var(--Colors-Use-Main-Bg);
     }
     &.node-foucsed {
-        border: 1px solid #f28b44;
-        background-color: rgba(242, 139, 68, 0.06);
+        border: 1px solid var(--Colors-Use-Main-Border);
+        background-color: var(--Colors-Use-Main-Bg);
         border-radius: 4px;
         padding-top: 2px;
         padding-bottom: 2px;
@@ -276,16 +276,16 @@
         }
     }
     .hint-icon {
-        color: #b4bbca;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .info-icon {
-        color: #4a94f8;
+        color: var(--Colors-Use-Blue-Primary);
     }
     .warn-icon {
-        color: #ffb660;
+        color: var(--Colors-Use-Warning-Primary);
     }
     .error-icon {
-        color: #f6544a;
+        color: var(--Colors-Use-Error-Primary);
     }
 }
 
@@ -316,13 +316,13 @@
                 flex-direction: row;
                 gap: 4px;
                 .text {
-                    color: #b4bbca;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
                 }
                 .number {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
@@ -373,7 +373,7 @@
     align-items: center;
     gap: 4px;
     .text-style {
-        color: #b4bbca;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;
@@ -391,7 +391,9 @@
         padding: 0px 16px;
         max-height: 600px;
         overflow: auto;
-        *:has(> label[title="基础信息"]),*:has(> label[title="代码源配置"]),*:has(> label[title="编译配置"]) {
+        *:has(> label[title="基础信息"]),
+        *:has(> label[title="代码源配置"]),
+        *:has(> label[title="编译配置"]) {
             display: none;
         }
     }
@@ -514,9 +516,8 @@
                 &:hover {
                     border-color: transparent;
                     box-shadow:
-                        0 1px 2px -2px rgba(0, 0, 0, 0.16),
-                        0 3px 6px 0 rgba(0, 0, 0, 0.12),
-                        0 5px 12px 4px rgba(0, 0, 0, 0.09);
+                        0 1px 2px -2px var(--Colors-Use-Basic-Shadow) 0 3px 6px 0 var(--Colors-Use-Basic-Shadow),
+                        0 5px 12px 4px var(--Colors-Use-Basic-Shadow);
                 }
             }
         }
@@ -530,7 +531,7 @@
     align-items: center;
     gap: 4px;
     .text-style {
-        color: #b4bbca;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;

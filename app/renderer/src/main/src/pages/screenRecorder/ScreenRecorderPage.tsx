@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -10,16 +10,27 @@ import {CloudDownloadIcon, SolidCloudDownloadIcon} from "@/assets/newIcon"
 import {ScreenRecorderList} from "@/pages/screenRecorder/ScreenRecorderList"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import styles from "./ScreenRecorderPage.module.scss"
-import screcorderEmpty from "./screcorderEmpty.png"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitRoute} from "@/enums/yakitRoute"
+
+import {fetchEnv} from "@/utils/envfile"
+import {useTheme} from "@/hook/useTheme"
+
+import screcorderEmpty from "./screcorderEmpty.png"
+import screcorderDarkEmpty from "./screcorderDarkEmpty.png"
+import IrifyScrecorderEmpty from "./IrifyscrecorderEmpty.png"
+import IrifyScrecorderDarkEmpty from "./IrifyScrecorderDarkEmpty.png"
+import MemfitScrecorderEmpty from "./MemfitScrecorderEmpty.png"
+import MemfitScrecorderDarkEmpty from "./MemfitScrecorderDarkEmpty.png"
 
 export interface ScreenRecorderPageProp {}
 
 const {ipcRenderer} = window.require("electron")
 
 export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
+    const {theme} = useTheme()
+
     const [available, setAvailable] = useState(false)
     const [refreshTrigger, setRefreshTrigger] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -42,6 +53,23 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
         init()
     }, [])
 
+    const screcorderEmptyImageTarget = useMemo(() => {
+        switch (fetchEnv()) {
+            case "irify":
+            case "irify-enterprise":
+                return theme === "dark" ? IrifyScrecorderDarkEmpty : IrifyScrecorderEmpty
+            case "memfit":
+                return theme === "dark" ? MemfitScrecorderDarkEmpty : MemfitScrecorderEmpty
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return theme === "dark" ? screcorderDarkEmpty : screcorderEmpty
+
+            default:
+                break
+        }
+    }, [theme])
+
     return (
         <YakitSpin spinning={loading}>
             {available ? (
@@ -49,7 +77,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
             ) : (
                 <div className={styles["not-installed-empty"]}>
                     <YakitEmpty
-                        image={<img src={screcorderEmpty} alt='' />}
+                        image={<img src={screcorderEmptyImageTarget} alt='' />}
                         imageStyle={{height: 200, margin: "auto", marginBottom: 24}}
                         title={<div style={{fontSize: 14}}>未安装录屏</div>}
                         description='点击“安装录屏”，录屏工具安装成功后即可开始录屏'

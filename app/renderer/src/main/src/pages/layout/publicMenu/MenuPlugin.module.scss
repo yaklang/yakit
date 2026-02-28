@@ -20,7 +20,7 @@
         border-left: 0;
         height: 72px;
         background: var(--Colors-Use-Neutral-Bg);
-        border-radius: 4px 0px 0px 4px;
+        border-radius: 0px 4px 4px 0px;
         font-size: 11px;
         line-height: 12px;
         text-align: center;
@@ -324,22 +324,22 @@
         }
 
         .add-list {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
             svg {
-                color: #f28b44;
+                color: var(--Colors-Use-Main-Primary);
             }
         }
         .add-list:hover {
-            color: #e27122;
+            color: var(--Colors-Use-Main-Hover);
             svg {
-                color: #e27122;
+                color: var(--Colors-Use-Main-Hover);
             }
         }
         .restore-style {
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         .restore-style:hover {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Hover);
         }
     }
 }

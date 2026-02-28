@@ -3,10 +3,17 @@ import React, {useMemo} from "react"
 import {YakitEmptyProps} from "./YakitEmptyType"
 import classNames from "classnames"
 import styles from "./YakitEmpty.module.scss"
-import EmptyPng from "./EmptyPng.png"
-import DarkEmptyPng from "./DarkEmptyPng.png"
+
+import YakitEmptyPng from "./YakitEmptyPng.png"
+import YakitDarkEmptyPng from "./YakitDarkEmptyPng.png"
+import IrifyDarkEmptyPng from "./IrifyDarkEmptyPng.png"
+import IrifyEmptyPng from "./IrifyEmptyPng.png"
+import MemfitEmptyPng from "./MemfitEmptyPng.png"
+import MemfitDarkEmptyPng from "./MemfitDarkEmptyPng.png"
+
 import {useTheme} from "@/hook/useTheme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {fetchEnv} from "@/utils/envfile"
 
 /**
  * @description:YakitEmpty
@@ -18,15 +25,24 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     const emptyImageTarget = useMemo(() => {
-        if (theme === "dark") {
-            return DarkEmptyPng
-        } else {
-            return EmptyPng
+        switch (fetchEnv()) {
+            case "irify":
+            case "irify-enterprise":
+                return theme === "dark" ? IrifyDarkEmptyPng : IrifyEmptyPng
+            case "memfit":
+                return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
+
+            default:
+                break
         }
     }, [theme])
     return (
         <Empty
-            image={<img style={{userSelect: "none"}}  draggable={false} src={emptyImageTarget} alt='' />}
+            image={<img style={{userSelect: "none"}} draggable={false} src={emptyImageTarget} alt='' />}
             imageStyle={
                 props.imageStyle
                     ? props.imageStyle
@@ -41,7 +57,7 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
                 props.descriptionReactNode ? (
                     props.descriptionReactNode
                 ) : (
-                    <div className={styles["yakit-empty"]} style={{userSelect: "none"}} >
+                    <div className={styles["yakit-empty"]} style={{userSelect: "none"}}>
                         <div className={classNames(styles["yakit-empty-title"], titleClassName)}>
                             {title || t("YakitEmpty.noData")}
                         </div>

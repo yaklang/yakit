@@ -767,7 +767,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 // 先销毁 antd 消息通知 弹窗
                 emiter.emit("destroyMainWinAntdUiEvent")
                 if (type === "reclaimDatabaseSpace_start") {
-                    ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type, dbPath: currentProject?.DatabasePath ? [currentProject?.DatabasePath] : []})
+                    ipcRenderer.invoke("yakitMainWin-done", {
+                        yakitStatus: type,
+                        dbPath: currentProject?.DatabasePath ? [currentProject?.DatabasePath] : []
+                    })
                 } else {
                     ipcRenderer.invoke("yakitMainWin-done", {yakitStatus: type})
                 }

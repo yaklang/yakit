@@ -21,9 +21,16 @@ import {
     onSetRemoteValuesBase,
     YakitOptionTypeProps
 } from "@/components/utils"
-import EmptyPng from "@/components/yakitUI/YakitEmpty/EmptyPng.png"
-import DarkEmptyPng from "@/components/yakitUI/YakitEmpty/DarkEmptyPng.png"
+
+import YakitEmptyPng from "@/components/yakitUI/YakitEmpty/YakitEmptyPng.png"
+import YakitDarkEmptyPng from "@/components/yakitUI/YakitEmpty/YakitDarkEmptyPng.png"
+import IrifyDarkEmptyPng from "@/components/yakitUI/YakitEmpty/IrifyDarkEmptyPng.png"
+import IrifyEmptyPng from "@/components/yakitUI/YakitEmpty/IrifyEmptyPng.png"
+import MemfitEmptyPng from "@/components/yakitUI/YakitEmpty/MemfitEmptyPng.png"
+import MemfitDarkEmptyPng from "@/components/yakitUI/YakitEmpty/MemfitDarkEmptyPng.png"
+
 import {useTheme} from "@/hooks/useTheme"
+import {__PLATFORM__} from "@/utils/envfile"
 const {Option, OptGroup} = Select
 
 /**
@@ -74,10 +81,19 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     )
 
     const emptyImageTarget = useMemo(() => {
-        if (theme === "dark") {
-            return DarkEmptyPng
-        } else {
-            return EmptyPng
+        switch (__PLATFORM__) {
+            case "irify":
+            case "irify-enterprise":
+                return theme === "dark" ? IrifyDarkEmptyPng : IrifyEmptyPng
+            case "memfit":
+                return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
+            case "enterprise":
+            case "simple-enterprise":
+            case "yakit":
+                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
+
+            default:
+                break
         }
     }, [theme])
 

@@ -3,12 +3,15 @@
     height: 100%;
     padding: 0px 0px 0px 4px;
     :global {
+        .ant-tree {
+            background-color: var(--Colors-Use-Main-Bg);
+        }
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
             background-color: var(--Colors-Use-Basic-Background);
         }
-        .ant-tree-list{
-            background: var(--Colors-Use-Basic-Background)
+        .ant-tree-list {
+            background: var(--Colors-Use-Basic-Background);
         }
         .ant-tree-switcher {
             display: none;
@@ -29,14 +32,14 @@
             flex: 1;
             overflow: hidden;
         }
-        .ant-tree-indent-unit{
+        .ant-tree-indent-unit {
             width: 0px;
         }
         // 树的滚动条
-        .ant-tree-list-scrollbar{
+        .ant-tree-list-scrollbar {
             width: 6px !important;
         }
-        .ant-tree-list-scrollbar-thumb{
+        .ant-tree-list-scrollbar-thumb {
             background: var(--Colors-Use-Basic-Background) !important;
         }
     }
@@ -53,7 +56,7 @@
     }
 }
 
-.tree-bottom{
+.tree-bottom {
     position: relative;
     height: 22px;
     text-align: center;
@@ -97,7 +100,7 @@
         svg {
             width: 12px;
             height: 12px;
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -143,11 +146,11 @@
     }
 
     &.node-selected {
-        background-color: rgba(242, 139, 68, 0.06);
+        background-color: var(--Colors-Use-Main-Bg-Hover);
     }
     &.node-foucsed {
-        border: 1px solid #f28b44;
-        background-color: rgba(242, 139, 68, 0.06);
+        border: 1px solid var(--Colors-Use-Main-Border);
+        background-color: var(--Colors-Use-Main-Focus);
         border-radius: 4px;
         padding-top: 2px;
         padding-bottom: 2px;
