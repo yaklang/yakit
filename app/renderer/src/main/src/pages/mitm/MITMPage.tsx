@@ -316,7 +316,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
-            setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
+            setAddr(`${host}:${port}`)
             setHost(host)
             setPort(port)
             setDisableCACertPage(extra?.disableCACertPage || false)

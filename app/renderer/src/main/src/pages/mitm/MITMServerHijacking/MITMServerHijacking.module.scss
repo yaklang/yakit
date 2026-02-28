@@ -26,6 +26,23 @@
                 line-height: 16px;
                 margin-left: 16px;
                 color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                display: flex;
+                align-items: center;
+                overflow: hidden;
+                .mitm-server-heard-addr-text {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    flex-shrink: 1;
+                    min-width: 0;
+                    margin-right: 8px;
+                }
+                .mitm-server-heard-addr-tags {
+                    display: flex;
+                    align-items: center;
+                    flex-shrink: 0;
+                    flex-wrap: nowrap;
+                }
             }
         }
         .mitm-server-extra {
@@ -51,6 +68,12 @@
                         color: var(--Colors-Use-Main-Pressed);
                     }
                 }
+                .check-icon {
+                    svg {
+                        width: 14px;
+                        height: 14px;
+                    }
+                }
             }
         }
         .mitm-server-extra {
@@ -70,6 +93,20 @@
     }
     .mitm-server-body {
         height: calc(100% - 41px);
+    }
+}
+
+.more-popover {
+    :global {
+        .ant-popover-inner {
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
+
+            .ant-popover-inner-content {
+                padding: 6px 4px 4px 4px;
+            }
+        }
     }
 }
 

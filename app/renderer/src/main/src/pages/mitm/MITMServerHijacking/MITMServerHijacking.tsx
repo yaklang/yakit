@@ -3,7 +3,7 @@ import {Divider, Form, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useSize} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import {MITMServer} from "@/pages/mitm/MITMPage"
@@ -11,6 +11,7 @@ import style from "./MITMServerHijacking.module.scss"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
@@ -31,9 +32,12 @@ import {
     grpcMITMFilterWebsocket,
     grpcMITMHotPort,
     grpcMITMSetDownstreamProxy,
+    grpcMITMGetFilter,
     grpcMITMSetDisableSystemProxy,
     grpcMITMStopCall
 } from "../MITMHacker/utils"
+import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
+import {getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
@@ -43,6 +47,8 @@ import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil
 import { useStore } from "@/store/mitmState"
 import {useProxy} from "@/hook/useProxy"
 import { debugToPrintLogs } from "@/utils/logCollection"
+import { OutlineCheckIcon, OutlineChevrondownIcon, OutlineChevronupIcon } from "@/assets/icon/outline"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -133,6 +139,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
+    const [isFilter, setIsFilter] = useState(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
     const [disableSystemProxy, setDisableSystemProxy] = useState<boolean>(false)
     const {t, i18n} = useI18nNamespaces(["webFuzzer",'mitm'])
@@ -262,6 +269,28 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         })
     }, [])
 
+    useEffect(() => {
+        grpcMITMGetFilter(true)
+            .then((res) => {
+                const fd = res?.FilterData
+                if (!fd) { setIsFilter(false); return }
+                const {baseFilter, advancedFilters} = convertMITMFilterUI(fd)
+                setIsFilter(getMitmHijackFilter(baseFilter, advancedFilters))
+            })
+            .catch(() => setIsFilter(false))
+    }, [])
+
+    const onSetFilterFlag = useMemoizedFn((flag: boolean) => {
+        setIsFilter(flag)
+    })
+
+    const heardRef = useRef<HTMLDivElement>(null)
+    const heardSize = useSize(heardRef)
+    const isNarrow = useCreation(() => {
+        return (heardSize?.width || 0) < 1150
+    }, [heardSize?.width])
+
+    const [morePopoverVisible, setMorePopoverVisible] = useState<boolean>(false)
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
 
     const downStreamTagClose = useMemoizedFn(() => {
@@ -282,11 +311,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     return (
         <div className={style["mitm-server"]}>
-            <div className={style["mitm-server-heard"]}>
+            <div className={style["mitm-server-heard"]} ref={heardRef}>
                 <div className={style["mitm-server-title"]}>
                     <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
-                    <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
-                        <span style={{marginRight: 8}}>{addr}</span>
+                    <div className={style["mitm-server-heard-addr"]}>
+                        <span className={style["mitm-server-heard-addr-text"]}>{addr}</span>
+                        <div className={style["mitm-server-heard-addr-tags"]}>
                         {tip
                             .split("|")
                             .filter((item) => item)
@@ -301,6 +331,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                     </YakitTag>
                                 )
                             )}
+                    </div>
                     </div>
                 </div>
                 <div className={style["mitm-server-extra"]}>
@@ -358,17 +389,31 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             <div className={style["link-item"]}>{t("AgentConfigModal.proxy_configuration")}</div>
                         </YakitPopover>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setVisible(true)}>
-                            规则配置
-                        </div>
-                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                        {!isNarrow && (
+                            <>
+                                <div className={style["link-item"]} onClick={() => setVisible(true)}>
+                                    规则配置
+                                </div>
+                                <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                            </>
+                        )}
                         <div className={style["link-item"]} onClick={() => setFiltersVisible(true)}>
                             过滤器
                         </div>
-                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
-                            证书下载
-                        </div>
+                        {isFilter && (
+                            <YakitTag color={"success"} style={{margin: '0 4px'}}>
+                                {t("HttpQueryAdvancedConfig.configured")}
+                                <OutlineCheckIcon className={style["check-icon"]} />
+                            </YakitTag>
+                        )}
+                        {!isNarrow && (
+                            <>
+                                <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                                <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
+                                    证书下载
+                                </div>
+                            </>
+                        )}
                     </div>
                     {/*<YakitButton*/}
                     {/*    onClick={() => {*/}
@@ -386,6 +431,40 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             disableCACertPage={disableCACertPage}
                         />
                     </div>
+                    {isNarrow && (
+                        <YakitPopover
+                            overlayClassName={classNames(style["more-popover"])}
+                            placement='bottomRight'
+                            trigger='click'
+                            visible={morePopoverVisible}
+                            onVisibleChange={setMorePopoverVisible}
+                            content={
+                                <YakitMenu
+                                    selectedKeys={[]}
+                                    data={[
+                                        { key: "rule-config", label: "规则配置" },
+                                        { key: "cert-download", label: "证书下载" }
+                                    ]}
+                                    onClick={({ key }) => {
+                                        setMorePopoverVisible(false)
+                                        switch (key) {
+                                            case "rule-config":
+                                                setVisible(true)
+                                                break
+                                            case "cert-download":
+                                                setDownloadVisible(true)
+                                                break
+                                        }
+                                    }}
+                                />
+                            }
+                        >
+                            <YakitButton type='outline2' style={{ marginLeft: 8 }}>
+                                更多
+                                {morePopoverVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                            </YakitButton>
+                        </YakitPopover>
+                    )}
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />
                     </div>
@@ -423,6 +502,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     visible={filtersVisible}
                     setVisible={setFiltersVisible}
                     isStartMITM={true}
+                    onSetFilterFlag={onSetFilterFlag}
                 />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
             </React.Suspense>

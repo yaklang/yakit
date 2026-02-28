@@ -111,7 +111,7 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'
-                trailColor='var(--Colors-Use-Neutral-Bg)'
+                trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                 percent={percent}
                 format={(percent) => `已导入 ${percent}%`}
             />

@@ -124,7 +124,7 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
             wrapClassName={styles["installLlamaServerModal"]}
         >
             <div className={styles["download-progress"]}>
-                <Progress percent={percent} format={(p) => `进度 ${p}%`} />
+                <Progress trailColor='var(--Colors-Use-Neutral-Bg-Hover)' percent={percent} format={(p) => `进度 ${p}%`} />
                 <div className={styles["download-progress-messages"]}>
                     {data.map((item, index) => (
                         <p key={item}>{item}</p>

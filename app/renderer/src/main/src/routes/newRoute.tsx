@@ -177,7 +177,7 @@ import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {ShortcutKeyList} from "@/pages/shortcutKey/ShortcutKey"
 import {AIAgent} from "@/pages/ai-agent/AIAgent"
 import {SolidClipboardlistIcon, SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon} from "@/assets/icon/solid"
-import {PublicToolDataCompareIcon} from "./publicIcon"
+import {PublicToolDataCompareIcon, PublicToolVulinboxIcon} from "./publicIcon"
 import {SoftMode, YakitModeEnum} from "@/store/softMode"
 import {AIMentionCommandParams} from "@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
@@ -1453,6 +1453,14 @@ interface ExtraMenuGroup extends BaseExtraMenuItem {
 }
 export type ExtraMenuItem = ExtraMenuLeaf | ExtraMenuGroup
 
+/** @name 靶场菜单项 */
+const getVulinboxMenuItem = (hideIcon = false): ExtraMenuItem => ({
+    page: YakitRoute.Beta_VulinboxManager,
+    i18n: false,
+    label: i18n.language === "en" ? "Range" : "靶场",
+    ...hideIcon ? {}:{ icon: <PublicToolVulinboxIcon /> }
+})
+
 /** @name yakit 安全专家模式 左侧菜单 */
 export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
     return [
@@ -1478,6 +1486,12 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
             page: YakitRoute.YakScript,
             ...YakitRouteToPageInfo[YakitRoute.YakScript]
         },
+        getVulinboxMenuItem(true)
+    ]
+}
+/** @name yakit 安全专家模式 记事本菜单 */
+export const getSecurityExpertNotepadMenu: () => ExtraMenuItem[] = () => {
+    return [
         {
             page: undefined,
             i18n: false,
@@ -1560,6 +1574,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                     icon: <SolidTerminalIcon />,
                     ...YakitRouteToPageInfo[YakitRoute.YakScript]
                 },
+                getVulinboxMenuItem(),
                 {
                     page: undefined,
                     icon: <SolidClipboardlistIcon />,
@@ -1600,6 +1615,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                         icon: <SolidTerminalIcon />,
                         ...YakitRouteToPageInfo[YakitRoute.YakScript]
                     },
+                    getVulinboxMenuItem(),
                     {
                         page: undefined,
                         icon: <SolidClipboardlistIcon />,
@@ -1752,6 +1768,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                         icon: <PublicToolDataCompareIcon />,
                         ...YakitRouteToPageInfo[YakitRoute.DataCompare]
                     },
+                    getVulinboxMenuItem(),
                     {
                         page: undefined,
                         label: "更多",

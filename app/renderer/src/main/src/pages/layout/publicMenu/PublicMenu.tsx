@@ -9,7 +9,8 @@ import {
     ResidentPluginName,
     databaseConvertData,
     getPublicRouteMenu,
-    getSecurityExpertLeftMenu
+    getSecurityExpertLeftMenu,
+    getSecurityExpertNotepadMenu
 } from "@/routes/newRoute"
 import {ExtraMenu, OrdinaryMenu} from "./ExtraMenu"
 import {SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
@@ -542,6 +543,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     <div className={styles["menu-wrapper-left"]}>
                         <OrdinaryMenu menuList={getSecurityExpertLeftMenu()} onMenuSelect={onClickSecurityExpertMenu} />
                         <ManagementTab hideIcon />
+                        <OrdinaryMenu menuList={getSecurityExpertNotepadMenu()} onMenuSelect={onClickSecurityExpertMenu} />
                     </div>
                 ) : (
                     <>
