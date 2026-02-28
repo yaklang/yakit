@@ -87,7 +87,9 @@
       "securityProduct": "Security Product",
       "remoteCodeExecutionScan": "Remote Code Execution (Scan)",
       "sQLInjection": "SQL Injection"
-    }
+    },
+    "reclaimDatabaseSpaceTitle": "Reclaim database space",
+    "reclaimDatabaseSpaceCont": "After deleting the data, the database space has not been reclaimed. Are you sure you want to reclaim the database space? If confirmed, it will exit to the welcome page for the reclaiming process."
   },
   "ImportExportProgress": {
     "exportHARData": "Export HAR traffic data"

@@ -4,7 +4,7 @@ const {GLOBAL_YAK_SETTING} = require("../state")
 const {getLocalYaklangEngine, YakitProjectPath} = require("../filePath")
 const {engineLogOutputFileAndUI, engineLogOutputUI} = require("../logFile")
 
-// 引擎连接过程中涉及到的执行任务，请务必存入，引擎引擎连接有中断连接功能
+// 引擎连接过程中涉及到能中断的执行任务
 const runningTasks = new Map()
 
 const ECHO_TEST_MSG = "Hello Yakit!"
@@ -29,7 +29,8 @@ module.exports = {
         })
 
         let currentCheckId = 0 // 全局任务标识
-        const asyncAllowSecretLocal = async (win, params, attempt = 1, maxRetry = 3) => {
+        /** check校验 */
+        const asyncAllowSecretLocal = async (win, params) => {
             const checkId = ++currentCheckId // 本次任务唯一 ID
 
             return new Promise((resolve, reject) => {
@@ -245,7 +246,8 @@ module.exports = {
         })
 
         let currentFixId = 0 // 全局任务标识
-        const asyncFixupDatabase = async (win, params, attempt = 1, maxRetry = 3) => {
+        /** 修复数据库 */
+        const asyncFixupDatabase = async (win, params) => {
             const checkId = ++currentFixId // 本次任务唯一 ID
 
             return new Promise((resolve, reject) => {
@@ -268,15 +270,11 @@ module.exports = {
                     const timeoutMs = 11000
                     let killed = false
                     let successDetected = false
-                    const taskKey = "fixdb_" + checkId
-                    let cleaned = false
 
-                    const killFun = (timeOut = false) => {
+                    const killFun = () => {
                         if (killed) return
                         killed = true
-                        cleanTask()
                         clearTimeout(timeoutId)
-                        !timeOut && engineLogOutputFileAndUI(win, `----- 执行中止 修复数据库 -----`)
                         try {
                             subprocess.kill()
                             if (process.platform === "win32") {
@@ -287,17 +285,9 @@ module.exports = {
                         } catch {}
                     }
 
-                    runningTasks.set(taskKey, killFun)
-
-                    const cleanTask = () => {
-                        if (cleaned) return
-                        cleaned = true
-                        runningTasks.delete(taskKey)
-                    }
-
                     const timeoutId = setTimeout(() => {
                         if (checkId !== currentFixId || successDetected || killed) return
-                        killFun(true)
+                        killFun()
                         engineLogOutputFileAndUI(win, `----- 修复数据库超时 -----`)
                         reject({status: "timeout", message: "修复数据库超时"})
                     }, timeoutMs)
@@ -318,7 +308,6 @@ module.exports = {
 
                     subprocess.on("error", (error) => {
                         if (checkId !== currentFixId) return
-                        cleanTask()
                         clearTimeout(timeoutId)
                         engineLogOutputFileAndUI(win, `----- 修复数据库失败 -----`)
                         engineLogOutputFileAndUI(win, `process_error: ${error.message}`)
@@ -327,7 +316,6 @@ module.exports = {
 
                     subprocess.on("close", (code) => {
                         if (checkId !== currentFixId || killed) return
-                        cleanTask()
                         clearTimeout(timeoutId)
                         const combinedOutput = (stdout + stderr).trim()
                         engineLogOutputFileAndUI(win, `----- 修复数据库结束，退出码: ${code} -----`)
@@ -388,7 +376,8 @@ module.exports = {
         })
 
         let currentReclaimId = 0 // 全局任务标识
-        const asyncReclaimDatabaseSpace = async (win, params, attempt = 1, maxRetry = 3) => {
+        /** 回收数据空间 */
+        const asyncReclaimDatabaseSpace = async (win, params) => {
             const checkId = ++currentReclaimId // 本次任务唯一 ID
             const {dbPath} = params
 
@@ -595,6 +584,7 @@ module.exports = {
         })
 
         let currentStartId = 0 // 全局启动任务标识
+        /** 启动引擎 */
         const asyncStartSecretLocalYakEngineServer = async (win, params) => {
             const checkId = ++currentStartId
             const {version, port, password, isEnpriTraceAgent, softwareVersion} = params

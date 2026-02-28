@@ -1374,6 +1374,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
         }
     })
+    useEffect(() => {
+        emiter.on("onUIOpSettingMenuSelect", menuSelect)
+        return () => {
+            emiter.off("onUIOpSettingMenuSelect", menuSelect)
+        }
+    }, [])
 
     const menu = (
         <YakitMenu

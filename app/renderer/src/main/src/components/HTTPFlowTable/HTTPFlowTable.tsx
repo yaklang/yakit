@@ -662,7 +662,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         onSetHasNewData,
         showHistoryAnalysisBtn = false
     } = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history", "home"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "history"])
 
     // 导出字段映射配置
     const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
@@ -2386,9 +2386,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onRemoveHttpHistory = useMemoizedFn((query, reclaim?: boolean) => {
         const len1 = query?.Filter?.IncludeInUrl?.length ?? 0
         const len2 = query?.Id?.length ?? 0
-        const flag = len1 >= 2 || len2 >= 2
-        // TODO 暂时不弹回收数据空间
-        if (SystemInfo.mode === "local" && !reclaimHint && flag && false) {
+        const flag = len1 >= 100 || len2 >= 100
+        if (SystemInfo.mode === "local" && !reclaimHint && flag) {
             delFun.current = "onRemoveHttpHistory"
             delQuery.current = query
             setReclaimHint(true)
@@ -4415,8 +4414,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     onClick: ({key}) => {
                                                         switch (key) {
                                                             case "resetId":
-                                                                // TODO 暂时不弹回收数据空间
-                                                                if (SystemInfo.mode === "local" && false) {
+                                                                if (SystemInfo.mode === "local") {
                                                                     delFun.current = "resetId"
                                                                     setReclaimHint(true)
                                                                 } else {
@@ -4424,8 +4422,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                 }
                                                                 break
                                                             case "noResetId":
-                                                                // TODO 暂时不弹回收数据空间
-                                                                if (SystemInfo.mode === "local" && false) {
+                                                                if (SystemInfo.mode === "local") {
                                                                     delFun.current = "noResetId"
                                                                     setReclaimHint(true)
                                                                 } else {
@@ -4605,8 +4602,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             )}
             <YakitHint
                 visible={reclaimHint}
-                title={t("HomeCom.reclaimDatabaseSpaceTitle")}
-                content={t("HomeCom.reclaimDatabaseSpaceCont")}
+                title={t("HTTPFlowTable.reclaimDatabaseSpaceTitle")}
+                content={t("HTTPFlowTable.reclaimDatabaseSpaceCont")}
                 onOk={reclaimDatabaseSpace}
                 onCancel={() => {
                     execDelFun(false)
