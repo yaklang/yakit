@@ -632,6 +632,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                             </Paragraph>
                         </div>
                     ),
+                    maskClosable: false,
                     footer: null
                 })
             })
