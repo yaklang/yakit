@@ -91,7 +91,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
 
             default:
-                break
+                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
         }
     }, [theme])
 
