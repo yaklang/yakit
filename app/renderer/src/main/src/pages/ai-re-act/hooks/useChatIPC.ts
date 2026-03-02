@@ -227,11 +227,11 @@ function useChatIPC(params?: UseChatIPCParams) {
     // #endregion
 
     // #region 自由对话(ReAct)相关变量和hook
-    const casualChatID = useRef("")
+    const casualChatID = useRef(0)
     /** 自由对话(ReAct)的loading状态 */
     const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>(cloneDeep(DefaultCasualLoadingStatus))
     const handleResetCasualChatLoading = useMemoizedFn(() => {
-        casualChatID.current = ""
+        casualChatID.current = 0
         setCasualStatus(cloneDeep(DefaultCasualLoadingStatus))
     })
 
@@ -488,7 +488,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 设置任务规划对应的问题ID, 并清除自由对话(ReAct)的loading状态
                         taskChatID.current = startInfo["re-act_task"]
-                        if (casualChatID.current === taskChatID.current) handleResetCasualChatLoading()
+                        casualChatID.current -= 1
+                        setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         // 标记grpc流里属于任务规划的流
                         planCoordinatorId.current = startInfo.coordinator_id
                         // 任务规划的loading开始置为true
@@ -639,13 +640,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                         ) as AIAgentGrpcApi.ReactTaskChanged
 
                         if (react_task_now_status === "processing") {
-                            casualChatID.current = react_task_id
-                            setCasualStatus(() => ({loading: true, title: "thinking..."}))
+                            casualChatID.current += 1
+                            setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         }
 
                         if (react_task_now_status === "completed") {
                             if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
-                            handleResetCasualChatLoading()
+                            casualChatID.current -= 1
+                            setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         }
                         return
                     } else if (res.NodeId === "status") {
