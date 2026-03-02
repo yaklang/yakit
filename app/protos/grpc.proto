@@ -749,6 +749,7 @@ service Yak {
   rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
   rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
   rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
+  rpc QueryAIProvider(QueryAIProvidersRequest) returns (QueryAIProvidersResponse);
   rpc UpsertAIProvider(UpsertAIProviderRequest) returns (UpsertAIProviderResponse);
   rpc DeleteAIProvider(DeleteAIProviderRequest) returns (Empty);
 
@@ -8380,6 +8381,25 @@ message AIProvider {
   int64 Id = 1;
   ThirdPartyApplicationConfig Config = 2;
 }
+
+
+message AIProviderFilter {
+  repeated int64 Ids = 1;
+  repeated string AIType = 2;
+}
+
+message QueryAIProvidersRequest {
+  AIProviderFilter Filter = 1;
+  Paging  Pagination = 2;
+}
+
+message QueryAIProvidersResponse {
+  Paging Pagination = 1;
+  repeated AIProvider Providers = 2;
+  int64 Total = 3;
+}
+
+
 
 message ListAIProvidersResponse {
   repeated AIProvider Providers = 1;
