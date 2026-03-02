@@ -200,8 +200,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     const focusOfTaskID = useRef("")
     const [focusMode, setFocusMode] = useState<string>("")
     const handleFocusModeChange = useMemoizedFn((id: string, mode: string) => {
-        //NOTE - 在react_task_now_status没有完成得时候，断开流，新的对话没有设置专注模式，因为id不一样，导致设置不了专注模式
-        if (focusOfTaskID.current && focusOfTaskID.current !== id) return
         focusOfTaskID.current = id
         setFocusMode(mode)
     })
@@ -274,14 +272,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
-    /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
-    const handleResetGrpcStatus = useMemoizedFn(() => {
-        taskChatEvent.handleCloseGrpc()
-        setExecute(false)
-        handleResetCasualChatLoading()
-        handleResetTaskChatLoading()
-    })
-
     // #region 问题和问题队列相关逻辑
     /** 更新问题队列状态 */
     const handleTriggerQuestionQueueRequest = useThrottleFn(
@@ -294,21 +284,18 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 问题入队|出队变化时-进行通知逻辑
     const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const {Type, NodeId, NodeIdVerbose, Timestamp} = res
+            const {NodeId} = res
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
             if (NodeId === "react_task_dequeue" && data.hasOwnProperty("focus_mode")) {
-                // 记录专注模式状态
-                handleFocusModeChange(data.react_task_id, data.focus_mode)
+                if (!!data.focus_mode) {
+                    // 记录专注模式状态
+                    handleFocusModeChange(data.react_task_id, data.focus_mode)
+                } else {
+                    // 非专注模式状态
+                    handleResetFocusMode()
+                }
             }
-
-            // handleNotifyMessage({
-            //     Type,
-            //     NodeId,
-            //     NodeIdVerbose,
-            //     Timestamp,
-            //     Content: data.react_task_input
-            // })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -374,6 +361,19 @@ function useChatIPC(params?: UseChatIPCParams) {
         } catch (error) {}
     })
     // #endregion
+
+    /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
+    const handleResetGrpcStatus = useMemoizedFn(() => {
+        taskChatEvent.handleCloseGrpc()
+        setExecute(false)
+        handleResetCasualChatLoading()
+        handleResetTaskChatLoading()
+    })
+
+    /** 流接口开始前需要重置的一些状态 */
+    const handleResetBeforeStart = useMemoizedFn(() => {
+        handleResetFocusMode()
+    })
 
     /** 重置所有数据 */
     const onReset = useMemoizedFn(() => {
@@ -454,7 +454,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 cacheDataStore?.create(token)
             } catch (error) {}
         }
-        handleResetFocusMode()
+        handleResetBeforeStart()
         setExecute(true)
         chatID.current = token
         fetchHistoryTimelines()
