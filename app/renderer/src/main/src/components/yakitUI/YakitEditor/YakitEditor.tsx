@@ -106,6 +106,7 @@ export interface contextMenuProps {
     key: string
     value: string
     isAiPlugin: boolean
+    params: YakParamProps[]
 }
 
 interface IFindReplaceState {
@@ -346,7 +347,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         return {
                             key: script.ScriptName,
                             value: script.ScriptName,
-                            isAiPlugin
+                            isAiPlugin,
+                            params: script.Params
                         } as contextMenuProps
                     })
                 )
@@ -437,7 +439,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             {item.key}
                         </>
                     ),
-                    isAiPlugin: item.isAiPlugin
+                    isAiPlugin: item.isAiPlugin,
+                    params: item.params
                 } as EditorMenuItemProps
             })
             ;(extraMenuListsObj["customcontextmenu"].menu[0] as EditorMenuItemProps).children =
@@ -462,7 +465,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     return {
                         key: `aiplugin-${item.value}`,
                         label: item.key,
-                        isAiPlugin: item.isAiPlugin
+                        isAiPlugin: item.isAiPlugin,
+                        params: item.params
                     } as EditorMenuItemProps
                 })
             ;(extraMenuListsObj["aiplugin"].menu[0] as EditorMenuItemProps).children =
@@ -514,6 +518,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         const allMenu = {...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu}
                         let pageId: string | undefined
                         let data: any = undefined
+                        let params: YakParamProps[] | undefined
                         // 自定义右键执行携带额外参数
                         if (keyPath.includes("customcontextmenu") || keyPath.includes("aiplugin")) {
                             // 获取页面唯一标识符
@@ -522,8 +527,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             try {
                                 // @ts-ignore
                                 allMenu[name].menu[0]?.children.map((item) => {
-                                    if (item.key === menuItemName && item.isAiPlugin) {
-                                        data = true
+                                    if (item.key === menuItemName) {
+                                        if (item.isAiPlugin) {
+                                            data = true
+                                        }
+                                        params = item.params
                                     }
                                     if (item.key === menuItemName && item.isGetPlugin) {
                                         data = "isGetPlugin"
@@ -543,7 +551,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             } catch (error) {}
                         }
 
-                        allMenu[name].onRun(editor, menuItemName, pageId, data)
+                        allMenu[name].onRun(editor, menuItemName, pageId, data, params)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
                         break
@@ -1485,7 +1493,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
             }
         }
-        const toOpenAiChat = (scriptName: string) => {
+        const toOpenAiChat = (scriptName: string, params?: YakParamProps[]) => {
             if (scriptName === "aiplugin-Get*plug-in") {
                 emiter.emit("onOpenFuzzerModal", JSON.stringify({scriptName, isAiPlugin: "isGetPlugin"}))
                 closeFizzRangeWidget()
@@ -1494,7 +1502,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
             if (editor) {
                 const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || value
-                emiter.emit("onOpenFuzzerModal", JSON.stringify({text: selectedText, scriptName, isAiPlugin: true}))
+                emiter.emit("onOpenFuzzerModal", JSON.stringify({text: selectedText, scriptName, isAiPlugin: true, params}))
                 closeFizzRangeWidget()
             }
         }

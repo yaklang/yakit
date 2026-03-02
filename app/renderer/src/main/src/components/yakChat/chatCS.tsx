@@ -126,15 +126,22 @@ import {
     getStorageChatCSShortcutKeyEvents
 } from "@/utils/globalShortcutKey/events/page/chatCS"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
-import { JSONParseLog } from "@/utils/tool"
-import { StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
+import {JSONParseLog} from "@/utils/tool"
+import {StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
     text?: string
     scriptName?: string
+    execParams?: YakExecutorParam[]
     code?: string
     isAiPlugin: boolean
+}
+
+export interface OpenFuzzerModal extends Omit<CodecParamsProps, "isAiPlugin"> {
+    isAiPlugin: string | boolean
+    params?: YakParamProps[]
 }
 
 /** 将 new Date 转换为日期 */
@@ -3083,12 +3090,13 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     // 执行
     const onStartExecute = useMemoizedFn((data: CodecParamsProps) => {
-        const {text, scriptName, isAiPlugin, code} = data
+        const {text, scriptName, isAiPlugin, code, execParams} = data
         const executeParams = {
             Input: text || "",
             PluginName: scriptName,
             PluginType: "codec",
-            Code: code
+            Code: code,
+            ExecParams: execParams || []
         }
         debugPluginStreamEvent.reset()
 

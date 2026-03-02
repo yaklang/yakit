@@ -65,5 +65,8 @@
     "allPlugin": "Online Plugin",
     "officialPlugin": "Official Plugin",
     "localPlugin": "local Plugin"
+  },
+  "PluginHasParamsDrawer": {
+    "parameter_Settings": "Parameter Settings{colon}"
   }
 }

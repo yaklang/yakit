@@ -7,7 +7,18 @@ i18n.use(HttpBackend)
     .init({
         lng: "zh",
         fallbackLng: "en",
-        ns: ["yakitUi", "yakitRoute", "layout", "customizeMenu", "home", "history", "webFuzzer", "aiAgent"], // 这几个需要预加载
+        ns: [
+            "yakitUi",
+            "yakitRoute",
+            "layout",
+            "plugin",
+            "yakitStore",
+            "customizeMenu",
+            "home",
+            "history",
+            "webFuzzer",
+            "aiAgent"
+        ], // 这几个需要预加载
         defaultNS: "",
         interpolation: {
             escapeValue: false

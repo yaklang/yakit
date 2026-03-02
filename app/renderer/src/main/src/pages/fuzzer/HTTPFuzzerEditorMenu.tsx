@@ -31,6 +31,7 @@ import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSwitchToTag} from "../pluginEditor/defaultconstants"
 import {setClipboardText} from "@/utils/clipboard"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakParamProps} from "../plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
@@ -95,7 +96,7 @@ export interface HTTPFuzzerClickEditorMenuProps {
     // 是否开启关闭倒计时
     fizzSelectTimeoutId?: any
     closeTimeout?: boolean
-    toOpenAiChat?: (v: string) => void
+    toOpenAiChat?: AIPluginComponentProps['toOpenAiChat']
     onClickSegmentedType?: (v: "insert-tag" | "aiplugin" | undefined) => void
 }
 
@@ -560,14 +561,14 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
 }
 
 export interface AIPluginComponentProps {
-    toOpenAiChat?: (v: string) => void
+    toOpenAiChat?: (v: string, params?: YakParamProps[]) => void
 }
 
 export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
     const {toOpenAiChat} = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [loading, setLoading] = useState<boolean>(false)
-    const [dataSource, setDataSource] = useState<{key: string; value: string}[]>([])
+    const [dataSource, setDataSource] = useState<{key: string; value: string; params?: YakParamProps[]}[]>([])
     useEffect(() => {
         getData()
     }, [])
@@ -586,7 +587,8 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
                     .map((script) => {
                         return {
                             key: script.ScriptName,
-                            value: script.ScriptName
+                            value: script.ScriptName,
+                            params: script.Params
                         }
                     })
 
@@ -620,7 +622,7 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
                     <div
                         className={styles["ai-plugin-item"]}
                         key={item.key}
-                        onClick={() => toOpenAiChat && toOpenAiChat(item.key)}
+                        onClick={() => toOpenAiChat && toOpenAiChat(item.key, item.params)}
                     >
                         <div className={styles["title"]}>{item.value}</div>
                     </div>
@@ -924,7 +926,7 @@ export interface HTTPFuzzerRangeEditorMenuProps {
     replace?: (v: string) => void
     hTTPFuzzerClickEditorMenuProps?: HTTPFuzzerClickEditorMenuProps
     fizzRangeTimeoutId?: any
-    toOpenAiChat?: (v: string) => void
+    toOpenAiChat?: AIPluginComponentProps['toOpenAiChat']
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
     const {

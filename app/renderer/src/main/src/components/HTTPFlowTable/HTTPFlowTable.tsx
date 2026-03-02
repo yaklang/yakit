@@ -140,11 +140,13 @@ import {
 } from "./HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {SystemInfo} from "@/constants/hardware"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
     key: string
     label: string
+    params: YakParamProps[]
     isAiPlugin: boolean
 }
 
@@ -2846,6 +2848,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         return {
                             key: script.ScriptName,
                             label: script.ScriptName,
+                            params: script.Params,
                             isAiPlugin
                         }
                     })
@@ -2876,6 +2879,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         return {
                             key: script.ScriptName,
                             label: script.ScriptName,
+                            params: script.Params,
                             isAiPlugin
                         }
                     })
@@ -3489,6 +3493,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     JSON.stringify({
                                                         text: `${rowData.Id}`,
                                                         scriptName: menuItemName,
+                                                        params: itemIn.params,
                                                         isAiPlugin: itemIn?.isAiPlugin
                                                     })
                                                 )
@@ -3819,6 +3824,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         JSON.stringify({
                                             text: selectedRowKeys.join(","),
                                             scriptName: menuItemName,
+                                            params: itemIn.params,
                                             isAiPlugin: itemIn?.isAiPlugin
                                         })
                                     )
