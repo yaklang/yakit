@@ -189,9 +189,11 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
     }, [terminalIds, refreshList])
 
     useUpdateEffect(() => {
-        if (isShowDetails && showItem && showItem === "terminal" && isReloadTerminal) {
-            setReloadTerminal(false)
-            initTerminal()
+        if (isShowDetails && isReloadTerminal) {
+            if (showItem === undefined || (showItem && showItem === "terminal")) {
+                setReloadTerminal(false)
+                initTerminal()
+            }
         }
     }, [isShowDetails, showItem, terminalRunnerId])
 
@@ -284,7 +286,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
 
         // 启动
         ipcRenderer
-            .invoke("runner-terminal", {
+            .invoke(`runner-terminal-${type}`, {
                 id: runnnerId,
                 path: folderPathRef.current,
                 ...terminalSizeRef.current

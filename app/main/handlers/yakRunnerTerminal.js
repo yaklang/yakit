@@ -45,7 +45,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("runner-terminal-clear", async (e) => {
         clearStreamRunner()
     })
-    ipcMain.handle("runner-terminal", async (e, params) => {
+
+    ipcMain.handle("runner-terminal-yakRunner", async (e, params) => {
         const {id, path, row, col} = params
         if (getStreamByRunner(id)) {
             throw Error("listened terminal")
@@ -54,9 +55,8 @@ module.exports = (win, getClient) => {
         // 如果有问题，重置
         stream.on("error", (e) => {
             removeStreamRunner(id)
-            if(win){
+            if (win) {
                 win.webContents.send("client-listening-terminal-error-yakRunner", {id, path})
-                win.webContents.send("client-listening-terminal-error-aiAgent", {id, path})
             }
         })
 
@@ -65,7 +65,6 @@ module.exports = (win, getClient) => {
             if (data.control) {
                 if (win && data.waiting) {
                     win.webContents.send(`client-listening-terminal-success-yakRunner`, {id, path, result: data})
-                    win.webContents.send(`client-listening-terminal-success-aiAgent`, {id, path, result: data})
                 }
                 if (win && data.closed) {
                     removeStreamRunner(id)
@@ -75,13 +74,51 @@ module.exports = (win, getClient) => {
 
             if (win) {
                 win.webContents.send(`client-listening-terminal-data-yakRunner`, {id, path, result: data})
-                win.webContents.send(`client-listening-terminal-data-aiAgent`, {id, path, result: data})
             }
         })
         stream.on("end", () => {
             removeStreamRunner(id)
             if (win) {
                 win.webContents.send("client-listening-terminal-end-yakRunner", {id, path})
+            }
+        })
+        stream.write({path, row, col})
+        streams[id] = stream
+    })
+
+    ipcMain.handle("runner-terminal-aiAgent", async (e, params) => {
+        const {id, path, row, col} = params
+        if (getStreamByRunner(id)) {
+            throw Error("listened terminal")
+        }
+        const stream = getClient().YaklangTerminal()
+        // 如果有问题，重置
+        stream.on("error", (e) => {
+            removeStreamRunner(id)
+            if (win) {
+                win.webContents.send("client-listening-terminal-error-aiAgent", {id, path})
+            }
+        })
+
+        // 发送回数据
+        stream.on("data", (data) => {
+            if (data.control) {
+                if (win && data.waiting) {
+                    win.webContents.send(`client-listening-terminal-success-aiAgent`, {id, path, result: data})
+                }
+                if (win && data.closed) {
+                    removeStreamRunner(id)
+                }
+                return
+            }
+
+            if (win) {
+                win.webContents.send(`client-listening-terminal-data-aiAgent`, {id, path, result: data})
+            }
+        })
+        stream.on("end", () => {
+            removeStreamRunner(id)
+            if (win) {
                 win.webContents.send("client-listening-terminal-end-aiAgent", {id, path})
             }
         })
