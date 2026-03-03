@@ -796,8 +796,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         setExpandedKeys([`${pageInfo.Path}${Variable}`])
                     }
                 }
-                // 如若已输入代码审计框
-                if (auditRule && (params?.Query || []).length > 0) {
+                // 仅当本次提交了新规则时，才清空历史 result_id
+                if (textArea && (params?.Query || []).length > 0) {
                     params.Query = []
                 }
                 if (Query) {
