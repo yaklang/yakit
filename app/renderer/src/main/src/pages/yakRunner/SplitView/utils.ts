@@ -8,6 +8,8 @@ interface GenerateKnownSplitSizeParams {
     length: number
     /** 所有屏的宽度和是否比容器的宽度多 */
     isOver: boolean
+    /** 默认尺寸配置 */
+    defaultSizes?: (number | undefined)[]
 }
 /**
  * @name 生成分屏的每个屏尺寸(横向|纵向)
@@ -19,10 +21,72 @@ export const generateKnownSplitSize: (params: GenerateKnownSplitSizeParams) => S
     wrapperLong,
     minLong,
     length,
-    isOver
+    isOver,
+    defaultSizes
 }) => {
     const defaultSize: SplitViewPositionProp = {width: 0, height: 0, left: 0, top: 0}
     const sizes: SplitViewPositionProp[] = []
+
+    // 如果有默认尺寸配置，优先使用
+    if (defaultSizes && defaultSizes.length === length && !isOver) {
+        // 分离固定尺寸和自适应尺寸
+        const fixedSizes: number[] = []
+        const autoIndexes: number[] = []
+        
+        defaultSizes.forEach((size, index) => {
+            if (size === undefined) {
+                autoIndexes.push(index)
+            } else {
+                fixedSizes.push(size)
+            }
+        })
+        
+        let totalFixedSize = fixedSizes.reduce((sum, size) => sum + size, 0)
+        let totalSeparatorWidth = (length - 1) * 1 // 分隔符总宽度
+        
+        // 检查固定尺寸是否合理
+        let remainingSpace = wrapperLong - totalFixedSize - totalSeparatorWidth
+        if (remainingSpace > 0 && autoIndexes.length > 0) {
+            // 自适应区域平分剩余空间
+            const autoSize = remainingSpace / autoIndexes.length
+            
+            let currentPosition = 0
+            for (let i = 0; i < length; i++) {
+                let size: number
+                if (defaultSizes[i] === undefined) {
+                    size = Math.max(autoSize, minLong)
+                } else {
+                    size = Math.max(defaultSizes[i]!, minLong)
+                }
+                
+                if (isVertical) {
+                    sizes.push({...defaultSize, height: size, top: currentPosition})
+                } else {
+                    sizes.push({...defaultSize, width: size, left: currentPosition})
+                }
+                
+                currentPosition += size + (i < length - 1 ? 1 : 0)
+            }
+            return cloneDeep(sizes)
+        } else if (autoIndexes.length === 0) {
+            // 没有自适应区域，按比例缩放固定尺寸
+            const scaleFactor = totalFixedSize > 0 ? (wrapperLong - totalSeparatorWidth) / totalFixedSize : 1
+            
+            let currentPosition = 0
+            for (let i = 0; i < length; i++) {
+                const size = Math.max(defaultSizes[i]! * scaleFactor, minLong)
+                
+                if (isVertical) {
+                    sizes.push({...defaultSize, height: size, top: currentPosition})
+                } else {
+                    sizes.push({...defaultSize, width: size, left: currentPosition})
+                }
+                
+                currentPosition += size + (i < length - 1 ? 1 : 0)
+            }
+            return cloneDeep(sizes)
+        }
+    }
 
     if (length === 2) {
         const init = wrapperLong - 1

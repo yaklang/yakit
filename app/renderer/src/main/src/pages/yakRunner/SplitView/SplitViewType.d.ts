@@ -10,6 +10,9 @@ export interface SplitViewProp {
     minHeight?: number
     /** 是否隐藏最后一块 */
     isLastHidden?: boolean
+    /** 每个分屏的默认尺寸配置（横向时为宽度，纵向时为高度）
+     * undefined 表示该分屏自适应剩余空间 */
+    defaultSizes?: (number | undefined)[]
 }
 
 export interface SplitViewPositionProp {
