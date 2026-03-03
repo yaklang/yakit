@@ -615,7 +615,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                                 className={classNames(
                                                                     styles["knowledge-base-info-card"]
                                                                 )}
-                                                                key={items.hash}
+                                                                key={items.hash + items.version}
                                                             >
                                                                 <div className={styles["content"]}>
                                                                     <div className={classNames([styles["header"]])}>
