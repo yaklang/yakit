@@ -161,11 +161,12 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
 
 interface AuditResultBoxProps {
     nodeId?: string
-    graphLine?: string[][]
+    pathItems?: AuditPathItem[]
     message: string
     activeKey?: string | string[]
     setActiveKey: (v: string | string[]) => void
     auditRightParams: AuditEmiterYakUrlProps
+    getGraphInfoByNodeId: (nodeId: string) => GraphInfoProps | undefined
 }
 
 interface InitDataProps {
@@ -174,8 +175,14 @@ interface InitDataProps {
     nodeId?: string
 }
 
+interface AuditPathItem {
+    title: string
+    nodeIDs: string[]
+    traceId?: string
+}
+
 export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
-    const {nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams} = props
+    const {nodeId, pathItems, message, activeKey, setActiveKey, auditRightParams, getGraphInfoByNodeId} = props
     const [resultKey, setResultKey] = useState<string | string[]>()
 
     const onExpendRightPathFun = useMemoizedFn((value: string) => {
@@ -204,7 +211,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     const getChildren = useMemoizedFn((data: string[]) => {
         const children = data
             .map((itemIn) => {
-                const detail = getMapGraphInfoDetail(itemIn)
+                const detail = getGraphInfoByNodeId(itemIn)
                 if (detail) {
                     return {
                         ...detail
@@ -220,11 +227,11 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     const initData: InitDataProps[] = useMemo(() => {
         setResultKey(undefined)
         let newData: InitDataProps[] = []
-        if (graphLine) {
+        if (pathItems) {
             clearMapResultDetail()
-            newData = graphLine.map((item, index) => {
-                let title = `路径${index + 1}`
-                let children = getChildren(item)
+            newData = pathItems.map((item, index) => {
+                let title = item.title || `路径${index + 1}`
+                let children = getChildren(item.nodeIDs)
                 // 将第一项默认值给入
                 if (index === 0 && children.length > 0) {
                     firstSource.current = {
@@ -242,7 +249,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
         }
 
         return newData
-    }, [graphLine])
+    }, [pathItems])
 
     useUpdateEffect(() => {
         if (!firstSource.current) return
@@ -636,37 +643,111 @@ interface RightSideBarProps {
 
 export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     const {auditRightParams, isShowAuditDetail, setShowAuditDetail} = props
-    const [graph, setGraph] = useState<string>()
-    const [graphLine, setGraphLine] = useState<string[][]>()
+    const [rawGraph, setRawGraph] = useState<string>()
+    const [pathItems, setPathItems] = useState<AuditPathItem[]>()
+    const [selectedPathTitle, setSelectedPathTitle] = useState<string>()
+    const [traceGraph, setTraceGraph] = useState<string>()
+    const [traceGraphLoading, setTraceGraphLoading] = useState<boolean>(false)
     const [message, setMessage] = useState<string>("")
     const [nodeId, setNodeId] = useState<string>()
     const [refresh, setRefresh] = useState<boolean>(false)
     const [activeKey, setActiveKey] = useState<string | string[]>()
     const [loading, setLoading] = useState<boolean>(false)
+    const instanceGraphInfoMapRef = useRef<Map<string, GraphInfoProps>>(new Map())
+    const traceGraphInfoCacheRef = useRef<Map<string, GraphInfoProps[]>>(new Map())
+    const traceGraphCacheRef = useRef<Map<string, string>>(new Map())
+    const activeTraceRef = useRef<string>()
+
+    const getGraphInfoByNodeId = useMemoizedFn((id: string) => {
+        return instanceGraphInfoMapRef.current.get(id)
+    })
+
+    const applyGraphInfoList = useMemoizedFn((list?: GraphInfoProps[]) => {
+        clearMapGraphInfoDetail()
+        if (!list || list.length === 0) return
+        list.forEach((item) => {
+            setMapGraphInfoDetail(item.node_id, item)
+        })
+    })
+
+    const parseTraceIDs = useMemoizedFn((raw?: string): string[] | undefined => {
+        if (!raw) return undefined
+        try {
+            const parsed = JSONParseLog(raw, {page: "RightAuditDetail", fun: "graph_trace_ids"})
+            if (Array.isArray(parsed)) {
+                return parsed.map((item) => String(item)).filter((item) => item)
+            }
+        } catch (error) {}
+        if (typeof raw === "string") {
+            const parts = raw
+                .split(",")
+                .map((item) => item.trim())
+                .filter((item) => item)
+            return parts.length > 0 ? parts : undefined
+        }
+        return undefined
+    })
+
+    const withTraceQuery = useMemoizedFn((query: {Key: string; Value: any}[] | undefined, traceId: string) => {
+        const nextQuery = [...(query || [])]
+        const idx = nextQuery.findIndex((item) => item.Key === "trace_id")
+        if (idx >= 0) {
+            nextQuery[idx] = {Key: "trace_id", Value: traceId}
+        } else {
+            nextQuery.push({Key: "trace_id", Value: traceId})
+        }
+        return nextQuery
+    })
     useEffect(() => {
         if (isShowAuditDetail && auditRightParams) {
             initData(auditRightParams)
         }
     }, [isShowAuditDetail, auditRightParams])
 
+    useUpdateEffect(() => {
+        if (!activeKey) {
+            setSelectedPathTitle(undefined)
+            return
+        }
+        if (Array.isArray(activeKey)) {
+            setSelectedPathTitle(activeKey[0])
+        } else {
+            setSelectedPathTitle(activeKey)
+        }
+    }, [activeKey])
+
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
         try {
             setLoading(true)
             clearMapGraphInfoDetail()
+            instanceGraphInfoMapRef.current.clear()
+            traceGraphCacheRef.current.clear()
+            traceGraphInfoCacheRef.current.clear()
+            activeTraceRef.current = undefined
+            setRawGraph(undefined)
+            setTraceGraph(undefined)
+            setPathItems(undefined)
+            setSelectedPathTitle(undefined)
+            setMessage("")
+            setNodeId(undefined)
             const {Body, ...auditYakUrl} = params
             const body = Body ? StringToUint8Array(Body) : undefined
             const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
             if (result && result.Resources.length > 0) {
+                const extraMap = new Map<string, string>()
                 result.Resources[0].Extra.forEach((item) => {
+                    extraMap.set(item.Key, item.Value)
                     if (item.Key === "graph") {
-                        setGraph(item.Value)
+                        setRawGraph(item.Value)
                     }
                     if (item.Key === "graph_info") {
                         try {
                             let graph_info: GraphInfoProps[] = JSONParseLog(item.Value, {page: "RightAuditDetail", fun: "graph_info"})
+                            instanceGraphInfoMapRef.current.clear()
                             graph_info.forEach((item) => {
-                                setMapGraphInfoDetail(item.node_id, item)
+                                instanceGraphInfoMapRef.current.set(item.node_id, item)
                             })
+                            applyGraphInfoList(graph_info)
                         } catch (error) {}
                     }
                     if (item.Key === "message") {
@@ -678,17 +759,28 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     if (item.Key === "graph_line") {
                         try {
                             let graph_info: string[][] = JSONParseLog(item.Value, {page: "RightAuditDetail", fun: "graph_line"})
+                            const traceIDs = parseTraceIDs(
+                                extraMap.get("graph_trace_ids") || extraMap.get("trace_ids") || extraMap.get("trace_id_list")
+                            )
+                            const nextPathItems: AuditPathItem[] = graph_info.map((item, index) => ({
+                                title: `路径${index + 1}`,
+                                nodeIDs: item,
+                                traceId: traceIDs?.[index]
+                            }))
 
                             // 当数量小于等于10条时默认第一级展开
-                            if (graph_info.length > 0 && graph_info.length <= 10) {
-                                const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
+                            if (nextPathItems.length > 0 && nextPathItems.length <= 10) {
+                                const expendKey: string[] = nextPathItems.map((item) => item.title)
                                 setActiveKey(expendKey)
                             } else {
                                 setActiveKey(undefined)
                             }
-                            setGraphLine(graph_info)
+                            setPathItems(nextPathItems)
+                            if (nextPathItems.length > 0) {
+                                setSelectedPathTitle(nextPathItems[0].title)
+                            }
                         } catch (error) {
-                            setGraphLine(undefined)
+                            setPathItems(undefined)
                             setActiveKey(undefined)
                         }
                     }
@@ -701,8 +793,100 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
         }
     })
 
+    const selectedPathItem = useMemo(() => {
+        if (!pathItems || pathItems.length === 0) return undefined
+        if (selectedPathTitle) {
+            const hit = pathItems.find((item) => item.title === selectedPathTitle)
+            if (hit) return hit
+        }
+        return pathItems[0]
+    }, [pathItems, selectedPathTitle])
+
+    const applyInstanceGraphInfo = useMemoizedFn(() => {
+        const list = Array.from(instanceGraphInfoMapRef.current.values())
+        applyGraphInfoList(list)
+    })
+
+    const fetchTraceGraph = useMemoizedFn(async (traceId: string) => {
+        if (!auditRightParams || !traceId) return
+        if (traceGraphCacheRef.current.has(traceId)) {
+            setTraceGraph(traceGraphCacheRef.current.get(traceId))
+            const cachedInfo = traceGraphInfoCacheRef.current.get(traceId)
+            if (cachedInfo) applyGraphInfoList(cachedInfo)
+            return
+        }
+        try {
+            setTraceGraphLoading(true)
+            activeTraceRef.current = traceId
+            const {Body, ...auditYakUrl} = auditRightParams
+            const body = Body ? StringToUint8Array(Body) : undefined
+            const result = await loadAuditFromYakURLRaw(
+                {
+                    ...auditYakUrl,
+                    Query: withTraceQuery(auditYakUrl.Query, traceId)
+                },
+                body
+            )
+            if (result && result.Resources.length > 0) {
+                let nextGraph: string | undefined
+                let nextGraphInfo: GraphInfoProps[] | undefined
+                result.Resources[0].Extra.forEach((item) => {
+                    if (item.Key === "graph") {
+                        nextGraph = item.Value
+                    }
+                    if (item.Key === "graph_info") {
+                        try {
+                            nextGraphInfo = JSONParseLog(item.Value, {page: "RightAuditDetail", fun: "trace_graph_info"})
+                        } catch (error) {}
+                    }
+                })
+                if (nextGraph) {
+                    traceGraphCacheRef.current.set(traceId, nextGraph)
+                }
+                if (nextGraphInfo && nextGraphInfo.length > 0) {
+                    traceGraphInfoCacheRef.current.set(traceId, nextGraphInfo)
+                }
+                if (activeTraceRef.current === traceId) {
+                    setTraceGraph(nextGraph)
+                    if (nextGraphInfo && nextGraphInfo.length > 0) {
+                        applyGraphInfoList(nextGraphInfo)
+                    }
+                }
+            }
+        } catch (error) {
+        } finally {
+            setTraceGraphLoading(false)
+        }
+    })
+
+    useUpdateEffect(() => {
+        if (!selectedPathItem?.traceId) {
+            activeTraceRef.current = undefined
+            setTraceGraph(undefined)
+            applyInstanceGraphInfo()
+            return
+        }
+        const traceId = selectedPathItem.traceId
+        const cachedGraph = traceGraphCacheRef.current.get(traceId)
+        if (cachedGraph) {
+            setTraceGraph(cachedGraph)
+            const cachedInfo = traceGraphInfoCacheRef.current.get(traceId)
+            if (cachedInfo) applyGraphInfoList(cachedInfo)
+            return
+        }
+        setTraceGraph(undefined)
+        fetchTraceGraph(traceId)
+    }, [selectedPathItem?.traceId])
+
+    const currentGraph = useMemo(() => {
+        if (selectedPathItem?.traceId && traceGraph) {
+            return traceGraph
+        }
+        return rawGraph
+    }, [selectedPathItem?.traceId, traceGraph, rawGraph])
+
     return (
-        <YakitSpin spinning={loading}>
+        <YakitSpin spinning={loading || traceGraphLoading}>
             <div className={classNames(styles["right-audit-detail"])}>
                 <div className={styles["header"]}>
                     <div className={styles["relative-box"]}>
@@ -713,7 +897,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                                     <YakitButton
                                         type='text2'
                                         icon={<OutlineCollectionIcon />}
-                                        disabled={(graphLine || []).length === 0}
+                                        disabled={(pathItems || []).length === 0}
                                         onClick={() => {
                                             setActiveKey(undefined)
                                         }}
@@ -746,15 +930,16 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                                     <AuditResultBox
                                         activeKey={activeKey}
                                         setActiveKey={setActiveKey}
-                                        graphLine={graphLine}
+                                        pathItems={pathItems}
                                         message={message}
                                         nodeId={nodeId}
                                         auditRightParams={auditRightParams}
+                                        getGraphInfoByNodeId={getGraphInfoByNodeId}
                                     />
                                 )}
                             </>
                         }
-                        secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
+                        secondNode={<FlowChartBox graph={currentGraph} refresh={refresh} node_id={nodeId} />}
                     />
                 </div>
             </div>
