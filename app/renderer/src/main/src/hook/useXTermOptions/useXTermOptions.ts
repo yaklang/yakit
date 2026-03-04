@@ -2,10 +2,8 @@ import {Theme, useTheme} from "../useTheme"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {getAllYakitColorVars} from "@/utils/monacoSpec/theme"
 import {defaultTerminalOptions} from "@/components/yakitUI/YakitXterm/YakitXterm"
-let currentAppliedTheme: Theme | null = null
-const applyYakitMonacoTheme = (themeGlobal: Theme, terminal, fun) => {
-    if (currentAppliedTheme === themeGlobal) return
-    currentAppliedTheme = themeGlobal
+
+const applyYakitXtermTheme = (terminal, fun) => {
     requestAnimationFrame(() => {
         fun(terminal, getXtermTheme())
     })
@@ -85,9 +83,9 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
         const terminal = getTerminal()
         if (terminal) {
             if (terminal.options) {
-                applyYakitMonacoTheme(themeGlobal, terminal, onOption)
+                applyYakitXtermTheme(terminal, onOption)
             } else if (terminal.setOption) {
-                applyYakitMonacoTheme(themeGlobal, terminal, onSetOption)
+                applyYakitXtermTheme(terminal, onSetOption)
             }
         }
     })
