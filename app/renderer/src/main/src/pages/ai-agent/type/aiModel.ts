@@ -1,4 +1,5 @@
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {AIGlobalConfig} from "../aiModelList/utils"
 
 export interface GeneralResponse {
     Ok: boolean
@@ -94,8 +95,15 @@ export interface GetAIModelListResponse {
     localModels: StartedLocalModelInfo[]
 }
 
+export interface GetAIModelAvailableTotalResponse {
+    onlineModelsTotal: number
+    localModelsTotal: number
+    onlineModels: AIGlobalConfig
+    localModels: StartedLocalModelInfo[]
+}
+
 export interface IsForcedSetAIModalRequest {
-    noDataCall: (v: GetAIModelListResponse) => void
-    haveDataCall: (v: GetAIModelListResponse) => void
+    noDataCall?: (v: GetAIModelAvailableTotalResponse) => void
+    haveDataCall?: (v: GetAIModelAvailableTotalResponse) => void
     mountContainer?: HTMLElement | null
 }

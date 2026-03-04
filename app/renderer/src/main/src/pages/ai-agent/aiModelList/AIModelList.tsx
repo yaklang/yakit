@@ -10,22 +10,27 @@ import {
     AIOnlineModelListItemProps,
     AIOnlineModelListProps,
     AIOnlineModelListRefProps,
+    AIOnlineModelProps,
+    AIOnlineModeSettingFormProps,
     OutlineAtomIconByStatusProps
 } from "./AIModelListType"
 import styles from "./AIModelList.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {
+    AIGlobalConfig,
+    AIModelConfig,
     grpcCancelStartLocalModel,
     grpcClearAllModels,
     grpcDeleteLocalModel,
+    grpcGetAIGlobalConfig,
     grpcGetSupportedLocalModels,
     grpcIsLlamaServerReady,
     grpcIsLocalModelReady,
-    grpcStopLocalModel,
-    reorderApplicationConfig
+    grpcSetAIGlobalConfig,
+    grpcStopLocalModel
 } from "./utils"
 import {resetForcedAIModalFlag} from "./utils"
 import {LocalModelConfig} from "../type/aiModel"
@@ -50,7 +55,8 @@ import {
     OutlineRefreshIcon,
     OutlineTrashIcon,
     OutlineSpeechToTextIcon,
-    OutlineCheckIcon
+    OutlineCheckIcon,
+    OutlineCogIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -60,16 +66,12 @@ import {
 } from "./installLlamaServerModelPrompt/InstallLlamaServerModelPrompt"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {AILocalModelTypeEnum, AIOnlineModelIconMap} from "../defaultConstant"
+import {AILocalModelTypeEnum, AIModelTypeEnum, AIOnlineModelIconMap} from "../defaultConstant"
 import {randomString} from "@/utils/randomUtil"
 import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AddAIModel} from "./addAIModel/AddAIModel"
-import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
-import {handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
-import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {DragDropContext, Droppable, Draggable} from "@hello-pangea/dnd"
-import {SolidDragsortIcon} from "@/assets/icon/solid"
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import classNames from "classnames"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -77,27 +79,17 @@ import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import useAIAgentStore from "../useContext/useStore"
-import useAIAgentDispatcher from "../useContext/useDispatcher"
+import {AIModelForm, getModelTypeByFileName, isEqualAIModel} from "./aiModelForm/AIModelForm"
+import {AIModelFormProps} from "./aiModelForm/AIModelFormType"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 export const setAIModal = (params: {
-    config: GlobalNetworkConfig
-    item?: ThirdPartyApplicationConfig
+    modelType?: AIModelFormProps["aiModelType"]
+    item?: AIModelFormProps["item"]
     onSuccess: () => void
     mountContainer
 }) => {
-    const {config, item, onSuccess, mountContainer} = params
-    let formValues
-    if (!!item) {
-        const extraParams: Record<string, any> = {}
-        item.ExtraParams?.forEach((item) => {
-            extraParams[item.Key] = item.Value
-        })
-        formValues = {
-            Type: item.Type,
-            ...extraParams
-        }
-    }
+    const {modelType, item, onSuccess, mountContainer} = params
     const isAdd = `${!item}`
     let m = showYakitModal({
         title: "添加第三方应用",
@@ -106,57 +98,21 @@ export const setAIModal = (params: {
         closable: true,
         maskClosable: false,
         keyboard: false,
-        cancelButtonProps: {style: {display: "none"}},
         getContainer: mountContainer,
         onCancel: () => {
-            // if (config?.AppConfigs?.length === 0) {
-            //     emiter.emit("onRefreshAvailableAIModelList", "false")
-            // }
             m.destroy()
         },
         content: (
             <>
-                <NewThirdPartyApplicationConfig
-                    isOnlyShowAiType={true}
-                    formValues={formValues}
-                    disabledType={!!formValues}
-                    footerProps={{hiddenCancel: true}}
-                    onAdd={(data) => {
-                        // 新增，有影响ai优化级
-                        const params = handleAIConfig(
-                            {
-                                AppConfigs: config.AppConfigs,
-                                AiApiPriority: config.AiApiPriority
-                            },
-                            data
-                        )
-                        if (!params) {
-                            yakitNotify("error", "setAIModal 参数错误")
-                            return
-                        }
-                        apiSetGlobalNetworkConfig({...config, ...params}).then(() => {
-                            resetForcedAIModalFlag()
-                            onSuccess()
-                            emiter.emit("onRefreshAvailableAIModelList", isAdd)
-                            emiter.emit(
-                                "aiModelSelectChange",
-                                JSON.stringify({
-                                    type: "online",
-                                    params: {
-                                        setting: true,
-                                        AIService: data.Type,
-                                        AIModelName: data?.ExtraParams?.find((e) => e.Key === "model")?.Value || ""
-                                    }
-                                })
-                            )
-                            m.destroy()
-                        })
-                    }}
-                    onCancel={() => {
-                        // if (config?.AppConfigs?.length === 0) {
-                        //     emiter.emit("onRefreshAvailableAIModelList", "false")
-                        // }
+                <AIModelForm
+                    item={item}
+                    aiModelType={modelType || AIModelTypeEnum.TierIntelligent}
+                    onClose={() => {
                         m.destroy()
+                    }}
+                    onSuccess={() => {
+                        resetForcedAIModalFlag()
+                        onSuccess()
                     }}
                 />
             </>
@@ -264,14 +220,11 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         })
     })
     const onAddOnline = useMemoizedFn(() => {
-        apiGetGlobalNetworkConfig().then((obj) => {
-            setAIModal({
-                config: obj,
-                mountContainer,
-                onSuccess: () => {
-                    onlineRef.current?.onRefresh()
-                }
-            })
+        setAIModal({
+            mountContainer,
+            onSuccess: () => {
+                onlineRef.current?.onRefresh()
+            }
         })
     })
     const onClear = useMemoizedFn(() => {
@@ -313,22 +266,33 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                     <div className={styles["ai-model-list-total"]}>{total}</div>
                 </div>
                 <div className={styles["ai-model-list-header-right"]}>
+                    {modelType === "online" && (
+                        <>
+                            <YakitPopover content={<AIOnlineModeSettingForm />}>
+                                <YakitButton type='text2' icon={<OutlineCogIcon />} />
+                            </YakitPopover>
+                        </>
+                    )}
                     <Tooltip title='添加'>
                         <YakitButton type='text2' icon={<OutlinePlusIcon />} onClick={onAdd} />
                     </Tooltip>
                     <Tooltip title='刷新'>
                         <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
                     </Tooltip>
-                    <Divider type='vertical' />
-                    <YakitPopconfirm
-                        placement='right'
-                        title={`是否确认清空所有${modelType === "local" ? "本地" : "线上"}模型配置`}
-                        onConfirm={onClear}
-                    >
-                        <YakitButton type='text' danger>
-                            清空
-                        </YakitButton>
-                    </YakitPopconfirm>
+                    {modelType === "local" && (
+                        <>
+                            <Divider type='vertical' />
+                            <YakitPopconfirm
+                                placement='right'
+                                title={`是否确认清空所有${modelType === "local" ? "本地" : "线上"}模型配置`}
+                                onConfirm={onClear}
+                            >
+                                <YakitButton type='text' danger>
+                                    清空
+                                </YakitButton>
+                            </YakitPopconfirm>
+                        </>
+                    )}
                 </div>
             </div>
             {modelType === "online" ? (
@@ -355,15 +319,15 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
 export default AIModelList
 
+const AIOnlineModeSettingForm: React.FC<AIOnlineModeSettingFormProps> = React.memo((props) => {
+    return <div></div>
+})
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {setting} = useAIAgentStore()
-        const {setSetting} = useAIAgentDispatcher()
         const {setOnlineTotal, onAdd, mountContainer} = props
+
         const [spinning, setSpinning] = useState<boolean>(false)
-        const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
-        const noAiAppConfigRef = useRef<ThirdPartyApplicationConfig[]>([])
-        const configRef = useRef<GlobalNetworkConfig>()
+        const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>()
         const onlineListRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(onlineListRef)
         useImperativeHandle(
@@ -381,21 +345,14 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         }, [inViewport])
         const getList = useMemoizedFn(() => {
             setSpinning(true)
-            apiGetGlobalNetworkConfig()
+            grpcGetAIGlobalConfig()
                 .then((res) => {
-                    configRef.current = res
-                    const appConfigs: ThirdPartyApplicationConfig[] = []
-                    const noAiAppConfigs: ThirdPartyApplicationConfig[] = []
-                    res.AppConfigs.forEach((ele) => {
-                        if (res.AiApiPriority.includes(ele.Type)) {
-                            appConfigs.push(ele)
-                        } else {
-                            noAiAppConfigs.push(ele)
-                        }
-                    })
-                    noAiAppConfigRef.current = noAiAppConfigs
-                    setList(appConfigs || [])
-                    setOnlineTotal(appConfigs?.length || 0)
+                    setAIGlobalConfig(res)
+                    const total =
+                        (res.IntelligentModels?.length || 0) +
+                        (res.LightweightModels?.length || 0) +
+                        (res.VisionModels?.length || 0)
+                    setOnlineTotal(total)
                 })
                 .finally(() => {
                     setTimeout(() => {
@@ -403,119 +360,81 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                     }, 200)
                 })
         })
-        const getNewAppConfig = useMemoizedFn((list: ThirdPartyApplicationConfig[]) => {
-            return [...list, ...noAiAppConfigRef.current]
-        })
-        const onEdit = useMemoizedFn((item: ThirdPartyApplicationConfig) => {
-            if (!configRef.current) return
+        const onRemoveAll = useMemoizedFn(() => {})
+        const isHaveData = useCreation(() => {
+            return !!(
+                aiGlobalConfig?.IntelligentModels?.length ||
+                aiGlobalConfig?.LightweightModels?.length ||
+                aiGlobalConfig?.VisionModels?.length
+            )
+        }, [
+            aiGlobalConfig?.IntelligentModels?.length,
+            aiGlobalConfig?.LightweightModels?.length,
+            aiGlobalConfig?.VisionModels?.length
+        ])
+
+        const onEdit = useMemoizedFn((item: AIModelConfig, fileName: string) => {
+            if (!aiGlobalConfig) return
+            const currentItem = aiGlobalConfig[fileName].find((i) => i.ProviderId === item.ProviderId)
+            const modelType = getModelTypeByFileName(fileName)
+            if (!currentItem || !modelType) {
+                yakitNotify(
+                    "error",
+                    `配置错误，无法编辑:modelType:${modelType};fileName:${fileName};currentItem:${JSON.stringify(
+                        currentItem
+                    )}`
+                )
+                return
+            }
             setAIModal({
-                config: configRef.current,
+                item: currentItem,
+                modelType,
                 mountContainer,
-                item,
                 onSuccess: () => {
                     getList()
                 }
             })
         })
-        const onRemove = useMemoizedFn((item: ThirdPartyApplicationConfig) => {
-            if (!configRef.current) return
-            const newList = list.filter((i) => i.Type !== item.Type)
-            setList(newList)
-            const appConfigs = getNewAppConfig(newList)
-            const isRefreshValue = setting.AIService === item.Type || appConfigs.length === 0
-            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: appConfigs}).then(() => {
+        const onRemove = useMemoizedFn((item: AIModelConfig, fileName: string) => {
+            if (!aiGlobalConfig) return
+            const newAIGlobalConfig = {...aiGlobalConfig}
+            const list = newAIGlobalConfig[fileName].filter((i) => !isEqualAIModel(i, item))
+            newAIGlobalConfig[fileName] = [...list]
+            grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
                 getList()
-                emiter.emit("onRefreshAvailableAIModelList", `${isRefreshValue}`)
             })
-        })
-        const onRemoveAll = useMemoizedFn(() => {
-            if (!configRef.current) return
-            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: getNewAppConfig([])}).then(() => {
-                getList()
-                emiter.emit("onRefreshAvailableAIModelList", "true")
-            })
-        })
-        /**
-         * @description: 拖拽结束后的计算
-         */
-        const onDragEnd = useMemoizedFn((result) => {
-            if (!configRef.current) return
-            if (!result.destination) {
-                return
-            }
-            if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
-                const newList: ThirdPartyApplicationConfig[] = reorderApplicationConfig(
-                    list,
-                    result.source.index,
-                    result.destination.index
-                )
-                setList(newList)
-                updateOrder(newList)
-            }
-        })
-        const updateOrder = useDebounceFn(
-            (newList: ThirdPartyApplicationConfig[]) => {
-                if (!configRef.current) return
-                const aiApiPriority = newList.map((ele) => ele.Type)
-                apiSetGlobalNetworkConfig({
-                    ...configRef.current,
-                    AppConfigs: getNewAppConfig(newList),
-                    AiApiPriority: aiApiPriority
-                })
-            },
-            {wait: 500}
-        ).run
-        const onSelectModel = useMemoizedFn((rowData: ThirdPartyApplicationConfig) => {
-            const aiModelName = rowData.ExtraParams?.find((ele) => ele.Key === "model")?.Value || ""
-            setSetting && setSetting((old) => ({...old, AIService: rowData.Type, AIModelName: aiModelName}))
-            emiter.emit(
-                "aiModelSelectChange",
-                JSON.stringify({
-                    type: "online",
-                    params: {
-                        AIService: rowData.Type,
-                        AIModelName: aiModelName
-                    }
-                })
-            )
         })
         return (
             <YakitSpin spinning={spinning}>
-                {list.length > 0 ? (
-                    <div ref={onlineListRef} className={styles["ai-online-model-list"]}>
-                        <DragDropContext onDragEnd={onDragEnd}>
-                            <Droppable droppableId='droppable1'>
-                                {(provided, snapshot) => (
-                                    <div {...provided.droppableProps} ref={provided.innerRef}>
-                                        {list.map((rowData, index) => (
-                                            <Draggable key={rowData.Type} draggableId={rowData.Type} index={index}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        style={provided.draggableProps.style}
-                                                        className={classNames(styles["ai-online-model-list-row"], {
-                                                            [styles["ai-online-model-list-row-isDragging"]]:
-                                                                snapshot.isDragging
-                                                        })}
-                                                        onClick={() => onSelectModel(rowData)}
-                                                    >
-                                                        <SolidDragsortIcon className={styles["drag-sort-icon"]} />
-                                                        <AIOnlineModelListItem
-                                                            item={rowData}
-                                                            onEdit={onEdit}
-                                                            onRemove={onRemove}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
+                {isHaveData ? (
+                    <div className={styles["ai-online-model-wrapper"]} ref={onlineListRef}>
+                        {!!aiGlobalConfig?.IntelligentModels.length && (
+                            <AIOnlineModel
+                                title={"高质模型"}
+                                subTitle={"用于执行复杂度高的任务,对话框中可切换该模型"}
+                                list={aiGlobalConfig?.IntelligentModels || []}
+                                onEdit={(item) => onEdit(item, "IntelligentModels")}
+                                onRemove={(item) => onRemove(item, "IntelligentModels")}
+                            />
+                        )}
+                        {!!aiGlobalConfig?.LightweightModels.length && (
+                            <AIOnlineModel
+                                title={"轻量模型"}
+                                subTitle={"用于执行简单任务和会话"}
+                                list={aiGlobalConfig?.LightweightModels || []}
+                                onEdit={(item) => onEdit(item, "LightweightModels")}
+                                onRemove={(item) => onRemove(item, "LightweightModels")}
+                            />
+                        )}
+                        {!!aiGlobalConfig?.VisionModels.length && (
+                            <AIOnlineModel
+                                title={"视觉模式"}
+                                subTitle={"用于识别图片等,生成知识库和任务执行都会用到"}
+                                list={aiGlobalConfig?.VisionModels || []}
+                                onEdit={(item) => onEdit(item, "VisionModels")}
+                                onRemove={(item) => onRemove(item, "VisionModels")}
+                            />
+                        )}
                     </div>
                 ) : (
                     <div className={styles["ai-list-empty-wrapper"]}>
@@ -534,12 +453,30 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         )
     })
 )
+const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
+    const {title, subTitle, list, onEdit, onRemove} = props
+
+    return (
+        <div className={styles["ai-online-model"]}>
+            <div className={styles["ai-online-model-header"]}>
+                <div className={styles["ai-online-model-header-title"]}>{title}</div>
+                <div className={styles["ai-online-model-header-subtitle"]}>{subTitle}</div>
+            </div>
+            <div className={styles["ai-online-model-list"]}>
+                {list.map((item, index) => (
+                    <div key={index} className={classNames(styles["ai-online-model-list-row"])}>
+                        <AIOnlineModelListItem item={item} onEdit={onEdit} onRemove={onRemove} checked={index === 0} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+})
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
-    const {item, onEdit, onRemove} = props
-    const {setting} = useAIAgentStore()
-    const model = useCreation(() => {
-        return item.ExtraParams?.find((ele) => ele.Key === "model")?.Value
-    }, [item.ExtraParams])
+    const {item, checked, onEdit, onRemove} = props
+    const config: ThirdPartyApplicationConfig = useCreation(() => {
+        return item.Provider
+    }, [item.Provider])
     const onEditClick = useMemoizedFn((e) => {
         e.stopPropagation()
         onEdit(item)
@@ -551,18 +488,18 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     return (
         <div className={styles["ai-online-model-list-item"]}>
             <div className={styles["ai-online-model-list-item-header"]}>
-                {AIOnlineModelIconMap[item.Type]}
-                <div className={styles["ai-online-model-list-item-type"]}>{item.Type}</div>
+                {AIOnlineModelIconMap[config.Type]}
+                <div className={styles["ai-online-model-list-item-type"]}>{config.Type}</div>
 
                 <div className={styles["ai-online-model-list-item-model"]}>
                     <OutlineAtomIcon className={styles["atom-icon"]} />
-                    <span className={styles["ai-online-model-list-item-model-text"]}>{model}</span>
+                    <span className={styles["ai-online-model-list-item-model-text"]}>{item.ModelName}</span>
                 </div>
             </div>
             <div className={styles["ai-online-model-list-item-extra"]}>
                 <div className={styles["ai-online-model-list-item-extra-edit"]}>
                     <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
-                    <YakitPopconfirm title={`确定要删除模型 ${item.Type} 吗？`} onConfirm={onRemoveClick}>
+                    <YakitPopconfirm title={`确定要删除模型 ${config.Type} 吗？`} onConfirm={onRemoveClick}>
                         <YakitButton
                             type='text2'
                             icon={<OutlineTrashIcon />}
@@ -573,7 +510,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
                         />
                     </YakitPopconfirm>
                 </div>
-                {setting.AIService === item.Type && <OutlineCheckIcon className={styles["check-icon"]} />}
+                {checked && <OutlineCheckIcon className={styles["check-icon"]} />}
             </div>
         </div>
     )

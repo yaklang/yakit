@@ -34,45 +34,45 @@
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     line-height: 16px;
 }
+.ai-online-model-wrapper {
+    @extend %display-column;
+    gap: 8px;
+    padding: 8px;
+}
+.ai-online-model {
+    @extend %display-column;
+    gap: 4px;
+    &-header {
+        @extend %display-column;
+        gap: 4px;
+        padding: 0 4px;
+        &-title {
+            font-size: 14px;
+            line-height: 16px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        &-subtitle {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            font-size: 12px;
+            line-height: 16px;
+        }
+    }
+}
 .ai-online-model-list {
     &-row {
         @extend %display-flex-center;
         gap: 4px;
         padding: 10px 12px 10px 4px;
         height: 44px;
+        border-radius: 8px;
         &:hover {
             background-color: var(--Colors-Use-Neutral-Bg);
-            .drag-sort-icon {
-                opacity: 1;
-            }
             .ai-online-model-list-item-extra-edit {
                 display: flex;
             }
             .ai-online-model-list-item-model {
                 display: none;
             }
-        }
-        .drag-sort-icon {
-            width: 16px;
-            height: 16px;
-            svg {
-                width: 16px;
-                height: 16px;
-                color: var(--Colors-Use-Neutral-Disable);
-            }
-            opacity: 0;
-        }
-    }
-    &-row-isDragging {
-        background-color: var(--Colors-Use-Neutral-Bg);
-        .drag-sort-icon {
-            opacity: 1;
-        }
-        .ai-online-model-list-item-extra-edit {
-            display: flex;
-        }
-        .ai-online-model-list-item-model {
-            display: none;
         }
     }
     &-item {
@@ -141,6 +141,7 @@
         }
     }
 }
+
 .ai-local-model-list-wrapper {
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     .ai-local-model-list-title {
@@ -311,7 +312,7 @@
     color: var(--Colors-Use-Success-On-Primary);
 }
 
-.ai-local-model-icon-small{
+.ai-local-model-icon-small {
     width: 16px;
     height: 16px;
     svg {

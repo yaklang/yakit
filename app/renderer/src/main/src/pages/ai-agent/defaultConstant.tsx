@@ -43,6 +43,7 @@ import {
 import {MCPServerType} from "./type/aiMCP"
 import {DefaultMemoryList} from "../ai-re-act/hooks/defaultConstant"
 import {ColorsAIIcon} from "@/assets/icon/colors"
+import {AIGlobalConfig} from "./aiModelList/utils"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -319,4 +320,35 @@ export enum AttachedResourceKeyEnum {
     CONTEXT_PROVIDER_KEY_FILE_CONTENT = "file_content",
     CONTEXT_PROVIDER_KEY_NAME = "name",
     CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = "system_flag"
+}
+
+export enum AIModelPolicyEnum {
+    // PolicyAuto 自动策略：根据请求内容自动选择最合适的模型
+    PolicyAuto = "auto",
+    // PolicyPerformance 性能优先：优先使用高智能模型
+    PolicyPerformance = "performance",
+    // PolicyCost 成本优先：优先使用轻量级/低成本模型
+    PolicyCost = "cost",
+    // PolicyBalance 平衡策略：在响应速度、智能程度和成本之间取得平衡
+    PolicyBalance = "balance"
+}
+
+export enum AIModelTypeEnum {
+    /** 高质模型 */
+    TierIntelligent = "intelligent",
+    /** 轻量模型 */
+    TierLightweight = "lightweight",
+    /** 视觉模式 */
+    TierVision = "vision"
+}
+
+export const defaultAIGlobalConfig: AIGlobalConfig = {
+    Enabled: false,
+    RoutingPolicy: "",
+    DisableFallback: false,
+    DefaultModelId: "",
+    GlobalWeight: 0,
+    IntelligentModels: [],
+    LightweightModels: [],
+    VisionModels: []
 }
