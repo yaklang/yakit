@@ -156,6 +156,21 @@ module.exports = (win, getClient) => {
         return await asyncListAIProviders(params)
     })
 
+    const asyncQueryAIProvider = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAIProvider(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryAIProvider", async (e, params) => {
+        return await asyncQueryAIProvider(params)
+    })
+
     const asyncUpsertAIProvider = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UpsertAIProvider(params, (err, data) => {
@@ -185,6 +200,22 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteAIProvider", async (e, params) => {
         return await asyncDeleteAIProvider(params)
     })
+
+    const asyncGetAIThirdPartyAppConfigTemplate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAIThirdPartyAppConfigTemplate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAIThirdPartyAppConfigTemplate", async (e, params) => {
+        return await asyncGetAIThirdPartyAppConfigTemplate(params)
+    })
+    
 
     // 查询自定义代码片段
     const asyncQuerySnippets = (params) => {
