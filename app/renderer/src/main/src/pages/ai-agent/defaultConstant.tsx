@@ -333,6 +333,13 @@ export enum AIModelPolicyEnum {
     PolicyBalance = "balance"
 }
 
+export const AIModelPolicyOptions = [
+    {value: AIModelPolicyEnum.PolicyAuto, label: "自动选择"},
+    {value: AIModelPolicyEnum.PolicyPerformance, label: "性能优先"},
+    {value: AIModelPolicyEnum.PolicyCost, label: "成本优先"},
+    {value: AIModelPolicyEnum.PolicyBalance, label: "平衡策略"}
+]
+
 export enum AIModelTypeEnum {
     /** 高质模型 */
     TierIntelligent = "intelligent",

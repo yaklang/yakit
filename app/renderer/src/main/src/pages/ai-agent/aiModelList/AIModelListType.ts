@@ -1,6 +1,4 @@
-import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {LocalModelConfig} from "../type/aiModel"
-import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {type ModalProps} from "antd"
 import {ReactNode} from "react"
@@ -18,7 +16,7 @@ export interface AIOnlineModelListProps {
 }
 
 export interface AIOnlineModelListRefProps {
-    onRefresh: () => void
+    onRefresh: (isShowLoading?:boolean) => void
     onRemoveAll: () => void
 }
 
@@ -69,6 +67,6 @@ export interface AIOnlineModelProps {
     onEdit: (item: AIModelConfig) => void
 }
 
-export interface AIOnlineModeSettingFormProps {
-    
+export interface AIOnlineModeSettingProps {
+    onRefresh: () => void
 }

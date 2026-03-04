@@ -11,7 +11,7 @@ import {
     AIOnlineModelListProps,
     AIOnlineModelListRefProps,
     AIOnlineModelProps,
-    AIOnlineModeSettingFormProps,
+    AIOnlineModeSettingProps,
     OutlineAtomIconByStatusProps
 } from "./AIModelListType"
 import styles from "./AIModelList.module.scss"
@@ -34,7 +34,7 @@ import {
 } from "./utils"
 import {resetForcedAIModalFlag} from "./utils"
 import {LocalModelConfig} from "../type/aiModel"
-import {Divider, Tooltip} from "antd"
+import {Divider, Form, Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -66,7 +66,13 @@ import {
 } from "./installLlamaServerModelPrompt/InstallLlamaServerModelPrompt"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {AILocalModelTypeEnum, AIModelTypeEnum, AIOnlineModelIconMap} from "../defaultConstant"
+import {
+    AILocalModelTypeEnum,
+    AIModelPolicyEnum,
+    AIModelPolicyOptions,
+    AIModelTypeEnum,
+    AIOnlineModelIconMap
+} from "../defaultConstant"
 import {randomString} from "@/utils/randomUtil"
 import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -82,6 +88,7 @@ import {shallow} from "zustand/shallow"
 import {AIModelForm, getModelTypeByFileName, isEqualAIModel} from "./aiModelForm/AIModelForm"
 import {AIModelFormProps} from "./aiModelForm/AIModelFormType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 export const setAIModal = (params: {
     modelType?: AIModelFormProps["aiModelType"]
@@ -158,9 +165,9 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
     useEffect(() => {
         if (!inViewport) return
-        emiter.on("onRefreshAIModelList", onRefresh)
+        emiter.on("onRefreshAIModelList", onRefreshAIModelList)
         return () => {
-            emiter.off("onRefreshAIModelList", onRefresh)
+            emiter.off("onRefreshAIModelList", onRefreshAIModelList)
         }
     }, [inViewport])
 
@@ -180,10 +187,13 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
             return localTotal
         }
     }, [modelType, localTotal, onlineTotal])
-    const onRefresh = useMemoizedFn(() => {
+    const onRefreshAIModelList = useMemoizedFn(() => {
+        onRefresh()
+    })
+    const onRefresh = useMemoizedFn((isShowLoading?: boolean) => {
         switch (modelType) {
             case "online":
-                onlineRef.current?.onRefresh()
+                onlineRef.current?.onRefresh(isShowLoading)
                 break
             case "local":
                 localRef.current?.onRefresh()
@@ -266,18 +276,12 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                     <div className={styles["ai-model-list-total"]}>{total}</div>
                 </div>
                 <div className={styles["ai-model-list-header-right"]}>
-                    {modelType === "online" && (
-                        <>
-                            <YakitPopover content={<AIOnlineModeSettingForm />}>
-                                <YakitButton type='text2' icon={<OutlineCogIcon />} />
-                            </YakitPopover>
-                        </>
-                    )}
+                    {modelType === "online" && <AIOnlineModeSetting onRefresh={() => onRefresh(false)} />}
                     <Tooltip title='添加'>
                         <YakitButton type='text2' icon={<OutlinePlusIcon />} onClick={onAdd} />
                     </Tooltip>
                     <Tooltip title='刷新'>
-                        <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
+                        <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={() => onRefresh()} />
                     </Tooltip>
                     {modelType === "local" && (
                         <>
@@ -319,8 +323,85 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
 export default AIModelList
 
-const AIOnlineModeSettingForm: React.FC<AIOnlineModeSettingFormProps> = React.memo((props) => {
-    return <div></div>
+const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((props) => {
+    const {onRefresh} = props
+    const [visible, setVisible] = useState<boolean>(false)
+    const configRef = useRef<AIGlobalConfig>()
+    const [form] = Form.useForm()
+    const routingPolicy = Form.useWatch("RoutingPolicy", form)
+
+    const getList = useMemoizedFn(() => {
+        grpcGetAIGlobalConfig().then((res) => {
+            configRef.current = res
+            form.setFieldsValue({
+                RoutingPolicy: res.RoutingPolicy || AIModelPolicyEnum.PolicyAuto,
+                DisableFallback: res.DisableFallback
+            })
+        })
+    })
+    const getTipByType = useMemoizedFn(() => {
+        switch (routingPolicy) {
+            case AIModelPolicyEnum.PolicyAuto:
+                return "根据请求内容自动选择最合适的模型"
+            case AIModelPolicyEnum.PolicyPerformance:
+                return "优先使用高智能模型"
+            case AIModelPolicyEnum.PolicyCost:
+                return "优先使用轻量级/低成本模型"
+            case AIModelPolicyEnum.PolicyBalance:
+                return "在响应速度、智能程度和成本之间取得平衡"
+
+            default:
+                return null
+        }
+    })
+    const onSetConfig = useMemoizedFn((visible: boolean) => {
+        setVisible(visible) // 不管是否保存成功,都设置
+        if (visible) {
+            getList()
+            return
+        }
+
+        const values = form.getFieldsValue()
+        if (!configRef.current) {
+            yakitNotify("error", "配置更新失败,未获取到全局ai配置,请重试")
+            return
+        }
+        if (
+            configRef.current.RoutingPolicy === values.RoutingPolicy &&
+            configRef.current.DisableFallback === values.DisableFallback
+        ) {
+            return
+        }
+        const config: AIGlobalConfig = {
+            ...configRef.current,
+            RoutingPolicy: values.RoutingPolicy,
+            DisableFallback: values.DisableFallback
+        }
+        grpcSetAIGlobalConfig(config).then(() => {
+            onRefresh()
+        })
+    })
+    return (
+        <YakitPopover
+            content={
+                <div className={styles["ai-online-mode-setting-popover"]}>
+                    <Form form={form} labelCol={{span: 8}} wrapperCol={{span: 16}}>
+                        <Form.Item name='RoutingPolicy' label='调用模式' extra={<>{getTipByType()}</>}>
+                            <YakitRadioButtons buttonStyle='solid' options={AIModelPolicyOptions} />
+                        </Form.Item>
+                        <Form.Item name='DisableFallback' valuePropName='checked' label='禁用降级到轻量模型'>
+                            <YakitSwitch size='middle' />
+                        </Form.Item>
+                    </Form>
+                </div>
+            }
+            visible={visible}
+            onVisibleChange={onSetConfig}
+            placement='bottomRight'
+        >
+            <YakitButton type='text2' icon={<OutlineCogIcon />} />
+        </YakitPopover>
+    )
 })
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
@@ -333,8 +414,8 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         useImperativeHandle(
             ref,
             () => ({
-                onRefresh: () => {
-                    getList()
+                onRefresh: (isShowLoading) => {
+                    getList(isShowLoading)
                 },
                 onRemoveAll: () => onRemoveAll()
             }),
@@ -343,8 +424,9 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         useEffect(() => {
             if (inViewport) getList()
         }, [inViewport])
-        const getList = useMemoizedFn(() => {
-            setSpinning(true)
+        const getList = useMemoizedFn((isShowLoading?: boolean) => {
+            const showLoading = isShowLoading !== false
+            showLoading && setSpinning(true)
             grpcGetAIGlobalConfig()
                 .then((res) => {
                     setAIGlobalConfig(res)
@@ -355,9 +437,10 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                     setOnlineTotal(total)
                 })
                 .finally(() => {
-                    setTimeout(() => {
-                        setSpinning(false)
-                    }, 200)
+                    showLoading &&
+                        setTimeout(() => {
+                            setSpinning(false)
+                        }, 200)
                 })
         })
         const onRemoveAll = useMemoizedFn(() => {})

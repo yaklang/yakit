@@ -185,7 +185,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     })
 
     const onUpdate = useMemoizedFn((newItem: AIModelConfig, options: AIModelFormUpdateOptions) => {
-        debugger
         try {
             if (!aiGlobalConfigRef.current || currentIndexInConfigRef.current === -1) return
 
@@ -209,6 +208,11 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
                 newConfig[fileName].push(newItem)
             } else {
+                // const oldItem = newConfig[fileName][currentIndexInConfigRef.current]
+                // if (isEqualAIModel(oldItem, newItem)) {
+                //     yakitNotify("error", "未修改任何配置，无需保存")
+                //     return
+                // }
                 newConfig[fileName][currentIndexInConfigRef.current] = newItem
             }
 
