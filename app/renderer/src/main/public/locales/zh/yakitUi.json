@@ -208,6 +208,8 @@
         "paste": "粘贴",
         "hideLineBreaks": "隐藏换行符",
         "showLineBreaks": "显示换行符",
+        "hideActionBar": "关闭操作栏",
+        "showActionBar": "打开操作栏",
         "yakCodeFormat": "Yak 代码格式化",
         "pasteTooFast": "粘贴过快，请稍后再试",
         "emptyContentTypeAutoDetected": "原Content-Type为空，该Content-type为自动探测",
