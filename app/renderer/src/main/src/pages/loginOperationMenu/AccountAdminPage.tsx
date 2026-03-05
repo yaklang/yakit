@@ -879,27 +879,39 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                             setCreatCountVisible(true)
                         }}
                     />
-                    <YakitPopconfirm
-                        title={"确定要重置该用户密码吗？"}
-                        onConfirm={() => onResetPwd(record.uid, record.user_name)}
-                    >
-                        <Tooltip title='重置用户密码' align={{targetOffset: [0, -15]}}>
-                            <OutlineRefreshIcon className={styles["action-icon"]} onClick={() => {}} />
+                    {record.from_platform === "company" ? (
+                        <YakitPopconfirm
+                            title={"确定要重置该用户密码吗？"}
+                            onConfirm={() => onResetPwd(record.uid, record.user_name)}
+                        >
+                            <Tooltip title='重置用户密码' align={{targetOffset: [0, -15]}}>
+                                <OutlineRefreshIcon className={styles["action-icon"]} onClick={() => {}} />
+                            </Tooltip>
+                        </YakitPopconfirm>
+                    ) : (
+                        <Tooltip title='该用户非系统创建用户，不可重置密码' align={{targetOffset: [0, -15]}}>
+                            <OutlineRefreshIcon className={styles["action-icon-disable"]} onClick={() => {}} />
                         </Tooltip>
-                    </YakitPopconfirm>
+                    )}
                     <Tooltip title='复制远程连接' align={{targetOffset: [0, -15]}}>
                         <OutlineDocumentduplicateIcon
                             className={styles["action-icon"]}
                             onClick={() => copySecretKey(record.user_name)}
                         />
                     </Tooltip>
-                    <YakitPopconfirm
-                        title={"确定删除该用户吗？"}
-                        onConfirm={() => onRemoveSingle(record.uid, record.department_id)}
-                        placement='right'
-                    >
-                        <OutlineTrashIcon className={styles["del-icon"]} />
-                    </YakitPopconfirm>
+                    {record.from_platform === "company" ? (
+                        <YakitPopconfirm
+                            title={"确定删除该用户吗？"}
+                            onConfirm={() => onRemoveSingle(record.uid, record.department_id)}
+                            placement='right'
+                        >
+                            <OutlineTrashIcon className={styles["del-icon"]} />
+                        </YakitPopconfirm>
+                    ) : (
+                        <Tooltip title='该用户非系统创建用户，不可删除用户' placement="left">
+                            <OutlineTrashIcon className={styles["del-icon-disable"]} />
+                        </Tooltip>
+                    )}
                 </div>
             )
         }
@@ -1215,7 +1227,10 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                     type: "checkbox",
                     selectedRowKeys,
                     onSelectAll,
-                    onChangeCheckboxSingle
+                    onChangeCheckboxSingle,
+                    getCheckboxProps: (record) => ({
+                        disabled: record.from_platform !== "company"
+                    })
                 }}
             ></TableVirtualResize>
             <YakitModal
@@ -1462,7 +1477,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
                 user_name,
-                department:departmentId,
+                department: departmentId,
                 role_id: role_id?.key || role_id
             }
             NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
