@@ -1025,6 +1025,7 @@ service Yak {
 
 message DownloadRAGsRequest {
   string RagName = 1;
+  bool All = 2;
   bool Force = 3;
 }
 
@@ -7149,6 +7150,7 @@ message ExecResult {
 
   string RuntimeID = 7;
   float Progress = 8;
+  string PluginName = 9;
 }
 
 message GetLicenseResponse {
@@ -8609,6 +8611,12 @@ message MITMV2Request{
   */
   bool SetAutoForward = 40;
   bool AutoForwardValue = 41;
+
+  // auto unzip / zip packet encoding for manual hijack (hot reload)
+  // If enabled, engine will try to decode Content-Encoding/Transfer-Encoding (chunked) before
+  // sending packets to frontend for editing, and re-encode them when frontend sends back.
+  bool AutoUnzipValue = 54;
+  bool SetAutoUnzip = 55;
 
   bool RecoverManualHijack = 42;
   bool ManualHijackControl = 43;
