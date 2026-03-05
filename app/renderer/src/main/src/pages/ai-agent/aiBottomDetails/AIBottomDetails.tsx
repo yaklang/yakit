@@ -1,11 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {} from "antd"
-import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import styles from "./AIBottomDetails.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineCogIcon, OutlineExitIcon, OutlinePlusIcon, OutlineXIcon} from "@/assets/icon/outline"
@@ -23,7 +18,6 @@ import {
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-const {ipcRenderer} = window.require("electron")
 export interface AIBottomDetailsProps {
     isShowAIBottomDetails: boolean
     setShowAIBottomDetails: React.Dispatch<React.SetStateAction<boolean>>
