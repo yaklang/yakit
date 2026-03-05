@@ -27,6 +27,7 @@ import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {getRemoteValue} from "@/utils/kv"
 import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
 import {AIModelForm} from "@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm"
+import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 
 interface HistoryAIReActChatProps {
     refRef: React.RefObject<HTMLDivElement>
@@ -64,6 +65,8 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     } = props
 
     const [globalNetworkConfig, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
+
+    const chatWidth = useListenWidth(refRef)
 
     const {data, run, loading} = useRequest(
         async () => {
@@ -120,7 +123,35 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
 
         // 无模型 → 配置引导
         if (data) {
-            return <AIModelForm onClose={() => {}} />
+            return (
+                <AIModelForm
+                    onClose={() => {}}
+                    onSuccess={() => {
+                        run()
+                    }}
+                    thirdPartyApplicationConfig={
+                        chatWidth < 400
+                            ? {
+                                  FormProps: {
+                                      layout: "vertical",
+                                      labelCol: 24,
+                                      wrapperCol: 24
+                                  },
+                                  onAdd: () => {},
+                                  onCancel: () => {}
+                              }
+                            : {
+                                  FormProps: {
+                                      layout: "horizontal",
+                                      labelCol: 8,
+                                      wrapperCol: 16
+                                  },
+                                  onAdd: () => {},
+                                  onCancel: () => {}
+                              }
+                    }
+                />
+            )
         }
 
         // 有模型 → 正常聊天
@@ -173,7 +204,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                 }}
             />
         )
-    }, [activeID, aiReActChatRef, data, events, globalNetworkConfig, loading, showFreeChat])
+    }, [activeID, aiReActChatRef, data, events, globalNetworkConfig, loading, showFreeChat, chatWidth])
 
     return (
         <div ref={refRef} className={styles["ai-wrapper"]} id='main-operator-page-body-db-http-request-aiReAct-chat'>
