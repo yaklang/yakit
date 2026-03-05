@@ -270,8 +270,7 @@ export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: 
 
         getAIModelAvailableInfo(hiddenError)
             .then((res) => {
-                const noModel = res.localModelsTotal && res.onlineModelsTotal
-
+                const noModel = res.localModelsTotal === 0 && res.onlineModelsTotal === 0
                 if (noModel) {
                     // 每个 tab / 页面只弹一次
                     if (!openedAIModalMap.get(pageKey)) {
