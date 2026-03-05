@@ -34,11 +34,9 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     const {handleSendConfigHotpatch} = useChatIPCDispatcher()
 
     const [visible, setVisible] = useState<boolean>(false)
-    const [open, setOpen] = useState<boolean>(false)
     const [selectAIReviewRiskControlScore, setAIReviewRiskControlScore] =
         useState<AIStartParams["AIReviewRiskControlScore"]>()
 
-    const selectReviewPolicyRef = useRef<AIStartParams["ReviewPolicy"]>()
     const refRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(refRef)
 
@@ -89,10 +87,9 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
     const onSelectModel = useMemoizedFn((value: AIStartParams["ReviewPolicy"]) => {
         setSetting && setSetting((old) => ({...old, ReviewPolicy: value}))
-        if (chatIPCData.execute && modelValue && !isEqual(selectReviewPolicyRef.current, modelValue)) {
-            handHotpatchReviewPolicy(modelValue)
+        if (chatIPCData.execute && modelValue) {
+            handHotpatchReviewPolicy(value)
         }
-        selectReviewPolicyRef.current = modelValue
     })
 
     const onSetAIReviewRiskControlScore = useMemoizedFn((value?: number) => {
