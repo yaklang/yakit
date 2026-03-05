@@ -85,6 +85,8 @@ export const defaultUserInfo: UserInfoProps = {
     qqHeadImg: null,
     companyName: null,
     companyHeadImg: null,
+    ccbName: null,
+    ccbHeadImg: null,
     role: null,
     user_id: null,
     token: ""

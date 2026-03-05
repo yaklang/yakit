@@ -22,12 +22,14 @@ interface UserPlatformTypeProps {
     wechat: {name: string; img: string}
     qq: {name: string; img: string}
     company: {name: string; img: string}
+    ccb: {name: string; img: string}
 }
 export const UserPlatformType: UserPlatformTypeProps = {
     github: {name: "githubName", img: "githubHeadImg"},
     wechat: {name: "wechatName", img: "wechatHeadImg"},
     qq: {name: "qqName", img: "qqHeadImg"},
-    company: {name: "companyName", img: "companyHeadImg"}
+    company: {name: "companyName", img: "companyHeadImg"},
+    ccb: {name: "ccbName", img: "ccbHeadImg"}
 }
 
 interface info {

@@ -1569,6 +1569,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
         if (userInfo.platform === "github") return userInfo.githubHeadImg || ""
         if (userInfo.platform === "wechat") return userInfo.wechatHeadImg || ""
         if (userInfo.platform === "company") return userInfo.companyHeadImg || ""
+        if (userInfo.platform === "ccb") return userInfo.ccbHeadImg || ""
         return ``
     }, [userInfo])
 
