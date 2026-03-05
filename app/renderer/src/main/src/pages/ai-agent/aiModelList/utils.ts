@@ -400,7 +400,7 @@ export const grpcQueryAIProviderAll: APIFunc<string, QueryAIProvidersResponse> =
         }
         const query: QueryAIProvidersRequest = {
             Filter: {
-                AIType: []
+                AIType: [params]
             },
             Pagination: {
                 ...genDefaultPagination(-1)

@@ -340,7 +340,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                             </Form.Item>
                         )
                     }
-                    if ((isOnlyShowAiType || modelType === "ai") && item.Name === "api_key") {
+                    if (isOnlyShowAiType && modelType === "ai" && item.Name === "api_key") {
                         return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
                     } else {
                         let selectProps: YakitSelectProps = {}
@@ -411,9 +411,27 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                         name={"Type"}
                     >
                         {canAddType ? (
-                            <YakitAutoComplete options={options} disabled={disabledType} />
+                            <YakitAutoComplete
+                                options={options}
+                                disabled={disabledType}
+                                filterOption={(inputValue, option) => {
+                                    if (option?.label && typeof option?.label === "string") {
+                                        return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                    }
+                                    return false
+                                }}
+                            />
                         ) : (
-                            <YakitSelect disabled={disabledType} options={options}></YakitSelect>
+                            <YakitSelect
+                                disabled={disabledType}
+                                options={options}
+                                filterOption={(inputValue, option) => {
+                                    if (option?.label && typeof option?.label === "string") {
+                                        return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                    }
+                                    return false
+                                }}
+                            ></YakitSelect>
                         )}
                     </Form.Item>
                     {isInOptions ? (
