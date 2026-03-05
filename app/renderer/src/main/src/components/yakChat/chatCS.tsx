@@ -3219,10 +3219,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 secondNode={
                                     <div className={styles["result-box"]} style={{height: "100%"}}>
                                         <PluginExecuteResult
-                                            streamInfo={{
-                                                ...streamInfo,
-                                                cardState: []
-                                            }}
+                                            streamInfo={streamInfo}
                                             runtimeId={runtimeId}
                                             loading={loading}
                                             defaultActiveKey={"Codec结果"}
