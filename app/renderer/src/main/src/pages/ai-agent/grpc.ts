@@ -18,7 +18,8 @@ import {
     QueryAIFocusRequest,
     QueryAIFocusResponse,
     QueryAIForgeRequest,
-    QueryAIForgeResponse
+    QueryAIForgeResponse,
+    QueryAISessionResponse
 } from "./type/forge"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
@@ -230,6 +231,45 @@ export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocus
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "QueryAIFocus 查询详情失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcQueryAISession: APIFunc<QueryAIForgeRequest, QueryAISessionResponse> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryAISession", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询 AISession 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcDeleteAISession: APIFunc<{SessionID: string}, undefined> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteAISession", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "删除 AISession 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcUpdateAISessionTitle: APIFunc<{SessionID: string; Title: string}, undefined> = (
+    param,
+    hiddenError
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("UpdateAISessionTitle", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "修改 AISession Title 失败:" + e)
                 reject(e)
             })
     })

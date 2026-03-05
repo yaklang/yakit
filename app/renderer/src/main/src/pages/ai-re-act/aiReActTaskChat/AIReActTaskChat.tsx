@@ -125,7 +125,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             <div className={styles["tab-content"]}>
                 <AIAgentChatStream
                     streams={streams}
-                    session={activeChat?.session || ""}
+                    session={activeChat?.SessionID || ""}
                     scrollToBottom={scrollToBottom}
                     taskStatus={chatIPCData.taskStatus}
                 />

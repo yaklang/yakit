@@ -274,7 +274,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.session
+        return activeChat?.SessionID
     }, [activeChat])
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
@@ -284,7 +284,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
         const newChat: AIHandleStartExtraProps = {
-            chatId: activeChat?.session
+            chatId: activeChat?.SessionID
         }
 
         return new Promise<AIHandleStartResProps>((resolve) => {

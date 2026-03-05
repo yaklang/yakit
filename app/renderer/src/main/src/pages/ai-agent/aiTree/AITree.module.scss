@@ -288,7 +288,9 @@
     border: 1px solid var(--Colors-Use-Main-Primary);
     border-radius: 50%;
     background-color: var(--Colors-Use-Basic-Background);
-
+    display: flex;
+    align-items: center;
+    justify-content: center;    
     .center-wrapper {
         width: 100%;
         height: 100%;

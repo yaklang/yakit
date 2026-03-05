@@ -101,11 +101,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             setExportLoading(true)
             //
             try {
-                const ids = aiChatDataStore.get(activeChat.request.TimelineSessionID || "default")?.coordinatorIDs || []
+                // const ids = aiChatDataStore.get(activeChat.request.TimelineSessionID || "default")?.coordinatorIDs || []
                 await grpcExportAILogs(
                     {
                         // CoordinatorIDs: ids,
-                        SessionID: activeChat.session,
+                        SessionID: activeChat.SessionID,
                         ExportDataTypes: data.types,
                         OutputPath: data.outputPath
                     },
@@ -368,7 +368,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                         <div className={styles["header"]}>
                             <div className={styles["title"]}>
                                 <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
-                                <div className={styles["chat-title"]}>{activeChat?.name || "新会话"}</div>
+                                <div className={styles["chat-title"]}>{activeChat?.Title || "新会话"}</div>
                                 <Divider type='vertical' />
                                 <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
                                     新建会话
@@ -376,7 +376,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                                 <SideSettingButton />
                             </div>
                             <div className={styles["extra"]}>
-                                <AIContextToken execute={execute} session={activeChat?.session} />
+                                <AIContextToken execute={execute} session={activeChat?.SessionID} />
                                 <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                                     日志
                                 </YakitButton>

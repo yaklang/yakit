@@ -30,8 +30,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
-import {aiChatDataStore} from "./store/ChatDataStore"
-import {grpcDeleteAIEvent, grpcDeleteAITask} from "./grpc"
+import {grpcDeleteAIEvent, grpcDeleteAITask, grpcQueryAISession} from "./grpc"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {AIBottomSideBar} from "./aiBottomSideBar/AIBottomSideBar"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -49,7 +48,16 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
     // 历史对话
+    const [pagination, setPagination] = useState({
+        Page: 1,
+        Limit: 3,
+        OrderBy: "",
+        Order: "",
+        total: 0
+    })
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
+    // 缓存的历史对话数据
+    const cacheChatsRef = useRef<AIChatInfo[]>()
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
@@ -97,6 +105,42 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
     }, [chats])
 
+    const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
+        try {
+            const {Data, Total} = await grpcQueryAISession({
+                Pagination: pagination
+            })
+            let finalData: AIChatInfo[] = Data
+            if (cacheChatsRef.current) {
+                try {
+                    if (Array.isArray(cacheChatsRef.current) && cacheChatsRef.current.length > 0) {
+                        const cacheMap = new Map<string, AIChatInfo>(
+                            cacheChatsRef.current.map((item) => [item.SessionID, item])
+                        )
+                        finalData = Data.map((item) => {
+                            const cached = cacheMap.get(item.SessionID)
+                            if (!cached) return item
+                            return {
+                                ...item,
+                                request: cached.request,
+                                id: cached.id
+                            }
+                        })
+                    }
+                } catch {}
+            }
+            setChats((prev) => [...prev, ...Data])
+            setPagination((prev) => ({
+                ...prev,
+                Page: pagination.Page + 1,
+                total: Total
+            }))
+            return Total
+        } catch {
+            return 0
+        }
+    })
+
     const store: AIAgentContextStore = useMemo(() => {
         return {
             setting: setting,
@@ -110,7 +154,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat
+            setActiveChat: setActiveChat,
+            loadHistoryData: loadHistoryData
 
             // getChatData: aiChatDataStore.get
         }
@@ -133,7 +178,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                         try {
                             const cache = JSON.parse(res) as AIChatInfo[]
                             if (!Array.isArray(cache) || cache.length === 0) return
-                            setChats(cache)
+                            cacheChatsRef.current = cache
                         } catch (error) {}
                     })
                     .catch(() => {})
