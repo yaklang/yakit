@@ -29,7 +29,7 @@ export const UserPlatformType: UserPlatformTypeProps = {
     wechat: {name: "wechatName", img: "wechatHeadImg"},
     qq: {name: "qqName", img: "qqHeadImg"},
     company: {name: "companyName", img: "companyHeadImg"},
-    ccb: {name: "ccbName", img: "ccbHeadImg"}
+    ccb: {name: "companyName", img: "companyHeadImg"}
 }
 
 interface info {

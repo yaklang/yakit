@@ -288,7 +288,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         ]
 
         // CE 版本
-        if (userInfo.platform !== "company") {
+        if (userInfo.platform !== "company" && userInfo.platform !== "ccb") {
             let isNew: boolean = false
             // CE-超管
             if (userInfo.role === "superAdmin") {
@@ -717,7 +717,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             }
                                         }}
                                     >
-                                        {userInfo.platform === "company" ? (
+                                        {["company", "ccb"].includes(userInfo.platform || "") ? (
                                             judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect)
                                         ) : (
                                             <img

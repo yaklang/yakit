@@ -15,8 +15,6 @@ export interface UserInfoProps {
     qqHeadImg: string | null
     companyName: string | null
     companyHeadImg: string | null
-    ccbName: string | null
-    ccbHeadImg: string | null
     /** 角色 */
     role: string | null
     user_id: number | null
@@ -37,8 +35,6 @@ export const useStore = create<StoreProps>((set, get) => ({
         wechatHeadImg: null,
         qqName: null,
         qqHeadImg: null,
-        ccbName: null,
-        ccbHeadImg: null,
         companyName: null,
         companyHeadImg: null,
         role: null,

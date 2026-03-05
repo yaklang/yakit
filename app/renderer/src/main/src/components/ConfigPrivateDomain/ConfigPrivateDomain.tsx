@@ -19,6 +19,7 @@ import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoC
 import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/utils/envfile"
 import {useUploadInfoByEnpriTrace} from "../layout/utils"
 import {JSONParseLog} from "@/utils/tool"
+import {RightOutlined} from "@ant-design/icons"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -60,6 +61,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         pwd: ""
     })
     const [isShowSkip, setShowSkip] = useState<boolean>(false)
+    const [isShowCCB, setShowCCB] = useState<boolean>(true)
     useEffect(() => {
         getHttpSetting()
     }, [])
@@ -94,10 +96,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
                         qqName: res.from_platform === "qq" ? res.name : null,
                         qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
-                        companyName: res.from_platform === "company" ? res.name : null,
-                        companyHeadImg: res.from_platform === "company" ? res.head_img : null,
-                        ccbName: res.from_platform === "ccb" ? res.name : null,
-                        ccbHeadImg: res.from_platform === "ccb" ? res.head_img : null,
+                        companyName: ["company", "ccb"].includes(res.from_platform) ? res.name : null,
+                        companyHeadImg: ["company", "ccb"].includes(res.from_platform) ? res.head_img : null,
                         role: res.role,
                         user_id: res.user_id,
                         token: res.token
@@ -251,10 +251,40 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         }
     ]
 
+    const fetchLogin = (type: string) => {
+        if (type === "ccb") {
+            // CCB 登录逻辑
+        }
+    }
+
     const loginContentDom = useMemo(() => {
         // 企业版登录
         if (enterpriseLogin) {
-            return (
+            return isShowCCB ? (
+                <>
+                    <div className='login-title-show'>
+                        <div className='icon-box'>
+                            <img src={yakitImg} className='type-icon-img' />
+                        </div>
+                        <div className='title-box'>企业登录</div>
+                    </div>
+                    <div className='login-switch-box'>
+                        <div className='login-icon' onClick={() => fetchLogin("ccb")}>
+                            <div className='login-icon-text'>使用 CCB 账号登录</div>
+                            <RightOutlined className='icon-right' />
+                        </div>
+                        <YakitButton
+                            size='max'
+                            type="outline2"
+                            onClick={() => {
+                                setShowCCB(!isShowCCB)
+                            }}
+                        >
+                            切换登录方式
+                        </YakitButton>
+                    </div>
+                </>
+            ) : (
                 <>
                     <div className='login-title-show'>
                         <div className='icon-box'>
@@ -309,10 +339,21 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             </YakitButton>
                         </Form.Item>
                     </Form>
+                    <div className='login-switch-box'>
+                        <YakitButton
+                            size='max'
+                            type="outline2"
+                            onClick={() => {
+                                setShowCCB(!isShowCCB)
+                            }}
+                        >
+                            切换登录方式
+                        </YakitButton>
+                    </div>
                 </>
             )
         } else {
-            <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
+            ;<Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
                 <Form.Item
                     name='BaseUrl'
                     label='私有域地址'
@@ -353,6 +394,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 </div>
             </Form>
         }
-    }, [enterpriseLogin, defaultHttpUrl, form, isShowSkip, loading, onClose, onFinish, onSuccee])
+    }, [enterpriseLogin, defaultHttpUrl, form, isShowSkip, loading, isShowCCB, onClose, onFinish, onSuccee])
     return <div className='private-domain'>{loginContentDom}</div>
 })
