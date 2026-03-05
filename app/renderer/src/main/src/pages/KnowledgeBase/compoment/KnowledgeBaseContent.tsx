@@ -398,7 +398,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
     const [chatIPCData, events] = useChatIPC({
-        getRequest: getSetting,
         cacheDataStore: knowledgeBaseDataStore
     })
 

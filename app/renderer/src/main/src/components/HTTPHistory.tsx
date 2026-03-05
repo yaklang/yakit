@@ -266,7 +266,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
     const [chatIPCData, events] = useChatIPC({
-        getRequest: getSetting,
         cacheDataStore: histroyAiStore
     })
 

@@ -172,7 +172,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskReviewExtra: handleShowReviewExtra,
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
-        getRequest: getSetting,
         setSessionChatName,
         cacheDataStore: aiChatDataStore
     })

@@ -22,7 +22,7 @@ import {
     UseChatIPCState,
     UseHookBaseParams
 } from "./type"
-import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent, AIStartParams} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
 import cloneDeep from "lodash/cloneDeep"
 import {
@@ -43,16 +43,8 @@ const {ipcRenderer} = window.require("electron")
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {
-        cacheDataStore,
-        getRequest,
-        setSessionChatName,
-        onTaskStart,
-        onTaskReview,
-        onTaskReviewExtra,
-        onReviewRelease,
-        onEnd
-    } = params || {}
+    const {cacheDataStore, setSessionChatName, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} =
+        params || {}
 
     const {getLabelByParams} = useAINodeLabel()
 
@@ -64,11 +56,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 任务规划-review 信息的自动释放
     const handleTaskReviewRelease = useMemoizedFn((id: string) => {
         onReviewRelease && onReviewRelease("task", id)
-    })
-
-    /** 获取当前grpc接口的请求参数 */
-    const fetchRequestParams = useMemoizedFn(() => {
-        return getRequest?.()
     })
 
     /** 消息通知提醒弹框 */
@@ -99,6 +86,15 @@ function useChatIPC(params?: UseChatIPCParams) {
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
         return chatID.current
+    })
+
+    /** 启动流接口的请求参数 */
+    const aiRequest = useRef<AIStartParams>()
+    const fetchAIRequest = useMemoizedFn(() => {
+        return cloneDeep(aiRequest.current)
+    })
+    const handleResetAIRequest = useMemoizedFn(() => {
+        aiRequest.current = undefined
     })
 
     /** 获取全部聊天数据 */
@@ -243,7 +239,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [casualChat, casualChatEvent] = useCasualChat({
         pushLog: logEvents.pushLog,
         getChatDataStore,
-        getRequest: fetchRequestParams,
+        getRequest: fetchAIRequest,
         onReviewRelease: handleCasualReviewRelease
     })
     // #endregion
@@ -269,7 +265,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [taskChat, taskChatEvent] = useTaskChat({
         pushLog: logEvents.pushLog,
         getChatDataStore,
-        getRequest: fetchRequestParams,
+        getRequest: fetchAIRequest,
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
@@ -344,6 +340,10 @@ function useChatIPC(params?: UseChatIPCParams) {
                 return
             }
 
+            if (params.IsConfigHotpatch) {
+                aiRequest.current = {...(aiRequest.current || {}), ...(params.Params || {})}
+            }
+
             switch (type) {
                 case "casual":
                 case "task":
@@ -383,6 +383,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 重置所有数据 */
     const onReset = useMemoizedFn(() => {
         chatID.current = ""
+        handleResetAIRequest()
         setExecute(false)
         handleResetGrpcFile()
         handleResetRunTimeIDs()
@@ -463,6 +464,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         setExecute(true)
         chatID.current = token
 
+        aiRequest.current = params.Params
+        
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
                 // 记录会话中所有的 CoordinatorId
@@ -917,6 +920,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const event: UseChatIPCEvents = useCreation(() => {
         return {
             fetchToken,
+            fetchAIRequest,
             fetchTaskChatID,
             fetchChatDataStore,
             onSwitchChat,

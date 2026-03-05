@@ -112,8 +112,6 @@ export interface AIChatIPCNotifyMessage {
 export interface UseChatIPCParams {
     /** 文件数据缓存实例类 */
     cacheDataStore?: ChatDataStore
-    /** 获取流接口请求参数 */
-    getRequest?: () => AIAgentSetting | undefined
     /** 设置会话的名字 */
     setSessionChatName?: (session: string, name: string) => void
 
@@ -209,6 +207,8 @@ export interface AIChatSendParams {
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
+    /** 获取当前执行接口流的请求参数 */
+    fetchAIRequest: () => AIStartParams | undefined
     /** 获取当前执行任务规划的问题id */
     fetchTaskChatID: () => string
     /** 获取当前外界传入的数据类实例 */
