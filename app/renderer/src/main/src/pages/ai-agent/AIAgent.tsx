@@ -50,7 +50,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // 历史对话
     const [pagination, setPagination] = useState({
         Page: 1,
-        Limit: 3,
+        Limit: 10,
         OrderBy: "",
         Order: "",
         total: 0
