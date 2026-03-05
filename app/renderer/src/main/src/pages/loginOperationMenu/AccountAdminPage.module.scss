@@ -106,6 +106,12 @@
                 }
             }
         }
+        .action-icon-disable {
+            svg {
+                width: 16px;
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
         span {
             padding: 0 12px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -121,6 +127,12 @@
             svg {
                 width: 16px;
                 color: var(--Colors-Use-Error-Primary);
+            }
+        }
+        .del-icon-disable{
+            svg {
+                width: 16px;
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
     }

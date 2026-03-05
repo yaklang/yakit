@@ -17,7 +17,7 @@ export interface LoginProp {
     onCancel: () => any
 }
 
-interface LoginParamsProp {
+export interface LoginParamsProp {
     source: string
 }
 
