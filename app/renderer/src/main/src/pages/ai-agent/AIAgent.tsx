@@ -56,8 +56,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         total: 0
     })
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
-    // 缓存的历史对话数据
-    const cacheChatsRef = useRef<AIChatInfo[]>()
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
@@ -77,8 +75,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         setDelCacheLoading(true)
         // 清空无效的用户缓存数据-全局配置数据
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
-        // 清空无效的用户缓存数据-taskChat历史对话数据
-        setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
+        // // 清空无效的用户缓存数据-taskChat历史对话数据
+        // setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
         // 设置清空标志位
         setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
 
@@ -101,34 +99,15 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
     }, [setting])
     // 缓存历史对话数据
-    useUpdateEffect(() => {
-        setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
-    }, [chats])
+    // useUpdateEffect(() => {
+    //     setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
+    // }, [chats])
 
     const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
         try {
             const {Data, Total} = await grpcQueryAISession({
                 Pagination: pagination
             })
-            let finalData: AIChatInfo[] = Data
-            if (cacheChatsRef.current) {
-                try {
-                    if (Array.isArray(cacheChatsRef.current) && cacheChatsRef.current.length > 0) {
-                        const cacheMap = new Map<string, AIChatInfo>(
-                            cacheChatsRef.current.map((item) => [item.SessionID, item])
-                        )
-                        finalData = Data.map((item) => {
-                            const cached = cacheMap.get(item.SessionID)
-                            if (!cached) return item
-                            return {
-                                ...item,
-                                request: cached.request,
-                                id: cached.id
-                            }
-                        })
-                    }
-                } catch {}
-            }
             setChats((prev) => [...prev, ...Data])
             setPagination((prev) => ({
                 ...prev,
@@ -171,17 +150,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             if (!res) return setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
 
             if (res >= AIAgentCacheClearValue) {
-                // 获取缓存的历史对话数据
-                getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
-                    .then((res) => {
-                        if (!res) return
-                        try {
-                            const cache = JSON.parse(res) as AIChatInfo[]
-                            if (!Array.isArray(cache) || cache.length === 0) return
-                            cacheChatsRef.current = cache
-                        } catch (error) {}
-                    })
-                    .catch(() => {})
                 // 获取缓存的全局配置数据
                 getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
                     .then((res) => {
