@@ -5,7 +5,7 @@ import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./u
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {AIChatData, AIChatInfo} from "./type/aiChat"
+import {AIChatInfo} from "./type/aiChat"
 import {
     useCreation,
     useDebounceFn,
@@ -30,7 +30,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
-import {grpcDeleteAIEvent, grpcDeleteAITask, grpcQueryAISession} from "./grpc"
+import {grpcDeleteAISession, grpcQueryAISession} from "./grpc"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {AIBottomSideBar} from "./aiBottomSideBar/AIBottomSideBar"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -75,7 +75,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         setDelCacheLoading(true)
         // 清空无效的用户缓存数据-全局配置数据
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
-        // // 清空无效的用户缓存数据-taskChat历史对话数据
+        // 清空无效的用户缓存数据-taskChat历史对话数据
         // setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
         // 设置清空标志位
         setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
@@ -83,8 +83,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         try {
             if (isDelCache) {
                 // 删除数据库历史记录
-                await grpcDeleteAIEvent({ClearAll: true}, true)
-                await grpcDeleteAITask({})
+                await grpcDeleteAISession({DeleteAll: true}, true)
             }
             setDelCacheVisible(false)
         } catch {
@@ -98,10 +97,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     useUpdateEffect(() => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
     }, [setting])
-    // 缓存历史对话数据
-    // useUpdateEffect(() => {
-    //     setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
-    // }, [chats])
 
     const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
         try {

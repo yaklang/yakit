@@ -14,7 +14,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import styles from "./HistoryChat.module.scss"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
-import {grpcDeleteAIEvent, grpcDeleteAITask} from "../grpc"
+import {grpcDeleteAISession} from "../grpc"
 import {aiChatDataStore} from "../store/ChatDataStore"
 import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import HistoryChatList from "./HistoryChatList/HistoryChatList"
@@ -37,9 +37,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         setClearLoading(true)
         try {
             onNewChat()
-            // await grpcDeleteAIEvent({ClearAll: true}, true)
-            // await grpcDeleteAITask({})
-            await grpcDeleteAIEvent({ClearAll: true}, true)
+            await grpcDeleteAISession({DeleteAll: true}, true)
             aiChatDataStore.clear()
             setActiveChat?.(undefined)
             setChats?.([])
