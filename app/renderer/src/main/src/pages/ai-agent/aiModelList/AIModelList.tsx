@@ -323,6 +323,22 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
 export default AIModelList
 
+export const getTipByType = (routingPolicy: AIModelPolicyEnum) => {
+    switch (routingPolicy) {
+        case AIModelPolicyEnum.PolicyAuto:
+            return "根据请求内容自动选择最合适的模型"
+        case AIModelPolicyEnum.PolicyPerformance:
+            return "优先使用高智能模型"
+        case AIModelPolicyEnum.PolicyCost:
+            return "优先使用轻量级/低成本模型"
+        case AIModelPolicyEnum.PolicyBalance:
+            return "在响应速度、智能程度和成本之间取得平衡"
+
+        default:
+            return null
+    }
+}
+
 const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((props) => {
     const {onRefresh} = props
     const [visible, setVisible] = useState<boolean>(false)
@@ -339,21 +355,7 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
             })
         })
     })
-    const getTipByType = useMemoizedFn(() => {
-        switch (routingPolicy) {
-            case AIModelPolicyEnum.PolicyAuto:
-                return "根据请求内容自动选择最合适的模型"
-            case AIModelPolicyEnum.PolicyPerformance:
-                return "优先使用高智能模型"
-            case AIModelPolicyEnum.PolicyCost:
-                return "优先使用轻量级/低成本模型"
-            case AIModelPolicyEnum.PolicyBalance:
-                return "在响应速度、智能程度和成本之间取得平衡"
 
-            default:
-                return null
-        }
-    })
     const onSetConfig = useMemoizedFn((visible: boolean) => {
         setVisible(visible) // 不管是否保存成功,都设置
         if (visible) {
@@ -386,7 +388,7 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
             content={
                 <div className={styles["ai-online-mode-setting-popover"]}>
                     <Form form={form} labelCol={{span: 8}} wrapperCol={{span: 16}}>
-                        <Form.Item name='RoutingPolicy' label='调用模式' extra={<>{getTipByType()}</>}>
+                        <Form.Item name='RoutingPolicy' label='调用模式' extra={<>{getTipByType(routingPolicy)}</>}>
                             <YakitRadioButtons buttonStyle='solid' options={AIModelPolicyOptions} />
                         </Form.Item>
                         <Form.Item name='DisableFallback' valuePropName='checked' label='禁用降级到轻量模型'>
@@ -487,6 +489,36 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                 getList()
             })
         })
+        const onSelect = useMemoizedFn(
+            (
+                item: AIModelConfig,
+                options: {
+                    fileName: string
+                    index: number
+                }
+            ) => {
+                if (!aiGlobalConfig) return
+                const {fileName, index} = options
+                const newAIGlobalConfig = {...aiGlobalConfig}
+                newAIGlobalConfig[fileName].splice(index, 1)
+                newAIGlobalConfig[fileName].unshift(item)
+                grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
+                    getList()
+                })
+                emiter.emit(
+                    "aiModelSelectChange",
+                    JSON.stringify({
+                        type: "online",
+                        params: {
+                            AIService: item.Provider.Type,
+                            AIModelName: item.ModelName,
+                            fileName
+                        }
+                    })
+                )
+                emiter.emit("onRefreshAvailableAIModelList")
+            }
+        )
         return (
             <YakitSpin spinning={spinning}>
                 {isHaveData ? (
@@ -498,6 +530,12 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 list={aiGlobalConfig?.IntelligentModels || []}
                                 onEdit={(item) => onEdit(item, "IntelligentModels")}
                                 onRemove={(item) => onRemove(item, "IntelligentModels")}
+                                onSelect={(item, index) =>
+                                    onSelect(item, {
+                                        fileName: "IntelligentModels",
+                                        index
+                                    })
+                                }
                             />
                         )}
                         {!!aiGlobalConfig?.LightweightModels.length && (
@@ -507,6 +545,12 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 list={aiGlobalConfig?.LightweightModels || []}
                                 onEdit={(item) => onEdit(item, "LightweightModels")}
                                 onRemove={(item) => onRemove(item, "LightweightModels")}
+                                onSelect={(item, index) =>
+                                    onSelect(item, {
+                                        fileName: "LightweightModels",
+                                        index
+                                    })
+                                }
                             />
                         )}
                         {!!aiGlobalConfig?.VisionModels.length && (
@@ -516,6 +560,12 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 list={aiGlobalConfig?.VisionModels || []}
                                 onEdit={(item) => onEdit(item, "VisionModels")}
                                 onRemove={(item) => onRemove(item, "VisionModels")}
+                                onSelect={(item, index) =>
+                                    onSelect(item, {
+                                        fileName: "VisionModels",
+                                        index
+                                    })
+                                }
                             />
                         )}
                     </div>
@@ -537,7 +587,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     })
 )
 const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
-    const {title, subTitle, list, onEdit, onRemove} = props
+    const {title, subTitle, list, onEdit, onRemove, onSelect} = props
 
     return (
         <div className={styles["ai-online-model"]}>
@@ -547,7 +597,11 @@ const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
             </div>
             <div className={styles["ai-online-model-list"]}>
                 {list.map((item, index) => (
-                    <div key={index} className={classNames(styles["ai-online-model-list-row"])}>
+                    <div
+                        key={index}
+                        className={classNames(styles["ai-online-model-list-row"])}
+                        onClick={() => onSelect(item, index)}
+                    >
                         <AIOnlineModelListItem item={item} onEdit={onEdit} onRemove={onRemove} checked={index === 0} />
                     </div>
                 ))}

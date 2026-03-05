@@ -65,6 +65,7 @@ export interface AIOnlineModelProps {
     list: AIModelConfig[]
     onRemove: (item: AIModelConfig) => void
     onEdit: (item: AIModelConfig) => void
+    onSelect: (v: AIModelConfig, i: number) => void
 }
 
 export interface AIOnlineModeSettingProps {

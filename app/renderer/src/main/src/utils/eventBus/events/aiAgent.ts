@@ -27,11 +27,12 @@ export type AIAgentEventProps = {
      */
     setAIInputByType?: string
 
-    /** @deprecated AIModelList=> AIModelSelect{AIAgentTriggerEventInfo}
+    /**  AIModelList=> AIModelSelect{AIAgentTriggerEventInfo}
      * @name type "online"|"local"
-     * @name params 传递的值
+     * @name params 传递的值, 
+     * params.fileName 当前变化的模型类型,IntelligentModels/LightweightModels/VisionModels
      */
-    aiModelSelectChange: string,
+    aiModelSelectChange: string
     /** 文件系统默认展开路径 */
     fileSystemDefaultExpand: string
 }

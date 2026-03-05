@@ -155,6 +155,7 @@
             @extend %display-column;
             gap: 4px;
             padding: 12px;
+            cursor: pointer;
             &:hover {
                 background-color: var(--Colors-Use-Neutral-Bg);
                 .ai-local-model-heard-extra-btns {

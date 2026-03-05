@@ -20,6 +20,7 @@ export interface AIConfigAPIKeyFormItemProps {
 export interface AIModelFormSetAIGlobalConfigOptions {
     aiService: string
     aiModelName: string
+    fileName?: string
 }
 
 interface AddOrUpdateOptions {

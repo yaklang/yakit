@@ -190,12 +190,14 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
             const {modelType, aiModelName} = options
             const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigRef.current)
-            const item = {
-                aiService: newItem.Provider.Type,
-                aiModelName
-            }
+
             const fileName = getFileNameByModelType(modelType)
             if (!fileName) return
+            const item = {
+                aiService: newItem.Provider.Type,
+                aiModelName,
+                fileName
+            }
             if (aiModelType !== modelType) {
                 const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newItem))
                 if (isHave) {
@@ -208,11 +210,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
                 newConfig[fileName].push(newItem)
             } else {
-                // const oldItem = newConfig[fileName][currentIndexInConfigRef.current]
-                // if (isEqualAIModel(oldItem, newItem)) {
-                //     yakitNotify("error", "未修改任何配置，无需保存")
-                //     return
-                // }
                 newConfig[fileName][currentIndexInConfigRef.current] = newItem
             }
 
@@ -225,21 +222,22 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         setLoading(true)
         grpcSetAIGlobalConfig(config)
             .then(() => {
-                const {aiService, aiModelName} = option
+                const {aiService, aiModelName, fileName} = option
 
                 onSuccess?.()
                 emiter.emit("onRefreshAvailableAIModelList", `${isAdd}`)
-                emiter.emit(
-                    "aiModelSelectChange",
-                    JSON.stringify({
-                        type: "online",
-                        params: {
-                            setting: true,
-                            AIService: aiService,
-                            AIModelName: aiModelName
-                        }
-                    })
-                )
+                fileName &&
+                    emiter.emit(
+                        "aiModelSelectChange",
+                        JSON.stringify({
+                            type: "online",
+                            params: {
+                                fileName,
+                                AIService: aiService,
+                                AIModelName: aiModelName
+                            }
+                        })
+                    )
                 onClose?.()
             })
             .finally(() => {
