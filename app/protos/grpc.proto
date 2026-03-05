@@ -2012,13 +2012,13 @@ message UpdateAISessionTitleRequest {
 
 message DeleteAISessionFilter {
   repeated string SessionID = 1;
-  int64 AfterTimestamp = 2; // delete sessions with updated_at earlier than this unix timestamp(second)
+  int64 AfterTimestamp = 2;
+  int64 BeforeTimestamp = 3;
 }
 
 message DeleteAISessionRequest {
   DeleteAISessionFilter Filter = 1;
   bool DeleteAll = 2;
-  string SessionID = 3; // deprecated: kept for backward compatibility
 }
 
 message AIForgeFilter {
