@@ -185,7 +185,9 @@ const modelTypeOptions: YakitRadioButtonsProps["options"] = [
         value: "local"
     }
 ]
-const AIModelList: React.FC<AIModelListProps> = React.memo((props, mountContainer) => {
+const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
+    const {mountContainer} = props
+
     const [modelType, setModelType] = useState<AIModelType>("online")
 
     const [onlineTotal, setOnlineTotal] = useState<number>(0)
