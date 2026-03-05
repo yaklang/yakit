@@ -10,6 +10,7 @@
     background-color: var(--Colors-Use-Basic-Background);
     overflow: auto;
     .list-item {
+        margin: 0px 2px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
         height: 22px;
         padding: 2px 8px;
@@ -49,8 +50,8 @@
         }
     }
     .list-item-active {
-        background-color: var(--Colors-Use-Basic-Background);
-        border-left: 1px solid var(--Colors-Use-Blue-Bg);
+        background-color: var(--Colors-Use-Main-Bg);
+        border: 1px solid var(--Colors-Use-Main-Border);
         &:hover {
             .extra {
                 display: flex;
@@ -58,8 +59,9 @@
         }
     }
     .list-item-no-active {
+        border: 1px solid transparent;
         &:hover {
-            background-color: var(--Colors-Use-Basic-Background);
+            background-color: var(--Colors-Use-Main-Bg);
             .extra {
                 display: flex;
             }
