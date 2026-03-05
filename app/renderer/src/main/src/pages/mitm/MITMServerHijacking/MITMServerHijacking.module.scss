@@ -451,17 +451,6 @@
     }
 }
 
-.mitm-hijacked-passive-content {
-    flex: 1;
-    overflow: hidden;
-    :global {
-        .ant-timeline-item-head-blue {
-            color: var(--Colors-Use-Main-Primary);
-            border-color: var(--Colors-Use-Main-Primary);
-        }
-    }
-}
-
 .mitm-alert-msg {
     line-height: 25px;
     margin-bottom: 12px;
@@ -477,6 +466,23 @@
             width: 16px;
             height: 16px;
         }
+    }
+}
+
+.pluginOutput-wrapper {
+    display: flex;
+    flex-direction: column;
+    .pluginOutput-select {
+        display: flex;
+        align-items: baseline;
+    }
+    .pluginOutput-pluginName {
+        white-space: nowrap;
+        margin-right: 8px;
+    }
+    .pluginOutput-execRes {
+        flex: 1;
+        min-height: 0;
     }
 }
 

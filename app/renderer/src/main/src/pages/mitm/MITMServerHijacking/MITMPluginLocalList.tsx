@@ -57,16 +57,6 @@ import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface MITMPluginListProp {
-    proxy?: string
-    downloadCertNode?: () => React.ReactNode
-    setFilterNode?: () => React.ReactNode
-    onSubmitScriptContent?: (script: string) => any
-    onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    onExit?: () => any
-}
-
 interface MITMPluginLocalListProps {
     noParamsCheckList: string[]
     setNoParamsCheckList: (s: string[]) => void

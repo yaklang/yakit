@@ -1,17 +1,14 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCounter, useCreation, useInterval, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
 import {MITMLogHeardExtra} from "./MITMLog"
-import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
-import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
-import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
 import {useStore} from "@/store/mitmState"
-import {HTTPFlowRealTimeTableAndEditor, HTTPHistory} from "@/components/HTTPHistory"
+import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
@@ -49,8 +46,7 @@ import {
     grpcMITMHijackGetFilter,
     grpcMITMHijackedCurrentResponseById,
     grpcMITMSetFilter,
-    isMITMResponse,
-    isMITMV2Response
+    isMITMResponse
 } from "../MITMHacker/utils"
 import {ManualHijackTypeProps, MITMManualRefProps} from "../MITMManual/MITMManualType"
 import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
@@ -61,7 +57,10 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -71,8 +70,6 @@ export type MITMStatus = "hijacking" | "hijacked" | "idle"
 interface MITMHijackedContentProps {
     status: MITMStatus
     setStatus: (status: MITMStatus) => any
-    logs: ExecResultLog[]
-    statusCards: StatusCardProps[]
     downstreamProxyStr: string
     loadedPluginLen: number
     onSelectAll: (e: boolean) => void
@@ -80,21 +77,25 @@ interface MITMHijackedContentProps {
     setTempShowPluginHistory?: (s: string) => void
     onSetRuleVisible: (v: boolean) => void
     onSetFilterVisible: (v: boolean) => void
+    pluginStreamInfo: Record<string, HoldGRPCStreamInfo>
+    showPluginStream: string
+    setShowPluginStream: React.Dispatch<React.SetStateAction<string>>
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
     const {
         status,
         setStatus,
-        logs,
-        statusCards,
         downstreamProxyStr,
         loadedPluginLen,
         onSelectAll,
         setShowPluginHistoryList,
         setTempShowPluginHistory,
         onSetRuleVisible,
-        onSetFilterVisible
+        onSetFilterVisible,
+        pluginStreamInfo,
+        showPluginStream,
+        setShowPluginStream
     } = props
     const mitmContent = useContext(MITMContext)
 
@@ -1062,7 +1063,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                     value: "hijackFilter"
                                 },
                                 {label: "自动放行", value: "log"},
-                                {label: "被动日志", value: "passive"}
+                                {label: "插件输出", value: "pluginOutput"}
                             ]}
                             onChange={(e) => {
                                 if (e.target.value === "hijackFilter") return
@@ -1097,10 +1098,34 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
             </div>
             {onRenderContent()}
-            {/* 被动日志 */}
-            {autoForward === "passive" && (
-                <div className={styles["mitm-hijacked-passive-content"]}>
-                    <MITMPluginLogViewer messages={logs} status={statusCards} />
+            {/* 插件输出 */}
+            {autoForward === "pluginOutput" && pluginStreamInfo[showPluginStream] && (
+                <div className={styles["pluginOutput-wrapper"]} style={{height: `calc(100% - ${height}px)`}}>
+                    <div className={styles["pluginOutput-select"]}>
+                        <span className={styles["pluginOutput-pluginName"]}>当前插件输出：</span>
+                        <YakitSelect
+                            size='small'
+                            showSearch
+                            placeholder='选择插件'
+                            optionFilterProp='label'
+                            value={showPluginStream}
+                            onChange={setShowPluginStream}
+                            virtual
+                            listHeight={300}
+                            options={Object.keys(pluginStreamInfo || {}).map((pluginName) => ({
+                                label: pluginName,
+                                value: pluginName
+                            }))}
+                            wrapperStyle={{width: 350}}
+                        ></YakitSelect>
+                    </div>
+                    <div className={styles["pluginOutput-execRes"]}>
+                        <PluginExecuteResult
+                            streamInfo={pluginStreamInfo[showPluginStream]}
+                            runtimeId={""}
+                            loading={true}
+                        />
+                    </div>
                 </div>
             )}
         </div>

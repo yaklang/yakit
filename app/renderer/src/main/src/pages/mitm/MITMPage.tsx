@@ -1,24 +1,11 @@
-import React, {
-    Profiler,
-    ReactElement,
-    forwardRef,
-    useContext,
-    useEffect,
-    useImperativeHandle,
-    useMemo,
-    useRef,
-    useState
-} from "react"
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
-import {ExecResult, QueryYakScriptRequest, YakScriptHookItem} from "../invoker/schema"
-import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
-import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
+import {QueryYakScriptRequest} from "../invoker/schema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import style from "./MITMPage.module.scss"
-import {useCreation, useDebounceEffect, useDeepCompareEffect, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
-import {StatusCardProps} from "../yakitStore/viewers/base"
+import {useCreation, useDebounceEffect, useDeepCompareEffect, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
@@ -76,6 +63,9 @@ import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import { getStorageMitmShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/mitm"
 import { JSONParseLog } from "@/utils/tool"
+import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {DefaultStreamInfo, StreamProcessorManager} from "./PluginsOutput/StreamProcessor"
+import { isEqual } from "lodash"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
@@ -126,11 +116,15 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
     const [tip, setTip] = useState("")
 
-    // yakit log message
-    const [logs, setLogs] = useState<ExecResultLog[]>([])
-    const latestLogs = useLatest<ExecResultLog[]>(logs)
-    const [_, setLatestStatusHash, getLatestStatusHash] = useGetState("")
-    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
+    // 插件输出
+    const pluginsStreamTimerRef = useRef<NodeJS.Timeout | null>(null)
+    const pluginStreamProcessorManagerRef = useRef(new StreamProcessorManager())
+    const pluginsStreamInfoRef = useRef<Record<string, HoldGRPCStreamInfo>>({
+        default: DefaultStreamInfo
+    })
+    const [showPluginStream, setShowPluginStream] = useState<string>("default")
+    const [_, setTickRefresh] = useState(0)
+
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
@@ -182,35 +176,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 recover()
             })
 
-        // 用于 MITM 的 Message （YakitLog）
-        let messages: ExecResultLog[] = []
-        const statusMap = new Map<string, StatusCardProps>()
-        let lastStatusHash = ""
-        grpcClientMITMMessage(mitmVersion).on((data: ExecResult) => {
-            let msg = ExtractExecResultMessage(data)
-            if (msg !== undefined) {
-                const currentLog = msg as ExecResultLog
-                if (currentLog.level === "feature-status-card-data") {
-                    lastStatusHash = `${currentLog.timestamp}-${currentLog.data}`
-
-                    try {
-                        // 解析 Object
-                        const obj = JSONParseLog(currentLog.data, {page: "MITMPage", fun: "feature-status-card-data"})
-                        const {id, data} = obj
-                        if (!data) {
-                            statusMap.delete(`${id}`)
-                        } else {
-                            statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
-                        }
-                    } catch (e) {}
-                    return
-                }
-                messages.push(currentLog)
-                if (messages.length > 25) {
-                    messages.shift()
-                }
-            }
-        })
         grpcClientMITMError(mitmVersion).on((msg) => {
             if (!msg) {
                 info("MITM 劫持服务器已关闭")
@@ -229,40 +194,46 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             }
             grpcMITMStopCall(mitmVersion)
             setStatus("idle")
+
+            // 重置插件输出日志
+            stopPluginsStreamTimer()
+            pluginStreamProcessorManagerRef.current.reset()
+            pluginsStreamInfoRef.current = {
+                default: DefaultStreamInfo
+            }
+            setShowPluginStream("default")
         })
 
-        const updateLogs = () => {
-            if (statusRef.current === "idle") {
-                messages = []
-                lastStatusHash = ""
-                statusMap.clear()
-            }
-
-            try {
-                if (JSON.stringify(latestLogs.current) !== JSON.stringify(messages)) {
-                    const arr = [...messages]
-                    setLogs(arr)
-                    return
-                }
-            } catch (error) {}
-
-            if (getLatestStatusHash() !== lastStatusHash) {
-                setLatestStatusHash(lastStatusHash)
-
-                const tmpCurrent: StatusCardProps[] = []
-                statusMap.forEach((value, key) => {
-                    tmpCurrent.push(value)
-                })
-                setStatusCards(tmpCurrent.sort((a, b) => a.Id.localeCompare(b.Id)))
+        // 用于 MITM 的 插件输出
+        grpcClientMITMMessage(mitmVersion).on((data: StreamResult.BaseProsp) => {
+            pluginStreamProcessorManagerRef.current.consume(data)
+            startPluginsStreamTimer()
+        })
+        const updatePluginOutput = () => {
+            const streamInfos = pluginStreamProcessorManagerRef.current.buildAllStreamInfo([
+                {tabName: "日志", type: "log"}
+            ])
+            
+            if (!isEqual(pluginsStreamInfoRef.current, streamInfos)) {
+                pluginsStreamInfoRef.current = streamInfos
+                setTickRefresh((t) => t + 1)
             }
         }
-        updateLogs()
-        let id = setInterval(() => {
-            updateLogs()
-        }, 1000)
+        const startPluginsStreamTimer = () => {
+            if (pluginsStreamTimerRef.current) return
+            pluginsStreamTimerRef.current = setInterval(() => {
+                updatePluginOutput()
+            }, 1000)
+        }
+        const stopPluginsStreamTimer = () => {
+            if (pluginsStreamTimerRef.current) {
+                clearInterval(pluginsStreamTimerRef.current)
+                pluginsStreamTimerRef.current = null
+            }
+        }
 
         return () => {
-            clearInterval(id)
+            stopPluginsStreamTimer()
             grpcClientMITMError(mitmVersion).remove()
             grpcClientMITMMessage(mitmVersion).remove()
         }
@@ -410,13 +381,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setVisible={setVisible}
                         status={status}
                         setStatus={setStatus}
-                        logs={[]}
-                        statusCards={[]}
                         downstreamProxyStr={downstreamProxyStr}
                         isHasParams={false}
                         onIsHasParams={setIsHasParams}
                         showPluginHistoryList={showPluginHistoryList}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        pluginStreamInfo={pluginsStreamInfoRef.current}
+                        showPluginStream={showPluginStream}
+                        setShowPluginStream={setShowPluginStream}
                     />
                 )
 
@@ -432,8 +404,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         defaultPlugins={defaultPlugins}
                         enableInitialMITMPlugin={enableInitialMITMPlugin}
                         setVisible={setVisible}
-                        logs={logs}
-                        statusCards={statusCards}
                         tip={tip}
                         onSetTip={setTip}
                         downstreamProxyStr={downstreamProxyStr}
@@ -444,6 +414,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setShowPluginHistoryList={setShowPluginHistoryList}
                         tempShowPluginHistory={tempShowPluginHistory}
                         setTempShowPluginHistory={setTempShowPluginHistory}
+                        pluginStreamInfo={pluginsStreamInfoRef.current}
+                        showPluginStream={showPluginStream}
+                        setShowPluginStream={setShowPluginStream}
                     />
                 )
         }
@@ -537,8 +510,6 @@ interface MITMServerProps {
     status: MitmStatus
     // 开启劫持后
     setStatus: (status: MITMStatus) => any
-    logs: ExecResultLog[]
-    statusCards: StatusCardProps[]
     downstreamProxyStr: string
     isHasParams: boolean
     onIsHasParams: (isHasParams: boolean) => void
@@ -547,6 +518,9 @@ interface MITMServerProps {
     tempShowPluginHistory?: string
     setTempShowPluginHistory?: (t: string) => void
     setFiltersVisible?: (v: boolean) => void
+    pluginStreamInfo: Record<string, HoldGRPCStreamInfo>
+    showPluginStream: string
+    setShowPluginStream: React.Dispatch<React.SetStateAction<string>>
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const {
@@ -554,8 +528,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         setVisible,
         status,
         setStatus,
-        logs,
-        statusCards,
         downstreamProxyStr,
         isHasParams,
         onIsHasParams = () => {},
@@ -563,7 +535,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         tempShowPluginHistory,
         setShowPluginHistoryList,
         setTempShowPluginHistory,
-        setFiltersVisible
+        setFiltersVisible,
+        pluginStreamInfo,
+        showPluginStream,
+        setShowPluginStream
     } = props
 
     const mitmContent = useContext(MITMContext)
@@ -1009,8 +984,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     <MITMHijackedContent
                         setStatus={setStatus}
                         status={status}
-                        logs={logs}
-                        statusCards={statusCards}
                         downstreamProxyStr={downstreamProxyStr}
                         loadedPluginLen={loadedPluginLen}
                         onSelectAll={onSelectAll}
@@ -1022,6 +995,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 setFiltersVisible(v)
                             }
                         }}
+                        pluginStreamInfo={pluginStreamInfo}
+                        showPluginStream={showPluginStream}
+                        setShowPluginStream={setShowPluginStream}
                     />
                 )
         }
