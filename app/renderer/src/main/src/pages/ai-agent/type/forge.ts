@@ -1,4 +1,11 @@
 import {PaginationSchema} from "@/pages/invoker/schema"
+import { AIChatInfo } from "./aiChat"
+
+export interface GrpcPageResponse<T = unknown> {
+    Pagination: PaginationSchema
+    Data: T
+    Total: number
+}
 
 /** forge 详情数据字段 */
 export interface AIForge {
@@ -73,3 +80,5 @@ export interface QueryAIFocusRequest {}
 export interface QueryAIFocusResponse {
     Data: AIFocus[]
 }
+
+export type QueryAISessionResponse = GrpcPageResponse<AIChatInfo[]>

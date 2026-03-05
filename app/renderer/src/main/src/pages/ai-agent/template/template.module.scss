@@ -119,13 +119,15 @@ textarea.qs-input-textarea {
             justify-content: flex-end;
             gap: 4px;
             overflow: hidden;
+            .round-btn {
+                width: 24px;
+                svg {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
         }
     }
 }
 
-.round-btn {
-    svg {
-        width: 14px;
-    }
-}
 // #endregion
