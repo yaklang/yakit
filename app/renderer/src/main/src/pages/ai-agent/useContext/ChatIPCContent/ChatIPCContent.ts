@@ -56,6 +56,7 @@ export interface ChatIPCContextValue {
 export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     chatIPCEvents: {
         fetchToken: () => "",
+        fetchAIRequest: () => undefined,
         fetchTaskChatID: () => "",
         onSwitchChat: () => {},
         onStart: () => {},
