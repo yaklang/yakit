@@ -84,7 +84,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         }
     }, [inViewport])
 
-    const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
+    const onRefreshAvailableAIModelList = useMemoizedFn(() => {
         setOnlineLoading(true)
         getAIModelListOption()
     })
@@ -133,6 +133,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
     const onSetGlobalConfig = useMemoizedFn(() => {
         grpcSetAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
+            setAIModelOptions((v) => ({...v, onlineModels: cloneDeep(aiModelOptions.onlineModels)}))
+            aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
             emiter.emit("onRefreshAIModelList")
         })
     })
@@ -316,18 +318,19 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                 <div className={styles["select-title"]}>
                                     <div className={styles["select-title-left"]}>
                                         <span>AI 模型选择</span>
-                                        <YakitSelect
-                                            size='small'
-                                            disabled={execute}
-                                            options={AIModelPolicyOptions}
-                                            value={policy}
-                                            onSelect={onSelectPolicy}
-                                            wrapperClassName={styles["select-policy-wrapper"]}
-                                            dropdownClassName={styles["select-policy-dropdown"]}
-                                            wrapperStyle={{width: 80, marginRight: 4}}
-                                            dropdownMatchSelectWidth={false}
-                                        />
-
+                                        {!execute && (
+                                            <YakitSelect
+                                                size='small'
+                                                disabled={execute}
+                                                options={AIModelPolicyOptions}
+                                                value={policy}
+                                                onSelect={onSelectPolicy}
+                                                wrapperClassName={styles["select-policy-wrapper"]}
+                                                dropdownClassName={styles["select-policy-dropdown"]}
+                                                wrapperStyle={{width: 80, marginRight: 4}}
+                                                dropdownMatchSelectWidth={false}
+                                            />
+                                        )}
                                         <Tooltip title={getTipByType(policy)}>
                                             <OutlineInformationcircleIcon className={styles["icon-info"]} />
                                         </Tooltip>

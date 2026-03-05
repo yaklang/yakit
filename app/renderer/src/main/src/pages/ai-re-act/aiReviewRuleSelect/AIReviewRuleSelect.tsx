@@ -76,18 +76,6 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         }
         if (v) setAIReviewRiskControlScore(aiReviewRiskControlScore)
     })
-    // const onSetOpen = useMemoizedFn((v: boolean) => {
-    //     setOpen(v)
-    //     if (!v && chatIPCData.execute && !isEqual(selectReviewPolicyRef.current, modelValue)) {
-    //         handleSendConfigHotpatch({
-    //             hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-    //             params: {
-    //                 ReviewPolicy: modelValue
-    //             }
-    //         })
-    //     }
-    //     if (v) selectReviewPolicyRef.current = modelValue
-    // })
     const getIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
         if (modelValue === value) {
             return AIReviewRuleIconMap[value]?.activeIcon
@@ -95,7 +83,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         return AIReviewRuleIconMap[value]?.icon
     })
     return (
-        <div className={classNames(styles["review-rule-select-wrapper"],props.className)}>
+        <div className={classNames(styles["review-rule-select-wrapper"], props.className)}>
             <YakitSegmented
                 value={modelValue}
                 onChange={(v) => {

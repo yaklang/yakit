@@ -264,6 +264,12 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         setRemoveVisible(false)
         localRef.current?.onRefresh()
     })
+    const onRefreshAIModel=useMemoizedFn(()=>{
+        //刷新列表
+        onRefresh(false)
+        // 刷新ai输入框中model数据
+        emiter.emit("onRefreshAvailableAIModelList")
+    })
     return (
         <div className={styles["ai-model-list-wrapper"]} ref={onlineListRef}>
             <div className={styles["ai-model-list-header"]}>
@@ -278,7 +284,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                     <div className={styles["ai-model-list-total"]}>{total}</div>
                 </div>
                 <div className={styles["ai-model-list-header-right"]}>
-                    {modelType === "online" && <AIOnlineModeSetting onRefresh={() => onRefresh(false)} />}
+                    {modelType === "online" && <AIOnlineModeSetting onRefresh={onRefreshAIModel} />}
                     <Tooltip title='添加'>
                         <YakitButton type='text2' icon={<OutlinePlusIcon />} onClick={onAdd} />
                     </Tooltip>
