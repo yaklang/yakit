@@ -14,6 +14,7 @@ import {
     AIGlobalConfig,
     AIModelConfig,
     AIModelTypeFileName,
+    AIProvider,
     grpcGetAIGlobalConfig,
     grpcQueryAIProviderAll,
     grpcSetAIGlobalConfig
@@ -273,6 +274,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
     const [options, setOptions] = useState<YakitAutoCompleteProps["options"]>()
     const [loading, setLoading] = useState<boolean>(false)
 
+    const aiProviderRef = useRef<AIProvider[]>()
     const form = Form.useFormInstance()
 
     useEffect(() => {
@@ -285,6 +287,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
                 setLoading(true)
                 grpcQueryAIProviderAll(aiType)
                     .then((res) => {
+                        aiProviderRef.current = res.Providers
                         const options: YakitAutoCompleteProps["options"] = res.Providers.map((item) => {
                             return {
                                 label: item.Config.APIKey,
@@ -304,10 +307,19 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
         }),
         {wait: 200, leading: true}
     ).run
-    const onSelect = useMemoizedFn((value: string, options) => {
+    const onSelect = useMemoizedFn((value: string, option) => {
+        const item = aiProviderRef.current?.find((i) => i.Id === value)
         form.setFieldsValue({
-            api_key: options.label,
-            api_key_id: value
+            api_key: option.label,
+            api_key_id: value,
+            domain: item?.Config?.Domain,
+            proxy: item?.Config?.Proxy,
+            no_https: item?.Config?.NoHttps
+        })
+    })
+    const onClear = useMemoizedFn(() => {
+        form.setFieldsValue({
+            api_key_id: undefined
         })
     })
     return (
@@ -347,6 +359,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
                         return false
                     }}
                     onSelect={onSelect}
+                    onClear={onClear}
                 ></YakitAutoComplete>
             </Form.Item>
             <Form.Item name='api_key_id' noStyle style={{display: "none"}}>
