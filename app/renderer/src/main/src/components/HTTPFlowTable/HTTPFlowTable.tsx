@@ -4603,12 +4603,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             <YakitHint
                 visible={reclaimHint}
                 title={t("HTTPFlowTable.reclaimDatabaseSpaceTitle")}
-                content={t("HTTPFlowTable.reclaimDatabaseSpaceCont")}
-                onOk={reclaimDatabaseSpace}
-                onCancel={() => {
+                content={<>{t("HTTPFlowTable.reclaimDatabaseSpaceCont")}<span style={{color: "var(--Colors-Use-Error-Primary)"}}>{t("HTTPFlowTable.reclaimDatabaseSpaceCont2")}</span></>}
+                onCancel={reclaimDatabaseSpace}
+                onOk={() => {
                     execDelFun(false)
                     resetReclaimInfo()
                 }}
+                okButtonText={t("HTTPFlowTable.reclaimOk")}
+                cancelButtonText={t("HTTPFlowTable.reclaimCancel")}
             />
         </div>
     )
