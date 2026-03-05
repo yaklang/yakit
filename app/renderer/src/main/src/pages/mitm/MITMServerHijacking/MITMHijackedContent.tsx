@@ -1,17 +1,14 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCounter, useCreation, useInterval, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
 import {MITMLogHeardExtra} from "./MITMLog"
-import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
-import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
-import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
 import {useStore} from "@/store/mitmState"
-import {HTTPFlowRealTimeTableAndEditor, HTTPHistory} from "@/components/HTTPHistory"
+import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
@@ -29,7 +26,7 @@ import {convertLocalMITMFilterRequest, convertMITMFilterUI} from "../MITMServerS
 import cloneDeep from "lodash/cloneDeep"
 import {defaultMITMFilterData} from "@/defaultConstants/mitm"
 import MITMFiltersModal, {getAdvancedFlag, getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
-import {Tooltip} from "antd"
+import {Badge, Tooltip} from "antd"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     ClientMITMHijackedResponse,
@@ -49,8 +46,7 @@ import {
     grpcMITMHijackGetFilter,
     grpcMITMHijackedCurrentResponseById,
     grpcMITMSetFilter,
-    isMITMResponse,
-    isMITMV2Response
+    isMITMResponse
 } from "../MITMHacker/utils"
 import {ManualHijackTypeProps, MITMManualRefProps} from "../MITMManual/MITMManualType"
 import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
@@ -61,7 +57,11 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {StreamUpdateState} from "./PluginsOutput/StreamProcessor"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -71,8 +71,8 @@ export type MITMStatus = "hijacking" | "hijacked" | "idle"
 interface MITMHijackedContentProps {
     status: MITMStatus
     setStatus: (status: MITMStatus) => any
-    logs: ExecResultLog[]
-    statusCards: StatusCardProps[]
+    autoForward: ManualHijackTypeProps
+    setAutoForward: React.Dispatch<React.SetStateAction<ManualHijackTypeProps>>
     downstreamProxyStr: string
     loadedPluginLen: number
     onSelectAll: (e: boolean) => void
@@ -80,29 +80,39 @@ interface MITMHijackedContentProps {
     setTempShowPluginHistory?: (s: string) => void
     onSetRuleVisible: (v: boolean) => void
     onSetFilterVisible: (v: boolean) => void
+    pluginStreamInfo: Record<string, HoldGRPCStreamInfo>
+    showPluginStream: string
+    setShowPluginStream: React.Dispatch<React.SetStateAction<string>>
+    hasPluginsStreamUpdate: boolean
+    updatesPlugins?: Map<string, StreamUpdateState>
+    pluginOutputRef: React.RefObject<HTMLDivElement>
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
     const {
         status,
         setStatus,
-        logs,
-        statusCards,
+        autoForward,
+        setAutoForward,
         downstreamProxyStr,
         loadedPluginLen,
         onSelectAll,
         setShowPluginHistoryList,
         setTempShowPluginHistory,
         onSetRuleVisible,
-        onSetFilterVisible
+        onSetFilterVisible,
+        pluginStreamInfo,
+        showPluginStream,
+        setShowPluginStream,
+        hasPluginsStreamUpdate,
+        updatesPlugins,
+        pluginOutputRef
     } = props
     const mitmContent = useContext(MITMContext)
 
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
-    // 自动转发 与 劫持响应的自动设置
-    const [autoForward, setAutoForward] = useState<ManualHijackTypeProps>("log")
 
     const [hijackResponseType, setHijackResponseType] = useState<"all" | "never">("never") // 劫持类型
 
@@ -1015,6 +1025,36 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         )
     })
 
+    // #region 插件输出展示插件
+    const [pluginSearchValue, setPluginSearchValue] = useState("其他")
+    useEffect(() => {
+        setPluginSearchValue(showPluginStream === "default" ? "其他" : showPluginStream)
+    }, [showPluginStream])
+    const hasSinglePluginUpdate = useMemoizedFn((pluginName: string) => {
+        const update = updatesPlugins?.get(pluginName)
+        return !!(
+            update?.hasNewPlugin ||
+            update?.newTables?.size ||
+            update?.tableDataUpdate?.size ||
+            update?.hasNewMarkdown
+        )
+    })
+    const pluginOptions = useMemo(() => {
+        return Object.keys(pluginStreamInfo || {}).map((pluginName) => {
+            const text = pluginName === "default" ? "其他" : pluginName
+            return {
+                label: (
+                    <Badge dot={hasSinglePluginUpdate(pluginName)} size='small'>
+                        <span className={styles["pluginOut-select-item"]}>{text}</span>
+                    </Badge>
+                ),
+                value: text,
+                pluginName: pluginName
+            }
+        })
+    }, [pluginStreamInfo])
+    // #endregion
+
     return (
         <div className={styles["mitm-hijacked-content"]}>
             <div>
@@ -1062,7 +1102,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                     value: "hijackFilter"
                                 },
                                 {label: "自动放行", value: "log"},
-                                {label: "被动日志", value: "passive"}
+                                {
+                                    label: (
+                                        <Badge dot={hasPluginsStreamUpdate} offset={[0, 0]}>
+                                            <span className={styles["pluginOut-text"]}>插件输出</span>
+                                        </Badge>
+                                    ),
+                                    value: "pluginOutput"
+                                }
                             ]}
                             onChange={(e) => {
                                 if (e.target.value === "hijackFilter") return
@@ -1097,10 +1144,39 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
             </div>
             {onRenderContent()}
-            {/* 被动日志 */}
-            {autoForward === "passive" && (
-                <div className={styles["mitm-hijacked-passive-content"]}>
-                    <MITMPluginLogViewer messages={logs} status={statusCards} />
+            {/* 插件输出 */}
+            {autoForward === "pluginOutput" && (
+                <div className={styles["pluginOutput-wrapper"]} style={{height: `calc(100% - ${height}px)`}}>
+                    <div className={styles["pluginOutput-select"]}>
+                        <span className={styles["pluginOutput-pluginName"]}>当前插件输出：</span>
+                        <YakitAutoComplete
+                            size='small'
+                            wrapperStyle={{width: 350}}
+                            placeholder={showPluginStream === "default" ? "其他" : showPluginStream}
+                            virtual
+                            listHeight={300}
+                            value={pluginSearchValue}
+                            options={pluginOptions}
+                            filterOption={(input: string, option?: any) => {
+                                if (!option) return false
+                                return option.value.toLowerCase().includes(input.toLowerCase())
+                            }}
+                            showSearch
+                            onSearch={setPluginSearchValue}
+                            onSelect={(v, option: any) => {
+                                setPluginSearchValue(v)
+                                setShowPluginStream(option.pluginName)
+                            }}
+                            allowClear
+                        />
+                    </div>
+                    <div className={styles["pluginOutput-execRes"]} ref={pluginOutputRef}>
+                        <PluginExecuteResult
+                            streamInfo={pluginStreamInfo[showPluginStream]}
+                            runtimeId={""}
+                            loading={true}
+                        />
+                    </div>
                 </div>
             )}
         </div>

@@ -21,8 +21,8 @@ export enum ManualHijackType {
     Manual = "manual",
     /**自动放行 */
     Log = "log",
-    /**被动日志 */
-    Passive = "passive",
+    /*插件输出 */
+    PluginOutput = "pluginOutput",
     /**条件劫持 */
     HijackFilter = "hijackFilter"
 }

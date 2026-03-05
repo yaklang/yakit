@@ -57,6 +57,8 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
@@ -92,6 +94,10 @@ interface MITMPluginHijackContentProps {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory?: string
     setTempShowPluginHistory?: (t: string) => void
+    pluginStreamInfo: Record<string, HoldGRPCStreamInfo>
+    showPluginStream: string
+    setShowPluginStream: React.Dispatch<React.SetStateAction<string>>
+    setAutoForward: React.Dispatch<React.SetStateAction<ManualHijackTypeProps>>
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -164,7 +170,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory = "",
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        pluginStreamInfo,
+        showPluginStream,
+        setShowPluginStream,
+        setAutoForward
     } = props
 
     const mitmContent = useContext(MITMContext)
@@ -803,6 +813,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                         tempShowPluginHistory={tempShowPluginHistory}
                                         setTempShowPluginHistory={setTempShowPluginHistory}
                                         curTabKey={curTabKey}
+                                        pluginStreamInfo={pluginStreamInfo}
+                                        showPluginStream={showPluginStream}
+                                        setShowPluginStream={setShowPluginStream}
+                                        setAutoForward={setAutoForward}
                                     />
                                 )}
                             />
@@ -903,6 +917,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 curTabKey={curTabKey}
                                 tempShowPluginHistory={tempShowPluginHistory}
                                 setTempShowPluginHistory={setTempShowPluginHistory}
+                                pluginStreamInfo={pluginStreamInfo}
+                                showPluginStream={showPluginStream}
+                                setShowPluginStream={setShowPluginStream}
+                                setAutoForward={setAutoForward}
                             />
                         </YakitSpin>
                     </div>

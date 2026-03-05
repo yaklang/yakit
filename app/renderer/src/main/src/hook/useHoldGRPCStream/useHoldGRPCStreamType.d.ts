@@ -76,6 +76,7 @@ export declare namespace StreamResult {
         Id?: number
         Progress: number
         RuntimeID?: string
+        PluginName?: string
         AnalyzeId?: string
         ExecResult?: BaseProsp
         RuleData?: HTTPFlowRuleData // 后端返回的ExtractedContent其实不在这个字段里面，只是前端表格展示需要塞到这个字段
