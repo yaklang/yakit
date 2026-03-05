@@ -13,6 +13,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     AIGlobalConfig,
     AIModelConfig,
+    AIModelTypeFileName,
     grpcGetAIGlobalConfig,
     grpcQueryAIProviderAll,
     grpcSetAIGlobalConfig
@@ -20,7 +21,7 @@ import {
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {AIModelTypeEnum} from "../../defaultConstant"
+import {AIModelTypeEnum, AIModelTypeInterFileNameEnum} from "../../defaultConstant"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {yakitNotify} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
@@ -40,34 +41,35 @@ export const isEqualAIModel = (item: AIModelConfig, newItem: AIModelConfig) => {
     )
 }
 
+/**获取ai模型对应的键名,通过模型类型 */
 const getFileNameByModelType = (type: AIModelTypeEnum) => {
-    let fileName = ""
+    let fileName: AIModelTypeFileName | null = null
     switch (type) {
         case AIModelTypeEnum.TierIntelligent:
-            fileName = "IntelligentModels"
+            fileName = AIModelTypeInterFileNameEnum.IntelligentModels
             break
         case AIModelTypeEnum.TierLightweight:
-            fileName = "LightweightModels"
+            fileName = AIModelTypeInterFileNameEnum.LightweightModels
             break
         case AIModelTypeEnum.TierVision:
-            fileName = "VisionModels"
+            fileName = AIModelTypeInterFileNameEnum.VisionModels
             break
         default:
             break
     }
     return fileName
 }
-
+/**通过键名获取对应的模型类型 */
 export const getModelTypeByFileName = (fileName: string) => {
-    let modelType: AIModelTypeEnum | undefined = undefined
+    let modelType: AIModelTypeEnum | null = null
     switch (fileName) {
-        case "IntelligentModels":
+        case AIModelTypeInterFileNameEnum.IntelligentModels:
             modelType = AIModelTypeEnum.TierIntelligent
             break
-        case "LightweightModels":
+        case AIModelTypeInterFileNameEnum.LightweightModels:
             modelType = AIModelTypeEnum.TierLightweight
             break
-        case "VisionModels":
+        case AIModelTypeInterFileNameEnum.VisionModels:
             modelType = AIModelTypeEnum.TierVision
             break
         default:
@@ -172,6 +174,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigRef.current)
 
         const fileName = getFileNameByModelType(modelType)
+        if (!fileName) return
         const index = newConfig[fileName].findIndex((i) => isEqualAIModel(i, newItem))
         if (index !== -1) {
             yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
@@ -206,6 +209,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 }
                 // 修改了模型类型,需要先把原来模型从列表中删除,然后再新的列表末尾添加
                 const oldFileName = getFileNameByModelType(aiModelType!)
+                if (!oldFileName) return
                 newConfig[oldFileName].splice(currentIndexInConfigRef.current, 1)
 
                 newConfig[fileName].push(newItem)

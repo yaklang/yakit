@@ -1,8 +1,7 @@
 import {ThirdPartyApplicationConfigProp} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
-import {AIModelConfig} from "../utils"
+import {AIModelConfig, AIModelTypeFileName} from "../utils"
 import {AIModelTypeEnum} from "../../defaultConstant"
 import {FormItemProps} from "antd"
-import {KVPair} from "@/models/kv"
 
 export interface AIModelFormProps {
     item?: AIModelConfig
@@ -20,7 +19,7 @@ export interface AIConfigAPIKeyFormItemProps {
 export interface AIModelFormSetAIGlobalConfigOptions {
     aiService: string
     aiModelName: string
-    fileName?: string
+    fileName?: AIModelTypeFileName
 }
 
 interface AddOrUpdateOptions {

@@ -22,6 +22,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {
     AIGlobalConfig,
     AIModelConfig,
+    AIModelTypeFileName,
     grpcCancelStartLocalModel,
     grpcClearAllModels,
     grpcDeleteLocalModel,
@@ -71,6 +72,7 @@ import {
     AIModelPolicyEnum,
     AIModelPolicyOptions,
     AIModelTypeEnum,
+    AIModelTypeInterFileNameEnum,
     AIOnlineModelIconMap
 } from "../defaultConstant"
 import {randomString} from "@/utils/randomUtil"
@@ -493,7 +495,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             (
                 item: AIModelConfig,
                 options: {
-                    fileName: string
+                    fileName: AIModelTypeFileName
                     index: number
                 }
             ) => {
@@ -528,11 +530,11 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 title={"高质模型"}
                                 subTitle={"用于执行复杂度高的任务,对话框中可切换该模型"}
                                 list={aiGlobalConfig?.IntelligentModels || []}
-                                onEdit={(item) => onEdit(item, "IntelligentModels")}
-                                onRemove={(item) => onRemove(item, "IntelligentModels")}
+                                onEdit={(item) => onEdit(item, AIModelTypeInterFileNameEnum.IntelligentModels)}
+                                onRemove={(item) => onRemove(item, AIModelTypeInterFileNameEnum.IntelligentModels)}
                                 onSelect={(item, index) =>
                                     onSelect(item, {
-                                        fileName: "IntelligentModels",
+                                        fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
                                         index
                                     })
                                 }
@@ -543,11 +545,11 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 title={"轻量模型"}
                                 subTitle={"用于执行简单任务和会话"}
                                 list={aiGlobalConfig?.LightweightModels || []}
-                                onEdit={(item) => onEdit(item, "LightweightModels")}
-                                onRemove={(item) => onRemove(item, "LightweightModels")}
+                                onEdit={(item) => onEdit(item, AIModelTypeInterFileNameEnum.LightweightModels)}
+                                onRemove={(item) => onRemove(item, AIModelTypeInterFileNameEnum.LightweightModels)}
                                 onSelect={(item, index) =>
                                     onSelect(item, {
-                                        fileName: "LightweightModels",
+                                        fileName: AIModelTypeInterFileNameEnum.LightweightModels,
                                         index
                                     })
                                 }
@@ -558,11 +560,11 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 title={"视觉模式"}
                                 subTitle={"用于识别图片等,生成知识库和任务执行都会用到"}
                                 list={aiGlobalConfig?.VisionModels || []}
-                                onEdit={(item) => onEdit(item, "VisionModels")}
-                                onRemove={(item) => onRemove(item, "VisionModels")}
+                                onEdit={(item) => onEdit(item, AIModelTypeInterFileNameEnum.VisionModels)}
+                                onRemove={(item) => onRemove(item, AIModelTypeInterFileNameEnum.VisionModels)}
                                 onSelect={(item, index) =>
                                     onSelect(item, {
-                                        fileName: "VisionModels",
+                                        fileName: AIModelTypeInterFileNameEnum.VisionModels,
                                         index
                                     })
                                 }

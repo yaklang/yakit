@@ -330,6 +330,7 @@ export interface AIGlobalConfig {
     /**视觉模式 */
     VisionModels: AIModelConfig[]
 }
+export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, "IntelligentModels" | "LightweightModels" | "VisionModels">
 export interface AIModelConfig {
     ProviderId: string
     Provider: ThirdPartyApplicationConfig

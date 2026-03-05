@@ -2,13 +2,14 @@ import React, {useEffect, useRef, useState} from "react"
 import {AIModelItemProps, AIModelSelectListProps, AIModelSelectProps, AISelectType} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {AIGlobalConfig, AIModelConfig, grpcSetAIGlobalConfig, isForcedSetAIModal} from "../utils"
+import {AIGlobalConfig, AIModelConfig, AIModelTypeFileName, grpcSetAIGlobalConfig, isForcedSetAIModal} from "../utils"
 import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
 import {GetAIModelAvailableTotalResponse} from "../../type/aiModel"
 import {
     AIModelPolicyEnum,
     AIModelPolicyOptions,
+    AIModelTypeInterFileNameEnum,
     AIOnlineModelIconMap,
     defaultAIGlobalConfig
 } from "../../defaultConstant"
@@ -84,6 +85,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     }, [inViewport])
 
     const onRefreshAvailableAIModelList = useMemoizedFn((data?: string) => {
+        setOnlineLoading(true)
         getAIModelListOption()
     })
 
@@ -93,8 +95,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             const data: AIAgentTriggerEventInfo = JSON.parse(res)
             const {type, params} = data
             setAIType(type as AISelectType)
+            const fileName = params?.fileName as AIModelTypeFileName
             if (execute) {
-                if (params?.fileName === "IntelligentModels") {
+                if (fileName === AIModelTypeInterFileNameEnum.IntelligentModels) {
                     handleSendConfigHotpatch({
                         hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
                         params: {
@@ -104,7 +107,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     })
                 }
             } else {
-                getAIModelListOption()
+                onRefreshAvailableAIModelList()
             }
         } catch (error) {}
     })
@@ -119,6 +122,10 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 pageKey: "ai-agent",
                 isOpen: isOpen,
                 mountContainer: document.getElementById("main-operator-page-body-ai-agent")
+            }).finally(() => {
+                setTimeout(() => {
+                    setOnlineLoading(false)
+                }, 200)
             })
         },
         {wait: 200, leading: true}
@@ -280,7 +287,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         (
             item: AIModelConfig,
             options: {
-                fileName: string
+                fileName: AIModelTypeFileName
                 index: number
             }
         ) => {
@@ -331,7 +338,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             type='text2'
                                             icon={<OutlineRefreshIcon />}
                                             loading={onlineLoading}
-                                            onClick={() => getAIModelListOption()}
+                                            onClick={() => onRefreshAvailableAIModelList()}
                                         />
                                     )}
                                 </div>
@@ -343,7 +350,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             list={intelligentModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
-                                                    fileName: "IntelligentModels",
+                                                    fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
                                                     index
                                                 })
                                             }
@@ -356,7 +363,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             list={lightweightModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
-                                                    fileName: "LightweightModels",
+                                                    fileName: AIModelTypeInterFileNameEnum.LightweightModels,
                                                     index
                                                 })
                                             }
@@ -369,7 +376,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             list={visionModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
-                                                    fileName: "VisionModels",
+                                                    fileName: AIModelTypeInterFileNameEnum.VisionModels,
                                                     index
                                                 })
                                             }

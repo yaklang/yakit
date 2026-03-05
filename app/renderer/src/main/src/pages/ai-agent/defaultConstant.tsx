@@ -43,7 +43,7 @@ import {
 import {MCPServerType} from "./type/aiMCP"
 import {DefaultMemoryList} from "../ai-re-act/hooks/defaultConstant"
 import {ColorsAIIcon} from "@/assets/icon/colors"
-import {AIGlobalConfig} from "./aiModelList/utils"
+import {AIGlobalConfig, AIModelTypeFileName} from "./aiModelList/utils"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -340,6 +340,7 @@ export const AIModelPolicyOptions = [
     {value: AIModelPolicyEnum.PolicyBalance, label: "平衡策略"}
 ]
 
+/**ai model type,下拉选择的值 */
 export enum AIModelTypeEnum {
     /** 高质模型 */
     TierIntelligent = "intelligent",
@@ -347,6 +348,16 @@ export enum AIModelTypeEnum {
     TierLightweight = "lightweight",
     /** 视觉模式 */
     TierVision = "vision"
+}
+
+/**接口字段名对应 */
+export const AIModelTypeInterFileNameEnum: {[K in AIModelTypeFileName]: K} = {
+    /** 高质模型 */
+    IntelligentModels: "IntelligentModels",
+    /** 轻量模型 */
+    LightweightModels: "LightweightModels",
+    /** 视觉模式 */
+    VisionModels: "VisionModels"
 }
 
 export const defaultAIGlobalConfig: AIGlobalConfig = {
