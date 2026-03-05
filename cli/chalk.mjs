@@ -1,4 +1,5 @@
-import chalk from "chalk"
+import {importWithHint} from "./utils.mjs"
+const chalk = await importWithHint("chalk", (mod) => mod.default)
 
 // 主题色
 const MainChalk = chalk.hex("#B06028")

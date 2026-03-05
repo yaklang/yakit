@@ -1,3 +1,4 @@
+import {genCLIDisplayList, importWithHint} from "./utils.mjs"
 import {
     BusinessVersionOption,
     ElectronCMDExamplesDoc,
@@ -5,25 +6,7 @@ import {
     InstallCMDExamplesDoc,
     RenderCMDExamplesDoc
 } from "./config.mjs"
-import {MainChalk, RedChalk, BlueChalk, YellowChalk, GreenChalk, CyanChalk, GrayChalk} from "./chalk.mjs"
-import {genCLIDisplayList} from "./utils.mjs"
-
-const importWithHint = async (packageName, selector) => {
-    try {
-        const mod = await import(packageName)
-        return selector(mod)
-    } catch (error) {
-        const msg = String(error?.message || "")
-        const isMissingDependency = error?.code === "ERR_MODULE_NOT_FOUND" && msg.includes(`'${packageName}'`)
-
-        if (isMissingDependency) {
-            console.log(`\n缺少依赖: ${packageName}`)
-            console.log("请先在项目根目录执行: yarn install\n")
-            process.exit(1)
-        }
-        throw error
-    }
-}
+import {MainChalk, RedChalk, BlueChalk, YellowChalk, GreenChalk, CyanChalk} from "./chalk.mjs"
 
 const Command = await importWithHint("commander", (mod) => mod.Command)
 const inquirer = await importWithHint("inquirer", (mod) => mod.default)
