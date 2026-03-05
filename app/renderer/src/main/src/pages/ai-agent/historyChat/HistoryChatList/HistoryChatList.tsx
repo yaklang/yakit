@@ -10,11 +10,12 @@ import {YakitAIAgentPageID} from "../../defaultConstant"
 import {EditChatNameModal} from "../../UtilModals"
 import {AIChatInfo} from "../../type/aiChat"
 import {useInfiniteScroll, useMemoizedFn} from "ahooks"
-import {grpcDeleteAIEvent, grpcUpdateAISessionTitle} from "../../grpc"
+import { grpcDeleteAISession, grpcUpdateAISessionTitle} from "../../grpc"
 import useAIAgentStore from "../../useContext/useStore"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {yakitNotify} from "@/utils/notification"
 import {aiChatDataStore} from "../../store/ChatDataStore"
+import {onNewChat} from "../HistoryChat"
 
 const HistoryChatList: FC<{
     search: string
@@ -27,8 +28,8 @@ const HistoryChatList: FC<{
     const [delLoading, setDelLoading] = useState<string[]>([])
     const [editShow, setEditShow] = useState(false)
 
-    const activeID = useMemo(() => {
-        return activeChat?.id || ""
+    const activeSessionId = useMemo(() => {
+        return activeChat?.SessionID || ""
     }, [activeChat])
 
     const {loading} = useInfiniteScroll(
@@ -76,36 +77,39 @@ const HistoryChatList: FC<{
     })
 
     const handleDeleteChat = useMemoizedFn(async (info: AIChatInfo) => {
-        const {id, SessionID} = info
-        const isLoading = delLoading.includes(id)
+        const {SessionID} = info
+        const isLoading = delLoading.includes(SessionID)
         if (isLoading) return
-        const findIndex = chats.findIndex((item) => item.id === id)
+        const findIndex = chats.findIndex((item) => item.SessionID === SessionID)
         if (findIndex === -1) {
             yakitNotify("error", "未找到对应的对话")
             return
         }
-        setDelLoading((old) => [...old, id])
-        let active: AIChatInfo | undefined =
-            findIndex === chats.length - 1 ? chats[findIndex - 1] : chats[findIndex + 1]
-        setChats && setChats((old) => old.filter((item) => item.id !== id))
+        setDelLoading((old) => [...old, SessionID])
 
-        if (activeID !== id) active = undefined
-        active && handleSetActiveChat(active)
+        const newChats = chats.filter((item) => item.SessionID !== SessionID)
+        let active: AIChatInfo | undefined
+        if (newChats.length === 0) {
+            onNewChat()
+        } else {
+            const prev = chats[findIndex - 1]
+            const next = chats[findIndex + 1]
+            active = prev ?? next
+        }
+
+        setChats && setChats(newChats)
+
+        if (activeSessionId === SessionID && active) {
+            handleSetActiveChat(active)
+        }
 
         try {
-            await grpcDeleteAIEvent(
-                {
-                    Filter: {
-                        SessionID
-                    }
-                },
-                true
-            )
+            grpcDeleteAISession({Filter: {SessionID: [SessionID]}}, true)
             aiChatDataStore.remove(SessionID)
         } catch (error) {
             yakitNotify("error", "删除会话失败:" + error)
         } finally {
-            setDelLoading((old) => old.filter((el) => el !== id))
+            setDelLoading((old) => old.filter((el) => el !== SessionID))
         }
     })
 
@@ -121,13 +125,13 @@ const HistoryChatList: FC<{
     return (
         <div ref={listRef} className={styles["history-chat-list"]}>
             {showHistory.map((item) => {
-                const {SessionID, id, Title} = item
-                const delStatus = delLoading.includes(id)
+                const {SessionID, Title} = item
+                const delStatus = delLoading.includes(SessionID)
                 return (
                     <div
                         key={SessionID}
                         className={classNames(styles["history-item"], {
-                            [styles["history-item-active"]]: activeID === id
+                            [styles["history-item-active"]]: activeSessionId === SessionID
                         })}
                         onClick={() => handleSetActiveChat(item)}
                     >

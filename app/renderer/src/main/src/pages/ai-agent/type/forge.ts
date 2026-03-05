@@ -82,3 +82,32 @@ export interface QueryAIFocusResponse {
 }
 
 export type QueryAISessionResponse = GrpcPageResponse<AIChatInfo[]>
+
+export interface DeleteAISessionFilter {
+  /**
+   * 会话ID列表
+   */
+  SessionID?: string[];
+
+  /**
+   * 删除该时间戳之后的数据（毫秒时间戳）
+   */
+  AfterTimestamp?: number;
+
+  /**
+   * 删除该时间戳之前的数据（毫秒时间戳）
+   */
+  BeforeTimestamp?: number;
+}
+
+export interface DeleteAISessionRequest {
+  /**
+   * 删除过滤条件
+   */
+  Filter?: DeleteAISessionFilter;
+
+  /**
+   * 是否删除全部
+   */
+  DeleteAll?: boolean;
+}

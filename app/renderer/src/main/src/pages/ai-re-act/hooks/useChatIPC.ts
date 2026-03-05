@@ -444,7 +444,9 @@ function useChatIPC(params?: UseChatIPCParams) {
             grpcFolders: cloneDeep(grpcFolders),
             reActTimelines: cloneDeep(reActTimelines)
         }
-        cacheDataStore?.updater(session, answer)
+        try {
+            cacheDataStore?.updater(chatID.current, answer)
+        } catch{}
     })
 
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
@@ -465,7 +467,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatID.current = token
 
         aiRequest.current = params.Params
-        
+
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
                 // 记录会话中所有的 CoordinatorId
