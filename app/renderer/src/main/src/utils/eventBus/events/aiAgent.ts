@@ -35,4 +35,10 @@ export type AIAgentEventProps = {
     aiModelSelectChange: string
     /** 文件系统默认展开路径 */
     fileSystemDefaultExpand: string
+
+    /** AIReviewRule相关数据发生编发,是否热更新
+     * @name reviewPolicy {AIStartParams["ReviewPolicy"]
+     * @name aiReviewRiskControlScore {AIStartParams["AIReviewRiskControlScore"]
+     */
+    onRefreshAIReviewRuleSelect: string
 }

@@ -1,10 +1,10 @@
-import React, {useRef, useState} from "react"
-import {AIChatSelectProps, AIReviewRuleSelectProps, ReviewRuleSelectProps} from "./type"
+import React, {useEffect, useRef, useState} from "react"
+import {AIChatSelectProps, ReviewRuleSelectProps} from "./type"
 import styles from "./AIReviewRuleSelect.module.scss"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
 import classNames from "classnames"
-import {useClickAway, useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useClickAway, useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
     AIAgentSettingDefault,
@@ -23,6 +23,8 @@ import isEqual from "lodash/isEqual"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {Tooltip} from "antd"
+import emiter from "@/utils/eventBus/eventBus"
+import {JSONParseLog} from "@/utils/tool"
 
 const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
     const {setting} = useAIAgentStore()
@@ -37,6 +39,16 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         useState<AIStartParams["AIReviewRiskControlScore"]>()
 
     const selectReviewPolicyRef = useRef<AIStartParams["ReviewPolicy"]>()
+    const refRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(refRef)
+
+    useEffect(() => {
+        if (!inViewport) return
+        emiter.on("onRefreshAIReviewRuleSelect", onRefreshAIReviewRuleSelect)
+        return () => {
+            emiter.off("onRefreshAIReviewRuleSelect", onRefreshAIReviewRuleSelect)
+        }
+    }, [inViewport])
 
     const modelValue = useCreation(() => {
         return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
@@ -46,15 +58,39 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore
     }, [setting?.AIReviewRiskControlScore])
 
+    const onRefreshAIReviewRuleSelect = useMemoizedFn((res: string) => {
+        if (!chatIPCData.execute) return
+        const data = JSONParseLog(res)
+        if (!!data?.reviewPolicy) {
+            handHotpatchReviewPolicy(data?.reviewPolicy as AIStartParams["ReviewPolicy"])
+        }
+        if (!!data?.aiReviewRiskControlScore) {
+            handHotpatchAIReviewRiskControlScore(data?.aiReviewRiskControlScore)
+        }
+    })
+
+    const handHotpatchReviewPolicy = useMemoizedFn((value: AIStartParams["ReviewPolicy"]) => {
+        handleSendConfigHotpatch({
+            hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
+            params: {
+                ReviewPolicy: value
+            }
+        })
+    })
+
+    const handHotpatchAIReviewRiskControlScore = useMemoizedFn((value: number) => {
+        handleSendConfigHotpatch({
+            hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
+            params: {
+                AIReviewRiskControlScore: value
+            }
+        })
+    })
+
     const onSelectModel = useMemoizedFn((value: AIStartParams["ReviewPolicy"]) => {
         setSetting && setSetting((old) => ({...old, ReviewPolicy: value}))
-        if (chatIPCData.execute && !isEqual(selectReviewPolicyRef.current, modelValue)) {
-            handleSendConfigHotpatch({
-                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-                params: {
-                    ReviewPolicy: modelValue
-                }
-            })
+        if (chatIPCData.execute && modelValue && !isEqual(selectReviewPolicyRef.current, modelValue)) {
+            handHotpatchReviewPolicy(modelValue)
         }
         selectReviewPolicyRef.current = modelValue
     })
@@ -65,13 +101,13 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
     const onVisibleChange = useMemoizedFn((v: boolean) => {
         setVisible(v)
-        if (!v && chatIPCData.execute && !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)) {
-            handleSendConfigHotpatch({
-                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
-                params: {
-                    AIReviewRiskControlScore: selectAIReviewRiskControlScore
-                }
-            })
+        if (
+            !v &&
+            chatIPCData.execute &&
+            selectAIReviewRiskControlScore &&
+            !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)
+        ) {
+            handHotpatchAIReviewRiskControlScore(selectAIReviewRiskControlScore)
             onSetAIReviewRiskControlScore(selectAIReviewRiskControlScore)
         }
         if (v) setAIReviewRiskControlScore(aiReviewRiskControlScore)
@@ -83,7 +119,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         return AIReviewRuleIconMap[value]?.icon
     })
     return (
-        <div className={classNames(styles["review-rule-select-wrapper"], props.className)}>
+        <div className={classNames(styles["review-rule-select-wrapper"], props.className)} ref={refRef}>
             <YakitSegmented
                 value={modelValue}
                 onChange={(v) => {
