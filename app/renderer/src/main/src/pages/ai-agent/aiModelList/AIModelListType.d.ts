@@ -2,8 +2,9 @@ import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {LocalModelConfig} from "../type/aiModel"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
+import {type ModalProps} from "antd"
 
-export interface AIModelListProps {}
+export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, "mountContainer">> {}
 
 export type AIModelType = "online" | "local"
 
@@ -11,7 +12,7 @@ export interface AIOnlineModelListProps {
     ref: React.ForwardedRef<AIOnlineModelListRefProps>
     setOnlineTotal: (total: number) => void
     onAdd: () => void
-    mountContainer: HTMLElement | null
+    mountContainer?: ModalProps["getContainer"]
 }
 
 export interface AIOnlineModelListRefProps {
