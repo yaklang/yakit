@@ -169,6 +169,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 }
             })
             setTimeout(() => {
+                getAIModelListOption()
                 emiter.emit("onRefreshAIModelList")
             }, 500)
         }
