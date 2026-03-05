@@ -2383,19 +2383,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     //删除
-    const onRemoveHttpHistory = useMemoizedFn((query, reclaim?: boolean) => {
-        const len1 = query?.Filter?.IncludeInUrl?.length ?? 0
-        const len2 = query?.Id?.length ?? 0
-        const flag = len1 >= 100 || len2 >= 100
-        if (SystemInfo.mode === "local" && !reclaimHint && flag) {
-            delFun.current = "onRemoveHttpHistory"
-            delQuery.current = query
-            setReclaimHint(true)
-            return
-        }
+    const onRemoveHttpHistory = useMemoizedFn((query) => {
         setLoading(true)
         if (isAllSelect) {
-            onRemoveHttpHistoryAll(true, query, reclaim)
+            onRemoveHttpHistoryAll(true, query)
             return
         }
         ipcRenderer
@@ -2409,9 +2400,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 100)
-                if (reclaim) {
-                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
-                }
             })
     })
 
@@ -2439,7 +2427,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     //删除 重置请求 ID
-    const onRemoveHttpHistoryAllAndResetId = useMemoizedFn((reclaim?: boolean) => {
+    const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
@@ -2453,13 +2441,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .finally(() => {
                 onUpdateOtherPage()
                 setTimeout(() => setLoading(false), 500)
-                if (reclaim) {
-                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
-                }
             })
     })
     // 不重置请求 ID
-    const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any, reclaim?: boolean) => {
+    const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any) => {
         let newParams = {
             Filter: {},
             DeleteAll: false
@@ -2486,9 +2471,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .finally(() => {
                 onUpdateOtherPage()
                 setTimeout(() => setLoading(false), 300)
-                if (reclaim) {
-                    emiter.emit("openEngineLinkWin", "reclaimDatabaseSpace_start")
-                }
             })
         yakitNotify("info", t("HTTPFlowTable.deletingPleaseRefresh"))
         setCompareLeft({content: "", language: "http"})
@@ -2497,35 +2479,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setTimeout(() => {
             if (props.onSelected) props.onSelected(undefined)
         }, 400)
-    })
-
-    // 回收数据库空间
-    const delFun = useRef<string>("")
-    const delQuery = useRef<any>()
-    const [reclaimHint, setReclaimHint] = useState<boolean>(false)
-    const execDelFun = useMemoizedFn((reclaim: boolean) => {
-        switch (delFun.current) {
-            case "resetId":
-                onRemoveHttpHistoryAllAndResetId(reclaim)
-                break
-            case "noResetId":
-                onRemoveHttpHistoryAll(undefined, undefined, reclaim)
-                break
-            case "onRemoveHttpHistory":
-                onRemoveHttpHistory(delQuery.current, reclaim)
-                break
-            default:
-                break
-        }
-    })
-    const reclaimDatabaseSpace = useMemoizedFn(() => {
-        execDelFun(true)
-        resetReclaimInfo()
-    })
-    const resetReclaimInfo = useMemoizedFn(() => {
-        delFun.current = ""
-        delQuery.current = undefined
-        setReclaimHint(false)
     })
 
     const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
@@ -4414,20 +4367,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     onClick: ({key}) => {
                                                         switch (key) {
                                                             case "resetId":
-                                                                if (SystemInfo.mode === "local") {
-                                                                    delFun.current = "resetId"
-                                                                    setReclaimHint(true)
-                                                                } else {
-                                                                    onRemoveHttpHistoryAllAndResetId()
-                                                                }
+                                                                onRemoveHttpHistoryAllAndResetId()
                                                                 break
                                                             case "noResetId":
-                                                                if (SystemInfo.mode === "local") {
-                                                                    delFun.current = "noResetId"
-                                                                    setReclaimHint(true)
-                                                                } else {
-                                                                    onRemoveHttpHistoryAll()
-                                                                }
+                                                                onRemoveHttpHistoryAll()
                                                                 break
                                                             default:
                                                                 break
@@ -4600,18 +4543,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     defalutColumnsOrder={defalutColumnsOrderRef.current}
                 ></AdvancedSet>
             )}
-            <YakitHint
-                visible={reclaimHint}
-                title={t("HTTPFlowTable.reclaimDatabaseSpaceTitle")}
-                content={<>{t("HTTPFlowTable.reclaimDatabaseSpaceCont")}<span style={{color: "var(--Colors-Use-Error-Primary)"}}>{t("HTTPFlowTable.reclaimDatabaseSpaceCont2")}</span></>}
-                onCancel={reclaimDatabaseSpace}
-                onOk={() => {
-                    execDelFun(false)
-                    resetReclaimInfo()
-                }}
-                okButtonText={t("HTTPFlowTable.reclaimOk")}
-                cancelButtonText={t("HTTPFlowTable.reclaimCancel")}
-            />
         </div>
     )
 })
