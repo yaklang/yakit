@@ -12,6 +12,8 @@ const USER_INFO = {
     companyHeadImg: null,
     qqName: null,
     qqHeadImg: null,
+    ccbName: null,
+    ccbHeadImg: null,
     /** 角色 */
     role: null,
     token: null,

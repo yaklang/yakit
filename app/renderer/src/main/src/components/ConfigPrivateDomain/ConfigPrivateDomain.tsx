@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from "react"
+import React, {useEffect, useState, useRef, useMemo} from "react"
 import {Form, Tooltip} from "antd"
 import "./ConfigPrivateDomain.scss"
 import {NetWorkApi} from "@/services/fetch"
@@ -18,7 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/utils/envfile"
 import {useUploadInfoByEnpriTrace} from "../layout/utils"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -96,6 +96,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
                         companyName: res.from_platform === "company" ? res.name : null,
                         companyHeadImg: res.from_platform === "company" ? res.head_img : null,
+                        ccbName: res.from_platform === "ccb" ? res.name : null,
+                        ccbHeadImg: res.from_platform === "ccb" ? res.head_img : null,
                         role: res.role,
                         user_id: res.user_id,
                         token: res.token
@@ -193,7 +195,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const getHttpSetting = useMemoizedFn(() => {
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) return
-            const value = JSONParseLog(setting,{page:"ConfigPrivateDomain", fun:"getHttpSetting"})
+            const value = JSONParseLog(setting, {page: "ConfigPrivateDomain", fun: "getHttpSetting"})
             setDefaultHttpUrl(value.BaseUrl)
             if (value?.pwd && value.pwd.length > 0) {
                 // 解密
@@ -248,16 +250,68 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         }
     ]
-    return (
-        <div className='private-domain'>
-            {enterpriseLogin && (
-                <div className='login-title-show'>
-                    <div className='icon-box'>
-                        <img src={yakitImg} className='type-icon-img' />
+
+    const loginContentDom = useMemo(() => {
+        // 企业版登录
+        if (enterpriseLogin) {
+            return (
+                <>
+                    <div className='login-title-show'>
+                        <div className='icon-box'>
+                            <img src={yakitImg} className='type-icon-img' />
+                        </div>
+                        <div className='title-box'>企业登录</div>
                     </div>
-                    <div className='title-box'>企业登录</div>
-                </div>
-            )}
+                    <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
+                        <Form.Item
+                            name='BaseUrl'
+                            label='私有域地址'
+                            rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}
+                        >
+                            <YakitAutoComplete
+                                ref={httpHistoryRef}
+                                cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+                                initValue={defaultHttpUrl}
+                                placeholder='请输入你的私有域地址'
+                                defaultOpen={!enterpriseLogin}
+                            />
+                        </Form.Item>
+                        <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
+                            <YakitInput placeholder='请输入你的用户名' allowClear />
+                        </Form.Item>
+                        <Form.Item
+                            name='pwd'
+                            label='密码'
+                            rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
+                        >
+                            <YakitInput.Password placeholder='请输入你的密码' allowClear />
+                        </Form.Item>
+                        <Form.Item label={" "} colon={false} className='form-item-submit'>
+                            {isShowSkip && (
+                                <YakitButton
+                                    style={{width: 165, marginRight: 12}}
+                                    onClick={() => {
+                                        onSuccee && onSuccee()
+                                    }}
+                                    size='large'
+                                >
+                                    跳过
+                                </YakitButton>
+                            )}
+                            <YakitButton
+                                size='large'
+                                type='primary'
+                                htmlType='submit'
+                                style={{width: 165, marginLeft: isShowSkip ? 0 : 43}}
+                                loading={loading}
+                            >
+                                登录
+                            </YakitButton>
+                        </Form.Item>
+                    </Form>
+                </>
+            )
+        } else {
             <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
                 <Form.Item
                     name='BaseUrl'
@@ -272,76 +326,33 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         defaultOpen={!enterpriseLogin}
                     />
                 </Form.Item>
-                {!enterpriseLogin && (
-                    <Form.Item
-                        name='Proxy'
-                        label={
-                            <span className='form-label'>
-                                设置代理
-                                <Tooltip
-                                    title='特殊情况无法访问插件商店时，可设置代理进行访问'
-                                    overlayStyle={{width: 150}}
-                                >
-                                    <InformationCircleIcon className='info-icon' />
-                                </Tooltip>
-                            </span>
-                        }
-                    >
-                        <YakitAutoComplete
-                            ref={httpProxyRef}
-                            cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
-                            placeholder='设置代理'
-                        />
-                    </Form.Item>
-                )}
-                {enterpriseLogin && (
-                    <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
-                        <YakitInput placeholder='请输入你的用户名' allowClear />
-                    </Form.Item>
-                )}
-                {enterpriseLogin && (
-                    <Form.Item
-                        name='pwd'
-                        label='密码'
-                        rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
-                    >
-                        <YakitInput.Password placeholder='请输入你的密码' allowClear />
-                    </Form.Item>
-                )}
-                {enterpriseLogin ? (
-                    <Form.Item label={" "} colon={false} className='form-item-submit'>
-                        {isShowSkip && (
-                            <YakitButton
-                                style={{width: 165, marginRight: 12}}
-                                onClick={() => {
-                                    onSuccee && onSuccee()
-                                }}
-                                size='large'
-                            >
-                                跳过
-                            </YakitButton>
-                        )}
-                        <YakitButton
-                            size='large'
-                            type='primary'
-                            htmlType='submit'
-                            style={{width: 165, marginLeft: isShowSkip ? 0 : 43}}
-                            loading={loading}
-                        >
-                            登录
-                        </YakitButton>
-                    </Form.Item>
-                ) : (
-                    <div className='form-btns'>
-                        <YakitButton type='outline2' onClick={(e) => onClose && onClose()}>
-                            取消
-                        </YakitButton>
-                        <YakitButton type='primary' htmlType='submit' loading={loading}>
-                            确定
-                        </YakitButton>
-                    </div>
-                )}
+                <Form.Item
+                    name='Proxy'
+                    label={
+                        <span className='form-label'>
+                            设置代理
+                            <Tooltip title='特殊情况无法访问插件商店时，可设置代理进行访问' overlayStyle={{width: 150}}>
+                                <InformationCircleIcon className='info-icon' />
+                            </Tooltip>
+                        </span>
+                    }
+                >
+                    <YakitAutoComplete
+                        ref={httpProxyRef}
+                        cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
+                        placeholder='设置代理'
+                    />
+                </Form.Item>
+                <div className='form-btns'>
+                    <YakitButton type='outline2' onClick={(e) => onClose && onClose()}>
+                        取消
+                    </YakitButton>
+                    <YakitButton type='primary' htmlType='submit' loading={loading}>
+                        确定
+                    </YakitButton>
+                </div>
             </Form>
-        </div>
-    )
+        }
+    }, [enterpriseLogin, defaultHttpUrl, form, isShowSkip, loading, onClose, onFinish, onSuccee])
+    return <div className='private-domain'>{loginContentDom}</div>
 })
