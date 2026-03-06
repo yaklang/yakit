@@ -16,6 +16,9 @@ interface StoreProps {
     // Tun劫持会话状态
     tunSessionState: TunSessionStateProps
     setTunSessionState: (state: TunSessionStateProps) => void
+    /** @name 当前MITM热加载状态 */
+    mitmHotStatus: "success" | "failed" | "end"
+    setMitmHotStatus: (status: "success" | "failed" | "end") => void
 }
 
 export const useStore = create<StoreProps>((set, get) => ({
@@ -24,5 +27,7 @@ export const useStore = create<StoreProps>((set, get) => ({
     mitmStatus: "idle",
     setMitmStatus: (mitmStatus) => set({mitmStatus}),
     tunSessionState: tunSessionStateDefault,
-    setTunSessionState: (tunSessionState) => set({tunSessionState})
+    setTunSessionState: (tunSessionState) => set({tunSessionState}),
+    mitmHotStatus: "end",
+    setMitmHotStatus: (mitmHotStatus) => set({mitmHotStatus})
 }))

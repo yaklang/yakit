@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useRef, useState} from "react"
-import {Divider, Form, notification, Typography} from "antd"
+import {Divider, Form, notification, Tooltip, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
@@ -34,7 +34,9 @@ import {
     grpcMITMSetDownstreamProxy,
     grpcMITMGetFilter,
     grpcMITMSetDisableSystemProxy,
-    grpcMITMStopCall
+    grpcMITMStopCall,
+    grpcMITMRemoveHook,
+    MITMRemoveHookRequest
 } from "../MITMHacker/utils"
 import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
 import {getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
@@ -49,6 +51,7 @@ import {useProxy} from "@/hook/useProxy"
 import { debugToPrintLogs } from "@/utils/logCollection"
 import { OutlineCheckIcon, OutlineChevrondownIcon, OutlineChevronupIcon } from "@/assets/icon/outline"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { useGlobalHotPatchTag, useGlobalHotPatch } from "@/store/globalHotPatch"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -236,7 +239,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         })
     })
 
-    const {tunSessionState} = useStore()
+    const {tunSessionState, mitmHotStatus, setMitmHotStatus} = useStore()
     const stop = useMemoizedFn(() => {
         if(tunSessionState?.deviceName){
             emiter.emit("onCloseTunHijackConfirmModal", "mitm")
@@ -292,6 +295,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     const [morePopoverVisible, setMorePopoverVisible] = useState<boolean>(false)
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
+    const { globalEnabledTemplateName, onDisableGlobalHotPatch } = useGlobalHotPatchTag()
+    
+    useEffect(() => {
+        if (!useGlobalHotPatch.getState().globalHotPatchConfig) {
+            useGlobalHotPatch.getState().loadGlobalHotPatchConfig()
+        }
+    }, [])
 
     const downStreamTagClose = useMemoizedFn(() => {
         const tipStr = tip
@@ -330,7 +340,33 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                         {item}
                                     </YakitTag>
                                 )
-                            )}
+                        )}
+                        {globalEnabledTemplateName && (
+                            <YakitTag closable onClose={onDisableGlobalHotPatch}>
+                                <Tooltip title={globalEnabledTemplateName}> 
+                                {t("GlobalHotPatch.Global_hot_template")}{t("GlobalHotPatch.started")}
+                                </Tooltip>
+                            </YakitTag>
+                        )}
+                        {globalEnabledTemplateName && mitmHotStatus === "success" ? "->": ""}
+                        {mitmHotStatus === "success" && (
+                            <YakitTag
+                                style={{ marginLeft: 6 }}
+                                closable
+                                onClose={() => {
+                                    const value: MITMRemoveHookRequest = {
+                                        HookName: [],
+                                        RemoveHookID: ["@HotPatchCode"],
+                                        version: mitmVersion
+                                    }
+                                    grpcMITMRemoveHook(value).then(() => {
+                                        setMitmHotStatus("end")
+                                    })
+                                }}
+                            >
+                                {t("GlobalHotPatch.MITM_hot_patch")}{t("GlobalHotPatch.started")}
+                            </YakitTag>
+                        )}
                     </div>
                     </div>
                 </div>
