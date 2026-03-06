@@ -65,7 +65,6 @@ export const installOnlineRagWithEvents = (
     binary: {RagName?: string; Force: boolean; All?: boolean},
     token: string
 ) => {
-    console.log(url, binary, token, "url, binary, token")
     const invokeArgs = binary.All ? {Force: binary.Force, All: binary.All} : binary
     return downloadWithEvents(url, invokeArgs, token)
 }
