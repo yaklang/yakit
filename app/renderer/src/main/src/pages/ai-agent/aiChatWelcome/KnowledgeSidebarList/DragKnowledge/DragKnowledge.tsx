@@ -109,6 +109,9 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                 const safeResolve = () => {
                     if (!settled) {
                         settled = true
+                        ipcRenderer.removeAllListeners(`${token}-data`)
+                        ipcRenderer.removeAllListeners(`${token}-end`)
+                        ipcRenderer.removeAllListeners(`${token}-error`)
                         resolve()
                     }
                 }
@@ -116,6 +119,9 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                 const safeReject = (err) => {
                     if (!settled) {
                         settled = true
+                        ipcRenderer.removeAllListeners(`${token}-data`)
+                        ipcRenderer.removeAllListeners(`${token}-end`)
+                        ipcRenderer.removeAllListeners(`${token}-error`)
                         reject(err)
                     }
                 }
