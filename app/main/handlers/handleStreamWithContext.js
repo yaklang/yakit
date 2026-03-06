@@ -1,9 +1,10 @@
 module.exports = {
-    cancelHandler: (streamMap) => {
+    cancelHandler: (streamMap, callback) => {
         return async (e, token) => {
             const stream = streamMap.get(token)
             stream && stream.cancel()
             streamMap.delete(token)
+            callback && callback(token)
         }
     },
     registerHandler: (windows, stream, streamMap, token) => {
