@@ -35,13 +35,17 @@ export interface AIChatInfo {
     /** 唯一标识 */
     id: string
     /** 对话名称 */
-    name: string
+    Title: string
     /** 对话问题 */
     question: string
     /** 时间 */
-    time: number
+    createdAt: number
+    /** 更新时间 */
+    updatedAt: number
+    /** 是否已初始化标题 */
+    titleInitialized: boolean
     /** 请求参数 */
-    request: AIStartParams
+    request?: AIStartParams
     /** 会话 session */
-    session: string
+    SessionID: string
 }

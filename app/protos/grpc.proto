@@ -901,6 +901,9 @@ service Yak {
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
   rpc QueryAIEvent(AIEventQueryRequest) returns (AIEventQueryResponse);
   rpc DeleteAIEvent(AIEventDeleteRequest) returns (DbOperateMessage);
+  rpc QueryAISession(QueryAISessionRequest) returns (QueryAISessionResponse);
+  rpc UpdateAISessionTitle(UpdateAISessionTitleRequest) returns (DbOperateMessage);
+  rpc DeleteAISession(DeleteAISessionRequest) returns (DbOperateMessage);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
@@ -1911,6 +1914,7 @@ message AITaskFilter {
   repeated string Name = 1;
   repeated string Keyword = 2;
   repeated string ForgeName = 3;
+  repeated string SessionID = 4;
   repeated string CoordinatorId = 5;
 }
 
@@ -1974,6 +1978,47 @@ message AITask {
   int64 Seq = 3;
   string UserInput = 4;
   string ForgeName = 5;
+}
+
+message AISessionFilter {
+  repeated string SessionID = 1;
+  string Keyword = 2;
+}
+
+message AISession {
+  int64 Id = 1;
+  string SessionID = 2;
+  string Title = 3;
+  bool TitleInitialized = 4;
+  int64 CreatedAt = 5;
+  int64 UpdatedAt = 6;
+}
+
+message QueryAISessionRequest {
+  Paging Pagination = 1;
+  AISessionFilter Filter = 2;
+}
+
+message QueryAISessionResponse {
+  Paging Pagination = 1;
+  repeated AISession Data = 2;
+  int64 Total = 3;
+}
+
+message UpdateAISessionTitleRequest {
+  string SessionID = 1;
+  string Title = 2;
+}
+
+message DeleteAISessionFilter {
+  repeated string SessionID = 1;
+  int64 AfterTimestamp = 2;
+  int64 BeforeTimestamp = 3;
+}
+
+message DeleteAISessionRequest {
+  DeleteAISessionFilter Filter = 1;
+  bool DeleteAll = 2;
 }
 
 message AIForgeFilter {
@@ -7149,6 +7194,7 @@ message ExecResult {
 
   string RuntimeID = 7;
   float Progress = 8;
+  string PluginName = 9;
 }
 
 message GetLicenseResponse {
@@ -8609,6 +8655,12 @@ message MITMV2Request{
   */
   bool SetAutoForward = 40;
   bool AutoForwardValue = 41;
+
+  // auto unzip / zip packet encoding for manual hijack (hot reload)
+  // If enabled, engine will try to decode Content-Encoding/Transfer-Encoding (chunked) before
+  // sending packets to frontend for editing, and re-encode them when frontend sends back.
+  bool AutoUnzipValue = 54;
+  bool SetAutoUnzip = 55;
 
   bool RecoverManualHijack = 42;
   bool ManualHijackControl = 43;

@@ -366,6 +366,56 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetRandomAIMaterials", async (e, params) => {
         return await asyncGetRandomAIMaterials(params)
     })
+
+    const asyncQueryAISession = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAISession(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 查询 AI 会话列表
+    ipcMain.handle("QueryAISession", async (e, params) => {
+        return await asyncQueryAISession(params)
+    })
+
+    const asyncDeleteAISession = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAISession(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    // 删除 AI 会话
+    ipcMain.handle("DeleteAISession", async (e, params) => {
+        return await asyncDeleteAISession(params)
+    })
+
+    const asyncUpdateAISessionTitle = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateAISessionTitle(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 修改 AI 会话标题
+    ipcMain.handle("UpdateAISessionTitle", async (e, params) => {
+        return await asyncUpdateAISessionTitle(params)
+    })
+
     // #endregion
 
     // #region AI-Log-Export

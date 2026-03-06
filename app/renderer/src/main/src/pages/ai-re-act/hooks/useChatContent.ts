@@ -37,23 +37,29 @@ function useChatContent(params: UseChatContentParams) {
                     const newArr = [...getElements()]
 
                     const item = newArr[target]
-                    item.renderNum += 1
+                    const newItem = {...item, renderNum: item.renderNum + 1}
+                    newArr[target] = newItem
 
-                    if (!sub || !item.isGroup) return newArr
-                    const subIndex = item.children.findIndex(
+                    if (!sub || !newItem.isGroup) {
+                        setElements(newArr)
+                        return newArr
+                    }
+                    const newChildren = [...newItem.children]
+                    const subIndex = newChildren.findIndex(
                         (item) => item.token === sub.mapKey && item.type === sub.type
                     )
                     if (subIndex >= 0) {
-                        item.children[subIndex].renderNum += 1
+                        newChildren[subIndex] = {...newChildren[subIndex], renderNum: newChildren[subIndex].renderNum + 1}
                     } else {
-                        item.children.push({
+                        newChildren.push({
                             chatType: chatType,
                             token: sub.mapKey,
                             type: sub.type,
                             renderNum: 1
                         })
                     }
-                    setElements([...newArr])
+                    newItem.children = newChildren
+                    setElements(newArr)
                 } else {
                     if (sub) {
                         setElements((old) =>

@@ -84,7 +84,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
 
     useEffect(() => {
-        const chatData = aiChatDataStore.get(activeChat?.session || "")
+        const chatData = aiChatDataStore.get(activeChat?.SessionID || "")
         if (taskChatIsEmpty(chatData?.taskChat)) {
             onSetKeyTask()
         } else if (!!activeChat?.id) {
@@ -143,7 +143,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.session
+        return activeChat?.SessionID
     }, [activeChat])
 
     // 提问结束后缓存数据
@@ -154,14 +154,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const setSessionChatName = (session: string, name: string) => {
         setActiveChat?.((prev) => {
             if (!prev) return prev
-            if (prev.session !== session) return prev
-            return {...prev, name}
+            if (prev.SessionID !== session) return prev
+            return {...prev, Title: name}
         })
         setChats?.((prev) => {
-            const chatIndex = prev.findIndex((item) => item.session === session)
+            const chatIndex = prev.findIndex((item) => item.SessionID === session)
             if (chatIndex === -1) return prev
             const newChats = [...prev]
-            newChats[chatIndex] = {...newChats[chatIndex], name}
+            newChats[chatIndex] = {...newChats[chatIndex], Title: name}
             return newChats
         })
     }
@@ -172,7 +172,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskReviewExtra: handleShowReviewExtra,
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
-        getRequest: getSetting,
         setSessionChatName,
         cacheDataStore: aiChatDataStore
     })
@@ -301,7 +300,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     useUpdateEffect(() => {
         onHistoryAfter()
-        events.onSwitchChat(activeChat?.session)
+        events.onSwitchChat(activeChat?.SessionID)
     }, [activeChat])
 
     /**切换历史后的处理逻辑 */
