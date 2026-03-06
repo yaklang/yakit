@@ -81,11 +81,16 @@ function useChatIPC(params?: UseChatIPCParams) {
         })
     })
 
-    // 向进行中的grpc流接口发送请求
+    /** 向进行中的grpc流接口发送请求 */
     const sendRequest = useMemoizedFn((request: AIInputEvent) => {
         if (!chatID.current) return
         console.log("send-ai-re-act---\n", chatID.current, request)
         ipcRenderer.invoke("send-ai-re-act", chatID.current, request)
+    })
+
+    /** 获取当前会话数据集类实例 */
+    const fetchChatDataStore = useMemoizedFn(() => {
+        return cacheDataStore
     })
     // #endregion
 
@@ -200,8 +205,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     const focusOfTaskID = useRef("")
     const [focusMode, setFocusMode] = useState<string>("")
     const handleFocusModeChange = useMemoizedFn((id: string, mode: string) => {
-        //NOTE - 在react_task_now_status没有完成得时候，断开流，新的对话没有设置专注模式，因为id不一样，导致设置不了专注模式
-        if (focusOfTaskID.current && focusOfTaskID.current !== id) return
         focusOfTaskID.current = id
         setFocusMode(mode)
     })
@@ -229,11 +232,11 @@ function useChatIPC(params?: UseChatIPCParams) {
     // #endregion
 
     // #region 自由对话(ReAct)相关变量和hook
-    const casualChatID = useRef("")
+    const casualChatID = useRef(0)
     /** 自由对话(ReAct)的loading状态 */
     const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>(cloneDeep(DefaultCasualLoadingStatus))
     const handleResetCasualChatLoading = useMemoizedFn(() => {
-        casualChatID.current = ""
+        casualChatID.current = 0
         setCasualStatus(cloneDeep(DefaultCasualLoadingStatus))
     })
 
@@ -274,14 +277,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
-    /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
-    const handleResetGrpcStatus = useMemoizedFn(() => {
-        taskChatEvent.handleCloseGrpc()
-        setExecute(false)
-        handleResetCasualChatLoading()
-        handleResetTaskChatLoading()
-    })
-
     // #region 问题和问题队列相关逻辑
     /** 更新问题队列状态 */
     const handleTriggerQuestionQueueRequest = useThrottleFn(
@@ -294,21 +289,18 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 问题入队|出队变化时-进行通知逻辑
     const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const {Type, NodeId, NodeIdVerbose, Timestamp} = res
+            const {NodeId} = res
             const ipcContent = Uint8ArrayToString(res.Content) || ""
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-            if (NodeId === "react_task_dequeue" && data.hasOwnProperty("focus_mode")) {
-                // 记录专注模式状态
-                handleFocusModeChange(data.react_task_id, data.focus_mode)
+            if (NodeId === "react_task_dequeue") {
+                if (!!data.focus_mode) {
+                    // 记录专注模式状态
+                    handleFocusModeChange(data.react_task_id, data.focus_mode)
+                } else {
+                    // 非专注模式状态
+                    handleResetFocusMode()
+                }
             }
-
-            // handleNotifyMessage({
-            //     Type,
-            //     NodeId,
-            //     NodeIdVerbose,
-            //     Timestamp,
-            //     Content: data.react_task_input
-            // })
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -375,6 +367,19 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
+    /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
+    const handleResetGrpcStatus = useMemoizedFn(() => {
+        taskChatEvent.handleCloseGrpc()
+        setExecute(false)
+        handleResetCasualChatLoading()
+        handleResetTaskChatLoading()
+    })
+
+    /** 流接口开始前需要重置的一些状态 */
+    const handleResetBeforeStart = useMemoizedFn(() => {
+        handleResetFocusMode()
+    })
+
     /** 重置所有数据 */
     const onReset = useMemoizedFn(() => {
         chatID.current = ""
@@ -403,12 +408,12 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
 
     /** 获取历史时间线 */
-    const fetchHistoryTimelines = useMemoizedFn(async () => {
+    const fetchHistoryTimelines = useMemoizedFn(async (session: string) => {
         try {
             setReActTimelines([])
             const {Events, Total} = await grpcQueryAIEvent({
                 Filter: {
-                    SessionID: chatID.current,
+                    SessionID: session,
                     NodeId: ["timeline_item"]
                 },
                 Pagination: {
@@ -429,7 +434,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
 
     /** 保存state类型的数据 */
-    const saveStateDataOfEnd = useMemoizedFn(() => {
+    const saveStateDataOfEnd = useMemoizedFn((session: string) => {
         const answer: DeepPartial<AIChatData> = {
             runTimeIDs: cloneDeep(runTimeIDs),
             yakExecResult: cloneDeep(yakExecResult),
@@ -438,7 +443,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             grpcFolders: cloneDeep(grpcFolders),
             reActTimelines: cloneDeep(reActTimelines)
         }
-        cacheDataStore?.updater(chatID.current, answer)
+        cacheDataStore?.updater(session, answer)
     })
 
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
@@ -454,10 +459,10 @@ function useChatIPC(params?: UseChatIPCParams) {
                 cacheDataStore?.create(token)
             } catch (error) {}
         }
-        handleResetFocusMode()
+        handleResetBeforeStart()
         setExecute(true)
         chatID.current = token
-        fetchHistoryTimelines()
+
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
                 // 记录会话中所有的 CoordinatorId
@@ -488,7 +493,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 设置任务规划对应的问题ID, 并清除自由对话(ReAct)的loading状态
                         taskChatID.current = startInfo["re-act_task"]
-                        if (casualChatID.current === taskChatID.current) handleResetCasualChatLoading()
+                        casualChatID.current -= 1
+                        setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         // 标记grpc流里属于任务规划的流
                         planCoordinatorId.current = startInfo.coordinator_id
                         // 任务规划的loading开始置为true
@@ -502,6 +508,8 @@ function useChatIPC(params?: UseChatIPCParams) {
                     // 结束任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current === startInfo.coordinator_id) {
+                        casualChatID.current += 1
+                        setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         taskChatEvent.handlePlanExecEnd(res)
                         taskChatEvent.handleCloseGrpc()
                         handleResetTaskChatLoading()
@@ -639,13 +647,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                         ) as AIAgentGrpcApi.ReactTaskChanged
 
                         if (react_task_now_status === "processing") {
-                            casualChatID.current = react_task_id
-                            setCasualStatus(() => ({loading: true, title: "thinking..."}))
+                            casualChatID.current += 1
+                            setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         }
 
-                        if (react_task_now_status === "completed") {
+                        if (["completed", "aborted"].includes(react_task_now_status)) {
                             if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
-                            handleResetCasualChatLoading()
+                            casualChatID.current -= 1
+                            setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         }
                         return
                     } else if (res.NodeId === "status") {
@@ -751,7 +760,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
-            saveStateDataOfEnd()
+            saveStateDataOfEnd(token)
             handleResetGrpcStatus()
             if (endAfterSession.current) {
                 handleSwitchSessionData(endAfterSession.current)
@@ -805,10 +814,12 @@ function useChatIPC(params?: UseChatIPCParams) {
             chatID.current = session
             setGrpcFolders(chatData.grpcFolders || [])
             setRunTimeIDs(chatData.runTimeIDs || [])
-            setReActTimelines(chatData.reActTimelines || [])
+            setReActTimelines(() => chatData.reActTimelines || [])
             yakExecResultEvent.handleSetYakResult(chatData.yakExecResult || {})
             casualChatEvent.handleSetElements(chatData.casualChat?.elements || [])
             taskChatEvent.handleSetElements(chatData.taskChat?.elements || [])
+        } else {
+            fetchHistoryTimelines(session)
         }
         endAfterSession.current = ""
         setTimeout(() => {
@@ -834,9 +845,11 @@ function useChatIPC(params?: UseChatIPCParams) {
         setSwitchLoading(true)
         if (execute) {
             endAfterSession.current = session || "clear"
+            // 通过停止流接口后的end触发切换数据逻辑
             ipcRenderer.invoke("cancel-ai-re-act", chatID.current).catch(() => {})
         } else {
             endAfterSession.current = ""
+            // 直接切换数据逻辑
             handleSwitchSessionData(session || "clear")
         }
     })
@@ -848,10 +861,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         } else {
             // yakitNotify("info", "useChatIPC AI 任务已取消")
         }
-    })
-
-    const fetchChatDataStore = useMemoizedFn(() => {
-        return cacheDataStore
     })
 
     useInterval(

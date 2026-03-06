@@ -36,6 +36,9 @@ module.exports = (win, getClient) => {
     let aiReActTaskPool = new Map()
     // 开始执行 AI ReAct
     ipcMain.handle("start-ai-re-act", async (e, token, params) => {
+        if (aiReActTaskPool.has(token)) {
+            return
+        }
         let stream = getClient().StartAIReAct()
         handlerHelper.registerHandler(win, stream, aiReActTaskPool, token)
         try {
