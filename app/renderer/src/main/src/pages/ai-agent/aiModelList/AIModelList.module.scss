@@ -328,6 +328,11 @@
     color: var(--Colors-Use-Main-Primary);
 }
 
-.ai-online-mode-setting-popover{
+.ai-online-mode-setting-popover {
     width: 500px;
+    :global {
+        .ant-form-item {
+            margin-bottom: 0;
+        }
+    }
 }
