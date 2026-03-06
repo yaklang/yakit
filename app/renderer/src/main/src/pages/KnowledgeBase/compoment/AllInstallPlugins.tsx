@@ -23,7 +23,6 @@ import {
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {downloadWithEvents} from "../utils"
-import DragKnowledge from "@/pages/ai-agent/aiChatWelcome/KnowledgeSidebarList/DragKnowledge/DragKnowledge"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -166,8 +165,10 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
     return (
         <div className={styles["install-container"]}>
             <div className={styles["install-box"]}>
-                {/* <YakitEmpty title='检测到有插件未下载' description='请点击下载后，再创建知识库' /> */}
-                <DragKnowledge />
+                <YakitEmpty
+                    title='检测到有插件未下载'
+                    description='请下载插件后再创建知识库，也可以下载线上知识库进行使用'
+                />
                 <div className={styles["install-button-box"]}>
                     <YakitButton
                         type='outline1'
@@ -180,6 +181,15 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                             }
                         }}
                         loading={loading}
+                    >
+                        一键下载插件
+                    </YakitButton>
+                    <YakitButton
+                        type='outline1'
+                        icon={<CloudDownloadIcon />}
+                        // onClick={() =>
+                        //                                                                     onDownloadOnlineRag(items)
+                        //                                                                 }
                     >
                         一键下载在线知识库
                     </YakitButton>

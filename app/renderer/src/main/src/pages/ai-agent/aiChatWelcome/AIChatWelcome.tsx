@@ -384,6 +384,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                         />,
                         <YakitButton
                             key='add'
+                            disabled={knowledgeSidebarListRef.current?.installPlug}
                             onClick={() => {
                                 knowledgeSidebarListRef.current?.openAdd()
                             }}
