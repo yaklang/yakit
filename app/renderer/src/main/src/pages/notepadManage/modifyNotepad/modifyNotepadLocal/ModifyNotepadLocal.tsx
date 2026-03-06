@@ -153,6 +153,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     onUpdatePageInfo({
                         notepadHash: res.NoteId
                     })
+                    emiter.emit("refreshNotepadLocalList")
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -368,6 +369,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const onSave = useMemoizedFn(() => {
         onSaveNewContent(notepadContentRef.current).then(() => {
             yakitNotify("success", "保存成功")
+            emiter.emit("refreshNotepadLocalList")
         })
     })
     //#endregion
@@ -424,6 +426,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         }
         grpcDeleteNote(removeParams)
             .then(() => {
+                emiter.emit("refreshNotepadLocalList")
                 emiter.emit("onCloseCurrentPage", pageId)
             })
             .finally(() =>

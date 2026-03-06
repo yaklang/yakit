@@ -51,6 +51,10 @@ import {isCommunityYakit, isMemfit} from "@/utils/envfile"
 import {useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {toMITMHacker} from "@/pages/hacker/httpHacker"
 import { ManagementTab } from "@/components/managementTab"
+import emiter from "@/utils/eventBus/eventBus"
+import {grpcQueryNote} from "@/pages/notepadManage/notepadManage/utils"
+import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
+import {genDefaultPagination} from "@/pages/invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -506,12 +510,45 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         )
     }, [defaultMenu, pluginMenu, noExpandMenu, i18n.language])
 
+    /** 打开最近编辑的记事本，若无则新建 */
+    const openLatestOrNewNotepad = useMemoizedFn(() => {
+        grpcQueryNote({
+            Filter: {...defaultNoteFilter},
+            Pagination: {...genDefaultPagination(1), OrderBy: "updated_at", Page: 1}
+        })
+            .then((res) => {
+                if (res.Data && res.Data.length > 0) {
+                    const latestNote = res.Data[0]
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.Modify_Notepad,
+                            params: {notepadHash: `${latestNote.Id}`, title: latestNote.Title}
+                        })
+                    )
+                } else {
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.Modify_Notepad,
+                            params: {notepadHash: ""}
+                        })
+                    )
+                }
+            })
+            .catch(() => {
+                onMenuSelect({route: YakitRoute.Modify_Notepad})
+            })
+    })
+
     // 右侧额外菜单点击
     const onClickExtraMenu = useMemoizedFn((route: RouteToPageProps) => {
         if (route.route === YakitRoute.Plugin_OP) {
             const obj = {...route}
             obj.pluginId = pluginToId[obj?.pluginName || ""]
             onCheckPlugin(obj, "plugin")
+        } else if (route.route === YakitRoute.Modify_Notepad) {
+            openLatestOrNewNotepad()
         } else {
             onMenuSelect({route: route.route})
         }
@@ -523,6 +560,8 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             toMITMHacker({
                 immediatelyLaunchedInfo: {}
             })
+        } else if (route.route === YakitRoute.Modify_Notepad) {
+            openLatestOrNewNotepad()
         } else {
             onMenuSelect({route: route.route})
         }
