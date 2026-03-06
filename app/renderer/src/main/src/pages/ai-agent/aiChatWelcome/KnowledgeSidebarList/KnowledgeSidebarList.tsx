@@ -53,7 +53,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
 
     const [knowledgeBase, setKnowledgeBase] = useSafeState<KnowledgeBaseItem[]>([])
     const [menuSelectedId, setMenuSelectedId] = useSafeState<string>()
-    const [addMode, setAddMode] = useSafeState<string[]>(["manual"])
+    const [addMode, setAddMode] = useSafeState<string[]>([])
     const [selectedKnowledgeBaseItems, setSelectedKnowledgeBaseItems] = useSafeState<
         KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
     >({} as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"])
