@@ -4,6 +4,7 @@ import {EditorMenuItemType} from "./EditorMenu"
 import {EditorDetailInfoProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
 import {type Theme} from "@/hook/useTheme"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -112,7 +113,7 @@ export interface OtherMenuListProps {
     [key: string]: {
         menu: EditorMenuItemType[]
         // data可传额外的任何参数 目前仅用作自定义右键执行-检测是否为ai插件
-        onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string, data?: any) => any
+        onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string, data?: string | boolean, params?: YakParamProps[]) => any
         /** Order菜单权重排序 0为第一个 1为第二个... 负数统一放最后 */
         order?: number
     }

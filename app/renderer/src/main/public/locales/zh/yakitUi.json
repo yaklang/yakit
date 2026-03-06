@@ -43,6 +43,7 @@
         "start_execution": "开始执行",
         "startAudit": "开始审计",
         "reset": "重置",
+        "resetParams": "重置参数",
         "batchOperation": "批量操作",
         "clear": "清空",
         "disable": "禁用",

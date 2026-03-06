@@ -66,7 +66,7 @@ import {handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} fr
 import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {CodecParamsProps} from "../yakChat/chatCS"
+import {CodecParamsProps, OpenFuzzerModal} from "../yakChat/chatCS"
 import NewThirdPartyApplicationConfig from "../configNetwork/NewThirdPartyApplicationConfig"
 import {usePerformanceSampling} from "@/store/performanceSampling"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -99,7 +99,15 @@ import styles from "./uiLayout.module.scss"
 import {JSONParseLog} from "@/utils/tool"
 import {LocalGVS} from "@/enums/localGlobal"
 import {useSoftMode} from "@/store/softMode"
-
+import {YakParamProps} from "@/pages/plugins/pluginsType"
+import {
+    CustomPluginExecuteFormValue,
+    YakExtraParamProps
+} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {getValueByType, ParamsToGroupByGroupName} from "@/pages/plugins/editDetails/utils"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import {RemotePluginGV} from "@/enums/plugin"
+const PluginHasParamsDrawer = React.lazy(() => import("../pluginHasParamsDrawer/PluginHasParamsDrawer"))
 const {ipcRenderer} = window.require("electron")
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -334,14 +342,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 token: onlineToken,
                 type: "Project"
             }
-            apiSplitUpload(onlineParams, true).then((TaskStatus) => {
-                if (!TaskStatus) {
+            apiSplitUpload(onlineParams, true)
+                .then((TaskStatus) => {
+                    if (!TaskStatus) {
+                        failed(`${projectName}项目数据同步失败,请手动上传`)
+                    }
+                    onExportProject()
+                })
+                .catch(() => {
                     failed(`${projectName}项目数据同步失败,请手动上传`)
-                }
-                onExportProject()
-            }).catch(()=>{
-                failed(`${projectName}项目数据同步失败,请手动上传`)
-            })
+                })
         })
         const params: ExportProjectRequest = {
             Id: value.Id,
@@ -1443,89 +1453,154 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 切换引擎时的逻辑 End ---------- */
 
     // #region ChatCS
+    const openFuzzerModalVarRef = useRef<OpenFuzzerModal>()
+    const [drawerWidth, setDrawerWidth] = useState<number>(45) // 默认45vw
+    const [hasParamsDrawer, setHasParamsDrawer] = useState<boolean>(false)
+    const paramsValueRef = useRef<{
+        initFormValue: CustomPluginExecuteFormValue
+        requiredParams: YakParamProps[]
+        groupParams: YakExtraParamProps[]
+    }>({initFormValue: {}, requiredParams: [], groupParams: []})
+    const execParamsRef = useRef<YakExecutorParam[]>([])
+    const openHasParamsPlugin = useMemoizedFn((fuzzerModalVar) => {
+        const requiredParams = fuzzerModalVar.params!.filter((item) => item.Required)
+        const norequiredParams = fuzzerModalVar.params!.filter((item) => !item.Required)
+        const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
+        let initFormValue: CustomPluginExecuteFormValue = {}
+        fuzzerModalVar.params!.forEach((ele) => {
+            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+            initFormValue = {
+                ...initFormValue,
+                [ele.Field]: value
+            }
+        })
+        paramsValueRef.current = {
+            initFormValue: initFormValue,
+            requiredParams: requiredParams,
+            groupParams: groupParams
+        }
+        getRemoteValue(RemotePluginGV.CodecHasParamsDrawerWidth)
+            .then((width) => {
+                if (width) {
+                    setDrawerWidth(Number(width))
+                } else {
+                    setDrawerWidth(45)
+                }
+            })
+            .catch(() => {
+                setDrawerWidth(45)
+            })
+            .finally(() => {
+                setHasParamsDrawer(true)
+            })
+    })
+    const onOkParamsDrawer = useMemoizedFn((execParams: YakExecutorParam[]) => {
+        execParamsRef.current = execParams
+        setRemoteValue(RemotePluginGV.CodecHasParamsDrawerWidth, drawerWidth + "")
+        handleExecuteChatCS()
+    })
+
     const openAIByChatCS = useMemoizedFn((obj: CodecParamsProps) => {
         emiter.emit("onRunChatcsAIByFuzzer", JSON.stringify(obj))
     })
 
-    const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
+    const handleExecuteChatCS = useMemoizedFn(async () => {
+        const fuzzerModalVar = openFuzzerModalVarRef.current
+        if (!fuzzerModalVar) return
+        const codecParams: CodecParamsProps = {
+            text: fuzzerModalVar.text,
+            scriptName: fuzzerModalVar.scriptName,
+            isAiPlugin: fuzzerModalVar.isAiPlugin as boolean,
+            code: fuzzerModalVar.code,
+            execParams: execParamsRef.current
+        }
+        if (fuzzerModalVar.isAiPlugin) {
+            try {
+                const res = await ipcRenderer.invoke("CheckHahValidAiConfig")
+                apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
+                    // 如若已配置 则打开执行框
+                    if (res.Ok) {
+                        openAIByChatCS(codecParams)
+                    } else {
+                        let m = showYakitModal({
+                            title: "添加第三方应用",
+                            width: 600,
+                            footer: null,
+                            closable: true,
+                            maskClosable: false,
+                            content: (
+                                <>
+                                    <div className={styles["ai-describe"]}>
+                                        请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
+                                    </div>
+                                    <NewThirdPartyApplicationConfig
+                                        isOnlyShowAiType={true}
+                                        onAdd={(data) => {
+                                            // 新增，有影响ai优化级
+                                            const newParams = handleAIConfig(
+                                                {
+                                                    AppConfigs: obj.AppConfigs,
+                                                    AiApiPriority: obj.AiApiPriority
+                                                },
+                                                data
+                                            )
+                                            if (!newParams) {
+                                                yakitNotify("error", "onFuzzerModal 参数错误")
+                                                return
+                                            }
+                                            const params: GlobalNetworkConfig = {...obj, ...newParams}
+                                            apiSetGlobalNetworkConfig(params).then(() => {
+                                                openAIByChatCS(codecParams)
+                                                m.destroy()
+                                            })
+                                        }}
+                                        onCancel={() => m.destroy()}
+                                    />
+                                </>
+                            )
+                        })
+                    }
+                })
+            } catch (error) {
+                yakitNotify("error", error + "")
+            }
+        } else {
+            openAIByChatCS(codecParams)
+        }
+    })
 
-    // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
+    // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框/带参抽屉
+    const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
     const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onFuzzerModal = useMemoizedFn(async (value) => {
         try {
-            const val: {text?: string; scriptName?: string; code?: string; isAiPlugin: any} = JSONParseLog(value, {
+            const val: OpenFuzzerModal = JSONParseLog(value, {
                 page: "UILayout",
                 fun: "onFuzzerModal"
             })
+            openFuzzerModalVarRef.current = val
+
             if (val.isAiPlugin === "isGetPlugin") {
                 percentContainerRef.current = currentPageTabRouteKey
                 setCoedcPluginShow(true)
                 return
             }
-            if (val.isAiPlugin) {
-                try {
-                    const res = await ipcRenderer.invoke("CheckHahValidAiConfig")
-                    apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
-                        // 如若已配置 则打开执行框
-                        if (res.Ok) {
-                            openAIByChatCS({...val})
-                        } else {
-                            let m = showYakitModal({
-                                title: "添加第三方应用",
-                                width: 600,
-                                footer: null,
-                                closable: true,
-                                maskClosable: false,
-                                content: (
-                                    <>
-                                        <div className={styles["ai-describe"]}>
-                                            请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
-                                        </div>
-                                        <NewThirdPartyApplicationConfig
-                                            isOnlyShowAiType={true}
-                                            onAdd={(data) => {
-                                                // 新增，有影响ai优化级
-                                                const newParams = handleAIConfig(
-                                                    {
-                                                        AppConfigs: obj.AppConfigs,
-                                                        AiApiPriority: obj.AiApiPriority
-                                                    },
-                                                    data
-                                                )
-                                                if (!newParams) {
-                                                    yakitNotify("error", "onFuzzerModal 参数错误")
-                                                    return
-                                                }
-                                                const params: GlobalNetworkConfig = {...obj, ...newParams}
-                                                apiSetGlobalNetworkConfig(params).then(() => {
-                                                    openAIByChatCS({...val})
-                                                    m.destroy()
-                                                })
-                                            }}
-                                            onCancel={() => m.destroy()}
-                                        />
-                                    </>
-                                )
-                            })
-                        }
-                    })
-                } catch (error) {
-                    yakitNotify("error", error + "")
-                }
-            } else {
-                openAIByChatCS({text: val.text, scriptName: val.scriptName, isAiPlugin: val.isAiPlugin})
+
+            if (val.params?.length) {
+                openHasParamsPlugin(val)
+                return
             }
+
+            execParamsRef.current = val.execParams ? val.execParams : []
+            handleExecuteChatCS()
         } catch (error) {}
     })
-
     useEffect(() => {
-        // YakitWindow
         emiter.on("onOpenFuzzerModal", onFuzzerModal)
         return () => {
             emiter.off("onOpenFuzzerModal", onFuzzerModal)
         }
     }, [])
-
     // #endregion
 
     // #region 软件顶部展示采样中、录屏中
@@ -2269,6 +2344,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 getContainer={
                     document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
                 }
+            />
+
+            {/* 带参插件参数 */}
+            <PluginHasParamsDrawer
+                visible={hasParamsDrawer}
+                placementDrawer='right'
+                pluginType={"codec"}
+                scriptName={openFuzzerModalVarRef.current?.scriptName || ""}
+                drawerWidth={drawerWidth}
+                onSetDrawerWidth={setDrawerWidth}
+                onCloseParamsDrawer={setHasParamsDrawer}
+                onOkParamsDrawer={onOkParamsDrawer}
+                {...paramsValueRef.current}
             />
         </div>
     )
