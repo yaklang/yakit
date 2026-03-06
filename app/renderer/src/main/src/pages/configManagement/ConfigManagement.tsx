@@ -670,8 +670,9 @@ export const HotPatchManagement: React.FC = () => {
             <div className={styles["editor-panel"]}>
                 <div className={styles["editor-title"]}>{selectedTemplate}</div>
                 <div className={styles["editor-header"]}>
+                    {/* 产品要求暂时去掉 */}
                     <div>
-                        <YakitRadioButtons
+                        {/* <YakitRadioButtons
                             value={editorTab}
                             onChange={(e) => {
                                 setEditorTab(e.target.value)
@@ -687,7 +688,7 @@ export const HotPatchManagement: React.FC = () => {
                                     label: t("HTTPFuzzerHotPatch.executionResult")
                                 }
                             ]}
-                        />
+                        /> */}
                     </div>
                     <div className={styles["editor-header-right"]}>
                         <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
