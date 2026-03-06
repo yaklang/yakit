@@ -20,7 +20,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {getAIModelList, isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
+import {isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -205,7 +205,6 @@ const KnowledgeBase: FC = () => {
                 noDataCall: () => {
                     setAIModelOptions("")
                 },
-                haveDataCall: () => {},
                 mountContainer: document.getElementById("main-operator-page-body-ai-repository")
             })
         },

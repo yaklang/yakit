@@ -147,7 +147,7 @@
 .yakit-segmented-wrapper {
     .segmented {
         padding: 1px;
-        height: 24px;
+        height: 22px;
         display: flex;
         align-items: center;
         background-color: var(--Colors-Use-Basic-Shadow);
@@ -156,21 +156,22 @@
     }
     :global {
         .ant-segmented-group {
-            height: 22px;
+            height: 20px;
         }
         .ant-segmented-thumb {
             border-radius: 50%;
         }
         .ant-segmented.ant-segmented-sm .ant-segmented-item-label {
-            height: 22px;
+            height: 20px;
+            width: 20px;
             padding: 4px;
             display: flex;
             align-items: center;
         }
         .ant-segmented-item-icon {
             svg {
-                width: 14px;
-                height: 14px;
+                width: 12px;
+                height: 12px;
             }
         }
         .ant-segmented-item {

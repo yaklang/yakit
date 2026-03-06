@@ -18,17 +18,16 @@ import {
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
 import {UseChatIPCEvents} from "@/pages/ai-re-act/hooks/type"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
-import {getAIModelList, isForcedSetAIModal} from "@/pages/ai-agent/aiModelList/utils"
+import {getAIModelAvailableInfo, isForcedSetAIModal} from "@/pages/ai-agent/aiModelList/utils"
 import {useDebounceFn, useMemoizedFn, useRequest, useSafeState} from "ahooks"
-import {handleAIConfig, apiSetGlobalNetworkConfig, apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
-import emiter from "@/utils/eventBus/eventBus"
-import {yakitNotify} from "@/utils/notification"
-import NewThirdPartyApplicationConfig from "./configNetwork/NewThirdPartyApplicationConfig"
+import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {defaultParams, GlobalNetworkConfig} from "./configNetwork/ConfigNetworkPage"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {getRemoteValue} from "@/utils/kv"
 import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
+import {AIModelForm} from "@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm"
+import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 
 interface HistoryAIReActChatProps {
     refRef: React.RefObject<HTMLDivElement>
@@ -67,10 +66,12 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
 
     const [globalNetworkConfig, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
 
+    const chatWidth = useListenWidth(refRef)
+
     const {data, run, loading} = useRequest(
         async () => {
-            const res = await getAIModelList()
-            const isModels = res.localModels.length === 0 && res.onlineModels.length === 0
+            const res = await getAIModelAvailableInfo()
+            const isModels = res.localModelsTotal === 0 && res.onlineModelsTotal === 0
             return isModels
         },
         {manual: true}
@@ -88,8 +89,6 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
         () => {
             isForcedSetAIModal({
                 pageKey: "knowledge-base",
-                noDataCall: () => {},
-                haveDataCall: () => {},
                 isOpen: false
             })
         },
@@ -125,45 +124,32 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
         // 无模型 → 配置引导
         if (data) {
             return (
-                <NewThirdPartyApplicationConfig
-                    isOnlyShowAiType={true}
-                    formValues={undefined}
-                    disabledType={false}
-                    footerProps={{hiddenCancel: true}}
-                    FormProps={{
-                        layout: "horizontal",
-                        labelCol: 8,
-                        wrapperCol: 16
+                <AIModelForm
+                    onClose={() => {}}
+                    onSuccess={() => {
+                        run()
                     }}
-                    onAdd={(data) => {
-                        const params = handleAIConfig(
-                            {
-                                AppConfigs: globalNetworkConfig.AppConfigs,
-                                AiApiPriority: globalNetworkConfig.AiApiPriority
-                            },
-                            data
-                        )
-                        if (!params) {
-                            yakitNotify("error", "setAIModal 参数错误")
-                            return
-                        }
-                        apiSetGlobalNetworkConfig({...globalNetworkConfig, ...params}).then(() => {
-                            emiter.emit("onRefreshAvailableAIModelList", "true")
-                            emiter.emit(
-                                "aiModelSelectChange",
-                                JSON.stringify({
-                                    type: "online",
-                                    params: {
-                                        setting: true,
-                                        AIService: data.Type,
-                                        AIModelName: data?.ExtraParams?.find((e) => e.Key === "model")?.Value || ""
-                                    }
-                                })
-                            )
-                            run()
-                        })
-                    }}
-                    onCancel={() => {}}
+                    thirdPartyApplicationConfig={
+                        chatWidth < 400
+                            ? {
+                                  FormProps: {
+                                      layout: "vertical",
+                                      labelCol: 24,
+                                      wrapperCol: 24
+                                  },
+                                  onAdd: () => {},
+                                  onCancel: () => {}
+                              }
+                            : {
+                                  FormProps: {
+                                      layout: "horizontal",
+                                      labelCol: 8,
+                                      wrapperCol: 16
+                                  },
+                                  onAdd: () => {},
+                                  onCancel: () => {}
+                              }
+                    }
                 />
             )
         }
@@ -218,7 +204,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                 }}
             />
         )
-    }, [activeID, aiReActChatRef, data, events, globalNetworkConfig, loading, showFreeChat])
+    }, [activeID, aiReActChatRef, data, events, globalNetworkConfig, loading, showFreeChat, chatWidth])
 
     return (
         <div ref={refRef} className={styles["ai-wrapper"]} id='main-operator-page-body-db-http-request-aiReAct-chat'>

@@ -98,8 +98,8 @@ export interface GlobalNetworkConfig {
     MaxTlsVersion: number
     MaxContentLength: number | string
 }
-
 export interface ThirdPartyApplicationConfig {
+    //zoomeye / hunter / shodan / fofa / github / openai / token
     Type:
         | "zoomeye"
         | "hunter"
@@ -112,10 +112,17 @@ export interface ThirdPartyApplicationConfig {
         | "tencent"
         | "quake"
         | string
-    ExtraParams?: KVPair[]
     APIKey?: string
+    UserIdentifier?: string
+    UserSecret?: string
+    Namespace?: string
+    Domain?: string
+    WebhookURL?: string
+    ExtraParams?: KVPair[]
+    Disabled?: boolean
+    Proxy?: string
+    NoHttps?: boolean
 }
-
 type TenumBuffer = Buffer | Uint8Array
 
 export interface IsSetGlobalNetworkConfig {

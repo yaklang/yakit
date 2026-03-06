@@ -15,15 +15,17 @@ import {
     UpdateLocalModelRequest,
     StartedLocalModelInfo,
     LocalModelConfig,
-    GetAIModelListResponse,
     StopLocalModelRequest,
-    IsForcedSetAIModalRequest
+    IsForcedSetAIModalRequest,
+    GetAIModelAvailableTotalResponse
 } from "../type/aiModel"
 import omit from "lodash/omit"
-import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {AILocalModelTypeEnum} from "../defaultConstant"
 import {onOpenConfigModal} from "./aiModelSelect/AIModelSelect"
+import {KVPair} from "@/models/kv"
+import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
+import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
+import {defaultAIGlobalConfig} from "../defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -158,20 +160,27 @@ export const grpcStopLocalModel: APIFunc<StopLocalModelRequest, GeneralResponse>
 }
 
 /**获取线上和本地已启动的AI模型 */
-export const getAIModelList: APINoRequestFunc<GetAIModelListResponse> = (hiddenError) => {
+export const getAIModelAvailableInfo: APINoRequestFunc<GetAIModelAvailableTotalResponse> = (hiddenError) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let onlineModels: ThirdPartyApplicationConfig[] = []
+            let onlineModelsTotal: number = 0
+            let localModelsTotal: number = 0
+            let onlineModels: AIGlobalConfig = {...defaultAIGlobalConfig}
             let localModels: StartedLocalModelInfo[] = []
-            const config = await apiGetGlobalNetworkConfig()
+            const config = await grpcGetAIGlobalConfig()
             if (!!config) {
-                onlineModels = config.AppConfigs.filter((ele) => config.AiApiPriority.includes(ele.Type)) || []
+                const intelligentModelsTotal = config.IntelligentModels?.length || 0
+                const lightweightModelsTotal = config.LightweightModels?.length || 0
+                const visionModelsTotal = config.VisionModels?.length || 0
+                onlineModelsTotal = intelligentModelsTotal + lightweightModelsTotal + visionModelsTotal
+
+                onlineModels = config
             }
             // const localModelsRes = await grpcGetAllStartedLocalModels()
             // if (!!localModelsRes) {
             //     localModels = localModelsRes.Models.filter((ele) => ele.ModelType === AILocalModelTypeEnum.AIChat) || []
             // }
-            resolve({onlineModels, localModels})
+            resolve({onlineModelsTotal, localModelsTotal, onlineModels, localModels})
         } catch (error) {
             if (!hiddenError) yakitNotify("error", "getAIModelList 失败:" + error)
             reject(error)
@@ -259,19 +268,18 @@ export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: 
     return new Promise((resolve, reject) => {
         const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true} = params
 
-        getAIModelList(hiddenError)
+        getAIModelAvailableInfo(hiddenError)
             .then((res) => {
-                const noModel = res.localModels.length === 0 && res.onlineModels.length === 0
-
+                const noModel = res.localModelsTotal === 0 && res.onlineModelsTotal === 0
                 if (noModel) {
                     // 每个 tab / 页面只弹一次
                     if (!openedAIModalMap.get(pageKey)) {
                         openedAIModalMap.set(pageKey, true)
                         isOpen && onOpenConfigModal(mountContainer)
                     }
-                    noDataCall(res)
+                    noDataCall?.(res)
                 } else {
-                    haveDataCall(res)
+                    haveDataCall?.(res)
                 }
 
                 resolve(null)
@@ -302,6 +310,119 @@ export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> =
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "grpcListAiModel 失败:" + err)
+                reject(err)
+            })
+    })
+}
+export interface AIGlobalConfig {
+    Enabled: boolean
+    /**调用模式 */
+    RoutingPolicy: string
+    /**禁用降级轻量模型 */
+    DisableFallback: boolean
+    DefaultModelId: string
+    GlobalWeight: number
+    /**高质模型 */
+    IntelligentModels: AIModelConfig[]
+    /**轻量模型 */
+    LightweightModels: AIModelConfig[]
+    /**视觉模式 */
+    VisionModels: AIModelConfig[]
+}
+export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, "IntelligentModels" | "LightweightModels" | "VisionModels">
+export interface AIModelConfig {
+    ProviderId: string
+    Provider: ThirdPartyApplicationConfig
+    ModelName: string
+    ExtraParams: KVPair[]
+}
+
+/**获取ai 全局配置 */
+export const grpcGetAIGlobalConfig: APINoRequestFunc<AIGlobalConfig> = (hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetAIGlobalConfig")
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcGetAIGlobalConfig 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+/**设置ai 全局配置 */
+export const grpcSetAIGlobalConfig: APIFunc<AIGlobalConfig, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("SetAIGlobalConfig", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcSetAIGlobalConfig 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+export interface QueryAIProvidersResponse {
+    Pagination: PaginationSchema
+    Providers: AIProvider[]
+    Total: number
+}
+export interface AIProvider {
+    Id: string
+    Config: ThirdPartyApplicationConfig
+}
+export interface QueryAIProvidersRequest {
+    Filter?: AIProviderFilter
+    Pagination?: PaginationSchema
+}
+export interface AIProviderFilter {
+    Ids?: string[]
+    AIType: string[]
+}
+const grpcQueryAIProvider: APIFunc<QueryAIProvidersRequest, QueryAIProvidersResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryAIProvider", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcQueryAIProvider 失败:" + err)
+                reject(err)
+            })
+    })
+}
+export const grpcQueryAIProviderAll: APIFunc<string, QueryAIProvidersResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        if (!params) {
+            reject("AIType 不能为空")
+            return
+        }
+        const query: QueryAIProvidersRequest = {
+            Filter: {
+                AIType: [params]
+            },
+            Pagination: {
+                ...genDefaultPagination(-1)
+            }
+        }
+        grpcQueryAIProvider(query, hiddenError)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcQueryAIProviderAll 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+export const grpcGetAIThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPartyAppConfigTemplateResponse> = (
+    hiddenError
+) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetAIThirdPartyAppConfigTemplate")
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcGetAIThirdPartyAppConfigTemplate 失败:" + err)
                 reject(err)
             })
     })

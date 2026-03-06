@@ -1,5 +1,8 @@
 .drop-select-wrapper {
-    width: 200px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     :global {
         .ant-select-item-option-grouped {
             padding-left: 8px;
@@ -11,7 +14,7 @@
         font-weight: 600;
         line-height: 16px; /* 133.333% */
         letter-spacing: 0.5px;
-        padding: 2px 12px 4px 12px;
+        padding: 2px 8px 0 8px;
 
         display: flex;
         align-items: center;
@@ -22,16 +25,40 @@
             gap: 4px;
             flex-shrink: 0;
         }
+        .select-title-right{
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
     }
     .type-btn {
         margin-bottom: 4px;
         padding: 0 4px;
     }
+    .select-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .add-model-btn {
+        width: 100%;
+    }
 }
-
+.icon-info {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    display: flex;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+}
 .select-option-wrapper {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 4px;
     overflow: hidden;
     color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -51,8 +78,14 @@
     .icon-pencilalt {
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
     }
-    .icon-info {
-        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    .select-option-left {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        overflow: hidden;
+    }
+    .check-icon {
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -77,6 +110,17 @@
         width: 16px;
         height: 16px;
     }
+    .model-item {
+        width: 16px;
+        height: 16px;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+    }
 }
 .icon-small {
     width: 16px;
@@ -84,5 +128,95 @@
     svg {
         width: 12px;
         height: 12px;
+    }
+}
+
+.ai-model-select-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    &-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 0 8px;
+        &-title {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px; /* 133.333% */
+            letter-spacing: 0.5px;
+        }
+    }
+}
+.ai-online-model-list {
+    &-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        height: 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        &:hover {
+            background-color: var(--Colors-Use-Neutral-Bg);
+        }
+    }
+    .select-option-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        justify-content: space-between;
+        overflow: hidden;
+        flex: 1;
+        .select-option-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow: hidden;
+            font-size: 14px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            line-height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}
+
+.select-policy-wrapper,
+.select-policy-dropdown {
+    :global {
+        .ant-select-item-option-selected {
+            padding: 6px 8px;
+            height: 28px;
+            min-height: 28px;
+        }
+        .ant-select-item-option-content {
+            line-height: 16px;
+            height: 16px;
+        }
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 20px;
+            padding: 3px 6px;
+        }
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+            line-height: 12px;
+            font-size: 11px;
+        }
+        .ant-select-item {
+            font-size: 12px;
+        }
+        .ant-select .ant-select-arrow {
+            width: 12px;
+        }
+        .ant-select-item:not(.ant-select-item-option-grouped) {
+            padding: 6px 8px;
+        }
     }
 }

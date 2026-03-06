@@ -16,6 +16,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 // import classNames from "classnames"
 import styles from "./AIChatSetting.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 
 const ReviewPolicyOptions: YakitRadioButtonsProps["options"] = AIReviewRuleOptions.map((item) => ({
     value: item.value,
@@ -30,7 +31,16 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
         form && form.setFieldsValue({...(setting || {})})
     }, [setting])
 
-    const handleFormChange = useMemoizedFn((changedValues) => {
+    const handleFormChange = useMemoizedFn((changedValues, value) => {
+        if (!!changedValues.ReviewPolicy) {
+            emiter.emit("onRefreshAIReviewRuleSelect", JSON.stringify({reviewPolicy: changedValues.ReviewPolicy}))
+        }
+        if (changedValues.AIReviewRiskControlScore !== undefined) {
+            emiter.emit(
+                "onRefreshAIReviewRuleSelect",
+                JSON.stringify({AIReviewRiskControlScore: changedValues.AIReviewRiskControlScore})
+            )
+        }
         setSetting && setSetting((old) => ({...old, ...changedValues}))
     })
 
