@@ -400,12 +400,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         <div className={style["link-item"]} onClick={() => setFiltersVisible(true)}>
                             过滤器
                         </div>
-                        {isFilter && (
+                        {/* 产品要求暂时下掉 */}
+                        {/* {isFilter && (
                             <YakitTag color={"success"} style={{margin: '0 4px'}}>
                                 {t("HttpQueryAdvancedConfig.configured")}
                                 <OutlineCheckIcon className={style["check-icon"]} />
                             </YakitTag>
-                        )}
+                        )} */}
                         {!isNarrow && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 4px", top: 1}} />

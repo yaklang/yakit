@@ -44,14 +44,14 @@ export default ModifyNotepad
 
 const ModifyNotepadContentTab: YakitTabsProps[] = [
     {
-        icon: <OutlineListOneIcon />,
-        label: "目录",
-        value: "catalogue"
-    },
-    {
         icon: <OutlineListTwoIcon />,
         label: "列表",
         value: "list"
+    },
+    {
+        icon: <OutlineListOneIcon />,
+        label: "目录",
+        value: "catalogue"
     }
 ]
 
@@ -107,7 +107,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
 
         //#endregion
         //#region 侧边栏
-        const [activeKey, setActiveKey] = useState<string>("catalogue")
+        const [activeKey, setActiveKey] = useState<string>("list")
         const [show, setShow] = useState<boolean>(true)
         useEffect(() => {
             getRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey).then((setting: string) => {
@@ -145,10 +145,10 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                         <YakitResizeBox
                             freeze={show}
                             lineDirection='right'
-                            firstRatio={show ? "300px" : "25px"}
+                            firstRatio={show ? "350px" : "25px"}
                             firstNodeStyle={show ? {padding: 0} : {padding: 0, maxWidth: 25}}
-                            firstMinSize={show ? 300 : 25}
-                            secondMinSize={830}
+                            firstMinSize={show ? 350 : 25}
+                            secondMinSize={780}
                             firstNode={
                                 <div className={styles["notepad-tab-body"]}>
                                     <YakitSideTab

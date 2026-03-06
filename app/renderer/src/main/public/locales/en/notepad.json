@@ -1,0 +1,8 @@
+{
+    "NotepadLocalList": {
+        "confirmDeleteSelected": "Are you sure you want to delete the selected documents?",
+        "confirmDeleteAll": "Are you sure you want to delete all documents?",
+        "title": "Title",
+        "lastUpdateTime": "Last Updated"
+    }
+}

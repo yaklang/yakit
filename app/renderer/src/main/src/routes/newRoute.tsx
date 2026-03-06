@@ -381,7 +381,7 @@ export const YakitRouteToPageInfo: Record<
         describeUi: "YakitRoute.penetrationRecordDescription"
     },
     "modify-notepad": {
-        label: i18n.language === "en" ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`
+        label: i18n.language === "en" ? getNotepadNameByEdition() : getNotepadNameByEdition()
     },
     "yakrunner-audit-hole": {label: "审计漏洞", labelUi: "YakitRoute.auditVulnerability"},
     "system-config": {label: "系统配置", labelUi: "YakitRoute.systemConfig"},
@@ -1493,25 +1493,9 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
 export const getSecurityExpertNotepadMenu: () => ExtraMenuItem[] = () => {
     return [
         {
-            page: undefined,
+            page: YakitRoute.Modify_Notepad,
             i18n: false,
-            label: getNotepadNameByEdition(),
-            children: [
-                {
-                    page: YakitRoute.Notepad_Manage,
-                    i18n: false,
-                    label:
-                        i18n.language === "en"
-                            ? `${getNotepadNameByEdition()} Manage`
-                            : `${getNotepadNameByEdition()}管理`
-                },
-                {
-                    page: YakitRoute.Modify_Notepad,
-                    i18n: false,
-                    label:
-                        i18n.language === "en" ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`
-                }
-            ]
+            label: getNotepadNameByEdition()
         }
     ]
 }
@@ -1617,28 +1601,10 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                     },
                     getVulinboxMenuItem(),
                     {
-                        page: undefined,
+                        page: YakitRoute.Modify_Notepad,
                         icon: <SolidClipboardlistIcon />,
                         i18n: false,
-                        label: getNotepadNameByEdition(),
-                        children: [
-                            {
-                                page: YakitRoute.Notepad_Manage,
-                                i18n: false,
-                                label:
-                                    i18n.language === "en"
-                                        ? `${getNotepadNameByEdition()} Manage`
-                                        : `${getNotepadNameByEdition()}管理`
-                            },
-                            {
-                                page: YakitRoute.Modify_Notepad,
-                                i18n: false,
-                                label:
-                                    i18n.language === "en"
-                                        ? `Add ${getNotepadNameByEdition()}`
-                                        : `新建${getNotepadNameByEdition()}`
-                            }
-                        ]
+                        label: getNotepadNameByEdition()
                     }
                 ]
             }
@@ -1810,27 +1776,9 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                                 ...YakitRouteToPageInfo[YakitRoute.YakScript]
                             },
                             {
-                                page: undefined,
+                                page: YakitRoute.Modify_Notepad,
                                 i18n: false,
-                                label: getNotepadNameByEdition(),
-                                children: [
-                                    {
-                                        page: YakitRoute.Notepad_Manage,
-                                        i18n: false,
-                                        label:
-                                            i18n.language === "en"
-                                                ? `${getNotepadNameByEdition()} Manage`
-                                                : `${getNotepadNameByEdition()}管理`
-                                    },
-                                    {
-                                        page: YakitRoute.Modify_Notepad,
-                                        i18n: false,
-                                        label:
-                                            i18n.language === "en"
-                                                ? `Add ${getNotepadNameByEdition()}`
-                                                : `新建${getNotepadNameByEdition()}`
-                                    }
-                                ]
+                                label: getNotepadNameByEdition()
                             }
                         ]
                     }
