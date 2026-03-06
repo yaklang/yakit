@@ -278,17 +278,6 @@ const manageMenuList = [
     }
 ]
 
-const createMenuList = [
-    {
-        key: "create",
-        label: "新建"
-    },
-    {
-        key: "import",
-        label: "导入"
-    }
-]
-
 const tableHeaderGroupOptions = [
     {
         value: "entity",
@@ -1038,7 +1027,6 @@ const downloadOnlineRagWithEvents = (
 export {
     targetInstallList,
     getFileInfoList,
-    createMenuList,
     manageMenuList,
     targetIcon,
     mergeKnowledgeBaseData,

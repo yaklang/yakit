@@ -38,6 +38,7 @@ interface KnowledgeBaseTableProps {
     onDeleteVisible?: (visible: boolean) => void
     onExportKnowledgeBase?: (KnowledgeBaseId: string) => Promise<void>
     setOpenQA?: Dispatch<SetStateAction<boolean>>
+    installPlug?: boolean
     setStructureTableHeaderGroupOptions?: Dispatch<
         SetStateAction<
             | {
@@ -99,7 +100,14 @@ const loadTotals = async (knowledgeBaseItems: KnowledgeBaseTableProps["knowledge
 }
 
 const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
-    const {streams, knowledgeBaseItems, setOpenQA, setStructureTableHeaderGroupOptions, hasBuildDataProps} = props
+    const {
+        streams,
+        knowledgeBaseItems,
+        setOpenQA,
+        setStructureTableHeaderGroupOptions,
+        hasBuildDataProps,
+        installPlug
+    } = props
     const [query, setQuery] = useSafeState("")
     const [linkId, setLinkId] = useSafeState<string[]>([])
     const [tableProps, setTableProps] = useSafeState<{
@@ -295,6 +303,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                 structureTableHeaderGroupOptions={structureTableHeaderGroupOptions}
                 onOpenAddKnowledgeBaseModal={onOpenAddKnowledgeBaseModal}
                 knowledgeBaseIndexRun={knowledgeBaseIndexRun}
+                installPlug={installPlug}
             />
             {structureTableHeaderGroupOptions && structureTableHeaderGroupOptions?.length > 0 ? (
                 TargetTableRender
@@ -311,7 +320,9 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                     }}
                 >
                     <YakitButton
-                        disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success"}
+                        disabled={
+                            !knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success" || installPlug
+                        }
                         icon={<PlusIcon />}
                         type='secondary2'
                         onClick={() => onOpenAddKnowledgeBaseModal()}

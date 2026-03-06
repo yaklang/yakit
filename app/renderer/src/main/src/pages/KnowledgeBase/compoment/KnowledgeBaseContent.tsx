@@ -98,6 +98,7 @@ interface KnowledgeBaseContentProps {
     inViewport: boolean
     streamsRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["streams"] | undefined>
     loading: boolean
+    installPlug?: boolean
 }
 
 const hasStatusError = (state: HoldGRPCStreamInfo): boolean => {
@@ -700,6 +701,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         loading={loading}
                         refreshOlineRag={refreshOlineRag}
                         setRefreshOlineRag={setRefreshOlineRag}
+                        installPlug={props.installPlug}
                     />
 
                     <YakitResizeBox
@@ -726,13 +728,17 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                         setOpenQA={setShowFreeChat}
                                         addMode={addMode}
                                         setRefreshOlineRag={setRefreshOlineRag}
+                                        installPlug={props.installPlug}
                                     />
                                 </div>
                             ) : (
                                 <div className={styles["knowledge-base-container-empty"]}>
                                     <YakitEmpty />
                                     <div className={styles["empty-button"]}>
-                                        <YakitButton onClick={() => handleCreateKnowledgeBase()}>
+                                        <YakitButton
+                                            onClick={() => handleCreateKnowledgeBase()}
+                                            disabled={props.installPlug}
+                                        >
                                             创建知识库
                                         </YakitButton>
                                         <YakitButton

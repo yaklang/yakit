@@ -53,7 +53,7 @@ const KnowledgeBaseContainer: FC<
         | "aIModelAvailableTokens"
         | "progress"
     >
-> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA, addMode, setRefreshOlineRag}) => {
+> = ({knowledgeBaseID, streams, api, setKnowledgeBaseID, setOpenQA, addMode, setRefreshOlineRag, installPlug}) => {
     const {editKnowledgeBase, knowledgeBases} = useKnowledgeBase()
     const [state, dispatch] = useReducer(reducer, initialValue)
     const [structureTableHeaderGroupOptions, setStructureTableHeaderGroupOptions] = useSafeState<
@@ -236,6 +236,7 @@ const KnowledgeBaseContainer: FC<
                     setOpenQA={setOpenQA}
                     setStructureTableHeaderGroupOptions={setStructureTableHeaderGroupOptions}
                     hasBuildDataProps={hasBuildData}
+                    installPlug={installPlug}
                 />
             )}
             <DeleteConfirm
