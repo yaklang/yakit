@@ -1,6 +1,13 @@
 import {Architecture, DownloadingState, System, SystemInfoProps, YaklangEngineMode} from "./types"
-import {ipcEventPre} from "@/utils/ipcEventPre"
-const {ipcRenderer} = window.require("electron")
+import {ipcEventPre} from "../../utils/ipcEventPre"
+
+let ipcRenderer: any
+function getIpcRenderer() {
+    if (!ipcRenderer) {
+        ipcRenderer = window.require("electron").ipcRenderer
+    }
+    return ipcRenderer
+}
 
 /**
  * 根据引擎运行模式（YaklangEngineMode）返回对应的中文描述。
@@ -31,33 +38,33 @@ export const SystemInfo: SystemInfoProps = {
 
 export const handleFetchSystemInfo = async () => {
     try {
-        SystemInfo.system = await ipcRenderer.invoke(`${ipcEventPre}fetch-system-name`)
+        SystemInfo.system = await getIpcRenderer().invoke(`${ipcEventPre}fetch-system-name`)
     } catch (error) {}
     try {
-        SystemInfo.architecture = await ipcRenderer.invoke(`${ipcEventPre}fetch-cpu-arch`)
+        SystemInfo.architecture = await getIpcRenderer().invoke(`${ipcEventPre}fetch-cpu-arch`)
     } catch (error) {}
     try {
-        SystemInfo.isDev = !!(await ipcRenderer.invoke(`${ipcEventPre}is-dev`))
+        SystemInfo.isDev = !!(await getIpcRenderer().invoke(`${ipcEventPre}is-dev`))
     } catch (error) {}
 }
 
 export const handleFetchSystem = async (callback?: (value: System | undefined) => any) => {
     try {
-        SystemInfo.system = await ipcRenderer.invoke(`${ipcEventPre}fetch-system-name`)
+        SystemInfo.system = await getIpcRenderer().invoke(`${ipcEventPre}fetch-system-name`)
     } catch (error) {}
     if (callback) callback(SystemInfo.system)
 }
 
 export const handleFetchArchitecture = async (callback?: (value: Architecture | undefined) => any) => {
     try {
-        SystemInfo.architecture = await ipcRenderer.invoke(`${ipcEventPre}fetch-cpu-arch`)
+        SystemInfo.architecture = await getIpcRenderer().invoke(`${ipcEventPre}fetch-cpu-arch`)
     } catch (error) {}
     if (callback) callback(SystemInfo.architecture)
 }
 
 export const handleFetchIsDev = async (callback?: (value: boolean | undefined) => any) => {
     try {
-        SystemInfo.isDev = !!(await ipcRenderer.invoke(`${ipcEventPre}is-dev`))
+        SystemInfo.isDev = !!(await getIpcRenderer().invoke(`${ipcEventPre}is-dev`))
     } catch (error) {}
     if (callback) callback(SystemInfo.isDev)
 }
@@ -88,7 +95,7 @@ export const safeFormatDownloadProcessState = (state: DownloadingState) => {
 }
 
 export const outputToWelcomeConsole = (msg: any) => {
-    ipcRenderer
+    getIpcRenderer()
         .invoke(ipcEventPre + "output-log-to-welcome-console", `${msg}`)
         .then(() => {})
         .catch((e) => {

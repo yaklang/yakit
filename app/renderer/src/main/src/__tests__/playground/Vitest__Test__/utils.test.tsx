@@ -8,7 +8,10 @@ describe("compareKnowledgeBaseChange", () => {
     })
 
     it("detects a deleted item", () => {
-        const prev = [{ID: "1", name: "a"}, {ID: "2", name: "b"}]
+        const prev = [
+            {ID: "1", name: "a"},
+            {ID: "2", name: "b"}
+        ]
         const next = [{ID: "2", name: "b"}]
 
         const res = compareKnowledgeBaseChange(prev as any, next as any)
@@ -17,7 +20,10 @@ describe("compareKnowledgeBaseChange", () => {
 
     it("detects an increased item", () => {
         const prev = [{ID: "1", name: "a"}]
-        const next = [{ID: "1", name: "a"}, {ID: "2", name: "b"}]
+        const next = [
+            {ID: "1", name: "a"},
+            {ID: "2", name: "b"}
+        ]
 
         const res = compareKnowledgeBaseChange(prev as any, next as any)
         expect(res).toEqual({delete: null, increase: next[1]})
