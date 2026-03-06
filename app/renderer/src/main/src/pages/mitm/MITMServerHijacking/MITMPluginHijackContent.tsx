@@ -414,7 +414,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
 
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(MITMHotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
-    const [hotStatus, setHotStatus] = useState<"success" | "failed" | "end">("end")
     const tempNameRef = useRef<string>("")
     const onUpdateTemplate = useMemoizedFn(() => {
         ipcRenderer
@@ -501,7 +500,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                     tempNameRef.current = tempName || ""
                                 }}
                             ></AddHotCodeTemplate>
-                            {hotStatus === "success" ? (
+                            {mitmHotStatus === "success" ? (
                                 <YakitButton
                                     type='outline1'
                                     colors='danger'
@@ -513,7 +512,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                             version: mitmVersion
                                         }
                                         grpcMITMRemoveHook(value).then(() => {
-                                            setHotStatus("end")
+                                            setMitmHotStatus("end")
                                             info("停止成功")
                                         })
                                     }}
@@ -531,14 +530,14 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                         }
                                         grpcMITMExecScriptContent(value)
                                             .then(() => {
-                                                setHotStatus("success")
+                                                setMitmHotStatus("success")
                                                 info("加载成功")
                                                 if (!script.Id) {
                                                     setRemoteValue(RemoteGV.MITMHotPatchCodeSave, script.Content)
                                                 }
                                             })
                                             .catch((e) => {
-                                                setHotStatus("failed")
+                                                setMitmHotStatus("failed")
                                                 yakitFailed("加载失败：" + e)
                                             })
                                     }}
@@ -622,7 +621,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         pluginTraceActions.startPluginTrace()
     })
 
-    const {tunSessionState, setTunSessionState} = useStore()
+    const {tunSessionState, setTunSessionState, mitmHotStatus, setMitmHotStatus} = useStore()
     const PluginTunHijackRef = useRef<PluginTunHijackRefProps>(PluginTunHijackDef)
     const [pluginTunHijackData, pluginTunHijackActions] = usePluginTunHijack({
         PluginName: "Tun劫持服务",
