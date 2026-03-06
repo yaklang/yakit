@@ -1,4 +1,4 @@
-const { ipcMain } = require("electron")
+const { ipcMain, shell } = require("electron")
 const { Uint8ArrayToString } = require("../toolsFunc")
 const fs = require("fs")
 const { handleSaveFileSystem } = require("../utils/fileSystemDialog")
@@ -248,6 +248,7 @@ module.exports = (win, getClient) => {
                 context.fileStream.end()
                 clearInterval(timer)
                 activeRequests.delete(uuid)
+                shell.showItemInFolder(context.fileStream.path)
                 resolve(true)
             }
         }, 50)
