@@ -166,6 +166,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         <div className={styles["install-container"]}>
             <div className={styles["install-box"]}>
                 <YakitEmpty
+                    imageStyle={{height: 120, width: 120, margin: "12px auto"}}
                     title='检测到有插件未下载'
                     description='请下载插件后再创建知识库，也可以下载线上知识库进行使用'
                 />
