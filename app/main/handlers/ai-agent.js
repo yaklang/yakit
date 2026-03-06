@@ -34,24 +34,50 @@ module.exports = (win, getClient) => {
 
     // #region AI-ReAct
     let aiReActTaskPool = new Map()
+
+    // aiWriteChainMap 用于让write操作是一个顺序队列执行
+    let aiWriteChainMap = new Map()
+    // 写操作的错误处理方法，保证写操作失败不会中断后续操作
+    const safeWrite = async (stream, params, token) => {
+        try {
+            console.log("safeWrite: ", token, JSON.stringify(params))
+            await stream.write({...params})
+            return {success: true, token, params}
+        } catch (error) {
+            // console.log("write error: ", error)
+            return {success: false, error, token, params}
+        } finally {
+            console.log("safeWrite-end: ")
+        }
+    }
+
     // 开始执行 AI ReAct
     ipcMain.handle("start-ai-re-act", async (e, token, params) => {
         if (aiReActTaskPool.has(token)) {
             return
         }
         let stream = getClient().StartAIReAct()
+        aiWriteChainMap.set(token, Promise.resolve())
+        let writeChain = aiWriteChainMap.get(token)
         handlerHelper.registerHandler(win, stream, aiReActTaskPool, token)
         try {
-            stream.write({...params})
+            writeChain = writeChain.then(() => safeWrite(stream, params, token))
             const qs = params?.Params?.UserQuery
             if (!!qs) {
-                stream.write({
-                    IsFreeInput: true,
-                    FreeInput: qs,
-                    AttachedResourceInfo: params?.AttachedResourceInfo,
-                    FocusModeLoop: params?.FocusModeLoop
-                })
+                writeChain = writeChain.then(() =>
+                    safeWrite(
+                        stream,
+                        {
+                            IsFreeInput: true,
+                            FreeInput: qs,
+                            AttachedResourceInfo: params?.AttachedResourceInfo,
+                            FocusModeLoop: params?.FocusModeLoop
+                        },
+                        token
+                    )
+                )
             }
+            aiWriteChainMap.set(token, writeChain)
         } catch (error) {
             throw new Error(error)
         }
@@ -62,14 +88,24 @@ module.exports = (win, getClient) => {
         if (!currentStream) {
             return Promise.reject("stream no exist")
         }
+        if (!aiWriteChainMap.has(token)) {
+            aiWriteChainMap.set(token, Promise.resolve())
+        }
         try {
-            currentStream.write({...params})
+            let writeChain = aiWriteChainMap.get(token)
+            writeChain = writeChain.then(() => safeWrite(currentStream, {...params}, token))
+            aiWriteChainMap.set(token, writeChain)
         } catch (error) {
             throw new Error(error)
         }
     })
     // 取消 AI ReAct
-    ipcMain.handle("cancel-ai-re-act", handlerHelper.cancelHandler(aiReActTaskPool))
+    ipcMain.handle(
+        "cancel-ai-re-act",
+        handlerHelper.cancelHandler(aiReActTaskPool, (token) => {
+            aiWriteChainMap.delete(token)
+        })
+    )
     // #endregion
 
     // #region AI-Forge
