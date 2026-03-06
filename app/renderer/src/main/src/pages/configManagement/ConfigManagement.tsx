@@ -356,7 +356,7 @@ export const HotPatchManagement: React.FC = () => {
         ipcRenderer
             .invoke("CreateHotPatchTemplate", {
                 Type: activeType,
-                Content: "",
+                Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,  
                 Name: newName
             })
             .then(() => {
@@ -365,7 +365,7 @@ export const HotPatchManagement: React.FC = () => {
                 loadTemplateList()
                 setSelectedTemplate(newName)
                 resetDebug()
-                setCode("")
+                setCode(DEFAULT_GLOBAL_TEMPLATE_CONTENT)
             })
             .catch((error) => {
                 yakitFailed(error + "")
@@ -697,9 +697,10 @@ export const HotPatchManagement: React.FC = () => {
                                 icon={<OutlineTerminalIcon />}
                             />
                         </Tooltip>
-                        <YakitButton type='primary' loading={loading} onClick={onDebugExecution}>
+                        {/* 产品要求暂时去掉 */}
+                        {/* <YakitButton type='primary' loading={loading} onClick={onDebugExecution}>
                             {t("YakitButton.debugExecution")}
-                        </YakitButton>
+                        </YakitButton> */}
                         {loading && (
                             <YakitButton danger onClick={onCancelDebug}>
                                 {t("YakitButton.cancel")}
