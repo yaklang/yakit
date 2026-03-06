@@ -533,6 +533,13 @@
     "add_template_success": "新建模板成功",
     "template_list":"模板列表"
   },
+  "GlobalHotPatch": {
+    "Global_hot_template": "全局热加载",
+    "Global_hot_template_tip": "启用全局热加载后，会对全局所有流量统一处理",
+    "enabled": "已启用",
+    "started": "(已启动)",
+    "MITM_hot_patch": "MITM热加载"
+  },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "是否应用修改的内容",
     "empty_matcher_exists": "已有空匹配器条件",
