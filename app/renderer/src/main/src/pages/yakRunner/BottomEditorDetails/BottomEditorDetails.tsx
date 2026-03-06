@@ -23,7 +23,8 @@ import {
     defaultTerminalFont,
     DefaultTerminaSettingProps,
     TerminalBox,
-    TerminalListBox
+    TerminalListBox,
+    useTerminalHook
 } from "./TerminalBox/TerminalBox"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -31,14 +32,6 @@ import {v4 as uuidv4} from "uuid"
 import {ChevronDownIcon, ChevronUpIcon, InformationCircleIcon, OutlinePlusIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {
-    clearTerminalMap,
-    getMapAllTerminalKey,
-    getTerminalMap,
-    removeTerminalMap,
-    setTerminalMap,
-    TerminalDetailsProps
-} from "./TerminalBox/TerminalMap"
 import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
 import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
@@ -163,14 +156,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [])
 
-    const onBlur = useMemoizedFn(() => {
-        terminalFocusRef.current = false
-    })
-
-    const onFocus = useMemoizedFn(() => {
-        terminalFocusRef.current = true
-    })
-
     // 输出缓存
     const outputCahceRef = useRef<string>("")
     // 输出流
@@ -198,72 +183,25 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
     // 终端路径
     const folderPathRef = useRef<string>("")
-    // 当前终端打开项
-    const [terminalIds, setTerminalIds] = useState<string[]>([])
     // 终端大小
     const terminalSizeRef = useRef<{row: number; col: number}>()
-    // 终端当前展示项
-    const [terminalRunnerId, setTerminalRunnerId, getTerminalRunnerId] = useGetState<string>("")
-    const [refreshList, setRefreshList, getRefreshList] = useGetState<boolean>(false)
-    // 是否需要重新加载终端(终端已被整体关闭)
-    const [isReloadTerminal, setReloadTerminal] = useState<boolean>(false)
 
-    // 构造xtrem列表数据
-    const initTerminalListData = useMemo(() => {
-        let listData: TerminalDetailsProps[] = []
-        terminalIds.forEach((item) => {
-            try {
-                const terminalCache = getTerminalMap(item)
-                const listItem: TerminalDetailsProps = JSON.parse(terminalCache)
-                listData.push(listItem)
-            } catch (error) {}
-        })
-        return listData
-    }, [terminalIds, refreshList])
 
-    useUpdateEffect(() => {
-        if (isShowEditorDetails && showItem === "terminal" && isReloadTerminal) {
-            setReloadTerminal(false)
-            initTerminal()
-        }
-    }, [isShowEditorDetails, showItem, terminalRunnerId])
+    const onExit = useMemoizedFn(() => {
+        setEditorDetails(false)
+    })
 
-    useEffect(() => {
-        if (terminalRef.current) {
-            terminalRef.current.terminal.textarea.addEventListener("blur", onBlur)
-            terminalRef.current.terminal.textarea.addEventListener("focus", onFocus)
-            terminalRef.current.terminal.onTitleChange((path: string) => {
-                // 此处路径用于终端列表名 由于需兼容mac liunx经与后端协商仅提取字符串存在\的名称其余完整展示
-                let title = path
-                if (path.includes("\\")) {
-                    const lastSlashIndex = path.lastIndexOf("\\")
-                    const fileName = path.substring(lastSlashIndex + 1)
-                    const lastIndex = fileName.lastIndexOf(".")
-                    if (lastIndex !== -1) {
-                        title = fileName.slice(0, lastIndex)
-                    } else {
-                        title = fileName
-                    }
-                }
-                const id = getTerminalRunnerId()
-                const terminalCache = getTerminalMap(id)
-                const obj: TerminalDetailsProps = JSON.parse(terminalCache)
-                obj.title = title
-                setTerminalMap(id, JSON.stringify(obj))
-                setRefreshList(!getRefreshList())
-            })
-        }
-        return () => {
-            if (terminalRef.current) {
-                terminalRef.current.terminal.textarea.removeEventListener("blur", onBlur)
-                terminalRef.current.terminal.textarea.removeEventListener("focus", onFocus)
-            }
-        }
-    }, [terminalRef.current])
-
-    useEffect(() => {
-        setTerminalIds(getMapAllTerminalKey())
-    }, [])
+        // 使用终端Hook来管理终端状态
+    const [terminalIds, terminalRunnerId, initTerminalListData, debugTerminalHookEvent] = useTerminalHook({
+        type:"yakRunner",
+        terminalRef,
+        folderPathRef,
+        terminalSizeRef,
+        terminalFocusRef,
+        onExit,
+        isShowDetails:isShowEditorDetails,
+        showItem
+    })
 
     useEffect(() => {
         if (fileTree.length > 0) {
@@ -277,7 +215,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         setEditorDetails(true)
         setShowItem("terminal")
         folderPathRef.current = path
-        startTerminal()
+        debugTerminalHookEvent.startTerminal()
     })
 
     // 在终端中打开
@@ -288,214 +226,10 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [])
 
-    // 整体退出终端
-    const onExitTernimal = useMemoizedFn(() => {
-        if (terminalRef.current) {
-            clearTerminalMap()
-            setEditorDetails(false)
-            // 重新渲染
-            // setShowType(showType.filter((item) => item !== "terminal"))
-            setTerminalIds([])
-            setTerminalRunnerId("")
-            setReloadTerminal(true)
-            setRefreshList(!refreshList)
-            terminalRef.current.terminal.reset()
-            const main = document.getElementById("yakit-runnner-main-box-id")
-            if (main) {
-                main.focus()
-            }
-        }
-    })
-
-    // 终端初始化
-    const initTerminal = useMemoizedFn(() => {
-        if (!terminalRef) return
-        if (!terminalSizeRef.current) return
-        try {
-            // 校验map存储缓存
-            const terminalCache = getMapAllTerminalKey()
-            if (terminalCache.length > 0) {
-                // 默认展开第一项
-                let runnerId: string = terminalCache[0]
-
-                const terminalItemCache = getTerminalMap(runnerId)
-                const cache: TerminalDetailsProps = JSON.parse(terminalItemCache)
-                setTerminalRunnerId(runnerId)
-                setTerminalIds(terminalCache)
-                writeXTerm(terminalRef, cache.content)
-            } else {
-                startTerminal()
-            }
-        } catch (error) {}
-    })
-
-    // 启动终端执行
-    const startTerminal = useMemoizedFn(() => {
-        if (!terminalRef) return
-        if (!terminalSizeRef.current) return
-        xtermClear(terminalRef)
-        const runnnerId = uuidv4()
-
-        // 启动
-        ipcRenderer
-            .invoke("runner-terminal", {
-                id: runnnerId,
-                path: folderPathRef.current,
-                ...terminalSizeRef.current
-            })
-            .then(() => {
-                const cache: TerminalDetailsProps = {
-                    id: runnnerId,
-                    path: folderPathRef.current,
-                    content: "",
-                    title: ""
-                }
-                // 更新缓存
-                setTerminalMap(runnnerId, JSON.stringify(cache))
-
-                setTerminalRunnerId(runnnerId)
-                setTerminalIds([...terminalIds, runnnerId])
-                // isShowEditorDetails && success(`终端${folderPathRef.current}监听成功`)
-            })
-            .catch((e: any) => {
-                failed(`ERROR: ${JSON.stringify(e)}`)
-            })
-            .finally(() => {})
-    })
-
-    // 写入
-    const commandExec = useMemoizedFn((cmd: string) => {
-        if (!terminalRef || !terminalRef.current) {
-            return
-        }
-
-        ipcRenderer.invoke("runner-terminal-input", terminalRunnerId, cmd)
-    })
-
-    // 行列变化
-    const onChangeSize = useMemoizedFn(({row, col}) => {
-        if (row && col) {
-            if (terminalSizeRef.current) {
-                ipcRenderer.invoke("runner-terminal-size", terminalRunnerId, {
-                    height: row,
-                    width: col
-                })
-            }
-            // 确保第一次执行 带入row、col
-            else {
-                terminalSizeRef.current = {row, col}
-                initTerminal()
-            }
-        }
-    })
-
-    // 输出
-    const onWriteXTerm = useMemoizedFn((id: string, path: string, data: Uint8Array) => {
-        let outPut = Uint8ArrayToString(data)
-        const terminalCache = getTerminalMap(id)
-        try {
-            if (terminalCache) {
-                const obj: TerminalDetailsProps = JSON.parse(terminalCache)
-                const cache: TerminalDetailsProps = {
-                    id,
-                    path,
-                    content: obj.content + outPut,
-                    title: obj.title
-                }
-
-                // 更新缓存
-                setTerminalMap(id, JSON.stringify(cache))
-                if (id === terminalRunnerId) {
-                    writeXTerm(terminalRef, outPut)
-                }
-            }
-        } catch (error) {}
-    })
-
     const isShowTerminalList = useMemo(() => {
         return terminalIds.length > 1
     }, [terminalIds])
-
-    const onListeningTerminalEnd = useMemoizedFn((data: {id: string; path: string}) => {
-        const {id, path} = data
-        if (getMapAllTerminalKey().includes(id)) {
-            // isShowEditorDetails && warn(`终端${path}被关闭`)
-            // 列表关闭
-            if (terminalIds.length > 1) {
-                if (terminalRunnerId === id) {
-                    let itemIndex = terminalIds.indexOf(id)
-                    let index = itemIndex === terminalIds.length - 1 ? itemIndex - 1 : itemIndex + 1
-                    onSelectTerminalItem(terminalIds[index])
-                }
-                removeTerminalMap(id)
-                setTerminalIds(terminalIds.filter((item) => item !== id))
-                setRefreshList(!refreshList)
-            }
-            // 整体关闭
-            else {
-                onExitTernimal()
-            }
-        }
-    })
-
-    useEffect(() => {
-        // 接收
-        const key = `client-listening-terminal-data`
-        ipcRenderer.on(key, (e, data) => {
-            const {id, path, result} = data
-            if (result.control) {
-                return
-            }
-            if (result?.raw) {
-                onWriteXTerm(id, path, result.raw)
-            }
-        })
-
-        const successKey = `client-listening-terminal-success`
-        ipcRenderer.on(successKey, (e: any, data: any) => {
-            // console.log("client-listening-terminal-success---")
-        })
-
-        // grpc通知关闭
-        const closeKey = "client-listening-terminal-end"
-        ipcRenderer.on(closeKey, (e: any, data: {id: string; path: string}) => {
-            onListeningTerminalEnd(data)
-        })
-
-        // grpc错误
-        const errorKey = "client-listening-terminal-error"
-        ipcRenderer.on(errorKey, (e: any, data: {id: string; path: string}) => {
-            warn(`终端${data.path}错误`)
-        })
-
-        return () => {
-            // 移除
-            ipcRenderer.removeAllListeners(key)
-            ipcRenderer.removeAllListeners(successKey)
-            ipcRenderer.removeAllListeners(closeKey)
-            ipcRenderer.removeAllListeners(errorKey)
-            // 清空
-            xtermClear(terminalRef)
-        }
-    }, [terminalRef])
-
-    const onSelectTerminalItem = useMemoizedFn((id) => {
-        if (terminalRunnerId === id) return
-        setTerminalRunnerId(id)
-        const terminalCache = getTerminalMap(id)
-        try {
-            if (terminalCache && terminalRef.current) {
-                const cache: TerminalDetailsProps = JSON.parse(terminalCache)
-                terminalRef.current.terminal.reset()
-                writeXTerm(terminalRef, cache.content)
-                terminalRef.current.terminal.scrollToBottom()
-            }
-        } catch (error) {}
-    })
-
-    const onDeleteTerminalItem = useMemoizedFn((id) => {
-        ipcRenderer.invoke("runner-terminal-cancel", id).finally(() => {})
-    })
+    
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -545,7 +279,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                 type='text2'
                                 icon={<OutlinePlusIcon />}
                                 onClick={() => {
-                                    startTerminal()
+                                    debugTerminalHookEvent.startTerminal()
                                 }}
                             />
                             <YakitPopover
@@ -620,7 +354,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                     icon={<OutlineExitIcon />}
                                     className={styles["yak-runner-terminal-close"]}
                                     onClick={() => {
-                                        ipcRenderer.invoke("runner-terminal-cancel", terminalRunnerId).finally(() => {})
+                                        debugTerminalHookEvent.onDeleteTerminalItem(terminalRunnerId)
                                     }}
                                 />
                             )}
@@ -679,8 +413,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             firstNode={
                                 <TerminalBox
                                     xtermRef={terminalRef}
-                                    commandExec={commandExec}
-                                    onChangeSize={onChangeSize}
+                                    commandExec={debugTerminalHookEvent.commandExec}
+                                    onChangeSize={debugTerminalHookEvent.onChangeSize}
                                     defaultTerminalSetting={terminaFont}
                                 />
                             }
@@ -690,8 +424,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                         <TerminalListBox
                                             initTerminalListData={initTerminalListData}
                                             terminalRunnerId={terminalRunnerId}
-                                            onSelectTerminalItem={onSelectTerminalItem}
-                                            onDeleteTerminalItem={onDeleteTerminalItem}
+                                            onSelectTerminalItem={debugTerminalHookEvent.onSelectTerminalItem}
+                                            onDeleteTerminalItem={debugTerminalHookEvent.onDeleteTerminalItem}
                                         />
                                     )}
                                 </>

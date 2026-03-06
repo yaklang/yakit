@@ -1,6 +1,12 @@
 import {getAllYakitColorVars} from "@/utils/theme"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {useTheme} from "./useTheme"
+import {Theme,useTheme} from "./useTheme"
+
+const applyYakitXtermTheme = (terminal, fun) => {
+    requestAnimationFrame(() => {
+        fun(terminal, getXtermTheme())
+    })
+}
 
 export const getXtermTheme = () => {
     const vars = getAllYakitColorVars()
@@ -64,13 +70,21 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
     const {getTerminal, delay = 0} = params
     const {theme: themeGlobal} = useTheme()
 
+    const onOption = useMemoizedFn((terminal, theme) => {
+        terminal.options.theme = theme
+    })
+
+    const onSetOption = useMemoizedFn((terminal, theme) => {
+        terminal.setOption("theme", theme)
+    })
+
     const handleSetOptions = useMemoizedFn(() => {
         const terminal = getTerminal()
         if (terminal) {
             if (terminal.options) {
-                terminal.options.theme = getXtermTheme()
+                applyYakitXtermTheme(terminal, onOption)
             } else if (terminal.setOption) {
-                terminal.setOption("theme", getXtermTheme())
+                applyYakitXtermTheme(terminal, onSetOption)
             }
         }
     })
