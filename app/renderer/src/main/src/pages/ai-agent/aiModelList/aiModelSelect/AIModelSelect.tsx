@@ -7,17 +7,19 @@ import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
 import {GetAIModelAvailableTotalResponse} from "../../type/aiModel"
 import {
+    AIAgentTabListEnum,
     AIModelPolicyEnum,
     AIModelPolicyOptions,
     AIModelTypeInterFileNameEnum,
     AIOnlineModelIconMap,
-    defaultAIGlobalConfig
+    defaultAIGlobalConfig,
+    SwitchAIAgentTabEventEnum
 } from "../../defaultConstant"
 import {getTipByType, OutlineAtomIconByStatus, setAIModal} from "../AIModelList"
 import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
-import {OutlineCheckIcon, OutlineInformationcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineCheckIcon, OutlineCogIcon, OutlineInformationcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {cloneDeep, isEqual} from "lodash"
 import {AIInputEventHotPatchTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
 import emiter from "@/utils/eventBus/eventBus"
@@ -25,6 +27,10 @@ import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfi
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Avatar, Tooltip} from "antd"
 import {AIAgentTriggerEventInfo} from "../../aiAgentType"
+import {yakitNotify} from "@/utils/notification"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 export const onOpenConfigModal = (mountContainer) => {
     const m = YakitModalConfirm({
@@ -54,6 +60,8 @@ export const onOpenConfigModal = (mountContainer) => {
 const modelType = ["高质模型", "轻量模型", "视觉模型"]
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     const {isOpen = true, mountContainer} = props
+
+    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
     //#region AI model
     const {chatIPCData} = useChatIPCStore()
     const {handleSendConfigHotpatch} = useChatIPCDispatcher()
@@ -190,34 +198,29 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                             value='select'
                             label={
                                 <div className={styles["select-option"]}>
-                                    <Avatar.Group>
-                                        {selectList.length > 1 ? (
-                                            <>
-                                                {selectList.map((item, index) => (
-                                                    <Tooltip
-                                                        key={index}
-                                                        title={`${modelType[index]}:${item.ModelName}`}
-                                                    >
-                                                        <Avatar
-                                                            className={styles["model-item"]}
-                                                            icon={getIconByAI(item.Provider.Type)}
-                                                            size='small'
-                                                        />
-                                                    </Tooltip>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            <>
-                                                {getIconByAI(selectList[0]?.Provider.Type)}
-                                                <span
-                                                    className={styles["select-option-text"]}
-                                                    title={`${selectList[0]?.ModelName}`}
-                                                >
-                                                    {selectList[0]?.ModelName}
-                                                </span>
-                                            </>
-                                        )}
-                                    </Avatar.Group>
+                                    {selectList.length > 1 ? (
+                                        <Avatar.Group>
+                                            {selectList.map((item, index) => (
+                                                <Tooltip key={index} title={`${modelType[index]}:${item.ModelName}`}>
+                                                    <Avatar
+                                                        className={styles["model-item"]}
+                                                        icon={getIconByAI(item.Provider.Type)}
+                                                        size='small'
+                                                    />
+                                                </Tooltip>
+                                            ))}
+                                        </Avatar.Group>
+                                    ) : (
+                                        <>
+                                            {getIconByAI(selectList[0]?.Provider.Type)}
+                                            <span
+                                                className={styles["select-option-text"]}
+                                                title={`${selectList[0]?.ModelName}`}
+                                            >
+                                                {selectList[0]?.ModelName}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             }
                         >
@@ -309,6 +312,35 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             })
         }
     )
+    const openModelTab = useMemoizedFn(() => {
+        if (currentRouteKey !== YakitRoute.AI_Agent) {
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.AI_Agent
+                })
+            )
+            setTimeout(() => {
+                onSwitchAIAgentTab()
+            }, 100)
+        } else {
+            onSwitchAIAgentTab()
+        }
+
+        yakitNotify("success", "已打开AI侧边栏模型配置")
+    })
+    const onSwitchAIAgentTab = useMemoizedFn(() => {
+        emiter.emit(
+            "switchAIAgentTab",
+            JSON.stringify({
+                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+                params: {
+                    active: AIAgentTabListEnum.AI_Model,
+                    show: true
+                }
+            })
+        )
+    })
     return (
         <div ref={refRef}>
             {isHaveData ? (
@@ -336,15 +368,27 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             <OutlineInformationcircleIcon className={styles["icon-info"]} />
                                         </Tooltip>
                                     </div>
-                                    {aiType === "online" && (
-                                        <YakitButton
-                                            size='small'
-                                            type='text2'
-                                            icon={<OutlineRefreshIcon />}
-                                            loading={onlineLoading}
-                                            onClick={() => onRefreshAvailableAIModelList()}
-                                        />
-                                    )}
+                                    <div className={styles["select-title-right"]}>
+                                        <Tooltip title={"打开ai侧边栏模型配置"}>
+                                            <YakitButton
+                                                size='small'
+                                                type='text2'
+                                                icon={<OutlineCogIcon />}
+                                                onClick={openModelTab}
+                                            />
+                                        </Tooltip>
+                                        {aiType === "online" && (
+                                            <Tooltip title={"刷新"}>
+                                                <YakitButton
+                                                    size='small'
+                                                    type='text2'
+                                                    icon={<OutlineRefreshIcon />}
+                                                    loading={onlineLoading}
+                                                    onClick={() => onRefreshAvailableAIModelList()}
+                                                />
+                                            </Tooltip>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className={styles["select-content"]}>
                                     {!!intelligentModels.length && (

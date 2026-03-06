@@ -2,7 +2,7 @@
 import {useMemo} from "react"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {usePageInfo} from "@/store/pageInfo"
-import shallow from "zustand/shallow"
+import {shallow} from "zustand/shallow"
 
 enum FileListStoreKey {
     FileList = "fileList",
