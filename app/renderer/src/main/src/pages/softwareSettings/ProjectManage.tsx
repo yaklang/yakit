@@ -2202,6 +2202,11 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         系统模块编号 :<span className={styles["required-style"]}>*</span>
                                     </div>
                                 }
+                                help={
+                                    <div className={styles["import-form-item-help-wrapper"]}>
+                                        若一个项目涉及多个系统模块，请分别创建项目
+                                    </div>
+                                }
                             >
                                 <YakitInput
                                     size='large'
