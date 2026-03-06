@@ -508,6 +508,9 @@
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
+        .title{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
     }
     .required-style {
         font-family: SimSun, sans-serif;
