@@ -6,7 +6,6 @@ import {useSafeState} from "ahooks"
 import {PlusIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {createMenuList} from "../utils"
 import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
 import {Form} from "antd"
 import {ImportModal} from "./ImportModal"
@@ -14,7 +13,8 @@ import {ImportModal} from "./ImportModal"
 const AddKnowledgenBaseDropdownMenu: FC<{
     setKnowledgeBaseID: (id: string) => void
     setAddMode: Dispatch<SetStateAction<string[]>>
-}> = ({setKnowledgeBaseID, setAddMode}) => {
+    installPlug?: boolean
+}> = ({setKnowledgeBaseID, setAddMode, installPlug}) => {
     const [form] = Form.useForm()
     const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
     const [visible, setVisible] = useSafeState(false)
@@ -30,7 +30,17 @@ const AddKnowledgenBaseDropdownMenu: FC<{
         <React.Fragment>
             <YakitDropdownMenu
                 menu={{
-                    data: createMenuList,
+                    data: [
+                        {
+                            key: "create",
+                            label: "新建",
+                            disabled: installPlug
+                        },
+                        {
+                            key: "import",
+                            label: "导入"
+                        }
+                    ],
                     onClick: ({key}) => {
                         setCreateMenuOpen(false)
                         switch (key) {

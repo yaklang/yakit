@@ -278,17 +278,6 @@ const manageMenuList = [
     }
 ]
 
-const createMenuList = [
-    {
-        key: "create",
-        label: "新建"
-    },
-    {
-        key: "import",
-        label: "导入"
-    }
-]
-
 const tableHeaderGroupOptions = [
     {
         value: "entity",
@@ -1028,7 +1017,6 @@ const downloadWithEvents = (invokeChannel: string, invokeArgs: any, token: strin
 export {
     targetInstallList,
     getFileInfoList,
-    createMenuList,
     manageMenuList,
     targetIcon,
     mergeKnowledgeBaseData,

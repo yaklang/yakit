@@ -68,7 +68,8 @@ const KnowledgeBaseTableHeader: FC<
     api,
     structureTableHeaderGroupOptions,
     onOpenAddKnowledgeBaseModal,
-    knowledgeBaseIndexRun
+    knowledgeBaseIndexRun,
+    installPlug
 }) => {
     const [searchValue, setSearchValue] = useSafeState("")
     const [addModalData, setAddModalData] = useSafeState<{visible: boolean; KnowledgeBaseName: string}>({
@@ -207,7 +208,9 @@ const KnowledgeBaseTableHeader: FC<
                         AI 召回
                     </div>
                     <YakitButton
-                        disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success"}
+                        disabled={
+                            !knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success" || installPlug
+                        }
                         icon={<PlusIcon />}
                         type='secondary2'
                         onClick={() => onOpenAddKnowledgeBaseModal()}

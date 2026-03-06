@@ -580,6 +580,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & {linkId: string[]}> = (pro
                                                 iconWidth={900}
                                                 icon={<OutlinePlay2Icon />}
                                                 type='outline1'
+                                                disabled
                                                 name={"从实体生成知识"}
                                             />
                                         }

@@ -221,7 +221,7 @@ const KnowledgeBase: FC = () => {
     const knowledgeBaseEntrance = useMemo(() => {
         switch (true) {
             // 缺失插件时展示需下载插件页面
-            case installPlug:
+            case installPlug && !knowledgeBases.length:
                 return (
                     <YakitSpin spinning={loading || existsKnowledgeLoading}>
                         <AllInstallPlugins
@@ -250,6 +250,7 @@ const KnowledgeBase: FC = () => {
                         binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
                         inViewport={inViewport}
                         streamsRef={streamsRef}
+                        installPlug={installPlug}
                     />
                 )
         }

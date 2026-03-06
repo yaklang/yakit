@@ -83,6 +83,7 @@ export interface TKnowledgeBaseSidebarProps {
     loading?: boolean
     refreshOlineRag?: boolean
     setRefreshOlineRag?: Dispatch<SetStateAction<boolean>>
+    installPlug?: boolean
 }
 
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
@@ -101,7 +102,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     progress,
     loading,
     refreshOlineRag,
-    setRefreshOlineRag
+    setRefreshOlineRag,
+    installPlug
 }) => {
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
     const [expand, setExpand] = useSafeState<boolean>(true)
@@ -398,6 +400,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                     <AddKnowledgenBaseDropdownMenu
                                         setKnowledgeBaseID={setKnowledgeBaseID}
                                         setAddMode={setAddMode}
+                                        installPlug={installPlug}
                                     />
                                     <Tooltip title={progress < 100 ? "知识库可用诊断进行中" : "知识库可用诊断"}>
                                         <YakitButton
