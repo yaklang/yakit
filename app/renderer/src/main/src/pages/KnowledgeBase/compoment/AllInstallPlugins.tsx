@@ -184,15 +184,6 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                     >
                         一键下载插件
                     </YakitButton>
-                    <YakitButton
-                        type='outline1'
-                        icon={<CloudDownloadIcon />}
-                        // onClick={() =>
-                        //                                                                     onDownloadOnlineRag(items)
-                        //                                                                 }
-                    >
-                        一键下载在线知识库
-                    </YakitButton>
                     {isShow ? (
                         <YakitButton type='text' onClick={() => showDetail()}>
                             查看详情
