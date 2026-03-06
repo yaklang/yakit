@@ -527,11 +527,26 @@
     "save_hot_reload_template": "Save Hot-Reload Template",
     "MITM_hot_template": "MITM",
     "WebFuzzer_hot_template": "Web Fuzzer",
+    "Global_hot_template": "Global",
     "add_template": "Add Template",
     "template_empty_message": "Template name cannot be empty",
     "template_repeat_message": "Template name already exists",
     "add_template_success": "Add Template Success",
     "template_list":"Template List"
+  },
+  "GlobalHotPatch": {
+    "status": "Global HotPatch",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "current": "Current",
+    "refresh": "Refresh",
+    "enable_selected": "Enable as Global",
+    "disable": "Disable Global",
+    "enabled_tag": "Global Enabled",
+    "select_template_first": "Please select a global hotpatch template first",
+    "enable_success": "Global HotPatch enabled",
+    "disable_success": "Global HotPatch disabled",
+    "default_template_created": "Default global template created: {name}"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "Apply the modified content?",
