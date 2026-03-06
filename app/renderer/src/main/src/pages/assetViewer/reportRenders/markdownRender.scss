@@ -1426,4 +1426,231 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     li .\[li_\&\]\:pl-6 {
         padding-left: 1.5rem;
     }
+
+    // --- Compact overrides for AI chat context ---
+
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+
+    [data-streamdown="code-block"] {
+        margin-top: 6px !important;
+        margin-bottom: 6px !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        border-radius: 6px !important;
+    }
+
+    [data-streamdown="code-block-header"] {
+        height: 22px !important;
+        padding: 0 8px !important;
+        font-size: 11px !important;
+        background: var(--yakit-card-border-bg, rgba(0, 0, 0, 0.03)) !important;
+        border-bottom: 1px solid var(--yakit-border-color, rgba(0, 0, 0, 0.06)) !important;
+        border-radius: 6px 6px 0 0 !important;
+        gap: 4px !important;
+
+        button svg {
+            width: 14px !important;
+            height: 14px !important;
+        }
+    }
+
+    [data-streamdown="code-block-body"] {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+        border-radius: 0 0 6px 6px !important;
+        border-top: none !important;
+    }
+
+    h1 {
+        font-size: 1.125rem !important;
+        line-height: 1.5 !important;
+        margin-top: 8px !important;
+        margin-bottom: 2px !important;
+    }
+
+    h2 {
+        font-size: 1rem !important;
+        line-height: 1.4 !important;
+        margin-top: 8px !important;
+        margin-bottom: 2px !important;
+    }
+
+    h3 {
+        font-size: 0.9375rem !important;
+        line-height: 1.35 !important;
+        margin-top: 6px !important;
+        margin-bottom: 2px !important;
+    }
+
+    h4 {
+        font-size: 0.875rem !important;
+        line-height: 1.3 !important;
+        margin-top: 6px !important;
+        margin-bottom: 2px !important;
+    }
+
+    h5,
+    h6 {
+        font-size: 0.8125rem !important;
+        line-height: 1.25 !important;
+        margin-top: 4px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 4px !important;
+    }
+
+    .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 1px !important;
+    }
+
+    p {
+        margin-bottom: 2px !important;
+        line-height: 1.4 !important;
+    }
+
+    ul,
+    ol {
+        margin-top: 1px !important;
+        margin-bottom: 1px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    li {
+        line-height: 1.4 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+
+        p {
+            margin-bottom: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        > ul,
+        > ol {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+    }
+
+    li + li {
+        margin-top: 1px !important;
+    }
+
+    ul.space-y-2 > :not([hidden]) ~ :not([hidden]),
+    ol.space-y-2 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 1px !important;
+    }
+
+    blockquote {
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        padding-left: 0.75rem !important;
+    }
+
+    hr {
+        margin-top: 6px !important;
+        margin-bottom: 6px !important;
+    }
+
+    [data-streamdown="table-wrapper"] {
+        margin-top: 6px !important;
+        margin-bottom: 6px !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
+
+        table {
+            th,
+            td {
+                padding: 2px 8px !important;
+                line-height: 1.4 !important;
+                font-size: 13px !important;
+            }
+
+            th {
+                font-weight: 600 !important;
+            }
+        }
+
+        > .flex.items-center.justify-end {
+            background: var(--yakit-card-border-bg, rgba(0, 0, 0, 0.03)) !important;
+            border-bottom: 1px solid var(--yakit-border-color, rgba(0, 0, 0, 0.06)) !important;
+            height: 22px !important;
+            padding: 0 8px !important;
+            border-radius: 6px 6px 0 0 !important;
+            gap: 4px !important;
+
+            button svg {
+                width: 14px !important;
+                height: 14px !important;
+            }
+        }
+    }
+
+    [data-streamdown="mermaid-block"] {
+        margin-top: 6px !important;
+        margin-bottom: 6px !important;
+        padding: 0 !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
+
+        > .flex.items-center.justify-end.gap-2 {
+            height: 22px !important;
+            padding: 0 8px !important;
+            justify-content: flex-end !important;
+            background: var(--yakit-card-border-bg, rgba(0, 0, 0, 0.03)) !important;
+            border-bottom: 1px solid var(--yakit-border-color, rgba(0, 0, 0, 0.06)) !important;
+            gap: 4px !important;
+            box-sizing: content-box !important;
+
+            button {
+                padding: 2px !important;
+                border: none !important;
+                background: transparent !important;
+
+                svg {
+                    width: 14px !important;
+                    height: 14px !important;
+                }
+            }
+        }
+
+        [data-streamdown="mermaid"] {
+            overflow: visible !important;
+            padding: 8px !important;
+
+            > div {
+                transform: none !important;
+                touch-action: auto !important;
+                will-change: auto !important;
+                cursor: default !important;
+                pointer-events: none;
+
+                > div {
+                    pointer-events: auto;
+                }
+            }
+
+            svg {
+                max-width: 100% !important;
+                height: auto !important;
+                display: block;
+            }
+        }
+    }
+
+    .fixed.inset-0 {
+        [data-streamdown="mermaid"] svg {
+            max-width: 90vw !important;
+            max-height: 85vh !important;
+            width: auto !important;
+            height: auto !important;
+        }
+    }
 }
