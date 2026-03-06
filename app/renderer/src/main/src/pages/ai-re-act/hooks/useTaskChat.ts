@@ -157,14 +157,14 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
             review.current = isAuto ? undefined : chatData
             if (isAuto) {
-                setContentMap(chatData.id, chatData)
+                setContentMap(chatData.id, cloneDeep(chatData))
                 setElements((old) => [
                     ...old,
                     {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}
                 ])
                 handleRviewDataToUI(chatData)
             } else {
-                onReview && onReview(chatData)
+                onReview && onReview(cloneDeep(chatData))
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -206,7 +206,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             reviewInfo.taskExtra.set(data.index, data)
 
             const isAuto = isAutoExecuteReviewContinue({getFunc: getRequest})
-            if (!isAuto && onReviewExtra) onReviewExtra(data)
+            if (!isAuto && onReviewExtra) onReviewExtra(cloneDeep(data))
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,
@@ -245,13 +245,13 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
             review.current = isAuto ? undefined : chatData
             if (isAuto) {
-                setContentMap(chatData.id, chatData)
+                setContentMap(chatData.id, cloneDeep(chatData))
                 setElements((old) => [
                     ...old,
                     {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}
                 ])
             } else {
-                onReview && onReview(chatData)
+                onReview && onReview(cloneDeep(chatData))
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -291,13 +291,13 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
             review.current = isAuto ? undefined : chatData
             if (isAuto) {
-                setContentMap(chatData.id, chatData)
+                setContentMap(chatData.id, cloneDeep(chatData))
                 setElements((old) => [
                     ...old,
                     {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}
                 ])
             } else {
-                onReview && onReview(chatData)
+                onReview && onReview(cloneDeep(chatData))
             }
         } catch (error) {
             handleGrpcDataPushLog({
@@ -325,7 +325,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 data: cloneDeep(data)
             }
             review.current = chatData
-            onReview && onReview(chatData)
+            onReview && onReview(cloneDeep(chatData))
         } catch (error) {
             handleGrpcDataPushLog({
                 info: res,

@@ -73,7 +73,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 }
             }
             review.current = isAuto ? undefined : chatData
-            setContentMap(chatData.id, chatData)
+            setContentMap(chatData.id, cloneDeep(chatData))
             setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "reAct"}])
         } catch (error) {
             handleGrpcDataPushLog({
@@ -112,7 +112,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 }
             }
             review.current = isAuto ? undefined : chatData
-            setContentMap(chatData.id, chatData)
+            setContentMap(chatData.id, cloneDeep(chatData))
             setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "reAct"}])
         } catch (error) {
             handleGrpcDataPushLog({
@@ -195,7 +195,6 @@ function useCasualChat(params?: UseCasualChatParams) {
                 ) {
                     // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
                     chatData.data.aiReview = cloneDeep(score)
-                    setContentMap(chatData.id, chatData)
                     setElements((old) => {
                         return old.map((item) => {
                             if (item.token === chatData.id && item.type === chatData.type) {
@@ -251,7 +250,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 data: info as any
             }
             review.current = undefined
-            setContentMap(chatData.id, chatData)
+            setContentMap(chatData.id, cloneDeep(chatData))
             setElements((old) => {
                 return old.map((item) => {
                     if (item.token === chatData.id && item.type === chatData.type) {
