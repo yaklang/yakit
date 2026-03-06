@@ -951,7 +951,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         添加第三方应用
                                     </YakitButton>
                                 </Form.Item>
-                                <Form.Item label={"AI使用优先级"}>
+                                {/* <Form.Item label={"AI使用优先级"}>
                                     <div className={styles["ai-sort-box"]}>
                                         {!!params.AppConfigs.length ? (
                                             <AISortContent
@@ -978,7 +978,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             <>请先配置ai</>
                                         )}
                                     </div>
-                                </Form.Item>
+                                </Form.Item> */}
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     自定义代码片段
                                     <div className={styles["form-rule-code-customize-describe"]}>
