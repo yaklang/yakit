@@ -7,6 +7,7 @@ import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatData, AIChatInfo} from "./type/aiChat"
 import {
+    useCreation,
     useDebounceFn,
     useInViewport,
     useMemoizedFn,
@@ -32,6 +33,10 @@ import styles from "./AIAgent.module.scss"
 import {aiChatDataStore} from "./store/ChatDataStore"
 import {grpcDeleteAIEvent, grpcDeleteAITask} from "./grpc"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {AIBottomSideBar} from "./aiBottomSideBar/AIBottomSideBar"
+import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {SplitView} from "../yakRunner/SplitView/SplitView"
+import {AIBottomDetails} from "./aiBottomDetails/AIBottomDetails"
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20260113"
@@ -77,7 +82,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             }
             setDelCacheVisible(false)
         } catch {
-            
         } finally {
             setDelCacheLoading(false)
         }
@@ -106,7 +110,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat,
+            setActiveChat: setActiveChat
 
             // getChatData: aiChatDataStore.get
         }
@@ -241,20 +245,46 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         }
     }, [inViewPort])
 
+    const [isShowAIBottomDetails, setShowAIBottomDetails] = useState(false)
+
     return (
         <AIAgentContext.Provider value={{store, dispatcher}}>
             <div id={YakitAIAgentPageID} className={styles["ai-agent"]} ref={welcomeRef}>
-                <div className={classNames(styles["ai-side-list"], {[styles["ai-side-list-mini"]]: isMini})}>
-                    <AIAgentSideList show={show} setShow={setShow} />
+                <div className={styles["ai-agent-wrapper"]}>
+                    <div className={classNames(styles["ai-side-list"], {[styles["ai-side-list-mini"]]: isMini})}>
+                        <AIAgentSideList show={show} setShow={setShow} />
+                    </div>
+                    <div className={styles["split-wrapper"]}>
+                        <SplitView
+                            isVertical={true}
+                            isLastHidden={!isShowAIBottomDetails}
+                            defaultSizes={isShowAIBottomDetails ? [undefined, 220] : []}
+                            elements={[
+                                {
+                                    element: (
+                                        <div
+                                            className={classNames(styles["ai-agent-chat"], {
+                                                [styles["ai-agent-chat-mini"]]: isMini
+                                            })}
+                                            onClick={onSendSwitchAIAgentTab}
+                                        >
+                                            <AIAgentChat />
+                                        </div>
+                                    )
+                                },
+                                {
+                                    element: (
+                                        <AIBottomDetails
+                                            isShowAIBottomDetails={isShowAIBottomDetails}
+                                            setShowAIBottomDetails={setShowAIBottomDetails}
+                                        />
+                                    )
+                                }
+                            ]}
+                        />
+                    </div>
                 </div>
-
-                <div
-                    className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}
-                    onClick={onSendSwitchAIAgentTab}
-                >
-                    <AIAgentChat />
-                </div>
-
+                <AIBottomSideBar setShowAIBottomDetails={setShowAIBottomDetails} />
                 <YakitHint
                     getContainer={welcomeRef.current || undefined}
                     visible={delCacheVisible}

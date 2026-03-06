@@ -3,8 +3,17 @@
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
+}
+.ai-agent-wrapper{
+    flex: 1;
+    display: flex;
     overflow: hidden;
     position: relative;
+    .split-wrapper{
+        flex: 1;
+        overflow: hidden;
+    }
 }
 .ai-side-list {
     height: 100%;

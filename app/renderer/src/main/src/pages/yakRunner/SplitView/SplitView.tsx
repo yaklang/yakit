@@ -8,7 +8,7 @@ import classNames from "classnames"
 import styles from "./SplitView.module.scss"
 
 export const SplitView: React.FC<SplitViewProp> = memo((props) => {
-    const {isVertical = false, elements = [], minWidth = 220, minHeight = 200, isLastHidden} = props
+    const {isVertical = false, elements = [], minWidth = 220, minHeight = 200, isLastHidden, defaultSizes} = props
 
     const [isVer, _] = useState<boolean>(isVertical || false)
 
@@ -79,7 +79,8 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
             wrapperLong: long,
             minLong: min,
             length: length,
-            isOver: viewsMinLong >= long
+            isOver: viewsMinLong >= long,
+            defaultSizes: defaultSizes
         })
         positions.current = [...sizes]
         setViewAndSashStyle()
