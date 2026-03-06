@@ -1,0 +1,8 @@
+{
+    "NotepadLocalList": {
+        "confirmDeleteSelected": "确定要删除勾选文档吗?",
+        "confirmDeleteAll": "确定要删除所有文档吗?",
+        "title": "标题",
+        "lastUpdateTime": "最近更新时间"
+    }
+}

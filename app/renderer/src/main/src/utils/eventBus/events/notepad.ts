@@ -7,4 +7,6 @@ export type NotepadEventProps = {
     localDataError: string
     /**刷新定位元素，滚动到定位 */
     refreshPositionElement: string
+    /**刷新笔记本侧边列表 */
+    refreshNotepadLocalList?: string
 }
