@@ -1,8 +1,8 @@
-import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {LocalModelConfig} from "../type/aiModel"
-import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {type ModalProps} from "antd"
+import {ReactNode} from "react"
+import {AIModelConfig} from "./utils"
 
 export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, "mountContainer">> {}
 
@@ -16,7 +16,7 @@ export interface AIOnlineModelListProps {
 }
 
 export interface AIOnlineModelListRefProps {
-    onRefresh: () => void
+    onRefresh: (isShowLoading?:boolean) => void
     onRemoveAll: () => void
 }
 
@@ -34,9 +34,10 @@ export interface AILocalModelListItemProps {
     currentPageTabRouteKey: string
 }
 export interface AIOnlineModelListItemProps {
-    item: ThirdPartyApplicationConfig
-    onRemove: (item: ThirdPartyApplicationConfig) => void
-    onEdit: (item: ThirdPartyApplicationConfig) => void
+    item: AIModelConfig
+    onRemove: (item: AIModelConfig) => void
+    onEdit: (item: AIModelConfig) => void
+    checked: boolean
 }
 export interface OutlineAtomIconByStatusProps {
     isReady?: boolean
@@ -47,7 +48,7 @@ export interface OutlineAtomIconByStatusProps {
 export interface AILocalModelListItemPromptHintProps {
     title: string
     content: string
-    onOk: (b: boolean) => Promise
+    onOk: (b: boolean) => Promise<void>
     onCancel: () => void
 }
 
@@ -56,4 +57,17 @@ export interface AILocalModelListWrapperProps {
     list: LocalModelConfig[]
     onRefresh: () => void
     currentPageTabRouteKey: string
+}
+
+export interface AIOnlineModelProps {
+    title: ReactNode
+    subTitle: ReactNode
+    list: AIModelConfig[]
+    onRemove: (item: AIModelConfig) => void
+    onEdit: (item: AIModelConfig) => void
+    onSelect: (v: AIModelConfig, i: number) => void
+}
+
+export interface AIOnlineModeSettingProps {
+    onRefresh: () => void
 }

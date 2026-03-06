@@ -746,6 +746,13 @@ service Yak {
   // AI相关
   rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
   rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
+  rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
+  rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
+  rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
+  rpc QueryAIProvider(QueryAIProvidersRequest) returns (QueryAIProvidersResponse);
+  rpc UpsertAIProvider(UpsertAIProviderRequest) returns (UpsertAIProviderResponse);
+  rpc DeleteAIProvider(DeleteAIProviderRequest) returns (Empty);
+  rpc GetAIThirdPartyAppConfigTemplate(Empty) returns (GetThirdPartyAppConfigTemplateResponse);
 
   // 指纹库
   rpc GetFingerprint(GetFingerprintRequest) returns (GetFingerprintResponse);
@@ -1749,6 +1756,7 @@ message AIOutputEvent {
 
   string AIService = 20; // 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称
   string AIModelName = 22; // AI 模型名称
+  string AIModelVerboseName = 23; // AI 模型展示名称（美化后的模型名）
 
   string TaskUUID = 21; // 任务的唯一ID
 }
@@ -2036,6 +2044,8 @@ message AIFocus {
   string Description = 2;
   string OutputExamplePrompt = 3;
   string UsagePrompt = 4;
+  string VerboseName = 5;
+  string VerboseNameZh = 6;
 }
 
 message QueryAIFocusRequest {
@@ -2746,6 +2756,8 @@ message ThirdPartyApplicationConfig {
   string WebhookURL = 7;
   repeated KVPair ExtraParams = 8;
   bool Disabled = 9;
+  string Proxy = 10;
+  bool NoHttps = 11;
 }
 
 message DiagnoseNetworkRequest {
@@ -4166,7 +4178,6 @@ message GenerateYakCodeByPacketRequest {
 message GenerateCSRFPocByPacketRequest {
   bool IsHttps = 1;
   bytes Request = 2;
-  // 为 true 时在返回的 HTML 中注入自动提交脚本（页面加载后自动提交表单）
   bool AutoSubmit = 3;
 }
 
@@ -4678,6 +4689,7 @@ message Risk {
   string SyntaxFlowVariable = 31;
   string ProgramName = 32;
   bool IsPotential = 33;
+
   // 关联的请求/响应报文对列表
   repeated PacketPair PacketPairs = 34;
 }
@@ -8369,6 +8381,62 @@ message ListAiModelRequest{
 
 message ListAiModelResponse{
   repeated string ModelName = 1;
+}
+
+message AIProvider {
+  int64 Id = 1;
+  ThirdPartyApplicationConfig Config = 2;
+}
+
+
+message AIProviderFilter {
+  repeated int64 Ids = 1;
+  repeated string AIType = 2;
+}
+
+message QueryAIProvidersRequest {
+  AIProviderFilter Filter = 1;
+  Paging  Pagination = 2;
+}
+
+message QueryAIProvidersResponse {
+  Paging Pagination = 1;
+  repeated AIProvider Providers = 2;
+  int64 Total = 3;
+}
+
+message ListAIProvidersResponse {
+  repeated AIProvider Providers = 1;
+}
+
+message UpsertAIProviderRequest {
+  AIProvider Provider = 1;
+}
+
+message UpsertAIProviderResponse {
+  AIProvider Provider = 1;
+}
+
+message DeleteAIProviderRequest {
+  int64 Id = 1;
+}
+
+message AIModelConfig {
+  int64 ProviderId = 1;
+  ThirdPartyApplicationConfig Provider = 2;
+  string ModelName = 3;
+  repeated KVPair ExtraParams = 4;
+}
+
+message AIGlobalConfig {
+  bool Enabled = 1;
+  string RoutingPolicy = 2;
+  bool DisableFallback = 3;
+  string DefaultModelId = 4;
+  double GlobalWeight = 5;
+  repeated AIModelConfig IntelligentModels = 6;
+  repeated AIModelConfig LightweightModels = 7;
+  repeated AIModelConfig VisionModels = 8;
 }
 
 // Local Model Messages

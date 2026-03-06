@@ -692,30 +692,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                     </YakitModal>
 
-                    {/* <YakitModal
-                        visible={true}
-                        title={"AI 模型未配置"}
-                        destroyOnClose={true}
-                        maskClosable={false}
-                        width={420}
-                        onCancel={() => setPasswordShow(false)}
-                        okText='去配置'
-                        onOk={() => {
-                            apiGetGlobalNetworkConfig().then((obj) => {
-                                setAIModal({
-                                    config: obj,
-                                    onSuccess: () => {
-                                        setTimeout(() => {
-                                            emiter.emit("onRefreshAIModelList")
-                                        }, 200)
-                                    }
-                                })
-                            })
-                        }}
-                    >
-                        <div>无可使用AI模型，请配置后使用</div>
-                    </YakitModal> */}
-
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />
                     )}

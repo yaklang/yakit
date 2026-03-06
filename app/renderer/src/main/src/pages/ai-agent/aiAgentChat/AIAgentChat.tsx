@@ -627,8 +627,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         () => {
             isForcedSetAIModal({
                 pageKey: "ai-agent",
-                noDataCall: () => {},
-                haveDataCall: () => {},
                 mountContainer: document.getElementById("main-operator-page-body-ai-agent"),
                 isOpen: true
             })

@@ -715,12 +715,9 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                 })
         })
         const onConfig = useMemoizedFn(() => {
-            apiGetGlobalNetworkConfig().then((obj) => {
-                setAIModal({
-                    config: obj,
-                    mountContainer,
-                    onSuccess: () => {}
-                })
+            setAIModal({
+                mountContainer,
+                onSuccess: () => {}
             })
         })
         const formExtraAI = useMemoizedFn((params: {generate: () => void; loading: boolean}) => {
