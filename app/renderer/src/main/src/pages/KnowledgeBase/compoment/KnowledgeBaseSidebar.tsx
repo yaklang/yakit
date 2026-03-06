@@ -17,6 +17,7 @@ import {
     BuildingOnlineKnowledgeBase,
     ClearAllKnowledgeBase,
     downloadWithEvents,
+    downloadOnlineRagWithEvents,
     insertModaOptions,
     KnowledgeTabList,
     KnowledgeTabListEnum,
@@ -59,8 +60,13 @@ const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
-export const installOnlineRagWithEvents = (url: string, binary: {RagName: string; Force: boolean}, token: string) => {
-    return downloadWithEvents(url, binary, token)
+export const installOnlineRagWithEvents = (
+    url: string,
+    binary: {RagName?: string; Force: boolean; All?: boolean},
+    token: string
+) => {
+    const invokeArgs = binary.All ? {Force: binary.Force, All: binary.All} : binary
+    return downloadWithEvents(url, invokeArgs, token)
 }
 
 export interface TKnowledgeBaseSidebarProps {
@@ -267,6 +273,10 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
     const [onlineRagProgress, setOnlineRagProgress] = useSafeState<Record<string, number>>({})
 
+    // 一键下载所有状态
+    const [allDownloadToken, setAllDownloadToken] = useSafeState<string>("")
+    const [allDownloadProgress, setAllDownloadProgress] = useSafeState<number>(0)
+
     // 线上知识库列表 State
     const [onlineRagList, setOnlineRagList] = useSafeState<OnlieRageLatestResponse[]>([])
 
@@ -282,25 +292,86 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     // 下载线上知识库
-    const onDownloadOnlineRag = async (ragItem: OnlieRageLatestResponse) => {
+    const onDownloadOnlineRag = async (ragItem?: OnlieRageLatestResponse, all?: boolean) => {
         try {
-            setInstallOnlineRagsTokens((prev) =>
-                prev.includes(ragItem.installToken) ? prev : [...prev, ragItem.installToken]
-            )
+            if (all) {
+                setInstallOnlineRagsTokens((prev) => {
+                    const newTokens = onlineRagList
+                        .map((item) => item.installToken)
+                        .filter((token) => !prev.includes(token))
+                    return [...prev, ...newTokens]
+                })
+            } else if (ragItem) {
+                setInstallOnlineRagsTokens((prev) =>
+                    prev.includes(ragItem.installToken) ? prev : [...prev, ragItem.installToken]
+                )
+            }
 
-            await installOnlineRagWithEvents("DownloadRAGs", {RagName: ragItem.name, Force: true}, ragItem.installToken)
+            const token = all ? randomString(50) : ragItem?.installToken || ""
+
+            await installOnlineRagWithEvents(
+                "DownloadRAGs",
+                all ? {Force: true, All: true} : {RagName: ragItem?.name, Force: true, All: false},
+                token
+            )
             await binariesToInstallRefreshAsync?.()
 
             setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
             setKnowledgeBaseID(knowledgeBase?.[0]?.ID ?? "")
 
-            success(`${ragItem.name_zh || ragItem.name} 下载完成`)
+            if (all) {
+                success("所有线上知识库下载完成")
+            } else if (ragItem) {
+                success(`${ragItem.name_zh || ragItem.name} 下载完成`)
+            }
         } catch (err) {
-            failed(`${ragItem.name_zh || ragItem.name} 下载失败: ${err}`)
+            if (all) {
+                failed("下载所有线上知识库失败: " + err)
+            } else if (ragItem) {
+                failed(`${ragItem.name_zh || ragItem.name} 下载失败: ${err}`)
+            }
         } finally {
-            setInstallOnlineRagsTokens((prev) => prev.filter((t) => t !== ragItem.installToken))
+            if (all) {
+                setInstallOnlineRagsTokens((prev) =>
+                    prev.filter((t) => !onlineRagList.some((item) => item.installToken === t))
+                )
+            } else if (ragItem) {
+                setInstallOnlineRagsTokens((prev) => prev.filter((t) => t !== ragItem.installToken))
+            }
         }
     }
+
+    // 一键下载所有线上知识库
+    const onDownloadAllOnlineRag = useMemoizedFn(async () => {
+        try {
+            const token = randomString(50)
+            setAllDownloadToken(token)
+            setAllDownloadProgress(0)
+
+            setInstallOnlineRagsTokens((prev) => {
+                const newTokens = onlineRagList
+                    .map((item) => item.installToken)
+                    .filter((token) => !prev.includes(token))
+                return [...prev, ...newTokens]
+            })
+
+            await installOnlineRagWithEvents("DownloadRAGs", {Force: true, All: true}, token)
+
+            await binariesToInstallRefreshAsync?.()
+            setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
+            setKnowledgeBaseID(knowledgeBase?.[0]?.ID ?? "")
+
+            success("所有线上知识库下载完成")
+        } catch (err) {
+            failed("一键下载所有线上知识库失败: " + err)
+        } finally {
+            setAllDownloadToken("")
+            setAllDownloadProgress(0)
+            setInstallOnlineRagsTokens((prev) =>
+                prev.filter((t) => !onlineRagList.some((item) => item.installToken === t))
+            )
+        }
+    })
     useEffect(() => {
         if (!installOnlineRagsTokens || installOnlineRagsTokens.length === 0) return
 
@@ -332,6 +403,32 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             })
         }
     }, [installOnlineRagsTokens])
+
+    // 监听一键下载进度
+    useEffect(() => {
+        if (!allDownloadToken) return
+
+        const onData = (_, data) => {
+            if (data?.Progress > 0) {
+                const progressValue = Math.ceil(data.Progress)
+                setAllDownloadProgress(progressValue)
+            }
+        }
+
+        const onError = () => {}
+
+        const onEnd = () => {}
+
+        ipcRenderer.on(`${allDownloadToken}-data`, onData)
+        ipcRenderer.on(`${allDownloadToken}-error`, onError)
+        ipcRenderer.on(`${allDownloadToken}-end`, onEnd)
+
+        return () => {
+            ipcRenderer.removeAllListeners(`${allDownloadToken}-data`)
+            ipcRenderer.removeAllListeners(`${allDownloadToken}-error`)
+            ipcRenderer.removeAllListeners(`${allDownloadToken}-end`)
+        }
+    }, [allDownloadToken])
 
     const [onlineRagRefreshing, setOnlineRagRefreshing] = useSafeState<boolean>(false)
     // 刷新线上知识库列表和本地已下载列表
@@ -571,18 +668,44 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 <YakitPanel
                                     header='线上知识库'
                                     key='online-knowledge'
-                                    extra={
-                                        <Tooltip title='刷新线上知识库'>
-                                            <YakitButton
-                                                type='text'
-                                                icon={<OutlineRefreshIcon />}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onRefreshOnlineRag()
-                                                }}
-                                            />
-                                        </Tooltip>
-                                    }
+                                    extra={(() => {
+                                        const localMap = new Map(knowledgeBases.map((it) => [it.KnowledgeBaseName, it]))
+                                        const allLatest = onlineRagList.every((item) => {
+                                            const local = localMap.get(item.name)
+                                            const isDownloaded = !!local
+                                            const isLatest = isDownloaded && local.SerialVersionID === item.hash
+                                            return isLatest
+                                        })
+
+                                        return (
+                                            <div>
+                                                <Tooltip title='刷新线上知识库'>
+                                                    <YakitButton
+                                                        type='text'
+                                                        icon={<OutlineRefreshIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            onRefreshOnlineRag()
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                {!allLatest && (
+                                                    <YakitButton
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            onDownloadAllOnlineRag()
+                                                        }}
+                                                        style={{marginLeft: 4}}
+                                                        disabled={!!allDownloadToken}
+                                                    >
+                                                        {allDownloadToken
+                                                            ? `下载中... (${allDownloadProgress}%)`
+                                                            : "一键下载"}
+                                                    </YakitButton>
+                                                )}
+                                            </div>
+                                        )
+                                    })()}
                                 >
                                     <YakitSpin spinning={onlineRagRefreshing}>
                                         <div className={styles["knowledge-base-collapse-panel"]}>

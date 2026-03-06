@@ -1025,6 +1025,16 @@ const downloadWithEvents = (invokeChannel: string, invokeArgs: any, token: strin
     })
 }
 
+const downloadOnlineRagWithEvents = (
+    ragName: string | undefined,
+    all: boolean,
+    token: string,
+    onData?: (data: any) => void
+) => {
+    const invokeArgs = all ? {Force: true, All: true} : {RagName: ragName, Force: true, All: false}
+    return downloadWithEvents("DownloadRAGs", invokeArgs, token, onData)
+}
+
 export {
     targetInstallList,
     getFileInfoList,
@@ -1057,5 +1067,6 @@ export {
     stopList,
     joyrideSteps,
     extractStreamTokenChangedItem,
-    downloadWithEvents
+    downloadWithEvents,
+    downloadOnlineRagWithEvents
 }

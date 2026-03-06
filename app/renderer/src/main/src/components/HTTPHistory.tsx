@@ -290,8 +290,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const params = {...data.params, FocusModeLoop: "http_flow_analyze"}
             resolve({
                 params,
-                extraParams: newChat,
-                onChatFromHistory
+                extraParams: newChat
+                // onChatFromHistory
             })
         })
     })
