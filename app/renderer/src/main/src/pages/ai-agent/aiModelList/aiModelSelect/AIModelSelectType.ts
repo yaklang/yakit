@@ -1,12 +1,13 @@
 import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {ReactNode} from "react"
 import {AIModelConfig} from "../utils"
+import { AIOnlineModelListProps } from "../AIModelListType"
 
 export type AISelectType = "online" | "local"
 export interface AIModelSelectProps {
     isOpen?: boolean
     className?: string
-    mountContainer?: HTMLElement | null
+    mountContainer?: AIOnlineModelListProps['mountContainer']
 }
 export interface AIModelItemProps {
     value: string
