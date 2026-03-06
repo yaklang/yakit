@@ -252,6 +252,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const keyToOnRunRef = useRef<Record<string, string[]>>({})
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
+    /** @name 控制快捷操作栏的显示隐藏 */
+    const [showActionBar, setShowActionBar, getShowActionBar] = useGetState<boolean>(true)
     const {theme: themeGlobal} = useTheme()
 
     const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
@@ -630,6 +632,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         switch (key) {
+            case "toggle-action-bar":
+                setShowActionBar(!getShowActionBar())
+                return
             case "http-show-break":
                 onOperationRecord("showBreak", getShowBreak())
                 if (editorId) {
@@ -757,6 +762,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 {
                     key: "http-show-break",
                     label: getShowBreak() ? t("YakitEditor.hideLineBreaks") : t("YakitEditor.showLineBreaks")
+                }
+            ])
+        }
+        if (isShowSelectRangeMenu) {
+            rightContextMenu.current = rightContextMenu.current.concat([
+                {
+                    key: "toggle-action-bar",
+                    label: getShowActionBar() ? t("YakitEditor.hideActionBar") : t("YakitEditor.showActionBar")
                 }
             ])
         }
@@ -1360,6 +1373,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
     }, [showBreak])
 
+    useEffect(() => {
+        if (!isShowSelectRangeMenu) return
+        for (let item of rightContextMenu.current) {
+            const info = item as EditorMenuItemProps
+            if (info?.key === "toggle-action-bar") {
+                info.label = getShowActionBar() ? t("YakitEditor.hideActionBar") : t("YakitEditor.showActionBar")
+            }
+        }
+    }, [showActionBar])
+
     const showContextMenu = useMemoizedFn(() => {
         showByRightContext(
             <EditorMenu
@@ -1816,7 +1839,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
                                 fizzRangeWidget.update()
                             } else if (selectedText.length === 0) {
-                                if (!readOnly) {
+                                if (!readOnly && getShowActionBar()) {
                                     closeFizzRangeWidget()
                                     // 展示点击的菜单
                                     selectId && editor.addContentWidget(fizzSelectWidget)
@@ -1824,9 +1847,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 }
                             } else {
                                 closeFizzSelectWidget()
-                                // 展示选中的菜单
-                                rangeId && editor.addContentWidget(fizzRangeWidget)
-                                fizzRangeWidget.isOpen = true
+                                if (getShowActionBar()) {
+                                    // 展示选中的菜单
+                                    rangeId && editor.addContentWidget(fizzRangeWidget)
+                                    fizzRangeWidget.isOpen = true
+                                }
                             }
                         } else {
                             closeFizzRangeWidget()

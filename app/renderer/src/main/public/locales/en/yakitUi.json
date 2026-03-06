@@ -208,6 +208,8 @@
         "paste": "Paste",
         "hideLineBreaks": "Hide Line Breaks",
         "showLineBreaks": "Show Line Breaks",
+        "hideActionBar": "Hide Action Bar",
+        "showActionBar": "Show Action Bar",
         "yakCodeFormat": "Yak Code Formatting",
         "pasteTooFast": "Pasting too quickly, please try again later",
         "emptyContentTypeAutoDetected": "Original Content-Type was empty; this Content-Type is auto-detected",
