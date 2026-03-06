@@ -956,6 +956,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         tempShowPluginHistory={tempShowPluginHistory}
                         setShowPluginHistoryList={setShowPluginHistoryList}
                         setTempShowPluginHistory={setTempShowPluginHistory}
+                        pluginStreamInfo={pluginStreamInfo}
+                        setShowPluginStream={setShowPluginStream}
                     />
                 )
         }

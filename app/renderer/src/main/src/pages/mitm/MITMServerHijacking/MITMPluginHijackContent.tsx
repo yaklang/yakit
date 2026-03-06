@@ -57,6 +57,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
@@ -92,6 +93,8 @@ interface MITMPluginHijackContentProps {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory?: string
     setTempShowPluginHistory?: (t: string) => void
+    pluginStreamInfo: Record<string, HoldGRPCStreamInfo>
+    setShowPluginStream: React.Dispatch<React.SetStateAction<string>>
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -164,7 +167,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory = "",
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        pluginStreamInfo,
+        setShowPluginStream
     } = props
 
     const mitmContent = useContext(MITMContext)
@@ -803,6 +808,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                         tempShowPluginHistory={tempShowPluginHistory}
                                         setTempShowPluginHistory={setTempShowPluginHistory}
                                         curTabKey={curTabKey}
+                                        pluginStreamInfo={pluginStreamInfo}
+                                        setShowPluginStream={setShowPluginStream}
                                     />
                                 )}
                             />
@@ -903,6 +910,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 curTabKey={curTabKey}
                                 tempShowPluginHistory={tempShowPluginHistory}
                                 setTempShowPluginHistory={setTempShowPluginHistory}
+                                pluginStreamInfo={pluginStreamInfo}
+                                setShowPluginStream={setShowPluginStream}
                             />
                         </YakitSpin>
                     </div>

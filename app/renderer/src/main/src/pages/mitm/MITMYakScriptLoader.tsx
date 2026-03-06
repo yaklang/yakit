@@ -1,10 +1,10 @@
-import React, {ForwardedRef, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {Card, Col, Form, Row, Statistic, Tooltip, Space} from "antd"
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
+import {Card, Col, Row, Statistic, Tooltip} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
-import {useCreation, useMemoizedFn, useThrottleEffect} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
@@ -16,26 +16,21 @@ import {
     CustomPluginExecuteFormValue,
     YakExtraParamProps
 } from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {ExecuteEnterNodeByPluginParams} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {getValueByType, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {
     OutlileHistoryIcon,
     OutlinePencilaltIcon,
+    OutlinePositionIcon,
     OutlineQuestionmarkcircleIcon,
     OutlineTerminalIcon
 } from "@/assets/icon/outline"
-import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {SolidDotsverticalIcon, SolidLightningboltIcon} from "@/assets/icon/solid"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
-import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Resizable} from "re-resizable"
 import {MitmStatus} from "./MITMPage"
 import {AuthorImg} from "../plugins/funcTemplate"
 import YakitLogo from "@/assets/yakitLogo.png"
@@ -43,9 +38,9 @@ import UnLogin from "@/assets/unLogin.png"
 import {pluginTypeToName} from "../plugins/builtInData"
 import MITMContext from "./Context/MITMContext"
 import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {JSONParseLog} from "@/utils/tool"
 import {debugToPrintLogs} from "@/utils/logCollection"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 const PluginHasParamsDrawer = React.lazy(() => import("../../components/pluginHasParamsDrawer/PluginHasParamsDrawer"))
 
 const {ipcRenderer} = window.require("electron")
@@ -67,7 +62,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         tempShowPluginHistory,
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey
+        curTabKey,
+        pluginStreamInfo,
+        setShowPluginStream
     } = p
     const mitmContent = useContext(MITMContext)
 
@@ -239,7 +236,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         return (
             <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? "取消查看该插件流量" : "查看该插件流量"}>
                 <OutlileHistoryIcon
-                    style={{marginLeft: curTabKey === "loaded" ? 4 : 12, marginRight: curTabKey === "loaded" ? 12 : 0}}
                     className={classNames(style["history-icon"], {
                         [style["history-icon-def"]]: !showPluginHistoryList.includes(i.ScriptName),
                         [style["history-icon-light"]]: showPluginHistoryList.includes(i.ScriptName)
@@ -301,10 +297,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     p.onSendToPatch && p.onSendToPatch(i)
                 }}
             >
-                <SolidLightningboltIcon
-                    className={style["lightning-bolt-icon"]}
-                    style={{marginLeft: curTabKey === "loaded" ? 4 : 0, marginRight: curTabKey === "loaded" ? 12 : 0}}
-                />
+                <SolidLightningboltIcon className={style["lightning-bolt-icon"]} />
             </YakitPopconfirm>
         )
     }, [i, p])
@@ -368,86 +361,112 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     </div>
                 </div>
             </div>
-            {showEditor && (
-                <OutlinePencilaltIcon
-                    className={style["mitm-params-edit-icon"]}
-                    onClick={() => {
-                        handleMitmHasParams()
-                    }}
-                />
-            )}
-            {status !== "idle" ? (
-                <>
-                    {curTabKey === "loaded" ? (
-                        <>{hasParamsCheckList.includes(i.ScriptName) ? historyIcon : hotIcon}</>
-                    ) : (
-                        <>{isHasParams ? historyIcon : hotIcon}</>
-                    )}
-                </>
-            ) : null}
-            {status !== "idle" && curTabKey !== "loaded" && (
-                <YakitDropdownMenu
-                    menu={{
-                        data: [
-                            {
-                                key: "source-code",
-                                label: (
-                                    <YakitPopover
-                                        placement='right'
-                                        overlayClassName={style["terminal-popover"]}
-                                        content={<YakEditor type={i.Type} value={i.Content} readOnly={true} />}
-                                        onVisibleChange={(v) => {
-                                            if (v && !i.Content) {
-                                                getScriptInfo(i)
-                                            }
-                                        }}
-                                        zIndex={9999}
-                                    >
-                                        <div className={style["extra-menu"]}>
-                                            <OutlineTerminalIcon className={style["plugin-local-icon"]} />
-                                            <div className={style["menu-name"]}>源码</div>
-                                        </div>
-                                    </YakitPopover>
-                                )
-                            },
-                            {
-                                key: "help-info",
-                                label: (
-                                    <Tooltip
-                                        title={i.Help || "No Description about it."}
-                                        placement='right'
-                                        overlayClassName={style["question-tooltip"]}
-                                        onVisibleChange={(v) => {
-                                            if (v && !i.Help) {
-                                                getScriptInfo(i)
-                                            }
-                                        }}
-                                    >
-                                        <div className={style["extra-menu"]}>
-                                            <OutlineQuestionmarkcircleIcon className={style["plugin-local-icon"]} />
-                                            <div className={style["menu-name"]}>帮助信息</div>
-                                        </div>
-                                    </Tooltip>
-                                )
+            <div style={{display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 8, marginRight: 12}}>
+                {showEditor && (
+                    <OutlinePencilaltIcon
+                        className={style["mitm-params-edit-icon"]}
+                        onClick={() => {
+                            handleMitmHasParams()
+                        }}
+                    />
+                )}
+                {status !== "idle" ? (
+                    <>
+                        {curTabKey === "loaded" ? (
+                            <>{hasParamsCheckList.includes(i.ScriptName) ? historyIcon : hotIcon}</>
+                        ) : (
+                            <>{isHasParams ? historyIcon : hotIcon}</>
+                        )}
+                    </>
+                ) : null}
+                {status !== "idle" && (
+                    <Tooltip
+                        title={`${
+                            pluginStreamInfo && Object.keys(pluginStreamInfo).includes(i.ScriptName) ? "查看" : "暂无"
+                        }当前插件输出`}
+                    >
+                        <OutlinePositionIcon
+                            className={classNames(style["position-icon"], {
+                                [style["position-disable"]]: pluginStreamInfo
+                                    ? !Object.keys(pluginStreamInfo).includes(i.ScriptName)
+                                    : true
+                            })}
+                            onClick={() => {
+                                const flag = pluginStreamInfo
+                                    ? Object.keys(pluginStreamInfo).includes(i.ScriptName)
+                                    : false
+                                if (flag) {
+                                    setShowPluginStream?.(i.ScriptName)
+                                }
+                            }}
+                        />
+                    </Tooltip>
+                )}
+                {status !== "idle" && curTabKey !== "loaded" && (
+                    <YakitDropdownMenu
+                        menu={{
+                            data: [
+                                {
+                                    key: "source-code",
+                                    label: (
+                                        <YakitPopover
+                                            placement='right'
+                                            overlayClassName={style["terminal-popover"]}
+                                            content={<YakEditor type={i.Type} value={i.Content} readOnly={true} />}
+                                            onVisibleChange={(v) => {
+                                                if (v && !i.Content) {
+                                                    getScriptInfo(i)
+                                                }
+                                            }}
+                                            zIndex={9999}
+                                        >
+                                            <div className={style["extra-menu"]}>
+                                                <OutlineTerminalIcon className={style["plugin-local-icon"]} />
+                                                <div className={style["menu-name"]}>源码</div>
+                                            </div>
+                                        </YakitPopover>
+                                    )
+                                },
+                                {
+                                    key: "help-info",
+                                    label: (
+                                        <Tooltip
+                                            title={i.Help || "No Description about it."}
+                                            placement='right'
+                                            overlayClassName={style["question-tooltip"]}
+                                            onVisibleChange={(v) => {
+                                                if (v && !i.Help) {
+                                                    getScriptInfo(i)
+                                                }
+                                            }}
+                                        >
+                                            <div className={style["extra-menu"]}>
+                                                <OutlineQuestionmarkcircleIcon className={style["plugin-local-icon"]} />
+                                                <div className={style["menu-name"]}>帮助信息</div>
+                                            </div>
+                                        </Tooltip>
+                                    )
+                                }
+                            ] as YakitMenuItemProps[],
+                            onClick: ({key}) => {
+                                switch (key) {
+                                    case "source-code":
+                                        break
+                                    case "help-info":
+                                        break
+                                }
                             }
-                        ] as YakitMenuItemProps[],
-                        onClick: ({key}) => {
-                            switch (key) {
-                                case "source-code":
-                                    break
-                                case "help-info":
-                                    break
-                            }
-                        }
-                    }}
-                    dropdown={{
-                        trigger: ["click"],
-                        placement: "bottomLeft"
-                    }}
-                >
-                    <SolidDotsverticalIcon className={style["extra-btns-icon"]} />
-                </YakitDropdownMenu>
-            )}
+                        }}
+                        dropdown={{
+                            trigger: ["click"],
+                            placement: "bottomLeft"
+                        }}
+                    >
+                        <SolidDotsverticalIcon className={style["extra-btns-icon"]} />
+                    </YakitDropdownMenu>
+                )}
+            </div>
+
             <PluginHasParamsDrawer
                 visible={mitmParamsDrawer}
                 placementDrawer='left'
@@ -508,6 +527,8 @@ export interface MITMYakScriptLoaderProps {
     setTempShowPluginHistory?: (l: string) => void
     hasParamsCheckList: string[]
     curTabKey: string
+    pluginStreamInfo?: Record<string, HoldGRPCStreamInfo>
+    setShowPluginStream?: React.Dispatch<React.SetStateAction<string>>
 }
 
 export function clearMITMPluginCache(version: string) {

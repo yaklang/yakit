@@ -55,7 +55,6 @@
             width: 16px;
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
-        margin-left: 12px;
     }
     .lightning-bolt-icon {
         color: var(--Colors-Use-Main-Primary);
@@ -80,9 +79,19 @@
         }
     }
 
+    .position-icon {
+        cursor: pointer;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .position-disable {
+        cursor: not-allowed;
+    }
+
     .extra-btns-icon {
-        margin-right: 12px;
-        margin-left: 12px;
         svg {
             width: 16px;
             height: 16px;

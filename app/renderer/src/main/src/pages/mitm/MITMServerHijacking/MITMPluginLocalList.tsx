@@ -54,6 +54,7 @@ import {DelGroupConfirmPop} from "@/pages/pluginHub/group/PluginOperationGroupLi
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -88,6 +89,8 @@ interface MITMPluginLocalListProps {
     setTempShowPluginHistory?: (t: string) => void
     hasParamsCheckList: string[]
     curTabKey?: string
+    pluginStreamInfo?: Record<string, HoldGRPCStreamInfo>
+    setShowPluginStream?: React.Dispatch<React.SetStateAction<string>>
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -120,7 +123,9 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         tempShowPluginHistory,
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey = ""
+        curTabKey = "",
+        pluginStreamInfo,
+        setShowPluginStream
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -280,6 +285,8 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                 hasParamsCheckList={hasParamsCheckList}
                                 tempShowPluginHistory={tempShowPluginHistory}
                                 setTempShowPluginHistory={setTempShowPluginHistory}
+                                pluginStreamInfo={pluginStreamInfo}
+                                setShowPluginStream={setShowPluginStream}
                                 // 劫持启动前
                                 defaultPlugins={noParamsCheckList}
                                 setDefaultPlugins={setNoParamsCheckList}
