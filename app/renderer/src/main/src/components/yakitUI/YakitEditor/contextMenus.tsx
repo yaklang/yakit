@@ -14,6 +14,7 @@ import {CodecResponseProps, CodecWorkProps} from "@/pages/codec/NewCodec"
 import {getClipboardText, setClipboardText} from "@/utils/clipboard"
 import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -256,7 +257,7 @@ export const extraMenuLists: (t: (text: string) => string) => OtherMenuListProps
                     children: []
                 }
             ],
-            onRun: (editor: YakitIMonacoEditor, key: string, pageId, isAiPlugin: any) => {
+            onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string, isAiPlugin?: string | boolean, params?: YakParamProps[]) => {
                 try {
                     let scriptName = key
                     if (scriptName.startsWith("plugin-")) {
@@ -272,7 +273,7 @@ export const extraMenuLists: (t: (text: string) => string) => OtherMenuListProps
                             text = selectText
                         }
                     }
-                    emiter.emit("onOpenFuzzerModal", JSON.stringify({text, scriptName, isAiPlugin}))
+                    emiter.emit("onOpenFuzzerModal", JSON.stringify({text, scriptName, isAiPlugin, params}))
                 } catch (e) {
                     failed(`custom context menu execute failed: ${e}`)
                 }
@@ -292,7 +293,7 @@ export const extraMenuLists: (t: (text: string) => string) => OtherMenuListProps
                     children: []
                 }
             ],
-            onRun: (editor: YakitIMonacoEditor, key: string, pageId, isAiPlugin: any) => {
+            onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string, isAiPlugin?: string | boolean, params?: YakParamProps[] | undefined) => {
                 try {
                     let scriptName = key
                     if (scriptName.startsWith("aiplugin-")) {
@@ -308,7 +309,7 @@ export const extraMenuLists: (t: (text: string) => string) => OtherMenuListProps
                             text = selectText
                         }
                     }
-                    emiter.emit("onOpenFuzzerModal", JSON.stringify({text, scriptName, isAiPlugin}))
+                    emiter.emit("onOpenFuzzerModal", JSON.stringify({text, scriptName, isAiPlugin, params}))
                 } catch (e) {
                     failed(`custom context menu execute failed: ${e}`)
                 }

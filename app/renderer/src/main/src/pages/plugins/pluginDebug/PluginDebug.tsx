@@ -44,6 +44,7 @@ import classNames from "classnames"
 import styles from "./PluginDebug.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {delInvalidPluginExecuteParams} from "@/pages/pluginEditor/utils/convert"
 
 export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
     const {plugin, getContainer, visible, onClose, onMerge} = props
@@ -492,9 +493,15 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     if (pluginType === "codec") {
                         const codecInfo = await onCodeToInfo({type: pluginType, code: newCode || ""})
                         if ((codecInfo?.Tags || []).includes("AI工具")) {
+                            const execParams = delInvalidPluginExecuteParams(requestParams.ExecParams, params)
                             emiter.emit(
                                 "onOpenFuzzerModal",
-                                JSON.stringify({text: value["Input"] || "", code: "newCode", isAiPlugin: true})
+                                JSON.stringify({
+                                    text: value["Input"] || "",
+                                    code: "newCode",
+                                    isAiPlugin: true,
+                                    execParams
+                                })
                             )
                         }
                     }

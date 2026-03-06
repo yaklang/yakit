@@ -45,6 +45,7 @@ import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorCode.module.scss"
 import {getJsonSchemaListResult, JsonFormValidateProps} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {delInvalidPluginExecuteParams} from "../utils/convert"
 
 export interface EditorCodeRefProps {
     onSubmit: () => string
@@ -452,9 +453,15 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                         if (type === "codec") {
                             const codecInfo = await onCodeToInfo({type: type, code: getContent() || ""})
                             if ((codecInfo?.Tags || []).includes("AI工具")) {
+                                const execParams = delInvalidPluginExecuteParams(requestParams.ExecParams, params)
                                 emiter.emit(
                                     "onOpenFuzzerModal",
-                                    JSON.stringify({text: value["Input"] || "", code: "newCode", isAiPlugin: true})
+                                    JSON.stringify({
+                                        text: value["Input"] || "",
+                                        code: "newCode",
+                                        isAiPlugin: true,
+                                        execParams: execParams
+                                    })
                                 )
                             }
                         }

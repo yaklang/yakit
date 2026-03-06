@@ -43,6 +43,7 @@
         "start_execution": "Start Execution",
         "startAudit": "Start Audit",
         "reset": "Reset",
+        "resetParams": "Reset Params",
         "batchOperation": "Batch Operation",
         "clear": "Clear",
         "disable": "Disable",
