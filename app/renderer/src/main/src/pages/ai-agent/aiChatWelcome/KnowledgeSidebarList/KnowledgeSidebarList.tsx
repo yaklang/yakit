@@ -31,6 +31,7 @@ import {ImportModal} from "@/pages/KnowledgeBase/compoment/ImportModal"
 import {Form} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import DragKnowledge from "./DragKnowledge/DragKnowledge"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -42,6 +43,7 @@ interface KnowledgeSidebarListProps {
 export interface KnowledgeModalRef {
     openAdd: () => void
     openImport: () => void
+    installPlug: boolean
 }
 
 const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Ref<KnowledgeModalRef>) => {
@@ -272,9 +274,10 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
             openImport() {
                 form.resetFields()
                 setImportVisible(true)
-            }
+            },
+            installPlug
         }),
-        [form, setVisible, setImportVisible]
+        [installPlug, form, setVisible, setImportVisible]
     )
 
     // 搜索和筛选
@@ -335,86 +338,87 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                     <div className={styles["knowledge-base-info-list"]}>
                         <YakitSpin wrapperClassName={styles["knowledge-base-info-list-spin"]} spinning={loading}>
                             {knowledgeBase.length > 0 ? (
-                              <>
-                                {knowledgeBase.map((items, index) => {
-                                    const Icon = targetIcon(index)
-                                    return (
-                                        <div
-                                            className={classNames(styles["knowledge-base-info-card"])}
-                                            key={items.ID}
-                                            onClick={() => onSelectItem(items)}
-                                        >
+                                <>
+                                    {knowledgeBase.map((items, index) => {
+                                        const Icon = targetIcon(index)
+                                        return (
                                             <div
-                                                className={classNames({
-                                                    [styles["initial"]]: items.streamstep !== "success",
-                                                    [styles["content"]]: items.streamstep === "success"
-                                                })}
+                                                className={classNames(styles["knowledge-base-info-card"])}
+                                                key={items.ID}
+                                                onClick={() => onSelectItem(items)}
                                             >
                                                 <div
-                                                    className={classNames([styles["header"]], {
-                                                        [styles["operate-dropdown-menu-open"]]:
-                                                            menuSelectedId === items.ID
+                                                    className={classNames({
+                                                        [styles["initial"]]: items.streamstep !== "success",
+                                                        [styles["content"]]: items.streamstep === "success"
                                                     })}
                                                 >
-                                                    <Icon className={styles["icon"]} />
-                                                    <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
-                                                    {api?.tokens?.includes(items.streamToken) &&
-                                                    items.streamstep !== "success" ? (
+                                                    <div
+                                                        className={classNames([styles["header"]], {
+                                                            [styles["operate-dropdown-menu-open"]]:
+                                                                menuSelectedId === items.ID
+                                                        })}
+                                                    >
+                                                        <Icon className={styles["icon"]} />
+                                                        <div className={styles["title"]}>{items.KnowledgeBaseName}</div>
+                                                        {api?.tokens?.includes(items.streamToken) &&
+                                                        items.streamstep !== "success" ? (
+                                                            <div
+                                                                className={styles["tag"]}
+                                                                onClick={(e) => {
+                                                                    setSelectedKnowledgeBaseItems(
+                                                                        items as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
+                                                                    )
+                                                                    onViewBuildProcess(e, items.streamToken, "routine")
+                                                                }}
+                                                            >
+                                                                <OutlineLoadingIcon
+                                                                    className={styles["loading-icon"]}
+                                                                />
+                                                                生成中,点击查看进度
+                                                            </div>
+                                                        ) : items.IsDefault ? (
+                                                            <div className={styles["default-tag"]}>默认知识库</div>
+                                                        ) : (
+                                                            <div className={styles["type-tag"]}>
+                                                                {items.CreatedFromUI
+                                                                    ? "手动创建"
+                                                                    : items.IsImported
+                                                                    ? "外部导入"
+                                                                    : "其他"}
+                                                            </div>
+                                                        )}
+
                                                         <div
-                                                            className={styles["tag"]}
+                                                            className={classNames([styles["operate"]])}
                                                             onClick={(e) => {
-                                                                setSelectedKnowledgeBaseItems(
-                                                                    items as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
-                                                                )
-                                                                onViewBuildProcess(e, items.streamToken, "routine")
+                                                                e.stopPropagation()
                                                             }}
                                                         >
-                                                            <OutlineLoadingIcon className={styles["loading-icon"]} />
-                                                            生成中,点击查看进度
+                                                            <OperateKnowledgenBaseItem
+                                                                items={items}
+                                                                setMenuSelectedId={setMenuSelectedId}
+                                                                knowledgeBase={knowledgeBase}
+                                                                api={api}
+                                                                addMode={addMode}
+                                                            />
                                                         </div>
-                                                    ) : items.IsDefault ? (
-                                                        <div className={styles["default-tag"]}>默认知识库</div>
-                                                    ) : (
-                                                        <div className={styles["type-tag"]}>
-                                                            {items.CreatedFromUI
-                                                                ? "手动创建"
-                                                                : items.IsImported
-                                                                ? "外部导入"
-                                                                : "其他"}
-                                                        </div>
-                                                    )}
+                                                    </div>
 
-                                                    <div
-                                                        className={classNames([styles["operate"]])}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                        }}
-                                                    >
-                                                        <OperateKnowledgenBaseItem
-                                                            items={items}
-                                                            setMenuSelectedId={setMenuSelectedId}
-                                                            knowledgeBase={knowledgeBase}
-                                                            api={api}
-                                                            addMode={addMode}
-                                                        />
+                                                    <div className={styles["description"]}>
+                                                        {items.KnowledgeBaseDescription?.trim() || "-"}
                                                     </div>
                                                 </div>
-
-                                                <div className={styles["description"]}>
-                                                    {items.KnowledgeBaseDescription?.trim() || "-"}
-                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                                 <div className={styles["min-reached"]}>已经到底啦~</div>
-                              </>
+                                        )
+                                    })}
+                                    <div className={styles["min-reached"]}>已经到底啦~</div>
+                                </>
                             ) : (
-                                <YakitEmpty style={{width: "100%", margin: 0}} />
+                                <DragKnowledge setAddMode={setAddMode} />
                             )}
                         </YakitSpin>
                     </div>
-
                     <KnowledgeBaseFormModal
                         visible={visible}
                         title='新增知识库'
@@ -422,9 +426,6 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                         form={form}
                         setAddMode={setAddMode}
                     />
-
-                    <ImportModal visible={importVisible} onVisible={setImportVisible} setAddMode={setAddMode} />
-
                     {buildingDrawer.visible ? (
                         <PluginExecuteDetailDrawer
                             buildingDrawer={buildingDrawer}
@@ -437,6 +438,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                     ) : null}
                 </div>
             )}
+            <ImportModal visible={importVisible} onVisible={setImportVisible} setAddMode={setAddMode} />
         </React.Fragment>
     )
 }
