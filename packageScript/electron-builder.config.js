@@ -10,8 +10,13 @@ let nsisUninstallerIcon = null
 
 // 生成构建包的自定义配置
 const platform = process.env.PLATFORM
+/**
+ * @synchronize [IDENTIFIER_NAME]
+ * 注意：case的选项必须全局保持一致。
+ * 修改选项值时，请务必同步修改另外几处。
+ */
 switch (platform) {
-    case "ee":
+    case "yakitEE":
         appInfoOption = {
             appId: "io.yaklang.enpritrace",
             extraMetadata: {name: "enpritrace"},
@@ -24,7 +29,7 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakiteelogo.ico"
         nsisUninstallerIcon = "app/assets/yakiteelogo.ico"
         break
-    case "se":
+    case "yakitSE":
         appInfoOption = {
             appId: "io.yaklang.enpritraceagent",
             extraMetadata: {name: "enpritraceagent"},
@@ -50,7 +55,7 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitsslogo.ico"
         nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
         break
-    case "irifyee":
+    case "irifyEE":
         appInfoOption = {
             appId: "io.yaklang.irifyee",
             extraMetadata: {name: "irifyee"},
@@ -78,7 +83,7 @@ switch (platform) {
         break
 
     default:
-        // ce
+        // yakit
         appInfoOption = {
             appId: "io.yaklang.yakit",
             productName: "Yakit",
@@ -131,7 +136,8 @@ const configOption = {
         "!buildHooks/**/*",
         "!build/**/*",
         "!backups/**/*",
-        "!app/renderer/src/**/*"
+        "!app/renderer/src/**/*",
+        "!cli/*"
     ],
     asar: true,
     publish: [
