@@ -6,11 +6,18 @@ import {useDebounceFn, useRequest} from "ahooks"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {randomString} from "@/utils/randomUtil"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {CloudDownloadIcon} from "@/assets/newIcon"
+import {useState, useEffect, FC, Dispatch, SetStateAction} from "react"
+import {KnowledgeBaseContentProps} from "@/pages/KnowledgeBase/TKnowledgeBase"
+import {mergeKnowledgeBaseList} from "@/pages/KnowledgeBase/utils"
 
 const {ipcRenderer} = window.require("electron")
 
-const DragKnowledge = () => {
-    const {knowledgeBases, addKnowledgeBase, editKnowledgeBase} = useKnowledgeBase()
+const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({setAddMode}) => {
+    const {knowledgeBases, addKnowledgeBase, editKnowledgeBase, initialize} = useKnowledgeBase()
+    const [allDownloadToken, setAllDownloadToken] = useState<string>("")
+    const [allDownloadProgress, setAllDownloadProgress] = useState<number>(0)
 
     const beforeUploadFun = useDebounceFn(
         async (fileList: Array<File & {path: string}>) => {
@@ -89,13 +96,123 @@ const DragKnowledge = () => {
         }
     )
 
+    const handleDownloadAllOnlineRag = async () => {
+        try {
+            const token = randomString(50)
+            setAllDownloadToken(token)
+            setAllDownloadProgress(0)
+
+            const invokeArgs = {Force: true, All: true}
+            await new Promise<void>((resolve, reject) => {
+                let settled = false
+
+                const safeResolve = () => {
+                    if (!settled) {
+                        settled = true
+                        ipcRenderer.removeAllListeners(`${token}-data`)
+                        ipcRenderer.removeAllListeners(`${token}-end`)
+                        ipcRenderer.removeAllListeners(`${token}-error`)
+                        resolve()
+                    }
+                }
+
+                const safeReject = (err) => {
+                    if (!settled) {
+                        settled = true
+                        ipcRenderer.removeAllListeners(`${token}-data`)
+                        ipcRenderer.removeAllListeners(`${token}-end`)
+                        ipcRenderer.removeAllListeners(`${token}-error`)
+                        reject(err)
+                    }
+                }
+
+                ipcRenderer.invoke("DownloadRAGs", invokeArgs, token).catch(safeReject)
+
+                const onData = (_, data) => {
+                    if (data?.Progress > 0) {
+                        const progressValue = Math.ceil(data.Progress)
+                        setAllDownloadProgress(progressValue)
+                    }
+                }
+
+                ipcRenderer.on(`${token}-data`, onData)
+
+                ipcRenderer.once(`${token}-end`, () => {
+                    safeResolve()
+                })
+
+                ipcRenderer.once(`${token}-error`, (_, error) => {
+                    safeReject(error)
+                })
+            })
+            run()
+            success("所有线上知识库下载完成")
+            setAddMode([])
+        } catch (err) {
+            failed("一键下载所有线上知识库失败: " + err)
+        } finally {
+            setAllDownloadToken("")
+            setAllDownloadProgress(0)
+        }
+    }
+
+    // 监听下载进度
+    useEffect(() => {
+        if (!allDownloadToken) return
+
+        const onData = (_, data) => {
+            if (data?.Progress > 0) {
+                const progressValue = Math.ceil(data.Progress)
+                setAllDownloadProgress(progressValue)
+            }
+        }
+
+        const onError = () => {}
+
+        const onEnd = () => {}
+
+        ipcRenderer.on(`${allDownloadToken}-data`, onData)
+        ipcRenderer.on(`${allDownloadToken}-error`, onError)
+        ipcRenderer.on(`${allDownloadToken}-end`, onEnd)
+
+        return () => {
+            ipcRenderer.removeAllListeners(`${allDownloadToken}-data`)
+            ipcRenderer.removeAllListeners(`${allDownloadToken}-error`)
+            ipcRenderer.removeAllListeners(`${allDownloadToken}-end`)
+        }
+    }, [allDownloadToken])
+
+    // 获取数据库 列表数据
+    const {run} = useRequest(
+        async (Keyword?: string) => {
+            const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
+                Keyword,
+                Pagination: {Limit: 9999, Page: 1, OrderBy: "updated_at", Sort: "desc"}
+            })
+            const {KnowledgeBases} = result
+            return KnowledgeBases
+        },
+        {
+            onError: (error) => {
+                failed("获取知识库列表失败:" + error)
+            },
+            onSuccess: (value) => {
+                if (value) {
+                    const initKnowledgeBase = mergeKnowledgeBaseList(value, knowledgeBases)
+                    initialize(initKnowledgeBase)
+                }
+            },
+            manual: true
+        }
+    )
+
     return (
         <div className={styles["upload-dragger-box"]}>
             <YakitSpin spinning={loading}>
                 <Dragger
                     className={styles["upload-dragger"]}
                     multiple={true}
-                    style={{borderRadius: 8,backgroundColor: "var(--Colors-Use-Neutral-Bg)"}}
+                    style={{borderRadius: 8, backgroundColor: "var(--Colors-Use-Neutral-Bg)"}}
                     showUploadList={false}
                     beforeUpload={(_, fileList: any) => {
                         beforeUploadFun(fileList)
@@ -117,6 +234,22 @@ const DragKnowledge = () => {
                     </div>
                 </Dragger>
             </YakitSpin>
+            <YakitButton
+                className={styles["download-btn"]}
+                type='outline1'
+                icon={<CloudDownloadIcon />}
+                onClick={() => {
+                    try {
+                        handleDownloadAllOnlineRag()
+                    } catch (error) {
+                        failed(error + "")
+                    }
+                }}
+                loading={!!allDownloadToken}
+                disabled={!!allDownloadToken}
+            >
+                {allDownloadToken ? `下载中... (${allDownloadProgress}%)` : "一键下载在线知识库"}
+            </YakitButton>
         </div>
     )
 }
