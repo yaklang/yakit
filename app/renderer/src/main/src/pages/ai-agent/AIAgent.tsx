@@ -5,7 +5,7 @@ import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./u
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {AIChatData, AIChatInfo} from "./type/aiChat"
+import {AIChatInfo} from "./type/aiChat"
 import {
     useCreation,
     useDebounceFn,
@@ -30,8 +30,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
-import {aiChatDataStore} from "./store/ChatDataStore"
-import {grpcDeleteAIEvent, grpcDeleteAITask} from "./grpc"
+import {grpcDeleteAISession, grpcQueryAISession} from "./grpc"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {AIBottomSideBar} from "./aiBottomSideBar/AIBottomSideBar"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -49,6 +48,13 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
     // 历史对话
+    const [pagination, setPagination] = useState({
+        Page: 1,
+        Limit: 10,
+        OrderBy: "",
+        Order: "",
+        total: 0
+    })
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
@@ -70,15 +76,14 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         // 清空无效的用户缓存数据-全局配置数据
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
         // 清空无效的用户缓存数据-taskChat历史对话数据
-        setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
+        // setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
         // 设置清空标志位
         setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
 
         try {
             if (isDelCache) {
                 // 删除数据库历史记录
-                await grpcDeleteAIEvent({ClearAll: true}, true)
-                await grpcDeleteAITask({})
+                await grpcDeleteAISession({DeleteAll: true}, true)
             }
             setDelCacheVisible(false)
         } catch {
@@ -92,10 +97,23 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     useUpdateEffect(() => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
     }, [setting])
-    // 缓存历史对话数据
-    useUpdateEffect(() => {
-        setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
-    }, [chats])
+
+    const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
+        try {
+            const {Data, Total} = await grpcQueryAISession({
+                Pagination: pagination
+            })
+            setChats((prev) => [...prev, ...Data])
+            setPagination((prev) => ({
+                ...prev,
+                Page: pagination.Page + 1,
+                total: Total
+            }))
+            return Total
+        } catch {
+            return 0
+        }
+    })
 
     const store: AIAgentContextStore = useMemo(() => {
         return {
@@ -110,7 +128,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setSetting: setSetting,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat
+            setActiveChat: setActiveChat,
+            loadHistoryData: loadHistoryData
 
             // getChatData: aiChatDataStore.get
         }
@@ -126,17 +145,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             if (!res) return setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
 
             if (res >= AIAgentCacheClearValue) {
-                // 获取缓存的历史对话数据
-                getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
-                    .then((res) => {
-                        if (!res) return
-                        try {
-                            const cache = JSON.parse(res) as AIChatInfo[]
-                            if (!Array.isArray(cache) || cache.length === 0) return
-                            setChats(cache)
-                        } catch (error) {}
-                    })
-                    .catch(() => {})
                 // 获取缓存的全局配置数据
                 getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
                     .then((res) => {

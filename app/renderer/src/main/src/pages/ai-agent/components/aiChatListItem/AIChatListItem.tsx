@@ -183,12 +183,12 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     })
 
     const renderContent = useMemoizedFn(() => {
-        if (activeChat?.session === undefined) return null
+        if (activeChat?.SessionID === undefined) return null
         if (isStream)
             return (
                 <StreamingChatContent
                     {...item}
-                    session={activeChat?.session}
+                    session={activeChat?.SessionID}
                     hasNext={hasNext}
                     streamClassName={aiStreamNodeProps}
                 />
@@ -196,7 +196,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         return (
             <StaticChatContent
                 {...item}
-                session={activeChat?.session}
+                session={activeChat?.SessionID}
                 render={(contentItem) => ChatItemRenderer(contentItem)}
             />
         )

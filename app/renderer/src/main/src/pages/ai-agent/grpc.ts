@@ -1,24 +1,23 @@
 import {APIFunc, APIOptionalFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
-    AIEventDeleteRequest,
     AIEventQueryRequest,
     AIEventQueryResponse,
-    AITaskDeleteRequest,
     ExportAILogsRequest,
     ExportAILogsResponse,
     GetRandomAIMaterialsRequest,
     GetRandomAIMaterialsResponse
 } from "../ai-re-act/hooks/grpcApi"
-import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {
     AIForge,
     AIForgeFilter,
+    DeleteAISessionRequest,
     GetAIForgeRequest,
     QueryAIFocusRequest,
     QueryAIFocusResponse,
     QueryAIForgeRequest,
-    QueryAIForgeResponse
+    QueryAIForgeResponse,
+    QueryAISessionResponse
 } from "./type/forge"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
@@ -92,29 +91,29 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
 }
 
 /** @name 删除 AI 事件（支持 ClearAll） */
-export const grpcDeleteAIEvent: APIFunc<AIEventDeleteRequest, DbOperateMessage> = (param, hiddenError) => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("DeleteAIEvent", param)
-            .then(resolve)
-            .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "删除DeleteAIEvent失败:" + e)
-                reject(e)
-            })
-    })
-}
-/** @name 删除 AI 任务（支持 ClearAll） */
-export const grpcDeleteAITask: APIFunc<AITaskDeleteRequest, DbOperateMessage> = (param, hiddenError) => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("DeleteAITask", param)
-            .then(resolve)
-            .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "删除DeleteAITask失败:" + e)
-                reject(e)
-            })
-    })
-}
+// export const grpcDeleteAIEvent: APIFunc<AIEventDeleteRequest, DbOperateMessage> = (param, hiddenError) => {
+//     return new Promise(async (resolve, reject) => {
+//         ipcRenderer
+//             .invoke("DeleteAIEvent", param)
+//             .then(resolve)
+//             .catch((e) => {
+//                 if (!hiddenError) yakitNotify("error", "删除DeleteAIEvent失败:" + e)
+//                 reject(e)
+//             })
+//     })
+// }
+// /** @name 删除 AI 任务（支持 ClearAll） */
+// export const grpcDeleteAITask: APIFunc<AITaskDeleteRequest, DbOperateMessage> = (param, hiddenError) => {
+//     return new Promise(async (resolve, reject) => {
+//         ipcRenderer
+//             .invoke("DeleteAITask", param)
+//             .then(resolve)
+//             .catch((e) => {
+//                 if (!hiddenError) yakitNotify("error", "删除DeleteAITask失败:" + e)
+//                 reject(e)
+//             })
+//     })
+// }
 // #endregion
 
 // #region AI-Forge 相关 grpc 接口
@@ -230,6 +229,45 @@ export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocus
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "QueryAIFocus 查询详情失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcQueryAISession: APIFunc<QueryAIForgeRequest, QueryAISessionResponse> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryAISession", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询 AISession 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcDeleteAISession: APIFunc<DeleteAISessionRequest, undefined> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteAISession", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "删除 AISession 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export const grpcUpdateAISessionTitle: APIFunc<{SessionID: string; Title: string}, undefined> = (
+    param,
+    hiddenError
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("UpdateAISessionTitle", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "修改 AISession Title 失败:" + e)
                 reject(e)
             })
     })

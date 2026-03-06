@@ -85,7 +85,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
         const handleStart = useMemoizedFn((value: HandleStartParams) => {
             const {qs} = value
-            const sessionID = activeChat?.session || "" // 判断历史还是新建
+            const sessionID = activeChat?.SessionID || "" // 判断历史还是新建
 
             const request: AIStartParams = {
                 ...formatAIAgentSetting(setting),
@@ -119,15 +119,17 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     // 创建新的聊天记录
                     const newChat: AIChatInfo = {
                         id: extraParams?.chatId || session,
-                        name: qs || `AI Agent - ${new Date().toLocaleString()}`,
+                        Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
                         question: qs,
-                        time: new Date().getTime(),
+                        createdAt: new Date().getTime(),
+                        updatedAt: new Date().getTime(),
                         request,
-                        session
+                        SessionID: session,
+                        titleInitialized: false
                     }
 
                     setActiveChat && setActiveChat(newChat)
-                    setChats && setChats((old) => [...old, newChat])
+                    setChats && setChats((old) => [newChat, ...old])
                     // 新建的额外操作
                     onChat?.()
                 } else {
@@ -162,7 +164,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
         /**自由对话 */
         const handleSend = useMemoizedFn((data: HandleStartParams) => {
-            if (!activeChat?.session) return
+            if (!activeChat?.SessionID) return
             try {
                 const {extra, attachedResourceInfo} = getAIReActRequestParams(data)
                 const chatMessage: AIInputEvent = {
@@ -174,7 +176,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 const onSend = (res: AISendResProps) => {
                     const {params} = res
                     chatIPCEvents.onSend({
-                        token: activeChat.session,
+                        token: activeChat.SessionID,
                         type: "casual",
                         params: {
                             IsFreeInput: true,

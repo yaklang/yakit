@@ -397,7 +397,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
     const [chatIPCData, events] = useChatIPC({
-        getRequest: getSetting,
         cacheDataStore: knowledgeBaseDataStore
     })
 
@@ -422,7 +421,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.session
+        return activeChat?.SessionID 
     }, [activeChat])
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {

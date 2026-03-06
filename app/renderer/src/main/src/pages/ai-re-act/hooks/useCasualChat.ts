@@ -198,7 +198,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     setElements((old) => {
                         return old.map((item) => {
                             if (item.token === chatData.id && item.type === chatData.type) {
-                                item.renderNum += 1
+                                return {...item, renderNum: item.renderNum + 1}
                             }
                             return item
                         })
@@ -254,7 +254,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             setElements((old) => {
                 return old.map((item) => {
                     if (item.token === chatData.id && item.type === chatData.type) {
-                        item.renderNum += 1
+                        return {...item, renderNum: item.renderNum + 1}
                     }
                     return item
                 })
@@ -359,7 +359,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 setElements((old) => {
                     return old.map((item) => {
                         if (item.token === chatData.id && item.type === chatData.type) {
-                            item.renderNum += 1
+                            return {...item, renderNum: item.renderNum + 1}
                         }
                         return item
                     })
