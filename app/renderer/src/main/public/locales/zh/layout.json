@@ -119,7 +119,11 @@
       "modeSwitching": "模式切换",
       "classicMode": "经典模式",
       "securityExpertMode": "安全专家模式",
-      "scanMode": "扫描模式"
+      "scanMode": "扫描模式",
+      "dbCacheManager": "数据库与缓存管理",
+      "deleteCacheData": "删除缓存数据",
+      "reclaimDatabaseSpace": "回收数据库空间",
+      "refreshMenu": "刷新菜单"
     }
   },
   "MainOperatorContent": {

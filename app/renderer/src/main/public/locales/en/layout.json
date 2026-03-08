@@ -119,7 +119,11 @@
       "modeSwitching": "Mode Switching",
       "classicMode": "Classic Mode",
       "securityExpertMode": "Security Expert Mode",
-      "scanMode": "Scan Mode"
+      "scanMode": "Scan Mode",
+      "dbCacheManager": "DB & Cache Management",
+      "deleteCacheData": "Delete Cache Data",
+      "reclaimDatabaseSpace": "Reclaim Database Space",
+      "refreshMenu": "Refresh Menu"
     }
   },
   "MainOperatorContent": {

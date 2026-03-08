@@ -969,21 +969,21 @@ const ModeSwitch = (t: any) => {
     return null
 }
 
-const DBCacheManager = () => {
+const DBCacheManager = (t: any) => {
     if (SystemInfo.mode === "local") {
         return {
             key: "db-cache-manager",
-            label: "数据库与缓存管理",
+            label: t("UIOpSetting.dbCacheManager", { ns: "layout" }),
             children: [
-                { key: "invalidCache", label: "删除缓存数据" },
-                { key: "reclaimDatabaseSpace", label: "回收数据库空间" }
+                { key: "invalidCache", label: t("UIOpSetting.deleteCacheData", { ns: "layout" }) },
+                { key: "reclaimDatabaseSpace", label: t("UIOpSetting.reclaimDatabaseSpace", { ns: "layout" }) }
             ]
         }
     }
     return {
         key: "db-cache-manager",
-        label: "数据库与缓存管理",
-        children: [{ key: "invalidCache", label: "删除缓存数据" }]
+        label: t("UIOpSetting.dbCacheManager", { ns: "layout" }),
+        children: [{ key: "invalidCache", label: t("UIOpSetting.deleteCacheData", { ns: "layout" }) }]
     }
 }
 
@@ -999,7 +999,7 @@ const GetUIOpSettingMenu = (t: any) => {
                 key: "store",
                 label: t("UIOpSetting.pluginSource", { ns: "layout" })
             },
-            DBCacheManager(),
+            DBCacheManager(t),
             {
                 key: "diagnose-network",
                 label: t("UIOpSetting.diagnoseNetwork", { ns: "layout" })
@@ -1060,7 +1060,7 @@ const GetUIOpSettingMenu = (t: any) => {
             children: [
                 {
                     key: "bas-chaosmaker",
-                    label: "BAS实验室"
+                    label: t("YakitRoute.BASLab", { ns: "yakitRoute" })
                 },
                 {
                     key: "debug-monaco-editor",
@@ -1068,11 +1068,11 @@ const GetUIOpSettingMenu = (t: any) => {
                 },
                 {
                     key: "vulinbox-manager",
-                    label: "(靶场)Vulinbox"
+                    label: t("YakitRoute.vulinboxManager", { ns: "yakitRoute" })
                 },
                 {
                     key: "debug-traffic-analize",
-                    label: "流量分析"
+                    label: t("YakitRoute.trafficAnalysis", { ns: "yakitRoute" })
                 },
                 {
                     key: "run-node",
@@ -1080,14 +1080,14 @@ const GetUIOpSettingMenu = (t: any) => {
                 },
                 {
                     key: "webshell-manager",
-                    label: "网站管理"
+                    label: t("YakitRoute.websiteManagement", { ns: "yakitRoute" })
                 },
                 { key: "mcp", label: "Yak Mcp" },
-                { key: "ai-agent", label: "AI Agent" },
-                { key: "ssa-result-diff", label: "ssa-result-diff" },
-                { key: "ai-repository", label: "知识库" },
-                { key: "ssa-compile-history", label: "SSA项目编译历史" },
-                { key: "memory-base", label: "记忆库" }
+                { key: "ai-agent", label: t("YakitRoute.AIAgent", { ns: "yakitRoute" }) },
+                { key: "ssa-result-diff", label: t("YakitRoute.ssa-result-diff", { ns: "yakitRoute" }) },
+                { key: "ai-repository", label: t("YakitRoute.ai-repository", { ns: "yakitRoute" }) },
+                { key: "ssa-compile-history", label: t("YakitRoute.ssaCompileHistory", { ns: "yakitRoute" }) },
+                { key: "memory-base", label: t("YakitRoute.ai-memory", { ns: "yakitRoute" }) }
             ]
         },
         ModeSwitch(t),
@@ -1120,7 +1120,7 @@ const GetUIOpSettingMenu = (t: any) => {
             ]
         },
         { type: "divider" },
-        DBCacheManager(),
+        DBCacheManager(t),
         {
             key: "store",
             label: t("UIOpSetting.pluginSource", { ns: "layout" })
@@ -1159,7 +1159,7 @@ const GetUIOpSettingMenu = (t: any) => {
         },
         {
             key: "refreshMenu",
-            label: "刷新菜单"
+            label: t("UIOpSetting.refreshMenu", { ns: "layout" })
         },
         { type: "divider" },
         {
