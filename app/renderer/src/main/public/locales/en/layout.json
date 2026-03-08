@@ -123,7 +123,15 @@
       "dbCacheManager": "DB & Cache Management",
       "deleteCacheData": "Delete Cache Data",
       "reclaimDatabaseSpace": "Reclaim Database Space",
-      "refreshMenu": "Refresh Menu"
+      "refreshMenu": "Refresh Menu",
+      "debugPlayground": "(DEV) Debug Playground",
+      "runNode": "Run Node",
+      "performanceSampling": "Performance Sampling",
+      "crashLogCollection": "Crash Log Collection",
+      "screenRecording": "Screen Recording",
+      "stopScreenRecording": "Stop Recording",
+      "screenshot": "Screenshot",
+      "screenRecordingManagement": "Recorder Management"
     }
   },
   "MainOperatorContent": {

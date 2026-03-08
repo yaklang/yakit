@@ -123,7 +123,15 @@
       "dbCacheManager": "数据库与缓存管理",
       "deleteCacheData": "删除缓存数据",
       "reclaimDatabaseSpace": "回收数据库空间",
-      "refreshMenu": "刷新菜单"
+      "refreshMenu": "刷新菜单",
+      "debugPlayground": "(DEV)调试Playground",
+      "runNode": "运行节点",
+      "performanceSampling": "性能采样",
+      "crashLogCollection": "崩溃日志收集",
+      "screenRecording": "录屏",
+      "stopScreenRecording": "停止录屏",
+      "screenshot": "截屏",
+      "screenRecordingManagement": "录屏管理"
     }
   },
   "MainOperatorContent": {

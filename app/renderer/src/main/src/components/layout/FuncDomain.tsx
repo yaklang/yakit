@@ -1050,8 +1050,8 @@ const GetUIOpSettingMenu = (t: any) => {
             label: t("UIOpSetting.projectManagement", { ns: "layout" }),
             children: [
                 { label: t("UIOpSetting.changeProject", { ns: "layout" }), key: "changeProject" },
-                { label: t("UIOpSetting.encryptionExport", { ns: "layout" }), key: "encryptionExport" },
-                { label: t("UIOpSetting.plaintextExport", { ns: "layout" }), key: "plaintextExport" }
+                { label: t("UIOpSetting.encryptionExport", { ns: "layout" }), key: "encryptionProject" },
+                { label: t("UIOpSetting.plaintextExport", { ns: "layout" }), key: "plaintextProject" }
             ]
         },
         {
@@ -1064,7 +1064,7 @@ const GetUIOpSettingMenu = (t: any) => {
                 },
                 {
                     key: "debug-monaco-editor",
-                    label: "(DEV)调试Playground"
+                    label: t("UIOpSetting.debugPlayground", { ns: "layout" })
                 },
                 {
                     key: "vulinbox-manager",
@@ -1076,7 +1076,7 @@ const GetUIOpSettingMenu = (t: any) => {
                 },
                 {
                     key: "run-node",
-                    label: "运行节点"
+                    label: t("UIOpSetting.runNode", { ns: "layout" })
                 },
                 {
                     key: "webshell-manager",
@@ -3192,16 +3192,17 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
     /** 录屏功能的loading */
     const [screenCapLoading, setScreenCapLoading] = useState<boolean>(false)
+    const { t } = useI18nNamespaces(["layout"])
 
     const yakitMenuData = useCreation(() => {
         if (system === "Darwin" || system === "Windows_NT") {
             return [
                 {
-                    label: "性能采样",
+                    label: t("UIOpSetting.performanceSampling", { ns: "layout" }),
                     key: "performance-sampling"
                 },
                 {
-                    label: "崩溃日志收集",
+                    label: t("UIOpSetting.crashLogCollection", { ns: "layout" }),
                     key: "crash-log"
                 },
                 {
@@ -3212,11 +3213,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                                 ipcRenderer.invoke("cancel-StartScrecorder", token)
                             }}
                         >
-                            停止录屏
+                            {t("UIOpSetting.stopScreenRecording", { ns: "layout" })}
                         </div>
                     ) : (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
-                            <span>录屏</span>
+                            <span>{t("UIOpSetting.screenRecording", { ns: "layout" })}</span>
                             {/* <span className={styles["shortcut-keys"]}>
                                 {system === "Darwin"
                                     ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
@@ -3229,7 +3230,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 {
                     label: (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
-                            <span>截屏</span>
+                            <span>{t("UIOpSetting.screenshot", { ns: "layout" })}</span>
                             {
                                 screenshotLoading && (
                                     <div
@@ -3255,14 +3256,14 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     type: "divider"
                 },
                 {
-                    label: "录屏管理",
+                    label: t("UIOpSetting.screenRecordingManagement", { ns: "layout" }),
                     key: "screen-recorder"
                 }
             ]
         }
         return [
             {
-                label: "性能采样",
+                label: t("UIOpSetting.performanceSampling", { ns: "layout" }),
                 key: "performance-sampling"
             },
             {
@@ -3273,11 +3274,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                             ipcRenderer.invoke("cancel-StartScrecorder", token)
                         }}
                     >
-                        停止录屏
+                        {t("UIOpSetting.stopScreenRecording", { ns: "layout" })}
                     </div>
                 ) : (
                     <div className={styles["screen-and-screenshot-menu-item"]}>
-                        <span>录屏</span>
+                        <span>{t("UIOpSetting.screenRecording", { ns: "layout" })}</span>
                         <span className={styles["shortcut-keys"]}>{`${WinKeyborad[17]} ${WinKeyborad[16]} X`}</span>
                     </div>
                 ),
@@ -3287,7 +3288,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 type: "divider"
             },
             {
-                label: <span>录屏管理</span>,
+                label: <span>{t("UIOpSetting.screenRecordingManagement", { ns: "layout" })}</span>,
                 key: "screen-recorder"
             }
         ]
