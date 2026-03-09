@@ -11,6 +11,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import { getRemoteValue } from "@/utils/kv"
 import {failed, yakitNotify} from "@/utils/notification"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { JSONParseLog } from "@/utils/tool"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
@@ -197,9 +198,11 @@ export const apiDownloadStorageType: APIFunc<string, string> = (filePath) => {
                                 reject()
                                 return
                             }
+                            const value = JSONParseLog(setting)
+                            let url = value.BaseUrl
                             // 重要！！！ 此处仅供测试时使用 上线请复原
                             // resolve(`http://192.168.3.88:8080/install_package${match[1]}`)
-                            resolve(`${setting}/install_package${match[1]}`)
+                            resolve(`${url}/install_package${match[1]}`)
                          }).catch(() => {
                             reject()
                          })
