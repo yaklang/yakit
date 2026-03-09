@@ -431,7 +431,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams["extraValue"]) => {
         setMode("re-act")
         const userQuery = formValue?.UserQuery || ""
-        const qs = `${t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName })}${
+        const qs = `${t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName || "" })}${
             !!request.ForgeParams
                 ? `${t("AIAgent.params", { ns: "aiAgent" })}${JSON.stringify(request.ForgeParams)}`
                 : `${!!userQuery ? `${t("AIAgent.input", { ns: "aiAgent" })}${userQuery!}` : ""}`
@@ -440,7 +440,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             qs,
             extraValue: {
                 isForge: true,
-                showForgeQuestion: t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName }),
+                showForgeQuestion: t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName || "" }),
                 forgeParams: JSON.stringify(formValue, null, 2)
             }
         })
@@ -454,7 +454,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
         setMode("re-act")
         handleStart({
-            qs: `${t("AIAgent.useToolTask", { ns: "aiAgent", name: `${activeTool.VerboseName}(${activeTool.Name})` })}${
+            qs: `${t("AIAgent.useToolTask", { ns: "aiAgent", name: `${activeTool.VerboseName || ""}(${activeTool.Name || ""})` })}${
                 question ? `${t("AIAgent.input", { ns: "aiAgent" })}${question}` : ""
             }`
         })
@@ -640,6 +640,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const getAIModelListOption = useDebounceFn(
         () => {
             isForcedSetAIModal({
+                t,
                 pageKey: "ai-agent",
                 mountContainer: document.getElementById("main-operator-page-body-ai-agent"),
                 isOpen: true

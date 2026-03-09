@@ -31,13 +31,14 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-export const onOpenConfigModal = (mountContainer) => {
+export const onOpenConfigModal = (mountContainer, t: any) => {
     const m = YakitModalConfirm({
-        title: "AI 模型未配置",
+        title: t("AIAgent.AIModelSelect.configTitle", { ns: "aiAgent" }),
         width: 420,
-        onOkText: "去配置",
-        content: <div>无可使用AI模型，请配置后使用</div>,
+        onOkText: t("AIAgent.AIModelSelect.toConfigure", { ns: "aiAgent" }),
+        content: <div>{t("AIAgent.AIModelSelect.configDesc", { ns: "aiAgent" })}</div>,
         closable: false,
         maskClosable: false,
         keyboard: false,
@@ -46,6 +47,7 @@ export const onOpenConfigModal = (mountContainer) => {
         onOk: () => {
             setAIModal({
                 mountContainer,
+                t,
                 onSuccess: () => {
                     setTimeout(() => {
                         emiter.emit("onRefreshAIModelList")
@@ -57,8 +59,13 @@ export const onOpenConfigModal = (mountContainer) => {
     })
 }
 
-const modelType = ["高质模型", "轻量模型", "视觉模型"]
+const modelType = (t: any) => [
+    t("AIAgent.AIModelList.intelligentModels", { ns: "aiAgent" }),
+    t("AIAgent.AIModelList.lightweightModels", { ns: "aiAgent" }),
+    t("AIAgent.AIModelList.visionModels", { ns: "aiAgent" })
+]
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["aiAgent"])
     const {isOpen = true, mountContainer} = props
 
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
@@ -123,6 +130,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const getAIModelListOption = useDebounceFn(
         () => {
             isForcedSetAIModal({
+                t,
                 haveDataCall: (res) => {
                     setAIModelOptions(res)
                     aiGlobalConfigRef.current = cloneDeep(res.onlineModels)
@@ -201,7 +209,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     {selectList.length > 1 ? (
                                         <Avatar.Group>
                                             {selectList.map((item, index) => (
-                                                <Tooltip key={index} title={`${modelType[index]}:${item.ModelName}`}>
+                                                <Tooltip key={index} title={`${modelType(t)[index]}:${item.ModelName}`}>
                                                     <Avatar
                                                         className={styles["model-item"]}
                                                         icon={getIconByAI(item.Provider.Type)}
@@ -284,6 +292,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const onAddModel = useMemoizedFn(() => {
         setAIModal({
             mountContainer,
+            t,
             onSuccess: () => {
                 emiter.emit("onRefreshAIModelList")
             }
@@ -327,7 +336,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             onSwitchAIAgentTab()
         }
 
-        yakitNotify("success", "已打开AI侧边栏模型配置")
+        yakitNotify("success", t("AIAgent.AIModelSelect.openModelTabSuccess", { ns: "aiAgent" }))
     })
     const onSwitchAIAgentTab = useMemoizedFn(() => {
         emiter.emit(
@@ -350,12 +359,12 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                             <div className={styles["drop-select-wrapper"]}>
                                 <div className={styles["select-title"]}>
                                     <div className={styles["select-title-left"]}>
-                                        <span>AI 模型选择</span>
+                                        <span>{t("AIAgent.AIModelSelect.selectModel", { ns: "aiAgent" })}</span>
                                         {!execute && (
                                             <YakitSelect
                                                 size='small'
                                                 disabled={execute}
-                                                options={AIModelPolicyOptions}
+                                                options={AIModelPolicyOptions(t)}
                                                 value={policy}
                                                 onSelect={onSelectPolicy}
                                                 wrapperClassName={styles["select-policy-wrapper"]}
@@ -364,12 +373,12 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                                 dropdownMatchSelectWidth={false}
                                             />
                                         )}
-                                        <Tooltip title={getTipByType(policy)}>
+                                        <Tooltip title={getTipByType(policy, t)}>
                                             <OutlineInformationcircleIcon className={styles["icon-info"]} />
                                         </Tooltip>
                                     </div>
                                     <div className={styles["select-title-right"]}>
-                                        <Tooltip title={"打开ai侧边栏模型配置"}>
+                                        <Tooltip title={t("AIAgent.AIModelSelect.openConfigTooltip", { ns: "aiAgent" })}>
                                             <YakitButton
                                                 size='small'
                                                 type='text2'
@@ -378,7 +387,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             />
                                         </Tooltip>
                                         {aiType === "online" && (
-                                            <Tooltip title={"刷新"}>
+                                            <Tooltip title={t("AIAgent.AIModelSelect.refresh", { ns: "aiAgent" })}>
                                                 <YakitButton
                                                     size='small'
                                                     type='text2'
@@ -393,8 +402,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                 <div className={styles["select-content"]}>
                                     {!!intelligentModels.length && (
                                         <AIModelSelectList
-                                            title={"高质模型"}
-                                            subTitle={"用于执行复杂度高的任务,对话框中可切换该模型"}
+                                            title={t("AIAgent.AIModelList.intelligentModels", { ns: "aiAgent" })}
+                                            subTitle={t("AIAgent.AIModelList.intelligentModelsDesc", { ns: "aiAgent" })}
                                             list={intelligentModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
@@ -406,8 +415,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     )}
                                     {!execute && !!lightweightModels.length && (
                                         <AIModelSelectList
-                                            title={"轻量模型"}
-                                            subTitle={"用于执行简单任务和会话"}
+                                            title={t("AIAgent.AIModelList.lightweightModels", { ns: "aiAgent" })}
+                                            subTitle={t("AIAgent.AIModelList.lightweightModelsDesc", { ns: "aiAgent" })}
                                             list={lightweightModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
@@ -419,8 +428,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     )}
                                     {!execute && !!visionModels.length && (
                                         <AIModelSelectList
-                                            title={"视觉模式"}
-                                            subTitle={"用于识别图片等,生成知识库和任务执行都会用到"}
+                                            title={t("AIAgent.AIModelList.visionModels", { ns: "aiAgent" })}
+                                            subTitle={t("AIAgent.AIModelList.visionModelsDesc", { ns: "aiAgent" })}
                                             list={visionModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
@@ -432,7 +441,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     )}
                                 </div>
                                 <YakitButton type='secondary2' onClick={onAddModel} className={styles["add-model-btn"]}>
-                                    添加模型
+                                    {t("AIAgent.AIModelList.addModel", { ns: "aiAgent" })}
                                 </YakitButton>
                             </div>
                         )

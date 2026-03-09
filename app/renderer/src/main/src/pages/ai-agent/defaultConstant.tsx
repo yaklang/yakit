@@ -334,11 +334,11 @@ export enum AIModelPolicyEnum {
     PolicyBalance = "balance"
 }
 
-export const AIModelPolicyOptions = [
-    {value: AIModelPolicyEnum.PolicyAuto, label: "自动选择"},
-    {value: AIModelPolicyEnum.PolicyPerformance, label: "性能优先"},
-    {value: AIModelPolicyEnum.PolicyCost, label: "成本优先"},
-    {value: AIModelPolicyEnum.PolicyBalance, label: "平衡策略"}
+export const AIModelPolicyOptions = (t: any) => [
+    {value: AIModelPolicyEnum.PolicyAuto, label: t("AIAgent.AIModelSelect.policyAutoLabel", { ns: "aiAgent" })},
+    {value: AIModelPolicyEnum.PolicyPerformance, label: t("AIAgent.AIModelSelect.policyPerformanceLabel", { ns: "aiAgent" })},
+    {value: AIModelPolicyEnum.PolicyCost, label: t("AIAgent.AIModelSelect.policyCostLabel", { ns: "aiAgent" })},
+    {value: AIModelPolicyEnum.PolicyBalance, label: t("AIAgent.AIModelSelect.policyBalanceLabel", { ns: "aiAgent" })}
 ]
 
 /**ai model type,下拉选择的值 */

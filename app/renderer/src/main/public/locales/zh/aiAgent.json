@@ -95,6 +95,26 @@
       "startModel": "启动模型 - {{name}}",
       "downloadModel": "下载模型",
       "editLocalModel": "修改本地模型"
+    },
+    "AIModelSelect": {
+      "configTitle": "AI 模型未配置",
+      "toConfigure": "去配置",
+      "configDesc": "无可使用AI模型，请配置后使用",
+      "openModelTabSuccess": "已打开AI侧边栏模型配置",
+      "selectModel": "AI 模型选择",
+      "openConfigTooltip": "打开ai侧边栏模型配置",
+      "refresh": "刷新",
+      "policyAutoLabel": "自动选择",
+      "policyPerformanceLabel": "性能优先",
+      "policyCostLabel": "成本优先",
+      "policyBalanceLabel": "平衡策略"
+    },
+    "AIToolEditor": {
+      "writeCodeFirst": "请编写代码以后再点击生成",
+      "aiGenerateHelp": "配置AI后可用AI生成描述与tags",
+      "clickToGenerate": "点击生成",
+      "notConfigured": "如未配置",
+      "clickToConfigure": "请点此配置"
     }
   }
 }

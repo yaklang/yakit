@@ -239,7 +239,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         },
         {
             onError: (error) => {
-                failed(t("AIAgent.getKnowledgeBaseFailed", { ns: "aiAgent", error }))
+                failed(t("AIAgent.getKnowledgeBaseFailed", { ns: "aiAgent", error: error.message }))
             },
             onSuccess: (value) => {
                 if (value) {

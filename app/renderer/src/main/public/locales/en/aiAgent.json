@@ -95,6 +95,26 @@
       "startModel": "Start Model - {{name}}",
       "downloadModel": "Download Model",
       "editLocalModel": "Edit Local Model"
+    },
+    "AIModelSelect": {
+      "configTitle": "AI Model Not Configured",
+      "toConfigure": "Go to Configure",
+      "configDesc": "No available AI model found. Please configure one before use.",
+      "openModelTabSuccess": "AI sidebar model configuration opened",
+      "selectModel": "Select AI Model",
+      "openConfigTooltip": "Open AI sidebar model configuration",
+      "refresh": "Refresh",
+      "policyAutoLabel": "Auto Select",
+      "policyPerformanceLabel": "Performance First",
+      "policyCostLabel": "Cost First",
+      "policyBalanceLabel": "Balance Strategy"
+    },
+    "AIToolEditor": {
+      "writeCodeFirst": "Please write code before clicking generate",
+      "aiGenerateHelp": "Configure AI to generate descriptions and tags",
+      "clickToGenerate": "Click to generate",
+      "notConfigured": "If not configured",
+      "clickToConfigure": "Please click here to configure"
     }
   }
 }
