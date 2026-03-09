@@ -4,6 +4,7 @@
   "version": "2.02.28",
   "type": "module",
   "scripts": {
+    "cli": "node scripts/cli.cjs",
     "electron-render": "vite --mode default",
     "electron-render-enterprise": "vite --mode enterprise",
     "electron-render-simple-enterprise": "vite --mode simpleEE",

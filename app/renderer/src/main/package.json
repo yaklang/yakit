@@ -119,7 +119,7 @@
         "zustand": "^4.4.1"
     },
     "scripts": {
-        "render-cli": "node ./scripts/cli.js",
+        "cli": "node scripts/cli.js",
         "electron-render": "env-cmd -e noBrouser,devTool -f ./.env-cmdrc react-app-rewired start",
         "electron-render-enterprise": "env-cmd -e noBrouser,devTool,enterprise -f ./.env-cmdrc react-app-rewired start",
         "electron-render-simple-enterprise": "env-cmd -e noBrouser,devTool,simpleEE -f ./.env-cmdrc react-app-rewired start",
@@ -143,7 +143,7 @@
         "build-breachtrace": "env-cmd -e breachtrace -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject",
-        "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build",
+        "analyzer": "cross-env REACT_APP_ANALYZER=true react-app-rewired build",
         "postinstall": "patch-package",
         "release-render": "node scripts/release-render.js"
     },
@@ -168,7 +168,6 @@
         "@types/validator": "^13.15.10",
         "@xterm/xterm": "5.5.0",
         "babel-plugin-import": "^1.13.8",
-        "commander": "^13.1.0",
         "cross-env": "7.0.3",
         "env-cmd": "^10.1.0",
         "mini-css-extract-plugin": "^2.7.6",
