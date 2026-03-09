@@ -1,5 +1,5 @@
 import {PaginationSchema} from "@/pages/invoker/schema"
-import { AIChatInfo } from "./aiChat"
+import {AIChatInfo} from "./aiChat"
 
 export interface GrpcPageResponse<T = unknown> {
     Pagination: PaginationSchema
@@ -75,6 +75,8 @@ export interface AIFocus {
     Description: string
     OutputExamplePrompt: string
     UsagePrompt: string
+    VerboseName: string
+    VerboseNameZh: string
 }
 export interface QueryAIFocusRequest {}
 export interface QueryAIFocusResponse {
@@ -84,30 +86,30 @@ export interface QueryAIFocusResponse {
 export type QueryAISessionResponse = GrpcPageResponse<AIChatInfo[]>
 
 export interface DeleteAISessionFilter {
-  /**
-   * 会话ID列表
-   */
-  SessionID?: string[];
+    /**
+     * 会话ID列表
+     */
+    SessionID?: string[]
 
-  /**
-   * 删除该时间戳之后的数据（毫秒时间戳）
-   */
-  AfterTimestamp?: number;
+    /**
+     * 删除该时间戳之后的数据（毫秒时间戳）
+     */
+    AfterTimestamp?: number
 
-  /**
-   * 删除该时间戳之前的数据（毫秒时间戳）
-   */
-  BeforeTimestamp?: number;
+    /**
+     * 删除该时间戳之前的数据（毫秒时间戳）
+     */
+    BeforeTimestamp?: number
 }
 
 export interface DeleteAISessionRequest {
-  /**
-   * 删除过滤条件
-   */
-  Filter?: DeleteAISessionFilter;
+    /**
+     * 删除过滤条件
+     */
+    Filter?: DeleteAISessionFilter
 
-  /**
-   * 是否删除全部
-   */
-  DeleteAll?: boolean;
+    /**
+     * 是否删除全部
+     */
+    DeleteAll?: boolean
 }

@@ -25,7 +25,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
     }, [inViewPort])
     const getFocusMode = useMemoizedFn(() => {
         grpcQueryAIFocus().then((res) => {
-            const list = (res?.Data || []).map((item: AIFocus) => ({label: item.Name, value: item.Name}))
+            const list = (res?.Data || []).map((item: AIFocus) => ({label: item.VerboseNameZh, value: item.Name}))
             setFocusModeList(list)
         })
     })
@@ -40,6 +40,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
         onChange(undefined)
         setOpen(false)
     })
+
     return (
         <div ref={ref} className={className}>
             <AIChatSelect
@@ -70,6 +71,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                 optionLabelProp='label'
                 open={open}
                 setOpen={onSetOpen}
+                disabled={props.disabled}
             >
                 {focusModeList?.map((item) => (
                     <YakitSelect.Option
@@ -81,7 +83,9 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                                 <span className={styles["select-option-text"]} title={`${item.label}`}>
                                     {item.label}
                                 </span>
-                                <OutlineXIcon className={styles["icon-wrapper"]} onClick={onRemove} />
+                                {props.disabled ?? (
+                                    <OutlineXIcon className={styles["icon-wrapper"]} onClick={onRemove} />
+                                )}
                             </div>
                         }
                     >
