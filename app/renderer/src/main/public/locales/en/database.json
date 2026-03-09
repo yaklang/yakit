@@ -1,0 +1,27 @@
+{
+  "DomainAssetPage": {
+    "domain": "Domain",
+    "ip": "IP",
+    "htmlTitle": "HTMLTitle",
+    "onlyRefresh": "Refresh Only",
+    "resetRefresh": "Reset and Refresh"
+  },
+  "PortAssetPage": {
+    "title": "Port Asset List",
+    "searchPlaceholder": "Search by network address, port, service fingerprint, title keywords",
+    "onlyRefresh": "Refresh Only",
+    "resetRefresh": "Reset and Refresh",
+    "advancedFilter": "Advanced Filter",
+    "confirmDeleteSelected": "Are you sure you want to delete selected data?",
+    "confirmClearList": "Are you sure you want to clear the list?",
+    "delete": "Delete",
+    "clear": "Clear",
+    "noFingerprint": "No fingerprint information",
+    "getPortsGroupFailed": "Failed to get ports group: ",
+    "host": "Host",
+    "port": "Port",
+    "service": "Service",
+    "htmlTitle": "Title",
+    "state": "State"
+  }
+}
