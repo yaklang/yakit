@@ -7,7 +7,17 @@ concurrency:
 on:
   workflow_dispatch:
   pull_request:
-    branches: [master]
+  branches: [master]
+    # only run this workflow when source code (or related test files) change;
+    # ignore metadata/packaging updates so package.json edits don't start the job
+    paths-ignore:
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/**'
+      - 'README*'
+      - 'LICENSE*'
+      - 'electron*'
+      - 'docs/**'
 
 jobs:
   vitest:
@@ -105,6 +115,19 @@ jobs:
           CHANGED_REL=$(printf "%s\n" "$CHANGED_REL" | sed '/^$/d' || true)
           echo "Normalized changes:\n$CHANGED_REL"
 
+          # filter out known non-code files so they don't accidentally trigger tests
+          CHANGED_REL=$(printf "%s\n" "$CHANGED_REL" | grep -vE '^(package\.json|yarn\.lock|\.github/|README.*|LICENSE.*|electron.*|docs?/)' || true)
+
+
+          # --- ignore purely metadata/package changes ---
+          # if none of the changed paths live under a source directory, bail out early
+          # (tests in the repo live under src/, app/renderer/src/main/src, etc.)
+          if ! printf "%s\n" "$CHANGED_REL" | grep -qE '^(src/|app/)' ; then
+            echo "No source files changed, skipping vitest"
+            echo "tests=none" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           # Prefer explicitly changed test files (paths under repo root)
           TEST_FILES=$(printf "%s\n" "$CHANGED_REL" | grep -E '.*\.(test|spec)\.(ts|tsx|js|jsx)' || true)
           if [ -n "$TEST_FILES" ]; then
@@ -123,20 +146,17 @@ jobs:
             # enable globstar for ** expansion
             shopt -s globstar nullglob || true
             for d in $DIRS; do
-              # candidate test directories relative to changed dir
-              candidates=("$d/__tests__" "$d/src/__tests__")
-              # also consider mapping src/** -> src/__tests__
-              if [[ "$d" == *"/src"* ]]; then
-                base=${d%%/src*}
-                candidates+=("$base/src/__tests__")
-              fi
-              for c in "${candidates[@]}"; do
-                # look for test files under candidate
-                found=( $c/**/*.test.* $c/**/*.spec.* )
-                if [ ${#found[@]} -gt 0 ]; then
-                  # add glob pattern for this candidate
-                  TEST_PATTERNS+=("$c/**/*.test.*" "$c/**/*.spec.*")
+              # walk upward from the changed directory and collect any
+              # __tests__ folders we encounter. this way a change in a deep
+              # path still triggers tests placed in ancestor directories like
+              # app/renderer/src/__tests__ or app/renderer/src/main/__tests__.
+              cur="$d"
+              while [ "$cur" != "." ] && [ -n "$cur" ]; do
+                testdir="$cur/__tests__"
+                if [ -d "$testdir" ]; then
+                  TEST_PATTERNS+=("$testdir/**/*.test.*" "$testdir/**/*.spec.*")
                 fi
+                cur=$(dirname "$cur")
               done
             done
           fi
@@ -167,9 +187,14 @@ jobs:
           # enable glob expansion so ** patterns from TESTS are resolved in CI
           shopt -s globstar nullglob
 
-          # expand patterns to actual files before passing to vitest
-          EXPANDED_TESTS=$(eval echo $TESTS)
+          # expand patterns to actual files in a *safe* way without eval
+          EXPANDED_TESTS=()
+          for pat in $TESTS; do
+            for f in $pat; do
+              EXPANDED_TESTS+=("$f")
+            done
+          done
 
-          echo "Expanded tests: $EXPANDED_TESTS"
+          echo "Expanded tests: ${EXPANDED_TESTS[*]}"
 
-          yarn test:vitest $EXPANDED_TESTS --run --reporter verbose
+          yarn test:vitest "${EXPANDED_TESTS[@]}" --run --reporter verbose
