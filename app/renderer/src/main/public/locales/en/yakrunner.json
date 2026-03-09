@@ -1,0 +1,22 @@
+{
+  "CreateDictionaries": {
+    "cancel": "Cancel",
+    "createDictionary": "Create Dictionary",
+    "createPayload": "Create Payload",
+    "uploadFile": "Upload File",
+    "manualInput": "Manual Input",
+    "largeFileUpload": "Large File Upload",
+    "dictionaryName": "Dictionary Name",
+    "dictionaryNamePlaceholder": "Please enter dictionary name",
+    "uploadPlaceholder": "Click or drag file to this area to upload",
+    "uploadHint": "Supports single or batch upload",
+    "reupload": "Re-upload",
+    "saveToDatabase": "Save to Database",
+    "saveToFile": "Save to File",
+    "uploading": "Uploading...",
+    "uploadSuccess": "Upload successful",
+    "uploadFailed": "Upload failed",
+    "progress": "Progress",
+    "elapsedTime": "Elapsed Time"
+  }
+}
