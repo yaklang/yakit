@@ -307,7 +307,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                 })
                             }}
                         >
-                            查看下载地址
+                            {t("VulinboxManager.downloadAddresses")}
                         </YakitButton>
                     </Space>
                 }
