@@ -1,0 +1,28 @@
+{
+  "RemoteEngine": {
+    "remoteMode": "Remote Mode",
+    "connectionHistory": "Connection History",
+    "selectPlaceholder": "Please select...",
+    "hostLabel": "Yak gRPC Host:",
+    "portLabel": "Yak gRPC Port:",
+    "tlsLabel": "Enable TLS:",
+    "pemLabel": "gRPC Root-CA Certificate (PEM)",
+    "passwordLabel": "Password",
+    "saveHistoryLabel": "Save as History Connection",
+    "connectionNameLabel": "Connection Name:",
+    "connectionNameHelp": "After filling in, this record will be saved to the connection history for quick calls later",
+    "connectButton": "Start Connection",
+    "backButton": "Back",
+    "pemExampleTitle": "PEM Certificate Example",
+    "pemExampleContent": "Please paste the content of the server.pem certificate generated when the Yak server starts here",
+    "saveHistoryHintTitle": "Save as History Connection",
+    "saveHistoryHintContent": "After enabling, this connection will be recorded in [Connection History] for quick connection next time",
+    "pemTitle": "PEM format certificate required",
+    "pemContent": "When starting the core server with <div class=\"content-code\">yak grpc --tls</div>, the RootCA will be printed to the screen. Copy and paste it into this input box:",
+    "pemExample": "For example:",
+    "saveHistoryNote": "Note: {{appName}} will not upload the history to the internet",
+    "saveHistoryLocation": "You can find the remote login information in your local directory (client directory)",
+    "openLocation": "Open remote information storage location",
+    "cancel": "Cancel"
+  }
+}

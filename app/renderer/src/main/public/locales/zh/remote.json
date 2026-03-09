@@ -1,0 +1,28 @@
+{
+  "RemoteEngine": {
+    "remoteMode": "远程模式",
+    "connectionHistory": "连接历史",
+    "selectPlaceholder": "请选择...",
+    "hostLabel": "Yak gRPC 主机地址:",
+    "portLabel": "Yak gRPC 端口:",
+    "tlsLabel": "启用通信加密认证 TLS:",
+    "pemLabel": "gRPC Root-CA 证书(PEM)",
+    "passwordLabel": "密码",
+    "saveHistoryLabel": "保存为历史连接",
+    "connectionNameLabel": "连接名:",
+    "connectionNameHelp": "填写后，本次记录会保存到连接历史中，之后可以快捷调用",
+    "connectButton": "启动连接",
+    "backButton": "返回",
+    "pemExampleTitle": "PEM 证书样例",
+    "pemExampleContent": "请把 Yak 服务端启动时生成的 server.pem 证书内容粘贴到此处",
+    "saveHistoryHintTitle": "保存为历史连接",
+    "saveHistoryHintContent": "开启后，本次连接将会被记录在【连接历史】中，方便下次快速连接",
+    "pemTitle": "需要 PEM 格式的证书",
+    "pemContent": "在通过 <div class=\"content-code\">yak grpc --tls</div> 启动核心服务器的时候，会把 RootCA 打印到屏幕上，复制到该输入框即可：",
+    "pemExample": "例如如下内容：",
+    "saveHistoryNote": "注意：{{appName}} 并不会把历史记录上传到互联网",
+    "saveHistoryLocation": "你可以在你的本地目录（客户端目录）下找到远程登录信息",
+    "openLocation": "打开远程信息储存位置",
+    "cancel": "取消"
+  }
+}
