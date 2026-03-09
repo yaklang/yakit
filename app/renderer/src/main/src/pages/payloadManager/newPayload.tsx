@@ -307,17 +307,17 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
             if (error === `group[${group || dictionariesName}] exist`) {
                 messageWarnRef.current = true
-                warn("字典名重复")
+                warn(t("CreateDictionaries.dictionaryNameExists"))
                 return
             }
-            failed(`[SavePayload] error:  ${error}`)
+            failed(t("CreateDictionaries.savePayloadError", {error}))
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             if (messageWarnRef.current) {
                 messageWarnRef.current = false
                 return
             }
-            info("[SavePayload] finished")
+            info(t("CreateDictionaries.savePayloadFinished"))
             logInfoRef.current = []
             cancelRun()
         })
@@ -348,17 +348,17 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
         ipcRenderer.on(`${fileToken}-error`, (e: any, error: any) => {
             if (error === `group[${group || dictionariesName}] exist`) {
                 messageWarnRef.current = true
-                warn("字典名重复")
+                warn(t("CreateDictionaries.dictionaryNameExists"))
                 return
             }
-            failed(`[SavePayloadFile] error:  ${error}`)
+            failed(t("CreateDictionaries.savePayloadFileError", {error}))
         })
         ipcRenderer.on(`${fileToken}-end`, (e: any, data: any) => {
             if (messageWarnRef.current) {
                 messageWarnRef.current = false
                 return
             }
-            info("[SavePayloadFile] finished")
+            info(t("CreateDictionaries.savePayloadFileFinished"))
             logInfoRef.current = []
             cancelRun()
         })
@@ -395,15 +395,15 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }[] = []
             fileList.forEach((f) => {
                 if (uploadType === "large-dragger" && !"text/plain".includes(f.type) && f.size / 1024 / 1024 > 20) {
-                    failed("大文件存储仅支持txt文件类型")
+                    failed(t("CreateDictionaries.largeFileOnlyTxt"))
                     return false
                 }
                 if (uploadType === "dragger" && !FileType.includes(f.type)) {
-                    failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
+                    failed(t("CreateDictionaries.incorrectFormat", {name: f.name}))
                     return false
                 }
                 if (uploadList.map((item) => item.path).includes(f.path)) {
-                    warn(`${f.path}已选择`)
+                    warn(t("CreateDictionaries.alreadySelected", {path: f.path}))
                     return
                 }
                 let name = f.name.split(".")[0]
@@ -463,12 +463,12 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         {isDictionaries && (
                             <div className={styles["input-box"]}>
                                 <div className={styles["name"]}>
-                                    字典名<span className={styles["must"]}>*</span>:
+                                    {t("CreateDictionaries.dictionaryName")}<span className={styles["must"]}>*</span>:
                                 </div>
                                 <div>
                                     <YakitInput
                                         style={{width: "100%"}}
-                                        placeholder='请输入...'
+                                        placeholder={t("CreateDictionaries.inputPlaceholder")}
                                         value={dictionariesName}
                                         onChange={(e) => {
                                             setDictionariesName(e.target.value)
@@ -523,13 +523,12 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                                 </div>
                                                 <div className={styles["content"]}>
                                                     <div className={styles["title"]}>
-                                                        可将文件拖入框内，或
-                                                        <span className={styles["hight-light"]}>点击此处导入</span>
+                                                        {t("CreateDictionaries.uploadHint")}
                                                     </div>
                                                     <div className={styles["sub-title"]}>
                                                         {uploadType === "dragger"
-                                                            ? "支持文件夹批量上传(支持文件类型txt/csv)"
-                                                            : "支持大文件上传(支持文件类型txt)"}
+                                                            ? t("CreateDictionaries.uploadHintFolder")
+                                                            : t("CreateDictionaries.uploadHintLargeFile")}
                                                     </div>
                                                 </div>
                                             </div>
@@ -615,10 +614,10 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         ) : (
                             <>
                                 <YakitButton size='large' disabled={isDisabled} type='outline1' onClick={onClose}>
-                                    取消
+                                    {t("CreateDictionaries.cancelAction")}
                                 </YakitButton>
                                 <YakitButton size='large' disabled={isDisabled} onClick={onSavePayload}>
-                                    导入
+                                    {t("CreateDictionaries.importAction")}
                                 </YakitButton>
                             </>
                         )}
@@ -980,7 +979,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                     onQueryGroup()
                 })
                 .catch((e: any) => {
-                    failed(`数据更新失败：${e}`)
+                    failed(t("NewPayloadLocalList.updateFailed", {error: e}))
                 })
         }
     })
@@ -1011,7 +1010,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
         let newFolderName: string
         let index = 1
         do {
-            newFolderName = `未命名检测${index}`
+            newFolderName = `${t("NewPayloadLocalList.unnamedDetection")}${index}`
             index++
         } while (existingFolderNames.includes(newFolderName))
         return newFolderName
@@ -1315,7 +1314,9 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                 <div className={styles["header"]}>
                     <div className={styles["title-box"]}>
                         <div className={styles["title"]}>
-                            {onlyInsert ? t("NewPayloadLocalList.selectDictionaryToInsert") : "字典管理"}
+                            {onlyInsert
+                                ? t("NewPayloadLocalList.selectDictionaryToInsert")
+                                : t("NewPayloadLocalList.dictionaryManagement")}
                         </div>
                         <div className={styles["count"]}>{getPayloadCount}</div>
                         {!onlyInsert && (
@@ -1344,13 +1345,13 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                             </>
                         ) : (
                             <div className={styles["option"]}>
-                                <Tooltip title={"批量导出"}>
+                                <Tooltip title={t("NewPayloadLocalList.batchExport")}>
                                     <YakitButton
                                         type='text2'
                                         icon={<OutlineExportIcon />}
                                         onClick={() => {
                                             if (exportData.length === 0) {
-                                                warn("请选择导出内容")
+                                                warn(t("NewPayloadLocalList.pleaseSelectExportContent"))
                                                 return
                                             }
                                             setExportType("all")
@@ -1366,7 +1367,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                 label: (
                                                     <div className={styles["extra-menu"]}>
                                                         <OutlineAddPayloadIcon />
-                                                        <div className={styles["menu-name"]}>新建字典</div>
+                                                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.newDictionary")}</div>
                                                     </div>
                                                 )
                                             },
@@ -1375,7 +1376,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                 label: (
                                                     <div className={styles["extra-menu"]}>
                                                         <OutlineFolderaddIcon />
-                                                        <div className={styles["menu-name"]}>新建文件夹</div>
+                                                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.newFolder")}</div>
                                                     </div>
                                                 )
                                             }
@@ -1395,7 +1396,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                         hiddenHeader: true,
                                                         content: (
                                                             <CreateDictionaries
-                                                                title='新建字典'
+                                                                title={t("NewPayloadLocalList.newDictionary")}
                                                                 type='dictionaries'
                                                                 onQueryGroup={onQueryGroup}
                                                                 onClose={() => {
@@ -1429,7 +1430,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                         placement: "bottomRight"
                                     }}
                                 >
-                                    <Tooltip title={"新增"}>
+                                    <Tooltip title={t("NewPayloadLocalList.add")}>
                                         <YakitButton type='secondary2' icon={<OutlinePlusIcon />} />
                                     </Tooltip>
                                 </YakitDropdownMenu>
@@ -1511,7 +1512,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                 }
                                             }}
                                         >
-                                            全选
+                                            {t("NewPayloadLocalList.selectAll")}
                                         </YakitCheckbox>
                                     </div>
 
@@ -1608,7 +1609,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                             )}
                                         </Droppable>
                                     </DragDropContext>
-                                    <div className={styles["to-end"]}>已经到底啦～</div>
+                                    <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
                                 </>
                             )}
                         </div>
@@ -1736,6 +1737,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         userInfo,
         showType = "local"
     } = props
+    const {t} = useI18nNamespaces(["payload"])
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
     const [inputName, setInputName] = useState<string>(folder.name)
@@ -1771,13 +1773,13 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         Name: inputName
                     })
                     .then(() => {
-                        success("新建文件夹成功")
+                        success(t("NewPayloadLocalList.createFolderSuccess"))
                         setInputName(inputName)
                         setFolderNameById()
                         setExportData && setExportData([])
                     })
                     .catch((e: any) => {
-                        failed(`新建文件夹失败：${e}`)
+                        failed(t("NewPayloadLocalList.createFolderFailed", {error: e}))
                         setData(data.filter((item) => !item.isCreate))
                     })
             }
@@ -1789,27 +1791,27 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         NewName: inputName
                     })
                     .then(() => {
-                        success("修改成功")
+                        success(t("NewPayloadLocalList.modifySuccess"))
                         setInputName(inputName)
                         setFolderNameById()
                     })
                     .catch((e: any) => {
                         setInputName(folder.name)
-                        failed(`编辑失败：${e}`)
+                        failed(t("NewPayloadLocalList.editFailed", {error: e}))
                     })
             }
         } else {
-            !pass && warn("名称不允许出现/*,")
+            !pass && warn(t("NewPayloadLocalList.nameNotAllowSpecial"))
             // 创建时为空则不创建
             if (folder.isCreate) {
                 setData(data.filter((item) => !item.isCreate))
-                allFolderName.includes(inputName) && inputName.length !== 0 && warn("文件夹名重复，不可创建")
+                allFolderName.includes(inputName) && inputName.length !== 0 && warn(t("NewPayloadLocalList.folderNameExistsCannotCreate"))
             }
             // 编辑时为空恢复
             else {
                 // 没有修改
                 setInputName(folder.name)
-                folder.name !== inputName && allFolderName.includes(inputName) && warn("文件夹名重复，不可编辑")
+                folder.name !== inputName && allFolderName.includes(inputName) && warn(t("NewPayloadLocalList.folderNameExistsCannotEdit"))
             }
         }
     })
@@ -1833,14 +1835,14 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 Name: folder.name
             })
             .then(() => {
-                success("删除成功")
+                success(t("NewPayloadLocalList.deleteSuccess"))
                 onDeleteFolderById(folder.id)
                 setDeleteVisible(false)
                 setExportData && setExportData([])
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
-                failed(`删除失败：${e}`)
+                failed(t("NewPayloadLocalList.deleteFailed", {error: e}))
             })
     })
 
@@ -1868,7 +1870,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineDocumentduplicateIcon />
-                        <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.copyFuzztag")}</div>
                     </div>
                 )
             },
@@ -1877,7 +1879,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineAddPayloadIcon />
-                        <div className={styles["menu-name"]}>新增子集字典</div>
+                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.addChildPayload")}</div>
                     </div>
                 )
             },
@@ -1886,7 +1888,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlinePencilaltIcon />
-                        <div className={styles["menu-name"]}>重命名</div>
+                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.rename")}</div>
                     </div>
                 )
             },
@@ -1895,7 +1897,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineUploadIcon />
-                        <div className={styles["menu-name"]}>上传</div>
+                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.upload")}</div>
                     </div>
                 ),
                 disabled: !isPayloadOperator(userInfo)
@@ -1908,7 +1910,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineTrashIcon />
-                        <div className={styles["menu-name"]}>删除</div>
+                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.delete")}</div>
                     </div>
                 ),
                 type: "danger"
@@ -2048,7 +2050,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                         hiddenHeader: true,
                                                         content: (
                                                             <CreateDictionaries
-                                                                title='新建子集字典'
+                                                                title={t("NewPayloadLocalList.addChildPayload")}
                                                                 type='dictionaries'
                                                                 onQueryGroup={onQueryGroup}
                                                                 folder={folder.name}
@@ -2221,6 +2223,7 @@ interface DeleteConfirmProps {
 // 删除确认弹窗
 export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
     const {visible, setVisible, onFinish} = props
+    const {t} = useI18nNamespaces(["payload"])
     const [check, setCheck] = useState<boolean>(false)
     const [showConfirm, setShowConfirm] = useState<boolean>(false)
     const NewPayloadDeleteConfirm = "NewPayloadDeleteConfirm"
@@ -2251,11 +2254,11 @@ export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
             {/* 删除确认弹框 */}
             <YakitHint
                 visible={showConfirm && visible}
-                title='是否要删除'
-                content='确认删除后将会彻底删除'
+                title={t("NewPayloadLocalList.deleteConfirmTitle")}
+                content={t("NewPayloadLocalList.deleteConfirmContent")}
                 footerExtra={
                     <YakitCheckbox value={check} onChange={(e) => onCheck(e.target.checked)}>
-                        下次不再提醒
+                        {t("NewPayloadLocalList.dontRemindAgain")}
                     </YakitCheckbox>
                 }
                 onOk={() => {
@@ -2321,6 +2324,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         userInfo,
         showType
     } = props
+    const {t} = useI18nNamespaces(["payload"])
     const {theme} = useTheme()
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2407,7 +2411,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     NewName: inputName
                 })
                 .then(() => {
-                    success("修改成功")
+                    success(t("NewPayloadLocalList.modifySuccess"))
                     setInputName(inputName)
                     setFileById(file.id, inputName)
                     setExportData && setExportData([])
@@ -2419,11 +2423,11 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 })
                 .catch((e: any) => {
                     setInputName(file.name)
-                    failed(`编辑失败：${e}`)
+                    failed(t("NewPayloadLocalList.editFailed", {error: e}))
                 })
         } else {
-            file.name !== inputName && allFileName.includes(inputName) && warn("名称重复，编辑失败")
-            !pass && warn("名称不允许出现/*,")
+            file.name !== inputName && allFileName.includes(inputName) && warn(t("NewPayloadLocalList.folderNameExistsCannotEdit"))
+            !pass && warn(t("NewPayloadLocalList.nameNotAllowSpecial"))
             setInputName(file.name)
         }
     })
@@ -2463,14 +2467,14 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 Group: file.name
             })
             .then(() => {
-                success("删除成功")
+                success(t("NewPayloadLocalList.deleteSuccess"))
                 onDeletePayloadById(file.id)
                 setDeleteVisible(false)
                 setExportData && setExportData([])
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
-                failed(`删除失败：${e}`)
+                failed(t("NewPayloadLocalList.deleteFailed", {error: e}))
             })
     })
 
@@ -2522,7 +2526,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(`[ToDatabase] error:  ${error}`)
+            failed(t("NewPayloadLocalList.toDatabaseError", {error: error}))
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             logInfoRef.current = []
@@ -2530,7 +2534,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 Group: file.name,
                 Folder: folder || ""
             })
-            info("[ToDatabase] finished")
+            info(t("NewPayloadLocalList.toDatabaseFinished"))
         })
         return () => {
             ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
@@ -2550,7 +2554,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineDocumentduplicateIcon />
-                                  <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.copyFuzztag")}</div>
                               </div>
                           )
                       },
@@ -2559,7 +2563,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineImportIcon />
-                                  <div className={styles["menu-name"]}>扩充字典</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.extendDictionary")}</div>
                               </div>
                           )
                       },
@@ -2568,7 +2572,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineExportIcon />
-                                  <div className={styles["menu-name"]}>导出字典</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.exportDictionary")}</div>
                               </div>
                           )
                       },
@@ -2577,7 +2581,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlinePencilaltIcon />
-                                  <div className={styles["menu-name"]}>重命名</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.rename")}</div>
                               </div>
                           )
                       },
@@ -2586,7 +2590,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineUploadIcon />
-                                  <div className={styles["menu-name"]}>上传</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.upload")}</div>
                               </div>
                           ),
                           disabled: !isPayloadOperator(userInfo)
@@ -2599,7 +2603,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineTrashIcon />
-                                  <div className={styles["menu-name"]}>删除</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.delete")}</div>
                               </div>
                           ),
                           type: "danger"
@@ -2611,7 +2615,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineDocumentduplicateIcon />
-                                  <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.copyFuzztag")}</div>
                               </div>
                           )
                       },
@@ -2620,7 +2624,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineExportIcon />
-                                  <div className={styles["menu-name"]}>导出字典</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.exportDictionary")}</div>
                               </div>
                           )
                       },
@@ -2629,7 +2633,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlinePencilaltIcon />
-                                  <div className={styles["menu-name"]}>重命名</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.rename")}</div>
                               </div>
                           )
                       },
@@ -2638,7 +2642,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineDatabasebackupIcon />
-                                  <div className={styles["menu-name"]}>转为数据库存储</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.toDatabase")}</div>
                               </div>
                           )
                       },
@@ -2647,7 +2651,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineUploadIcon />
-                                  <div className={styles["menu-name"]}>上传</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.upload")}</div>
                               </div>
                           ),
                           disabled: !isPayloadOperator(userInfo)
@@ -2660,7 +2664,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineTrashIcon />
-                                  <div className={styles["menu-name"]}>删除</div>
+                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.delete")}</div>
                               </div>
                           ),
                           type: "danger"
@@ -2816,7 +2820,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                         hiddenHeader: true,
                                                         content: (
                                                             <CreateDictionaries
-                                                                title={`扩充到 ${inputName}`}
+                                                                title={t("NewPayloadLocalList.extendTo", {name: inputName})}
                                                                 type='payload'
                                                                 onQueryGroup={onQueryGroup}
                                                                 folder={folder}
@@ -2883,7 +2887,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
-                    title={"转为数据库存储中，请耐心等待..."}
+                    title={t("NewPayloadLocalList.toDatabaseWaiting")}
                     streamData={streamData}
                     cancelRun={() => {
                         cancelRemoveDuplicate()
@@ -2934,6 +2938,7 @@ interface MoveOrCopyParamsProps {
 
 export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
     const {copyMoveValueRef, group} = props
+    const {t} = useI18nNamespaces(["payload"])
     const [value, setValue] = useState<string>()
     const [fileArr, setFileArr] = useState<MoveOrCopyParamsProps[]>([])
     useEffect(() => {
@@ -2953,7 +2958,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
                 setFileArr(arr.filter((item) => item.file !== group))
             })
             .catch((e: any) => {
-                failed(`获取数据失败：${e}`)
+                failed(t("NewPayloadLocalList.getDataFailed", {error: e}))
             })
             .finally()
     }, [])
@@ -2966,7 +2971,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
                     let item = fileArr.filter((item) => item.file === val)[0]
                     copyMoveValueRef.current = item
                 }}
-                placeholder='请选择...'
+                placeholder={t("NewPayloadLocalList.pleaseSelect")}
             >
                 {fileArr.map((item) => (
                     <YakitSelect value={item.file} key={item.file}>
@@ -3084,7 +3089,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 setEditorValue(Uint8ArrayToString(data.Data))
             })
             .catch((e: any) => {
-                failed("编辑器数据获取失败")
+                failed(t("PayloadLocalContent.editorDataGetFailed"))
             })
             .finally(() => {
                 setLoading(false)
@@ -3104,10 +3109,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             .then(() => {
                 onQueryEditor(group, folder)
                 setEditMonaco(false)
-                success("保存成功")
+                success(t("PayloadLocalContent.saveSuccess"))
             })
             .catch((e: any) => {
-                failed(`UpdatePayloadToFile failed:${e}`)
+                failed(t("PayloadLocalContent.saveFailed", {error: e}))
             })
     })
 
@@ -3132,7 +3137,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 }
             })
             .catch((e: any) => {
-                failed(`QueryPayload failed：${e}`)
+                failed(t("PayloadLocalContent.queryFailed", {error: e}))
             })
     })
 
@@ -3147,17 +3152,17 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 }
                 onQueryPayload(page, pagination?.Limit)
                 setSelectPayloadArr([])
-                success("删除成功")
+                success(t("PayloadLocalContent.deleteSuccess"))
             })
             .catch((e: any) => {
-                failed("删除失败：" + e)
+                failed(t("PayloadLocalContent.deleteFailed", {error: e}))
             })
     })
 
     const onCopyOrMoveFun = useMemoizedFn((id?: number, isCopy = false) => {
         return new Promise((resolve, reject) => {
             if (copyMoveValueRef.current === undefined) {
-                warn("请选择字典")
+                warn(t("PayloadLocalContent.pleaseSelectDictionary"))
                 resolve(false)
             } else {
                 const {folder, file} = copyMoveValueRef.current
@@ -3169,12 +3174,12 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                         Copy: isCopy
                     })
                     .then(() => {
-                        success("操作成功")
+                        success(t("PayloadLocalContent.operationSuccess"))
                         onQueryPayload()
                         resolve(true)
                     })
                     .catch((e: any) => {
-                        failed(`操作字典失败${e}`)
+                        failed(t("PayloadLocalContent.operationFailed", {error: e}))
                         resolve(false)
                     })
                     .finally()
@@ -3185,7 +3190,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
     const onCopyToOtherPayload = useMemoizedFn((id?: number) => {
         copyMoveValueRef.current = undefined
         const m = showYakitModal({
-            title: "备份到其他字典",
+            title: t("PayloadLocalContent.backupToOther"),
             width: 400,
             type: "white",
             closable: false,
@@ -3206,7 +3211,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
     const onMoveToOtherPayload = useMemoizedFn((id?: number) => {
         copyMoveValueRef.current = undefined
         const y = showYakitModal({
-            title: "移动到其他字典",
+            title: t("PayloadLocalContent.moveToOther"),
             width: 400,
             type: "white",
             closable: false,
@@ -3264,11 +3269,11 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(`[RemoveDuplicate] error:  ${error}`)
+            failed(t("PayloadLocalContent.removeDuplicateError", {error: error}))
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             logInfoRef.current = []
-            info("[RemoveDuplicate] finished")
+            info(t("PayloadLocalContent.removeDuplicateFinished"))
             onQueryEditor(group, folder)
         })
         return () => {
@@ -3288,10 +3293,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                     <div className={styles["title"]}>{group}</div>
                     <div className={styles["sub-title"]}>
                         {showContentType === "editor" && payloadFileData?.IsBigFile ? (
-                            <YakitTag color='danger'>超大字典</YakitTag>
+                            <YakitTag color='danger'>{t("PayloadLocalContent.hugeDictionary")}</YakitTag>
                         ) : selectPayloadArr.length > 0 ? (
                             <div className={styles["total-item"]}>
-                                <span className={styles["total-item-text"]}>Selected</span>
+                                <span className={styles["total-item-text"]}>{t("PayloadLocalContent.selected")}</span>
                                 <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
                             </div>
                         ) : (
@@ -3302,7 +3307,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 {!onlyInsert && showContentType === "table" && (
                     <div className={styles["extra"]}>
                         <YakitInput.Search
-                            placeholder='请输入关键词搜索'
+                            placeholder={t("PayloadLocalContent.searchPlaceholder")}
                             value={params.Keyword}
                             onChange={(e) => {
                                 setParams({...params, Keyword: e.target.value})
@@ -3333,21 +3338,21 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     setExportVisible(true)
                                 }}
                             >
-                                导出
+                                {t("PayloadLocalContent.export")}
                             </YakitButton>
                         )}
                         {!isNoSelect && size && (
                             <>
                                 {size.width < 950 ? (
                                     <>
-                                        <Tooltip title={"备份到其他字典"}>
+                                        <Tooltip title={t("PayloadLocalContent.backupToOther")}>
                                             <YakitButton
                                                 type='outline2'
                                                 icon={<OutlineDocumentduplicateIcon />}
                                                 onClick={() => onCopyToOtherPayload()}
                                             />
                                         </Tooltip>
-                                        <Tooltip title={"移动到其他字典"}>
+                                        <Tooltip title={t("PayloadLocalContent.moveToOther")}>
                                             <YakitButton
                                                 type='outline2'
                                                 icon={<OutlineClipboardcopyIcon />}
@@ -3362,14 +3367,14 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                             icon={<OutlineDocumentduplicateIcon />}
                                             onClick={() => onCopyToOtherPayload()}
                                         >
-                                            备份到其他字典
+                                            {t("PayloadLocalContent.backupToOther")}
                                         </YakitButton>
                                         <YakitButton
                                             type='outline2'
                                             icon={<OutlineClipboardcopyIcon />}
                                             onClick={() => onMoveToOtherPayload()}
                                         >
-                                            移动到其他字典
+                                            {t("PayloadLocalContent.moveToOther")}
                                         </YakitButton>
                                     </>
                                 )}
@@ -3389,7 +3394,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     hiddenHeader: true,
                                     content: (
                                         <CreateDictionaries
-                                            title={`扩充到 ${group}`}
+                                            title={t("PayloadLocalContent.extendTo", {name: group})}
                                             type='payload'
                                             onQueryGroup={() => {
                                                 emiter.emit("refreshListEvent")
@@ -3404,7 +3409,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                 })
                             }}
                         >
-                            扩充
+                            {t("PayloadLocalContent.extend")}
                         </YakitButton>
                         {setExpand && Expand()}
                     </div>
@@ -3425,10 +3430,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
                                 }}
                             >
-                                取消
+                                {t("PayloadLocalContent.cancel")}
                             </YakitButton>
                             <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
-                                保存
+                                {t("PayloadLocalContent.save")}
                             </YakitButton>
                             {setExpand && Expand()}
                         </div>
@@ -3446,7 +3451,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     setExportVisible(true)
                                 }}
                             >
-                                导出
+                                {t("PayloadLocalContent.export")}
                             </YakitButton>
 
                             {payloadFileData?.IsBigFile === false && (
@@ -3456,7 +3461,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                         icon={<OutlineSparklesIcon />}
                                         onClick={onRemoveDuplicate}
                                     >
-                                        自动去重
+                                        {t("PayloadLocalContent.autoRemoveDuplicate")}
                                     </YakitButton>
 
                                     <YakitButton
@@ -3465,7 +3470,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                         }}
                                         icon={<OutlinePencilaltIcon />}
                                     >
-                                        编辑
+                                        {t("PayloadLocalContent.edit")}
                                     </YakitButton>
                                 </>
                             )}
@@ -3536,7 +3541,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
-                    title={"自动去重中，请耐心等待..."}
+                    title={t("PayloadLocalContent.autoRemoveDuplicateWaiting")}
                     streamData={streamData}
                     cancelRun={() => {
                         cancelRemoveDuplicate()
@@ -3564,6 +3569,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
 
 export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) => {
     const {isExpand, setExpand, showContentType, group, folder} = props
+    const {t} = useI18nNamespaces(["payload"])
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
@@ -3644,7 +3650,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 setEditorValue(res.data || "")
             })
             .catch((e: any) => {
-                failed(`编辑器数据获取失败：${e}`)
+                failed(t("PayloadLocalContent.editorDataGetFailed", {error: e}))
             })
             .finally(() => {
                 setLoading(false)
@@ -3663,10 +3669,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
             .then(() => {
                 onQueryEditor(group, folder)
                 setEditMonaco(false)
-                success("保存成功")
+                success(t("PayloadLocalContent.saveSuccess"))
             })
             .catch((e: any) => {
-                failed(`UpdatePayloadToFile failed:${e}`)
+                failed(t("PayloadLocalContent.saveFailed", {error: e}))
             })
     })
 
@@ -3690,7 +3696,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 }
             })
             .catch((e: any) => {
-                failed(`QueryPayload failed：${e}`)
+                failed(t("PayloadLocalContent.queryFailed", {error: e}))
             })
     })
 
@@ -3704,10 +3710,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 }
                 onQueryPayload(page, pagination?.limit)
                 setSelectPayloadArr([])
-                success("删除成功")
+                success(t("PayloadLocalContent.deleteSuccess"))
             })
             .catch((e: any) => {
-                failed("删除失败：" + e)
+                failed(t("PayloadLocalContent.deleteFailed", {error: e}))
             })
     })
 
@@ -3720,21 +3726,21 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                     <div className={styles["title"]}>{group}</div>
                     <div className={styles["sub-title"]}>
                         {showContentType === "editor" && payloadFileData?.IsBigFile ? (
-                            <YakitTag color='danger'>超大字典</YakitTag>
+                            <YakitTag color='danger'>{t("PayloadLocalContent.hugeDictionary")}</YakitTag>
                         ) : selectPayloadArr.length > 0 ? (
                             <div className={styles["total-item"]}>
-                                <span className={styles["total-item-text"]}>Selected</span>
+                                <span className={styles["total-item-text"]}>{t("PayloadLocalContent.selected")}</span>
                                 <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
                             </div>
                         ) : (
-                            `可以通过 fuzz 模块 {{x(字典名)}} 来渲染`
+                            t("PayloadLocalContent.fuzzModuleRenderHint")
                         )}
                     </div>
                 </div>
                 {showContentType === "table" && (
                     <div className={styles["extra"]}>
                         <YakitInput.Search
-                            placeholder='请输入关键词搜索'
+                            placeholder={t("PayloadLocalContent.searchPlaceholder")}
                             value={params.keyword}
                             onChange={(e) => {
                                 setParams({...params, keyword: e.target.value})
@@ -3775,10 +3781,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                                     payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
                                 }}
                             >
-                                取消
+                                {t("PayloadLocalContent.cancel")}
                             </YakitButton>
                             <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
-                                保存
+                                {t("PayloadLocalContent.save")}
                             </YakitButton>
                             {setExpand && Expand()}
                         </div>
@@ -3797,7 +3803,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                                         icon={<OutlinePencilaltIcon />}
                                         disabled={!isPayloadOperator(userInfo)}
                                     >
-                                        编辑
+                                        {t("PayloadLocalContent.edit")}
                                     </YakitButton>
                                 </>
                             )}
@@ -3852,6 +3858,7 @@ interface ExportByPayloadGrpcProps {
 // 导出
 export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) => {
     const {group, folder, setExportVisible, exportType} = props
+    const {t} = useI18nNamespaces(["payload"])
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
     // export-show
@@ -3897,7 +3904,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+        handleOpenFileSystemDialog({title: t("ExportByPayloadGrpc.selectFolder"), properties: ["openDirectory"]}).then((data) => {
             if (data.filePaths.length) {
                 let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
                 if (exportType === "all") {
@@ -3958,10 +3965,10 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
             }
         })
         ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-            failed(`[ExportFile] error:  ${error}`)
+            failed(t("ExportByPayloadGrpc.exportError", {error: error}))
         })
         ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-            info("[ExportFile] finished")
+            info(t("ExportByPayloadGrpc.exportFinished"))
             setShowModal(false)
             setExportVisible(false)
             if (exportPathRef.current) {
@@ -3989,7 +3996,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
             bodyStyle={{padding: 0}}
         >
             <UploadStatusInfo
-                title={"导出中，请耐心等待..."}
+                title={t("ExportByPayloadGrpc.exportWaiting")}
                 streamData={exportStreamData}
                 cancelRun={() => {
                     cancelExportFile()
@@ -4012,6 +4019,7 @@ interface UploadOrDownloadByPayloadGrpcProps {
 // 上传与下载(默认上传)
 export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGrpcProps> = (props) => {
     const {group, folder, setUploadOrDownloadVisible, type = "upload", finished} = props
+    const {t} = useI18nNamespaces(["payload"])
     const userInfo = useStore((s) => s.userInfo)
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
@@ -4069,10 +4077,10 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
             }
         })
         ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-            failed(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} error:  ${error}`)
+            failed(`${type === "upload" ? t("UploadOrDownloadByPayloadGrpc.uploadFile") : t("UploadOrDownloadByPayloadGrpc.downloadFile")} error:  ${error}`)
         })
         ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-            info(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} finished`)
+            info(`${type === "upload" ? t("UploadOrDownloadByPayloadGrpc.uploadFile") : t("UploadOrDownloadByPayloadGrpc.downloadFile")} finished`)
             setShowModal(false)
             setUploadOrDownloadVisible(false)
             finished && finished()
@@ -4102,7 +4110,7 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
             bodyStyle={{padding: 0}}
         >
             <UploadStatusInfo
-                title={`${type === "upload" ? "上传" : "下载"}中，请耐心等待...`}
+                title={t("UploadOrDownloadByPayloadGrpc.waiting", {type: type === "upload" ? t("UploadOrDownloadByPayloadGrpc.upload") : t("UploadOrDownloadByPayloadGrpc.download")})}
                 streamData={exportStreamData}
                 cancelRun={() => {
                     cancelExportFile()
@@ -4117,6 +4125,7 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
 
 export interface NewPayloadProps {}
 export const NewPayload: React.FC<NewPayloadProps> = (props) => {
+    const {t} = useI18nNamespaces(["payload"])
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
     const [showContentType, setContentType] = useState<"editor" | "table">()
@@ -4190,7 +4199,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 }
             })
             .catch((e: any) => {
-                failed(`获取字典列表失败：${e}`)
+                failed(t("NewPayload.getDictionaryListFailed", {error: e}))
             })
             .finally(() => {
                 setTimeout(() => {
@@ -4345,7 +4354,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
             {data.length === 0 ? (
                 <div className={styles["no-data"]}>
                     <YakitEmpty
-                        title='暂无 Payload 字典'
+                        title={t("NewPayload.noPayloadDictionary")}
                         // description='可一键获取官方内置字典，或新建字典'
                         children={
                             <YakitButton
@@ -4362,7 +4371,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                         hiddenHeader: true,
                                         content: (
                                             <CreateDictionaries
-                                                title='新建字典'
+                                                title={t("NewPayload.newDictionary")}
                                                 type='dictionaries'
                                                 onQueryGroup={onQueryGroup}
                                                 onClose={() => {
@@ -4374,7 +4383,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                     })
                                 }}
                             >
-                                新建字典
+                                {t("NewPayload.newDictionary")}
                             </YakitButton>
                         }
                     />
@@ -4403,27 +4412,27 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                         </>
                     ) : (
                         <div className={styles["no-data"]}>
-                            <YakitEmpty title='请点击左侧列表，选择想要查看的字典' />
+                            <YakitEmpty title={t("NewPayload.selectDictionaryHint")} />
                         </div>
                     )}
                 </>
             )}
             <YakitHint
                 visible={isFirstEnter}
-                title='迁移数据'
-                content='由于Payload功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。'
+                title={t("NewPayload.migrateData")}
+                content={t("NewPayload.migrateDataContent")}
                 footer={
                     <div style={{marginTop: 24, textAlign: "right"}}>
                         <YakitButton size='max' onClick={initNewPayload}>
-                            确定
+                            {t("NewPayload.confirm")}
                         </YakitButton>
                     </div>
                 }
             />
             <YakitHint
                 visible={isClosePayload}
-                title='引擎版本过低'
-                content='当前引擎版本过低无法使用新版Payload，请将引擎更新到 v1.2.9-sp3及以上版本'
+                title={t("NewPayload.engineVersionTooLow")}
+                content={t("NewPayload.engineVersionTooLowContent")}
                 footer={
                     <div style={{marginTop: 24, textAlign: "right"}}>
                         <YakitButton
@@ -4433,7 +4442,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                 emiter.emit("closePage", JSON.stringify({route: YakitRoute.PayloadManager}))
                             }}
                         >
-                            确定
+                            {t("NewPayload.confirm")}
                         </YakitButton>
                     </div>
                 }
@@ -4451,7 +4460,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
-                    title={"迁移数据中，请耐心等待..."}
+                    title={t("NewPayload.migratingDataWaiting")}
                     streamData={streamData}
                     cancelRun={() => {
                         cancelMigratePayloads()
