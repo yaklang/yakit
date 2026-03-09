@@ -33,19 +33,19 @@ import {
     YakFilterRemoteObj,
     YakModuleListHeard
 } from "./MITMServerHijacking/MITMPluginLocalList"
-import {ClientCertificate, maskProxyPassword, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { ClientCertificate, maskProxyPassword, MITMServerStartForm } from "./MITMServerStartForm/MITMServerStartForm"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {MITMConsts} from "./MITMConsts"
-import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
-import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
+import { YakitRoute } from "@/enums/yakitRoute"
+import { apiDownloadPluginOther, apiQueryYakScript } from "../plugins/utils"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { MITMConsts } from "./MITMConsts"
+import { onSetRemoteValuesBase } from "@/components/yakitUI/utils"
+import { CacheDropDownGV, RemoteGV } from "@/yakitGV"
 import classNames from "classnames"
-import {useStore} from "@/store/mitmState"
+import { useStore } from "@/store/mitmState"
 import MITMContext from "./Context/MITMContext"
 import {
     MITMExecScriptByIdRequest,
@@ -62,11 +62,11 @@ import {
     grpcMITMStartCall,
     grpcMITMStopCall
 } from "./MITMHacker/utils"
-import {KVPair} from "@/models/kv"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {useProxy} from "@/hook/useProxy"
-import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import { KVPair } from "@/models/kv"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { useProxy } from "@/hook/useProxy"
+import { YakitSideTab } from "@/components/yakitSideTab/YakitSideTab"
+import { YakitTabsProps } from "@/components/yakitSideTab/YakitSideTabType"
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import { getStorageMitmShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/mitm"
@@ -77,9 +77,9 @@ import {LIMIT_LOG_NUM_NAME} from "@/defaultConstants/HoldGRPCStream"
 import {StreamProcessorManager, StreamUpdateState, useStreamProcessorManager} from "./MITMServerHijacking/PluginsOutput/StreamProcessor"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
-export interface MITMPageProp {}
+export interface MITMPageProp { }
 
 export interface TraceInfo {
     AvailableDNSServers: string[]
@@ -111,7 +111,7 @@ export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL
 
 export type MitmStatus = "idle" | "hijacked" | "hijacking"
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
-    const {setMitmStatus} = useStore()
+    const { setMitmStatus } = useStore()
     // 整体的劫持状态
     const [status, setStatus, getStatus] = useGetState<MitmStatus>("idle")
     const statusRef = useRef<MitmStatus>(status)
@@ -142,8 +142,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
-    const { proxyConfig:{ Routes = [] }, proxyRouteOptions, comparePointUrl } = useProxy()
-    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const { proxyConfig: { Routes = [] }, proxyRouteOptions, comparePointUrl } = useProxy()
+    const { t, i18n } = useI18nNamespaces(["mitm"])
 
     const mitmContent = useContext(MITMContext)
 
@@ -165,7 +165,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         grpcClientMITMNotification(mitmVersion).on((i: Uint8Array) => {
             try {
                 info(Uint8ArrayToString(i))
-            } catch (e) {}
+            } catch (e) { }
         })
 
         return () => {
@@ -179,7 +179,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         // 用于前端恢复状态
         grpcMITMHaveCurrentStream(mitmVersion)
             .then((data) => {
-                const {haveStream, host, port} = data
+                const { haveStream, host, port } = data
                 if (haveStream) {
                     setStatus("hijacking")
                     setHost(host)
@@ -192,14 +192,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         grpcClientMITMError(mitmVersion).on((msg) => {
             if (!msg) {
-                info("MITM 劫持服务器已关闭")
+                info(t("mitm.serverClosed"))
             } else {
-                failed("MITM 劫持服务器异常或被关闭")
+                failed(t("mitm.serverErrorOrClosed"))
                 const m = showYakitModal({
-                    title: "启动 MITM 服务器 ERROR!",
+                    title: t("mitm.startMitmServerError"),
                     type: "white",
-                    cancelButtonProps: {style: {display: "none"}},
-                    content: <div style={{padding: "12px 24px"}}>{msg}</div>,
+                    cancelButtonProps: { style: { display: "none" } },
+                    content: <div style={{ padding: "12px 24px" }}>{msg}</div>,
                     onOkText: "OK",
                     onOk: () => {
                         m.destroy()
@@ -285,7 +285,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 version: mitmVersion
             }
             return grpcMITMStartCall(params, true).catch((e: any) => {
-                notification["error"]({message: `启动中间人劫持失败：${e}`})
+                notification["error"]({ message: t("mitm.startMitmFailed") + e })
             })
         }
     )
@@ -312,11 +312,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setEnableInitialMITMPlugin(enableInitialPlugin)
             startMITMServer(host, port, downstreamProxy, downstreamProxyRuleId, enableHttp2, ForceDisableKeepAlive, certs, extra)
             let tip = ""
-            if(downstreamProxyRuleId || downstreamProxy){
-                const proxyStr = downstreamProxyRuleId ? 
-                `规则组：${Routes.find(({Id})=> Id === downstreamProxyRuleId)?.Name}` : 
-                `${maskProxyPassword(downstreamProxy)}`
-                    tip += `下游代理：${proxyStr}`
+            if (downstreamProxyRuleId || downstreamProxy) {
+                const proxyStr = downstreamProxyRuleId ?
+                    t("mitm.ruleGroup") + (Routes.find(({ Id }) => Id === downstreamProxyRuleId)?.Name || "") :
+                    `${maskProxyPassword(downstreamProxy)}`
+                tip += t("mitm.downstreamProxy") + proxyStr
                 if (downstreamProxyRuleId) {
                     setDownstreamProxyStr(downstreamProxyRuleId)
                 } else {
@@ -325,7 +325,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         .filter((i) => !!i)
                         .map((val) => {
                             if (!val.startsWith("route") && !val.startsWith("ep")) {
-                                return proxyRouteOptions.find(({value}) => comparePointUrl(value) === val)?.value || val
+                                return proxyRouteOptions.find(({ value }) => comparePointUrl(value) === val)?.value || val
                             }
                             return val
                         })
@@ -333,30 +333,29 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     setDownstreamProxyStr(proxyStr)
                 }
             }
-            
+
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
-                    tip += "|仅国密 TLS"
+                    tip += "|" + t("mitm.onlyGMTLS")
                 }
                 if (extra.enableProxyAuth) {
-                    tip += "|开启代理认证"
+                    tip += "|" + t("mitm.enableProxyAuth")
                 }
             }
             setTip(tip)
         }
     )
 
-    const changeTip = useMemoizedFn(()=>{
+    const changeTip = useMemoizedFn(() => {
         if (!downstreamProxyStr) return
         const getLabel = () => {
             if (downstreamProxyStr.startsWith("route") || downstreamProxyStr.startsWith("ep")) {
-                const option = proxyRouteOptions.find(({value}) => value === downstreamProxyStr)
+                const option = proxyRouteOptions.find(({ value }) => value === downstreamProxyStr)
                 if (downstreamProxyStr.startsWith("ep")) {
-                    return `${maskProxyPassword(comparePointUrl(downstreamProxyStr))}${
-                        option?.disabled ? ` (${t("ProxyConfig.disabled")})` : ""
-                    }`
+                    return `${maskProxyPassword(comparePointUrl(downstreamProxyStr))}${option?.disabled ? ` (${t("ProxyConfig.disabled")})` : ""
+                        }`
                 }
-                return proxyRouteOptions.find(({value}) => value === downstreamProxyStr)?.label
+                return proxyRouteOptions.find(({ value }) => value === downstreamProxyStr)?.label
             }
             return maskProxyPassword(downstreamProxyStr)
         }
@@ -369,7 +368,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     useDeepCompareEffect(() => {
-       changeTip()
+        changeTip()
     }, [proxyRouteOptions])
 
 
@@ -378,14 +377,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [inViewport] = useInViewport(mitmPageRef)
 
     useEffect(() => {
-            if (inViewport) {
-                registerShortcutKeyHandle(ShortcutKeyPage.Mitm)
-                getStorageMitmShortcutKeyEvents()
-                return () => {
-                    unregisterShortcutKeyHandle(ShortcutKeyPage.Mitm)
-                }
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.Mitm)
+            getStorageMitmShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.Mitm)
             }
-        }, [inViewport])
+        }
+    }, [inViewport])
 
     const onRenderMITM = useMemoizedFn(() => {
         switch (status) {
@@ -444,9 +443,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     useEffect(() => {
         const onChangeAddrAndEnableInitialPlugin = (values) => {
             try {
-                const valObj = JSONParseLog(values, {page: "MITMPage", fun: "onChangeAddrAndEnableInitialPlugin"}) || {}
+                const valObj = JSONParseLog(values, { page: "MITMPage", fun: "onChangeAddrAndEnableInitialPlugin" }) || {}
                 if (valObj.version !== mitmVersion) return
-                setAddr(`http://${valObj.host}:${valObj.port} 或 socks5://${valObj.host}:${valObj.port}`)
+                setAddr(`http://${valObj.host}:${valObj.port} ${t("mitm.or")} socks5://${valObj.host}:${valObj.port}`)
                 setHost(valObj.host)
                 setPort(valObj.port)
                 setEnableInitialMITMPlugin(valObj.enableInitialPlugin)
@@ -460,7 +459,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     isCacheDefaultValue: true
                 })
                 setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, valObj.enableInitialPlugin ? "true" : "")
-            } catch (error) {}
+            } catch (error) { }
         }
         emiter.on("onChangeAddrAndEnableInitialPlugin", onChangeAddrAndEnableInitialPlugin)
         return () => {
@@ -473,7 +472,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             <div
                 className={style["mitm-page"]}
                 ref={mitmPageRef}
-                style={status === "idle" ? {padding: 0} : {padding: "8px 16px 0px 0px"}}
+                style={status === "idle" ? { padding: 0 } : { padding: "8px 16px 0px 0px" }}
             >
                 {onRenderMITM()}
             </div>
@@ -508,7 +507,7 @@ export interface ExtraMITMServerProps {
     PluginConcurrency: number
     OverwriteSNI: boolean
     SNI: string
-    SNIMapping: {Key: string, Value: string}[]
+    SNIMapping: { Key: string, Value: string }[]
 }
 
 interface MITMServerProps {
@@ -556,7 +555,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         setAutoForward,
         downstreamProxyStr,
         isHasParams,
-        onIsHasParams = () => {},
+        onIsHasParams = () => { },
         showPluginHistoryList,
         tempShowPluginHistory,
         setShowPluginHistoryList,
@@ -578,13 +577,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
-    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const { t, i18n } = useI18nNamespaces(["mitm"])
 
-    const MITMIdleTab: YakitTabsProps[] = useMemo(()=>([
-    {
-        label: t("MITMPage.passive_plugin"),
-        value: "plugin"
-    }]),[i18n.language])
+    const MITMIdleTab: YakitTabsProps[] = useMemo(() => ([
+        {
+            label: t("MITMPage.passive_plugin"),
+            value: "plugin"
+        }]), [i18n.language])
 
     /**
      * @description 插件勾选
@@ -616,7 +615,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
                 getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
                     if (!!data && !!is) {
-                        const cacheData: string[] = JSONParseLog(data, {page: "MITMPage", fun: "CHECK_CACHE_LIST_DATA"})
+                        const cacheData: string[] = JSONParseLog(data, { page: "MITMPage", fun: "CHECK_CACHE_LIST_DATA" })
                         if (isFirst.current) {
                             setNoParamsCheckList(cacheData)
                             isFirst.current = false
@@ -639,7 +638,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }, [status, noParamsCheckList])
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
-        info(`加载 MITM 插件[${id}]`)
+        info(t("mitm.loadingPlugin", { id }))
         const value: MITMExecScriptByIdRequest = {
             id,
             params,
@@ -720,7 +719,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     setIsSelectAll(checked)
                 })
                 .catch((err) => {
-                    yakitFailed("清空失败:" + err)
+                    yakitFailed(t("mitm.clearFailed") + err)
                 })
         } else {
             // 点按钮清空
@@ -737,11 +736,11 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     setTempShowPluginHistory && setTempShowPluginHistory("")
                     emiter.emit(
                         "onHasParamsJumpHistory",
-                        JSON.stringify({version: mitmVersion, mitmHasParamsNames: ""})
+                        JSON.stringify({ version: mitmVersion, mitmHasParamsNames: "" })
                     )
                 })
                 .catch((err) => {
-                    yakitFailed("清空失败:" + err)
+                    yakitFailed(t("mitm.clearFailed") + err)
                 })
         }
     })
@@ -759,13 +758,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }, [])
 
     const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
-        enableMITMPluginMode({initPluginNames: listNames, version: mitmVersion})
+        enableMITMPluginMode({ initPluginNames: listNames, version: mitmVersion })
             .then(() => {
                 setIsSelectAll(checked)
-                info("启动 MITM 插件成功")
+                info(t("mitm.startPluginSuccess"))
             })
             .catch((err) => {
-                yakitFailed("启动 MITM 插件失败:" + err)
+                yakitFailed(t("mitm.startPluginFailed") + err)
             })
     })
 
@@ -782,7 +781,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             FieldKeywords: fieldKeywords,
             Type: isHasParams ? "mitm" : "mitm,port-scan",
             Tag: tags,
-            Group: {UnSetGroup: false, Group: groupNames},
+            Group: { UnSetGroup: false, Group: groupNames },
             IsMITMParamPlugins: isHasParams ? 1 : 2
         }
         apiQueryYakScript(query).then((res) => {
@@ -800,14 +799,14 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
                 if (setting) {
                     try {
-                        const tabs = JSONParseLog(setting, {page: "MITMPage", fun: "MitmIdleLeftTabs"})
+                        const tabs = JSONParseLog(setting, { page: "MITMPage", fun: "MitmIdleLeftTabs" })
                         setOpenTabsFlag(tabs.contShow)
                         onActiveKey(tabs.curTabKey)
-                    } catch (error) {}
+                    } catch (error) { }
                 }
             })
         }
-        
+
     }, [inViewport])
     const onActiveKey = useMemoizedFn((key) => {
         setActiveKey(key)
@@ -817,12 +816,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             if (inViewport) {
                 setRemoteValue(
                     RemoteGV.MitmIdleLeftTabs,
-                    JSON.stringify({contShow: openTabsFlag, curTabKey: activeKey})
+                    JSON.stringify({ contShow: openTabsFlag, curTabKey: activeKey })
                 )
             }
         },
         [openTabsFlag, activeKey, inViewport],
-        {wait: 300}
+        { wait: 300 }
     )
     // #endregion
 
@@ -870,7 +869,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                             OrderBy: "",
                                             RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
                                         },
-                                        Group: {UnSetGroup: false, Group: groupNames},
+                                        Group: { UnSetGroup: false, Group: groupNames },
                                         IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
                                         IsMITMParamPlugins: 2
                                     }
@@ -881,7 +880,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             />
 
                             <div className={style["mitm-idle-tab-tips"]}>{t("MITMPage.MITMPage_tips")}</div>
-                            <div style={{paddingRight: 9}}>
+                            <div style={{ paddingRight: 9 }}>
                                 <PluginSearch
                                     tag={tags}
                                     searchKeyword={searchKeyword}
@@ -894,7 +893,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                     }}
                                 />
                             </div>
-                            <div style={{display: "flex", justifyContent: "space-between", paddingRight: 10}}>
+                            <div style={{ display: "flex", justifyContent: "space-between", paddingRight: 10 }}>
                                 <YakModuleListHeard
                                     onSelectAll={onSelectAll}
                                     setIsSelectAll={setIsSelectAll}
@@ -912,7 +911,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                     disabled={noParamsCheckList.length === 0}
                                     className={style["empty-button"]}
                                 >
-                                    清空
+                                    {t("mitm.clear")}
                                 </YakitButton>
                             </div>
                             <MITMPluginLocalList
@@ -1066,13 +1065,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             freeze={openTabsFlag}
             isRecalculateWH={openTabsFlag}
             firstNode={() => <div className={style["mitm-server-start-pre-first"]}>{onRenderFirstNode()}</div>}
-            lineStyle={{display: isFullScreenFirstNode ? "none" : ""}}
+            lineStyle={{ display: isFullScreenFirstNode ? "none" : "" }}
             firstMinSize={openTabsFlag ? "400px" : "24px"}
             secondMinSize={500}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
-                    style={{display: isFullScreenFirstNode ? "none" : ""}}
+                    style={{ display: isFullScreenFirstNode ? "none" : "" }}
                 >
                     {onRenderSecondNode()}
                 </div>
@@ -1121,8 +1120,8 @@ interface ImportYakScriptStreamRequest {
 }
 
 export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((props) => {
-    const {visible, setVisible, loadPluginMode, sendPluginLocal = false} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
+    const { visible, setVisible, loadPluginMode, sendPluginLocal = false } = props
+    const { t, i18n } = useI18nNamespaces(["yakitUi", "mitm"])
     const [form] = Form.useForm()
     const [loadMode, setLoadMode] = useState<LoadPluginMode>(loadPluginMode || "giturl")
     const [localNucleiPath, setLocalNucleiPath] = useState<string>("") // localNucleiPath
@@ -1163,7 +1162,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }
         },
         [visible, loadMode],
-        {wait: 300}
+        { wait: 300 }
     )
 
     useEffect(() => {
@@ -1184,7 +1183,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 "openPage",
                 JSON.stringify({
                     route: YakitRoute.Plugin_Hub,
-                    params: {tabActive: "local", refeshList: true}
+                    params: { tabActive: "local", refeshList: true }
                 })
             )
         }
@@ -1198,11 +1197,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 return (
                     <>
                         <Form.Item
-                            labelCol={{span: labelColSpan}}
-                            wrapperCol={{span: wrapperColSpan}}
+                            labelCol={{ span: labelColSpan }}
+                            wrapperCol={{ span: wrapperColSpan }}
                             name='nucleiGitUrl'
                             label={t("MitmPage.ImportLocalPlugin.pluginSource")}
-                            rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                            rules={[{ required: true, message: t("YakitForm.requiredField") }]}
                             initialValue='https://github.com/projectdiscovery/nuclei-templates'
                         >
                             <YakitSelect
@@ -1219,8 +1218,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             />
                         </Form.Item>
                         <Form.Item
-                            labelCol={{span: 3}}
-                            wrapperCol={{span: 21}}
+                            labelCol={{ span: 3 }}
+                            wrapperCol={{ span: 21 }}
                             name='proxy'
                             label={t("MitmPage.ImportLocalPlugin.proxy")}
                             help={t("MitmPage.ImportLocalPlugin.accessRepoViaProxy")}
@@ -1237,22 +1236,22 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             formItemProps={{
                                 name: "localPluginPath",
                                 label: t("MitmPage.ImportLocalPlugin.localPluginPath"),
-                                labelCol: {span: 5},
-                                wrapperCol: {span: 19},
-                                rules: [{required: true, message: t("MitmPage.ImportLocalPlugin.enterLocalPluginPath")}]
+                                labelCol: { span: 5 },
+                                wrapperCol: { span: 19 },
+                                rules: [{ required: true, message: t("MitmPage.ImportLocalPlugin.enterLocalPluginPath") }]
                             }}
                             multiple={false}
                             selectType='file'
                             fileExtensionIsExist={false}
                             onChange={(val) => {
                                 setLocalPluginPath(val)
-                                form.setFieldsValue({localPluginPath: val})
+                                form.setFieldsValue({ localPluginPath: val })
                             }}
                             value={localPluginPath}
                         />
                         <Form.Item
-                            labelCol={{span: 5}}
-                            wrapperCol={{span: 19}}
+                            labelCol={{ span: 5 }}
+                            wrapperCol={{ span: 19 }}
                             name='Password'
                             label={t("MitmPage.ImportLocalPlugin.password")}
                         >
@@ -1268,14 +1267,14 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             formItemProps={{
                                 name: "localNucleiPath",
                                 label: t("MitmPage.ImportLocalPlugin.nucleiPoCLocalPath"),
-                                labelCol: {span: 6},
-                                wrapperCol: {span: 18}
+                                labelCol: { span: 6 },
+                                wrapperCol: { span: 18 }
                             }}
                             selectType='folder'
                             // showUploadList={false}
                             onChange={(val) => {
                                 setLocalNucleiPath(val)
-                                form.setFieldsValue({localNucleiPath: val})
+                                form.setFieldsValue({ localNucleiPath: val })
                             }}
                             value={localNucleiPath}
                         />
@@ -1285,8 +1284,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 return (
                     <>
                         <Form.Item
-                            labelCol={{span: 3}}
-                            wrapperCol={{span: 21}}
+                            labelCol={{ span: 3 }}
+                            wrapperCol={{ span: 21 }}
                             name='localId'
                             label={t("MitmPage.ImportLocalPlugin.pluginID")}
                         >
@@ -1303,11 +1302,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         const formValue = form.getFieldsValue()
         if (loadMode === "giturl") {
             const params: YakExecutorParam[] = [
-                {Key: "giturl", Value: ""},
-                {Key: "nuclei-templates-giturl", Value: formValue.nucleiGitUrl}
+                { Key: "giturl", Value: "" },
+                { Key: "nuclei-templates-giturl", Value: formValue.nucleiGitUrl }
             ]
             if (formValue.proxy?.trim() !== "") {
-                params.push({Value: formValue.proxy?.trim(), Key: "proxy"})
+                params.push({ Value: formValue.proxy?.trim(), Key: "proxy" })
             }
 
             setStartExecYakCodeModalVisible(true)
@@ -1340,7 +1339,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             setStartExecYakCodeVerbose(t("MitmPage.ImportLocalPlugin.importLocalNuclei"))
             setStartExecYakCodeParams({
                 Script: loadNucleiPoCFromLocal,
-                Params: [{Key: "local-path", Value: formValue.localNucleiPath}]
+                Params: [{ Key: "local-path", Value: formValue.localNucleiPath }]
             })
         }
 
@@ -1356,7 +1355,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                         "openPage",
                         JSON.stringify({
                             route: YakitRoute.Plugin_Hub,
-                            params: {tabActive: "local", refeshList: true}
+                            params: { tabActive: "local", refeshList: true }
                         })
                     )
                     success(t("MitmPage.ImportLocalPlugin.pluginImportSuccess"))
@@ -1414,15 +1413,15 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             onChange={(e) => {
                                 setLoadMode(e.target.value)
                             }}
-                            options={loadModeInfo.map((item) => ({value: item.value, label: t(item.label)}))}
+                            options={loadModeInfo.map((item) => ({ value: item.value, label: t(item.label) }))}
                         ></YakitRadioButtons>
                     )
                 }
-                bodyStyle={{padding: 0}}
-                footerStyle={{justifyContent: "flex-end"}}
+                bodyStyle={{ padding: 0 }}
+                footerStyle={{ justifyContent: "flex-end" }}
                 footer={
                     <>
-                        <div style={{marginLeft: 12, display: "block"}}>
+                        <div style={{ marginLeft: 12, display: "block" }}>
                             <YakitButton onClick={onOk} loading={importLoading}>
                                 {t("YakitButton.import")}
                             </YakitButton>
