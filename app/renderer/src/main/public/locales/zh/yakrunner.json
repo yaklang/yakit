@@ -1,0 +1,22 @@
+{
+  "CreateDictionaries": {
+    "cancel": "取消",
+    "createDictionary": "新建字典",
+    "createPayload": "新建Payload",
+    "uploadFile": "上传文件",
+    "manualInput": "手动输入",
+    "largeFileUpload": "大文件上传",
+    "dictionaryName": "字典名称",
+    "dictionaryNamePlaceholder": "请输入字典名称",
+    "uploadPlaceholder": "点击或拖拽文件到此区域进行上传",
+    "uploadHint": "支持单个或批量上传",
+    "reupload": "重新上传",
+    "saveToDatabase": "存储到数据库",
+    "saveToFile": "存储为文件",
+    "uploading": "正在上传...",
+    "uploadSuccess": "上传成功",
+    "uploadFailed": "上传失败",
+    "progress": "进度",
+    "elapsedTime": "耗时"
+  }
+}
