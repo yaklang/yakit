@@ -346,9 +346,8 @@ export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: any) => {
             return t("AIAgent.AIModelList.policyCost", { ns: "aiAgent" })
         case AIModelPolicyEnum.PolicyBalance:
             return t("AIAgent.AIModelList.policyBalance", { ns: "aiAgent" })
-
         default:
-            return null
+            return ""
     }
 }
 
@@ -403,7 +402,7 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
                 <div className={styles["ai-online-mode-setting-popover"]}>
                     <Form form={form} labelCol={{span: 8}} wrapperCol={{span: 16}}>
                         <Form.Item name='RoutingPolicy' label={t("AIAgent.AIModelList.callingMode", { ns: "aiAgent" })} extra={<>{getTipByType(routingPolicy, t)}</>}>
-                            <YakitRadioButtons buttonStyle='solid' options={AIModelPolicyOptions} />
+                            <YakitRadioButtons buttonStyle='solid' options={AIModelPolicyOptions(t)} />
                         </Form.Item>
                         <Form.Item name='DisableFallback' valuePropName='checked' label={t("AIAgent.AIModelList.disableFallback", { ns: "aiAgent" })}>
                             <YakitSwitch size='middle' />
