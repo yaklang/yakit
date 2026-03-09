@@ -5,6 +5,7 @@ import {
     AILocalModelListProps,
     AILocalModelListRefProps,
     AILocalModelListWrapperProps,
+    AIModelActionProps,
     AIModelListProps,
     AIModelType,
     AIOnlineModelListItemProps,
@@ -96,7 +97,7 @@ export const setAIModal = (params: {
     modelType?: AIModelFormProps["aiModelType"]
     item?: AIModelFormProps["item"]
     onSuccess: () => void
-    mountContainer
+    mountContainer: AIOnlineModelListProps["mountContainer"]
 }) => {
     const {modelType, item, onSuccess, mountContainer} = params
     const isAdd = `${!item}`
@@ -127,6 +128,85 @@ export const setAIModal = (params: {
             </>
         )
     })
+}
+
+/** 编辑ai model */
+export const onEditAIModel = (data: {
+    aiGlobalConfig
+    index: number
+    fileName: string
+    mountContainer: AIOnlineModelListProps["mountContainer"]
+    onSuccess: () => void
+}) => {
+    const {aiGlobalConfig, index, fileName, mountContainer, onSuccess} = data
+    try {
+        if (!aiGlobalConfig) return
+        const currentItem = aiGlobalConfig[fileName][index]
+        const modelType = getModelTypeByFileName(fileName)
+        if (!currentItem || !modelType) {
+            yakitNotify(
+                "error",
+                `配置错误，无法编辑:modelType:${modelType};fileName:${fileName};currentItem:${JSON.stringify(
+                    currentItem
+                )}`
+            )
+            return
+        }
+        setAIModal({
+            item: currentItem,
+            modelType,
+            mountContainer,
+            onSuccess: () => {
+                onSuccess()
+            }
+        })
+    } catch (error) {}
+}
+
+/** 删除 ai model */
+export const onRemoveAIModel = (data: {aiGlobalConfig; index: number; fileName: string; onSuccess: () => void}) => {
+    try {
+        const {fileName, index, aiGlobalConfig, onSuccess} = data
+        if (!aiGlobalConfig) return
+        const newAIGlobalConfig = {...aiGlobalConfig}
+        const list = newAIGlobalConfig[fileName].filter((_, i) => i !== index)
+        newAIGlobalConfig[fileName] = [...list]
+        grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
+            onSuccess()
+        })
+    } catch (error) {}
+}
+
+/** 选中得model,设置为该类型得第一位 */
+export const onSelectAIModel = (data: {
+    aiGlobalConfig
+    item: AIModelConfig
+    index: number
+    fileName: string
+    onSuccess: () => void
+}) => {
+    try {
+        const {fileName, item, index, aiGlobalConfig, onSuccess} = data
+        if (!aiGlobalConfig) return
+        const newAIGlobalConfig = {...aiGlobalConfig}
+        newAIGlobalConfig[fileName].splice(index, 1)
+        newAIGlobalConfig[fileName].unshift(item)
+        grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
+            onSuccess()
+        })
+        emiter.emit(
+            "aiModelSelectChange",
+            JSON.stringify({
+                type: "online",
+                params: {
+                    AIService: item.Provider.Type,
+                    AIModelName: item.ModelName,
+                    fileName
+                }
+            })
+        )
+        emiter.emit("onRefreshAvailableAIModelList")
+    } catch (error) {}
 }
 
 const modelTypeOptions: YakitRadioButtonsProps["options"] = [
@@ -264,7 +344,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         setRemoveVisible(false)
         localRef.current?.onRefresh()
     })
-    const onRefreshAIModel=useMemoizedFn(()=>{
+    const onRefreshAIModel = useMemoizedFn(() => {
         //刷新列表
         onRefresh(false)
         // 刷新ai输入框中model数据
@@ -466,67 +546,46 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             aiGlobalConfig?.VisionModels?.length
         ])
 
-        const onEdit = useMemoizedFn((item: AIModelConfig, fileName: string) => {
+        const onEdit = useMemoizedFn((options: AIModelActionProps) => {
+            try {
+                if (!aiGlobalConfig) return
+                const {fileName, index} = options
+                onEditAIModel({
+                    aiGlobalConfig,
+                    index,
+                    fileName,
+                    mountContainer: undefined,
+                    onSuccess: () => {
+                        getList()
+                    }
+                })
+            } catch (error) {}
+        })
+        const onRemove = useMemoizedFn((options: AIModelActionProps) => {
             if (!aiGlobalConfig) return
-            const currentItem = aiGlobalConfig[fileName].find((i) => i.ProviderId === item.ProviderId)
-            const modelType = getModelTypeByFileName(fileName)
-            if (!currentItem || !modelType) {
-                yakitNotify(
-                    "error",
-                    `配置错误，无法编辑:modelType:${modelType};fileName:${fileName};currentItem:${JSON.stringify(
-                        currentItem
-                    )}`
-                )
-                return
-            }
-            setAIModal({
-                item: currentItem,
-                modelType,
-                mountContainer,
+            const {fileName, index} = options
+            onRemoveAIModel({
+                aiGlobalConfig,
+                index,
+                fileName,
                 onSuccess: () => {
                     getList()
                 }
             })
         })
-        const onRemove = useMemoizedFn((item: AIModelConfig, fileName: string) => {
+        const onSelect = useMemoizedFn((item: AIModelConfig, options: AIModelActionProps) => {
             if (!aiGlobalConfig) return
-            const newAIGlobalConfig = {...aiGlobalConfig}
-            const list = newAIGlobalConfig[fileName].filter((i) => !isEqualAIModel(i, item))
-            newAIGlobalConfig[fileName] = [...list]
-            grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
-                getList()
+            const {fileName, index} = options
+            onSelectAIModel({
+                aiGlobalConfig,
+                item,
+                index,
+                fileName,
+                onSuccess: () => {
+                    getList()
+                }
             })
         })
-        const onSelect = useMemoizedFn(
-            (
-                item: AIModelConfig,
-                options: {
-                    fileName: AIModelTypeFileName
-                    index: number
-                }
-            ) => {
-                if (!aiGlobalConfig) return
-                const {fileName, index} = options
-                const newAIGlobalConfig = {...aiGlobalConfig}
-                newAIGlobalConfig[fileName].splice(index, 1)
-                newAIGlobalConfig[fileName].unshift(item)
-                grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
-                    getList()
-                })
-                emiter.emit(
-                    "aiModelSelectChange",
-                    JSON.stringify({
-                        type: "online",
-                        params: {
-                            AIService: item.Provider.Type,
-                            AIModelName: item.ModelName,
-                            fileName
-                        }
-                    })
-                )
-                emiter.emit("onRefreshAvailableAIModelList")
-            }
-        )
         return (
             <YakitSpin spinning={spinning}>
                 {isHaveData ? (
@@ -536,8 +595,18 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 title={"高质模型"}
                                 subTitle={"用于执行复杂度高的任务,对话框中可切换该模型"}
                                 list={aiGlobalConfig?.IntelligentModels || []}
-                                onEdit={(item) => onEdit(item, AIModelTypeInterFileNameEnum.IntelligentModels)}
-                                onRemove={(item) => onRemove(item, AIModelTypeInterFileNameEnum.IntelligentModels)}
+                                onEdit={(index) =>
+                                    onEdit({
+                                        fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                                        index
+                                    })
+                                }
+                                onRemove={(index) =>
+                                    onRemove({
+                                        fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                                        index
+                                    })
+                                }
                                 onSelect={(item, index) =>
                                     onSelect(item, {
                                         fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
@@ -551,8 +620,18 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 title={"轻量模型"}
                                 subTitle={"用于执行简单任务和会话"}
                                 list={aiGlobalConfig?.LightweightModels || []}
-                                onEdit={(item) => onEdit(item, AIModelTypeInterFileNameEnum.LightweightModels)}
-                                onRemove={(item) => onRemove(item, AIModelTypeInterFileNameEnum.LightweightModels)}
+                                onEdit={(index) =>
+                                    onEdit({
+                                        fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                                        index
+                                    })
+                                }
+                                onRemove={(index) =>
+                                    onRemove({
+                                        fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                                        index
+                                    })
+                                }
                                 onSelect={(item, index) =>
                                     onSelect(item, {
                                         fileName: AIModelTypeInterFileNameEnum.LightweightModels,
@@ -566,8 +645,18 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                 title={"视觉模式"}
                                 subTitle={"用于识别图片等,生成知识库和任务执行都会用到"}
                                 list={aiGlobalConfig?.VisionModels || []}
-                                onEdit={(item) => onEdit(item, AIModelTypeInterFileNameEnum.VisionModels)}
-                                onRemove={(item) => onRemove(item, AIModelTypeInterFileNameEnum.VisionModels)}
+                                onEdit={(index) =>
+                                    onEdit({
+                                        fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                                        index
+                                    })
+                                }
+                                onRemove={(index) =>
+                                    onRemove({
+                                        fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                                        index
+                                    })
+                                }
                                 onSelect={(item, index) =>
                                     onSelect(item, {
                                         fileName: AIModelTypeInterFileNameEnum.VisionModels,
@@ -594,15 +683,17 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         )
     })
 )
-const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
+export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
     const {title, subTitle, list, onEdit, onRemove, onSelect} = props
 
     return (
         <div className={styles["ai-online-model"]}>
-            <div className={styles["ai-online-model-header"]}>
-                <div className={styles["ai-online-model-header-title"]}>{title}</div>
-                <div className={styles["ai-online-model-header-subtitle"]}>{subTitle}</div>
-            </div>
+            {title && (
+                <div className={styles["ai-online-model-header"]}>
+                    <div className={styles["ai-online-model-header-title"]}>{title}</div>
+                    <div className={styles["ai-online-model-header-subtitle"]}>{subTitle}</div>
+                </div>
+            )}
             <div className={styles["ai-online-model-list"]}>
                 {list.map((item, index) => (
                     <div
@@ -610,7 +701,12 @@ const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
                         className={classNames(styles["ai-online-model-list-row"])}
                         onClick={() => onSelect(item, index)}
                     >
-                        <AIOnlineModelListItem item={item} onEdit={onEdit} onRemove={onRemove} checked={index === 0} />
+                        <AIOnlineModelListItem
+                            item={item}
+                            onEdit={() => onEdit(index)}
+                            onRemove={() => onRemove(index)}
+                            checked={index === 0}
+                        />
                     </div>
                 ))}
             </div>

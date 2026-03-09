@@ -362,7 +362,7 @@ export const AIModelTypeInterFileNameEnum: {[K in AIModelTypeFileName]: K} = {
 
 export const defaultAIGlobalConfig: AIGlobalConfig = {
     Enabled: false,
-    RoutingPolicy: "",
+    RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
     DisableFallback: false,
     DefaultModelId: "",
     GlobalWeight: 0,

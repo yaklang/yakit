@@ -2,7 +2,7 @@ import {LocalModelConfig} from "../type/aiModel"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {type ModalProps} from "antd"
 import {ReactNode} from "react"
-import {AIModelConfig} from "./utils"
+import {AIModelConfig, AIModelTypeFileName} from "./utils"
 
 export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, "mountContainer">> {}
 
@@ -16,7 +16,7 @@ export interface AIOnlineModelListProps {
 }
 
 export interface AIOnlineModelListRefProps {
-    onRefresh: (isShowLoading?:boolean) => void
+    onRefresh: (isShowLoading?: boolean) => void
     onRemoveAll: () => void
 }
 
@@ -60,14 +60,19 @@ export interface AILocalModelListWrapperProps {
 }
 
 export interface AIOnlineModelProps {
-    title: ReactNode
-    subTitle: ReactNode
+    title?: ReactNode
+    subTitle?: ReactNode
     list: AIModelConfig[]
-    onRemove: (item: AIModelConfig) => void
-    onEdit: (item: AIModelConfig) => void
+    onRemove: (i: number) => void
+    onEdit: (i: number) => void
     onSelect: (v: AIModelConfig, i: number) => void
 }
 
 export interface AIOnlineModeSettingProps {
     onRefresh: () => void
+}
+
+export interface AIModelActionProps {
+    fileName: AIModelTypeFileName
+    index: number
 }
