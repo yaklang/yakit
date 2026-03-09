@@ -21,6 +21,7 @@ import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import { FilterType } from "./MITMFiltersModal"
 import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const { YakitPanel } = YakitCollapse
 const { ipcRenderer } = window.require("electron")
@@ -203,6 +204,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))
 }
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
+    const { t } = useI18nNamespaces(["mitm"])
     const { visible = true } = props
 
     const [activeKey, setActiveKey] = useControllableValue<string | string[]>(props, {
@@ -360,6 +362,7 @@ const filterRangeOption: YakitSelectProps["options"] = [
     }
 ]
 export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["mitm"])
     const { item, onEdit, searchValue } = props
     const onAddGroup = useMemoizedFn(() => {
         if (isFilterItemEmpty(item)) {

@@ -406,7 +406,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         </Form.Item>
                         <Form.Item label={t("speed", { ns: "screenRecorder" })} name='CoefficientPTS'>
                             <YakitSelect
-                                options={CoefficientPTSData}
+                                options={CoefficientPTSData(t)}
                                 style={{width: 120}}
                                 size='small'
                                 disabled={screenRecorderInfo.isRecording}
