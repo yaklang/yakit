@@ -183,11 +183,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                         setData([...getData()])
                     }, 300)
                 } catch (e) {
-                    failed(t("SelectUpload.processDataFailed", { ns: "core", error: e }))
+                    failed(t("SelectUpload.processDataFailed", { ns: "core", error: String(e) }))
                 }
             })
             .catch((e) => {
-                failed(t("SelectUpload.queryProjectsFailed", { ns: "core", error: e }))
+                failed(t("SelectUpload.queryProjectsFailed", { ns: "core", error: String(e) }))
             })
     })
 
@@ -212,11 +212,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                         })
                     )
                 } catch (e) {
-                    failed(t("SelectUpload.processDataFailed", { ns: "core", error: e }))
+                    failed(t("SelectUpload.processDataFailed", { ns: "core", error: String(e) }))
                 }
             })
             .catch((e) => {
-                failed(t("SelectUpload.queryProjectsFailed", { ns: "core", error: e }))
+                failed(t("SelectUpload.queryProjectsFailed", { ns: "core", error: String(e) }))
             })
     })
 

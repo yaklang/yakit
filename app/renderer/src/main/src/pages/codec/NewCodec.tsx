@@ -585,6 +585,7 @@ interface NewCodecMiddleTypeItemProps {
 }
 
 export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (props) => {
+    const { t } = useI18nNamespaces(["codec"])
     const {data, outerKey, rightItems, setRightItems, provided} = props
 
     const {title, node} = data
@@ -852,6 +853,7 @@ interface CodecRunListHistoryStoreProps {
 }
 
 export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["codec"])
     const {popoverVisible, setPopoverVisible, onSelect, setCodecFlow, mitmSaveData, onMitmSaveFilter} = props
     useEffect(() => {
         onMitmSaveFilter()
@@ -1013,6 +1015,7 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwardRef((props, ref) => {
+    const { t } = useI18nNamespaces(["codec"])
     const {
         id,
         fold,
@@ -1298,7 +1301,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                                 checkFail.push({
                                     key,
                                     index: indexIn,
-                                    message: t("codec.regexCheckFailed", {title: `${title}-${rightItem.title}`, regex: regexp})
+                                    message: t("codec.regexCheckFailed", {title: `${title}-${rightItem.title}`, regex: String(regexp)})
                                 })
                             }
                         }
@@ -1346,7 +1349,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                                 checkFail.push({
                                     key,
                                     index: indexIn,
-                                    message: t("codec.regexCheckFailed", {title: `${title}-${inputItem.title}`, regex: regexp})
+                                    message: t("codec.regexCheckFailed", {title: `${title}-${inputItem.title}`, regex: String(regexp)})
                                 })
                             }
                         }
@@ -1612,6 +1615,7 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
 
 // 左边拖拽源
 export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> = (props) => {
+    const { t } = useI18nNamespaces(["codec"])
     const {node, collectList, parentItem, getCollectData, onClickToRunList} = props
 
     const dragListItemDom = useMemoizedFn((item: CodecMethod) => (
@@ -1765,6 +1769,7 @@ interface LeftDataProps {
 
 // codec左边拖拽列表
 export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props) => {
+    const { t } = useI18nNamespaces(["codec"])
     const {
         fold,
         setFold,
@@ -2046,6 +2051,7 @@ export interface NewCodecProps {
     id: string
 }
 export const NewCodec: React.FC<NewCodecProps> = (props) => {
+    const { t } = useI18nNamespaces(["codec"])
     const {id} = props
     // codec分类展开收起
     const [fold, setFold] = useState<boolean>(true)
