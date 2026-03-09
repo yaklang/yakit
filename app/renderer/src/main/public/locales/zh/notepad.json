@@ -1,8 +1,37 @@
 {
-    "NotepadLocalList": {
-        "confirmDeleteSelected": "确定要删除勾选文档吗?",
-        "confirmDeleteAll": "确定要删除所有文档吗?",
-        "title": "标题",
-        "lastUpdateTime": "最近更新时间"
-    }
+  "NotepadManage": {
+    "createdAt": "最近创建时间",
+    "updatedAt": "最近更新时间",
+    "downloadFailed": "下载失败：",
+    "confirmDelete": "确定要删掉该文档吗"
+  },
+  "NotepadManageOnline": {
+    "fileName": "文件名称",
+    "author": "作者",
+    "collaborator": "协作人",
+    "updatedAt": "最近更新时间",
+    "createdAt": "最近创建时间",
+    "action": "操作",
+    "newNotepad": "新建笔记",
+    "batchDelete": "批量删除",
+    "batchDownload": "批量下载",
+    "confirmBatchDelete": "确定要批量删除所选笔记吗？",
+    "searchPlaceholder": "请输入关键词搜索"
+  },
+  "NotepadManageLocal": {
+    "fullTextSearch": "全文搜索",
+    "title": "标题",
+    "updatedAt": "最近更新时间",
+    "createdAt": "最近创建时间",
+    "action": "操作",
+    "searchPlaceholder": "请输入关键词搜索",
+    "confirmDeleteSelected": "确定要删除勾选文档吗?",
+    "confirmDeleteAll": "确定要删除所有文档吗?",
+    "delete": "删除",
+    "import": "导入",
+    "export": "导出",
+    "new": "新建",
+    "noData": "请点击右上角【新建】按钮添加数据",
+    "searchEmpty": "搜索结果“空”"
+  }
 }
