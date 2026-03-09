@@ -2,7 +2,6 @@ import React, {useCallback, useMemo, useState} from "react"
 import {AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps} from "./AIReActChatContentsType"
 import styles from "./AIReActChatContents.module.scss"
 import {useCreation} from "ahooks"
-import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
 import {AIMarkdown} from "@/pages/ai-agent/components/aiMarkdown/AIMarkdown"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
 import StreamCard from "@/pages/ai-agent/components/StreamCard"
@@ -77,18 +76,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     {...aiMarkdownProps}
                 />
             )
-        // case AIStreamContentType.CODE_YAKLANG:
-        // case AIStreamContentType.CODE_HTTP_REQUEST:
-        // case AIStreamContentType.CODE_PYTHON:
-        //     return (
-        //         <AIYaklangCode
-        //             contentType={ContentType}
-        //             content={content}
-        //             nodeLabel={nodeLabel}
-        //             modalInfo={modalInfo}
-        //             referenceNode={referenceNode}
-        //         />
-        //     )
         case AIStreamContentType.TEXT_PLAIN:
             const {execFileRecord} = yakExecResult
             const fileList = execFileRecord.get(CallToolID)
@@ -102,8 +89,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     referenceNode={referenceNode}
                 />
             )
-        case AIStreamContentType.LOG_TOOL:
-            return <AIChatToolColorCard toolCall={stream.data} referenceNode={referenceNode} />
         case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
             return <></>
         default:
@@ -121,11 +106,14 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         atBottomThreshold: 50
     })
 
-    const renderItem = useCallback((index: number, item?: ReActChatRenderItem) => {
-        if (!item?.token) return null
-        const hasNext = chats.elements.length - index > 1
-        return <AIChatListItem key={item.token} hasNext={hasNext} item={item} type='re-act' />
-    },[chats.elements.length])
+    const renderItem = useCallback(
+        (index: number, item?: ReActChatRenderItem) => {
+            if (!item?.token) return null
+            const hasNext = chats.elements.length - index > 1
+            return <AIChatListItem key={item.token} hasNext={hasNext} item={item} type='re-act' />
+        },
+        [chats.elements.length]
+    )
 
     const Item = useCallback(
         ({children, style, "data-index": dataIndex}) => (
