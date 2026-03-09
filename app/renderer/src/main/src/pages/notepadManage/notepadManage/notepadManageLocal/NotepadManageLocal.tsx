@@ -45,17 +45,19 @@ import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 
-const yakitTab: YakitTabsProps[] = [
+const yakitTab = (t: any): YakitTabsProps[] => [
     {
         icon: <OutlineSearchIcon />,
-        label: "全文搜索",
-        value: "全文搜索"
+        label: t("NotepadManageLocal.fullTextSearch"),
+        value: t("NotepadManageLocal.fullTextSearch")
     }
 ]
 const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["notepad"])
     const [activeKey, setActiveKey] = useState<string>("全文搜索")
     const [show, setShow] = useState<boolean>(true)
     return (
@@ -72,7 +74,7 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props)
                         <YakitSideTab
                             show={show}
                             setShow={setShow}
-                            yakitTabs={yakitTab}
+                            yakitTabs={yakitTab(t)}
                             activeKey={activeKey}
                             onActiveKey={setActiveKey}
                         />
@@ -97,6 +99,7 @@ const timeShow = {
     updated_at: "UpdateAt"
 }
 const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
+    const { t } = useI18nNamespaces(["notepad"])
     const {goAddNotepad} = useGoEditNotepad()
     const emptyImageTarget = useEmptyImage("search")
     const [pageLoading, setPageLoading] = useState<boolean>(false)
@@ -153,11 +156,11 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
     const columns: VirtualListColumns<Note>[] = useCreation(() => {
         return [
             {
-                title: "标题",
+                title: t("NotepadManageLocal.title"),
                 dataIndex: "Title"
             },
             {
-                title: "最近更新时间",
+                title: t("NotepadManageLocal.updatedAt"),
                 dataIndex: timeShow[sorterKey],
                 render: (text, record: Note) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
                 filterProps: {
@@ -167,11 +170,11 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                                 data: [
                                     {
                                         key: "updated_at",
-                                        label: "最近更新时间"
+                                        label: t("NotepadManageLocal.updatedAt")
                                     },
                                     {
                                         key: "created_at",
-                                        label: "最近创建时间"
+                                        label: t("NotepadManageLocal.createdAt")
                                     }
                                 ],
                                 onClick: ({key}) => {
@@ -186,7 +189,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                             }}
                         >
                             <YakitButton type='text2'>
-                                <span style={{marginRight: 8}}>{timeMap[sorterKey]}</span>
+                                <span style={{marginRight: 8}}>{timeMap(t)[sorterKey]}</span>
                                 {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
                             </YakitButton>
                         </YakitDropdownMenu>
@@ -194,7 +197,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 }
             },
             {
-                title: "操作",
+                title: t("NotepadManageLocal.action"),
                 dataIndex: "action",
                 width: 180,
                 render: (_, record: Note) => (
@@ -341,12 +344,13 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                     <div className={styles["heard-extra"]}>
                         <YakitInput.Search
                             value={keyWord}
+                            placeholder={t("NotepadManageLocal.searchPlaceholder")}
                             onChange={(e) => setKeyWord(e.target.value)}
                             onSearch={onSearch}
                         />
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitPopconfirm
-                            title={selectNumber > 0 ? "确定要删除勾选文档吗?" : "确定要删除所有文档吗?"}
+                            title={selectNumber > 0 ? t("NotepadManageLocal.confirmDeleteSelected") : t("NotepadManageLocal.confirmDeleteAll")}
                             onConfirm={onBatchRemove}
                         >
                             <YakitButton
@@ -356,7 +360,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                                 disabled={totalRef.current === 0}
                                 loading={pageLoading}
                             >
-                                删除
+                                {t("NotepadManageLocal.delete")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton
@@ -366,25 +370,25 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                             onClick={onBatchExport}
                             loading={pageLoading}
                         >
-                            批量导出
+                            {t("NotepadManageLocal.export")}
                         </YakitButton>
                         <YakitButton type='outline2' icon={<OutlineImportIcon />} onClick={onBatchImport}>
-                            导入
+                            {t("NotepadManageLocal.import")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
-                            新建
+                            {t("NotepadManageLocal.new")}
                         </YakitButton>
                     </div>
                 </div>
                 {totalRef.current === 0 || +response.Total === 0 ? (
                     totalRef.current === 0 ? (
-                        <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
+                        <YakitEmpty style={{paddingTop: 48}} description={t("NotepadManageLocal.noData")} />
                     ) : (
                         <YakitEmpty
                             image={emptyImageTarget}
                             imageStyle={{margin: "96px auto 12px", height: 200}}
-                            title='搜索结果“空”'
+                            title={t("NotepadManageLocal.searchEmpty")}
                         />
                     )
                 ) : (
@@ -429,6 +433,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
 }
 
 const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["notepad"])
     const {record, onSingleRemoveAfter} = props
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [editLoading, setEditLoading] = useState<boolean>(false)
@@ -487,7 +492,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
             <YakitButton type='text2' icon={<OutlineExportIcon />} onClick={onExport} />
 
             <Divider type='vertical' style={{margin: "0 8px"}} />
-            <YakitPopconfirm title='确定要删掉该文档吗' onConfirm={() => onSingleRemove()}>
+            <YakitPopconfirm title={t("NotepadManage.confirmDelete")} onConfirm={() => onSingleRemove()}>
                 <YakitButton type='text' danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
             </YakitPopconfirm>
             {exportVisible && (
