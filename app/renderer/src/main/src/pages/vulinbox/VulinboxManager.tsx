@@ -22,10 +22,12 @@ import {setClipboardText} from "@/utils/clipboard"
 import {grpcFetchLatestOSSDomain} from "@/apiUtils/grpc"
 import classNames from "classnames"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export interface VulinboxManagerProp {}
 
 const {ipcRenderer} = window.require("electron")
 export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
+    const { t } = useI18nNamespaces(["vulinbox"])
     const [available, setAvailable] = useState(false)
     const [started, setStarted] = useState(false)
     const [token, setToken] = useState(randomString(60))
@@ -120,15 +122,15 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 bordered={true}
                 title={
                     <Space>
-                        <div>Vulinbox 管理器</div>
+                        <div>{t("VulinboxManager.title")}</div>
                         {available ? (
                             <>
-                                <Tag color={"green"}>安装成功</Tag>
+                                <Tag color={"green"}>{t("VulinboxManager.installed")}</Tag>
                                 {started && currentParams && (
                                     <YakitButton
                                         type='outline2'
                                         onClick={() => {
-                                            info("使用 Chrome 打开靶场")
+                                            info(t("VulinboxManager.openInChrome"))
                                             openExternalWebsite(
                                                 `${
                                                     currentParams?.NoHttps ? "http://" : "https//"
@@ -141,7 +143,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                 )}
                             </>
                         ) : (
-                            <Tag color={"red"}>未安装</Tag>
+                            <Tag color={"red"}>{t("VulinboxManager.notInstalled")}</Tag>
                         )}
                         <YakitButton
                             type='text'
@@ -153,21 +155,21 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                         {available &&
                             (started ? (
                                 <YakitPopconfirm
-                                    title={"确定要关闭靶场进程吗？"}
+                                    title={t("VulinboxManager.confirmClose")}
                                     onConfirm={() => {
                                         ipcRenderer.invoke("cancel-StartVulinbox", token).then(() => {
                                             setStarted(false)
                                         })
                                     }}
                                 >
-                                    <YakitButton colors='danger'>关闭靶场</YakitButton>
+                                    <YakitButton colors='danger'>{t("VulinboxManager.closeVulinbox")}</YakitButton>
                                 </YakitPopconfirm>
                             ) : (
                                 <YakitButton
                                     type={"primary"}
                                     onClick={() => {
                                         const m = showYakitModal({
-                                            title: "启动靶场参数",
+                                            title: t("VulinboxManager.startParams"),
                                             width: "50%",
                                             footer: <div style={{height: 30}} />,
                                             content: (
@@ -178,7 +180,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                                 .invoke("StartVulinbox", param, token)
                                                                 .then(() => {
                                                                     setCurrentParams(param)
-                                                                    info("启动靶场成功")
+                                                                    info(t("VulinboxManager.startSuccess"))
                                                                     setStarted(true)
                                                                     m.destroy()
                                                                 })
@@ -198,7 +200,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                         })
                                     }}
                                 >
-                                    启动靶场
+                                    {t("VulinboxManager.startVulinbox")}
                                 </YakitButton>
                             ))}
                     </Space>
@@ -207,12 +209,11 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 extra={
                     <Space>
                         <YakitPopconfirm
-                            title={"将从互联网下载靶场程序并安装"}
+                            title={t("VulinboxManager.installConfirm")}
                             onConfirm={() => {
                                 const m = showYakitModal({
-                                    title: "安装靶场",
+                                    title: t("VulinboxManager.installTitle"),
                                     width: "50%",
-                                    height: 500,
                                     onOk: () => {
                                         m.destroy()
                                     },
@@ -234,13 +235,13 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                 })
                             }}
                         >
-                            <YakitButton type={"outline1"}>安装/升级靶场</YakitButton>
+                            <YakitButton type={"outline1"}>{t("VulinboxManager.installOrUpgrade")}</YakitButton>
                         </YakitPopconfirm>
                         <YakitButton
                             type='text'
                             onClick={() => {
                                 showYakitModal({
-                                    title: "靶场下载地址",
+                                    title: t("VulinboxManager.downloadAddresses"),
                                     content: (
                                         <div style={{margin: 20, overflowX: "auto"}}>
                                             {[
@@ -279,10 +280,10 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                         onClick={() => {
                                                             setClipboardText(item.url, {
                                                                 hiddenHint: false,
-                                                                hintText: "复制成功"
+                                                                hintText: t("VulinboxManager.copySuccess")
                                                             })
                                                         }}
-                                                        title='点击复制'
+                                                        title={t("VulinboxManager.copySuccess")}
                                                     >
                                                         {item.url}
                                                     </code>
@@ -291,12 +292,12 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                         onClick={() => {
                                                             setClipboardText(item.url, {
                                                                 hiddenHint: false,
-                                                                hintText: "复制成功"
+                                                                hintText: t("VulinboxManager.copySuccess")
                                                             })
                                                         }}
-                                                        title='点击复制'
+                                                        title={t("VulinboxManager.copySuccess")}
                                                     >
-                                                        复制
+                                                        {t("VulinboxManager.copy")}
                                                     </YakitButton>
                                                 </div>
                                             ))}
@@ -321,15 +322,14 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                     message={
                                         <div>
                                             <h2 style={{fontSize: 18, fontWeight: 600, marginBottom: 16}}>
-                                                Vulinbox Agent - Web安全漏洞靶场
+                                                {t("VulinboxManager.info.title")}
                                             </h2>
                                             <p style={{marginBottom: 16}}>
-                                                Vulinbox 是一个精心设计的 Web
-                                                安全漏洞靶场，它模拟了各类真实场景中可能出现的安全漏洞，为安全研究人员和渗透测试工程师提供了一个理想的学习和实践平台。
+                                                {t("VulinboxManager.info.description")}
                                             </p>
 
                                             <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>
-                                                漏洞类型覆盖
+                                                {t("VulinboxManager.info.coverageTitle")}
                                             </h3>
                                             <div
                                                 style={{
@@ -350,35 +350,28 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 >
                                                     <div style={{marginBottom: 16}}>
                                                         <h4 style={{fontSize: 14, fontWeight: 600, marginBottom: 8}}>
-                                                            1. 注入类漏洞
+                                                            {t("VulinboxManager.info.injectionTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            <li>SQL 注入漏洞环境</li>
-                                                            <li>XSS 跨站脚本演练场景</li>
-                                                            <li>SSRF 服务器端请求伪造环境</li>
-                                                            <li>命令注入漏洞复现</li>
+                                                            {(t("VulinboxManager.info.injectionItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
 
                                                     <div style={{marginBottom: 16}}>
                                                         <h4 style={{fontSize: 14, fontWeight: 600, marginBottom: 8}}>
-                                                            2. 身份认证漏洞
+                                                            {t("VulinboxManager.info.authTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            <li>Cookie 安全问题模拟</li>
-                                                            <li>JWT 令牌安全场景</li>
-                                                            <li>会话管理缺陷演示</li>
+                                                            {(t("VulinboxManager.info.authItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
 
                                                     <div style={{marginBottom: 16}}>
                                                         <h4 style={{fontSize: 14, fontWeight: 600, marginBottom: 8}}>
-                                                            3. 协议层漏洞
+                                                            {t("VulinboxManager.info.protocolTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            <li>WebSocket 安全问题模拟</li>
-                                                            <li>HTTP 协议缺陷环境</li>
-                                                            <li>DNS 安全问题演示</li>
+                                                            {(t("VulinboxManager.info.protocolItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -393,29 +386,25 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 >
                                                     <div style={{marginBottom: 16}}>
                                                         <h4 style={{fontSize: 14, fontWeight: 600, marginBottom: 8}}>
-                                                            4. 加密算法缺陷
+                                                            {t("VulinboxManager.info.cryptoTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            <li>AES/ECB 模式安全问题</li>
-                                                            <li>RSA 算法应用缺陷</li>
-                                                            <li>Base64 编码滥用场景</li>
+                                                            {(t("VulinboxManager.info.cryptoItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
 
                                                     <div style={{marginBottom: 16}}>
                                                         <h4 style={{fontSize: 14, fontWeight: 600, marginBottom: 8}}>
-                                                            5. API 接口漏洞
+                                                            {t("VulinboxManager.info.apiTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            <li>OpenAPI/Swagger 相关漏洞</li>
-                                                            <li>RESTful API 安全问题</li>
-                                                            <li>JSON 解析漏洞</li>
+                                                            {(t("VulinboxManager.info.apiItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>平台特色</h3>
+                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>{t("VulinboxManager.info.featuresTitle")}</h3>
                                             <div style={{display: "flex", gap: 16, marginBottom: 16}}>
                                                 <div
                                                     style={{
@@ -426,17 +415,15 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                     }}
                                                 >
                                                     <div style={{marginBottom: 8}}>
-                                                        <b>1. 教学性</b>
+                                                        <b>{t("VulinboxManager.info.teachingTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            <li>每个漏洞场景都有详细说明</li>
-                                                            <li>提供漏洞原理和利用方法</li>
+                                                            {(t("VulinboxManager.info.teachingItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
                                                     <div style={{marginBottom: 8}}>
-                                                        <b>2. 真实性</b>
+                                                        <b>{t("VulinboxManager.info.realismTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            <li>模拟真实业务场景</li>
-                                                            <li>还原实际漏洞环境</li>
+                                                            {(t("VulinboxManager.info.realismItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -450,28 +437,23 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                     }}
                                                 >
                                                     <div style={{marginBottom: 8}}>
-                                                        <b>3. 系统性</b>
+                                                        <b>{t("VulinboxManager.info.systematicTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            <li>漏洞类型覆盖全面</li>
-                                                            <li>难度梯度合理</li>
+                                                            {(t("VulinboxManager.info.systematicItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
                                                     <div style={{marginBottom: 8}}>
-                                                        <b>4. 实践性</b>
+                                                        <b>{t("VulinboxManager.info.practiceTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            <li>支持动手操作</li>
-                                                            <li>即时反馈结果</li>
+                                                            {(t("VulinboxManager.info.practiceItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                                         </ul>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>适用人群</h3>
+                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>{t("VulinboxManager.info.audienceTitle")}</h3>
                                             <ul style={{paddingLeft: 24, margin: 0}}>
-                                                <li>网络安全初学者</li>
-                                                <li>安全测试工程师</li>
-                                                <li>开发人员安全意识培训</li>
-                                                <li>安全研究人员</li>
+                                                {(t("VulinboxManager.info.audienceItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
                                             </ul>
 
                                             <div
@@ -482,9 +464,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                     borderRadius: 4
                                                 }}
                                             >
-                                                这是一个非常实用的安全学习平台，它不仅提供了丰富的漏洞环境，还能帮助使用者系统地理解和掌握各类
-                                                Web
-                                                安全漏洞。对于想要提升安全测试能力或加深安全理解的人来说，这是一个理想的练习环境。
+                                                {t("VulinboxManager.info.summary")}
                                             </div>
                                         </div>
                                     }
@@ -512,11 +492,11 @@ interface StartVulinboxParams {
 
 interface VulinboxStartProp {
     params: StartVulinboxParams
-    setParams?: (p: StartVulinboxParams) => any
-    onSubmit: (p: StartVulinboxParams) => any
+    onSubmit: (params: StartVulinboxParams) => any
 }
 
 const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
+    const { t } = useI18nNamespaces(["vulinbox"])
     const [params, setParams] = useState<StartVulinboxParams>(props.params)
 
     return (
@@ -529,11 +509,11 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
             }}
             size={"small"}
         >
-            <Form.Item label={"Host"}>
+            <Form.Item label={t("VulinboxManager.vulinboxStart.host")}>
                 <YakitInput value={params.Host} onChange={(e) => setParams({...params, Host: e.target.value})} />
             </Form.Item>
 
-            <Form.Item label={"Port"}>
+            <Form.Item label={t("VulinboxManager.vulinboxStart.port")}>
                 <YakitInputNumber
                     value={params.Port}
                     onChange={(value) => setParams({...params, Port: Number(value) || 0})}
@@ -542,14 +522,14 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
                 />
             </Form.Item>
 
-            <Form.Item label={"不启用 HTTPS"}>
+            <Form.Item label={t("VulinboxManager.vulinboxStart.noHttps")}>
                 <YakitSwitch
                     checked={params.NoHttps}
                     onChange={(checked) => setParams({...params, NoHttps: checked})}
                 />
             </Form.Item>
 
-            <Form.Item label={"安全模式"} help={"不启用命令注入类操作系统的靶场"}>
+            <Form.Item label={t("VulinboxManager.vulinboxStart.safeMode")} help={t("VulinboxManager.vulinboxStart.safeModeTooltip")}>
                 <YakitSwitch
                     checked={params.SafeMode}
                     onChange={(checked) => setParams({...params, SafeMode: checked})}
@@ -558,8 +538,7 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
 
             <Form.Item colon={false} label={" "}>
                 <YakitButton style={{marginBottom: 8}} type='primary' htmlType='submit'>
-                    {" "}
-                    启动靶场{" "}
+                    {t("VulinboxManager.vulinboxStart.start")}
                 </YakitButton>
             </Form.Item>
         </Form>
@@ -571,6 +550,7 @@ export interface InstallVulinboxPromptProp {
 }
 
 const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
+    const { t } = useI18nNamespaces(["vulinbox"])
     const [token, setToken] = useState(randomString(60))
     const [data, setData, getData] = useGetState<string[]>([])
     const [percent, setPercent] = useState(0)
@@ -604,7 +584,7 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.invoke("InstallVulinbox", {}, token).then(() => {
-            success("正在安装 Vulinbox")
+            success(t("VulinboxManager.installVulinboxPrompt.installing"))
             setLoading(true)
         })
         return () => {
@@ -619,7 +599,7 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
                     strokeColor='var(--Colors-Use-Main-Primary)'
                     trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
+                    format={(percent) => `${t("VulinboxManager.installVulinboxPrompt.downloading")} ${percent}%`}
                 />
             </div>
             <div className={styles["download-progress-messages"]}>

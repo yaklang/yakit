@@ -1,0 +1,99 @@
+{
+  "VulinboxManager": {
+    "title": "Vulinbox 管理器",
+    "installed": "安装成功",
+    "notInstalled": "未安装",
+    "openInChrome": "使用 Chrome 打开靶场",
+    "confirmClose": "确定要关闭靶场进程吗？",
+    "closeVulinbox": "关闭靶场",
+    "startVulinbox": "启动靶场",
+    "startParams": "启动靶场参数",
+    "startSuccess": "启动靶场成功",
+    "installConfirm": "将从互联网下载靶场程序并安装",
+    "installTitle": "安装靶场",
+    "installOrUpgrade": "安装/升级靶场",
+    "downloadAddresses": "靶场下载地址",
+    "copySuccess": "复制成功",
+    "copy": "复制",
+    "vulinboxStart": {
+      "host": "监听地址",
+      "port": "监听端口",
+      "noHttps": "关闭 HTTPS",
+      "safeMode": "安全模式",
+      "safeModeTooltip": "安全模式将会禁用部分危险的漏洞，但是可以有效避免 Vulinbox 被恶意利用",
+      "start": "启动"
+    },
+    "installVulinboxPrompt": {
+      "checking": "正在检查 Vulinbox...",
+      "downloading": "正在下载 Vulinbox...",
+      "installing": "正在安装 Vulinbox...",
+      "success": "Vulinbox 安装成功",
+      "failed": "Vulinbox 安装失败"
+    },
+    "info": {
+      "title": "Vulinbox Agent - Web安全漏洞靶场",
+      "description": "Vulinbox 是一个精心设计的 Web 安全漏洞靶场，它模拟了各类真实场景中可能出现的安全漏洞，为安全研究人员和渗透测试工程师提供了一个理想的学习和实践平台。",
+      "coverageTitle": "漏洞类型覆盖",
+      "injectionTitle": "1. 注入类漏洞",
+      "injectionItems": [
+        "SQL 注入漏洞环境",
+        "XSS 跨站脚本演练场景",
+        "SSRF 服务器端请求伪造环境",
+        "命令注入漏洞复现"
+      ],
+      "authTitle": "2. 身份认证漏洞",
+      "authItems": [
+        "Cookie 安全问题模拟",
+        "JWT 令牌安全场景",
+        "会话管理缺陷演示"
+      ],
+      "protocolTitle": "3. 协议层漏洞",
+      "protocolItems": [
+        "WebSocket 安全问题模拟",
+        "HTTP 协议缺陷环境",
+        "DNS 安全问题演示"
+      ],
+      "cryptoTitle": "4. 加密算法缺陷",
+      "cryptoItems": [
+        "AES/ECB 模式安全问题",
+        "RSA 算法应用缺陷",
+        "Base64 编码滥用场景"
+      ],
+      "apiTitle": "5. API 接口漏洞",
+      "apiItems": [
+        "OpenAPI/Swagger 相关漏洞",
+        "RESTful API 安全问题",
+        "JSON 解析漏洞"
+      ],
+      "featuresTitle": "平台特色",
+      "teachingTitle": "1. 教学性",
+      "teachingItems": [
+        "每个漏洞场景都有详细说明",
+        "提供漏洞原理和利用方法"
+      ],
+      "realismTitle": "2. 真实性",
+      "realismItems": [
+        "模拟真实业务场景",
+        "还原实际漏洞环境"
+      ],
+      "systematicTitle": "3. 系统性",
+      "systematicItems": [
+        "漏洞类型覆盖全面",
+        "难度梯度合理"
+      ],
+      "practiceTitle": "4. 实践性",
+      "practiceItems": [
+        "支持动手操作",
+        "即时反馈结果"
+      ],
+      "audienceTitle": "适用人群",
+      "audienceItems": [
+        "网络安全初学者",
+        "安全测试工程师",
+        "开发人员安全意识培训",
+        "安全研究人员"
+      ],
+      "summary": "这是一个非常实用的安全学习平台，它不仅提供了丰富的漏洞环境，还能帮助使用者系统地理解和掌握各类 Web 安全漏洞。对于想要提升安全测试能力或加深安全理解的人来说，这是一个理想的练习环境。"
+    }
+  }
+}
