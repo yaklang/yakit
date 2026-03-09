@@ -19,5 +19,15 @@
     "CreateDictionaries.storageMethod": "Choose a storage method as needed, which does not affect usage:",
     "CreateDictionaries.fileStorage": "File Storage: Save the dictionary as a file locally, does not support hit count, faster upload speed.",
     "CreateDictionaries.databaseStorage": "Database Storage: Read the dictionary data and save it in the database, supports hit count, more convenient to search.",
-    "CreateDictionaries.largeFileStorageMethod": "Large File Storage: When the uploaded file is larger than 20M, it supports large file storage, only supports txt, more convenient storage."
+    "CreateDictionaries.largeFileStorageMethod": "Large File Storage: When the uploaded file is larger than 20M, it supports large file storage, only supports txt, more convenient storage.",
+    "CreateDictionaries.dictionaryNameExists": "Dictionary name exists",
+    "CreateDictionaries.savePayloadError": "[SavePayload] Error: {{error}}",
+    "CreateDictionaries.savePayloadFinished": "[SavePayload] Finished",
+    "CreateDictionaries.savePayloadFileError": "[SavePayloadFile] Error: {{error}}",
+    "CreateDictionaries.savePayloadFileFinished": "[SavePayloadFile] Finished",
+    "CreateDictionaries.largeFileOnlyTxt": "Large file storage only supports txt file type",
+    "CreateDictionaries.incorrectFormat": "{{name}} is not a txt or csv file, please upload the correct format!",
+    "CreateDictionaries.alreadySelected": "{{path}} already selected",
+    "CreateDictionaries.inputPlaceholder": "Please input...",
+    "CreateDictionaries.clickToImport": "Click here to import"
 }

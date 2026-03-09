@@ -43,9 +43,9 @@ import {
     grpcFetchLocalYakVersionHash,
     grpcFetchSpecifiedYakVersionHash
 } from "@/apiUtils/grpc"
-import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { JSONParseLog } from "@/utils/tool"
+import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -86,7 +86,7 @@ interface ReverseDetail {
 
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
     const {isEngineLink, system} = props
-    const {t, i18n} = useI18nNamespaces(["yakitRoute", "home", "yakitUi", "layout"])
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "home", "yakitUi", "layout", "settings"])
 
     /** 自启全局反连配置(默认指定为本地) */
     useEffect(() => {

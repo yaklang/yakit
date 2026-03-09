@@ -112,5 +112,8 @@
   "UIOpSetting.configPrivateDomain": "配置私有域",
   "UIOpSetting.configGlobalReverse": "配置全局反连",
   "UIOpSetting.alreadyLocalMode": "已为本地连接",
-  "UIOpSetting.modeAlreadySet": "当前模式已设置"
+  "UIOpSetting.modeAlreadySet": "当前模式已设置",
+  "globalState.statusRefreshInterval": "状态刷新间隔时间",
+  "globalState.localYakProcessManagement": "本地 Yak 进程管理",
+  "globalState.updateOnStartup": "启动检测更新"
 }
