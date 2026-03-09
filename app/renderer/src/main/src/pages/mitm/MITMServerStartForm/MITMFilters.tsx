@@ -171,6 +171,7 @@ export type FilterMatcherType = "word" | "regexp" | "glob" | "mime" | "suffix"
 export interface FilterDataItem {
     MatcherType: FilterMatcherType
     Group: string[]
+    RuleName?: string
 }
 export interface MITMFilterData {
     IncludeHostnames: FilterDataItem[]
@@ -200,6 +201,7 @@ export type MITMFilterArrayKey = {
 export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))
 }
+
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
     const {visible = true} = props
 
@@ -215,6 +217,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
         trigger: "setFilterData"
     })
     const [searchValue, setSearchValue] = useState("")
+    const [groupByRuleName, setGroupByRuleName] = useState(false)
 
     const onEdit = useMemoizedFn((field: string, value, index: number) => {
         filterData[index][field] = value
@@ -241,18 +244,29 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             })}
         >
             <div className={styles["filter-operation"]}>
-                <YakitInput.Search onSearch={(value) => {
-                    setSearchValue(value)
-                    if(!value) return
-                    const matchedKeys: string[] = []
-                    filterData.forEach((item, index) => {
-                        const hasMatch = item.Group.some(g => g.toLowerCase().includes(value.toLowerCase()))
-                        if (hasMatch) {
-                            matchedKeys.push(`ID:${index}`)
-                        }
-                    })
-                    setActiveKey(matchedKeys)
-                }} />
+                <YakitInput.Search
+                    placeholder='按规则名或条件搜索'
+                    onSearch={(value) => {
+                        setSearchValue(value)
+                        if (!value) return
+                        const v = value.toLowerCase()
+                        const matchedKeys: string[] = []
+                        filterData.forEach((item, index) => {
+                            const matchGroup = item.Group.some((g) => g.toLowerCase().includes(v))
+                            const matchRuleName = (item.RuleName || "").toLowerCase().includes(v)
+                            if (matchGroup || matchRuleName) {
+                                matchedKeys.push(`ID:${index}`)
+                            }
+                        })
+                        setActiveKey(matchedKeys)
+                    }}
+                />
+                <YakitSwitch
+                    checked={groupByRuleName}
+                    onChange={setGroupByRuleName}
+                    size='small'
+                />
+                <span className={styles["filter-operation-label"]}>按规则名分组</span>
                 <YakitButton type='text' disabled={!!searchValue} onClick={onAddAdvancedSetting}>
                     添加高级配置
                 </YakitButton>
@@ -264,17 +278,29 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     accordion={!searchValue}
                     className={styles["filter-collapse"]}
                 >
-                    {filterData!.map((filterItem, index) => {
+                    {(groupByRuleName
+                        ? [...filterData.keys()].sort((a, b) => {
+                              const na = (filterData[a]?.RuleName || "").localeCompare(filterData[b]?.RuleName || "")
+                              return na !== 0 ? na : a - b
+                          })
+                        : [...filterData.keys()]
+                    ).map((index) => {
+                        const filterItem = filterData[index]
                         const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
 
-                        if(!!searchValue && filterItem.Group.every(g => !g.toLowerCase().includes(searchValue.toLowerCase()))) return null
+                        if (
+                            !!searchValue &&
+                            filterItem.Group.every((g) => !g.toLowerCase().includes(searchValue.toLowerCase())) &&
+                            !(filterItem.RuleName || "").toLowerCase().includes(searchValue.toLowerCase())
+                        )
+                            return null
 
                         return (
                             <YakitPanel
                                 header={
                                     <div className={styles["collapse-panel-header"]}>
                                         <span className={classNames(styles["header-id"])}>
-                                            <span>{`规则_${index}`}</span>
+                                            {filterItem.RuleName || `规则_${index}`}
                                         </span>
                                         <span>[{name}]</span>
                                         {filterItem.Group.length > 0 ? (
@@ -371,6 +397,13 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
     return (
         <>
             <div className={classNames(styles["collapse-panel-condition"])}>
+                <LabelNodeItem label='规则名'>
+                    <YakitInput
+                        placeholder='可自定义，便于分组筛选'
+                        value={item.RuleName || ""}
+                        onChange={(e) => onEdit("RuleName", e.target.value)}
+                    />
+                </LabelNodeItem>
                 <LabelNodeItem label='使用范围'>
                     <YakitSelect
                         value={item.Field}
@@ -402,6 +435,8 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
                 }}
                 onAddGroup={onAddGroup}
                 searchValue={searchValue}
+                supportCommaSeparated
+                includeCommaDelimiter={item.Field === "ExcludeHostnames" || item.Field === "IncludeHostnames"}
             />
         </>
     )

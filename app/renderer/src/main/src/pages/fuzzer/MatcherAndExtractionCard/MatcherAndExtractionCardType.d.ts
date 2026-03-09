@@ -151,6 +151,9 @@ export interface MatcherAndExtractionValueListProps {
     onAddGroup: () => void
     httpResponse: string
     searchValue?: string
+    /**@name 是否支持分隔输入多个项；分号/换行始终支持；includeComma 为 true 时同时支持逗号（仅适用于域名等不含逗号的规则） */
+    supportCommaSeparated?: boolean
+    includeCommaDelimiter?: boolean
 }
 
 export interface ExtractionResultsContentProps {
