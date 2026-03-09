@@ -116,6 +116,7 @@ interface UploadStatusInfoProps {
 }
 
 export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
+    const { t } = useI18nNamespaces(["yakrunner"])
     const {title, streamData, logInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
     useEffect(() => {
         if (autoClose && streamData.Progress === 1) {
@@ -141,7 +142,7 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
-                        <div className={styles["progress-title"]}>进度 {Math.round(streamData.Progress * 100)}%</div>
+                        <div className={styles["progress-title"]}>{t("CreateDictionaries.progress")} {Math.round(streamData.Progress * 100)}%</div>
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>
@@ -149,7 +150,7 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                             <div className={styles["divider-wrapper"]}>
                                 <div className={styles["divider-style"]}></div>
                             </div> */}
-                            <div>耗时 : {streamData.CostDurationVerbose}</div>
+                            <div>{t("CreateDictionaries.elapsedTime")} : {streamData.CostDurationVerbose}</div>
                             {/* <div className={styles["divider-wrapper"]}>
                                 <div className={styles["divider-style"]}></div>
                             </div>
@@ -165,7 +166,7 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                     </div>
                     <div className={styles["download-btn"]}>
                         <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
-                            取消
+                            {t("CreateDictionaries.cancel")}
                         </YakitButton>
                     </div>
                 </div>
@@ -192,6 +193,7 @@ export interface SavePayloadProgress {
 
 // 新建字典
 export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => {
+    const { t } = useI18nNamespaces(["yakrunner"])
     const {onClose, type, title, onQueryGroup, folder, group} = props
     const isDictionaries = type === "dictionaries"
     // 可上传文件类型
@@ -433,28 +435,24 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                     {isDictionaries && (
                         <div className={styles["explain"]}>
                             <div className={styles["explain-bg"]}>
-                                <div className={styles["title"]}>可根据需求选择以下存储方式，存储方式不影响使用：</div>
+                                <div className={styles["title"]}>{t("CreateDictionaries.storageMethod")}</div>
                                 <div className={styles["content"]}>
                                     <div className={styles["item"]}>
                                         <div className={styles["dot"]}>1</div>
                                         <div className={styles["text"]}>
-                                            文件存储：将字典以文件形式保存在本地，不支持命中次数，
-                                            <span className={styles["hight-text"]}>上传速度更快</span>
+                                            {t("CreateDictionaries.fileStorage")}
                                         </div>
                                     </div>
                                     <div className={styles["item"]}>
                                         <div className={styles["dot"]}>2</div>
                                         <div className={styles["text"]}>
-                                            数据库存储：将字典数据读取后保存在数据库中，支持命中次数，
-                                            <span className={styles["hight-text"]}>搜索更方便</span>
+                                            {t("CreateDictionaries.databaseStorage")}
                                         </div>
                                     </div>
                                     <div className={styles["item"]}>
                                         <div className={styles["dot"]}>3</div>
                                         <div className={styles["text"]}>
-                                            大文件存储：上传文件大于<span className={styles["hight-text"]}>20M</span>
-                                            时，支持采取大文件存储方式，仅支持txt，
-                                            <span className={styles["hight-text"]}>存储更便捷</span>
+                                            {t("CreateDictionaries.largeFileStorageMethod")}
                                         </div>
                                     </div>
                                 </div>
@@ -492,15 +490,15 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                     options={[
                                         {
                                             value: "dragger",
-                                            label: "上传文件"
+                                            label: t("CreateDictionaries.uploadFile")
                                         },
                                         {
                                             value: "editor",
-                                            label: "手动输入"
+                                            label: t("CreateDictionaries.manualInput")
                                         },
                                         {
                                             value: "large-dragger",
-                                            label: "上传大文件"
+                                            label: t("CreateDictionaries.largeFileUpload")
                                         }
                                     ]}
                                     // size={"small"}
@@ -592,7 +590,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                             icon={<SolidDatabaseIcon />}
                                             onClick={onSavePayload}
                                         >
-                                            数据库存储
+                                            {t("CreateDictionaries.saveToDatabase")}
                                         </YakitButton>
                                         <YakitButton
                                             size='large'
@@ -600,7 +598,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                             icon={<SolidDocumenttextIcon />}
                                             onClick={onSavePayloadToFile}
                                         >
-                                            文件存储
+                                            {t("CreateDictionaries.saveToFile")}
                                         </YakitButton>
                                     </>
                                 ) : (
@@ -610,7 +608,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                         icon={<SolidDocumenttextIcon />}
                                         onClick={onSavePayloadToFile}
                                     >
-                                        大文件存储
+                                        {t("CreateDictionaries.largeFileStorage")}
                                     </YakitButton>
                                 )}
                             </>
@@ -630,7 +628,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 
             {streamData && (
                 <UploadStatusInfo
-                    title={storeType === "database" ? "导入中..." : "自动去重检测，请耐心等待..."}
+                    title={storeType === "database" ? t("CreateDictionaries.importing") : t("CreateDictionaries.deduplicating")}
                     streamData={streamData}
                     cancelRun={cancelRun}
                     logInfo={logInfoRef.current}
