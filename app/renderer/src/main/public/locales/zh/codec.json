@@ -35,5 +35,21 @@
     "other": "其他",
     "unrecognizedData": "未识别数据",
     "requiredField": "{{title}}:为必填项",
-    "regexCheckFailed": "{{title}}-{{regex}}:校验不通过"
+    "regexCheckFailed": "{{title}}-{{regex}}:校验不通过",
+    "import": "导入",
+    "autoWordwrap": "自动换行",
+    "noAutoWordwrap": "不自动换行",
+    "largeInput": "超大输入",
+    "largeOutputTip": "超大输出，请点击保存下载文件查看",
+    "replaceOutputToInput": "将Output替换至Input",
+    "copy": "复制",
+    "disable": "禁用",
+    "enable": "启用",
+    "enableBreakpoint": "开启断点",
+    "disableBreakpoint": "关闭断点",
+    "noSavedContent": "暂无保存内容",
+    "savedSuccess": "保存成功",
+    "selectFolder": "请选择文件夹",
+    "collapseCodecCategory": "收起Codec分类",
+    "expandCodecCategory": "展开Codec分类"
 }
