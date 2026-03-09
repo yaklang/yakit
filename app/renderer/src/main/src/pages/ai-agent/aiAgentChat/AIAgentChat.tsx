@@ -308,6 +308,19 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         if (mode === "welcome") setMode("re-act")
     })
 
+    const handleDelChats = useMemoizedFn((jsonString: string) => {
+        try {
+            const sessions: string[] = JSON.parse(jsonString)
+            events.onDelChats(sessions)
+        } catch (error) {}
+    })
+    useEffect(() => {
+        emiter.on("onDelChats", handleDelChats)
+        return () => {
+            emiter.off("onDelChats", handleDelChats)
+        }
+    }, [])
+
     //#region 使用 AI-Forge 模板/Tool 相关逻辑
     const [activeTool, setActiveTool] = useState<AITool>()
     const [replaceToolShow, setReplaceToolShow] = useState<boolean>(false)

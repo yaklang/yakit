@@ -10,12 +10,13 @@ import {YakitAIAgentPageID} from "../../defaultConstant"
 import {EditChatNameModal} from "../../UtilModals"
 import {AIChatInfo} from "../../type/aiChat"
 import {useInfiniteScroll, useMemoizedFn} from "ahooks"
-import { grpcDeleteAISession, grpcUpdateAISessionTitle} from "../../grpc"
+import {grpcDeleteAISession, grpcUpdateAISessionTitle} from "../../grpc"
 import useAIAgentStore from "../../useContext/useStore"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {yakitNotify} from "@/utils/notification"
 import {aiChatDataStore} from "../../store/ChatDataStore"
 import {onNewChat} from "../HistoryChat"
+import emiter from "@/utils/eventBus/eventBus"
 
 const HistoryChatList: FC<{
     search: string
@@ -105,7 +106,7 @@ const HistoryChatList: FC<{
 
         try {
             grpcDeleteAISession({Filter: {SessionID: [SessionID]}}, true)
-            aiChatDataStore.remove(SessionID)
+            emiter.emit("onDelChats", JSON.stringify([SessionID]))
         } catch (error) {
             yakitNotify("error", "删除会话失败:" + error)
         } finally {

@@ -40,14 +40,11 @@ module.exports = (win, getClient) => {
     // 写操作的错误处理方法，保证写操作失败不会中断后续操作
     const safeWrite = async (stream, params, token) => {
         try {
-            console.log("safeWrite: ", token, JSON.stringify(params))
             await stream.write({...params})
             return {success: true, token, params}
         } catch (error) {
             // console.log("write error: ", error)
             return {success: false, error, token, params}
-        } finally {
-            console.log("safeWrite-end: ")
         }
     }
 
