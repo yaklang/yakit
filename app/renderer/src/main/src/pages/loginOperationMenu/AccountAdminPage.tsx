@@ -1356,7 +1356,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             params: depTreeQuery
         })
             .then((res) => {
-                const data = res.data.map((item) => ({
+                const data = (res.data||[]).map((item) => ({
                     value: item.id,
                     label: item.name,
                     isLeaf: item.exist_group ? false : true
