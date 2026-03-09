@@ -136,7 +136,7 @@ const removePrefixV = (version: string) => {
     return version.startsWith("v") ? version.substring(1) : version
 }
 
-export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean) => {
+export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean, t: any) => {
     const { companyHeadImg, companyName } = userInfo
     // 点击且已被远程控制
     const activeConnect: boolean = active && dynamicConnect
@@ -166,7 +166,7 @@ export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dyn
                 <div
                     className={classNames(styles["judge-avatar-text"], { [styles["judge-avatar-active-text"]]: active })}
                 >
-                    远程中
+                    {t("funcDomain.remoteInProgress", { ns: "layout" })}
                 </div>
             )}
         </div>
@@ -236,6 +236,7 @@ export interface FuncDomainProp {
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["layout"])
     const {
         isEngineLink,
         isReverse = false,
@@ -278,6 +279,28 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         const SetUserInfoModule = () => (
             <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
         )
+
+        /** 用户菜单 */
+        const UserMenusMap: Record<string, YakitMenuItemType> = {
+            divider: { type: "divider" },
+            singOut: { key: "sign-out", label: t("funcDomain.signOut", { ns: "layout" }), type: "danger" },
+            pluginAudit: { key: "plugin-audit", label: t("funcDomain.pluginAudit", { ns: "layout" }) },
+            misstatement: { key: "misstatement", label: t("funcDomain.misstatement", { ns: "layout" }) },
+            // CE
+            trustList: { key: "trust-list", label: t("funcDomain.trustList", { ns: "layout" }) },
+            licenseAdmin: { key: "license-admin", label: t("funcDomain.licenseAdmin", { ns: "layout" }) },
+            dataStatistics: { key: "data-statistics", label: t("funcDomain.dataStatistics", { ns: "layout" }) },
+            // EE|SE
+            roleAdmin: { key: "role-admin", label: t("funcDomain.roleAdmin", { ns: "layout" }) },
+            accountAdmin: { key: "account-admin", label: t("funcDomain.accountAdmin", { ns: "layout" }) },
+            setPassword: { key: "set-password", label: t("funcDomain.setPassword", { ns: "layout" }) },
+            uploadData: { key: "upload-data", label: t("funcDomain.uploadData", { ns: "layout" }) },
+            controlAdmin: { key: "control-admin", label: t("funcDomain.controlAdmin", { ns: "layout" }) },
+            dynamicControl: { key: "dynamic-control", label: t("funcDomain.dynamicControl", { ns: "layout" }) },
+            closeDynamicControl: { key: "close-dynamic-control", label: t("funcDomain.closeDynamicControl", { ns: "layout" }) },
+            holeCollect: { key: "hole-collect", label: t("funcDomain.holeCollect", { ns: "layout" }) },
+            systemConfig: { key: "system-config", label: t("funcDomain.systemConfig", { ns: "layout" }) }
+        }
 
         // 退出菜单
         const signOutMenu: YakitMenuItemType[] = [UserMenusMap["divider"], UserMenusMap["singOut"]]
@@ -488,7 +511,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             .then((data: { Ok: boolean; Reason: string }) => {
                 if (data.Ok) {
                     const m = showYakitModal({
-                        title: "录屏须知",
+                        title: t("funcDomain.screenRecordingNotice", { ns: "layout" }),
                         footer: null,
                         type: "white",
                         width: 520,
@@ -510,7 +533,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 }
             })
             .catch((err) => {
-                yakitFailed("IsScrecorderReady失败:" + err)
+                yakitFailed(t("funcDomain.isScrecorderReadyFailed", { ns: "layout", error: err }))
             })
     })
 
@@ -566,7 +589,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {!showProjectManage && (
                     <div className={styles["ui-op-btn-wrapper"]} onClick={openConsoleNewWindow}>
                         <div className={styles["op-btn-body"]}>
-                            <Tooltip placement='bottom' title='引擎Console'>
+                            <Tooltip placement='bottom' title={t("funcDomain.engineConsole", { ns: "layout" })}>
                                 <TerminalIcon className={classNames(styles["icon-style"], styles["size-style"])} />
                             </Tooltip>
                         </div>
@@ -625,11 +648,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                         dynamicStatus.isDynamicSelfStatus
                                                     ) {
                                                         Modal.confirm({
-                                                            title: "温馨提示",
+                                                            title: t("funcDomain.tip", { ns: "layout" }),
                                                             icon: <ExclamationCircleOutlined />,
-                                                            content: "点击退出登录将自动退出远程控制，是否确认退出",
-                                                            cancelText: "取消",
-                                                            okText: "退出",
+                                                            content: t("funcDomain.signOutRemoteConfirm", { ns: "layout" }),
+                                                            cancelText: t("funcDomain.cancel", { ns: "layout" }),
+                                                            okText: t("funcDomain.exit", { ns: "layout" }),
                                                             onOk() {
                                                                 if (dynamicStatus.isDynamicStatus) {
                                                                     ipcRenderer.invoke("lougin-out-dynamic-control", {
@@ -643,7 +666,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                                             setStoreUserInfo(defaultUserInfo)
                                                                             loginOut(userInfo)
                                                                             setTimeout(
-                                                                                () => success("已成功退出账号"),
+                                                                                () => success(t("funcDomain.signOutSuccess", { ns: "layout" })),
                                                                                 500
                                                                             )
                                                                         })
@@ -663,7 +686,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                     } else {
                                                         setStoreUserInfo(defaultUserInfo)
                                                         loginOut(userInfo)
-                                                        setTimeout(() => success("已成功退出账号"), 500)
+                                                        setTimeout(() => success(t("funcDomain.signOutSuccess", { ns: "layout" })), 500)
                                                     }
                                                 }
                                                 if (key === "trust-list") {
@@ -718,7 +741,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                         }}
                                     >
                                         {userInfo.platform === "company" ? (
-                                            judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect)
+                                            judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)
                                         ) : (
                                             <img
                                                 src={
@@ -743,7 +766,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             <YakitModal
                 visible={passwordShow}
                 closable={passwordClose}
-                title={"修改密码"}
+                title={t("funcDomain.setPassword", { ns: "layout" })}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{ padding: "10px 24px 24px 24px" }}
@@ -756,7 +779,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
             <YakitModal
                 visible={uploadModalShow}
-                title={"上传数据"}
+                title={t("funcDomain.uploadData", { ns: "layout" })}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{ padding: "10px 24px 24px 24px" }}
@@ -768,8 +791,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             </YakitModal>
 
             <DynamicControl
-                mainTitle={"远程控制"}
-                secondTitle={"请选择你的角色"}
+                mainTitle={t("funcDomain.remoteControl", { ns: "layout" })}
+                secondTitle={t("funcDomain.selectRole", { ns: "layout" })}
                 isShow={dynamicControlModal}
                 onCancle={() => setDynamicControlModal(false)}
                 width={345}
@@ -787,8 +810,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             </DynamicControl>
 
             <DynamicControl
-                mainTitle={"受控端"}
-                secondTitle={"复制密钥，并分享给控制端用户"}
+                mainTitle={t("funcDomain.controlledSide", { ns: "layout" })}
+                secondTitle={t("funcDomain.controlledSideDesc", { ns: "layout" })}
                 isShow={controlMyselfModal}
                 onCancle={() => setControlMyselfModal(false)}
             >
@@ -801,8 +824,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             </DynamicControl>
 
             <DynamicControl
-                mainTitle={"控制端"}
-                secondTitle={"可通过受控端分享的密钥远程控制他的 客户端"}
+                mainTitle={t("funcDomain.controllerSide", { ns: "layout" })}
+                secondTitle={t("funcDomain.controllerSideDesc", { ns: "layout" })}
                 isShow={controlOtherModal}
                 onCancle={() => setControlOtherModal(false)}
             >
@@ -834,6 +857,7 @@ const initRunNodeModalParams = {
 }
 
 const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
+    const { t } = useI18nNamespaces(["layout"])
     const { runNodeModalVisible, onClose } = props
     const [visible, setVisible] = useState(false)
     const [form] = Form.useForm()
@@ -854,10 +878,10 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
     const onOKFun = useMemoizedFn(async () => {
         try {
             if (!params.ipOrdomain || !params.port || !params.nodename) {
-                throw Error("请输入ip/域名、端口号、节点名")
+                throw Error(t("funcDomain.inputNodeParamsError", { ns: "layout" }))
             }
             if (hasRunNodeInList(JSON.stringify(params))) {
-                throw Error("相同节点正在运行")
+                throw Error(t("funcDomain.duplicateNodeRunning", { ns: "layout" }))
             }
             const res = await ipcRenderer.invoke("call-command-generate-node", {
                 ipOrdomain: params.ipOrdomain,
@@ -865,7 +889,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
                 nodename: params.nodename
             })
             setRunNodeList(JSON.stringify(params), res + "")
-            yakitNotify("success", "成功开启运行节点")
+            yakitNotify("success", t("funcDomain.startNodeSuccess", { ns: "layout" }))
             !firstRunNodeFlag && setFirstRunNodeFlag(true)
             onCloseModal()
         } catch (error) {
@@ -881,18 +905,18 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
 
     return (
         <YakitModal
-            title='运行节点'
+            title={t("funcDomain.runNode", { ns: "layout" })}
             width={506}
             maskClosable={false}
             closable={true}
             visible={visible}
-            okText='确认'
+            okText={t("funcDomain.confirm", { ns: "layout" })}
             onCancel={onCloseModal}
             onOk={onOKFun}
         >
             <div>
                 <div style={{ fontSize: 12, color: "#85899e", marginBottom: 10 }}>
-                    运行节点会占用引擎资源，建议运行节点的时候，适度使用Yakit，否则会造成节点运行任务缓慢，可以运行多个节点（运行在不同平台，或统一平台节点名称不同）。
+                    {t("funcDomain.runNodeDesc", { ns: "layout" })}
                 </div>
                 <Form
                     form={form}
@@ -905,28 +929,28 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
                     onValuesChange={onValuesChange}
                 >
                     <Form.Item
-                        label='平台IP/域名'
+                        label={t("funcDomain.platformIpDomain", { ns: "layout" })}
                         name='ipOrdomain'
                         style={{ marginBottom: 4 }}
-                        rules={[{ required: true, message: "请输入平台IP/域名" }]}
+                        rules={[{ required: true, message: t("funcDomain.platformIpDomain", { ns: "layout" }) }]}
                     >
-                        <YakitInput placeholder='请输入平台IP/域名' maxLength={100} showCount />
+                        <YakitInput placeholder={t("funcDomain.platformIpDomain", { ns: "layout" })} maxLength={100} showCount />
                     </Form.Item>
                     <Form.Item
-                        label='平台端口'
+                        label={t("funcDomain.platformPort", { ns: "layout" })}
                         name='port'
                         style={{ marginBottom: 4 }}
-                        rules={[{ required: true, message: "请输入平台端口" }]}
+                        rules={[{ required: true, message: t("funcDomain.platformPort", { ns: "layout" }) }]}
                     >
-                        <YakitInput placeholder='请输入平台端口' maxLength={50} showCount />
+                        <YakitInput placeholder={t("funcDomain.platformPort", { ns: "layout" })} maxLength={50} showCount />
                     </Form.Item>
                     <Form.Item
-                        label='节点名称'
+                        label={t("funcDomain.nodeName", { ns: "layout" })}
                         name='nodename'
                         style={{ marginBottom: 4 }}
-                        rules={[{ required: true, message: "请输入节点名称" }]}
+                        rules={[{ required: true, message: t("funcDomain.nodeName", { ns: "layout" }) }]}
                     >
-                        <YakitInput placeholder='请输入节点名称' maxLength={50} showCount />
+                        <YakitInput placeholder={t("funcDomain.nodeName", { ns: "layout" })} maxLength={50} showCount />
                     </Form.Item>
                 </Form>
             </div>
@@ -1218,11 +1242,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "store":
                 if (dynamicStatus.isDynamicStatus) {
-                    warn("远程控制中，暂无法修改")
+                    warn(t("UIOpSetting.remoteModeCannotModify", { ns: "layout" }))
                     return
                 }
                 const m = showYakitModal({
-                    title: "配置私有域",
+                    title: t("UIOpSetting.configPrivateDomain", { ns: "layout" }),
                     type: "white",
                     footer: null,
                     maskClosable: false,
@@ -1233,7 +1257,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "reverse":
                 showYakitModal({
                     type: "white",
-                    title: "配置全局反连",
+                    title: t("UIOpSetting.configGlobalReverse", { ns: "layout" }),
                     width: 800,
                     content: (
                         <div style={{ width: 800 }}>
@@ -1254,18 +1278,18 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "remote":
                 if (dynamicStatus.isDynamicStatus) {
-                    warn("远程控制中，暂无法修改")
+                    warn(t("UIOpSetting.remoteModeCannotModify", { ns: "layout" }))
                     return
                 }
                 onEngineModeChange(type)
                 return
             case "local":
                 if (dynamicStatus.isDynamicStatus) {
-                    warn("远程控制中，暂无法修改")
+                    warn(t("UIOpSetting.remoteModeCannotModify", { ns: "layout" }))
                     return
                 }
                 if (type === engineMode) {
-                    warn("已为本地连接")
+                    warn(t("UIOpSetting.alreadyLocalMode", { ns: "layout" }))
                     return
                 }
                 onEngineModeChange(type)
@@ -1354,7 +1378,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case YakitModeEnum.SecurityExpert:
             case YakitModeEnum.Scan:
                 if (softMode === type) {
-                    yakitNotify("info", "当前模式已设置")
+                    yakitNotify("info", t("UIOpSetting.modeAlreadySet", { ns: "layout" }))
                 } else {
                     setSoftMode(type)
                 }
