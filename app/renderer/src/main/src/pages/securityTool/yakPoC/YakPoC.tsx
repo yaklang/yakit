@@ -79,6 +79,7 @@ import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const HybridScanTaskListDrawer = React.lazy(
     () => import("@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer")
@@ -94,20 +95,21 @@ export const onToManageGroup = () => {
     )
 }
 
-const YakPoCTab: YakitTabsProps[] = [
-    {
-        label: "按关键词",
-        value: "keyword"
-    },
-    {
-        label: "按组选",
-        value: "group"
-    }
-]
-
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {pageId} = props
+
+    const YakPoCTab: YakitTabsProps[] = useCreation(() => [
+        {
+            label: t("yakPoC.byKeyword"),
+            value: "keyword"
+        },
+        {
+            label: t("yakPoC.byGroup"),
+            value: "group"
+        }
+    ], [t])
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -249,7 +251,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             >
                 <div className={styles["left-header-search"]}>
                     <div className={styles["header-type-wrapper"]}>
-                        <span className={styles["header-text"]}>选择插件</span>
+                        <span className={styles["header-text"]}>{t("yakPoC.selectPlugin")}</span>
                     </div>
                 </div>
                 <PluginGroupByKeyWord
@@ -286,6 +288,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
 })
 
 const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {selectGroupList, setTotal, hidden, type} = props
     const isLoadingRef = useRef<boolean>(true)
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
@@ -405,7 +408,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
             })}
         >
             {selectGroupList.length === 0 || +response.Total === 0 ? (
-                <YakitEmpty title='请选择关键词或插件组进行扫描' style={{paddingTop: 48}} />
+                <YakitEmpty title={t("yakPoC.selectPrompt")} style={{paddingTop: 48}} />
             ) : (
                 <RollingLoadList<YakScript>
                     data={response.Data}
@@ -448,6 +451,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
 })
 
 const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {pageId, hidden, inViewport, setResponseToSelect, defGroupKeywords} = props
     const [selectGroupList, setSelectGroupList] = useControllableValue<string[]>(props, {
         defaultValue: [],
@@ -613,7 +617,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                         <YakitInput.Search
                             value={keywords}
                             onChange={(e) => setKeywords(e.target.value)}
-                            placeholder='请输入关键词搜索'
+                            placeholder={t("yakPoC.searchKeywordPlaceholder")}
                             onSearch={onSearch}
                             onPressEnter={onPressEnter}
                             size='large'
@@ -623,19 +627,19 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                 <div className={styles["filter-body"]}>
                     <div className={styles["filter-body-left"]}>
                         <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
-                            全选
+                            {t("yakPoC.selectAll")}
                         </YakitCheckbox>
                         <span className={styles["count-num"]}>
-                            Total<span className={styles["num-style"]}>{total}</span>
+                            {t("yakPoC.total")}<span className={styles["num-style"]}>{total}</span>
                         </span>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <span className={styles["count-num"]}>
-                            Selected<span className={styles["num-style"]}>{selectGroupList.length}</span>
+                            {t("yakPoC.selected")}<span className={styles["num-style"]}>{selectGroupList.length}</span>
                         </span>
                     </div>
                     <div className={styles["filter-body-right"]}>
                         <YakitButton type='text' danger onClick={onClearSelect}>
-                            清空
+                            {t("yakPoC.clear")}
                         </YakitButton>
                     </div>
                 </div>
@@ -643,8 +647,8 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
             {initialResponseRef.current.length === 0 ? (
                 <div className={styles["yak-poc-empty"]}>
                     <YakitEmpty
-                        title='暂无数据'
-                        description='可一键获取默认关键词与插件,下载后请重启Yakit获取默认关键词'
+                        title={t("yakPoC.noData")}
+                        description={t("yakPoC.noDataDesc")}
                     />
                     <div className={styles["yak-poc-buttons"]}>
                         <YakitButton
@@ -652,7 +656,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                             icon={<CloudDownloadIcon />}
                             onClick={() => setVisibleOnline(true)}
                         >
-                            一键下载
+                            {t("yakPoC.oneClickDownload")}
                         </YakitButton>
                     </div>
                 </div>
@@ -691,6 +695,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
 })
 
 const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {hidden, inViewport, setResponseToSelect} = props
     const [selectGroupList, setSelectGroupList] = useControllableValue<string[]>(props, {
         defaultValue: [],
@@ -787,7 +792,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
             <div className={styles["filter-wrapper"]}>
                 <div className={styles["header-search"]}>
                     <YakitInput.Search
-                        placeholder='请输入组名搜索'
+                        placeholder={t("yakPoC.searchGroupNamePlaceholder")}
                         value={keywords}
                         onChange={(e) => setKeywords(e.target.value)}
                         onSearch={onSearch}
@@ -799,40 +804,40 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                 <div className={styles["filter-body"]}>
                     <div className={styles["filter-body-left"]}>
                         <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
-                            全选
+                            {t("yakPoC.selectAll")}
                         </YakitCheckbox>
                         <span className={styles["count-num"]}>
-                            Total<span className={styles["num-style"]}>{total}</span>
+                            {t("yakPoC.total")}<span className={styles["num-style"]}>{total}</span>
                         </span>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <span className={styles["count-num"]}>
-                            Selected<span className={styles["num-style"]}>{selectGroupList.length}</span>
+                            {t("yakPoC.selected")}<span className={styles["num-style"]}>{selectGroupList.length}</span>
                         </span>
                     </div>
                     <div className={styles["filter-body-right"]}>
                         <YakitButton type='text' onClick={onToManageGroup}>
-                            管理
+                            {t("yakPoC.manage")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <YakitButton type='text' danger onClick={onClearSelect}>
-                            清空
+                            {t("yakPoC.clear")}
                         </YakitButton>
                     </div>
                 </div>
             </div>
             {initialResponseRef.current.length === 0 ? (
                 <div className={styles["yak-poc-empty"]}>
-                    <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理手动新建' />
+                    <YakitEmpty title={t("yakPoC.noData")} description={t("yakPoC.noGroupDataDesc")} />
                     <div className={styles["yak-poc-buttons"]}>
                         <YakitButton
                             type='outline1'
                             icon={<CloudDownloadIcon />}
                             onClick={() => setVisibleOnline(true)}
                         >
-                            一键下载
+                            {t("yakPoC.oneClickDownload")}
                         </YakitButton>
                         <YakitButton icon={<OutlineCogIcon />} onClick={onToManageGroup}>
-                            管理
+                            {t("yakPoC.manage")}
                         </YakitButton>
                     </div>
                 </div>
@@ -871,6 +876,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 })
 
 const PluginGroupByKeyWordItem: React.FC<PluginGroupByKeyWordItemProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {item, onSelect, selected} = props
     return (
         <div
@@ -881,12 +887,13 @@ const PluginGroupByKeyWordItem: React.FC<PluginGroupByKeyWordItemProps> = React.
         >
             <div className={styles["item-tip"]}>
                 <span className={styles["item-tip-name"]}>{item.Value}</span>
-                <span className={styles["item-tip-number"]}>{item.Total}个插件</span>
+                <span className={styles["item-tip-number"]}>{item.Total}{t("yakPoC.plugins")}</span>
             </div>
         </div>
     )
 })
 const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {item, onSelect, selected} = props
     return (
         <div
@@ -898,12 +905,13 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
             <FolderColorIcon />
             <div className={styles["item-tip"]}>
                 <span className={styles["item-tip-name"]}>{item.Value}</span>
-                <span className={styles["item-tip-number"]}>{item.Total}个插件</span>
+                <span className={styles["item-tip-number"]}>{item.Total}{t("yakPoC.plugins")}</span>
             </div>
         </div>
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {selectGroupList, onClearAll, pageId, pageInfo, onInitInputValueAfter, type} = props
     const pluginBatchExecuteContentRef = useRef<HybridScanExecuteContentRefProps>(null)
 
@@ -1034,11 +1042,11 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                             options={[
                                 {
                                     value: "plugin",
-                                    label: "已选插件"
+                                    label: t("yakPoC.selected")
                                 },
                                 {
                                     value: "log",
-                                    label: "插件日志",
+                                    label: t("yakPoC.logs"),
                                     disabled: pluginLogDisabled
                                 }
                             ]}
@@ -1046,10 +1054,10 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         {showType === "plugin" && (
                             <div className={styles["heard-right"]}>
                                 <span className={styles["heard-tip"]}>
-                                    Total<span className={styles["heard-number"]}>{total}</span>
+                                    {t("yakPoC.total")}<span className={styles["heard-number"]}>{total}</span>
                                 </span>
                                 <YakitButton type='text' danger onClick={onClearAll}>
-                                    清空
+                                    {t("yakPoC.clear")}
                                 </YakitButton>
                             </div>
                         )}
@@ -1071,7 +1079,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             <div className={styles["yak-poc-execute-wrapper"]}>
                 <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                     <div className={styles["yak-poc-executor-title"]}>
-                        <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
+                        <span className={styles["yak-poc-executor-title-text"]}>{t("yakPoC.specialVulnerabilityDetection")}</span>
                     </div>
                     <div className={styles["yak-poc-executor-btn"]}>
                         {progressList.length === 1 && (
@@ -1085,19 +1093,19 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                             }}
                             style={{padding: 0}}
                         >
-                            任务列表
+                            {t("yakPoC.taskList")}
                         </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
                                       {executeStatus === "paused" && !pauseLoading && (
                                           <YakitButton onClick={onContinue} loading={continueLoading}>
-                                              继续
+                                              {t("yakPoC.continue")}
                                           </YakitButton>
                                       )}
                                       {(executeStatus === "process" || pauseLoading) && (
                                           <YakitButton onClick={onPause} loading={pauseLoading}>
-                                              暂停
+                                              {t("yakPoC.pause")}
                                           </YakitButton>
                                       )}
                                       <YakitButton
@@ -1105,7 +1113,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                                           onClick={onStopExecute}
                                           disabled={pauseLoading || continueLoading}
                                       >
-                                          停止
+                                          {t("yakPoC.stop")}
                                       </YakitButton>
                                       <div className={styles["divider-style"]}></div>
                                   </>
@@ -1113,7 +1121,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                             : !isExpand && (
                                   <>
                                       <YakitButton onClick={onStartExecute} disabled={selectGroupNum === 0}>
-                                          执行
+                                          {t("yakPoC.execute")}
                                       </YakitButton>
                                       <div className={styles["divider-style"]}></div>
                                   </>
@@ -1176,7 +1184,7 @@ const intervalTime = (startTime: number, endTime: number) => {
     if (minutes > 60) {
         return {
             type: "danger",
-            value: "超时"
+            value: "timeout"
         }
     }
     if (minutes > 0) {
@@ -1191,6 +1199,7 @@ const intervalTime = (startTime: number, endTime: number) => {
     }
 }
 export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["yakPoC"])
     const {hidden, pluginExecuteLog, isExecuting, classNameWrapper = ""} = props
     const [interval, setInterval] = useState<number | undefined>(1000)
 
@@ -1244,13 +1253,13 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
                             <span className={styles["name"]}>
                                 {i.Index}: [{i.PluginName}]
                             </span>
-                            <span className='content-ellipsis'>执行目标: {i.Url}</span>
+                            <span className='content-ellipsis'>{t("yakPoC.target")}: {i.Url}</span>
                             <span
                                 className={classNames(styles["time"], {
                                     [styles["time-danger"]]: type === "danger"
                                 })}
                             >
-                                {type === "danger" ? value : `耗时: ${value}`}
+                                {type === "danger" ? t("yakPoC.timeout") : `${t("yakPoC.timeConsuming")}: ${value}`}
                             </span>
                         </>
                     )
