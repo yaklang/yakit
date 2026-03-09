@@ -50,8 +50,7 @@ module.exports = {
                 github: "auth/from-github/callback",
                 wechat: "auth/from-wechat/callback",
                 qq: "auth/from-qq/callback",
-                // 等待后端给予
-                ccb: "?"
+                ccb: "auth/from-ccb/callback"
             }
 
             const {url = "", type} = arg
