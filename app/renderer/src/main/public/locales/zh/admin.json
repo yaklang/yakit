@@ -29,6 +29,7 @@
   "copySecretKeyTooltip": "复制远程连接",
   "deleteUserConfirm": "确定删除该用户吗？",
   "getListFailed": "获取账号列表失败：{{error}}",
+  "exportFailed": "数据导出失败：{{error}}",
   "holeCollect": "漏洞汇总",
   "riskAndVulnerability": "风险与漏洞",
   "refreshTooltip": "刷新会重置所有查询条件",

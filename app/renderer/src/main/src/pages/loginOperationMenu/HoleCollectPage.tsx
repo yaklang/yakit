@@ -20,10 +20,10 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {RiskDetails, cellColorFontSetting} from "../risks/RiskTable"
 import {Risk} from "../risks/schema"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 const {Paragraph} = Typography
 const {Option} = YakitSelect
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface HoleCollectPageProps {}
 
@@ -76,7 +76,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                 }
             })
             .catch((e) => {
-                failed(`QueryRisks failed: ${e}`)
+                failed(t("getListFailed", { error: e }))
             })
             .finally(() => {})
     }
@@ -100,7 +100,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                 setSelectedRowKeys([])
             })
             .catch((e) => {
-                failed(`QueryRisks failed: ${e}`)
+                failed(t("getListFailed", { error: e }))
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
@@ -324,7 +324,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                     })
                 })
                 .catch((e) => {
-                    failed("数据导出失败 " + `${e}`)
+                    failed(t("exportFailed", { error: e }))
                 })
                 .finally(() => {})
         })
@@ -442,7 +442,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                     pageSize: getParams().Limit,
                     showSizeChanger: true,
                     total: total,
-                    showTotal: (total) => <YakitTag>Total:{total}</YakitTag>,
+                    showTotal: (total) => <YakitTag>{t("total")}:{total}</YakitTag>,
                     pageSizeOptions: ["5", "10", "20"]
                 }}
                 onChange={(pagination) => {
