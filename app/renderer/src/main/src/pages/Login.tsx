@@ -10,6 +10,7 @@ import {isEnterpriseEdition} from "@/utils/envfile"
 import {apiDownloadPluginMine} from "./plugins/utils"
 import { YakitModalConfirm } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface LoginProp {
@@ -22,6 +23,7 @@ interface LoginParamsProp {
 }
 
 const Login: React.FC<LoginProp> = (props) => {
+    const { t } = useI18nNamespaces(["core"])
     const [loading, setLoading] = useState<boolean>(false)
     // 打开企业登录面板
     const openEnterpriseModal = () => {
@@ -57,7 +59,7 @@ const Login: React.FC<LoginProp> = (props) => {
                     if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
                 })
                 .catch((err) => {
-                    failed("登录错误:" + err)
+                    failed(t("Login.loginError", { ns: "core", error: err }))
                 })
                 .finally(() => {
                     setTimeout(() => setLoading(false), 200)
@@ -71,9 +73,9 @@ const Login: React.FC<LoginProp> = (props) => {
             if (ok) {
                 const m = YakitModalConfirm({
                     type: "white",
-                    title: "数据同步",
+                    title: t("Login.dataSync", { ns: "core" }),
                     icon: <ExclamationCircleOutlined />,
-                    content: "是否选择将远端的数据同步本地",
+                    content: t("Login.syncDataConfirm", { ns: "core" }),
                     onOk() {
                         apiDownloadPluginMine()
                         setTimeout(() => setLoading(false), 200)
@@ -108,20 +110,20 @@ const Login: React.FC<LoginProp> = (props) => {
         >
             <YakitSpin spinning={loading}>
                 <div className='login-type-body'>
-                    <h2 className='login-text'>登录</h2>
+                    <h2 className='login-text'>{t("Login.login", { ns: "core" })}</h2>
                     <div className='login-icon-body'>
                         {/*<div className='login-icon' onClick={() => githubAuth()}>*/}
                         <div className='login-icon' onClick={() => fetchLogin("github")}>
                             <div className='login-icon-text'>
                                 <GithubOutlined className='type-icon' />
-                                使用 GitHub 账号登录
+                                {t("Login.loginWithGithub", { ns: "core" })}
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
                         <div className='login-icon' onClick={() => fetchLogin("wechat")}>
                             <div className='login-icon-text'>
                                 <WechatOutlined className='type-icon icon-wx' />
-                                使用微信账号登录
+                                {t("Login.loginWithWechat", { ns: "core" })}
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
