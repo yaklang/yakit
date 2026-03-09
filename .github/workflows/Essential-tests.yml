@@ -164,4 +164,12 @@ jobs:
             exit 0
           fi
           echo "Running tests: $TESTS"
-          yarn test:vitest $TESTS --run --reporter verbose
+          # enable glob expansion so ** patterns from TESTS are resolved in CI
+          shopt -s globstar nullglob
+
+          # expand patterns to actual files before passing to vitest
+          EXPANDED_TESTS=$(eval echo $TESTS)
+
+          echo "Expanded tests: $EXPANDED_TESTS"
+
+          yarn test:vitest $EXPANDED_TESTS --run --reporter verbose
