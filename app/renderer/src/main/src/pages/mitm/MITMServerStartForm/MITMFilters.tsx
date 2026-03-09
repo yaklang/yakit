@@ -1,29 +1,29 @@
-import React, {useEffect, useImperativeHandle, useState} from "react"
-import {Form, Spin} from "antd"
-import {useControllableValue, useMemoizedFn} from "ahooks"
-import {yakitNotify} from "../../../utils/notification"
+import React, { useEffect, useImperativeHandle, useState, useMemo } from "react"
+import { Form, Spin } from "antd"
+import { useControllableValue, useMemoizedFn } from "ahooks"
+import { yakitNotify } from "../../../utils/notification"
 import styles from "./MITMServerStartForm.module.scss"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import classNames from "classnames"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {
     LabelNodeItem,
     MatcherAndExtractionValueList
 } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {OutlineTrashIcon} from "@/assets/icon/outline"
-import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {defaultMITMBaseFilter, defaultMITMAdvancedFilter} from "@/defaultConstants/mitm"
+import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { OutlineTrashIcon } from "@/assets/icon/outline"
+import { YakitSelectProps } from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import { defaultMITMBaseFilter, defaultMITMAdvancedFilter } from "@/defaultConstants/mitm"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {FilterType} from "./MITMFiltersModal"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import { FilterType } from "./MITMFiltersModal"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 
-const {YakitPanel} = YakitCollapse
-const {ipcRenderer} = window.require("electron")
+const { YakitPanel } = YakitCollapse
+const { ipcRenderer } = window.require("electron")
 
 export interface MITMFiltersProp {
     filterType: FilterType
@@ -63,11 +63,13 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
         setParams(props.filter || cloneDeep(defaultMITMBaseFilter))
     }, [props.filter])
 
+    const { t, i18n } = useI18nNamespaces(["mitm"])
+
     return (
         <Spin spinning={loading}>
             <Form
-                labelCol={{span: 6}}
-                wrapperCol={{span: 16}}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 16 }}
                 className={classNames(styles["mitm-filters-form"], {
                     [styles["mitm-filters-form-hidden"]]: props.visible === false
                 })}
@@ -77,7 +79,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.includeHostname}
                         onChange={(value, _) => {
-                            setParams({...params, includeHostname: value})
+                            setParams({ ...params, includeHostname: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -86,7 +88,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.excludeHostname || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, excludeHostname: value})
+                            setParams({ ...params, excludeHostname: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -95,7 +97,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.includeUri || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, includeUri: value})
+                            setParams({ ...params, includeUri: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -104,7 +106,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.excludeUri || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, excludeUri: value})
+                            setParams({ ...params, excludeUri: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -113,7 +115,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.includeSuffix || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, includeSuffix: value})
+                            setParams({ ...params, includeSuffix: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -122,7 +124,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.excludeSuffix || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, excludeSuffix: value})
+                            setParams({ ...params, excludeSuffix: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -131,7 +133,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.excludeContentTypes || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, excludeContentTypes: value})
+                            setParams({ ...params, excludeContentTypes: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -140,7 +142,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         <YakitSwitch
                             checked={!!params?.filterBundledStaticJS}
                             onChange={(checked) => {
-                                setParams({...params, filterBundledStaticJS: checked})
+                                setParams({ ...params, filterBundledStaticJS: checked })
                             }}
                         ></YakitSwitch>
                     </Form.Item>
@@ -150,7 +152,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         mode='tags'
                         value={params?.excludeMethod || undefined}
                         onChange={(value, _) => {
-                            setParams({...params, excludeMethod: value})
+                            setParams({ ...params, excludeMethod: value })
                         }}
                     ></YakitSelect>
                 </Form.Item>
@@ -201,7 +203,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))
 }
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
-    const {visible = true} = props
+    const { visible = true } = props
 
     const [activeKey, setActiveKey] = useControllableValue<string | string[]>(props, {
         defaultValue: "ID:0",
@@ -243,7 +245,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             <div className={styles["filter-operation"]}>
                 <YakitInput.Search onSearch={(value) => {
                     setSearchValue(value)
-                    if(!value) return
+                    if (!value) return
                     const matchedKeys: string[] = []
                     filterData.forEach((item, index) => {
                         const hasMatch = item.Group.some(g => g.toLowerCase().includes(value.toLowerCase()))
@@ -267,7 +269,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     {filterData!.map((filterItem, index) => {
                         const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
 
-                        if(!!searchValue && filterItem.Group.every(g => !g.toLowerCase().includes(searchValue.toLowerCase()))) return null
+                        if (!!searchValue && filterItem.Group.every(g => !g.toLowerCase().includes(searchValue.toLowerCase()))) return null
 
                         return (
                             <YakitPanel
@@ -316,7 +318,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             ) : (
                 <YakitEmpty
                     description={
-                        <YakitButton type='primary' disabled={!!searchValue} onClick={onAddAdvancedSetting} style={{marginTop: 12}}>
+                        <YakitButton type='primary' disabled={!!searchValue} onClick={onAddAdvancedSetting} style={{ marginTop: 12 }}>
                             添加高级配置
                         </YakitButton>
                     }
@@ -358,10 +360,10 @@ const filterRangeOption: YakitSelectProps["options"] = [
     }
 ]
 export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = React.memo((props) => {
-    const {item, onEdit, searchValue} = props
+    const { item, onEdit, searchValue } = props
     const onAddGroup = useMemoizedFn(() => {
         if (isFilterItemEmpty(item)) {
-            yakitNotify("error", "请将已添加条件配置完成后再新增")
+            yakitNotify("error", t("mitm.MITMFilters.pleaseCompleteCondition"))
             return
         } else {
             item.Group.push("")
@@ -386,8 +388,8 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
                         }}
                         buttonStyle='solid'
                         options={[
-                            {label: "正则", value: "regexp"},
-                            {label: "glob", value: "glob"}
+                            { label: "正则", value: "regexp" },
+                            { label: "glob", value: "glob" }
                         ]}
                     />
                 </LabelNodeItem>
