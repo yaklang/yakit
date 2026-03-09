@@ -29,6 +29,7 @@
   "copySecretKeyTooltip": "Copy Secret Key",
   "deleteUserConfirm": "Are you sure to delete this user?",
   "getListFailed": "Failed to get account list: {{error}}",
+  "exportFailed": "Data export failed: {{error}}",
   "holeCollect": "Vulnerability Summary",
   "riskAndVulnerability": "Risk & Vulnerability",
   "refreshTooltip": "Refresh will reset all search criteria",
