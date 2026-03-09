@@ -28,6 +28,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import styles from "./LicenseAdminPage.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {Paragraph} = Typography
 interface LicenseAdminRequest {
     keywords: string
@@ -39,6 +40,7 @@ interface LicenseAdminRequest {
 }
 export interface LicenseAdminPageProp {}
 export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
+    const { t } = useI18nNamespaces(["admin"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const isInitRequestRef = useRef<boolean>(true)
     const [query, setQuery] = useState<LicenseAdminRequest>({
@@ -73,17 +75,17 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
         const differ = later - now
         const day = differ / 60 / 60 / 24
         if (day > 30) {
-            return <YakitTag color='green'>正常使用</YakitTag>
+            return <YakitTag color='green'>{t("normalUse")}</YakitTag>
         } else if (0 < day && day <= 30) {
-            return <YakitTag color='yellow'>即将过期</YakitTag>
+            return <YakitTag color='yellow'>{t("expiringSoon")}</YakitTag>
         } else {
-            return <YakitTag color='danger'>已过期</YakitTag>
+            return <YakitTag color='danger'>{t("expired")}</YakitTag>
         }
     }
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: "企业名称",
+            title: t("companyName"),
             dataKey: "company",
             filterProps: {
                 filterKey: "keywords",
@@ -93,7 +95,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             fixed: "left"
         },
         {
-            title: "状态",
+            title: t("status"),
             dataKey: "status",
             render: (text, record) => countDay(record.currentTime, record.durationDate),
             filterProps: {
@@ -101,48 +103,48 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 filtersType: "select",
                 filtersSelectAll: {
                     isAll: true,
-                    textAll: "全部"
+                    textAll: t("all")
                 },
                 filters: [
                     {
-                        label: "已过期",
+                        label: t("expired"),
                         value: "1"
                     },
                     {
-                        label: "即将过期",
+                        label: t("expiringSoon"),
                         value: "2"
                     },
                     {
-                        label: "正常使用",
+                        label: t("normalUse"),
                         value: "3"
                     }
                 ]
             }
         },
         {
-            title: "有效期至",
+            title: t("validUntil"),
             dataKey: "durationDate",
             render: (text) => moment.unix(text).format("YYYY-MM-DD")
         },
         {
-            title: "License(已使用/总数)",
+            title: t("licenseUsedTotal"),
             dataKey: "useActivationNum",
             render: (text, record) => {
                 return `${text} / ${record.maxActivationNum}`
             }
         },
         {
-            title: "用户总数",
+            title: t("totalUsers"),
             dataKey: "maxUser"
         },
         {
-            title: "操作",
+            title: t("action"),
             dataKey: "action",
             width: 130,
             fixed: "right",
             render: (_, record: API.CompanyLicenseConfigList) => (
                 <div className={styles["table-action-icon"]}>
-                    <Tooltip title='生成License' align={{offset: [-5, 10]}}>
+                    <Tooltip title={t("generateLicense")} align={{offset: [-5, 10]}}>
                         <OutlinePluscircleIcon
                             className={styles["action-icon"]}
                             onClick={() => {
@@ -159,7 +161,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                         }}
                     />
                     <YakitPopconfirm
-                        title={"确定删除该企业吗？"}
+                        title={t("confirmDeleteCompany")}
                         onConfirm={() => onRemoveSingle(record.id)}
                         placement='right'
                     >
@@ -215,7 +217,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", "查看license失败：" + e)
+                yakitNotify("error", t("viewLicenseFailed", { error: e }))
             })
             .finally(() => {
                 setLoading(false)
@@ -231,7 +233,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", "删除企业成功")
+                yakitNotify("success", t("deleteCompanySuccess"))
                 setResponse((prevResponse) => {
                     return {
                         ...prevResponse,
@@ -244,7 +246,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", "删除企业失败：" + err)
+                yakitNotify("error", t("deleteCompanyFailed", { error: err }))
             })
     }
 
@@ -270,10 +272,10 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 extra={
                     <div className={styles["licenseAdminPage-table-extra"]}>
                         <YakitButton size='small' onClick={() => setEnterprisesPopShow(true)}>
-                            添加企业
+                            {t("addCompany")}
                         </YakitButton>
                         <YakitButton size='small' onClick={() => setCreateLicensePopShow(true)}>
-                            生成License
+                            {t("generateLicense")}
                         </YakitButton>
                     </div>
                 }
@@ -294,7 +296,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             ></TableVirtualResize>
             <YakitModal
                 visible={enterprisesPopShow}
-                title={editInfoRef.current ? "编辑企业" : "创建企业"}
+                title={editInfoRef.current ? t("editCompany") : t("createCompany")}
                 destroyOnClose={true}
                 maskClosable={false}
                 width={600}
@@ -317,7 +319,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             </YakitModal>
             <YakitModal
                 visible={createLicensePopShow}
-                title='生成License'
+                title={t("generateLicense")}
                 destroyOnClose={true}
                 maskClosable={false}
                 width={600}
@@ -353,6 +355,7 @@ interface LicenseFormProps {
     editInfo?: API.CompanyLicenseConfigList
 }
 const LicenseForm: React.FC<LicenseFormProps> = (props) => {
+    const { t } = useI18nNamespaces(["admin"])
     const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -381,7 +384,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                 refresh()
             })
             .catch((err) => {
-                yakitNotify("error", "企业操作失败：" + err)
+                yakitNotify("error", t("companyOperationFailed", { error: err }))
             })
             .finally(() => {
                 setLoading(false)
@@ -406,8 +409,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     requestFun(params)
                     m.destroy()
                 },
-                content:
-                    "由于修改用户总数需要修改私有部署服务器的License，会占用一次License生成次数，所以默认会把License总数加1"
+                content: t("changeUserCountWarning")
             })
         } else {
             requestFun(params)
@@ -417,18 +419,18 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
     return (
         <div style={{marginTop: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
-                <Form.Item name='company' label='企业名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入企业名称' allowClear disabled={!!editInfo} />
+                <Form.Item name='company' label={t("companyName")} rules={[{required: true, message: t("required")}]}>
+                    <YakitInput placeholder={t("inputCompanyName")} allowClear disabled={!!editInfo} />
                 </Form.Item>
                 <Form.Item
                     name='maxActivationNum'
-                    label='License总数'
+                    label={t("totalLicenses")}
                     rules={[
-                        {required: true, message: "该项为必填"},
+                        {required: true, message: t("required")},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value && value < editInfo.maxActivationNum) {
-                                    return Promise.reject("License总数仅能增加")
+                                    return Promise.reject(t("licenseCannotDecrease"))
                                 } else {
                                     setDisabledSubmit(false)
                                     return Promise.resolve()
@@ -437,25 +439,25 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         }
                     ]}
                 >
-                    <YakitInputNumber placeholder='请输入License总数' min={0} />
+                    <YakitInputNumber placeholder={t("inputTotalLicenses")} min={0} />
                 </Form.Item>
                 <Form.Item
                     name='maxUser'
-                    label={"用户总数"}
+                    label={t("totalUsers")}
                     tooltip={
                         editInfo
                             ? {
                                   icon: <OutlineInformationcircleIcon />,
-                                  title: "如修改用户总数则需要修改私有部署服务器的License"
+                                  title: t("changeUserCountTooltip")
                               }
                             : null
                     }
                     rules={[
-                        {required: true, message: "该项为必填"},
+                        {required: true, message: t("required")},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value && value < editInfo.maxUser) {
-                                    return Promise.reject("用户总数不可减少")
+                                    return Promise.reject(t("userCountCannotDecrease"))
                                 } else {
                                     setDisabledSubmit(false)
                                     return Promise.resolve()
@@ -464,25 +466,25 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         }
                     ]}
                 >
-                    <YakitInputNumber placeholder='请输入用户总数' min={0} />
+                    <YakitInputNumber placeholder={t("inputTotalUsers")} min={0} />
                 </Form.Item>
                 <Form.Item
                     name='durationDate'
-                    label='有效期'
+                    label={t("validityPeriod")}
                     tooltip={
                         editInfo
                             ? {
                                   icon: <OutlineInformationcircleIcon />,
-                                  title: "如修改有效期，则所有License都需替换，已使用License数清零"
+                                  title: t("changeValidityPeriodTooltip")
                               }
                             : null
                     }
                     rules={[
-                        {required: true, message: "该项为必填"},
+                        {required: true, message: t("required")},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value && value.unix() < editInfo.durationDate) {
-                                    return Promise.reject("有效期不可缩短")
+                                    return Promise.reject(t("validityPeriodCannotShorten"))
                                 } else {
                                     setDisabledSubmit(false)
                                     return Promise.resolve()
@@ -494,7 +496,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     <YakitDatePicker
                         locale={locale}
                         format='YYYY-MM-DD'
-                        placeholder='点击这里设置有效期'
+                        placeholder={t("clickToSetValidityPeriod")}
                         style={{width: "100%"}}
                     />
                 </Form.Item>
@@ -506,7 +508,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         htmlType='submit'
                         loading={loading}
                     >
-                        确认
+                        {t("confirm")}
                     </YakitButton>
                 </div>
             </Form>
@@ -530,6 +532,7 @@ interface CreateLicenseProps {
     refresh: () => void
 }
 const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
+    const { t } = useI18nNamespaces(["admin"])
     const {company, onCancel, refresh} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -596,7 +599,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 setSelectData(opsd)
             })
             .catch((err) => {
-                yakitNotify("error", "查看license失败：" + err)
+                yakitNotify("error", t("viewLicenseFailed", { error: err }))
             })
             .finally(() => {
                 setSelectLoading(false)
@@ -623,7 +626,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 onCancel()
                 refresh()
                 const m = showYakitModal({
-                    title: "生成成功",
+                    title: t("generateSuccess"),
                     content: (
                         <div style={{padding: 15}}>
                             <Paragraph>
@@ -637,7 +640,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", "企业操作失败：" + err)
+                yakitNotify("error", t("companyOperationFailed", { error: err }))
             })
             .finally(() => {
                 setLoading(false)
@@ -655,12 +658,12 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     return (
         <div style={{marginTop: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
-                <Form.Item name='id' label='企业名称' rules={[{required: true, message: "该项为必选"}]}>
+                <Form.Item name='id' label={t("companyName")} rules={[{required: true, message: t("required")}]}>
                     <YakitSelect
                         disabled={!!company}
                         showSearch
                         optionFilterProp='children'
-                        placeholder='请选择企业名称'
+                        placeholder={t("selectCompanyName")}
                         filterOption={(input, option) => {
                             const val = (option?.label ?? "") + ""
                             return val.toLowerCase().includes(input.toLowerCase())
@@ -681,18 +684,18 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                         notFoundContent={<YakitEmpty />}
                     />
                 </Form.Item>
-                <Form.Item name='company_version' label='版本' rules={[{required: true, message: "该项为必选"}]}>
-                    <YakitSelect placeholder='请选择版本' allowClear>
-                        <YakitSelect.Option value='EnpriTrace'>企业版</YakitSelect.Option>
-                        <YakitSelect.Option value='EnpriTraceAgent'>便携版</YakitSelect.Option>
+                <Form.Item name='company_version' label={t("version")} rules={[{required: true, message: t("required")}]}>
+                    <YakitSelect placeholder={t("selectVersion")} allowClear>
+                        <YakitSelect.Option value='EnpriTrace'>{t("enterpriseEdition")}</YakitSelect.Option>
+                        <YakitSelect.Option value='EnpriTraceAgent'>{t("portableEdition")}</YakitSelect.Option>
                     </YakitSelect>
                 </Form.Item>
-                <Form.Item name='license' label='申请码' rules={[{required: true, message: "该项为必选"}]}>
-                    <YakitInput.TextArea placeholder='请输入申请码' allowClear rows={13} />
+                <Form.Item name='license' label={t("applicationCode")} rules={[{required: true, message: t("required")}]}>
+                    <YakitInput.TextArea placeholder={t("inputApplicationCode")} allowClear rows={13} />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
-                        确认
+                        {t("confirm")}
                     </YakitButton>
                 </div>
             </Form>
