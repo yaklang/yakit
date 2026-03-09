@@ -35,5 +35,21 @@
     "other": "Other",
     "unrecognizedData": "Unrecognized Data",
     "requiredField": "{{title}} is required",
-    "regexCheckFailed": "{{title}}-{{regex}} check failed"
+    "regexCheckFailed": "{{title}}-{{regex}} check failed",
+    "import": "Import",
+    "autoWordwrap": "Auto Wrap",
+    "noAutoWordwrap": "No Auto Wrap",
+    "largeInput": "Large Input",
+    "largeOutputTip": "Output is too large, please click save to download and view the file",
+    "replaceOutputToInput": "Replace Output to Input",
+    "copy": "Copy",
+    "disable": "Disable",
+    "enable": "Enable",
+    "enableBreakpoint": "Enable Breakpoint",
+    "disableBreakpoint": "Disable Breakpoint",
+    "noSavedContent": "No saved content",
+    "savedSuccess": "Saved successfully",
+    "selectFolder": "Please select a folder",
+    "collapseCodecCategory": "Collapse Codec Categories",
+    "expandCodecCategory": "Expand Codec Categories"
 }
