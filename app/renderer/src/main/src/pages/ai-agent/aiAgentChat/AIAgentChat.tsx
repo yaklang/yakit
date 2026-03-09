@@ -49,6 +49,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {Tooltip} from "antd"
 import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 import {AIChatContentRefProps} from "../aiChatContent/type"
@@ -66,6 +67,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 }
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {} = props
     const {activeChat, setting} = useAIAgentStore()
     const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
@@ -344,24 +346,24 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     /** 从别的元素上触发使用 forge 模板的功能 */
     const handleTriggerExecForge = useMemoizedFn((forge: AIForge, useForge?: boolean) => {
         if (!forge || !forge.Id) {
-            yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
+            yakitNotify("error", t("AIAgent.templateDataError", { ns: "aiAgent" }))
             return
         }
         if (!chatIPCData.execute) {
             handleReplaceActiveForge(forge, useForge)
         } else {
             const m = YakitModalConfirm({
-                title: "切换forge模板",
+                title: t("AIAgent.switchForgeTemplate", { ns: "aiAgent" }),
                 width: 420,
                 footer: undefined,
                 footerStyle: {padding: "0 24px 24px"},
                 content: (
                     <div className={styles["forge-modal-content"]}>
-                        是否<b>中断</b>当前正在进行的对话,使用
+                        {t("AIAgent.interruptConfirm", { ns: "aiAgent" })}<b>中断</b>当前正在进行的对话,使用
                         <b>
                             {forge.ForgeVerboseName}({forge.ForgeName})
                         </b>
-                        forge模板?
+                        {t("AIAgent.forgeTemplate", { ns: "aiAgent" })}
                     </div>
                 ),
                 onOk: () => {
@@ -378,14 +380,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleAITool = useMemoizedFn((toolValue: AITool) => {
         if (!toolValue || !toolValue.ID) {
-            yakitNotify("error", "准备使用的工具数据异常，请稍后再试")
+            yakitNotify("error", t("AIAgent.templateDataError", { ns: "aiAgent" }))
             return
         }
         if (!chatIPCData.execute) {
             handleReplaceActiveTool(toolValue.ID)
         } else {
             const m = YakitModalConfirm({
-                title: "执行工具",
+                title: t("AIAgent.executeTool", { ns: "aiAgent" }),
                 width: 420,
                 footer: undefined,
                 footerStyle: {padding: "0 24px 24px"},
@@ -393,15 +395,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     <div className={styles["forge-modal-content"]}>
                         {!!chatIPCData.execute ? (
                             <>
-                                是否<b>中断</b>当前正在进行的对话,使用
+                                {t("AIAgent.interruptConfirm", { ns: "aiAgent" })}<b>中断</b>当前正在进行的对话,使用
                                 <b>
                                     {toolValue.VerboseName}({toolValue.Name})
                                 </b>
-                                forge模板?
+                                {t("AIAgent.forgeTemplate", { ns: "aiAgent" })}
                             </>
                         ) : (
                             <>
-                                确定要执行{toolValue.VerboseName}({toolValue.Name})工具?
+                                {t("AIAgent.confirmExecute", { ns: "aiAgent" })}{toolValue.VerboseName}({toolValue.Name}){t("AIAgent.toolSuffix", { ns: "aiAgent" })}
                             </>
                         )}
                     </div>
@@ -429,16 +431,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams["extraValue"]) => {
         setMode("re-act")
         const userQuery = formValue?.UserQuery || ""
-        const qs = `我要使用 ${request.ForgeName}forge执行任务${
+        const qs = `${t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName })}${
             !!request.ForgeParams
-                ? `,参数:${JSON.stringify(request.ForgeParams)}`
-                : `${!!userQuery ? `,输入${userQuery!}` : ""}`
+                ? `${t("AIAgent.params", { ns: "aiAgent" })}${JSON.stringify(request.ForgeParams)}`
+                : `${!!userQuery ? `${t("AIAgent.input", { ns: "aiAgent" })}${userQuery!}` : ""}`
         }`
         handleStart({
             qs,
             extraValue: {
                 isForge: true,
-                showForgeQuestion: `我要使用 ${request.ForgeName}forge执行任务`,
+                showForgeQuestion: t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName }),
                 forgeParams: JSON.stringify(formValue, null, 2)
             }
         })
@@ -447,13 +449,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleSubmitTool = useMemoizedFn((question: string) => {
         if (!activeTool) {
-            yakitNotify("warning", " tool 信息异常，请关闭重试")
+            yakitNotify("warning", t("AIAgent.toolInfoError", { ns: "aiAgent" }))
             return
         }
         setMode("re-act")
         handleStart({
-            qs: `我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务${
-                question ? `,输入${question}` : ""
+            qs: `${t("AIAgent.useToolTask", { ns: "aiAgent", name: `${activeTool.VerboseName}(${activeTool.Name})` })}${
+                question ? `${t("AIAgent.input", { ns: "aiAgent" })}${question}` : ""
             }`
         })
         handleClearActiveTool()
@@ -463,7 +465,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         try {
             const forgeID = Number(forge.Id) || 0
             if (!forgeID) {
-                yakitNotify("error", `准备使用的模板异常: id('${forgeID}'), 操作失败`)
+                yakitNotify("error", t("AIAgent.templateErrorWithId", { ns: "aiAgent", id: forgeID }))
                 return
             }
             let forgeInfo = cloneDeep(forge)
@@ -494,7 +496,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleReplaceActiveTool = useMemoizedFn((id: number) => {
         const toolId = Number(id) || 0
         if (!toolId) {
-            yakitNotify("error", `准备使用的工具异常: id('${id}'), 操作失败`)
+            yakitNotify("error", t("AIAgent.toolErrorWithId", { ns: "aiAgent", id }))
             return
         }
 
@@ -591,7 +593,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             clearAll()
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_Agent}))
         } catch (e) {
-            failed(`取消构建知识插件失败: ${e + ""}`)
+            failed(t("AIAgent.cancelBuildPluginFailed", { ns: "aiAgent", error: e + "" }))
         }
     }
 
@@ -686,47 +688,47 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             <YakitHint
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceShow}
-                title='警告'
-                content={"是否要替换当前使用的技能模板?"}
+                title={t("AIAgent.warning", { ns: "aiAgent" })}
+                content={t("AIAgent.replaceSkillTemplateConfirm", { ns: "aiAgent" })}
                 footerExtra={
                     <YakitCheckbox
                         checked={replaceForgeNoPrompt}
                         onChange={(e) => setReplaceForgeNoPrompt(e.target.checked)}
                     >
-                        不再提醒
+                        {t("AIAgent.doNotRemindAgain", { ns: "aiAgent" })}
                     </YakitCheckbox>
                 }
-                okButtonText='替换'
+                okButtonText={t("AIAgent.replace", { ns: "aiAgent" })}
                 onOk={handleReplaceOK}
-                cancelButtonText='取消'
+                cancelButtonText={t("AIAgent.cancel", { ns: "aiAgent" })}
                 onCancel={handleReplaceCancel}
             />
             <YakitHint
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceToolShow}
-                title='警告'
-                content={"是否要替换当前使用的工具?"}
+                title={t("AIAgent.warning", { ns: "aiAgent" })}
+                content={t("AIAgent.replaceToolConfirm", { ns: "aiAgent" })}
                 footerExtra={
                     <YakitCheckbox
                         checked={replaceToolNoPrompt}
                         onChange={(e) => setReplaceToolNoPrompt(e.target.checked)}
                     >
-                        不再提醒
+                        {t("AIAgent.doNotRemindAgain", { ns: "aiAgent" })}
                     </YakitCheckbox>
                 }
-                okButtonText='替换'
+                okButtonText={t("AIAgent.replace", { ns: "aiAgent" })}
                 onOk={handleReplaceToolOK}
-                cancelButtonText='取消'
+                cancelButtonText={t("AIAgent.cancel", { ns: "aiAgent" })}
                 onCancel={handleReplaceToolCancel}
             />
             <YakitHint
                 visible={visible}
                 // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
-                title={"知识库未构建完成"}
-                content={"知识未构建完成，是否确定关闭页面？"}
-                okButtonText='立即关闭'
+                title={t("AIAgent.knowledgeNotBuiltTitle", { ns: "aiAgent" })}
+                content={t("AIAgent.knowledgeNotBuiltDesc", { ns: "aiAgent" })}
+                okButtonText={t("AIAgent.closeImmediately", { ns: "aiAgent" })}
                 onOk={() => onOK?.()}
-                cancelButtonText='稍后再说'
+                cancelButtonText={t("AIAgent.waitAMoment", { ns: "aiAgent" })}
                 onCancel={onCancel}
             />
         </div>
@@ -734,6 +736,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onExtraAction} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
@@ -752,17 +755,17 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     icon={expand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
                     onClick={handleExpand}
                 >
-                    {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
+                    {expand ? t("AIAgent.hideReview", { ns: "aiAgent" }) : t("AIAgent.expandReview", { ns: "aiAgent" })}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
                     {showCancelSubtask && (
                         <YakitPopconfirm
                             placement='top'
                             onConfirm={() => onExtraAction("stopSubTask")}
-                            title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
+                            title={t("AIAgent.cancelSubtaskConfirm", { ns: "aiAgent" })}
                         >
                             <YakitButton type='outline2' icon={<RedoDotIcon />}>
-                                跳过子任务
+                                {t("AIAgent.skipSubtask", { ns: "aiAgent" })}
                             </YakitButton>
                         </YakitPopconfirm>
                     )}
@@ -770,9 +773,9 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     <YakitPopconfirm
                         placement='top'
                         onConfirm={() => onExtraAction("stopTask")}
-                        title='是否确认取消整个任务，确认将停止执行'
+                        title={t("AIAgent.cancelTaskConfirm", { ns: "aiAgent" })}
                     >
-                        <Tooltip overlay='终止任务' placement='top'>
+                        <Tooltip overlay={t("AIAgent.terminateTask", { ns: "aiAgent" })} placement='top'>
                             <YakitButton
                                 className={styles["task-button"]}
                                 radius='28px'

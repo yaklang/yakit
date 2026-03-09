@@ -199,13 +199,13 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             const knowledgeNames: string[] = []
             checkItems.forEach((item) => {
                 switch (item.type) {
-                    case "工具":
+                    case t("AIAgent.tool", { ns: "aiAgent" }):
                         toolNames.push(item.name)
                         break
-                    case "技能":
+                    case t("AIAgent.skill", { ns: "aiAgent" }):
                         forgeNames.push(item.name)
                         break
-                    case "知识库":
+                    case t("AIAgent.knowledgeBase", { ns: "aiAgent" }):
                         knowledgeNames.push(item.name)
                         break
                     default:
@@ -229,7 +229,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                         })
                     }
                 ],
-                PluginName: "简易意图识别"
+                PluginName: t("AIAgent.simpleIntentRecognition", { ns: "aiAgent" })
             }
             apiDebugPlugin({
                 params: params,
@@ -271,18 +271,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             onSetQuestion("")
         })
         const onMore = useMemoizedFn((item: string) => {
-            switch (item) {
-                case "技能":
-                    onForgeMore()
-                    break
-                case "知识库":
-                    onKnowledgeBaseMore()
-                    break
-                case "工具":
-                    onToolMore()
-                    break
-                default:
-                    break
+            if (item === t("AIAgent.skill", { ns: "aiAgent" })) {
+                onForgeMore()
+            } else if (item === t("AIAgent.knowledgeBase", { ns: "aiAgent" })) {
+                onKnowledgeBaseMore()
+            } else if (item === t("AIAgent.tool", { ns: "aiAgent" })) {
+                onToolMore()
             }
         })
         const onForgeMore = useMemoizedFn(() => {
@@ -323,9 +317,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
         const randomAIMaterialsData: RandomAIMaterialsDataProps = useCreation(() => {
             const tools: AIMaterialsData = {
-                type: "工具",
+                type: t("AIAgent.tool", { ns: "aiAgent" }),
                 data: (randomAIMaterials?.AITools || []).map((tool) => ({
-                    type: "工具",
+                    type: t("AIAgent.tool", { ns: "aiAgent" }),
                     name: tool.VerboseName || tool.Name,
                     description: tool.Description || ""
                 })),
@@ -333,9 +327,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 hoverIcon: <HoverAIToolIcon />
             }
             const forges: AIMaterialsData = {
-                type: "技能",
+                type: t("AIAgent.skill", { ns: "aiAgent" }),
                 data: (randomAIMaterials?.AIForges || []).map((forge) => ({
-                    type: "技能",
+                    type: t("AIAgent.skill", { ns: "aiAgent" }),
                     name: forge.ForgeVerboseName || forge.ForgeName,
                     description: forge.Description || ""
                 })),
@@ -343,9 +337,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 hoverIcon: <HoverAIForgeIcon />
             }
             const knowledgeBases: AIMaterialsData = {
-                type: "知识库",
+                type: t("AIAgent.knowledgeBase", { ns: "aiAgent" }),
                 data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
-                    type: "知识库",
+                    type: t("AIAgent.knowledgeBase", { ns: "aiAgent" }),
                     name: knowledgeBase.KnowledgeTitle || knowledgeBase.Summary,
                     description: knowledgeBase.KnowledgeDetails || ""
                 })),
@@ -373,7 +367,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const items = useMemo(() => {
             return [
                 {
-                    label: "知识库",
+                    label: t("AIAgent.knowledgeBase", { ns: "aiAgent" }),
                     key: "knowledge",
                     children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
                     extra: [
@@ -407,7 +401,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 },
                 {
-                    label: "技能库",
+                    label: t("AIAgent.skillBase", { ns: "aiAgent" }),
                     key: "skills",
                     children: <ForgeName ref={forgeNameRef} />,
                     extra: [
@@ -430,7 +424,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 },
                 {
-                    label: "工具库",
+                    label: t("AIAgent.toolBase", { ns: "aiAgent" }),
                     key: "tools",
                     children: <AIToolList />,
                     extra: [
@@ -450,7 +444,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         return (
             <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
                 <div className={styles["open-file-tree-button"]} onClick={() => setOpenDrawer(!openDrawer)}>
-                    扩展资源
+                    {t("AIAgent.expandResources", { ns: "aiAgent" })}
                     <YakitButton type='text2' icon={<OutlineOpenIcon />} />
                 </div>
 
@@ -466,7 +460,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     closable={false}
                     title={
                         <div className={styles["drawer-title"]}>
-                            <span>扩展资源</span>
+                            <span>{t("AIAgent.expandResources", { ns: "aiAgent" })}</span>
                             <YakitButton
                                 onClick={() => setOpenDrawer(false)}
                                 type='text2'
@@ -485,8 +479,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     <div className={styles["content-absolute"]}>
                         <div className={styles["input-wrapper"]}>
                             <div className={styles["input-heard"]}>
-                                <div className={styles["title"]}>Memfit AI Agent</div>
-                                <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
+                                <div className={styles["title"]}>{t("AIAgent.aiAgentTitle", { ns: "aiAgent" })}</div>
+                                <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle", { ns: "aiAgent" })}</div>
                             </div>
                             <div className={classNames(styles["input-body-wrapper"])}>
                                 <ReactResizeDetector
@@ -514,7 +508,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                             {checkItems.length > 0 ? (
                                 <div className={styles["suggestion-tips-wrapper"]}>
                                     <div className={styles["suggestion-tips-title"]}>
-                                        <span>你可能想问:</span>
+                                        <span>{t("AIAgent.maybeYouWantToAsk", { ns: "aiAgent" })}</span>
                                         {loading ? (
                                             <YakitSpin size='small' wrapperClassName={styles["loading-spinner"]} />
                                         ) : (
@@ -526,7 +520,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                                     className={styles["line2-btn"]}
                                                     onClick={onSwitchQuestion}
                                                 >
-                                                    换一换
+                                                    {t("AIAgent.refresh", { ns: "aiAgent" })}
                                                 </YakitButton>
                                             )
                                         )}
@@ -552,7 +546,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                 <AIUpAngleLeftIcon className={styles["recommend-up-left"]} />
                                 <AIUpAngleRightIcon className={styles["recommend-up-right"]} />
                                 <div className={styles["recommend-heard"]}>
-                                    <div className={styles["title"]}>首页推荐</div>
+                                    <div className={styles["title"]}>{t("AIAgent.homeRecommend", { ns: "aiAgent" })}</div>
                                     <YakitButton
                                         icon={<OutlineRefreshIcon />}
                                         size='small'
@@ -560,7 +554,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                         className={styles["line2-btn"]}
                                         onClick={getRandomAIMaterials}
                                     >
-                                        换一换
+                                        {t("AIAgent.refresh", { ns: "aiAgent" })}
                                     </YakitButton>
                                 </div>
                                 <YakitSpin spinning={loadingAIMaterials}>
@@ -598,6 +592,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 export default AIChatWelcome
 
 export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [isAutoHidden, setIsAutoHidden] = useState<boolean>(true)
     useEffect(() => {
         onGetSideSetting()
@@ -623,8 +618,8 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
         <Tooltip
             title={
                 !isAutoHidden
-                    ? "已开启固定菜单栏，点击icon则可关闭"
-                    : "点击icon高亮后则开启固定菜单栏，菜单栏不会在失焦后自动关闭"
+                    ? t("AIAgent.pinMenuOn", { ns: "aiAgent" })
+                    : t("AIAgent.pinMenuOff", { ns: "aiAgent" })
             }
         >
             <YakitButton
@@ -638,6 +633,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
 })
 
 const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem, checkItems} = props
     return (
         <div className={styles["recommend-list-wrapper"]}>
@@ -652,7 +648,7 @@ const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
                     {title}
                 </div>
                 <YakitButton className={styles["more-btn"]} type='text' size='small' onClick={onMore}>
-                    更多
+                    {t("AIAgent.more", { ns: "aiAgent" })}
                     <OutlineArrowrightIcon />
                 </YakitButton>
             </div>
