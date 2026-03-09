@@ -55,7 +55,17 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         const className = getAIReferenceNodeByType(ContentType)
         return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>
     }, [reference, ContentType])
-
+    if (ContentType?.startsWith("code/")) {
+        return (
+            <AIYaklangCode
+                contentType={ContentType}
+                content={content}
+                nodeLabel={nodeLabel}
+                modalInfo={modalInfo}
+                referenceNode={referenceNode}
+            />
+        )
+    }
     switch (ContentType) {
         case AIStreamContentType.TEXT_MARKDOWN:
             return (
@@ -67,17 +77,18 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     {...aiMarkdownProps}
                 />
             )
-        case AIStreamContentType.CODE_YAKLANG:
-        case AIStreamContentType.CODE_HTTP_REQUEST:
-            return (
-                <AIYaklangCode
-                    contentType={ContentType}
-                    content={content}
-                    nodeLabel={nodeLabel}
-                    modalInfo={modalInfo}
-                    referenceNode={referenceNode}
-                />
-            )
+        // case AIStreamContentType.CODE_YAKLANG:
+        // case AIStreamContentType.CODE_HTTP_REQUEST:
+        // case AIStreamContentType.CODE_PYTHON:
+        //     return (
+        //         <AIYaklangCode
+        //             contentType={ContentType}
+        //             content={content}
+        //             nodeLabel={nodeLabel}
+        //             modalInfo={modalInfo}
+        //             referenceNode={referenceNode}
+        //         />
+        //     )
         case AIStreamContentType.TEXT_PLAIN:
             const {execFileRecord} = yakExecResult
             const fileList = execFileRecord.get(CallToolID)
