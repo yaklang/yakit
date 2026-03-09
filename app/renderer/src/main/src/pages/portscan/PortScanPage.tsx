@@ -58,9 +58,9 @@ export interface PortScanParams {
 
     SynScanNetInterface?: string
     HostAliveConcurrent?: number
-    /**插件条件的配置 */
+    /**Plugin condition configuration */
     LinkPluginConfig?: HybridScanPluginConfig
-    /**爬虫是否启用 JS 解析 */
+    /**Whether the crawler enables JS parsing */
     BasicCrawlerEnableJSParser?: boolean
     TaskName?: string
 }
@@ -78,16 +78,16 @@ export const defaultPorts =
 interface ScanPortFormProp {
     defaultParams: PortScanParams
     setParams: (p: PortScanParams) => any
-    // 网卡选择是否被修改
+    // Whether the network card selection has been modified
     isSetInterface?: boolean
     setInterface?: (v: boolean) => void
-    // 简易企业版显示
+    // Simple enterprise version display
     isSimpleDetectShow?: boolean
-    // 简易版扫描速度
+    // Simple version scanning speed
     deepLevel?: number
-    // 简易版是否已修改速度
+    // Whether the speed has been modified in the simple version
     isSetPort?: boolean
-    // 简易版BruteParams参数更改
+    // Simple version BruteParams parameter change
     bruteParams?: StartBruteParams
     setBruteParams?: (v: StartBruteParams) => void
 }
@@ -142,7 +142,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     ]
 
-    const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
+    const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // proxy representative
     const globalNetworkConfig = useRef<GlobalNetworkConfig>()
     useEffect(() => {
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
