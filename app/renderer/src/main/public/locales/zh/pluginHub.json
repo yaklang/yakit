@@ -1,0 +1,30 @@
+{
+  "PluginEnvVariables": {
+    "title": "插件全局变量",
+    "isPluginSubtitle": "仅展示本插件使用到的变量，编辑后会同步到全局",
+    "allPluginSubtitle": "存放所有插件全局变量，可双击变量值修改，但未配置的变量不会在此显示",
+    "searchPlaceholder": "请输入变量名关键词",
+    "addVariable": "新增全局变量",
+    "key": "变量名",
+    "value": "变量值",
+    "operate": "操作",
+    "noData": "暂无数据",
+    "enterKey": "请填写变量名",
+    "modifyToSave": "请修改内容后再次操作",
+    "editVariable": "编辑全局变量"
+  },
+  "HubSideBarList": {
+    "online": "插件商店",
+    "own": "我的",
+    "local": "本地",
+    "setting": "配置",
+    "recycle": "回收站"
+  },
+  "HubSideBarHint": {
+    "online": "插件商店",
+    "own": "我的插件",
+    "local": "本地插件",
+    "setting": "配置",
+    "recycle": "回收站"
+  }
+}
