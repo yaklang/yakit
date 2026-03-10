@@ -33,6 +33,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
 import {useTypedStream} from "./aiChatListItem/StreamingChatContent/hooks/useTypedStream"
 import {AIReferenceNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
+import {useStreamingChatContent} from "./aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent"
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -85,7 +86,13 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
     const {activeChat} = useAIAgentStore()
     const {handleSend} = useChatIPCDispatcher()
-    const {stream} = useTypedStream({chatType, token: data.stream.EventUUID, session: activeChat?.SessionID || ""})
+
+    // 获取流数据
+    const {stream} = useStreamingChatContent({
+        chatType,
+        token: data.stream.EventUUID,
+        session: activeChat?.SessionID || ""
+    })
 
     const selectors = useCreation(() => {
         return stream?.data?.selectors
