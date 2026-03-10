@@ -51,6 +51,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {JSONParseLog} from "@/utils/tool"
 import {HTTPFlowCodec} from "@/utils/encodec"
+import {YakitMenu} from "./yakitUI/YakitMenu/YakitMenu"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -686,6 +687,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const lastIdRef = useRef<number>()
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
+    const [popoverVisible,setPopoverVisible] = useState<boolean>(false)
 
     const compareAnalyzedIds = useCampare(analyzedIds)
     useDebounceEffect(
@@ -962,6 +964,22 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         )
     })
 
+    const getContextMenu = useMemo(()=>{
+        return [{
+            key: "export",
+            label: t("YakitButton.export"),
+        }]
+    },[])
+
+    const onMultipleClick = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "export":
+                exportMITMRuleExtractedData()
+                break
+        }
+        setPopoverVisible(false)
+    })
+
     return isSelect ? (
         <div className={styles["http-history-box"]} ref={ref}>
             {showHeaderInfo && (
@@ -1105,7 +1123,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
                                                     onSetExportMITMRuleFilter={setExportMITMRuleFilter}
                                                     title={
-                                                        <div className={styles["table-header"]}>
+                                                        <div className={styles["table-header-rules"]}>
                                                             <Space>
                                                                 <Button.Group size={"small"}>
                                                                     {existedInfoType.map((i) => {
@@ -1156,13 +1174,32 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             </Space>
 
                                                             <Space>
-                                                                <YakitButton
-                                                                    type='primary'
-                                                                    size='small'
-                                                                    onClick={exportMITMRuleExtractedData}
+                                                                <YakitPopover
+                                                                    overlayClassName={
+                                                                        styles["http-flow-mini-drop-down-popover"]
+                                                                    }
+                                                                    content={
+                                                                        <YakitMenu
+                                                                            width={150}
+                                                                            selectedKeys={[]}
+                                                                            data={getContextMenu}
+                                                                            onClick={({key}) => {
+                                                                                onMultipleClick(key)
+                                                                            }}
+                                                                        />
+                                                                    }
+                                                                    trigger='click'
+                                                                    placement='bottomLeft'
+                                                                    onVisibleChange={setPopoverVisible}
+                                                                    visible={popoverVisible}
                                                                 >
-                                                                    {t("YakitButton.export")}
-                                                                </YakitButton>
+                                                                    <YakitButton
+                                                                        type='text'
+                                                                        size='small'
+                                                                    >
+                                                                        {t("HTTPFlowDetailMini.more")}
+                                                                    </YakitButton>
+                                                                </YakitPopover>
                                                                 <div
                                                                     className={classNames(
                                                                         styles["http-history-fold-box"]
@@ -1247,7 +1284,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                         </Space>
                                                     </div>
                                                 }
-                                                children={<HTTPFlowCodec data={decodeStr}/>}
+                                                children={<HTTPFlowCodec data={decodeStr} />}
                                             />
                                         )}
                                         {existedInfoType.length === 0 && (
