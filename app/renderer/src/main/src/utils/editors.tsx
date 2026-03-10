@@ -52,9 +52,9 @@ import {Theme, useTheme} from "@/hook/useTheme"
 import {applyYakitMonacoTheme} from "./monacoSpec/theme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {fontSizeOptions, useEditorFontSize} from "@/store/editorFontSize"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { newWebFuzzerTab } from "@/pages/fuzzer/HTTPFuzzerPage"
-import { JSONParseLog } from "./tool"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {JSONParseLog} from "./tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -342,7 +342,11 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const type = props.type || ""
             if (language === "yak") {
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type,SessionID: AnalyzeSessionIDRef.current})
+                    .invoke("StaticAnalyzeError", {
+                        Code: StringToUint8Array(allContent),
+                        PluginType: type,
+                        SessionID: AnalyzeSessionIDRef.current
+                    })
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
@@ -624,15 +628,17 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     // 编辑器Id 用于区分每个编辑器
     const [editorId, setEditorId] = useState<string>(uuidv4())
 
-
-    useEffect(()=>{
+    useEffect(() => {
         initFontSize()
-    },[])
+    }, [])
 
     // 读取上次选择的字体大小/换行符
     const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
         try {
-            const obj: RefreshEditorOperationRecordProps = JSONParseLog(v,{page: "editors", fun: "onRefreshEditorOperationRecord"})
+            const obj: RefreshEditorOperationRecordProps = JSONParseLog(v, {
+                page: "editors",
+                fun: "onRefreshEditorOperationRecord"
+            })
             if (obj.editorId === editorId) {
                 if (obj?.fontSize) {
                     setFontSize(obj.fontSize)
@@ -652,7 +658,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             getRemoteValue(editorOperationRecord).then((data) => {
                 try {
                     if (!data) return
-                    let obj: OperationRecordRes = JSONParseLog(data,{page: "editors"})
+                    let obj: OperationRecordRes = JSONParseLog(data, {page: "editors"})
                     if (typeof obj?.showBreak === "boolean") {
                         setShowLineBreaks(obj?.showBreak)
                     }
@@ -977,177 +983,169 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     })
 
     return (
-        <div className={styles["new-http-packet-editor"]}>
-            <Card
-                className={"flex-card"}
-                size={"small"}
-                loading={
-                    props.loading
-                    // || typeLoading
-                }
-                bordered={props.bordered}
-                style={{height: "100%", width: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
-                title={
-                    !props.noHeader && (
-                        <div style={{display: "flex", gap: 2, ...(props.titleStyle || {})}}>
-                            {!props.noTitle &&
-                                (!!props.title ? (
-                                    props.title
-                                ) : (
-                                    <span style={{fontSize: 12}}>{isResponse ? "Response" : "Request"}</span>
-                                ))}
-                        </div>
-                    )
-                }
-                bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}
-                extra={
-                    !props.noHeader && (
-                        <div style={{display: "flex", gap: 2, alignItems: "center"}}>
-                            {props.extra}
-                            {isShowBeautifyRender && (
-                                <div className={classNames(styles["type-options-checkable-tag"])}>
-                                    {typeOptions.map((item) => (
-                                        <YakitCheckableTag
-                                            key={item.value}
-                                            checked={type === item.value}
-                                            onChange={(checked) => {
-                                                if (checked) {
-                                                    setType(item.value)
-                                                } else {
-                                                    setType(undefined)
-                                                }
-                                            }}
-                                        >
-                                            {item.label}
-                                        </YakitCheckableTag>
-                                    ))}
-                                </div>
-                            )}
-                            {props.AfterBeautifyRenderBtn}
-                            {dataCompare && dataCompare.rightCode.length > 0 && (
-                                <YakitButton
-                                    size={"small"}
-                                    type={"primary"}
-                                    loading={compareLoading}
-                                    onClick={() => {
-                                        openCompareModal(dataCompare)
-                                    }}
-                                >
-                                    {t("NewHTTPPacketEditor.compare")}
-                                </YakitButton>
-                            )}
-                            {props.sendToWebFuzzer && (
-                                <YakitButton
-                                    size={"small"}
-                                    type={"primary"}
-                                    icon={<ThunderboltFilled />}
-                                    onClick={() =>
-                                        newWebFuzzerTab({
-                                            isHttps: props.defaultHttps || false,
-                                            request: props.defaultPacket ? props.defaultPacket : originValue,
-                                            downstreamProxyStr,
-                                            openFlag: true,
-                                            fromMITM: props.fromMITM
-                                        })
-                                    }
-                                >
-                                    FUZZ
-                                </YakitButton>
-                            )}
-                            {showDefaultExtra && (
-                                <>
-                                    <Tooltip title={t("NewHTTPPacketEditor.noWrap")}>
-                                        <YakitButton
-                                            size={"small"}
-                                            type={noWordwrap ? "text" : "primary"}
-                                            icon={<EnterOutlined />}
-                                            onClick={() => {
-                                                setNoWordwrap(!noWordwrap)
-                                            }}
-                                        />
-                                    </Tooltip>
-                                    {!props.noSetIngEditor && (
-                                        <YakitPopover
-                                            title={t("NewHTTPPacketEditor.configureEditor")}
-                                            content={
-                                                <>
-                                                    <Form
-                                                        onSubmitCapture={(e) => {
-                                                            e.preventDefault()
-                                                        }}
-                                                        size={"small"}
-                                                        layout={"horizontal"}
-                                                        wrapperCol={{span: 16}}
-                                                        labelCol={{span: 8}}
-                                                    >
-                                                        {(fontSize || 0) > 0 && (
-                                                             <Form.Item label={t("NewHTTPPacketEditor.fontSize")}>
-                                                                <div style={{display: "flex", width: 120, gap: 4}}>
-                                                                    <YakitSelect
-                                                                        options={fontSizeOptions.map((val) => ({
-                                                                            label: val,
-                                                                            value: val
-                                                                        }))}
-                                                                        value={fontSize}
-                                                                        onChange={(size) => {
-                                                                            setFontSize(size)
-                                                                        }}
-                                                                    />
-                                                                    px
-                                                                </div>
-                                                            </Form.Item>
-                                                        )}
-                                                        <Form.Item
-                                                            label={t("NewHTTPPacketEditor.fullScreen")}
-                                                            style={{marginBottom: 4}}
-                                                        >
-                                                            <YakitButton
-                                                                size={"small"}
-                                                                type={"text"}
-                                                                icon={<FullscreenOutlined />}
-                                                                disabled={props.disableFullscreen}
-                                                                onClick={() => {
-                                                                    showYakitDrawer({
-                                                                        title: t("NewHTTPPacketEditor.fullScreen"),
-                                                                        width: "100%",
-                                                                        content: (
-                                                                            <div
-                                                                                style={{
-                                                                                    height: "100%",
-                                                                                    width: "100%"
-                                                                                }}
-                                                                            >
-                                                                                <NewHTTPPacketEditor
-                                                                                    {...props}
-                                                                                    disableFullscreen={true}
-                                                                                    defaultHeight={670}
-                                                                                />
-                                                                            </div>
-                                                                        )
-                                                                    })
-                                                                    setPopoverVisible(false)
-                                                                }}
-                                                            />
-                                                        </Form.Item>
-                                                    </Form>
-                                                </>
+        <NewHTTPCard
+            loading={props.loading}
+            bordered={props.bordered}
+            title={
+                !props.noHeader && (
+                    <div style={{display: "flex", gap: 2, ...(props.titleStyle || {})}}>
+                        {!props.noTitle &&
+                            (!!props.title ? (
+                                props.title
+                            ) : (
+                                <span style={{fontSize: 12}}>{isResponse ? "Response" : "Request"}</span>
+                            ))}
+                    </div>
+                )
+            }
+            extra={
+                !props.noHeader && (
+                    <div style={{display: "flex", gap: 2, alignItems: "center"}}>
+                        {props.extra}
+                        {isShowBeautifyRender && (
+                            <div className={classNames(styles["type-options-checkable-tag"])}>
+                                {typeOptions.map((item) => (
+                                    <YakitCheckableTag
+                                        key={item.value}
+                                        checked={type === item.value}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setType(item.value)
+                                            } else {
+                                                setType(undefined)
                                             }
-                                            onVisibleChange={(v) => {
-                                                setPopoverVisible(v)
-                                            }}
-                                            overlayInnerStyle={{width: 350}}
-                                            visible={popoverVisible}
-                                        >
-                                            <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
-                                        </YakitPopover>
-                                    )}
-                                </>
-                            )}
-                            {props.extraEnd}
-                        </div>
-                    )
-                }
-            >
+                                        }}
+                                    >
+                                        {item.label}
+                                    </YakitCheckableTag>
+                                ))}
+                            </div>
+                        )}
+                        {props.AfterBeautifyRenderBtn}
+                        {dataCompare && dataCompare.rightCode.length > 0 && (
+                            <YakitButton
+                                size={"small"}
+                                type={"primary"}
+                                loading={compareLoading}
+                                onClick={() => {
+                                    openCompareModal(dataCompare)
+                                }}
+                            >
+                                {t("NewHTTPPacketEditor.compare")}
+                            </YakitButton>
+                        )}
+                        {props.sendToWebFuzzer && (
+                            <YakitButton
+                                size={"small"}
+                                type={"primary"}
+                                icon={<ThunderboltFilled />}
+                                onClick={() =>
+                                    newWebFuzzerTab({
+                                        isHttps: props.defaultHttps || false,
+                                        request: props.defaultPacket ? props.defaultPacket : originValue,
+                                        downstreamProxyStr,
+                                        openFlag: true,
+                                        fromMITM: props.fromMITM
+                                    })
+                                }
+                            >
+                                FUZZ
+                            </YakitButton>
+                        )}
+                        {showDefaultExtra && (
+                            <>
+                                <Tooltip title={t("NewHTTPPacketEditor.noWrap")}>
+                                    <YakitButton
+                                        size={"small"}
+                                        type={noWordwrap ? "text" : "primary"}
+                                        icon={<EnterOutlined />}
+                                        onClick={() => {
+                                            setNoWordwrap(!noWordwrap)
+                                        }}
+                                    />
+                                </Tooltip>
+                                {!props.noSetIngEditor && (
+                                    <YakitPopover
+                                        title={t("NewHTTPPacketEditor.configureEditor")}
+                                        content={
+                                            <>
+                                                <Form
+                                                    onSubmitCapture={(e) => {
+                                                        e.preventDefault()
+                                                    }}
+                                                    size={"small"}
+                                                    layout={"horizontal"}
+                                                    wrapperCol={{span: 16}}
+                                                    labelCol={{span: 8}}
+                                                >
+                                                    {(fontSize || 0) > 0 && (
+                                                        <Form.Item label={t("NewHTTPPacketEditor.fontSize")}>
+                                                            <div style={{display: "flex", width: 120, gap: 4}}>
+                                                                <YakitSelect
+                                                                    options={fontSizeOptions.map((val) => ({
+                                                                        label: val,
+                                                                        value: val
+                                                                    }))}
+                                                                    value={fontSize}
+                                                                    onChange={(size) => {
+                                                                        setFontSize(size)
+                                                                    }}
+                                                                />
+                                                                px
+                                                            </div>
+                                                        </Form.Item>
+                                                    )}
+                                                    <Form.Item
+                                                        label={t("NewHTTPPacketEditor.fullScreen")}
+                                                        style={{marginBottom: 4}}
+                                                    >
+                                                        <YakitButton
+                                                            size={"small"}
+                                                            type={"text"}
+                                                            icon={<FullscreenOutlined />}
+                                                            disabled={props.disableFullscreen}
+                                                            onClick={() => {
+                                                                showYakitDrawer({
+                                                                    title: t("NewHTTPPacketEditor.fullScreen"),
+                                                                    width: "100%",
+                                                                    content: (
+                                                                        <div
+                                                                            style={{
+                                                                                height: "100%",
+                                                                                width: "100%"
+                                                                            }}
+                                                                        >
+                                                                            <NewHTTPPacketEditor
+                                                                                {...props}
+                                                                                disableFullscreen={true}
+                                                                                defaultHeight={670}
+                                                                            />
+                                                                        </div>
+                                                                    )
+                                                                })
+                                                                setPopoverVisible(false)
+                                                            }}
+                                                        />
+                                                    </Form.Item>
+                                                </Form>
+                                            </>
+                                        }
+                                        onVisibleChange={(v) => {
+                                            setPopoverVisible(v)
+                                        }}
+                                        overlayInnerStyle={{width: 350}}
+                                        visible={popoverVisible}
+                                    >
+                                        <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
+                                    </YakitPopover>
+                                )}
+                            </>
+                        )}
+                        {props.extraEnd}
+                    </div>
+                )
+            }
+            children={
                 <div style={{flex: 1, overflow: "hidden"}}>
                     {empty && props.emptyOr}
                     {props.renderHtml || renderHtml}
@@ -1214,7 +1212,38 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                         />
                     )}
                 </div>
+            }
+        />
+    )
+})
+
+interface NewHTTPCardProps {
+    loading?: boolean
+    bordered?: boolean
+    title?: React.ReactNode
+    extra?: React.ReactNode
+    children?: React.ReactNode
+}
+
+export const NewHTTPCard: React.FC<NewHTTPCardProps> = (props) => {
+    const {loading, bordered, title, extra, children} = props
+    return (
+        <div className={styles["new-http-packet-editor"]}>
+            <Card
+                className={"flex-card"}
+                size={"small"}
+                loading={
+                    loading
+                    // || typeLoading
+                }
+                bordered={bordered}
+                style={{height: "100%", width: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
+                title={title}
+                bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}
+                extra={extra}
+            >
+                {children}
             </Card>
         </div>
     )
-})
+}
