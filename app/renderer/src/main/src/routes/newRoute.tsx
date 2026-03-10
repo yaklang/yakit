@@ -2030,7 +2030,7 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineAuditHoleIcon />,
         hoverIcon: <PrivateSolidAuditHoleIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Yak_Java_Decompiler]
-    }
+    },
     // [YakitRoute.AI_Agent]: {
     //     page: YakitRoute.AI_Agent,
     //     icon: <PrivateOutlineAIAgentIcon />,
