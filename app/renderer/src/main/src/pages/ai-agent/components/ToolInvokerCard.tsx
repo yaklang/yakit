@@ -263,7 +263,8 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             switch (type) {
                 case AIChatQSDataTypeEnum.STREAM:
                     if (isToolStdoutStream(data.NodeId)) {
-                        desc.push(data.content.slice(-1000))
+                        // 50KB大概字符数25600
+                        desc.push(data.content.slice(-25600))
                     } else {
                         desc.push(data.content)
                     }
