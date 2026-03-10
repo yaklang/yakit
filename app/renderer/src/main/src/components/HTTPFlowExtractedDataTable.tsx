@@ -1,19 +1,21 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {Typography, Table, Tooltip} from "antd"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@/pages/invoker/schema"
-import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import styles from "./hTTPFlowDetail.module.scss"
 import {OutlinePositionIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {HTTPFlowsFieldGroupResponse, MultipleSelect} from "./HTTPFlowTable/HTTPFlowTable"
 import classNames from "classnames"
 import {yakitNotify} from "@/utils/notification"
-import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, FiltersItemProps, SortProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {CopyComponents} from "./yakitUI/YakitTag/YakitTag"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TableVirtualResize} from "./TableVirtualResize/TableVirtualResize"
+import {showByRightContext} from "./yakitUI/YakitMenu/showByRightContext"
 const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
@@ -67,6 +69,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         valuePropName: "extractedData",
         trigger: "onSetExtractedData"
     })
+    const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [params, setParams] = useState<QueryMITMRuleExtractedDataRequest>({
         Filter: {
             TraceID: [props.hiddenIndex],
@@ -78,13 +81,12 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     const [total, setTotal] = useState(0)
     const [ruleVerboseSearchVal, setRuleVerboseSearchVal] = useState<string>("")
     const [tags, setTags] = useState<FiltersItemProps[]>([])
-    const ruleVerboseOpenRef = useRef<boolean>(false)
-    const clickOpenRef = useRef<boolean>(false)
     const [currId, setCurrId] = useControllableValue<number | undefined>(props, {
         defaultValue: props.currId,
         valuePropName: "currId",
         trigger: "onSetCurrId"
     })
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     useImperativeHandle(
         ref,
@@ -118,7 +120,12 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         ipcRenderer
             .invoke("QueryMITMRuleExtractedData", query)
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
-                setData(r.Data)
+                if (paginationProps.Page === 1) {
+                    setData(r.Data)
+                    setIsRefresh(!isRefresh)
+                } else {
+                    setData((data) => [...data, ...r.Data])
+                }
                 setCurrId(undefined)
                 props.onSetHighLightItem(undefined)
 
@@ -220,159 +227,158 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         }
     })
 
-    const columns: ColumnsType<HTTPFlowExtractedData> = [
-        {
-            title: t("HTTPFlowExtractedDataTable.ruleName"),
-            ellipsis: {
-                showTitle: false
-            },
-            render: (i: HTTPFlowExtractedData) => (
-                <Text
-                    ellipsis={{
-                        tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.RuleName}</div>
-                    }}
-                >
-                    {i.RuleName}
-                </Text>
-            ),
-            width: 150,
-            filterIcon: () => {
-                return (
-                    <OutlineSearchIcon
-                        className={classNames(styles["filter-icon"], {
-                            [styles["filter-icon-color"]]:
-                                !ruleVerboseOpenRef.current && !!params.Filter.RuleVerbose.length
-                        })}
-                        onClick={getHTTPFlowsFieldGroup}
-                    />
-                )
-            },
-            filterDropdown: ({confirm}) => {
-                return (
-                    <div className={styles["filter-dropdown"]}>
-                        <MultipleSelect
-                            filterProps={{
-                                filterSearch: true,
-                                filterSearchInputProps: {
-                                    prefix: <OutlineSearchIcon className='search-icon' />,
-                                    allowClear: true
-                                }
-                            }}
-                            originalList={tags}
-                            searchVal={ruleVerboseSearchVal}
-                            onChangeSearchVal={setRuleVerboseSearchVal}
-                            value={params.Filter.RuleVerbose}
-                            onSelect={(v, item) => {
-                                if (Array.isArray(v)) {
-                                    const newParams = {
-                                        ...params,
-                                        Filter: {
-                                            TraceID: [props.hiddenIndex],
-                                            AnalyzedIds: props.analyzedIds,
-                                            RuleVerbose: v
-                                        }
+    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
+        return [
+            {
+                title: t("HTTPFlowExtractedDataTable.ruleName"),
+                dataKey: "RuleName",
+                ellipsis: true,
+                width: 150,
+                filterProps: {
+                    filterKey: "RuleVerbose",
+                    filterMultiple: true,
+                    filterIcon: (
+                        <OutlineSearchIcon className={styles["filter-icon"]} onClick={getHTTPFlowsFieldGroup} />
+                    ),
+                    filterRender: (closePopover: () => void) => {
+                        return (
+                            <MultipleSelect
+                                filterProps={{
+                                    filterSearch: true,
+                                    filterSearchInputProps: {
+                                        prefix: <OutlineSearchIcon className='search-icon' />,
+                                        allowClear: true
                                     }
-                                    setParams(newParams)
-                                }
-                            }}
-                            onClose={() => {
-                                clickOpenRef.current = true
-                                confirm({closeDropdown: true})
-                                update()
-                            }}
-                            onQuery={() => {
-                                // 重置
-                                clickOpenRef.current = true
-                                resetUpdate()
-                            }}
-                        ></MultipleSelect>
-                    </div>
-                )
-            },
-            onFilterDropdownVisibleChange: (visible) => {
-                ruleVerboseOpenRef.current = visible
-                if (visible) {
-                    clickOpenRef.current = false
-                } else {
-                    if (!clickOpenRef.current) {
-                        update()
+                                }}
+                                originalList={tags}
+                                searchVal={ruleVerboseSearchVal}
+                                onChangeSearchVal={setRuleVerboseSearchVal}
+                                value={tagsFilter}
+                                onSelect={(v, item) => {
+                                    if (Array.isArray(v)) {
+                                        // const newParams = {
+                                        //     ...params,
+                                        //     Filter: {
+                                        //         TraceID: [props.hiddenIndex],
+                                        //         AnalyzedIds: props.analyzedIds,
+                                        //         RuleVerbose: v
+                                        //     }
+                                        // }
+                                        // setParams(newParams)
+                                        setTagsFilter(v)
+                                    }
+                                }}
+                                onClose={() => {
+                                    closePopover()
+                                }}
+                                onQuery={() => {
+                                    resetUpdate()
+                                }}
+                                selectContainerStyle={{
+                                    maxHeight: "40vh"
+                                }}
+                            ></MultipleSelect>
+                        )
                     }
                 }
-            }
-        },
-        {
-            title: t("HTTPFlowExtractedDataTable.ruleData"),
-            ellipsis: {
-                showTitle: false
             },
-            render: (i: HTTPFlowExtractedData) => (
-                <div className={styles["table-rule-content"]}>
-                    <Text
-                        ellipsis={{
-                            tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
-                        }}
-                    >
-                        {i.Data}
-                    </Text>
-                    <CopyComponents copyText={i.Data} />
-                </div>
-            )
-        },
-        {
-            title: t("YakitTable.action"),
-            width: 55,
-            align: "center",
-            render: (i: HTTPFlowExtractedData, record) => {
-                return (
-                    <Tooltip title={t("HTTPFlowExtractedDataTable.locate")}>
-                        <OutlinePositionIcon
-                            className={classNames(styles["position-icon"], {
-                                [styles["position-icon-active"]]: currId == i.Id
-                            })}
-                            onClick={() => {
-                                if (props.invalidForUTF8Request || props.InvalidForUTF8Response) {
-                                    yakitNotify("info", t("HTTPFlowExtractedDataTable.binaryStreamLocateError"))
-                                    return
-                                }
-                                setCurrId(+i.Id)
-                                props.onSetHighLightItem({
-                                    startOffset: i.Index,
-                                    highlightLength: i.Length,
-                                    hoverVal: i.RuleName,
-                                    IsMatchRequest: i.IsMatchRequest
-                                })
+            {
+                title: t("HTTPFlowExtractedDataTable.ruleData"),
+                dataKey: "Data",
+                render: (_, i: HTTPFlowExtractedData) => (
+                    <div className={styles["table-rule-content"]}>
+                        <Text
+                            ellipsis={{
+                                tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
                             }}
-                        />
-                    </Tooltip>
-                )
+                        >
+                            {i.Data}
+                        </Text>
+                        <CopyComponents copyText={i.Data} />
+                    </div>
+                ),
+                filterProps: {
+                    filterKey: "ruleData",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+                }
+            }
+        ]
+    }, [tags, params.Filter.RuleVerbose, ruleVerboseSearchVal, tagsFilter])
+
+    const onLocation = useMemoizedFn((i: HTTPFlowExtractedData) => {
+        if (props.invalidForUTF8Request || props.InvalidForUTF8Response) {
+            yakitNotify("info", t("HTTPFlowExtractedDataTable.binaryStreamLocateError"))
+            return
+        }
+        setCurrId(+i.Id)
+        props.onSetHighLightItem({
+            startOffset: i.Index,
+            highlightLength: i.Length,
+            hoverVal: i.RuleName,
+            IsMatchRequest: i.IsMatchRequest
+        })
+    })
+
+    const onRowContextMenu = (rowData: HTTPFlowExtractedData, _, event: React.MouseEvent) => {
+        showByRightContext(
+            {
+                width: 180,
+                data: [
+                    {label: "定位", key: "location"},
+                    {label: "删除", key: "delete", type: "danger"}
+                ],
+                onClick: ({key}) => {
+                    switch (key) {
+                        case "location":
+                            onLocation(rowData)
+                            return
+                        case "delete":
+                            return
+                    }
+                }
+            },
+            event.clientX,
+            event.clientY
+        )
+    }
+
+    const onTableChange = useDebounceFn((page: number, limit: number, sort: SortProps, filter: any) => {
+        console.log("onTableChange---", filter)
+        // 处理表格变化
+        const newParams = {
+            ...params,
+            Filter: {
+                TraceID: [props.hiddenIndex],
+                RuleVerbose: [...tagsFilter],
+                AnalyzedIds: props.analyzedIds
             }
         }
-    ]
-
+        setParams(newParams)
+        update(1, 10, newParams.Filter)
+    }).run
     return (
         <div className={styles["httpFlow-data-table"]}>
-            <Table<HTTPFlowExtractedData>
-                bordered={true}
-                title={() => <>{props.title}</>}
-                dataSource={data}
-                key={"Id"}
+            <TableVirtualResize<HTTPFlowExtractedData>
+                titleHeight={33}
+                renderTitle={<>{props.title}</>}
+                data={data}
+                query={params.Filter}
+                renderKey={"Id"}
                 columns={columns}
+                isRefresh={isRefresh}
                 loading={loading}
-                size={"small"}
-                style={{margin: 0, padding: 0, maxWidth: "100%"}}
+                onRowContextMenu={onRowContextMenu}
                 pagination={{
-                    pageSize: pagination.Limit,
-                    showSizeChanger: true,
+                    page: pagination.Page,
+                    limit: pagination.Limit,
                     total,
-                    pageSizeOptions: ["5", "10", "20"],
                     onChange: (page: number, limit?: number) => {
                         update(page, limit)
-                    },
-                    onShowSizeChange: (old, limit) => {
-                        update(1, limit)
                     }
                 }}
-            ></Table>
+                onChange={onTableChange}
+            />
         </div>
     )
 })
