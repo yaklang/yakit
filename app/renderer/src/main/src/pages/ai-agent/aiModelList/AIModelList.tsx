@@ -97,10 +97,9 @@ export const setAIModal = (params: {
     modelType?: AIModelFormProps["aiModelType"]
     item?: AIModelFormProps["item"]
     onSuccess: () => void
-    mountContainer: AIOnlineModelListProps["mountContainer"]
+    mountContainer?: AIOnlineModelListProps["mountContainer"]
 }) => {
     const {modelType, item, onSuccess, mountContainer} = params
-    const isAdd = `${!item}`
     let m = showYakitModal({
         title: "添加第三方应用",
         width: 600,
@@ -132,10 +131,10 @@ export const setAIModal = (params: {
 
 /** 编辑ai model */
 export const onEditAIModel = (data: {
-    aiGlobalConfig
+    aiGlobalConfig: AIGlobalConfig
     index: number
     fileName: string
-    mountContainer: AIOnlineModelListProps["mountContainer"]
+    mountContainer?: AIOnlineModelListProps["mountContainer"]
     onSuccess: () => void
 }) => {
     const {aiGlobalConfig, index, fileName, mountContainer, onSuccess} = data
@@ -164,7 +163,12 @@ export const onEditAIModel = (data: {
 }
 
 /** 删除 ai model */
-export const onRemoveAIModel = (data: {aiGlobalConfig; index: number; fileName: string; onSuccess: () => void}) => {
+export const onRemoveAIModel = (data: {
+    aiGlobalConfig: AIGlobalConfig
+    index: number
+    fileName: string
+    onSuccess: () => void
+}) => {
     try {
         const {fileName, index, aiGlobalConfig, onSuccess} = data
         if (!aiGlobalConfig) return
@@ -179,7 +183,7 @@ export const onRemoveAIModel = (data: {aiGlobalConfig; index: number; fileName: 
 
 /** 选中得model,设置为该类型得第一位 */
 export const onSelectAIModel = (data: {
-    aiGlobalConfig
+    aiGlobalConfig: AIGlobalConfig
     item: AIModelConfig
     index: number
     fileName: string
@@ -740,7 +744,13 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
             <div className={styles["ai-online-model-list-item-extra"]}>
                 <div className={styles["ai-online-model-list-item-extra-edit"]}>
                     <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
-                    <YakitPopconfirm title={`确定要删除模型 ${config.Type} 吗？`} onConfirm={onRemoveClick}>
+                    <YakitPopconfirm
+                        title={`确定要删除厂商${config.Type},模型名称为${item.ModelName} 吗？`}
+                        onConfirm={onRemoveClick}
+                        onCancel={(e) => {
+                            e?.stopPropagation()
+                        }}
+                    >
                         <YakitButton
                             type='text2'
                             icon={<OutlineTrashIcon />}
