@@ -27,10 +27,15 @@ export class ChatDataStore {
             runTimeIDs: [],
             yakExecResult: {card: [], execFileRecord: new Map(), yakExecResultLogs: []},
             aiPerfData: {
-                consumption: {},
-                pressure: [],
-                firstCost: [],
-                totalCost: []
+                consumption: {
+                    input_consumption: 0,
+                    output_consumption: 0,
+                    consumption_uuid: "",
+                    tier_consumption: {}
+                },
+                pressure: {},
+                firstCost: {},
+                totalCost: {}
             },
             casualChat: {
                 elements: [],

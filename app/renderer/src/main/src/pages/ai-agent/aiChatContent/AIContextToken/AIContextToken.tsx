@@ -24,7 +24,7 @@ const AIContextToken: FC<{
         resetDeps: [execute],
         // 优化：如果是一样的数据结构就不更新
         shouldUpdate: (prev, next) => {
-          if (!prev) return !!next
+            if (!prev) return !!next
             return (
                 prev.pressure?.length !== next.pressure?.length ||
                 prev.firstCost?.length !== next.firstCost?.length ||
@@ -34,8 +34,8 @@ const AIContextToken: FC<{
         // 进行数据克隆，确保引用变化
         clone: (data) => ({
             ...data,
-            pressure: [...data.pressure],
-            firstCost: [...data.firstCost],
+            pressure: {...data.pressure},
+            firstCost: {...data.firstCost},
             consumption: {...data.consumption}
         })
     })
@@ -43,10 +43,10 @@ const AIContextToken: FC<{
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
         const data: number[] = []
         const xAxis: string[] = []
-        aiPerfData?.pressure.forEach((item) => {
-            data.push(item.current_cost_token_size)
-            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-        })
+        // aiPerfData?.pressure.forEach((item) => {
+        //     data.push(item.current_cost_token_size)
+        //     xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
+        // })
         return {data, xAxis}
     }, [aiPerfData?.pressure])
     // 最新的上下文压力
@@ -60,17 +60,18 @@ const AIContextToken: FC<{
     const pressureThreshold = useCreation(() => {
         const length = aiPerfData?.pressure.length || 0
         if (length === 0) return 0
-        return aiPerfData?.pressure[length - 1].pressure_token_size || 0
+        return 0
+        // return aiPerfData?.pressure[length - 1].pressure_token_size || 0
     }, [aiPerfData?.pressure])
 
     // 首字符延迟集合
     const currentCostEcharts = useCreation(() => {
         const data: number[] = []
         const xAxis: string[] = []
-        aiPerfData?.firstCost.forEach((item) => {
-            data.push(item.ms)
-            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-        })
+        // aiPerfData?.firstCost.forEach((item) => {
+        //     data.push(item.ms)
+        //     xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
+        // })
         return {data, xAxis}
     }, [aiPerfData?.firstCost])
     // 最新的首字符延迟
@@ -84,11 +85,11 @@ const AIContextToken: FC<{
         let input = 0
         let output = 0
         const {consumption} = aiPerfData || {}
-        const keys = Object.keys(consumption || {})
-        for (let name of keys) {
-            input += consumption[name]?.input_consumption || 0
-            output += consumption[name]?.output_consumption || 0
-        }
+        // const keys = Object.keys(consumption || {})
+        // for (let name of keys) {
+        //     input += consumption[name]?.input_consumption || 0
+        //     output += consumption[name]?.output_consumption || 0
+        // }
         return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
     }, [aiPerfData?.consumption])
 
