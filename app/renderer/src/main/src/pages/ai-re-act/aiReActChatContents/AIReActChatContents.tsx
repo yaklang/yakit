@@ -19,7 +19,7 @@ import Loading from "@/components/Loading/Loading"
 import useAISystemStream from "../hooks/useAISystemStream"
 import {ScrollText} from "@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Code} from "@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const getAIReferenceNodeByType = (contentType?: string) => {
     switch (contentType) {
@@ -177,7 +177,9 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
     const {referenceList} = props
     const [expand, setExpand] = useState<boolean>(false)
-
+    const code = useCreation(() => {
+        return referenceList.map((item) => item.payload).join("\n")
+    }, [referenceList])
     return (
         <>
             <YakitModal
@@ -192,8 +194,9 @@ export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props
                     e.stopPropagation()
                     setExpand(false)
                 }}
+                bodyStyle={{height: 500}}
             >
-                <Code code={referenceList || []} style={{maxHeight: "500px"}} />
+                <YakitEditor type='plaintext' readOnly={true} value={code} />
             </YakitModal>
             <span
                 className={styles["ai-reference-node"]}
