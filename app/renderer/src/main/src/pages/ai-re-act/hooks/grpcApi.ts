@@ -237,19 +237,36 @@ export declare namespace AIAgentGrpcApi {
         input_consumption: number
         output_consumption: number
         consumption_uuid: string
+        tier_consumption: Record<string, {input_consumption: number; output_consumption: number}>
     }
 
     /** 上下文压力 */
     export interface Pressure {
         current_cost_token_size: number
+        model_tier: string
         pressure_token_size: number
         timestamp: number
     }
 
-    /**  (首字符响应|总对话)耗时 */
-    export interface AICostMS {
+    /**  首字符响应耗时 */
+    export interface AIFirstCostMS {
+        model_name: string
+        model_tier: string
         ms: number
+        provider_name: string
         second: number
+        timestamp: number
+    }
+    /** 总对话耗时 */
+    export interface AITotalCostMS {
+        model_name: string
+        model_tier: string
+        ms: number
+        output_bytes: number
+        output_duration_ms: number
+        provider_name: string
+        second: number
+        token_rate: number
         timestamp: number
     }
 
