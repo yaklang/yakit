@@ -181,7 +181,8 @@
     "domain": "Domain",
     "object": "Object",
     "rule": "Rule",
-    "codec": "Codec"
+    "codec": "Codec",
+    "more": "More"
   },
   "CodingPopover": {
     "encoding": "Encoding"

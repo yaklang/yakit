@@ -182,7 +182,8 @@
     "domain": "域名",
     "object": "对象",
     "rule": "规则",
-    "codec": "编解码"
+    "codec": "编解码",
+    "more": "更多"
   },
   "CodingPopover": {
     "encoding": "编码"
