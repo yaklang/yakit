@@ -46,7 +46,7 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
                         pressure[data.model_tier] = [{...data, timestamp: Number(res.Timestamp) || 0}]
                     } else {
                         target.push({...data, timestamp: Number(res.Timestamp) || 0})
-                        if (target.length > 100) target.shift()
+                        // if (target.length > 100) target.shift()
                     }
                 }
                 return
@@ -63,7 +63,7 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
                         firstCost[data.model_tier] = [{...data, timestamp: Number(res.Timestamp) || 0}]
                     } else {
                         target.push({...data, timestamp: Number(res.Timestamp) || 0})
-                        if (target.length > 100) target.shift()
+                        // if (target.length > 100) target.shift()
                     }
                 }
                 return
@@ -80,7 +80,7 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
                         totalCost[data.model_tier] = [{...data, timestamp: Number(res.Timestamp) || 0}]
                     } else {
                         target.push({...data, timestamp: Number(res.Timestamp) || 0})
-                        if (target.length > 100) target.shift()
+                        // if (target.length > 100) target.shift()
                     }
                 }
                 return
