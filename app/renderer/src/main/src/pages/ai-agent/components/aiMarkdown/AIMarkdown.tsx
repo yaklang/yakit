@@ -1,4 +1,3 @@
-import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import {AIMarkdownProps} from "./type"
 import React, {ReactNode, useState} from "react"
 import {ReportItem} from "@/pages/assetViewer/reportRenders/schema"
@@ -12,16 +11,8 @@ import {ColorsPreViewMDIcon, ColorsSourceCodeIcon} from "@/assets/icon/colors"
 import ChatCard from "../ChatCard"
 import {Tooltip} from "antd"
 import {StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
-const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
-    {
-        label: "预览",
-        value: "preview"
-    },
-    {
-        label: "源码",
-        value: "code"
-    }
-]
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
     const {content, nodeLabel, className, modalInfo, referenceNode} = props
     const [type, setType] = useState<"preview" | "code">("preview")
@@ -37,10 +28,25 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
         let content: ReactNode = <></>
         switch (type) {
             case "preview":
-                content = <StreamMarkdown wrapperClassName={classNames(styles["ai-milkdown"])} content={item.content} />
+                content = (
+                    <StreamMarkdown
+                        wrapperClassName={classNames(styles["ai-milkdown"], {
+                            [styles["ai-milkdown-mini"]]: !expand
+                        })}
+                        content={item.content}
+                    />
+                )
                 break
             case "code":
-                content = <div className={styles["ai-milkdown-code"]}>{item.content}</div>
+                content = (
+                    <div
+                        className={classNames(styles["ai-milkdown-code"], {
+                            [styles["ai-milkdown-code-mini"]]: !expand
+                        })}
+                    >
+                        <YakitEditor type='plaintext' readOnly={true} value={item.content} />
+                    </div>
+                )
                 break
             default:
                 break
@@ -71,13 +77,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
             }
             className={classNames(styles["ai-milkdown-wrapper"], className)}
         >
-            <div
-                className={classNames({
-                    [styles["ai-milkdown-mini"]]: !expand
-                })}
-            >
-                {renderContent()}
-            </div>
+            {renderContent()}
             {referenceNode}
         </ChatCard>
     )

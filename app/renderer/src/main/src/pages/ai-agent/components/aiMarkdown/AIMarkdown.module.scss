@@ -8,7 +8,7 @@
     padding: 8px;
 
     overflow-wrap: break-word;
-    
+
     .milkdown-header {
         display: flex;
         align-items: center;
@@ -34,7 +34,9 @@
         overflow: auto;
     }
     .ai-milkdown-code {
-        white-space: pre-wrap;
-        word-wrap: break-word;
+        height: 500px;
+    }
+    .ai-milkdown-code-mini {
+        height: 200px;
     }
 }
