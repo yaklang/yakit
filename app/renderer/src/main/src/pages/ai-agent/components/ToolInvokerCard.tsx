@@ -52,6 +52,8 @@ interface ToolInvokerCardProps {
 interface PreWrapperProps {
     code: ReactNode
     autoScrollBottom?: boolean
+    className?: string
+    style?: React.CSSProperties
 }
 interface ToolStatusCardProps {
     status: AIToolResult["tool"]["status"] | "purple"
@@ -152,7 +154,13 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
         >
             <ToolStatusCard status={"purple"} title={<div>{data.toolName}</div>}>
                 <div className={styles["file-system-content"]}>
-                    {stream?.data?.content && <PreWrapper code={stream?.data?.content || ""} autoScrollBottom />}
+                    {stream?.data?.content && (
+                        <PreWrapper
+                            code={stream?.data?.content || ""}
+                            autoScrollBottom
+                            className={styles["pre-max-height"]}
+                        />
+                    )}
                 </div>
                 {referenceNode}
             </ToolStatusCard>
@@ -344,10 +352,18 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                         </div>
                         {!!resultDetails ? (
                             <>
-                                <PreWrapper code={resultDetails} autoScrollBottom />
+                                <PreWrapper
+                                    code={resultDetails}
+                                    autoScrollBottom
+                                    className={styles["pre-max-height"]}
+                                />
                             </>
                         ) : (
-                            <>{content && <PreWrapper code={content} autoScrollBottom />}</>
+                            <>
+                                {content && (
+                                    <PreWrapper code={content} autoScrollBottom className={styles["pre-max-height"]} />
+                                )}
+                            </>
                         )}
                     </div>
                 </YakitSpin>
@@ -368,7 +384,7 @@ const ToolStatusCard: React.FC<ToolStatusCardProps> = memo((props) => {
 })
 
 export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
-    const {code, autoScrollBottom = false} = props
+    const {code, autoScrollBottom = false, className, style} = props
 
     const containerRef = useRef<HTMLPreElement>(null)
     const [isAtBottom, setIsAtBottom] = useState(true)
@@ -410,9 +426,9 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
     return (
         <pre
             ref={containerRef}
-            className={styles["file-system-wrapper"]}
+            className={classNames(styles["file-system-wrapper"], className)}
             style={{
-                maxHeight: 100,
+                ...style,
                 overflow: isScroll ? "auto" : "hidden"
             }}
             onClick={() => setIsScroll(true)}

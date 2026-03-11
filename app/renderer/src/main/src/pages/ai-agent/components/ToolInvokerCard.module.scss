@@ -101,7 +101,6 @@
         padding: 8px;
         border-radius: 0 0 8px 8px;
         border: 1px solid var(--title-bg-color);
-        max-height: 400px;
         div {
             color: var(--content-color);
         }
@@ -125,6 +124,7 @@
         border-radius: 4px;
         border: 1px solid var(--Colors-Use-Neutral-Border);
         background-color: var(--Colors-Use-Neutral-Bg);
+        max-height: 100px;
     }
     code {
         white-space: break-spaces;
@@ -133,4 +133,7 @@
 .file-system-icon svg {
     width: 16px;
     height: 16px;
+}
+.pre-max-height {
+    max-height: 400px;
 }
