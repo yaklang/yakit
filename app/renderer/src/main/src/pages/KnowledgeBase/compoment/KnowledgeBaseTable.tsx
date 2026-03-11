@@ -22,6 +22,8 @@ import {failed} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AddKnowledgeBaseModal} from "./AddKnowledgeBaseModal"
+import {InstallPluginModal} from "./InstallPluginModal/InstallPluginModal"
+import {useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
 
 type UseMultipleHoldGRPCStreamReturn = ReturnType<typeof useMultipleHoldGRPCStream>
 
@@ -100,14 +102,9 @@ const loadTotals = async (knowledgeBaseItems: KnowledgeBaseTableProps["knowledge
 }
 
 const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
-    const {
-        streams,
-        knowledgeBaseItems,
-        setOpenQA,
-        setStructureTableHeaderGroupOptions,
-        hasBuildDataProps,
-        installPlug
-    } = props
+    const {streams, knowledgeBaseItems, setOpenQA, setStructureTableHeaderGroupOptions, hasBuildDataProps} = props
+    const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+
     const [query, setQuery] = useSafeState("")
     const [linkId, setLinkId] = useSafeState<string[]>([])
     const [tableProps, setTableProps] = useSafeState<{
@@ -320,12 +317,22 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                     }}
                 >
                     <YakitButton
-                        disabled={
-                            !knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success" || installPlug
-                        }
+                        disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success"}
                         icon={<PlusIcon />}
                         type='secondary2'
-                        onClick={() => onOpenAddKnowledgeBaseModal()}
+                        onClick={async () => {
+                            try {
+                                await ThirdPartyBinaryRunAsync()
+                                installPlug
+                                    ? InstallPluginModal({
+                                          getContainer: "#main-operator-page-body-ai-repository",
+                                          callback: () => {
+                                              refreshPluginStatus()
+                                          }
+                                      })
+                                    : onOpenAddKnowledgeBaseModal()
+                            } catch (error) {}
+                        }}
                     >
                         添加
                     </YakitButton>

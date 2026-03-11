@@ -1,7 +1,7 @@
-import React, {Dispatch, SetStateAction} from "react"
+import React, {Dispatch, SetStateAction, useEffect} from "react"
 import {type FC} from "react"
 
-import {useSafeState} from "ahooks"
+import {useMemoizedFn, useSafeState} from "ahooks"
 
 import {PlusIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -9,13 +9,17 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
 import {Form} from "antd"
 import {ImportModal} from "./ImportModal"
+import {useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
+import {InstallPluginModal} from "./InstallPluginModal/InstallPluginModal"
 
 const AddKnowledgenBaseDropdownMenu: FC<{
     setKnowledgeBaseID: (id: string) => void
     setAddMode: Dispatch<SetStateAction<string[]>>
-    installPlug?: boolean
-}> = ({setKnowledgeBaseID, setAddMode, installPlug}) => {
+}> = ({setKnowledgeBaseID, setAddMode}) => {
     const [form] = Form.useForm()
+
+    const {installPlug, refresh: binariesToInstallRefresh, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+
     const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
     const [visible, setVisible] = useSafeState(false)
     const [importVisible, setImportVisible] = useSafeState(false)
@@ -26,6 +30,20 @@ const AddKnowledgenBaseDropdownMenu: FC<{
         setVisible((preValue) => !preValue)
     }
 
+    const createKnowledgeBase = useMemoizedFn(async () => {
+        try {
+            await ThirdPartyBinaryRunAsync()
+            installPlug
+                ? InstallPluginModal({
+                      getContainer: "#main-operator-page-body-ai-repository",
+                      callback: () => {
+                          binariesToInstallRefresh()
+                      }
+                  })
+                : handOpenKnowledgeBasesModal()
+        } catch (error) {}
+    })
+
     return (
         <React.Fragment>
             <YakitDropdownMenu
@@ -33,8 +51,7 @@ const AddKnowledgenBaseDropdownMenu: FC<{
                     data: [
                         {
                             key: "create",
-                            label: "新建",
-                            disabled: installPlug
+                            label: "新建"
                         },
                         {
                             key: "import",
@@ -48,7 +65,7 @@ const AddKnowledgenBaseDropdownMenu: FC<{
                                 setImportVisible((prevalue) => !prevalue)
                                 break
                             case "create":
-                                handOpenKnowledgeBasesModal()
+                                createKnowledgeBase()
                                 break
                             default:
                                 break
@@ -72,6 +89,7 @@ const AddKnowledgenBaseDropdownMenu: FC<{
                     className='third-step'
                 />
             </YakitDropdownMenu>
+
             <KnowledgeBaseFormModal
                 visible={visible}
                 title='新增知识库'

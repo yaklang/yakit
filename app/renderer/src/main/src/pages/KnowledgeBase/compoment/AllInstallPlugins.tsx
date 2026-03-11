@@ -1,7 +1,7 @@
 import {FC, memo, useEffect, useRef, useState} from "react"
 
 import {Progress, Tooltip} from "antd"
-import {useRequest, useSafeState} from "ahooks"
+import {useAsyncEffect, useInViewport, useRequest, useSafeState} from "ahooks"
 
 import {CloudDownloadIcon, RemoveIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -22,7 +22,8 @@ import {
 } from "@/assets/icon/outline"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
-import {downloadWithEvents} from "../utils"
+import {downloadWithEvents, exclude} from "../utils"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,6 +46,9 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
     const progressMap = useRef<Record<string, number>>({})
     const [showDetailStatus, setShowDetailStatus] = useSafeState(true)
     const [eachProgress, setEachProgress] = useState<Record<string, number>>({})
+
+    const refRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(refRef)
 
     useEffect(() => {
         emiter.on("onCloseKnowledgeRepository", onCloseKnowledgeRepository)
@@ -163,7 +167,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
     }
 
     return (
-        <div className={styles["install-container"]}>
+        <div className={styles["install-container"]} ref={refRef}>
             <div className={styles["install-box"]}>
                 <YakitEmpty
                     imageStyle={{height: 120, width: 120, margin: "12px auto"}}
@@ -236,9 +240,18 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                                         <YakitLogoSvgIcon />
                                         <YakitSpinLogoSvgIcon className={styles["yakit-svg"]} />
                                     </div>
-                                    <div className={styles["middle-box"]}>
-                                        <div className={styles["title"]}>{it.Name}</div>
-                                        <div className={styles["describe"]}>{it.Description}</div>
+                                    <div
+                                        className={classNames(styles["middle-box"], {
+                                            [styles["middle-width"]]: eachProgress?.[it.installToken] < 100
+                                        })}
+                                    >
+                                        <div className={classNames(styles["title-box"])}>
+                                            <span className={styles["title"]}>{it.Name}</span>
+                                            {exclude.includes(it.Name) && <YakitTag>可不下载</YakitTag>}
+                                        </div>
+                                        <Tooltip title={it.Description}>
+                                            <div className={styles["describe"]}>{it.Description}</div>
+                                        </Tooltip>
                                     </div>
                                     <div className={styles["last-box"]}>
                                         {!it.InstallPath && !eachProgress?.[it.installToken] ? (

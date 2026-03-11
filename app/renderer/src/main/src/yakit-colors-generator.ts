@@ -154,6 +154,10 @@ export function generateSingleThemeColor(
         color = "#ABB3C2"
     } else if (name === "Yellow" && mode === "light") {
         color = "#FFC905"
+    } else if (name === "Purple" && mode === "dark") {
+        color = "#9B79FF"
+    } else if (name === "Purple" && mode === "light") {
+        color = "#7B51F7"
     }
 
     if (!color) {

@@ -1024,6 +1024,8 @@ const downloadOnlineRagWithEvents = (
     return downloadWithEvents("DownloadRAGs", invokeArgs, token, onData)
 }
 
+const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
+
 export {
     targetInstallList,
     getFileInfoList,
@@ -1056,5 +1058,6 @@ export {
     joyrideSteps,
     extractStreamTokenChangedItem,
     downloadWithEvents,
-    downloadOnlineRagWithEvents
+    downloadOnlineRagWithEvents,
+    exclude
 }
