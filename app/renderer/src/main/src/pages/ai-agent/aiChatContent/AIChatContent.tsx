@@ -94,7 +94,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         })
 
         const onExportOk = useMemoizedFn(async (data: {types: string[]; outputPath: string}) => {
-            if (!activeChat?.id) {
+            if (!activeChat?.Id) {
                 failed("当前没有活跃的会话")
                 return
             }
@@ -226,13 +226,13 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             chatId?: string
             foldersLen: number
         }>({
-            chatId: activeChat?.id,
+            chatId: activeChat?.Id,
             foldersLen: grpcFolders.length
         })
 
         useEffect(() => {
             const prev = prevRef.current
-            const currentChatId = activeChat?.id
+            const currentChatId = activeChat?.Id
             const currentLen = grpcFolders.length
             let nextShowHot = false
 
@@ -246,7 +246,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 chatId: currentChatId,
                 foldersLen: currentLen
             }
-        }, [grpcFolders.length, activeChat?.id, activeKey])
+        }, [grpcFolders.length, activeChat?.Id, activeKey])
 
         const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
             const [label] = node

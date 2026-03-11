@@ -3,9 +3,21 @@
     padding-left: 12px;
     padding-right: 12px;
     overflow-y: auto;
+    .history-group {
+        & + .history-group {
+            margin-top: 12px;
+        }
+    }
+    .history-group-title {
+        padding: 0px 12px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+    }
     .history-item {
-        height: 40px;
-        padding: 10px 8px;
+        height: 32px;
+        padding: 0 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;

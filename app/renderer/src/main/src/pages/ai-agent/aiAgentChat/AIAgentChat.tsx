@@ -87,7 +87,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         const chatData = aiChatDataStore.get(activeChat?.SessionID || "")
         if (taskChatIsEmpty(chatData?.taskChat)) {
             onSetKeyTask()
-        } else if (!!activeChat?.id) {
+        } else if (!!activeChat?.Id) {
             onSetReAct()
         }
     }, [activeChat])
