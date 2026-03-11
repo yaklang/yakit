@@ -17,6 +17,12 @@
             border-right: 1px solid var(--Colors-Use-Neutral-Border);
             gap: 8px;
 
+            .type-panel-section {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
             .type-panel-header {
                 display: flex;
                 justify-content: space-between;
@@ -47,7 +53,14 @@
                 padding: 8px;
                 gap: 8px;
                 flex: 1;
-                overflow-y: auto;
+                overflow: hidden;
+
+                .type-template-scroll {
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    overflow-y: auto;
+                }
 
                 .template-section {
                     display: flex;
