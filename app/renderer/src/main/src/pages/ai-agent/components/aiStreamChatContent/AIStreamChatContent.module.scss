@@ -41,6 +41,8 @@
             height: 100%;
             position: absolute;
             top: 0;
+            right: 0;
+            pointer-events: none;
             background: linear-gradient(
                 to right,
                 var(--Colors-Use-Basic-Background) 0%,
