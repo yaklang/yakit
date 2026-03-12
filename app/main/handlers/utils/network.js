@@ -116,9 +116,18 @@ async function getAvailableOSSDomain() {
     }
 }
 
+/** 根据版本号获取引擎文件名前缀，与 exp-cross-build 一致：yakit->yaklang_yakit_, irify->yaklang_irify_, 其它->yak_ */
+const getYakEngineNamePrefix = (version) => {
+    const v = (version || "").toLowerCase()
+    if (v.includes("yakit")) return "yaklang_yakit_"
+    if (v.includes("irify")) return "yaklang_irify_"
+    return "yak_"
+}
+
 /** 获取校验url */
 const getCheckTextUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
+    const prefix = getYakEngineNamePrefix(version)
     let system_mode = ""
     try {
         system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
@@ -131,19 +140,19 @@ const getCheckTextUrl = async (version) => {
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                url = `https://${domain}/yak/${version}/yak_darwin_arm64.sha256.txt`
+                url = `https://${domain}/yak/${version}/${prefix}darwin_arm64.sha256.txt`
             } else {
-                url = `https://${domain}/yak/${version}/yak_darwin_amd64.sha256.txt`
+                url = `https://${domain}/yak/${version}/${prefix}darwin_amd64.sha256.txt`
             }
             break
         case "win32":
-            url = `https://${domain}/yak/${version}/yak_windows_${suffix ? "leagacy_" : ""}amd64.exe.sha256.txt`
+            url = `https://${domain}/yak/${version}/${prefix}windows_${suffix ? "legacy_" : ""}amd64.exe.sha256.txt`
             break
         case "linux":
             if (process.arch === "arm64") {
-                url = `https://${domain}.com/yak/${version}/yak_linux_arm64.sha256.txt`
+                url = `https://${domain}/yak/${version}/${prefix}linux_arm64.sha256.txt`
             } else {
-                url = `https://${domain}.com/yak/${version}/yak_linux_amd64.sha256.txt`
+                url = `https://${domain}/yak/${version}/${prefix}linux_amd64.sha256.txt`
             }
             break
         default:
@@ -225,6 +234,7 @@ const fetchLatestVersionCommon = async (path, requestConfig = {}) => {
 /** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
+    const prefix = getYakEngineNamePrefix(version)
     let system_mode = ""
     try {
         // 开发环境是不添加-legacy
@@ -238,17 +248,17 @@ const getYakEngineDownloadUrl = async (version) => {
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `https://${domain}/yak/${version}/yak_darwin_arm64`
+                return `https://${domain}/yak/${version}/${prefix}darwin_arm64`
             } else {
-                return `https://${domain}/yak/${version}/yak_darwin_amd64`
+                return `https://${domain}/yak/${version}/${prefix}darwin_amd64`
             }
         case "win32":
-            return `https://${domain}/yak/${version}/yak_windows_${suffix ? "legacy_" : ""}amd64.exe`
+            return `https://${domain}/yak/${version}/${prefix}windows_${suffix ? "legacy_" : ""}amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
-                return `https://${domain}/yak/${version}/yak_linux_arm64`
+                return `https://${domain}/yak/${version}/${prefix}linux_arm64`
             } else {
-                return `https://${domain}/yak/${version}/yak_linux_amd64`
+                return `https://${domain}/yak/${version}/${prefix}linux_amd64`
             }
         default:
             throw new Error(`Unsupported platform: ${process.platform}`)
