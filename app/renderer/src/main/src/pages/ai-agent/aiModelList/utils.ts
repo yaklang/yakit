@@ -25,7 +25,7 @@ import {onOpenConfigModal} from "./aiModelSelect/AIModelSelect"
 import {KVPair} from "@/models/kv"
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
 import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
-import {defaultAIGlobalConfig} from "../defaultConstant"
+import {AIModelPolicyEnum, defaultAIGlobalConfig} from "../defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -317,7 +317,7 @@ export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> =
 export interface AIGlobalConfig {
     Enabled: boolean
     /**调用模式 */
-    RoutingPolicy: string
+    RoutingPolicy: AIModelPolicyEnum
     /**禁用降级轻量模型 */
     DisableFallback: boolean
     DefaultModelId: string

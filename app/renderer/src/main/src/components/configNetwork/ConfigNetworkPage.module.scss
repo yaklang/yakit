@@ -124,7 +124,6 @@
                     }
                 }
             }
-
         }
 
         &-footer {
@@ -492,10 +491,10 @@
         }
     }
 
-    .config-tab-item{
+    .config-tab-item {
         transform: rotate(180deg);
         text-orientation: sideways-right;
-        writing-mode: vertical-rl
+        writing-mode: vertical-rl;
     }
 
     .disabled-badge {
@@ -595,8 +594,8 @@
 .destination-address {
     margin-bottom: 0 !important;
     :global {
-        .ant-form-item-extra{
-            color: var(--Colors-Use-Neutral-Text-4-Help-text)
+        .ant-form-item-extra {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
         }
     }
 }
@@ -607,7 +606,7 @@
     cursor: pointer;
 }
 
-.proxy-test-title-disabled{
+.proxy-test-title-disabled {
     color: var(--Colors-Use-Neutral-Disable);
 }
 
@@ -668,6 +667,29 @@
                 font-weight: bold;
                 color: var(--Colors-Use-Success-Primary);
             }
+        }
+    }
+}
+
+.ai-model-global-config-wrapper {
+    :global {
+        .ant-form-item:not(:last-child) {
+            margin-bottom: 0;
+        }
+    }
+    .ai-model-list-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 500px;
+        gap: 8px;
+        :global {
+            .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
+                padding: 0 8px 8px;
+            }
+        }
+        .ai-model-list-header {
+            display: flex;
+            align-items: center;
         }
     }
 }

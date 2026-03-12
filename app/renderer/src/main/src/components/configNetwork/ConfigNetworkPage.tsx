@@ -49,6 +49,27 @@ import {useProxy} from "@/hook/useProxy"
 import {handleAIConfig} from "@/pages/spaceEngine/utils"
 import {isIRify} from "@/utils/envfile"
 import {JSONParseLog} from "@/utils/tool"
+import {
+    AIOnlineModel,
+    getTipByType,
+    onEditAIModel,
+    onRemoveAIModel,
+    onSelectAIModel,
+    setAIModal
+} from "@/pages/ai-agent/aiModelList/AIModelList"
+import {
+    AIModelPolicyOptions,
+    AIModelTypeInterFileNameEnum,
+    defaultAIGlobalConfig
+} from "@/pages/ai-agent/defaultConstant"
+import {
+    AIGlobalConfig,
+    AIModelConfig,
+    grpcGetAIGlobalConfig,
+    grpcSetAIGlobalConfig
+} from "@/pages/ai-agent/aiModelList/utils"
+import YakitCollapse from "../yakitUI/YakitCollapse/YakitCollapse"
+import {AIModelActionProps, AIOnlineModelListProps} from "@/pages/ai-agent/aiModelList/AIModelListType"
 
 export interface ConfigNetworkPageProp {}
 
@@ -951,7 +972,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         添加第三方应用
                                     </YakitButton>
                                 </Form.Item>
-                                <Form.Item label={"AI使用优先级"}>
+                                {/* <Form.Item label={"AI使用优先级"}>
                                     <div className={styles["ai-sort-box"]}>
                                         {!!params.AppConfigs.length ? (
                                             <AISortContent
@@ -978,7 +999,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             <>请先配置ai</>
                                         )}
                                     </div>
-                                </Form.Item>
+                                </Form.Item> */}
+                                <AIModelGlobalConfig />
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     自定义代码片段
                                     <div className={styles["form-rule-code-customize-describe"]}>
@@ -1304,6 +1326,196 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         </>
     )
 }
+
+interface AIModelGlobalConfigProps {
+    mountContainer?: AIOnlineModelListProps["mountContainer"]
+}
+/**
+ * 在全局配置得页面使用这个组件,组件得父元素得Form表单中没有使用自带得设置值,而是采用得state来控制
+ */
+const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
+    const {mountContainer} = props
+    const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>(cloneDeep(defaultAIGlobalConfig))
+    const refRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(refRef)
+    useEffect(() => {
+        inViewport && getAIConfig()
+    }, [inViewport])
+    const getAIConfig = useMemoizedFn(() => {
+        grpcGetAIGlobalConfig().then((res) => {
+            setAIGlobalConfig(res)
+        })
+    })
+    useEffect(() => {
+        setAIConfig()
+    }, [aiGlobalConfig.DisableFallback, aiGlobalConfig.RoutingPolicy])
+    const setAIConfig = useDebounceFn(
+        useMemoizedFn(() => {
+            grpcSetAIGlobalConfig(aiGlobalConfig)
+        }),
+        {wait: 500}
+    ).run
+
+    const onEdit = useMemoizedFn((options: AIModelActionProps) => {
+        if (!aiGlobalConfig) return
+        const {fileName, index} = options
+        onEditAIModel({
+            aiGlobalConfig,
+            index,
+            fileName,
+            mountContainer: undefined,
+            onSuccess: () => {
+                getAIConfig()
+            }
+        })
+    })
+
+    const onRemove = useMemoizedFn((options: AIModelActionProps) => {
+        if (!aiGlobalConfig) return
+        const {fileName, index} = options
+        onRemoveAIModel({
+            aiGlobalConfig,
+            index,
+            fileName,
+            onSuccess: () => {
+                getAIConfig()
+            }
+        })
+    })
+
+    const onSelect = useMemoizedFn((item: AIModelConfig, options: AIModelActionProps) => {
+        if (!aiGlobalConfig) return
+        const {index, fileName} = options
+        onSelectAIModel({
+            aiGlobalConfig,
+            item,
+            index,
+            fileName,
+            onSuccess: () => {
+                getAIConfig()
+            }
+        })
+    })
+
+    /**增加ai配置模型 */
+    const onAdd = useMemoizedFn(() => {
+        setAIModal({
+            mountContainer,
+            onSuccess: () => {
+                getAIConfig()
+            }
+        })
+    })
+
+    return (
+        <div ref={refRef} className={styles["ai-model-global-config-wrapper"]}>
+            <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                AI模型配置
+            </Divider>
+            <Form.Item label='AI模型'>
+                <div className={styles["ai-model-list-wrapper"]}>
+                    <div className={styles["ai-model-list-header"]}>
+                        <YakitButton type='primary' onClick={onAdd}>
+                            添加
+                        </YakitButton>
+                    </div>
+                    <YakitCollapse defaultActiveKey={["高质模型", "轻量模型", "视觉模式"]}>
+                        <YakitCollapse.YakitPanel key='高质模型' header='高质模型'>
+                            {!!aiGlobalConfig?.IntelligentModels.length && (
+                                <AIOnlineModel
+                                    list={aiGlobalConfig?.IntelligentModels || []}
+                                    onEdit={(index) =>
+                                        onEdit({
+                                            fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                                            index
+                                        })
+                                    }
+                                    onRemove={(index) =>
+                                        onRemove({
+                                            fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                                            index
+                                        })
+                                    }
+                                    onSelect={(item, index) =>
+                                        onSelect(item, {
+                                            fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                                            index
+                                        })
+                                    }
+                                />
+                            )}
+                        </YakitCollapse.YakitPanel>
+                        {!!aiGlobalConfig?.LightweightModels.length && (
+                            <YakitCollapse.YakitPanel key='轻量模型' header='轻量模型'>
+                                <AIOnlineModel
+                                    list={aiGlobalConfig?.LightweightModels || []}
+                                    onEdit={(index) =>
+                                        onEdit({
+                                            fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                                            index
+                                        })
+                                    }
+                                    onRemove={(index) =>
+                                        onRemove({
+                                            fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                                            index
+                                        })
+                                    }
+                                    onSelect={(item, index) =>
+                                        onSelect(item, {
+                                            fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                                            index
+                                        })
+                                    }
+                                />
+                            </YakitCollapse.YakitPanel>
+                        )}
+                        {!!aiGlobalConfig?.VisionModels?.length && (
+                            <YakitCollapse.YakitPanel key='视觉模式' header='视觉模式'>
+                                <AIOnlineModel
+                                    list={aiGlobalConfig?.VisionModels || []}
+                                    onEdit={(index) =>
+                                        onEdit({
+                                            fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                                            index
+                                        })
+                                    }
+                                    onRemove={(index) =>
+                                        onRemove({
+                                            fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                                            index
+                                        })
+                                    }
+                                    onSelect={(item, index) =>
+                                        onSelect(item, {
+                                            fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                                            index
+                                        })
+                                    }
+                                />
+                            </YakitCollapse.YakitPanel>
+                        )}
+                    </YakitCollapse>
+                </div>
+            </Form.Item>
+            <Form.Item label='调用模式' extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy)}</>}>
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    options={AIModelPolicyOptions}
+                    value={aiGlobalConfig.RoutingPolicy}
+                    onChange={(v) => setAIGlobalConfig((old) => ({...old, RoutingPolicy: v.target.value}))}
+                />
+            </Form.Item>
+            <Form.Item valuePropName='checked' label='禁用降级到轻量模型'>
+                <YakitSwitch
+                    size='middle'
+                    checked={aiGlobalConfig.DisableFallback}
+                    onChange={(c) => setAIGlobalConfig((old) => ({...old, DisableFallback: c}))}
+                />
+            </Form.Item>
+        </div>
+    )
+})
 
 interface NTMLConfigProps {
     visible: boolean

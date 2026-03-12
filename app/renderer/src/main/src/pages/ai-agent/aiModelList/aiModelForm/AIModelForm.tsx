@@ -202,8 +202,20 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 aiModelName,
                 fileName
             }
+
+            if (!fileName) return
+            const oldUpdateItem = aiGlobalConfigRef.current?.[fileName][currentIndexInConfigRef.current]
+            const newUpdateItem: AIModelConfig = {
+                ...newItem,
+                ExtraParams: oldUpdateItem.ExtraParams,
+                Provider: {
+                    ExtraParams: oldUpdateItem.Provider.ExtraParams,
+                    ...newItem.Provider
+                }
+            }
+            debugger
             if (aiModelType !== modelType) {
-                const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newItem))
+                const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))
                 if (isHave) {
                     yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
                     return
@@ -213,9 +225,9 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 if (!oldFileName) return
                 newConfig[oldFileName].splice(currentIndexInConfigRef.current, 1)
 
-                newConfig[fileName].push(newItem)
+                newConfig[fileName].push(newUpdateItem)
             } else {
-                newConfig[fileName][currentIndexInConfigRef.current] = newItem
+                newConfig[fileName][currentIndexInConfigRef.current] = newUpdateItem
             }
 
             onSetAIGlobalConfig(newConfig, item)
