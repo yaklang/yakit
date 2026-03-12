@@ -96,7 +96,6 @@ import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {monacoEditorWrite} from "../fuzzerTemplates"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {ShareImportExportData} from "../components/ShareImportExportData"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import sequencemp4 from "@/assets/sequence.mp4"
@@ -2856,36 +2855,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         )
 
         const hotPatchTrigger = useMemoizedFn(() => {
-            let m = showYakitModal({
-                title: null,
-                width: "80%",
-                footer: null,
-                maskClosable: false,
-                closable: false,
-                hiddenHeader: true,
-                keyboard: false,
-                content: (
-                    <HTTPFuzzerHotPatch
-                        pageId={pageId}
-                        initialHotPatchCode={hotPatchCode}
-                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
-                        onInsert={(tag) => {
-                            if (webFuzzerNewEditorRef.current.reqEditor)
-                                monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
-                            m.destroy()
-                        }}
-                        onSaveCode={(code) => {
-                            setHotPatchCode(code)
-                        }}
-                        onSaveHotPatchCodeWithParamGetterCode={(code) => {
-                            setHotPatchCodeWithParamGetter(code)
-
-                            setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-                        }}
-                        onCancel={() => m.destroy()}
-                    />
-                )
-            })
+            emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "hot-patch"}))
+            emiter.emit("sequenceSendSwitchTypeToFuzzer", JSON.stringify({type: "hot-patch"}))
+            emiter.emit("onCurrentFuzzerPage", true)
         })
 
         const moreLimtAlertMsg = useMemo(

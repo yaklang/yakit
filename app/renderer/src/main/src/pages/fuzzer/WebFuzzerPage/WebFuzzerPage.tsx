@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
-import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon, OutlineViewboardsIcon } from "@/assets/icon/outline"
+import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon, OutlineLightningboltIcon, OutlineViewboardsIcon } from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -42,6 +42,11 @@ export const webFuzzerTabs = (t: (text: string) => string) => {
             key: "concurrency",
             label: t("WebFuzzerPage.concurrency"),
             icon: <OutlineViewboardsIcon />
+        },
+        {
+            key: "hot-patch",
+            label: t("HTTPFuzzerPage.hotReload"),
+            icon: <OutlineLightningboltIcon />
         }
     ]
 }
