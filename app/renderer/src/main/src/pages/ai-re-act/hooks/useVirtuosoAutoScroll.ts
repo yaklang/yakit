@@ -1,13 +1,13 @@
-import {useMemoizedFn, useMount, useThrottleFn} from "ahooks"
-import {useRef} from "react"
+import {useMemoizedFn, useThrottleFn} from "ahooks"
+import {useEffect, useRef} from "react"
 import type {VirtuosoHandle} from "react-virtuoso"
 
-interface UseVirtuosoAutoScrollOptions<T> {
+interface UseVirtuosoAutoScrollOptions {
     atBottomThreshold?: number
     total?: number
 }
 
-const useVirtuosoAutoScroll = <T>(options: UseVirtuosoAutoScrollOptions<T>) => {
+const useVirtuosoAutoScroll = (options: UseVirtuosoAutoScrollOptions) => {
     const {atBottomThreshold = 80, total} = options
     const virtuosoRef = useRef<VirtuosoHandle>(null)
     const isAtBottomRef = useRef(true)
@@ -119,7 +119,7 @@ const useVirtuosoAutoScroll = <T>(options: UseVirtuosoAutoScrollOptions<T>) => {
     })
 
     // 组件卸载时清理事件
-    useMount(() => {
+    useEffect(() => {
         return () => {
             if (scrollerRef.current && scrollerRef.current instanceof HTMLElement) {
                 scrollerRef.current.removeEventListener("wheel", onWheel as EventListener)
@@ -131,16 +131,16 @@ const useVirtuosoAutoScroll = <T>(options: UseVirtuosoAutoScrollOptions<T>) => {
             }
             document.removeEventListener("mouseup", onMouseUp)
         }
-    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const scrollToIndex = useMemoizedFn((index: "LAST" | number, behavior?: "auto" | "smooth") => {
-        if (index === "LAST" || index === total! - 1) {
-            isAtBottomRef.current = true
-        }
+        const isLast = index === "LAST" || (total != null && index === total - 1)
+        isAtBottomRef.current = isLast
         requestIdleCallback(() => {
             virtuosoRef.current?.scrollToIndex({
                 index,
-                align: "end",
+                align: isLast ? "end" : "center",
                 behavior: behavior || "smooth"
             })
         })
