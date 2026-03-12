@@ -1,6 +1,7 @@
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {
     AICostDetailsEcharts,
+    AICostDetailsEchartsProps,
     AIPressureDetailsEcharts,
     AIPressureDetailsEchartsProps,
     ContextPressureEcharts,
@@ -20,7 +21,7 @@ import {
 } from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useRafPolling} from "@/hook/useRafPolling/useRafPolling"
-import {isEmpty} from "lodash"
+import {cloneDeep, isEmpty} from "lodash"
 import {AIModelTypeEnum} from "../../defaultConstant"
 import {getPressuresData, getCostData, getThreshold} from "./utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -71,25 +72,7 @@ const AIContextToken: FC<{
             )
         },
         // 进行数据克隆，确保引用变化
-        clone: (data) => ({
-            ...data,
-            pressure: {
-                intelligent: [...(data.pressure?.intelligent || [])],
-                lightweight: [...(data.pressure?.lightweight || [])],
-                vision: [...(data.pressure?.vision || [])]
-            },
-            firstCost: {
-                intelligent: [...(data.firstCost?.intelligent || [])],
-                lightweight: [...(data.firstCost?.lightweight || [])],
-                vision: [...(data.firstCost?.vision || [])]
-            },
-            consumption: {
-                ...data.consumption,
-                tier_consumption: {
-                    ...data.consumption?.tier_consumption
-                }
-            }
-        })
+        clone: (data) => cloneDeep(data)
     })
     // 上下文压力集合
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
@@ -245,7 +228,7 @@ const AIContextToken: FC<{
                 content={
                     <AIEchartsDetails
                         overallToken={[token[0], token[1]]}
-                        tierConsumption={aiPerfData?.consumption.tier_consumption}
+                        tierConsumption={aiPerfData?.consumption?.tier_consumption}
                         pressure={aiPerfData?.pressure}
                         firstCost={aiPerfData?.firstCost}
                     />
@@ -314,15 +297,15 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     // 上下文压力集合
     const pressuresEcharts: AIPressureDetailsEchartsProps["dataEcharts"] = useCreation(() => {
         return getPressuresData(pressure)
-    }, [pressure])
+    }, [pressure?.intelligent, pressure?.lightweight])
     // 首字符延迟集合
-    const costEcharts: ResponseSpeedEchartsProps["dataEcharts"] = useCreation(() => {
+    const costEcharts: AICostDetailsEchartsProps["dataEcharts"] = useCreation(() => {
         return getCostData(firstCost)
-    }, [firstCost])
+    }, [firstCost?.intelligent, firstCost?.lightweight])
     // 上下文压力预设值
     const threshold = useCreation(() => {
         return getThreshold(pressure)
-    }, [pressure])
+    }, [pressure?.intelligent, pressure?.lightweight])
     const getEchartsHeard = useMemoizedFn((title: string) => {
         return (
             <div className={styles["echarts-heard"]}>

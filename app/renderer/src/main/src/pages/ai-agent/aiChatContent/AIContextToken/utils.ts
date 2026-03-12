@@ -1,8 +1,6 @@
 import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIModelTypeEnum} from "../../defaultConstant"
 import {AIEchartsDataKey, ContextPressureEchartsProps} from "../../chatTemplate/AIEcharts"
-import {random} from "lodash"
-import moment from "moment"
 
 /**
  * 处理压力数据，获取echarts需要的数据格式
@@ -19,9 +17,12 @@ export const getPressuresData = (
         [AIModelTypeEnum.TierLightweight]: [],
         [AIModelTypeEnum.TierVision]: []
     }
-    let isPushXData = true
     let xData: number[] = []
     if (!pressure) return {data, xData}
+    const intelligentLength = pressure?.intelligent?.length || 0
+    const lightweightLength = pressure?.lightweight?.length || 0
+    const visionLength = pressure?.vision?.length || 0
+    const maxLength = Math.max(intelligentLength, lightweightLength, visionLength)
     if (!!pressure?.intelligent?.length) {
         let intelligent: AIAgentGrpcApi.Pressure[] = pressure?.intelligent
         if (!!sliceLength) {
@@ -33,9 +34,8 @@ export const getPressuresData = (
                 modelName: item.model_name || "",
                 value: item.current_cost_token_size
             })
-            xData.push(item.timestamp || 0)
+            if (maxLength === intelligentLength) xData.push(item.timestamp || 0)
         })
-        isPushXData = false
     }
     if (!!pressure?.lightweight?.length) {
         let lightweight: AIAgentGrpcApi.Pressure[] = pressure?.lightweight
@@ -47,9 +47,8 @@ export const getPressuresData = (
                 modelName: item.model_name || "",
                 value: item.current_cost_token_size
             })
-            isPushXData && xData.push(item.timestamp || 0)
+            if (maxLength === lightweightLength) xData.push(item.timestamp || 0)
         })
-        isPushXData = false
     }
     if (!!pressure?.vision?.length) {
         let vision: AIAgentGrpcApi.Pressure[] = pressure?.vision
@@ -61,7 +60,7 @@ export const getPressuresData = (
                 modelName: item.model_name || "",
                 value: item.current_cost_token_size
             })
-            isPushXData && xData.push(item.timestamp || 0)
+            if (maxLength === visionLength) xData.push(item.timestamp || 0)
         })
     }
     return {data, xData}
@@ -80,8 +79,12 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
         [AIModelTypeEnum.TierVision]: []
     }
     let xData: number[] = []
-    let isPushXData = true
+
     if (!cost) return {data, xData}
+    const intelligentLength = cost?.intelligent?.length || 0
+    const lightweightLength = cost?.lightweight?.length || 0
+    const visionLength = cost?.vision?.length || 0
+    const maxLength = Math.max(intelligentLength, lightweightLength, visionLength)
     if (!!cost?.intelligent?.length) {
         let intelligent: AIAgentGrpcApi.AIFirstCostMS[] = cost?.intelligent
         if (!!sliceLength) {
@@ -92,9 +95,8 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
                 modelName: item.model_name || "",
                 value: item.ms
             })
-            xData.push(item.timestamp || 0)
+            if (maxLength === intelligentLength) xData.push(item.timestamp || 0)
         })
-        isPushXData = false
     }
     if (!!cost?.lightweight?.length) {
         let lightweight: AIAgentGrpcApi.AIFirstCostMS[] = cost?.lightweight
@@ -106,9 +108,8 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
                 modelName: item.model_name || "",
                 value: item.ms
             })
-            isPushXData && xData.push(item.timestamp || 0)
+            if (maxLength === lightweightLength) xData.push(item.timestamp || 0)
         })
-        isPushXData = false
     }
     if (!!cost?.vision?.length) {
         let vision: AIAgentGrpcApi.AIFirstCostMS[] = cost?.vision
@@ -120,7 +121,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
                 modelName: item.model_name || "",
                 value: item.ms
             })
-            isPushXData && xData.push(item.ms || 0)
+            if (maxLength === visionLength) xData.push(item.ms || 0)
         })
     }
     return {data, xData}
@@ -132,22 +133,21 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
  * @returns
  */
 export const getThreshold = (pressure?: Record<AIModelTypeEnum, AIAgentGrpcApi.Pressure[]>) => {
-    let threshold: Record<AIModelTypeEnum, number> = {
-        [AIModelTypeEnum.TierIntelligent]: 0,
-        [AIModelTypeEnum.TierLightweight]: 0,
-        [AIModelTypeEnum.TierVision]: 0
-    }
+    let threshold: number = 0
+    let isUpdate = true
     if (!!pressure?.intelligent?.length) {
         const i = pressure.intelligent.length
-        threshold.intelligent = pressure.intelligent[i - 1].pressure_token_size || 0
+        threshold = pressure.intelligent[i - 1].pressure_token_size || 0
+        isUpdate = false
     }
-    if (!!pressure?.lightweight?.length) {
+    if (!!pressure?.lightweight?.length && isUpdate) {
         const l = pressure.lightweight.length
-        threshold.lightweight = pressure.lightweight[l - 1].pressure_token_size || 0
+        threshold = pressure.lightweight[l - 1].pressure_token_size || 0
+        isUpdate = false
     }
-    if (!!pressure?.vision?.length) {
+    if (!!pressure?.vision?.length && isUpdate) {
         const v = pressure.vision.length
-        threshold.vision = pressure.vision[v - 1].pressure_token_size || 0
+        threshold = pressure.vision[v - 1].pressure_token_size || 0
     }
     return threshold
 }
