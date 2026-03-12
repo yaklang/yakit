@@ -3094,6 +3094,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
     })
 
     const onSaveFileFun = useMemoizedFn(() => {
+        if (editorValue.trim().length === 0) {
+            warn(t("PayloadLocalContent.contentCannotBeEmpty"))
+            return
+        }
         ipcRenderer
             .invoke("UpdatePayloadToFile", {
                 GroupName: group,
@@ -3567,6 +3571,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
 
     const [selectPayloadArr, setSelectPayloadArr] = useState<number[]>([])
+    const {t, i18n} = useI18nNamespaces(["payload"])
     const [params, setParams, getParams] = useGetState<API.PayloadRequest>({
         keyword: "",
         folder: "",
@@ -3649,6 +3654,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
     })
 
     const onSaveFileFun = useMemoizedFn(() => {
+        if (editorValue.trim().length === 0) {
+            warn(t("PayloadLocalContent.contentCannotBeEmpty"))
+            return
+        }
         apiUpdateOnlinePayloadFile({
             groupName: group,
             content: editorValue

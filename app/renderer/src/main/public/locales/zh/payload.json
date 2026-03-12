@@ -11,7 +11,8 @@
     "goToDictionaryManagement": "前往 字典管理"
   },
   "PayloadLocalContent": {
-    "fuzzModuleRenderHint": "可以通过 fuzz 模块 {{x(字典名)}} 来渲染"
+    "fuzzModuleRenderHint": "可以通过 fuzz 模块 {{x(字典名)}} 来渲染",
+    "contentCannotBeEmpty": "内容不能为空"
   },
   "NewPayloadTable": {
     "dictionaryContent": "字典内容",

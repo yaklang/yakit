@@ -11,7 +11,8 @@
     "goToDictionaryManagement": "Go to Payload Management"
   },
   "PayloadLocalContent": {
-    "fuzzModuleRenderHint": "Can be rendered via the fuzz module {{x(payload_name)}}"
+    "fuzzModuleRenderHint": "Can be rendered via the fuzz module {{x(payload_name)}}",
+    "contentCannotBeEmpty": "Content Can not Be Empty"
   },
   "NewPayloadTable": {
     "dictionaryContent": "Payload Content",
