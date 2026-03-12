@@ -1,25 +1,41 @@
-import {useCreation} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {
+    AICostDetailsEcharts,
+    AIPressureDetailsEcharts,
+    AIPressureDetailsEchartsProps,
     ContextPressureEcharts,
     ContextPressureEchartsProps,
     ResponseSpeedEcharts,
     ResponseSpeedEchartsProps
 } from "../../chatTemplate/AIEcharts"
 import styles from "../AIChatContent.module.scss"
-import {FC, memo, useCallback, useEffect} from "react"
+import {FC, memo, useCallback, useEffect, useRef, useState} from "react"
 import {aiChatDataStore} from "../../store/ChatDataStore"
 import {formatNumberUnits} from "../../utils"
-import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowdownIcon,
+    OutlineArrowupIcon,
+    OutlinePresentationchartlineIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useRafPolling} from "@/hook/useRafPolling/useRafPolling"
 import {isEmpty} from "lodash"
 import {AIModelTypeEnum} from "../../defaultConstant"
-import {getPressuresData, getCostData} from "./utils"
+import {getPressuresData, getCostData, getThreshold} from "./utils"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {AIModelConfig, grpcGetAIGlobalConfig} from "../../aiModelList/utils"
+import {getIconByAI} from "../../aiModelList/aiModelSelect/AIModelSelect"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIChatData} from "../../type/aiChat"
+import {AIDetailsDashIcon} from "../../aiChatWelcome/icon"
 
 const AIContextToken: FC<{
     session?: string
     execute: boolean
 }> = ({session, execute}) => {
+    const [visible, setVisible] = useState<boolean>(false)
     const getPerfData = useCallback(() => {
         const data = aiChatDataStore.get(session ?? "")?.aiPerfData ?? null
         return data
@@ -77,7 +93,8 @@ const AIContextToken: FC<{
     })
     // 上下文压力集合
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
-        return {data: getPressuresData(aiPerfData?.pressure, 100)}
+        const value = getPressuresData(aiPerfData?.pressure, 100)
+        return {data: value.data}
     }, [aiPerfData?.pressure])
     // 最新的上下文压力
     const lastPressure = useCreation(() => {
@@ -103,29 +120,12 @@ const AIContextToken: FC<{
 
     // 上下文压力预设值
     const pressureThreshold = useCreation(() => {
-        let threshold: Record<AIModelTypeEnum, number> = {
-            [AIModelTypeEnum.TierIntelligent]: 0,
-            [AIModelTypeEnum.TierLightweight]: 0,
-            [AIModelTypeEnum.TierVision]: 0
-        }
-        if (!!aiPerfData?.pressure?.intelligent?.length) {
-            const i = aiPerfData.pressure.intelligent.length
-            threshold.intelligent = aiPerfData.pressure.intelligent[i - 1].pressure_token_size || 0
-        }
-        if (!!aiPerfData?.pressure?.lightweight?.length) {
-            const l = aiPerfData.pressure.lightweight.length
-            threshold.lightweight = aiPerfData.pressure.lightweight[l - 1].pressure_token_size || 0
-        }
-        if (!!aiPerfData?.pressure?.vision?.length) {
-            const v = aiPerfData.pressure.vision.length
-            threshold.vision = aiPerfData.pressure.vision[v - 1].pressure_token_size || 0
-        }
-        return threshold
+        return getThreshold(aiPerfData?.pressure)
     }, [aiPerfData?.pressure])
 
     // 首字符延迟集合
     const currentCostEcharts: ResponseSpeedEchartsProps["dataEcharts"] = useCreation(() => {
-        return {data: getCostData(aiPerfData?.firstCost, 100)}
+        return {data: getCostData(aiPerfData?.firstCost, 100).data}
     }, [aiPerfData?.firstCost])
     // 最新的首字符延迟
     const lastFirstCost = useCreation(() => {
@@ -240,9 +240,222 @@ const AIContextToken: FC<{
                     <OutlineArrowdownIcon />
                     {token[1]}
                 </div>
-                <div className={styles["divider-style"]}></div>
             </div>
+            <YakitPopover
+                content={
+                    <AIEchartsDetails
+                        overallToken={[token[0], token[1]]}
+                        tierConsumption={aiPerfData?.consumption.tier_consumption}
+                        pressure={aiPerfData?.pressure}
+                        firstCost={aiPerfData?.firstCost}
+                    />
+                }
+                destroyTooltipOnHide={true}
+                trigger='click'
+                placement='bottom'
+                overlayClassName={styles["echarts-details-popover"]}
+                visible={visible}
+                onVisibleChange={setVisible}
+            >
+                <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type='outline2' />
+            </YakitPopover>
+            <div className={styles["divider-style"]}></div>
         </>
     )
 }
 export default memo(AIContextToken)
+
+interface CurrentModel {
+    /**高质模型 */
+    intelligentModels?: AIModelConfig
+    /**轻量模型 */
+    lightweightModels?: AIModelConfig
+}
+interface AIEchartsDetailsProps {
+    overallToken: [number | string, number | string]
+    tierConsumption?: AIAgentGrpcApi.Consumption["tier_consumption"]
+    pressure?: AIChatData["aiPerfData"]["pressure"]
+    firstCost?: AIChatData["aiPerfData"]["firstCost"]
+}
+const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
+    const {overallToken, tierConsumption, pressure, firstCost} = props
+    const [currentModel, setCurrentModel] = useState<CurrentModel>()
+    const ref = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(ref)
+    useEffect(() => {
+        inViewport && getList()
+    }, [inViewport])
+    const getList = useMemoizedFn(() => {
+        grpcGetAIGlobalConfig().then((res) => {
+            let data: CurrentModel = {}
+            if (!!res?.IntelligentModels?.length) {
+                data.intelligentModels = res.IntelligentModels[0]
+            }
+            if (!!res?.LightweightModels?.length) {
+                data.lightweightModels = res.LightweightModels[0]
+            }
+            setCurrentModel(data)
+        })
+    })
+    const intelligentToken = useCreation(() => {
+        if (!tierConsumption?.intelligent) return [0, 0]
+        const input = tierConsumption.intelligent.input_consumption || 0
+        const output = tierConsumption.intelligent.output_consumption || 0
+        return [formatNumberUnits(input), formatNumberUnits(output)]
+    }, [tierConsumption?.intelligent])
+
+    const lightweightToken = useCreation(() => {
+        if (!tierConsumption?.lightweight) return [0, 0]
+        const input = tierConsumption.lightweight.input_consumption || 0
+        const output = tierConsumption.lightweight.output_consumption || 0
+        return [formatNumberUnits(input), formatNumberUnits(output)]
+    }, [tierConsumption?.lightweight])
+
+    // 上下文压力集合
+    const pressuresEcharts: AIPressureDetailsEchartsProps["dataEcharts"] = useCreation(() => {
+        return getPressuresData(pressure)
+    }, [pressure])
+    // 首字符延迟集合
+    const costEcharts: ResponseSpeedEchartsProps["dataEcharts"] = useCreation(() => {
+        return getCostData(firstCost)
+    }, [firstCost])
+    // 上下文压力预设值
+    const threshold = useCreation(() => {
+        return getThreshold(pressure)
+    }, [pressure])
+    const getEchartsHeard = useMemoizedFn((title: string) => {
+        return (
+            <div className={styles["echarts-heard"]}>
+                <span className={styles["title"]}>{title}</span>
+                <div className={styles["extra"]}>
+                    <div className={styles["intelligent"]}>
+                        <AIDetailsDashIcon className={styles["intelligent-icon"]} />
+                        <span>高质模型</span>
+                    </div>
+                    <div className={styles["lightweight"]}>
+                        <AIDetailsDashIcon className={styles["lightweight-icon"]} />
+                        <span>轻量模型</span>
+                    </div>
+                </div>
+            </div>
+        )
+    })
+    const isShowPressure = useCreation(() => {
+        return !!(
+            pressuresEcharts?.data?.intelligent?.length > 0 ||
+            pressuresEcharts?.data?.lightweight?.length > 0 ||
+            pressuresEcharts?.data?.vision?.length > 0
+        )
+    }, [pressuresEcharts.data])
+    const isShowCost = useCreation(() => {
+        return !!(
+            costEcharts?.data?.intelligent?.length > 0 ||
+            costEcharts?.data?.lightweight?.length > 0 ||
+            costEcharts?.data?.vision?.length > 0
+        )
+    }, [costEcharts.data])
+    return (
+        <div className={styles["echarts-details-wrapper"]} ref={ref}>
+            <div className={styles["echarts-details-heard"]}>
+                <div className={styles["echarts-details-title"]}>
+                    <OutlinePresentationchartlineIcon />
+                    <span>数据详情</span>
+                </div>
+                <YakitButton icon={<OutlineXIcon />} type='text2' />
+            </div>
+            <div className={styles["echarts-details-content"]}>
+                <div className={styles["token-wrapper"]}>
+                    <div className={styles["token-heard"]}>
+                        <span>Tokens:</span>
+                        <div className={styles["token-overall-wrapper"]}>
+                            <div className={styles["token-overall"]}>
+                                <span>总输入</span>
+                                <div className={classNames(styles["token-tag"], styles["upload-token"])}>
+                                    <OutlineArrowupIcon />
+                                    {overallToken[0]}
+                                </div>
+                            </div>
+                            <div className={styles["token-overall"]}>
+                                <span>总输出</span>
+                                <div className={classNames(styles["token-tag"], styles["download-token"])}>
+                                    <OutlineArrowdownIcon />
+                                    {overallToken[1]}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={styles["token-content"]}>
+                        <AITokens
+                            modelType={"高质模型"}
+                            aiModel={currentModel?.intelligentModels}
+                            token={[intelligentToken[0], intelligentToken[1]]}
+                        />
+                        <AITokens
+                            modelType={"轻量模型"}
+                            aiModel={currentModel?.lightweightModels}
+                            token={[lightweightToken[0], lightweightToken[1]]}
+                        />
+                    </div>
+                </div>
+                {isShowPressure && (
+                    <div className={styles["pressure-wrapper"]}>
+                        {getEchartsHeard("上下文压力")}
+                        <AIPressureDetailsEcharts dataEcharts={pressuresEcharts} threshold={threshold} />
+                    </div>
+                )}
+                {isShowCost && (
+                    <div className={styles["cost-wrapper"]}>
+                        {getEchartsHeard("响应速度")}
+                        <AICostDetailsEcharts dataEcharts={costEcharts} />
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+})
+
+interface AITokensProps {
+    modelType: string
+    aiModel?: AIModelConfig
+    token: [number | string, number | string]
+}
+const AITokens: React.FC<AITokensProps> = memo((props) => {
+    const {modelType, aiModel, token} = props
+    const icon = useCreation(() => {
+        if (!aiModel?.Provider?.Type) return <></>
+        return getIconByAI(aiModel?.Provider?.Type)
+    }, [aiModel?.Provider?.Type])
+    const modelName = useCreation(() => {
+        return aiModel?.ModelName || ""
+    }, [aiModel?.ModelName])
+    return (
+        <div className={styles["ai-tokens"]}>
+            <div className={styles["ai-tokens-heard"]}>
+                <span className={styles["title"]}>{modelType}</span>
+                <div className={styles["model"]}>
+                    {icon}
+                    <div className={styles["model-text"]} title={modelName}>
+                        {modelName}
+                    </div>
+                </div>
+            </div>
+            <div className={styles["ai-tokens-content"]}>
+                <div className={styles["ai-tokens-item"]}>
+                    <div className={styles["token-item"]}>
+                        输入
+                        <OutlineArrowupIcon />
+                    </div>
+                    <div className={classNames(styles["token-tag"], styles["upload-token"])}>{token[0]}</div>
+                </div>
+                <div className={styles["diver"]} />
+                <div className={styles["ai-tokens-item"]}>
+                    <div className={styles["token-item"]}>
+                        输出
+                        <OutlineArrowdownIcon />
+                    </div>
+                    <div className={classNames(styles["token-tag"], styles["download-token"])}>{token[1]}</div>
+                </div>
+            </div>
+        </div>
+    )
+})
