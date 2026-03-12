@@ -36,7 +36,7 @@
             align-items: center;
             // height: 36px;
             padding-bottom: 12px;
-            gap: 8px 16px;
+            gap: 8px;
             flex-wrap: wrap;
             .fuzzer-heard-force {
                 display: flex;
@@ -185,6 +185,20 @@
     svg {
         width: 16px;
         height: 16px;
+    }
+}
+
+.hot-patch-trigger {
+    display: inline-flex;
+
+    .hot-patch-trigger-main {
+        border-radius: 4px 0 0 4px;
+    }
+
+    .hot-patch-trigger-dropdown {
+        border-radius: 0 4px 4px 0;
+        padding: 0;
+        margin-left: 1px;
     }
 }
 

@@ -98,6 +98,20 @@
         padding: 12px 12px 0;
     }
 
+    .hotPatchCodeOpen {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        margin-left: -6px;
+
+        .info-icon {
+            svg {
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
+    }
+
     .etcHosts-config {
         margin-top: 12px;
         margin-left: 30px;

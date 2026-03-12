@@ -25,7 +25,7 @@ import {
 } from "ahooks"
 import { getRemoteValue, setRemoteValue } from "../../utils/kv"
 import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from "./HTTPFuzzerHistory"
-import { HTTPFuzzerHotPatch } from "./HTTPFuzzerHotPatch"
+import { HTTPFuzzerHotPatchSidebar, HotCodeTemplate, HotPatchTempItem } from "./HTTPFuzzerHotPatch"
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from "./HTTPFuzzerPageExport"
 import { StringToUint8Array, Uint8ArrayToString } from "../../utils/str"
 import { PacketScanButton } from "@/pages/packetScanner/DefaultPacketScanGroup"
@@ -118,6 +118,7 @@ import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
 import { prettifyPacketCode } from "@/utils/prettifyPacket"
 import { WebFuzzerType } from "./WebFuzzerPage/WebFuzzerPageType"
+import { setHotPatchCache } from "./hotPatchCache"
 import cloneDeep from "lodash/cloneDeep"
 
 import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -131,7 +132,8 @@ import {
     emptyFuzzer,
     defaultWebFuzzerPageInfo,
     defaultLabel,
-    defaultAdvancedConfigValue
+    defaultAdvancedConfigValue,
+    HotPatchTempDefault
 } from "@/defaultConstants/HTTPFuzzerPage"
 import { KVPair } from "@/models/kv"
 import { FuncBtn } from "../plugins/funcTemplate"
@@ -151,6 +153,7 @@ import { FuzzerConcurrentLoad, FuzzerResChartData } from "./FuzzerConcurrentLoad
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import { WebFuzzerDroppedProps } from "./FuzzerSequence/FuzzerSequenceType"
 import { YakitCheckableTag } from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import { OutlineChevrondownIcon } from "@/assets/icon/outline"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import { convertKeyboardToUIKey, registerShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import {
@@ -199,7 +202,7 @@ const logger = (log: LoggerData) => {
     ipcRenderer.invoke("add-log", log)
 }
 
-export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence" | "concurrency">, boolean>
+export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence" | "concurrency"| "hot-patch">, boolean>
 export interface ShareValueProps {
     /**高级配置显示/隐藏 */
     advancedConfigShow: AdvancedConfigShowProps
@@ -844,6 +847,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
+    const hotPatchEnabled = !advancedConfigValue.disableHotPatch
+    const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
+    const [selectedHotPatchTemplateName, setSelectedHotPatchTemplateName] = useState<string>("")
 
     const proxyListRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
@@ -1641,36 +1647,18 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         updatePagesDataCacheById(YakitRoute.HTTPFuzzer, { ...newCurrentItem })
     })
 
+    const onChangeHotPatchEnabled = useMemoizedFn((enabled: boolean) => {
+        setAdvancedConfigValue((prev) => ({
+            ...prev,
+            disableHotPatch: !enabled
+        }))
+        setHotPatchCache({hotPatchCodeOpen: enabled, hotPatchCode: hotPatchCodeRef.current})
+    })
+
     const hotPatchTrigger = useMemoizedFn(() => {
-        let m = showYakitModal({
-            title: null,
-            width: "80%",
-            footer: null,
-            maskClosable: false,
-            closable: false,
-            hiddenHeader: true,
-            keyboard: false,
-            content: (
-                <HTTPFuzzerHotPatch
-                    pageId={props.id}
-                    initialHotPatchCode={hotPatchCodeRef.current}
-                    initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                    onInsert={(tag) => {
-                        if (webFuzzerNewEditorRef.current.reqEditor)
-                            monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
-                        m.destroy()
-                    }}
-                    onSaveCode={(code) => {
-                        setHotPatchCode(code)
-                    }}
-                    onSaveHotPatchCodeWithParamGetterCode={(code) => {
-                        setHotPatchCodeWithParamGetter(code)
-                        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-                    }}
-                    onCancel={() => m.destroy()}
-                />
-            )
-        })
+        emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "hot-patch"}))
+        emiter.emit("sequenceSendSwitchTypeToFuzzer", JSON.stringify({type: "hot-patch"}))
+        emiter.emit("onCurrentFuzzerPage", true)
     })
     const getShareContent = useMemoizedFn((callback) => {
         const advancedConfiguration = { ...advancedConfigValue }
@@ -1814,18 +1802,26 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
         }, 500)
     }
-    const setHotPatchCode = useMemoizedFn((v: string) => {
+    const onChangeHotPatchCode = useMemoizedFn((v: string) => {
         setHotPatchCodeRef(v)
+        sendFuzzerSettingInfo()
+    })
+    const setHotPatchCode = useMemoizedFn((v: string) => {
+        onChangeHotPatchCode(v)
         setRefreshTrigger(!refreshTrigger)
         sendFuzzerSettingInfo()
     })
-    const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
+    const onChangeHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
         hotPatchCodeWithParamGetterRef.current = v
         setTimeout(() => {
             if (webFuzzerNewEditorRef.current?.reqEditor) {
                 setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCodeWithParam", v)
             }
         }, 500)
+    })
+    const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
+        onChangeHotPatchCodeWithParamGetter(v)
+        sendFuzzerSettingInfo()
     })
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
@@ -1920,6 +1916,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 <YakitButton
                     size='small'
                     type='outline2'
+                    onMouseUp={(event) => event.currentTarget.blur()}
                     onClick={async () => {
                         if (!requestRef.current) return
                         const beautifyValue = await prettifyPacketCode(requestRef.current)
@@ -1929,16 +1926,37 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 >
                     {t("YakitButton.beautify")}
                 </YakitButton>
-                <YakitButton
-                    size='small'
-                    type='primary'
-                    onClick={() => {
-                        hotPatchTrigger()
-                    }}
-                    // style={{ marginLeft: -8 }}
-                >
-                    {t("HTTPFuzzerPage.hotReload")}
-                </YakitButton>
+                <div className={styles["hot-patch-trigger"]}>
+                    <YakitButton
+                        size='small'
+                        type='primary'
+                        className={styles["hot-patch-trigger-main"]}
+                        onClick={() => hotPatchTrigger()}
+                    >
+                        {t("HTTPFuzzerPage.hotReload")}
+                    </YakitButton>
+                    <HotCodeTemplate
+                        type='fuzzer'
+                        hotPatchTempLocal={hotPatchTempLocal}
+                        onSetHotPatchTempLocal={setHotPatchTempLocal}
+                        onClickHotCode={(temp, tempName) => {
+                            setHotPatchCode(temp)
+                            setSelectedHotPatchTemplateName(tempName || "")
+                            hotPatchTrigger()
+                        }}
+                        onDeleteLocalTempOk={() => {
+                            setSelectedHotPatchTemplateName("")
+                        }}
+                        triggerNode={
+                            <YakitButton
+                                size='small'
+                                type='primary'
+                                className={styles["hot-patch-trigger-dropdown"]}
+                                icon={<OutlineChevrondownIcon />}
+                            />
+                        }
+                    />
+                </div>
                 <YakitPopover
                     trigger={"click"}
                     content={
@@ -2175,6 +2193,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return false
         }
     }, [advancedConfigShowType, advancedConfigShow])
+    const hotPatchVisible = useCreation(() => advancedConfigShowType === "hot-patch", [advancedConfigShowType])
 
     useShortcutKeyTrigger(
         "sendRequest*httpFuzzer",
@@ -2297,7 +2316,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const renderTLSTags = useMemo(
         () => (
-            <div>
+            <>
                 {advancedConfigValue.randomJA3 && (
                     <YakitTag
                         closable
@@ -2324,9 +2343,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {t("HttpQueryAdvancedConfig.guomi_tls")}
                     </YakitTag>
                 )}
-            </div>
+            </>
         ),
-        [i18n.language, advancedConfigValue]
+        [advancedConfigValue, t]
+    )
+
+    const renderHotPatchTag = useMemo(
+        () =>
+            hotPatchEnabled ? (
+                <YakitTag closable onClose={() => onChangeHotPatchEnabled(false)}>
+                    {`${t("HTTPFuzzerPage.hotReload")}${t("GlobalHotPatch.started")}`}
+                </YakitTag>
+            ) : null,
+        [hotPatchEnabled, onChangeHotPatchEnabled, t]
     )
 
     const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)
@@ -2364,6 +2393,29 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         cachedTotal={cachedTotal}
                     />
                 </React.Suspense>
+                <HTTPFuzzerHotPatchSidebar
+                    pageId={props.id}
+                    visible={hotPatchVisible}
+                    hotPatchCode={hotPatchCodeRef.current}
+                    hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                    selectedTemplateName={selectedHotPatchTemplateName}
+                    onChangeCode={onChangeHotPatchCode}
+                    onChangeHotPatchCodeWithParamGetterCode={onChangeHotPatchCodeWithParamGetter}
+                    onSaveCode={(code) => {
+                        setHotPatchCode(code)
+                    }}
+                    onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                        setHotPatchCodeWithParamGetter(code)
+                        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                    }}
+                    hotPatchEnabled={hotPatchEnabled}
+                    onHotPatchEnabledChange={onChangeHotPatchEnabled}
+                    onSelectedTemplateNameChange={setSelectedHotPatchTemplateName}
+                    onInsert={(tag) => {
+                        if (webFuzzerNewEditorRef.current.reqEditor)
+                            monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
+                    }}
+                />
                 <div className={styles["http-fuzzer-page"]}>
                     <div className={styles["fuzzer-heard"]}>
                         <div className={styles["fuzzer-heard-left"]}>
@@ -2526,6 +2578,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 httpResponse={httpResponse}
                             />
                             {renderTLSTags}
+                            {renderHotPatchTag}
                         </div>
                         <div className={styles["fuzzer-heard-right"]}>
                             {getFuzzerRequestParams && typeof getFuzzerRequestParams === "function" ? (
