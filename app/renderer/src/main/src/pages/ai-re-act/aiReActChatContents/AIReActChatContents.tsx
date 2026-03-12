@@ -2,7 +2,6 @@ import React, {useCallback, useMemo, useState} from "react"
 import {AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps} from "./AIReActChatContentsType"
 import styles from "./AIReActChatContents.module.scss"
 import {useCreation} from "ahooks"
-import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
 import {AIMarkdown} from "@/pages/ai-agent/components/aiMarkdown/AIMarkdown"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
 import StreamCard from "@/pages/ai-agent/components/StreamCard"
@@ -20,7 +19,7 @@ import Loading from "@/components/Loading/Loading"
 import useAISystemStream from "../hooks/useAISystemStream"
 import {ScrollText} from "@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Code} from "@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const getAIReferenceNodeByType = (contentType?: string) => {
     switch (contentType) {
@@ -55,7 +54,17 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         const className = getAIReferenceNodeByType(ContentType)
         return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>
     }, [reference, ContentType])
-
+    if (ContentType?.startsWith("code/")) {
+        return (
+            <AIYaklangCode
+                contentType={ContentType}
+                content={content}
+                nodeLabel={nodeLabel}
+                modalInfo={modalInfo}
+                referenceNode={referenceNode}
+            />
+        )
+    }
     switch (ContentType) {
         case AIStreamContentType.TEXT_MARKDOWN:
             return (
@@ -65,17 +74,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     nodeLabel={nodeLabel}
                     modalInfo={modalInfo}
                     {...aiMarkdownProps}
-                />
-            )
-        case AIStreamContentType.CODE_YAKLANG:
-        case AIStreamContentType.CODE_HTTP_REQUEST:
-            return (
-                <AIYaklangCode
-                    contentType={ContentType}
-                    content={content}
-                    nodeLabel={nodeLabel}
-                    modalInfo={modalInfo}
-                    referenceNode={referenceNode}
                 />
             )
         case AIStreamContentType.TEXT_PLAIN:
@@ -91,8 +89,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     referenceNode={referenceNode}
                 />
             )
-        case AIStreamContentType.LOG_TOOL:
-            return <AIChatToolColorCard toolCall={stream.data} referenceNode={referenceNode} />
         case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
             return <></>
         default:
@@ -110,11 +106,14 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         atBottomThreshold: 50
     })
 
-    const renderItem = useCallback((index: number, item?: ReActChatRenderItem) => {
-        if (!item?.token) return null
-        const hasNext = chats.elements.length - index > 1
-        return <AIChatListItem key={item.token} hasNext={hasNext} item={item} type='re-act' />
-    },[chats.elements.length])
+    const renderItem = useCallback(
+        (index: number, item?: ReActChatRenderItem) => {
+            if (!item?.token) return null
+            const hasNext = chats.elements.length - index > 1
+            return <AIChatListItem key={item.token} hasNext={hasNext} item={item} type='re-act' />
+        },
+        [chats.elements.length]
+    )
 
     const Item = useCallback(
         ({children, style, "data-index": dataIndex}) => (
@@ -178,7 +177,9 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
     const {referenceList} = props
     const [expand, setExpand] = useState<boolean>(false)
-
+    const code = useCreation(() => {
+        return referenceList.map((item) => item.payload).join("\n")
+    }, [referenceList])
     return (
         <>
             <YakitModal
@@ -193,8 +194,9 @@ export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props
                     e.stopPropagation()
                     setExpand(false)
                 }}
+                bodyStyle={{height: 500}}
             >
-                <Code code={referenceList || []} style={{maxHeight: "500px"}} />
+                <YakitEditor type='plaintext' readOnly={true} value={code} />
             </YakitModal>
             <span
                 className={styles["ai-reference-node"]}

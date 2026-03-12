@@ -5,8 +5,7 @@ import {OutlinCompileTwoIcon} from "@/assets/icon/outline"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import ModalInfo from "../ModelInfo"
 import styles from "./AIYaklangCode.module.scss"
-import {useMemoizedFn, useThrottleEffect} from "ahooks"
-import {AIStreamContentType} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {useCreation, useMemoizedFn, useThrottleEffect} from "ahooks"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 
 export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
@@ -19,14 +18,17 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
         [defContent],
         {wait: 500}
     )
+    const type = useCreation(() => {
+        return contentType.split("/")?.[1] || "plaintext"
+    }, [contentType])
     const renderCode = useMemoizedFn(() => {
-        switch (contentType) {
-            case AIStreamContentType.CODE_YAKLANG:
-                return <YakitEditor type='yak' value={content} readOnly={true} />
-            case AIStreamContentType.CODE_HTTP_REQUEST:
+        switch (type) {
+            case "http-request":
                 return <NewHTTPPacketEditor originValue={content} readOnly={true} />
             default:
-                return null
+                // case AIStreamContentType.CODE_YAKLANG:
+                // case AIStreamContentType.CODE_PYTHON:
+                return <YakitEditor type={type} value={content} readOnly={true} />
         }
     })
     return (

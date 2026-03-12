@@ -449,9 +449,9 @@ function useChatContent(params: UseChatContentParams) {
                 }
                 // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
                 toolForStreamData.data.status = "end"
-                const isShowAll = toolForStreamData.data.content.length > 200
+                const isShowAll = toolForStreamData.data.content.length > 25600// 50KB大概字符数25600
                 const displayContent = isShowAll
-                    ? "..." + toolForStreamData.data.content.slice(-200) + "..."
+                    ? "..." + toolForStreamData.data.content.slice(-25600) + "..."
                     : toolForStreamData.data.content
                 toolResult.data.tool.toolStdoutContent = {content: displayContent, isShowAll}
                 updateElements({mapKey: toolResult.id, type: toolResult.type})

@@ -33,6 +33,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
 import {useTypedStream} from "./aiChatListItem/StreamingChatContent/hooks/useTypedStream"
 import {AIReferenceNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
+import {useStreamingChatContent} from "./aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent"
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -51,6 +52,8 @@ interface ToolInvokerCardProps {
 interface PreWrapperProps {
     code: ReactNode
     autoScrollBottom?: boolean
+    className?: string
+    style?: React.CSSProperties
 }
 interface ToolStatusCardProps {
     status: AIToolResult["tool"]["status"] | "purple"
@@ -85,7 +88,13 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
     const {activeChat} = useAIAgentStore()
     const {handleSend} = useChatIPCDispatcher()
-    const {stream} = useTypedStream({chatType, token: data.stream.EventUUID, session: activeChat?.SessionID || ""})
+
+    // 获取流数据
+    const {stream} = useStreamingChatContent({
+        chatType,
+        token: data.stream.EventUUID,
+        session: activeChat?.SessionID || ""
+    })
 
     const selectors = useCreation(() => {
         return stream?.data?.selectors
@@ -145,7 +154,13 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
         >
             <ToolStatusCard status={"purple"} title={<div>{data.toolName}</div>}>
                 <div className={styles["file-system-content"]}>
-                    {stream?.data?.content && <PreWrapper code={stream?.data?.content || ""} autoScrollBottom />}
+                    {stream?.data?.content && (
+                        <PreWrapper
+                            code={stream?.data?.content || ""}
+                            autoScrollBottom
+                            className={styles["pre-max-height"]}
+                        />
+                    )}
                 </div>
                 {referenceNode}
             </ToolStatusCard>
@@ -256,7 +271,8 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             switch (type) {
                 case AIChatQSDataTypeEnum.STREAM:
                     if (isToolStdoutStream(data.NodeId)) {
-                        desc.push(data.content.slice(-1000))
+                        // 50KB大概字符数25600
+                        desc.push(data.content.slice(-25600))
                     } else {
                         desc.push(data.content)
                     }
@@ -336,10 +352,18 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                         </div>
                         {!!resultDetails ? (
                             <>
-                                <PreWrapper code={resultDetails} autoScrollBottom />
+                                <PreWrapper
+                                    code={resultDetails}
+                                    autoScrollBottom
+                                    className={styles["pre-max-height"]}
+                                />
                             </>
                         ) : (
-                            <>{content && <PreWrapper code={content} autoScrollBottom />}</>
+                            <>
+                                {content && (
+                                    <PreWrapper code={content} autoScrollBottom className={styles["pre-max-height"]} />
+                                )}
+                            </>
                         )}
                     </div>
                 </YakitSpin>
@@ -360,7 +384,7 @@ const ToolStatusCard: React.FC<ToolStatusCardProps> = memo((props) => {
 })
 
 export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
-    const {code, autoScrollBottom = false} = props
+    const {code, autoScrollBottom = false, className, style} = props
 
     const containerRef = useRef<HTMLPreElement>(null)
     const [isAtBottom, setIsAtBottom] = useState(true)
@@ -402,9 +426,9 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
     return (
         <pre
             ref={containerRef}
-            className={styles["file-system-wrapper"]}
+            className={classNames(styles["file-system-wrapper"], className)}
             style={{
-                maxHeight: 100,
+                ...style,
                 overflow: isScroll ? "auto" : "hidden"
             }}
             onClick={() => setIsScroll(true)}
