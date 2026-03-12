@@ -227,6 +227,28 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 {/* <Form.Item label={<>会话ID</>} name='TimelineSessionID'>
                     <YakitInput size='small' />
                 </Form.Item> */}
+                <Form.Item
+                    label={
+                        <>
+                            压力token阈值
+                            <Tooltip
+                                overlayClassName={styles["form-info-icon-tooltip"]}
+                                title={"Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告"}
+                            >
+                                <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                        </>
+                    }
+                    name='AICallTokenLimit'
+                    normalize={(value) => {
+                        const num = Number(value.replace(/\D/g, ""))
+                        if (isNaN(num)) return ""
+                        return `${num}`
+                    }}
+                    initialValue={40}
+                >
+                    <YakitInput suffix='KB' size='small' className={styles["input-kb-suffix"]} />
+                </Form.Item>
             </Form>
         </div>
     )
