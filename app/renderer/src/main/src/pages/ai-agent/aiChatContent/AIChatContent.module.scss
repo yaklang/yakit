@@ -1,4 +1,4 @@
-@use '../../../styles/mixin.scss' as mixin;
+@use "../../../styles/mixin.scss" as mixin;
 
 %display-flex-center {
     display: flex;
@@ -55,7 +55,7 @@
                     color: var(--Colors-Use-Neutral-Disable);
                 }
             }
-            .chat-title{
+            .chat-title {
                 max-width: 250px;
                 @include mixin.text-ellipsis();
             }
@@ -116,11 +116,17 @@
                 @extend %display-flex-center;
                 gap: 4px;
             }
-            .pressure {
+            .intelligent {
+                color: var(--Colors-Use-Purple-Primary);
+            }
+            .intelligent-height {
                 color: var(--Colors-Use-Error-Primary);
             }
-            .cost {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+            .lightweight {
+                color: var(--Colors-Use-Warning-Primary);
+            }
+            .lightweight-height {
+                color: var(--Colors-Use-Error-Primary);
             }
         }
         .divider-style {

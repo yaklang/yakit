@@ -5,7 +5,7 @@ import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
-import {AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "@/pages/ai-agent/defaultConstant"
+import {AIModelTypeEnum, AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "@/pages/ai-agent/defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -237,13 +237,13 @@ export declare namespace AIAgentGrpcApi {
         input_consumption: number
         output_consumption: number
         consumption_uuid: string
-        tier_consumption: Record<string, {input_consumption: number; output_consumption: number}>
+        tier_consumption: Record<AIModelTypeEnum, {input_consumption: number; output_consumption: number}>
     }
 
     /** 上下文压力 */
     export interface Pressure {
         current_cost_token_size: number
-        model_tier: string
+        model_tier: AIModelTypeEnum
         pressure_token_size: number
         timestamp: number
     }
@@ -251,7 +251,7 @@ export declare namespace AIAgentGrpcApi {
     /**  首字符响应耗时 */
     export interface AIFirstCostMS {
         model_name: string
-        model_tier: string
+        model_tier: AIModelTypeEnum
         ms: number
         provider_name: string
         second: number
@@ -260,7 +260,7 @@ export declare namespace AIAgentGrpcApi {
     /** 总对话耗时 */
     export interface AITotalCostMS {
         model_name: string
-        model_tier: string
+        model_tier: AIModelTypeEnum
         ms: number
         output_bytes: number
         output_duration_ms: number
