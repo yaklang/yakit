@@ -1,0 +1,99 @@
+{
+  "VulinboxManager": {
+    "title": "Vulinbox Manager",
+    "installed": "Installed",
+    "notInstalled": "Not Installed",
+    "openInChrome": "Open in Chrome",
+    "confirmClose": "Are you sure you want to close the Vulinbox process?",
+    "closeVulinbox": "Close Vulinbox",
+    "startVulinbox": "Start Vulinbox",
+    "startParams": "Start Vulinbox Parameters",
+    "startSuccess": "Vulinbox started successfully",
+    "installConfirm": "This will download and install the Vulinbox program from the internet",
+    "installTitle": "Install Vulinbox",
+    "installOrUpgrade": "Install/Upgrade Vulinbox",
+    "downloadAddresses": "Vulinbox Download Addresses",
+    "copySuccess": "Copied successfully",
+    "copy": "Copy",
+    "vulinboxStart": {
+      "host": "Host",
+      "port": "Port",
+      "noHttps": "Disable HTTPS",
+      "safeMode": "Safe Mode",
+      "safeModeTooltip": "Safe mode will disable some dangerous vulnerabilities, but it can effectively prevent Vulinbox from being maliciously exploited",
+      "start": "Start"
+    },
+    "installVulinboxPrompt": {
+      "checking": "Checking Vulinbox...",
+      "downloading": "Downloading Vulinbox...",
+      "installing": "Installing Vulinbox...",
+      "success": "Vulinbox installed successfully",
+      "failed": "Vulinbox installation failed"
+    },
+    "info": {
+      "title": "Vulinbox Agent - Web Security Vulnerability Playground",
+      "description": "Vulinbox is a well-designed web security vulnerability playground that simulates various security vulnerabilities that may occur in real-world scenarios, providing an ideal learning and practice platform for security researchers and penetration testing engineers.",
+      "coverageTitle": "Vulnerability Type Coverage",
+      "injectionTitle": "1. Injection Vulnerabilities",
+      "injectionItems": [
+        "SQL Injection Vulnerability Environment",
+        "XSS Cross-Site Scripting Practice Scene",
+        "SSRF Server-Side Request Forgery Environment",
+        "Command Injection Vulnerability Reproduction"
+      ],
+      "authTitle": "2. Authentication Vulnerabilities",
+      "authItems": [
+        "Cookie Security Issue Simulation",
+        "JWT Token Security Scene",
+        "Session Management Flaw Demonstration"
+      ],
+      "protocolTitle": "3. Protocol Layer Vulnerabilities",
+      "protocolItems": [
+        "WebSocket Security Issue Simulation",
+        "HTTP Protocol Flaw Environment",
+        "DNS Security Issue Demonstration"
+      ],
+      "cryptoTitle": "4. Cryptographic Algorithm Flaws",
+      "cryptoItems": [
+        "AES/ECB Mode Security Issue",
+        "RSA Algorithm Application Flaw",
+        "Base64 Encoding Abuse Scene"
+      ],
+      "apiTitle": "5. API Interface Vulnerabilities",
+      "apiItems": [
+        "OpenAPI/Swagger Related Vulnerabilities",
+        "RESTful API Security Issues",
+        "JSON Parsing Vulnerabilities"
+      ],
+      "featuresTitle": "Platform Features",
+      "teachingTitle": "1. Educational",
+      "teachingItems": [
+        "Detailed instructions for each vulnerability scene",
+        "Provide vulnerability principles and exploitation methods"
+      ],
+      "realismTitle": "2. Realistic",
+      "realismItems": [
+        "Simulate real business scenarios",
+        "Restore actual vulnerability environments"
+      ],
+      "systematicTitle": "3. Systematic",
+      "systematicItems": [
+        "Comprehensive coverage of vulnerability types",
+        "Reasonable difficulty gradient"
+      ],
+      "practiceTitle": "4. Practical",
+      "practiceItems": [
+        "Support hands-on operation",
+        "Instant feedback results"
+      ],
+      "audienceTitle": "Target Audience",
+      "audienceItems": [
+        "Cybersecurity beginners",
+        "Security test engineers",
+        "Developer security awareness training",
+        "Security researchers"
+      ],
+      "summary": "This is a very practical security learning platform. It not only provides a wealth of vulnerability environments, but also helps users systematically understand and master various web security vulnerabilities. For those who want to improve their security testing capabilities or deepen their security understanding, this is an ideal practice environment."
+    }
+  }
+}

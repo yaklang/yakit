@@ -18,6 +18,7 @@ import debounce from "lodash/debounce"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 import styles from "./TrustListPage.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 interface UserListRequest {
     keywords: string
     limit: number
@@ -27,6 +28,7 @@ interface UserListRequest {
 }
 export interface TrustListPageProp {}
 export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
+    const { t } = useI18nNamespaces(["admin"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<API.UserList[]>([])
@@ -82,7 +84,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: "用户",
+            title: t("user"),
             dataKey: "name",
             width: 450,
             render: (text, record) => (
@@ -98,28 +100,28 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             )
         },
         {
-            title: "用户角色",
+            title: t("userRole"),
             dataKey: "role",
             render: (text) => {
                 let role = text
                 switch (text) {
                     case "admin":
-                        role = "管理员"
+                        role = t("administrator")
                         break
                     case "superAdmin":
-                        role = "超级管理员"
+                        role = t("superAdministrator")
                         break
                     case "licenseAdmin":
-                        role = "License管理员"
+                        role = t("licenseAdministrator")
                         break
                     case "trusted":
-                        role = "信任用户"
+                        role = t("trustedUser")
                         break
                     case "operate":
-                        role = "运营专员"
+                        role = t("operationsSpecialist")
                         break
                     case "auditor":
-                        role = "审核员"
+                        role = t("auditor")
                         break
                     default:
                         role = "--"
@@ -129,27 +131,27 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         },
         {
-            title: "创建时间",
+            title: t("createdAt"),
             dataKey: "created_at",
             ellipsis: true,
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
         {
-            title: "操作",
+            title: t("action"),
             dataKey: "action",
             width: 80,
             fixed: "right",
             render: (_, record: API.UserList) => (
                 <>
                     <YakitPopconfirm
-                        title={"确定移除该用户吗？"}
+                        title={t("confirmRemoveUser")}
                         onConfirm={() => {
                             onRemoveSingle(record.appid, record.id)
                         }}
                         placement='right'
                     >
                         <YakitButton type='text' colors='danger'>
-                            移除
+                            {t("remove")}
                         </YakitButton>
                     </YakitPopconfirm>
                 </>
@@ -230,7 +232,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", "获取账号列表失败：" + e)
+                yakitNotify("error", t("getAccountListFailed", { error: e }))
             })
             .finally(() => {
                 setLoading(false)
@@ -247,7 +249,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", "删除用户成功")
+                yakitNotify("success", t("deleteUserSuccess"))
                 setSelectList((s) => s.filter((ele) => ele.id !== id))
                 setResponse({
                     data: response.data.filter((item) => item.id !== id),
@@ -258,7 +260,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", "删除账号失败：" + err)
+                yakitNotify("error", t("deleteUserFailed", { error: err }))
             })
     }
 
@@ -273,7 +275,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", "删除用户成功")
+                yakitNotify("success", t("deleteUserSuccess"))
                 setQuery((prevQuery) => ({
                     ...prevQuery,
                     page: 1
@@ -282,7 +284,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 setAllCheck(false)
             })
             .catch((err) => {
-                yakitNotify("error", "删除账号失败：" + err)
+                yakitNotify("error", t("deleteUserFailed", { error: err }))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     }
@@ -298,14 +300,14 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                     <div className={styles["virtual-table-header-wrap"]}>
                         <div className={styles["virtual-table-heard-left"]}>
                             <div className={styles["virtual-table-heard-left-item"]}>
-                                <span className={styles["virtual-table-heard-left-text"]}>Total</span>
+                                <span className={styles["virtual-table-heard-left-text"]}>{t("total")}</span>
                                 <span className={styles["virtual-table-heard-left-number"]}>
                                     {response.pagemeta.total}
                                 </span>
                             </div>
                             <Divider type='vertical' />
                             <div className={styles["virtual-table-heard-left-item"]}>
-                                <span className={styles["virtual-table-heard-left-text"]}>Selected</span>
+                                <span className={styles["virtual-table-heard-left-text"]}>{t("selected")}</span>
                                 <span className={styles["virtual-table-heard-left-number"]}>{selectNum}</span>
                             </div>
                         </div>
@@ -314,7 +316,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 extra={
                     <div className={styles["newTrustListPage-table-extra"]}>
                         <YakitInput.Search
-                            placeholder={"请输入用户名进行搜索"}
+                            placeholder={t("searchUserPlaceholder")}
                             enterButton={true}
                             style={{width: 200}}
                             onSearch={(value) => {
@@ -322,7 +324,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                             }}
                         />
                         <YakitPopconfirm
-                            title={"确定删除选择的用户吗？不可恢复"}
+                            title={t("confirmDeleteSelectedUsers")}
                             onConfirm={(e) => {
                                 e?.stopPropagation()
                                 onRemoveMultiple()
@@ -336,11 +338,11 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                                 icon={<TrashIcon />}
                                 disabled={selectNum === 0}
                             >
-                                批量移除
+                                {t("batchRemove")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton size='small' onClick={() => setCreateUserShow(!createUserShow)}>
-                            添加用户
+                            {t("addUser")}
                         </YakitButton>
                     </div>
                 }
@@ -367,7 +369,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             ></TableVirtualResize>
             <YakitModal
                 visible={createUserShow}
-                title={"添加用户"}
+                title={t("addUser")}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -398,6 +400,7 @@ interface CreateUserFormProps {
     refresh: () => void
 }
 const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
+    const { t } = useI18nNamespaces(["admin"])
     const {onCancel, refresh} = props
     const [form] = Form.useForm()
     const appidRef = useRef<string>("")
@@ -423,7 +426,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                 refresh()
             })
             .catch((err) => {
-                yakitNotify("error", "增加失败：" + err)
+                yakitNotify("error", t("addFailed", { error: err }))
             })
             .finally(() => {
                 setLoading(false)
@@ -456,7 +459,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                     setUserList({data: data || []})
                 })
                 .catch((err) => {
-                    yakitNotify("error", "获取普通用户失败：" + err)
+                    yakitNotify("error", t("getNormalUserFailed", { error: err }))
                 })
         }),
         300
@@ -471,7 +474,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             wrapperCol={{span: 15}}
             onFinish={onAdd}
         >
-            <Form.Item label='添加用户' name='name' rules={[{required: true, message: "添加用户必填"}]}>
+            <Form.Item label={t("addUser")} name='name' rules={[{required: true, message: t("addUserRequired")}]}>
                 <YakitSelect
                     showSearch
                     allowClear
@@ -481,7 +484,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         appidRef.current = option.record.appid
                     }}
                     onSearch={getUserList}
-                    placeholder='请输入完整的用户名'
+                    placeholder={t("inputFullUsername")}
                     optionLabelProp='lable'
                 >
                     {userList.data.map((item) => {
@@ -499,36 +502,36 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                     })}
                 </YakitSelect>
             </Form.Item>
-            <Form.Item label='选择角色' name='role'>
+            <Form.Item label={t("selectRole")} name='role'>
                 <YakitSelect
                     options={[
                         {
                             value: "trusted",
-                            label: "信任用户"
+                            label: t("trustedUser")
                         },
                         {
                             value: "admin",
-                            label: "管理员"
+                            label: t("administrator")
                         },
                         {
                             value: "licenseAdmin",
-                            label: "License管理员"
+                            label: t("licenseAdministrator")
                         },
                         {
                             value: "operate",
-                            label: "运营专员"
+                            label: t("operationsSpecialist")
                         },
                         {
                             value: "auditor",
-                            label: "审核员"
+                            label: t("auditor")
                         }
                     ]}
-                    placeholder='请选择角色'
+                    placeholder={t("selectRolePlaceholder")}
                 ></YakitSelect>
             </Form.Item>
             <div style={{textAlign: "right"}}>
                 <YakitButton htmlType='submit' loading={loading}>
-                    添加
+                    {t("add")}
                 </YakitButton>
             </div>
         </Form>

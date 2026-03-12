@@ -21,10 +21,12 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 const KnowledgeBase: FC = () => {
+    const { t } = useI18nNamespaces(["aiAgent"])
     const apiRef = useRef<KnowledgeBaseTableHeaderProps["api"]>()
     const streamsRef = useRef<KnowledgeBaseTableHeaderProps["streams"]>()
     const contentRef = useRef<any>(null)
@@ -201,6 +203,7 @@ const KnowledgeBase: FC = () => {
     const getAIModelListOption = useDebounceFn(
         () => {
             isForcedSetAIModal({
+                t,
                 pageKey: "ai-repository",
                 noDataCall: () => {
                     setAIModelOptions("")

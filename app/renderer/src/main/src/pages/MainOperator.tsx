@@ -139,6 +139,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["layout"])
     const {userInfo, setStoreUserInfo, avatarColor} = props
 
     // OSS远程头像删除
@@ -146,7 +147,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
         httpDeleteOSSResource({file_name: [imgName]}, true)
             .then(() => {})
             .catch((err) => {
-                failed("头像更换失败：" + err)
+                failed(t("mainOperator.avatarUpdateFailed", { ns: "layout", error: err }))
             })
     })
 
@@ -165,7 +166,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 })
                     .then((result) => {
                         if (result.ok) {
-                            success("头像更换成功")
+                            success(t("mainOperator.avatarUpdateSuccess", { ns: "layout" }))
                             setStoreUserInfo({
                                 ...userInfo,
                                 companyHeadImg: imgUrl
@@ -175,12 +176,12 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                         }
                     })
                     .catch((err) => {
-                        failed("头像更换失败：" + err)
+                        failed(t("mainOperator.avatarUpdateFailed", { ns: "layout", error: err }))
                     })
                     .finally(() => {})
             })
             .catch((err) => {
-                failed("头像上传失败")
+                failed(t("mainOperator.avatarUploadFailed", { ns: "layout" }))
             })
             .finally(() => {})
     })
@@ -195,7 +196,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 showUploadList={false}
                 beforeUpload={(f) => {
                     if (!FileType.includes(f.type)) {
-                        failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                        failed(t("mainOperator.avatarFileTypeLimit", { ns: "layout", name: f.name }))
                         return false
                     }
                     setAvatar(f)
@@ -219,7 +220,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 <div className='user-name'>{userInfo.companyName}</div>
                 {userInfo.role === "admin" && (
                     <>
-                        <div className='permission-show'>管理员</div>
+                        <div className='permission-show'>{t("mainOperator.admin", { ns: "layout" })}</div>
                         <span className='user-admin-icon'>
                             <EnterpriseLoginInfoIcon />
                         </span>
@@ -256,6 +257,7 @@ const getDefaultExpand = () => {
     return true
 }
 const Main: React.FC<MainProp> = React.memo((props) => {
+    const {t: tlayout} = useI18nNamespaces(["layout"])
     const [showRenderCrash, setShowRenderCrash] = useState(false)
     const [showProxyModal, setShowProxyModal] = useState(false)
     const [ProxyModalLoading, setProxyModalLoading] = useState(false)
@@ -681,7 +683,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
                     <YakitModal
                         visible={passwordShow}
-                        title={"修改密码"}
+                        title={tlayout("funcDomain.setPassword", { ns: "layout" })}
                         destroyOnClose={true}
                         maskClosable={false}
                         bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -708,11 +710,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     <YakitHint
                         getContainer={chartCSDragAreaRef.current || undefined}
                         visible={showRenderCrash}
-                        title='渲染端崩溃提示'
-                        content='检测到渲染端有崩溃情况，点击查看日志即可查看崩溃日志，忽略后可在系统设置中进行查看'
-                        okButtonText='查看日志'
+                        title={tlayout("mainOperator.renderCrashTitle", { ns: "layout" })}
+                        content={tlayout("mainOperator.renderCrashDesc", { ns: "layout" })}
+                        okButtonText={tlayout("mainOperator.viewLog", { ns: "layout" })}
                         onOk={() => handleShowRenderCrashCallback(true)}
-                        cancelButtonText='忽略'
+                        cancelButtonText={tlayout("mainOperator.ignore", { ns: "layout" })}
                         onCancel={() => handleShowRenderCrashCallback(false)}
                     />
                 </Layout>
@@ -720,15 +722,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             {controlShow && <ControlOperation controlName={controlName} />}
             <YakitHintModal
                 visible={false}
-                title='收到远程连接请求'
+                title={tlayout("mainOperator.remoteRequestTitle", { ns: "layout" })}
                 content={
                     <div>
-                        用户 <span style={{color: "#F28B44"}}>Alex-null</span>{" "}
-                        正在向你发起远程连接请求，是否同意对方连接？
+                        {tlayout("mainOperator.remoteRequestContentRich", { ns: "layout", name: "Alex-null" })}
                     </div>
                 }
-                cancelButtonText='拒绝'
-                okButtonText='同意'
+                cancelButtonText={tlayout("mainOperator.refuse", { ns: "layout" })}
+                okButtonText={tlayout("mainOperator.agree", { ns: "layout" })}
                 onOk={() => {}}
                 onCancel={() => {}}
             />
@@ -736,12 +737,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             {/* irify-start */}
             <YakitHint
                 visible={isShowIRifyHint}
-                title='迁移数据'
-                content='由于IRify功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。'
+                title={tlayout("mainOperator.migrateDataTitle", { ns: "layout" })}
+                content={tlayout("mainOperator.migrateDataDesc", { ns: "layout" })}
                 footer={
                     <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "flex-end"}}>
                         <YakitButton size='max' type='outline2' onClick={() => setIsShowIRifyHint(false)}>
-                            取消
+                            {tlayout("funcDomain.cancel", { ns: "layout" })}
                         </YakitButton>
                         <YakitButton
                             size='max'
@@ -750,7 +751,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 setIsAllowIRifyUpdate(true)
                             }}
                         >
-                            确定
+                            {tlayout("funcDomain.confirm", { ns: "layout" })}
                         </YakitButton>
                     </div>
                 }

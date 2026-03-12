@@ -261,12 +261,12 @@ export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse>
 
 const openedAIModalMap = new Map<string, boolean>()
 
-export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean}, null> = (
+export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean; t?: any}, null> = (
     params,
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true} = params
+        const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true, t} = params
 
         getAIModelAvailableInfo(hiddenError)
             .then((res) => {
@@ -275,7 +275,7 @@ export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: 
                     // 每个 tab / 页面只弹一次
                     if (!openedAIModalMap.get(pageKey)) {
                         openedAIModalMap.set(pageKey, true)
-                        isOpen && onOpenConfigModal(mountContainer)
+                        isOpen && onOpenConfigModal(mountContainer, t)
                     }
                     noDataCall?.(res)
                 } else {

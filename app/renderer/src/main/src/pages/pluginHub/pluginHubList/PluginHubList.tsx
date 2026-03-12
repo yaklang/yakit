@@ -13,6 +13,7 @@ import {useStore} from "@/store"
 import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
@@ -34,6 +35,7 @@ interface PluginHubListProps {
 }
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
+    const { t } = useI18nNamespaces(["pluginHub"])
     const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage, setAutoOpenDetailTab} = props
 
     const userinfo = useStore((s) => s.userInfo)
@@ -193,25 +195,20 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     /** ---------- 通信监听 Start ---------- */
 
     const barHint = useMemoizedFn((key: string) => {
-        const item = HubSideBarList.find((item) => item.value === key)
+        const item = HubSideBarList(t).find((item) => item.value === key)
         if (key !== active) {
             return `点击进入${item ? item.hint?.() : "列表"}`
         } else {
             if (noDetailTabs.current.includes(key as PluginSourceType)) return ""
-            if (key === "own" && !isLogin) return ""
-            if (isDetail) {
-                return !show ? "展开详情列表" : "收起详情列表"
-            } else {
-                return !show ? "展开高级筛选" : "收起高级筛选"
-            }
+            return show ? "收起列表" : "展开列表"
         }
     })
 
     return (
-        <div className={styles["plugin-hub-list"]}>
-            <div className={styles["side-bar-list"]}>
+        <div id={rootElementId} className={styles["plugin-hub-list"]}>
+            <div className={styles["side-bar"]}>
                 <YakitSideTab
-                    yakitTabs={HubSideBarList}
+                    yakitTabs={HubSideBarList(t)}
                     activeKey={active}
                     onActiveKey={(v) => {
                         setSearchParams(undefined)

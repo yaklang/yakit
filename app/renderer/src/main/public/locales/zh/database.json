@@ -1,0 +1,27 @@
+{
+  "DomainAssetPage": {
+    "domain": "域名",
+    "ip": "IP",
+    "htmlTitle": "HTMLTitle",
+    "onlyRefresh": "仅刷新",
+    "resetRefresh": "重置查询条件刷新"
+  },
+  "PortAssetPage": {
+    "title": "端口资产列表",
+    "searchPlaceholder": "请输入网络地址、端口、服务指纹、title关键词搜索",
+    "onlyRefresh": "仅刷新",
+    "resetRefresh": "重置查询条件刷新",
+    "advancedFilter": "高级筛选",
+    "confirmDeleteSelected": "确定删除勾选数据吗？",
+    "confirmClearList": "确定清空列表数据吗?",
+    "delete": "删除",
+    "clear": "清空",
+    "noFingerprint": "暂无指纹信息",
+    "getPortsGroupFailed": "获取端口分组失败: ",
+    "host": "主机",
+    "port": "端口",
+    "service": "服务",
+    "htmlTitle": "标题",
+    "state": "状态"
+  }
+}

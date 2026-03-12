@@ -19,6 +19,7 @@ import {
 import {UseChatIPCEvents} from "@/pages/ai-re-act/hooks/type"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {getAIModelAvailableInfo, isForcedSetAIModal} from "@/pages/ai-agent/aiModelList/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useDebounceFn, useMemoizedFn, useRequest, useSafeState} from "ahooks"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {defaultParams, GlobalNetworkConfig} from "./configNetwork/ConfigNetworkPage"
@@ -47,6 +48,7 @@ interface HistoryAIReActChatProps {
 }
 
 const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
+    const { t } = useI18nNamespaces(["aiAgent"])
     const {
         refRef,
         showFreeChat,
@@ -88,6 +90,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     const getAIModelListOption = useDebounceFn(
         () => {
             isForcedSetAIModal({
+                t,
                 pageKey: "knowledge-base",
                 isOpen: false
             })

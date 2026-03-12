@@ -66,8 +66,10 @@ import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {setAIModal} from "@/pages/ai-agent/aiModelList/AIModelList"
 import styles from "./AIToolEditor.module.scss"
 import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(["aiAgent"])
     const {isModify} = props
 
     const [saveLoading, setSaveLoading] = useState<boolean>(false)
@@ -609,6 +611,7 @@ export default AIToolEditor
 
 const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
     forwardRef((props, ref) => {
+        const { t } = useI18nNamespaces(["aiAgent"])
         const {content, mountContainer} = props
         const [expand, setExpand] = useState(true)
 
@@ -678,7 +681,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
         })
         const onGetDescriptionByAI = useMemoizedFn(() => {
             if (!content) {
-                yakitNotify("error", "请编写代码以后再点击生成")
+                yakitNotify("error", t("AIAgent.AIToolEditor.writeCodeFirst", { ns: "aiAgent" }))
                 return
             }
             const params: AIToolGenerateMetadataRequest = getGrpcAIToolGenerateParams()
@@ -697,7 +700,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
         })
         const onGetKeywordsByAI = useMemoizedFn(() => {
             if (!content) {
-                yakitNotify("error", "请编写代码以后再点击生成")
+                yakitNotify("error", t("AIAgent.AIToolEditor.writeCodeFirst", { ns: "aiAgent" }))
                 return
             }
             const params: AIToolGenerateMetadataRequest = getGrpcAIToolGenerateParams()
@@ -717,6 +720,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
         const onConfig = useMemoizedFn(() => {
             setAIModal({
                 mountContainer,
+                t,
                 onSuccess: () => {}
             })
         })
@@ -724,13 +728,13 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
             const {generate, loading} = params
             return (
                 <div className={styles["form-help"]}>
-                    配置AI后可用AI生成描述与tags
+                    {t("AIAgent.AIToolEditor.aiGenerateHelp", { ns: "aiAgent" })}
                     <YakitButton type='text' onClick={generate} loading={loading}>
-                        点击生成
+                        {t("AIAgent.AIToolEditor.clickToGenerate", { ns: "aiAgent" })}
                     </YakitButton>
-                    如未配置
+                    {t("AIAgent.AIToolEditor.notConfigured", { ns: "aiAgent" })}
                     <YakitButton type='text' onClick={onConfig}>
-                        请点此配置
+                        {t("AIAgent.AIToolEditor.clickToConfigure", { ns: "aiAgent" })}
                     </YakitButton>
                 </div>
             )

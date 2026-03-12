@@ -1,8 +1,37 @@
 {
-    "NotepadLocalList": {
-        "confirmDeleteSelected": "Are you sure you want to delete the selected documents?",
-        "confirmDeleteAll": "Are you sure you want to delete all documents?",
-        "title": "Title",
-        "lastUpdateTime": "Last Updated"
-    }
+  "NotepadManage": {
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "downloadFailed": "Download failed: ",
+    "confirmDelete": "Are you sure you want to delete this document?"
+  },
+  "NotepadManageOnline": {
+    "fileName": "File Name",
+    "author": "Author",
+    "collaborator": "Collaborator",
+    "updatedAt": "Updated At",
+    "createdAt": "Created At",
+    "action": "Action",
+    "newNotepad": "New Notepad",
+    "batchDelete": "Batch Delete",
+    "batchDownload": "Batch Download",
+    "confirmBatchDelete": "Are you sure you want to batch delete the selected notepads?",
+    "searchPlaceholder": "Please enter keywords to search"
+  },
+  "NotepadManageLocal": {
+    "fullTextSearch": "Full-text Search",
+    "title": "Title",
+    "updatedAt": "Updated At",
+    "createdAt": "Created At",
+    "action": "Action",
+    "searchPlaceholder": "Please enter keywords to search",
+    "confirmDeleteSelected": "Are you sure you want to delete the selected documents?",
+    "confirmDeleteAll": "Are you sure you want to delete all documents?",
+    "delete": "Delete",
+    "import": "Import",
+    "export": "Export",
+    "new": "New",
+    "noData": "Please click the [New] button in the upper right corner to add data",
+    "searchEmpty": "Search result is empty"
+  }
 }
