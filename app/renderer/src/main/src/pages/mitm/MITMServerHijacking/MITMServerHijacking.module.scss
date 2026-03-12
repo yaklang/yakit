@@ -117,7 +117,7 @@
     .mitm-hijacked-heard {
         display: flex;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 4px;
         .mitm-hijacked-heard-left {
             display: flex;
             align-items: center;
@@ -464,10 +464,10 @@
 
 .mitm-alert-msg {
     line-height: 25px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
     background-color: var(--Colors-Use-Yellow-Bg);
     border: 1px solid var(--Colors-Use-Yellow-Border);
-    padding: 8px 15px;
+    padding: 1px 15px;
     border-radius: 2px;
     .circle-icon {
         position: relative;
