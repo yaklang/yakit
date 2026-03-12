@@ -54,18 +54,10 @@ import {DelGroupConfirmPop} from "@/pages/pluginHub/group/PluginOperationGroupLi
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
 
 const {ipcRenderer} = window.require("electron")
-
-export interface MITMPluginListProp {
-    proxy?: string
-    downloadCertNode?: () => React.ReactNode
-    setFilterNode?: () => React.ReactNode
-    onSubmitScriptContent?: (script: string) => any
-    onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    onExit?: () => any
-}
 
 interface MITMPluginLocalListProps {
     noParamsCheckList: string[]
@@ -98,6 +90,10 @@ interface MITMPluginLocalListProps {
     setTempShowPluginHistory?: (t: string) => void
     hasParamsCheckList: string[]
     curTabKey?: string
+    pluginStreamInfo?: Record<string, HoldGRPCStreamInfo>
+    showPluginStream?: string
+    setShowPluginStream?: React.Dispatch<React.SetStateAction<string>>
+    setAutoForward?: React.Dispatch<React.SetStateAction<ManualHijackTypeProps>>
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -130,7 +126,11 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         tempShowPluginHistory,
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey = ""
+        curTabKey = "",
+        pluginStreamInfo,
+        showPluginStream,
+        setShowPluginStream,
+        setAutoForward
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -290,6 +290,10 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                 hasParamsCheckList={hasParamsCheckList}
                                 tempShowPluginHistory={tempShowPluginHistory}
                                 setTempShowPluginHistory={setTempShowPluginHistory}
+                                pluginStreamInfo={pluginStreamInfo}
+                                showPluginStream={showPluginStream}
+                                setShowPluginStream={setShowPluginStream}
+                                setAutoForward={setAutoForward}
                                 // 劫持启动前
                                 defaultPlugins={noParamsCheckList}
                                 setDefaultPlugins={setNoParamsCheckList}

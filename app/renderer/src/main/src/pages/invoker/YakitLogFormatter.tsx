@@ -35,26 +35,6 @@ import { JSONParseLog } from "@/utils/tool"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 const WordCloudCharts = React.lazy(() => import("./LogCharts/WordCloudCharts"))
-export interface YakitLogViewersProp {
-    data: ExecResultLog[]
-    finished?: boolean
-    onlyTime?: boolean
-}
-
-export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
-    return (
-        <Timeline pending={!props.finished} reverse={true}>
-            {(props.data || []).map((item, index) => (
-                <Timeline.Item
-                    key={`${item.timestamp}-${item.level}-${item.data}-${index}`}
-                    color={LogLevelToCode(item.level)}
-                >
-                    <YakitLogFormatter data={item.data} level={item.level} timestamp={item.timestamp} />
-                </Timeline.Item>
-            ))}
-        </Timeline>
-    )
-})
 
 export interface YakitLogFormatterProp {
     level: string

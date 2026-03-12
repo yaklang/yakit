@@ -451,17 +451,6 @@
     }
 }
 
-.mitm-hijacked-passive-content {
-    flex: 1;
-    overflow: hidden;
-    :global {
-        .ant-timeline-item-head-blue {
-            color: var(--Colors-Use-Main-Primary);
-            border-color: var(--Colors-Use-Main-Primary);
-        }
-    }
-}
-
 .mitm-alert-msg {
     line-height: 25px;
     margin-bottom: 12px;
@@ -477,6 +466,36 @@
             width: 16px;
             height: 16px;
         }
+    }
+}
+
+.pluginOutput-wrapper {
+    display: flex;
+    flex-direction: column;
+    .pluginOutput-select {
+        display: flex;
+        align-items: center;
+    }
+    .pluginOutput-pluginName {
+        white-space: nowrap;
+        margin-right: 8px;
+    }
+    .pluginOutput-execRes {
+        flex: 1;
+        min-height: 0;
+    }
+}
+
+.pluginOut-select-item {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    &:hover {
+        color: var(--Colors-Use-Main-Primary);
+    }
+}
+
+:global(.ant-select-item-option-active) {
+    .pluginOut-select-item {
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -568,6 +587,37 @@
 }
 
 .mitm-hijacked-heard-tab {
+    .configuredIcon {
+        svg {
+            color: var(--Colors-Use-Success-Primary);
+            width: 16px;
+            height: 16px;
+        }
+    }
+    
+    .unconfiguredIcon {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+        &:hover {
+            color: var(--radio-buttons-primary-font-hover-color);
+        }
+    }
+
+    .pluginOut-text {
+        font-size: 12px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        &:hover {
+            color: var(--radio-buttons-primary-font-hover-color);
+        }
+    }
+
+    :global(.ant-radio-button-wrapper-checked) .pluginOut-text {
+        color: var(--yakit-solid-primary-font-color);
+    }
+    
     :global {
         .ant-radio-button-wrapper {
             padding: 0 5px;
@@ -575,25 +625,6 @@
         .ant-radio-button-wrapper:nth-child(2) {
             padding: 0 2px;
         }
-    }
-}
-
-.configuredIcon {
-    svg {
-        color: #56c991;
-        width: 16px;
-        height: 16px;
-    }
-}
-
-.unconfiguredIcon {
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-    &:hover {
-        color: var(--Colors-Use-Main-Primary);
     }
 }
 

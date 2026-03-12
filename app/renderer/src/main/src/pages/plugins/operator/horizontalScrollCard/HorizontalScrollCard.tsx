@@ -4,7 +4,6 @@ import {
     HorizontalScrollCardProps,
     HorizontalScrollCardScrollProps,
     StatusCardListProps,
-    StatusCardProps
 } from "./HorizontalScrollCardType"
 import styles from "./HorizontalScrollCard.module.scss"
 import classNames from "classnames"

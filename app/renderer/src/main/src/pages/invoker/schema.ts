@@ -176,6 +176,7 @@ export interface ExecResult {
     Id?: number
     Progress: number
     RuntimeID?: string
+    PluginName?: string
 }
 
 export interface TagsAndType {

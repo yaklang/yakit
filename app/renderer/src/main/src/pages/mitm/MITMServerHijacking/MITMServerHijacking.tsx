@@ -2,10 +2,8 @@ import React, {useContext, useEffect, useRef, useState} from "react"
 import {Divider, Form, notification, Tooltip, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
-import {failed, info, yakitNotify} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useMemoizedFn, useSize} from "ahooks"
-import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
-import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
+import {info, yakitNotify} from "@/utils/notification"
+import {useCreation, useMemoizedFn, useSize} from "ahooks"
 import {MITMServer} from "@/pages/mitm/MITMPage"
 import style from "./MITMServerHijacking.module.scss"
 import {QuitIcon} from "@/assets/newIcon"
@@ -16,7 +14,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {AgentConfigModal, maskProxyPassword} from "../MITMServerStartForm/MITMServerStartForm"
+import {maskProxyPassword} from "../MITMServerStartForm/MITMServerStartForm"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -42,7 +40,6 @@ import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
 import {getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import ProxyRulesConfig, {ProxyTest} from "@/components/configNetwork/ProxyRulesConfig"
 import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil"
@@ -52,6 +49,9 @@ import { debugToPrintLogs } from "@/utils/logCollection"
 import { OutlineCheckIcon, OutlineChevrondownIcon, OutlineChevronupIcon } from "@/assets/icon/outline"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 import { useGlobalHotPatchTag, useGlobalHotPatch } from "@/store/globalHotPatch"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
+import {StreamUpdateState} from "./PluginsOutput/StreamProcessor"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -65,10 +65,10 @@ export interface MITMServerHijackingProp {
     enableInitialMITMPlugin?: boolean
     defaultPlugins?: string[]
     setStatus: (status: MITMStatus) => any
+    autoForward: ManualHijackTypeProps
+    setAutoForward: React.Dispatch<React.SetStateAction<ManualHijackTypeProps>>
     onLoading?: (loading: boolean) => any
     setVisible: (b: boolean) => void
-    logs: ExecResultLog[]
-    statusCards: StatusCardProps[]
     tip: string
     onSetTip: (tip: string) => void
     downstreamProxyStr: string
@@ -79,6 +79,12 @@ export interface MITMServerHijackingProp {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory: string
     setTempShowPluginHistory: (t: string) => void
+    pluginStreamInfo: Record<string, HoldGRPCStreamInfo>
+    showPluginStream: string
+    setShowPluginStream: React.Dispatch<React.SetStateAction<string>>
+    hasPluginsStreamUpdate: boolean
+    updatesPlugins?: Map<string, StreamUpdateState>
+    pluginOutputRef: React.RefObject<HTMLDivElement>
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -99,9 +105,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         addr,
         status,
         setStatus,
+        autoForward,
+        setAutoForward,
         setVisible,
-        logs,
-        statusCards,
         tip,
         onSetTip,
         downstreamProxyStr,
@@ -111,7 +117,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory,
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        pluginStreamInfo,
+        showPluginStream,
+        setShowPluginStream,
+        hasPluginsStreamUpdate,
+        updatesPlugins,
+        pluginOutputRef
     } = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -522,8 +534,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     onIsHasParams={onIsHasParams}
                     status={status}
                     setStatus={setStatus}
-                    logs={logs}
-                    statusCards={statusCards}
+                    autoForward={autoForward}
+                    setAutoForward={setAutoForward}
                     downstreamProxyStr={downstreamProxyStr}
                     showPluginHistoryList={showPluginHistoryList}
                     setShowPluginHistoryList={setShowPluginHistoryList}
@@ -531,6 +543,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     setTempShowPluginHistory={setTempShowPluginHistory}
                     setVisible={setVisible}
                     setFiltersVisible={setFiltersVisible}
+                    pluginStreamInfo={pluginStreamInfo}
+                    showPluginStream={showPluginStream}
+                    setShowPluginStream={setShowPluginStream}
+                    hasPluginsStreamUpdate={hasPluginsStreamUpdate}
+                    updatesPlugins={updatesPlugins}
+                    pluginOutputRef={pluginOutputRef}
                 />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
