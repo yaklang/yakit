@@ -119,6 +119,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
         data.TimelineContentSizeLimit =
             ((setting.TimelineContentSizeLimit ?? AIAgentSettingDefault.TimelineContentSizeLimit) as number) * 1024
 
+        // AICallTokenLimit 单位是KB，但传到后端需要转换为字节
+        data.AICallTokenLimit = ((setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit) as number) * 1024
         if (!isNil(setting?.UserInteractLimit)) {
             data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
         }
