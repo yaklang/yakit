@@ -258,7 +258,7 @@ export class StreamProcessor {
     onMarkdownData?: () => void
 
     /**自定义tab页放前面还是后面 */
-    placeTab(isHead: boolean, info: HoldGRPCStreamProps.InfoTab) {
+    placeTab(info: HoldGRPCStreamProps.InfoTab) {
         const exists = this.topTabs.some((tab) => tab.tabName === info.tabName)
         if (!exists) {
             this.topTabs.unshift(info)
@@ -329,8 +329,8 @@ export class StreamProcessor {
             const checkInfo = checkStreamValidity(logData)
             if (!checkInfo) return true
 
-            const obj: StreamResult.Card = checkInfo
-            const {id, data, tags} = obj
+            const info: StreamResult.Card = checkInfo
+            const {id, data, tags} = info
             const origin = this.cardKVPair.get(id)
             if (origin && origin.Timestamp > logData.timestamp) {
                 return true
@@ -368,7 +368,7 @@ export class StreamProcessor {
                         type: "table"
                     }
 
-                    this.placeTab(!!info.at_head, tabInfo)
+                    this.placeTab(tabInfo)
 
                     if (this.tabTable.get(table.table_name)) {
                         this.pushLogs(obj)
@@ -394,7 +394,7 @@ export class StreamProcessor {
                         type: "text"
                     }
 
-                    this.placeTab(!!info.at_head, tabInfo)
+                    this.placeTab(tabInfo)
 
                     if (this.tabsText.get(text.tab_name)) {
                         this.pushLogs(obj)
