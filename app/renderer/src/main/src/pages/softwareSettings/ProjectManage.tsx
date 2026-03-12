@@ -59,8 +59,9 @@ import {isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {setClipboardText} from "@/utils/clipboard"
 import {useEeSystemConfig, useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
-import { useUploadInfoByEnpriTrace } from "@/components/layout/utils"
+import {useUploadInfoByEnpriTrace} from "@/components/layout/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {Trans} from "react-i18next"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -138,11 +139,33 @@ interface FilterInfoProps {
     itemIcon?: ReactNode
 }
 
+/** 项目名过滤项 */
+const typeFilter: FilterInfoProps[] = [
+    {key: "all", label: "全部文件", itemIcon: <ProjectViewGridSvgIcon className={styles["all-icon"]} />},
+    {
+        key: "project",
+        label: "项目",
+        itemIcon: <ProjectDocumentTextSvgIcon className={styles["project-icon"]} />
+    },
+    {
+        key: "file",
+        label: "文件夹",
+        itemIcon: <ProjectFolderOpenSvgIcon className={styles["floder-icon"]} />
+    }
+]
+
 /** 项目名过滤项对应展示内容 */
 const typeToName: {[key: string]: string} = {}
+for (let item of typeFilter) typeToName[item.key] = item.label
 
+/** 时间过滤项 */
+const timeFilter: FilterInfoProps[] = [
+    {key: "created_at", label: "创建时间"},
+    {key: "updated_at", label: "最近操作时间"}
+]
 /** 时间过滤项对应展示内容 */
 export const timeToName: {[key: string]: string} = {}
+for (let item of timeFilter) timeToName[item.key] = item.label
 
 /** 企业版web配置过滤 */
 const judgeProjectConfig = (eeSystemConfig: API.SystemConfigList[]) => {
@@ -181,40 +204,7 @@ const DefaultProjectInfo: ProjectDescription = {
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
-    const { t } = useI18nNamespaces(["settings"])
-
-    /** 项目名过滤项 */
-    const typeFilter = useMemo((): FilterInfoProps[] => [
-        {key: "all", label: t("ProjectManage.allFiles"), itemIcon: <ProjectViewGridSvgIcon className={styles["all-icon"]} />},
-        {
-            key: "project",
-            label: t("ProjectManage.project"),
-            itemIcon: <ProjectDocumentTextSvgIcon className={styles["project-icon"]} />
-        },
-        {
-            key: "file",
-            label: t("ProjectManage.folder"),
-            itemIcon: <ProjectFolderOpenSvgIcon className={styles["floder-icon"]} />
-        }
-    ], [t])
-
-    const typeToNameMap = useMemo(() => {
-        const map: {[key: string]: string} = {}
-        typeFilter.forEach(item => map[item.key] = item.label)
-        return map
-    }, [typeFilter])
-
-    /** 时间过滤项 */
-    const timeFilter = useMemo((): FilterInfoProps[] => [
-        {key: "created_at", label: t("ProjectManage.createdAt")},
-        {key: "updated_at", label: t("ProjectManage.updatedAt")}
-    ], [t])
-
-    const timeToNameMap = useMemo(() => {
-        const map: {[key: string]: string} = {}
-        timeFilter.forEach(item => map[item.key] = item.label)
-        return map
-    }, [timeFilter])
+    const {t, i18n} = useI18nNamespaces(["projectManage", "yakitUi"])
 
     const {engineMode, onFinish} = props
 
@@ -299,7 +289,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         let header: HeaderProp<ProjectDescription>[] = [
             {
                 key: "ProjectName",
-                name: typeToNameMap["all"],
+                name: typeToName["all"],
                 style: {width: "15%"},
                 headerRender: (index) => {
                     return (
@@ -325,7 +315,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     [styles["project-table-filter-dropdown"]]: typeShow
                                 })}
                             >
-                                {typeToNameMap[params.Type || "all"]}
+                                {typeToName[params.Type || "all"]}
                                 {typeShow ? (
                                     <ChevronUpIcon className={styles["icon-style"]} />
                                 ) : (
@@ -348,7 +338,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             <div className={styles["project-style"]} title={data.ProjectName}>
                                 {data.ProjectName}
                             </div>
-                            {(data?.OnlineSubTaskID || "").length > 0 && <YakitTag color="info">{t("ProjectManage.server")}</YakitTag>}
+                            {(data?.OnlineSubTaskID || "").length > 0 && (
+                                <YakitTag color='info'>{t("ProjectManage.server")}</YakitTag>
+                            )}
                         </div>
                     )
                 }
@@ -456,7 +448,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             },
             {
                 key: "CreatedAt",
-                name: timeToNameMap["updated_at"],
+                name: timeToName["updated_at"],
                 style: {width: "15%"},
                 headerRender: (index) => {
                     return (
@@ -485,7 +477,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     [styles["project-table-filter-dropdown"]]: timeShow
                                 })}
                             >
-                                {timeToNameMap[params.Pagination.OrderBy || "created_at"]}
+                                {timeToName[params.Pagination.OrderBy || "created_at"]}
                                 {timeShow ? (
                                     <ChevronUpIcon className={styles["icon-style"]} />
                                 ) : (
@@ -515,7 +507,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             }
         })
         return header
-    }, [params, typeShow, timeShow, typeFilter, timeFilter, typeToNameMap, timeToNameMap, t])
+    }, [params, typeShow, timeShow, i18n.language])
 
     const [operateShow, setOperateShow] = useState<number>(-1)
     const projectOperate = useMemoizedFn((info: ProjectDescription) => {
@@ -671,7 +663,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         if (param.ProjectName) param.Type = getEnvTypeByProjects()
         // 查当前文件夹下的所有内容，应该用当前的父节点（也就是文件夹id）来获取所有的
         if (param.FolderId !== undefined) {
-             param.Type = ''
+            param.Type = ""
         }
         if (isIRify()) param.FrontendType = "ssa_project"
         setLoading(true)
@@ -717,7 +709,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel, Type: getEnvTypeByProjects()})
             .then((e) => {
                 setStopUpdate(true)
-                info(t("ProjectManage.deleteSuccess"))
+                info(t("YakitNotification.deleted"))
                 const projects = getData().Projects.filter((item) => +item.Id !== delId.Id)
                 const newData = {
                     ...getData(),
@@ -731,7 +723,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
             })
             .catch((e) => {
-                failed(t("ProjectManage.deleteFailed") + `: ${e}`)
+                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
             })
             .finally(() => {
                 setDelId({Id: -1, Type: "project"})
@@ -1051,7 +1043,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 }
                             })
                             .catch((e) => {
-                                failed(t("ProjectManage.folderNameInvalid") + `: ${e}`)
+                                failed(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败，文件夹名校验不通过：${e}`)
                                 setTimeout(() => {
                                     setModalLoading(false)
                                 }, 300)
@@ -1101,7 +1093,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 },
                 {
                     key: "export",
-                    label: t("ProjectManage.export"),
+                    label: t("YakitButton.export"),
                     children: [
                         {
                             key: "encryption",
@@ -1115,7 +1107,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 },
                 {
                     key: "edit",
-                    label: t("ProjectManage.edit"),
+                    label: t("YakitButton.edit"),
                     disabled: project?.ProjectName === "[default]"
                 },
                 {
@@ -1125,7 +1117,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {type: "divider"},
                 {
                     key: "delete",
-                    label: t("ProjectManage.delete"),
+                    label: t("YakitButton.delete"),
                     type: "danger",
                     disabled: project?.ProjectName === "[default]"
                 }
@@ -1154,36 +1146,36 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             <div className={styles["project-manage-container"]}>
                 <div className={styles["project-header"]}>
                     <div className={styles["header-title"]}>
-                            <div className={styles["title-style"]}>{t("ProjectManage.title")}</div>
-                            <div className={styles["total-style"]}>
-                                Total <span className={styles["total-number"]}>{__data.ProjectToTal}</span>
-                            </div>
+                        <div className={styles["title-style"]}>{t("ProjectManage.title")}</div>
+                        <div className={styles["total-style"]}>
+                            Total <span className={styles["total-number"]}>{__data.ProjectToTal}</span>
                         </div>
-                        <YakitInput.Search
-                            size='large'
-                            placeholder={t("ProjectManage.inputProjectName")}
-                            value={params.ProjectName}
-                            onChange={(e) =>
+                    </div>
+                    <YakitInput.Search
+                        size='large'
+                        placeholder={t("ProjectManage.inputProjectName")}
+                        value={params.ProjectName}
+                        onChange={(e) =>
+                            setParams({
+                                Type: "all",
+                                Pagination: {...params.Pagination, Page: 1},
+                                ProjectName: e.target.value
+                            })
+                        }
+                        style={{width: 288}}
+                        onSearch={() => {
+                            if (getParams().ProjectName) {
+                                setFiles([])
                                 setParams({
                                     Type: "all",
-                                    Pagination: {...params.Pagination, Page: 1},
-                                    ProjectName: e.target.value
+                                    Pagination: {...getParams().Pagination, Page: 1},
+                                    ProjectName: getParams().ProjectName
                                 })
                             }
-                            style={{width: 288}}
-                            onSearch={() => {
-                                if (getParams().ProjectName) {
-                                    setFiles([])
-                                    setParams({
-                                        Type: "all",
-                                        Pagination: {...getParams().Pagination, Page: 1},
-                                        ProjectName: getParams().ProjectName
-                                    })
-                                }
 
-                                setTimeout(() => update(1), 300)
-                            }}
-                        />
+                            setTimeout(() => update(1), 300)
+                        }}
+                    />
                 </div>
 
                 <div className={styles["project-operate"]}>
@@ -1202,9 +1194,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     <div className={styles["title-style"]}>
                                         {latestProject?.ProjectName || "[default]"}
                                     </div>
-                                    <div className={styles["subtitle-style"]}>{`${t("ProjectManage.recentOperation")}：${
-                                        latestProject ? formatTimestamp(latestProject?.UpdateAt) : "- -"
-                                    }`}</div>
+                                    <div className={styles["subtitle-style"]}>{`${t(
+                                        "ProjectManage.recentOperation"
+                                    )}：${latestProject ? formatTimestamp(latestProject?.UpdateAt) : "- -"}`}</div>
                                 </div>
                             </div>
 
@@ -1220,7 +1212,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         data: [
                                             {
                                                 key: "export",
-                                                label: t("ProjectManage.export"),
+                                                label: t("YakitButton.export"),
                                                 itemIcon: <OutlineExportIcon />,
                                                 children: [
                                                     {key: "encryption", label: t("ProjectManage.encryptedExport")},
@@ -1229,8 +1221,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             },
                                             {
                                                 key: "edit",
-                                                label: t("ProjectManage.edit"),
-                                                disabled: latestProject?.ProjectName === "[default]" || (latestProject?.OnlineSubTaskID || "").length > 0 ,
+                                                label: t("YakitButton.edit"),
+                                                disabled:
+                                                    latestProject?.ProjectName === "[default]" ||
+                                                    (latestProject?.OnlineSubTaskID || "").length > 0,
                                                 itemIcon: <OutlinePencilaltIcon />
                                             },
                                             {
@@ -1241,7 +1235,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             {type: "divider"},
                                             {
                                                 key: "delete",
-                                                label: t("ProjectManage.delete"),
+                                                label: t("YakitButton.delete"),
                                                 type: "danger",
                                                 disabled: latestProject?.ProjectName === "[default]",
                                                 itemIcon: <OutlineTrashIcon />
@@ -1332,7 +1326,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
                                 <DocumentDownloadSvgIcon />
-                                {t("ProjectManage.import")}
+                                {t("YakitButton.import")}
                             </div>
                             <div className={styles["icon-style"]}>
                                 <ImportSvgIcon />
@@ -1344,7 +1338,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
                 {search.name && (
                     <div className={styles["project-search"]}>
-                        {t("ProjectManage.searchResult", {total: search.total, name: search.name})}
+                        <Trans
+                            i18nKey='ProjectManage.searchResult'
+                            ns='projectManage'
+                            components={{
+                                code: <span className={styles["total-style"]}></span>
+                            }}
+                            values={{name: search.name}}
+                        />
                     </div>
                 )}
 
@@ -1417,7 +1418,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     </div>
                                 </div>
                                 {/* { engineMode !== "remote" &&  */}
-                                <div style={{width: 120}}>{t("ProjectManage.action")}</div>
+                                <div style={{width: 120}}>{t("YakitTable.action")}</div>
                                 {/* } */}
                             </div>
 
@@ -1487,7 +1488,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                         <YakitEmpty
                                                             descriptionReactNode={
                                                                 <div className={styles["title-style"]}>
-                                                                    {t("ProjectManage.searchResultEmpty")}
+                                                                    {t("YakitEmpty.searchEmpty")}
                                                                 </div>
                                                             }
                                                         />
@@ -1557,7 +1558,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 )
                                             })
                                         )}
-                                        {loadMore && <div className={styles["table-loading-more"]}>{t("ProjectManage.loading")}</div>}
+                                        {loadMore && (
+                                            <div className={styles["table-loading-more"]}>
+                                                {t("ProjectManage.loading")}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1584,9 +1589,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 visible={delShow}
                 title={delId.Type === "file" ? t("ProjectManage.deleteFolder") : t("ProjectManage.deleteProject")}
                 content={
-                    delId.Type === "file" ? t("ProjectManage.deleteFolderConfirm") : t("ProjectManage.deleteProjectConfirm")
+                    delId.Type === "file"
+                        ? t("ProjectManage.deleteFolderConfirm")
+                        : t("ProjectManage.deleteProjectConfirm")
                 }
-                okButtonText={t("ProjectManage.keep")}
+                okButtonText={t("YakitButton.keep")}
                 cancelButtonText={t("ProjectManage.clear")}
                 footerExtra={
                     <YakitButton
@@ -1597,7 +1604,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             setDelId({Id: -1, Type: "project"})
                         }}
                     >
-                        {t("ProjectManage.cancel")}
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                 }
                 onOk={() => delProjectFolder(false)}
@@ -1698,7 +1705,7 @@ export interface FileProjectInfoProps extends ProjectDescription {
 }
 
 export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
-    const { t } = useI18nNamespaces(["settings"])
+    const {t, i18n} = useI18nNamespaces(["projectManage", "yakitUi"])
     const {
         isNew = true,
         isFolder,
@@ -1736,11 +1743,11 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         setData([...getData()])
                     }, 300)
                 } catch (e) {
-                    failed(t("ProjectManage.dataErrorRetry"))
+                    failed("处理项目数据失败: " + `${e}`)
                 }
             })
             .catch((e) => {
-                failed(t("ProjectManage.fetchProjectsFailed") + `: ${e}`)
+                failed(`查询 Projects 失败：${e}`)
             })
     })
 
@@ -1762,11 +1769,11 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         })
                     )
                 } catch (e) {
-                    failed(t("ProjectManage.dataErrorRetry"))
+                    failed("处理项目数据失败: " + `${e}`)
                 }
             })
             .catch((e) => {
-                failed(t("ProjectManage.fetchProjectsFailed") + `: ${e}`)
+                failed(`查询 Projects 失败：${e}`)
             })
     })
 
@@ -1862,21 +1869,21 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     const [isCheck, setIsCheck] = useState<boolean>(false)
     const {eeSystemConfig} = useEeSystemConfig()
     const headerTitle = useMemo(() => {
-        if (isNew && isFolder && !project) return t("ProjectManage.newFolderTitle")
-        if (isNew && !isFolder && !project) return t("ProjectManage.newProjectTitle")
-        if (isNew && isFolder && project) return t("ProjectManage.editFolderTitle")
-        if (isNew && !isFolder && project) return t("ProjectManage.editProjectTitle")
-        if (isExport) return t("ProjectManage.exportProjectTitle")
-        if (isImport) return t("ProjectManage.importProjectTitle")
-        return t("ProjectManage.unknownCase")
-    }, [isNew, isFolder, isExport, isImport, project, t])
+        if (isNew && isFolder && !project) return t("NewProjectAndFolder.newFolderTitle")
+        if (isNew && !isFolder && !project) return t("NewProjectAndFolder.newProjectTitle")
+        if (isNew && isFolder && project) return t("NewProjectAndFolder.editFolderTitle")
+        if (isNew && !isFolder && project) return t("NewProjectAndFolder.editProjectTitle")
+        if (isExport) return t("NewProjectAndFolder.exportProjectTitle")
+        if (isImport) return t("NewProjectAndFolder.importProjectTitle")
+        return t("NewProjectAndFolder.unknownCase")
+    }, [isNew, isFolder, isExport, isImport, project, i18n.language])
 
     const submitTitle = useMemo(() => {
-        if (isNew && !project) return t("ProjectManage.create")
-        if (isExport) return t("ProjectManage.export")
-        if (isImport) return t("ProjectManage.import")
-        return t("ProjectManage.confirm")
-    }, [isNew, isExport, isImport, project, t])
+        if (isNew && !project) return t("NewProjectAndFolder.create")
+        if (isExport) return t("YakitButton.export")
+        if (isImport) return t("YakitButton.import")
+        return t("YakitButton.ok")
+    }, [isNew, isExport, isImport, project, i18n.language])
 
     const [transferShow, setTransferShow] = useState<{
         isExport?: boolean
@@ -1896,7 +1903,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         const isHasDescription = Array.isArray(v?.Description) && v.Description.length > 0
 
         if (isHasDescription && !validateArray(v.Description) && !isCommunityEdition()) {
-            warn(t("ProjectManage.completeRemarks"))
+            warn(t("NewProjectAndFolder.completeRemarks"))
             return
         }
         if (!isCheck) setIsCheck(true)
@@ -1916,7 +1923,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }
 
             if (info.ProjectName.length > 100) {
-                failed(t("ProjectManage.nameTooLong"))
+                failed(t("NewProjectAndFolder.nameTooLong"))
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -1946,7 +1953,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         }
         if (isExport) {
             if (!exportInfo.Id) {
-                failed(t("ProjectManage.noDataId"))
+                failed(t("NewProjectAndFolder.noDataId"))
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -1955,7 +1962,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 return
             }
             if (exportInfo.Password.length > 15) {
-                failed(t("ProjectManage.passwordTooLong"))
+                failed(t("NewProjectAndFolder.passwordTooLong"))
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -2019,14 +2026,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 })
                             })
                             .catch((e) => {
-                                failed(t("ProjectManage.createProjectFailed") + ": " + `${e}`)
+                                failed("创建新项目失败，项目名校验不通过：" + `${e}`)
                                 setTimeout(() => {
                                     setLoading(false)
                                 }, 300)
                             })
                     })
                     .catch((e) => {
-                        failed(t("ProjectManage.parseFileNameFailed") + `: ${e}`)
+                        failed(t("NewProjectAndFolder.parseFileNameFailed") + `: ${e}`)
                         setTimeout(() => {
                             setLoading(false)
                         }, 300)
@@ -2070,7 +2077,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     ) => {
         e.stopPropagation()
         onReset({
-            [field]: [{Key: t("ProjectManage.system"), Value: ""}]
+            [field]: [{Key: "系统", Value: ""}]
         })
         ref.current.setVariableActiveKey(["0"])
     }
@@ -2091,7 +2098,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             })
             ref.current.setVariableActiveKey([...(ref.current.variableActiveKey || []), `${variables?.length || 0}`])
         } else {
-            yakitFailed(t("ProjectManage.pleaseCompleteRemark", {index}))
+            yakitFailed(t("NewProjectAndFolder.pleaseCompleteRemark", {index}))
         }
     }
 
@@ -2140,14 +2147,18 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         <Form.Item
                             label={
                                 <div>
-                                    {`${isFolder ? t("ProjectManage.folderName") : t("ProjectManage.projectName")}`}{" "}
+                                    {`${
+                                        isFolder
+                                            ? t("NewProjectAndFolder.folderName")
+                                            : t("NewProjectAndFolder.projectName")
+                                    }`}{" "}
                                     <span className={styles["required-style"]}>*</span> :
                                 </div>
                             }
                         >
                             <YakitInput
                                 size='large'
-                                placeholder={t("ProjectManage.unnamed")}
+                                placeholder={t("NewProjectAndFolder.unnamed")}
                                 className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !info.ProjectName
                                 })}
@@ -2160,13 +2171,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 label={
                                     !!project ? (
                                         <div className={styles["form-item-cascader"]}>
-                                            <div>{`${t("ProjectManage.belongToFolder")} :`}</div>
+                                            <div>{`${t("NewProjectAndFolder.belongToFolder")} :`}</div>
                                             {dropShow && (
                                                 <div className={styles["hint-style"]}>{cascaderValue.join("/")}</div>
                                             )}
                                         </div>
                                     ) : (
-                                        `${t("ProjectManage.belongToFolder")} :`
+                                        `${t("NewProjectAndFolder.belongToFolder")} :`
                                     )
                                 }
                             >
@@ -2196,13 +2207,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        {t("ProjectManage.projectCode")} :<span className={styles["required-style"]}>*</span>
+                                        {t("ProjectManage.projectCode")} :
+                                        <span className={styles["required-style"]}>*</span>
                                     </div>
                                 }
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder={t("ProjectManage.externalProjectCodePlaceholder")}
+                                    placeholder={t("NewProjectAndFolder.externalProjectCodePlaceholder")}
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalProjectCode
                                     })}
@@ -2215,18 +2227,19 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        {t("ProjectManage.moduleCode")} :<span className={styles["required-style"]}>*</span>
+                                        {t("ProjectManage.moduleCode")} :
+                                        <span className={styles["required-style"]}>*</span>
                                     </div>
                                 }
                                 help={
                                     <div className={styles["import-form-item-help-wrapper"]}>
-                                        {t("ProjectManage.externalModuleHelp")}
+                                        {t("NewProjectAndFolder.externalModuleHelp")}
                                     </div>
                                 }
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder={t("ProjectManage.externalModulePlaceholder")}
+                                    placeholder={t("NewProjectAndFolder.externalModulePlaceholder")}
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalModule
                                     })}
@@ -2239,8 +2252,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        {t("ProjectManage.mysqlAddress")}
-                                        <Tooltip title={t("ProjectManage.mysqlAddressTooltip")}>
+                                        {t("NewProjectAndFolder.mysqlAddress")}
+                                        <Tooltip title={t("NewProjectAndFolder.mysqlAddressTooltip")}>
                                             <QuestionMarkCircleIcon className={styles["icon-question"]} />
                                         </Tooltip>{" "}
                                         :
@@ -2260,12 +2273,12 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         )}
                         <>
                             {isCommunityEdition() ? (
-                                <Form.Item label={`${t("ProjectManage.remark")} :`}>
+                                <Form.Item label={`${t("NewProjectAndFolder.remark")} :`}>
                                     <YakitInput.TextArea
                                         autoSize={{minRows: 3, maxRows: 5}}
                                         showCount
                                         maxLength={100}
-                                        placeholder={t("ProjectManage.inputDescription")}
+                                        placeholder={t("NewProjectAndFolder.inputDescription")}
                                         value={info.Description}
                                         onChange={(e) => setInfo({...info, Description: e.target.value})}
                                     />
@@ -2273,7 +2286,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             ) : (
                                 <>
                                     <div className={styles["remark-header"]}>
-                                        <div className={styles["title"]}>{t("ProjectManage.remark")} :</div>
+                                        <div className={styles["title"]}>{t("NewProjectAndFolder.remark")} :</div>
                                         {/* 添加额外的元素 */}
                                         <span className={styles[""]}>
                                             <YakitButton
@@ -2284,7 +2297,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                                 }}
                                                 size='small'
                                             >
-                                                {t("ProjectManage.reset")}
+                                                {t("YakitButton.reset")}
                                             </YakitButton>
                                             <Divider type='vertical' style={{margin: 0}} />
                                             <YakitButton
@@ -2295,7 +2308,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                                 className={styles["btn-padding-right-0"]}
                                                 size='small'
                                             >
-                                                {t("ProjectManage.add")}
+                                                {t("YakitButton.add")}
                                                 <PlusIcon />
                                             </YakitButton>
                                         </span>
@@ -2314,13 +2327,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 )}
                 {isExport && (
                     <>
-                        <Form.Item label={`${t("ProjectManage.projectName")} :`}>
+                        <Form.Item label={`${t("NewProjectAndFolder.projectName")} :`}>
                             <YakitInput disabled={true} size='large' value={exportInfo.ProjectName} />
                         </Form.Item>
                         <Form.Item
                             label={
                                 <div>
-                                    {t("ProjectManage.password")} <span className={styles["required-style"]}>*</span> :
+                                    {t("NewProjectAndFolder.password")}{" "}
+                                    <span className={styles["required-style"]}>*</span> :
                                 </div>
                             }
                             className={styles["export-form-item-password-wrapper"]}
@@ -2329,7 +2343,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !exportInfo.Password
                                 })}
-                                placeholder={t("ProjectManage.passwordPlaceholder")}
+                                placeholder={t("NewProjectAndFolder.passwordPlaceholder")}
                                 value={exportInfo.Password}
                                 onChange={(e) => setExportInfo({...exportInfo, Password: e.target.value})}
                             />
@@ -2341,12 +2355,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         <Form.Item
                             label={
                                 <div>
-                                    {t("ProjectManage.selectProjectFile")} <span className={styles["required-style"]}>*</span> :
+                                    {t("NewProjectAndFolder.selectProjectFile")}{" "}
+                                    <span className={styles["required-style"]}>*</span> :
                                 </div>
                             }
                             help={
                                 <div className={styles["import-form-item-help-wrapper"]}>
-                                    {t("ProjectManage.clickHere")}
+                                    {t("NewProjectAndFolder.clickHere")}
                                     <Upload
                                         multiple={false}
                                         maxCount={1}
@@ -2357,7 +2372,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         }}
                                     >
                                         <a className={styles["upload-btn"]} onClick={(e) => e.preventDefault()}>
-                                            {t("ProjectManage.uploadFile")}
+                                            {t("NewProjectAndFolder.uploadFile")}
                                         </a>
                                     </Upload>
                                 </div>
@@ -2368,35 +2383,38 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     [styles["required-form-item-wrapper"]]: isCheck && !importInfo.ProjectFilePath
                                 })}
                                 size='large'
-                                placeholder={t("ProjectManage.inputAbsolute")}
+                                placeholder={t("NewProjectAndFolder.inputAbsolute")}
                                 value={importInfo.ProjectFilePath}
                                 onChange={(e) => setImportInfo({...importInfo, ProjectFilePath: e.target.value})}
                             />
                         </Form.Item>
                         <Form.Item
-                            label={`${t("ProjectManage.projectName")} :`}
+                            label={`${t("NewProjectAndFolder.projectName")} :`}
                             help={
                                 <div className={styles["import-form-item-help-wrapper"]}>
-                                    {t("ProjectManage.projectNameImportEmpty")}
+                                    {t("NewProjectAndFolder.projectNameImportEmpty")}
                                 </div>
                             }
                         >
                             <YakitInput
                                 size='large'
-                                placeholder={t("ProjectManage.inputProjectNameImport")}
+                                placeholder={t("NewProjectAndFolder.inputProjectNameImport")}
                                 value={importInfo.LocalProjectName}
                                 onChange={(e) => setImportInfo({...importInfo, LocalProjectName: e.target.value})}
                             />
                         </Form.Item>
-                        <Form.Item label={`${t("ProjectManage.password")} :`} className={styles["export-form-item-password-wrapper"]}>
+                        <Form.Item
+                            label={`${t("NewProjectAndFolder.password")} :`}
+                            className={styles["export-form-item-password-wrapper"]}
+                        >
                             <YakitInput.Password
-                                placeholder={t("ProjectManage.passwordImport")}
+                                placeholder={t("NewProjectAndFolder.passwordImport")}
                                 value={importInfo.Password}
                                 onChange={(e) => setImportInfo({...importInfo, Password: e.target.value})}
                             />
                         </Form.Item>
                         {!parentNode && (
-                            <Form.Item label={`${t("ProjectManage.belongToFolder")} :`}>
+                            <Form.Item label={`${t("NewProjectAndFolder.belongToFolder")} :`}>
                                 <Cascader
                                     options={data}
                                     fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
@@ -2425,7 +2443,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 <Form.Item label={""}>
                     <div className={styles["form-btn-wrapper"]}>
                         <YakitButton loading={loading} size='large' type='outline2' onClick={onClose}>
-                            {t("ProjectManage.cancel")}
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton loading={loading} size='large' htmlType='submit'>
                             {submitTitle}
@@ -2470,7 +2488,7 @@ export interface ProjectIOProgress {
     Verbose: string
 }
 export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
-    const { t } = useI18nNamespaces(["settings"])
+    const {t} = useI18nNamespaces(["projectManage", "yakitUi"])
     const {usedBy, isExport, isImport, data, visible, setVisible, onSuccess} = props
 
     const {isExportTemporaryProjectFlag, setIsExportTemporaryProjectFlag} = useTemporaryProjectStore()
@@ -2491,7 +2509,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
             return
         }
         if ((!isExport && !isImport) || !data) {
-            failed(t("ProjectManage.dataErrorRetry"))
+            failed(t("NewProjectAndFolder.dataErrorRetry"))
             return
         }
 
@@ -2602,8 +2620,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
 
                         <div className={styles["modal-right-wrapper"]}>
                             <div className={styles["modal-right-title"]}>
-                                {isExport && t("ProjectManage.projectExporting")}
-                                {isImport && t("ProjectManage.projectImporting")}
+                                {isExport && t("TransferProject.projectExporting")}
+                                {isImport && t("TransferProject.projectImporting")}
                             </div>
                             <div className={styles["download-progress"]}>
                                 <Progress
@@ -2611,7 +2629,11 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                                     trailColor='var(--Colors-Use-Neutral-Bg)'
                                     percent={+percent.toFixed(2)}
                                     format={(p, sp) => {
-                                        return <div className={styles["progress-content-style"]}>{`${t("ProjectManage.progress")} ${p}%`}</div>
+                                        return (
+                                            <div className={styles["progress-content-style"]}>{`${t(
+                                                "TransferProject.progress"
+                                            )} ${p}%`}</div>
+                                        )
                                     }}
                                 />
                             </div>
@@ -2631,7 +2653,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                             </div>
                             <div className={styles["modal-right-btn"]}>
                                 <YakitButton size='max' type='outline2' onClick={onClose}>
-                                    {t("ProjectManage.cancel")}
+                                    {t("YakitButton.cancel")}
                                 </YakitButton>
                             </div>
                         </div>
@@ -2668,18 +2690,21 @@ interface SetVariableProjectItemProps {
 }
 
 const SetVariableProjectItem: React.FC<SetVariableProjectItemProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["settings"])
+    const {t} = useI18nNamespaces(["projectManage"])
     const {name} = props
 
     return (
         <div className={styles["variable-project-item"]}>
             <Form.Item name={[name, "Key"]} noStyle wrapperCol={{span: 24}}>
-                <input placeholder={t("ProjectManage.remarkName")} className={styles["variable-item-input"]} />
+                <input placeholder={t("SetVariableProjectItem.remarkName")} className={styles["variable-item-input"]} />
             </Form.Item>
 
             <div className={styles["variable-item-textarea-body"]}>
                 <Form.Item name={[name, "Value"]} noStyle wrapperCol={{span: 24}}>
-                    <AutoTextarea className={styles["variable-item-textarea"]} placeholder={t("ProjectManage.remarkContent")} />
+                    <AutoTextarea
+                        className={styles["variable-item-textarea"]}
+                        placeholder={t("SetVariableProjectItem.remarkContent")}
+                    />
                 </Form.Item>
                 <ResizerIcon className={styles["resizer-icon"]} />
             </div>
@@ -2699,7 +2724,7 @@ interface VariableProjectListProps {
  * 目前只有Project备注使用
  */
 const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef((props, ref) => {
-    const { t } = useI18nNamespaces(["settings"])
+    const {t} = useI18nNamespaces(["projectManage", "yakitUi"])
     const {field, onDel, collapseWrapperClassName, extra} = props
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
@@ -2733,7 +2758,7 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                                 {fields.map(({key, name}, i) => (
                                     <YakitPanel
                                         key={`${key + ""}`}
-                                        header={`${t("ProjectManage.remark")} ${name}`}
+                                        header={`${t("NewProjectAndFolder.remark")} ${name}`}
                                         className={styles["variable-list-panel"]}
                                         extra={
                                             <div className={styles["extra-wrapper"]}>
@@ -2751,7 +2776,7 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                                         <SetVariableProjectItem name={name} />
                                     </YakitPanel>
                                 ))}
-                                </YakitCollapse>
+                            </YakitCollapse>
                             {fields?.length === 0 && (
                                 <>
                                     <YakitButton
@@ -2766,7 +2791,7 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                                         icon={<PlusIcon />}
                                         block
                                     >
-                                        {t("ProjectManage.add")}
+                                        {t("YakitButton.add")}
                                     </YakitButton>
                                 </>
                             )}

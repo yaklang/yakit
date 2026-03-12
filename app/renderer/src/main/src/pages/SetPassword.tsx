@@ -8,7 +8,7 @@ import {loginOut, refreshToken} from "@/utils/login"
 import {UserInfoProps, yakitDynamicStatus} from "@/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface SetPasswordProps {
@@ -17,12 +17,12 @@ export interface SetPasswordProps {
 }
 
 const layout = {
-    labelCol: {span: 5},
-    wrapperCol: {span: 19}
+    labelCol: {span: 7},
+    wrapperCol: {span: 17}
 }
 
 const SetPassword: React.FC<SetPasswordProps> = (props) => {
-    const { t } = useI18nNamespaces(["core"])
+    const {t} = useI18nNamespaces(["core", "yakitUi"])
     const [form] = Form.useForm()
     const {userInfo, onCancel} = props
     const {getFieldValue} = form
@@ -31,7 +31,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
     const onFinish = useMemoizedFn((values: API.UpUserInfoRequest) => {
         const {old_pwd, pwd, confirm_pwd} = values
         if (getFieldValue("confirm_pwd") !== getFieldValue("pwd")) {
-            warn(t("SetPassword.passwordMismatch", { ns: "core" }))
+            warn(t("SetPassword.passwordMismatch"))
         } else {
             NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
                 method: "post",
@@ -44,7 +44,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
             })
                 .then((result) => {
                     if (result.ok) {
-                        success(t("SetPassword.updateSuccess", { ns: "core" }))
+                        success(t("SetPassword.updateSuccess"))
                         onCancel()
                         if (dynamicStatus.isDynamicStatus) {
                             ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: true})
@@ -56,7 +56,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                 })
                 .catch((err) => {
                     setLoading(false)
-                    failed(t("SetPassword.updateFailed", { ns: "core", error: err }))
+                    failed(t("SetPassword.updateFailed", {error: err}))
                 })
                 .finally(() => {})
         }
@@ -70,7 +70,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                 if (re.test(value)) {
                     return Promise.resolve()
                 } else {
-                    return Promise.reject(t("SetPassword.passwordRule", { ns: "core" }))
+                    return Promise.reject(t("SetPassword.passwordRule"))
                 }
             }
         }
@@ -79,22 +79,30 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
     return (
         <div>
             <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='old_pwd' label={t("SetPassword.oldPassword", { ns: "core" })} rules={[{required: true, message: t("SetPassword.required", { ns: "core" })}]}>
-                    <YakitInput.Password placeholder={t("SetPassword.inputOldPassword", { ns: "core" })} allowClear />
+                <Form.Item
+                    name='old_pwd'
+                    label={t("SetPassword.oldPassword")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
+                    <YakitInput.Password placeholder={t("SetPassword.inputOldPassword")} allowClear />
                 </Form.Item>
-                <Form.Item name='pwd' label={t("SetPassword.newPassword", { ns: "core" })} rules={[{required: true, message: t("SetPassword.required", { ns: "core" })}, ...judgePass()]}>
-                    <YakitInput.Password placeholder={t("SetPassword.inputNewPassword", { ns: "core" })} allowClear />
+                <Form.Item
+                    name='pwd'
+                    label={t("SetPassword.newPassword")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}, ...judgePass()]}
+                >
+                    <YakitInput.Password placeholder={t("SetPassword.inputNewPassword")} allowClear />
                 </Form.Item>
                 <Form.Item
                     name='confirm_pwd'
-                    label={t("SetPassword.confirmPassword", { ns: "core" })}
-                    rules={[{required: true, message: t("SetPassword.required", { ns: "core" })}, ...judgePass()]}
+                    label={t("SetPassword.confirmPassword")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}, ...judgePass()]}
                 >
-                    <YakitInput.Password placeholder={t("SetPassword.inputConfirmPassword", { ns: "core" })} allowClear />
+                    <YakitInput.Password placeholder={t("SetPassword.inputConfirmPassword")} allowClear />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton type='primary' htmlType='submit' loading={loading}>
-                        {t("SetPassword.updatePassword", { ns: "core" })}
+                        {t("SetPassword.updatePassword")}
                     </YakitButton>
                 </div>
             </Form>

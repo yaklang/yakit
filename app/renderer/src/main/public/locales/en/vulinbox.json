@@ -13,87 +13,58 @@
     "installTitle": "Install Vulinbox",
     "installOrUpgrade": "Install/Upgrade Vulinbox",
     "downloadAddresses": "Vulinbox Download Addresses",
-    "copySuccess": "Copied successfully",
-    "copy": "Copy",
-    "vulinboxStart": {
-      "host": "Host",
-      "port": "Port",
-      "noHttps": "Disable HTTPS",
-      "safeMode": "Safe Mode",
-      "safeModeTooltip": "Safe mode will disable some dangerous vulnerabilities, but it can effectively prevent Vulinbox from being maliciously exploited",
-      "start": "Start"
-    },
-    "installVulinboxPrompt": {
-      "checking": "Checking Vulinbox...",
-      "downloading": "Downloading Vulinbox...",
-      "installing": "Installing Vulinbox...",
-      "success": "Vulinbox installed successfully",
-      "failed": "Vulinbox installation failed"
-    },
     "info": {
       "title": "Vulinbox Agent - Web Security Vulnerability Playground",
       "description": "Vulinbox is a well-designed web security vulnerability playground that simulates various security vulnerabilities that may occur in real-world scenarios, providing an ideal learning and practice platform for security researchers and penetration testing engineers.",
       "coverageTitle": "Vulnerability Type Coverage",
       "injectionTitle": "1. Injection Vulnerabilities",
-      "injectionItems": [
-        "SQL Injection Vulnerability Environment",
-        "XSS Cross-Site Scripting Practice Scene",
-        "SSRF Server-Side Request Forgery Environment",
-        "Command Injection Vulnerability Reproduction"
-      ],
+      "sqlInjectionEnv": "SQL Injection Vulnerability Environment",
+      "xssPracticeScenario": "XSS Cross-Site Scripting Practice Scene",
+      "ssrfEnv": "SSRF Server-Side Request Forgery Environment",
+      "commandInjectionReproduce": "Command Injection Vulnerability Reproduction",
       "authTitle": "2. Authentication Vulnerabilities",
-      "authItems": [
-        "Cookie Security Issue Simulation",
-        "JWT Token Security Scene",
-        "Session Management Flaw Demonstration"
-      ],
+      "cookieSecuritySimulation": "Cookie Security Issue Simulation",
+      "jwtTokenScenario": "JWT Token Security Scenario",
+      "sessionManagementDemo": "Session Management Vulnerability Demonstration",
       "protocolTitle": "3. Protocol Layer Vulnerabilities",
-      "protocolItems": [
-        "WebSocket Security Issue Simulation",
-        "HTTP Protocol Flaw Environment",
-        "DNS Security Issue Demonstration"
-      ],
+      "websocketSecuritySimulation": "WebSocket Security Issue Simulation",
+      "httpProtocolWeaknessEnv": "HTTP Protocol Weakness Environment",
+      "dnsSecurityDemo": "DNS Security Issue Demonstration",
       "cryptoTitle": "4. Cryptographic Algorithm Flaws",
-      "cryptoItems": [
-        "AES/ECB Mode Security Issue",
-        "RSA Algorithm Application Flaw",
-        "Base64 Encoding Abuse Scene"
-      ],
+      "aesEcbSecurityIssue": "AES/ECB Mode Security Issue",
+      "rsaAlgorithmWeakness": "RSA Algorithm Implementation Weakness",
+      "base64MisuseScenario": "Base64 Encoding Misuse Scenario",
       "apiTitle": "5. API Interface Vulnerabilities",
-      "apiItems": [
-        "OpenAPI/Swagger Related Vulnerabilities",
-        "RESTful API Security Issues",
-        "JSON Parsing Vulnerabilities"
-      ],
+      "openapiSwaggerVulnerabilities": "OpenAPI/Swagger Related Vulnerabilities",
+      "restfulApiSecurityIssues": "RESTful API Security Issues",
+      "jsonParsingVulnerability": "JSON Parsing Vulnerability",
       "featuresTitle": "Platform Features",
       "teachingTitle": "1. Educational",
-      "teachingItems": [
-        "Detailed instructions for each vulnerability scene",
-        "Provide vulnerability principles and exploitation methods"
-      ],
+      "detailedDescriptionForEachScenario": "Each vulnerability scenario includes a detailed description",
+      "provideVulnerabilityPrinciplesAndExploitationMethods": "Provides vulnerability principles and exploitation methods",
       "realismTitle": "2. Realistic",
-      "realismItems": [
-        "Simulate real business scenarios",
-        "Restore actual vulnerability environments"
-      ],
+      "simulateRealBusinessScenarios": "Simulate real-world business scenarios",
+      "replicateRealVulnerabilityEnvironment": "Replicate real vulnerability environments",
       "systematicTitle": "3. Systematic",
-      "systematicItems": [
-        "Comprehensive coverage of vulnerability types",
-        "Reasonable difficulty gradient"
-      ],
+      "comprehensiveVulnerabilityCoverage": "Comprehensive coverage of vulnerability types",
+      "reasonableDifficultyGradient": "Reasonable difficulty gradient",
       "practiceTitle": "4. Practical",
-      "practiceItems": [
-        "Support hands-on operation",
-        "Instant feedback results"
-      ],
+      "handsOnSupport": "Hands-on support",
+      "instantFeedback": "Instant feedback",
       "audienceTitle": "Target Audience",
-      "audienceItems": [
-        "Cybersecurity beginners",
-        "Security test engineers",
-        "Developer security awareness training",
-        "Security researchers"
-      ],
+      "networkSecurityBeginners": "Network Security Beginners",
+      "securityTestEngineers": "Security Test Engineers",
+      "developerSecurityAwarenessTraining": "Developer Security Awareness Training",
+      "securityResearchers": "Security Researchers",
       "summary": "This is a very practical security learning platform. It not only provides a wealth of vulnerability environments, but also helps users systematically understand and master various web security vulnerabilities. For those who want to improve their security testing capabilities or deepen their security understanding, this is an ideal practice environment."
     }
+  },
+  "VulinboxStart": {
+    "noHttps": "Disable HTTPS",
+    "safeMode": "Safe Mode",
+    "safeModeTooltip": "Safe mode will disable some dangerous vulnerabilities, but it can effectively prevent Vulinbox from being maliciously exploited"
+  },
+  "InstallVulinboxPrompt": {
+    "installing": "Installing Vulinbox"
   }
 }

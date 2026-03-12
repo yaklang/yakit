@@ -29,7 +29,7 @@ const DefaultEnvInfo: PluginEnvInfo = {
 
 /** @name 插件全局变量 */
 export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props, ref) => {
-    const { t } = useI18nNamespaces(["pluginHub"])
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
     const {isPlugin, keys} = props
 
     const pluginEnvVarRef = useRef<HTMLDivElement>(null)
@@ -313,7 +313,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                 handleOpenEdit(false)
                             }}
                         >
-                            {t("PluginEnvVariables.addVariable")}
+                            {t("YakitButton.new")}
                         </YakitButton>
                     )}
                 </div>
@@ -364,7 +364,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                                             infoValue
                                                         ) : (
                                                             <span className={styles["plugin-env-value-noexist"]}>
-                                                                {t("PluginEnvVariables.notConfigured")}
+                                                                未配置
                                                             </span>
                                                         )}
                                                     </div>
@@ -400,7 +400,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                 })}
                             </div>
                             {data.length === 0 && !loading && (
-                                <div className={styles["table-footer-empty"]}>{t("PluginEnvVariables.noData")}</div>
+                                <div className={styles["table-footer-empty"]}>{t("YakitEmpty.noData")}</div>
                             )}
                         </div>
                     </YakitSpin>
@@ -409,7 +409,9 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
             <YakitModal
                 type='white'
-                title={`${isNew.current ? t("PluginEnvVariables.addVariable") : t("PluginEnvVariables.editVariable")} ${t("PluginEnvVariables.variableValue")}`}
+                title={`${
+                    isNew.current ? t("YakitButton.add_new") : t("YakitButton.edit")
+                } ${t("PluginEnvVariables.value")}`}
                 centered={true}
                 maskClosable={false}
                 closable={true}

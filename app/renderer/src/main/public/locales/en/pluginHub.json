@@ -4,27 +4,19 @@
     "isPluginSubtitle": "Only variables used by this plugin are displayed, synchronized to global after editing",
     "allPluginSubtitle": "Stores all plugin global variables, double-click value to modify, unconfigured variables won't show here",
     "searchPlaceholder": "Please enter variable name keywords",
-    "addVariable": "Add Global Variable",
     "key": "Variable Name",
     "value": "Variable Value",
     "operate": "Operate",
-    "noData": "No Data",
     "enterKey": "Please enter variable name",
-    "modifyToSave": "Please modify the content and try again",
-    "editVariable": "Edit Global Variable"
+    "modifyToSave": "Please modify the content and try again"
   },
-  "HubSideBarList": {
+  "PluginHubList": {
     "online": "Plugin Hub",
     "own": "My Plugins",
     "local": "Local",
     "setting": "Setting",
-    "recycle": "Recycle Bin"
-  },
-  "HubSideBarHint": {
-    "online": "Plugin Hub",
-    "own": "My Plugins",
-    "local": "Local Plugins",
-    "setting": "Setting",
-    "recycle": "Recycle Bin"
+    "recycle": "Recycle Bin",
+    "ownHint": "My Plugins",
+    "localHint": "Local Plugins"
   }
 }

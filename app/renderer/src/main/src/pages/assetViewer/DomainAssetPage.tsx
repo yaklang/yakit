@@ -25,11 +25,11 @@ const {ipcRenderer} = window.require("electron")
 const batchRefreshMenuData = (t: any): YakitMenuItemProps[] => [
     {
         key: "noResetRefresh",
-        label: t("DomainAssetPage.onlyRefresh")
+        label: t("YakitButton.refreshOnly")
     },
     {
         key: "resetRefresh",
-        label: t("DomainAssetPage.resetRefresh")
+        label: t("YakitButton.resetQueryAndRefresh")
     }
 ]
 
@@ -46,7 +46,7 @@ interface QueryDomainsRequest extends QueryGeneralRequest {
 }
 export interface DomainAssetPageProps {}
 export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
-    const { t } = useI18nNamespaces(["database"])
+    const {t} = useI18nNamespaces(["database", "yakitUi"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<Domain[]>([])
@@ -78,7 +78,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
             render: (text) => text || "-"
         },
         {
-            title: t("DomainAssetPage.ip"),
+            title: "IP",
             dataKey: "IPAddr",
             ellipsis: true,
             filterProps: {
@@ -89,7 +89,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
             render: (text) => text || "-"
         },
         {
-            title: t("DomainAssetPage.htmlTitle"),
+            title: "HTMLTitle",
             dataKey: "HTMLTitle",
             ellipsis: true,
             filterProps: {
@@ -100,9 +100,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
             render: (text) => text || "-"
         },
         {
-            title: "操作",
+            title: t("YakitTable.action"),
             dataKey: "action",
-            width: 60,
+            width: 80,
             fixed: "right",
             render: (_, record: Domain) => (
                 <>

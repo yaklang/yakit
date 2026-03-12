@@ -97,7 +97,7 @@ export const portAssetFormatJson = (filterVal, jsonData) => {
 }
 
 export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
-    const { t } = useI18nNamespaces(["database"])
+    const {t} = useI18nNamespaces(["database", "yakitUi"])
     const [params, setParams] = useState<QueryPortsRequest>({
         ...cloneDeep(defQueryPortsRequest),
         State: props.closed ? "closed" : "open"
@@ -138,7 +138,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 setAdvancedConfig(data.PortsGroupList.length > 0)
             })
             .catch((e: any) => {
-                failed(t("PortAssetPage.getPortsGroupFailed") + e)
+                failed("getPortsGroup failed: " + e)
             })
             .finally(() => setTimeout(() => setAdvancedQueryLoading(false), 200))
     })
@@ -184,10 +184,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display: "flex", flexDirection: "row"}}>
             <div className={styles["portAsset"]}>
                 <div className={styles["portAsset-head"]}>
-                    <div className={styles["head-title"]}>{t("PortAssetPage.title")}</div>
+                    <div className={styles["head-title"]}>{t("PortAssetPage.PortAssetTable.title")}</div>
                     <div className={styles["head-extra"]}>
                         <YakitInput.Search
-                            placeholder={t("PortAssetPage.searchPlaceholder")}
+                            placeholder={t("PortAssetPage.PortAssetTable.searchPlaceholder")}
                             style={{width: 320}}
                             onSearch={onSearch}
                             onPressEnter={() => onSearch(keywords)}
@@ -202,11 +202,11 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 data: [
                                     {
                                         key: "noResetRefresh",
-                                        label: t("PortAssetPage.onlyRefresh")
+                                        label: t("YakitButton.refreshOnly")
                                     },
                                     {
                                         key: "resetRefresh",
-                                        label: t("PortAssetPage.resetRefresh")
+                                        label: t("YakitButton.resetQueryAndRefresh")
                                     }
                                 ],
                                 onClick: ({key}) => {
@@ -217,7 +217,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         case "resetRefresh":
                                             onResetRefresh()
                                             break
-                                        default:                                            break
+                                        default:
+                                            break
                                     }
                                 }
                             }}
@@ -240,7 +241,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         {!advancedConfig && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 8px", marginRight: 12}} />
-                                <span style={{marginRight: 4}}>{t("PortAssetPage.advancedFilter")}</span>
+                                <span style={{marginRight: 4}}>{t("YakitButton.advancedFilter")}</span>
                                 <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
                             </>
                         )}
@@ -258,8 +259,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             <YakitPopconfirm
                                 title={
                                     selectNumber > 0
-                                        ? t("PortAssetPage.confirmDeleteSelected")
-                                        : t("PortAssetPage.confirmClearList")
+                                        ? t("PortAssetPage.PortAssetTable.confirmDeleteSelected")
+                                        : t("PortAssetPage.PortAssetTable.confirmClearList")
                                 }
                                 onConfirm={() => {
                                     onRemove()
@@ -267,7 +268,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 placement='bottomRight'
                             >
                                 <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
-                                    {selectNumber > 0 ? t("PortAssetPage.delete") : t("PortAssetPage.clear")}
+                                    {selectNumber > 0 ? t("YakitButton.delete") : t("YakitButton.clear")}
                                 </YakitButton>
                             </YakitPopconfirm>
                         </>
@@ -287,7 +288,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 setVisible={setAdvancedConfig}
                 queryList={queryList || {}}
                 setQueryList={setQueryList}
-                t={t}
             />
         </div>
     )
@@ -341,12 +341,12 @@ interface PortAssetQueryProps {
     setVisible: (b: boolean) => void
     queryList: QueryListProps
     setQueryList: (s: QueryListProps) => void
-    t: any
 }
 
 /**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
-    const {loading, portsGroupList, visible, setVisible, queryList, setQueryList, t} = props
+    const {loading, portsGroupList, visible, setVisible, queryList, setQueryList} = props
+    const {t} = useI18nNamespaces(["database", "yakitUi"])
     const [activeKey, setActiveKey] = useState<string[]>([]) // Collapse打开的key
 
     useEffect(() => {
@@ -374,12 +374,12 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
     return (
         <div className={classNames(styles["portAsset-query"])} style={{display: visible ? "" : "none"}}>
             <div className={styles["query-head"]}>
-                <span>{t("PortAssetPage.advancedFilter")}</span>
+                <span>{t("YakitButton.advancedFilter")}</span>
                 <YakitSwitch checked={visible} onChange={setVisible} />
             </div>
             <YakitSpin spinning={loading} wrapperClassName={styles["portAsset-query-loading"]}>
                 {portsGroupList.length === 0 ? (
-                    <YakitEmpty style={{paddingTop: 48}} title={t("PortAssetPage.noFingerprint")} />
+                    <YakitEmpty style={{paddingTop: 48}} title={t("PortAssetPage.PortAssetQuery.noFingerprint")} />
                 ) : (
                     <YakitCollapse
                         activeKey={activeKey}
@@ -401,7 +401,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                                             setQueryList({...queryList})
                                         }}
                                     >
-                                        {t("PortAssetPage.clear")}
+                                        {t("YakitButton.clear")}
                                     </YakitButton>
                                 }
                             >
@@ -441,10 +441,11 @@ export interface PortAssetDescriptionProp {
 
 export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
     const {port} = props
+    const {t} = useI18nNamespaces(["database"])
     return (
         <>
             <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={"端口资产详情"}>
-                <Descriptions.Item label='状态'>
+                <Descriptions.Item label={t("PortAssetPage.PortAssetDescription.state")}>
                     <YakitCopyText showText={port.State} />
                 </Descriptions.Item>
                 {port.HtmlTitle && (

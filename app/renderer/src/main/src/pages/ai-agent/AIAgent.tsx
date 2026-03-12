@@ -239,7 +239,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         },
         {
             onError: (error) => {
-                failed(t("AIAgent.getKnowledgeBaseFailed", { ns: "aiAgent", error: error.message }))
+                failed(t("AIAgent.getKnowledgeBaseFailed", {error: error + ""}))
             },
             onSuccess: (value) => {
                 if (value) {
@@ -299,15 +299,15 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 <YakitHint
                     getContainer={welcomeRef.current || undefined}
                     visible={delCacheVisible}
-                    title={t("AIAgent.tip", { ns: "aiAgent" })}
+                    title={t("AIAgent.tip")}
                     content={
                         <>
-                            {t("AIAgent.memfitUpdateNotice", { ns: "aiAgent" })}
+                            {t("AIAgent.memfitUpdateNotice")}
                             <br />
                             <br />
                             <YakitCheckbox checked={isDelCache} onChange={(e) => setIsDelCache(e.target.checked)}>
                                 <span style={{color: "var(--Colors-Use-Neutral-Text-4-Help-text)"}}>
-                                    {t("AIAgent.clearHistoryConfirm", { ns: "aiAgent" })}
+                                    {t("AIAgent.clearHistoryConfirm")}
                                 </span>
                             </YakitCheckbox>
                         </>

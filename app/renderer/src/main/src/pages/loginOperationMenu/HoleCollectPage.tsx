@@ -28,7 +28,7 @@ const {Option} = YakitSelect
 export interface HoleCollectPageProps {}
 
 export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const [response, setResponse] = useState<API.RiskLists[]>([])
     const [params, setParams, getParams] = useGetState<PaginationSchema>({
         ...genDefaultPagination(20)
@@ -72,11 +72,11 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         })
             .then((res) => {
                 if (res) {
-                    setRiskType(res?.data||[])
+                    setRiskType(res?.data || [])
                 }
             })
             .catch((e) => {
-                failed(t("getListFailed", { error: e }))
+                failed(`QueryRisks failed: ${e}`)
             })
             .finally(() => {})
     }
@@ -100,7 +100,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                 setSelectedRowKeys([])
             })
             .catch((e) => {
-                failed(t("getListFailed", { error: e }))
+                failed(`QueryRisks failed: ${e}`)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
@@ -120,14 +120,14 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         })
             .then((res) => {
                 if (res.ok) {
-                    success(t("deleteSuccess"))
+                    success(t("YakitNotification.deleted"))
                     setSelectedRowKeys([])
                     update()
                 }
             })
             .catch((e) => {
                 setLoading(false)
-                failed(t("getListFailed", { error: e }))
+                failed(`QueryRisks failed: ${e}`)
             })
             .finally(() => {})
     }
@@ -138,7 +138,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
 
     const columns = [
         {
-            title: t("title"),
+            title: t("HoleCollectPage.title"),
             dataIndex: "title_verbose",
             render: (_, i: API.RiskLists) => (
                 <Paragraph style={{maxWidth: 400, marginBottom: 0}} ellipsis={{tooltip: true}}>
@@ -148,13 +148,13 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             width: 400
         },
         {
-            title: t("type"),
+            title: t("HoleCollectPage.type"),
             dataIndex: "risk_type_verbose",
             width: 90,
             render: (_, i: API.RiskLists) => i?.risk_type_verbose || i.risk_type
         },
         {
-            title: t("level"),
+            title: t("HoleCollectPage.level"),
             dataIndex: "severity",
             render: (_, i: API.RiskLists) => {
                 const title = TitleColor.filter((item) => item.key.includes(i.severity || ""))[0]
@@ -163,7 +163,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             width: 90
         },
         {
-            title: t("ip"),
+            title: "ip",
             dataIndex: "ip",
             render: (_, i: API.RiskLists) => i?.ip || "-"
         },
@@ -178,26 +178,26 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             width: 400
         },
         {
-            title: t("uploadAccount"),
+            title: t("HoleCollectPage.uploadAccount"),
             dataIndex: "user_name",
             render: (_, i: API.RiskLists) => <div style={{minWidth: 120}}>{i?.user_name}</div>
         },
         {
-            title: t("discoveryTime"),
+            title: t("HoleCollectPage.discoveryTime"),
             dataIndex: "risk_created_at",
             render: (_, i: API.RiskLists) => (
                 <YakitTag>{i.risk_created_at > 0 ? formatTimestamp(i.risk_created_at) : "-"}</YakitTag>
             )
         },
         {
-            title: t("uploadTime"),
+            title: t("HoleCollectPage.uploadTime"),
             dataIndex: "created_at",
             render: (_, i: API.RiskLists) => (
                 <YakitTag>{i.created_at > 0 ? formatTimestamp(i.created_at) : "-"}</YakitTag>
             )
         },
         {
-            title: t("action"),
+            title: t("YakitTable.action"),
             dataIndex: "action",
             render: (_, i: API.RiskLists) => {
                 return (
@@ -231,7 +231,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                 }
                                 showModal({
                                     width: "80%",
-                                    title: t("details"),
+                                    title: t("YakitButton.detail"),
                                     content: (
                                         <div style={{overflow: "auto"}}>
                                             <RiskDetails
@@ -244,16 +244,16 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                 })
                             }}
                         >
-                            {t("details")}
+                            {t("YakitButton.detail")}
                         </YakitButton>
                         <YakitPopconfirm
-                            title={t("deleteHoleConfirm")}
+                            title={t("HoleCollectPage.deleteHoleConfirm")}
                             onConfirm={() => {
                                 delItem(i.hash)
                             }}
                         >
-                            <YakitButton type={"text"} colors="danger">
-                                {t("delete")}
+                            <YakitButton type={"text"} colors='danger'>
+                                {t("YakitButton.delete")}
                             </YakitButton>
                         </YakitPopconfirm>
                     </Space>
@@ -324,7 +324,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                     })
                 })
                 .catch((e) => {
-                    failed(t("exportFailed", { error: e }))
+                    failed(t("HoleCollectPage.exportFailed", {error: e}))
                 })
                 .finally(() => {})
         })
@@ -349,8 +349,8 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                         <div>
                             <div className={styles["table-title"]}>
                                 <Space>
-                                    {t("riskAndVulnerability")}
-                                    <Tooltip title={t("refreshTooltip")}>
+                                    {t("HoleCollectPage.riskAndVulnerability")}
+                                    <Tooltip title={t("HoleCollectPage.refreshTooltip")}>
                                         <YakitButton
                                             size={"small"}
                                             type={"text"}
@@ -362,17 +362,20 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                     </Tooltip>
                                 </Space>
                                 <Space>
-                                    <ExportExcel getData={getData} fileName={t("riskAndVulnerability")} />
+                                    <ExportExcel
+                                        getData={getData}
+                                        fileName={t("HoleCollectPage.riskAndVulnerability")}
+                                    />
                                     <YakitPopconfirm
                                         title={
                                             selectedRowKeys.length > 0
-                                                ? t("deleteSelectedConfirm")
-                                                : t("deleteAllConfirm")
+                                                ? t("HoleCollectPage.deleteSelectedConfirm")
+                                                : t("HoleCollectPage.deleteAllConfirm")
                                         }
                                         onConfirm={onRemove}
                                     >
-                                        <YakitButton type="primary" colors="danger">
-                                            {t("deleteData")}
+                                        <YakitButton type='primary' colors='danger'>
+                                            {t("HoleCollectPage.deleteData")}
                                         </YakitButton>
                                     </YakitPopconfirm>
                                 </Space>
@@ -384,36 +387,43 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                     layout='inline'
                                     className={styles["filter-box-form"]}
                                 >
-                                    <Form.Item name='search' label={t("vulnerabilityTitle")}>
-                                        <YakitInput placeholder={t("inputVulnerabilityTitle")} allowClear />
+                                    <Form.Item name='search' label={t("HoleCollectPage.vulnerabilityTitle")}>
+                                        <YakitInput
+                                            placeholder={t("HoleCollectPage.inputVulnerabilityTitle")}
+                                            allowClear
+                                        />
                                     </Form.Item>
-                                    <Form.Item name='risk_type' label={t("vulnerabilityType")}>
+                                    <Form.Item name='risk_type' label={t("HoleCollectPage.vulnerabilityType")}>
                                         <YakitSelect
                                             mode='multiple'
                                             allowClear
                                             style={{width: 180}}
-                                            placeholder={t("selectVulnerabilityType")}
+                                            placeholder={t("HoleCollectPage.selectVulnerabilityType")}
                                         >
                                             {RiskType.map((item) => {
                                                 return <Option key={item.risk_type}>{item.risk_type}</Option>
                                             })}
                                         </YakitSelect>
                                     </Form.Item>
-                                    <Form.Item name='net_work' label={t("ip")}>
-                                        <YakitInput placeholder={t("inputIp")} allowClear style={{width: 180}} />
+                                    <Form.Item name='net_work' label={"ip"}>
+                                        <YakitInput
+                                            placeholder={t("HoleCollectPage.inputIp")}
+                                            allowClear
+                                            style={{width: 180}}
+                                        />
                                     </Form.Item>
-                                    <Form.Item name='severity' label={t("vulnerabilityLevel")}>
+                                    <Form.Item name='severity' label={t("HoleCollectPage.vulnerabilityLevel")}>
                                         <YakitSelect defaultValue='all' style={{width: 180}}>
-                                            <Option value='all'>{t("all")}</Option>
-                                            <Option value='info'>{t("info")}</Option>
-                                            <Option value='critical'>{t("critical")}</Option>
-                                            <Option value='high'>{t("high")}</Option>
-                                            <Option value='warning'>{t("medium")}</Option>
-                                            <Option value='low'>{t("low")}</Option>
+                                            <Option value='all'>{t("HoleCollectPage.all")}</Option>
+                                            <Option value='info'>{t("YakitTag.info")}</Option>
+                                            <Option value='critical'>{t("YakitTag.critical")}</Option>
+                                            <Option value='high'>{t("YakitTag.high")}</Option>
+                                            <Option value='warning'>{t("YakitTag.warning")}</Option>
+                                            <Option value='low'>{t("YakitTag.low")}</Option>
                                         </YakitSelect>
                                     </Form.Item>
-                                    <Form.Item name='user_name' label={t("uploadAccount")}>
-                                        <YakitInput placeholder={t("inputUploadAccount")} allowClear />
+                                    <Form.Item name='user_name' label={t("HoleCollectPage.uploadAccount")}>
+                                        <YakitInput placeholder={t("HoleCollectPage.inputUploadAccount")} allowClear />
                                     </Form.Item>
                                 </Form>
                                 <div className={styles["filter-btn"]}>
@@ -423,7 +433,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                             form.submit()
                                         }}
                                     >
-                                        {t("search")}
+                                        {t("HoleCollectPage.search")}
                                     </YakitButton>
                                 </div>
                             </div>
@@ -442,7 +452,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                     pageSize: getParams().Limit,
                     showSizeChanger: true,
                     total: total,
-                    showTotal: (total) => <YakitTag>{t("total")}:{total}</YakitTag>,
+                    showTotal: (total) => <YakitTag>Total:{total}</YakitTag>,
                     pageSizeOptions: ["5", "10", "20"]
                 }}
                 onChange={(pagination) => {

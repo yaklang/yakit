@@ -55,6 +55,7 @@ import styles from "./AIAgentChat.module.scss"
 import {AIChatContentRefProps} from "../aiChatContent/type"
 import {PageNodeItemProps} from "@/store/pageInfo"
 import {isForcedSetAIModal} from "../aiModelList/utils"
+import {Trans} from "react-i18next"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -67,7 +68,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 }
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
-    const {t} = useI18nNamespaces(["aiAgent"])
+    const {t} = useI18nNamespaces(["aiAgent", "yakitUi"])
     const {} = props
     const {activeChat, setting} = useAIAgentStore()
     const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
@@ -346,24 +347,30 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     /** 从别的元素上触发使用 forge 模板的功能 */
     const handleTriggerExecForge = useMemoizedFn((forge: AIForge, useForge?: boolean) => {
         if (!forge || !forge.Id) {
-            yakitNotify("error", t("AIAgent.templateDataError", { ns: "aiAgent" }))
+            yakitNotify("error", t("AIAgentChat.templateDataError"))
             return
         }
         if (!chatIPCData.execute) {
             handleReplaceActiveForge(forge, useForge)
         } else {
             const m = YakitModalConfirm({
-                title: t("AIAgent.switchForgeTemplate", { ns: "aiAgent" }),
+                title: t("AIAgentChat.switchForgeTemplate"),
                 width: 420,
                 footer: undefined,
                 footerStyle: {padding: "0 24px 24px"},
                 content: (
                     <div className={styles["forge-modal-content"]}>
-                        {t("AIAgent.interruptConfirm", { ns: "aiAgent" })}<b>中断</b>当前正在进行的对话,使用
+                        <Trans
+                            i18nKey='AIAgentChat.interruptConfirm'
+                            ns='aiAgent'
+                            components={{
+                                code: <b></b>
+                            }}
+                        />
                         <b>
                             {forge.ForgeVerboseName}({forge.ForgeName})
                         </b>
-                        {t("AIAgent.forgeTemplate", { ns: "aiAgent" })}
+                        {t("AIAgentChat.forgeTemplate")}
                     </div>
                 ),
                 onOk: () => {
@@ -380,14 +387,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleAITool = useMemoizedFn((toolValue: AITool) => {
         if (!toolValue || !toolValue.ID) {
-            yakitNotify("error", t("AIAgent.templateDataError", { ns: "aiAgent" }))
+            yakitNotify("error", t("AIAgentChat.templateDataError"))
             return
         }
         if (!chatIPCData.execute) {
             handleReplaceActiveTool(toolValue.ID)
         } else {
             const m = YakitModalConfirm({
-                title: t("AIAgent.executeTool", { ns: "aiAgent" }),
+                title: t("AIAgentChat.executeTool"),
                 width: 420,
                 footer: undefined,
                 footerStyle: {padding: "0 24px 24px"},
@@ -395,15 +402,22 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     <div className={styles["forge-modal-content"]}>
                         {!!chatIPCData.execute ? (
                             <>
-                                {t("AIAgent.interruptConfirm", { ns: "aiAgent" })}<b>中断</b>当前正在进行的对话,使用
+                                <Trans
+                                    i18nKey='AIAgentChat.interruptConfirm'
+                                    ns='aiAgent'
+                                    components={{
+                                        code: <b></b>
+                                    }}
+                                />
                                 <b>
                                     {toolValue.VerboseName}({toolValue.Name})
                                 </b>
-                                {t("AIAgent.forgeTemplate", { ns: "aiAgent" })}
+                                {t("AIAgentChat.forgeTemplate")}
                             </>
                         ) : (
                             <>
-                                {t("AIAgent.confirmExecute", { ns: "aiAgent" })}{toolValue.VerboseName}({toolValue.Name}){t("AIAgent.toolSuffix", { ns: "aiAgent" })}
+                                {t("AIAgentChat.confirmExecute")}
+                                {toolValue.VerboseName}({toolValue.Name}){t("AIAgentChat.toolSuffix")}
                             </>
                         )}
                     </div>
@@ -431,16 +445,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams["extraValue"]) => {
         setMode("re-act")
         const userQuery = formValue?.UserQuery || ""
-        const qs = `${t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName || "" })}${
+        const qs = `${t("AIAgentChat.useForgeTask", {name: request.ForgeName || ""})}${
             !!request.ForgeParams
-                ? `${t("AIAgent.params", { ns: "aiAgent" })}${JSON.stringify(request.ForgeParams)}`
-                : `${!!userQuery ? `${t("AIAgent.input", { ns: "aiAgent" })}${userQuery!}` : ""}`
+                ? `${t("AIAgentChat.params")}${JSON.stringify(request.ForgeParams)}`
+                : `${!!userQuery ? `${t("AIAgentChat.input")}${userQuery!}` : ""}`
         }`
         handleStart({
             qs,
             extraValue: {
                 isForge: true,
-                showForgeQuestion: t("AIAgent.useForgeTask", { ns: "aiAgent", name: request.ForgeName || "" }),
+                showForgeQuestion: t("AIAgentChat.useForgeTask", {name: request.ForgeName || ""}),
                 forgeParams: JSON.stringify(formValue, null, 2)
             }
         })
@@ -449,14 +463,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const handleSubmitTool = useMemoizedFn((question: string) => {
         if (!activeTool) {
-            yakitNotify("warning", t("AIAgent.toolInfoError", { ns: "aiAgent" }))
+            yakitNotify("warning", t("AIAgentChat.toolInfoError"))
             return
         }
         setMode("re-act")
         handleStart({
-            qs: `${t("AIAgent.useToolTask", { ns: "aiAgent", name: `${activeTool.VerboseName || ""}(${activeTool.Name || ""})` })}${
-                question ? `${t("AIAgent.input", { ns: "aiAgent" })}${question}` : ""
-            }`
+            qs: `${t("AIAgentChat.useToolTask", {
+                name: `${activeTool.VerboseName}(${activeTool.Name})`
+            })}${question ? `${t("AIAgentChat.input")}${question}` : ""}`
         })
         handleClearActiveTool()
     })
@@ -465,7 +479,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         try {
             const forgeID = Number(forge.Id) || 0
             if (!forgeID) {
-                yakitNotify("error", t("AIAgent.templateErrorWithId", { ns: "aiAgent", id: forgeID }))
+                yakitNotify("error", t("AIAgentChat.templateErrorWithId", {id: forgeID}))
                 return
             }
             let forgeInfo = cloneDeep(forge)
@@ -496,7 +510,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleReplaceActiveTool = useMemoizedFn((id: number) => {
         const toolId = Number(id) || 0
         if (!toolId) {
-            yakitNotify("error", t("AIAgent.toolErrorWithId", { ns: "aiAgent", id }))
+            yakitNotify("error", t("AIAgentChat.toolErrorWithId", {id}))
             return
         }
 
@@ -593,7 +607,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             clearAll()
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_Agent}))
         } catch (e) {
-            failed(t("AIAgent.cancelBuildPluginFailed", { ns: "aiAgent", error: e + "" }))
+            failed(t("AIAgentChat.cancelBuildPluginFailed", {error: e + ""}))
         }
     }
 
@@ -689,47 +703,47 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             <YakitHint
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceShow}
-                title={t("AIAgent.warning", { ns: "aiAgent" })}
-                content={t("AIAgent.replaceSkillTemplateConfirm", { ns: "aiAgent" })}
+                title={t("AIAgentChat.warning")}
+                content={t("AIAgentChat.replaceSkillTemplateConfirm")}
                 footerExtra={
                     <YakitCheckbox
                         checked={replaceForgeNoPrompt}
                         onChange={(e) => setReplaceForgeNoPrompt(e.target.checked)}
                     >
-                        {t("AIAgent.doNotRemindAgain", { ns: "aiAgent" })}
+                        {t("YakitModal.doNotRemindAgain")}
                     </YakitCheckbox>
                 }
-                okButtonText={t("AIAgent.replace", { ns: "aiAgent" })}
+                okButtonText={t("YakitButton.replace")}
                 onOk={handleReplaceOK}
-                cancelButtonText={t("AIAgent.cancel", { ns: "aiAgent" })}
+                cancelButtonText={t("YakitButton.cancel")}
                 onCancel={handleReplaceCancel}
             />
             <YakitHint
                 getContainer={wrapperRef.current || undefined}
                 visible={replaceToolShow}
-                title={t("AIAgent.warning", { ns: "aiAgent" })}
-                content={t("AIAgent.replaceToolConfirm", { ns: "aiAgent" })}
+                title={t("AIAgentChat.warning")}
+                content={t("AIAgentChat.replaceToolConfirm")}
                 footerExtra={
                     <YakitCheckbox
                         checked={replaceToolNoPrompt}
                         onChange={(e) => setReplaceToolNoPrompt(e.target.checked)}
                     >
-                        {t("AIAgent.doNotRemindAgain", { ns: "aiAgent" })}
+                        {t("YakitModal.doNotRemindAgain")}
                     </YakitCheckbox>
                 }
-                okButtonText={t("AIAgent.replace", { ns: "aiAgent" })}
+                okButtonText={t("YakitButton.replace")}
                 onOk={handleReplaceToolOK}
-                cancelButtonText={t("AIAgent.cancel", { ns: "aiAgent" })}
+                cancelButtonText={t("YakitButton.cancel")}
                 onCancel={handleReplaceToolCancel}
             />
             <YakitHint
                 visible={visible}
                 // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
-                title={t("AIAgent.knowledgeNotBuiltTitle", { ns: "aiAgent" })}
-                content={t("AIAgent.knowledgeNotBuiltDesc", { ns: "aiAgent" })}
-                okButtonText={t("AIAgent.closeImmediately", { ns: "aiAgent" })}
+                title={t("AIAgentChat.knowledgeNotBuiltTitle")}
+                content={t("AIAgentChat.knowledgeNotBuiltDesc")}
+                okButtonText={t("AIAgentChat.closeImmediately")}
                 onOk={() => onOK?.()}
-                cancelButtonText={t("AIAgent.waitAMoment", { ns: "aiAgent" })}
+                cancelButtonText={t("YakitButton.remindMeLater")}
                 onCancel={onCancel}
             />
         </div>
@@ -756,17 +770,17 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     icon={expand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
                     onClick={handleExpand}
                 >
-                    {expand ? t("AIAgent.hideReview", { ns: "aiAgent" }) : t("AIAgent.expandReview", { ns: "aiAgent" })}
+                    {expand ? t("AIReActTaskChatReview.hideReview") : t("AIReActTaskChatReview.expandReview")}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
                     {showCancelSubtask && (
                         <YakitPopconfirm
                             placement='top'
                             onConfirm={() => onExtraAction("stopSubTask")}
-                            title={t("AIAgent.cancelSubtaskConfirm", { ns: "aiAgent" })}
+                            title={t("AIReActTaskChatReview.cancelSubtaskConfirm")}
                         >
                             <YakitButton type='outline2' icon={<RedoDotIcon />}>
-                                {t("AIAgent.skipSubtask", { ns: "aiAgent" })}
+                                {t("AIReActTaskChatReview.skipSubtask")}
                             </YakitButton>
                         </YakitPopconfirm>
                     )}
@@ -774,9 +788,9 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     <YakitPopconfirm
                         placement='top'
                         onConfirm={() => onExtraAction("stopTask")}
-                        title={t("AIAgent.cancelTaskConfirm", { ns: "aiAgent" })}
+                        title={t("AIReActTaskChatReview.cancelTaskConfirm")}
                     >
-                        <Tooltip overlay={t("AIAgent.terminateTask", { ns: "aiAgent" })} placement='top'>
+                        <Tooltip overlay={t("AIReActTaskChatReview.terminateTask")} placement='top'>
                             <YakitButton
                                 className={styles["task-button"]}
                                 radius='28px'

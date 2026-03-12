@@ -17,8 +17,8 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
-import { HubSideBarList } from "../defaultConstant"
-import { JSONParseLog } from "@/utils/tool"
+import {HubSideBarList} from "../defaultConstant"
+import {JSONParseLog} from "@/utils/tool"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -35,7 +35,7 @@ interface PluginHubListProps {
 }
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
-    const { t } = useI18nNamespaces(["pluginHub"])
+    const {t, i18n} = useI18nNamespaces(["pluginHub"])
     const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage, setAutoOpenDetailTab} = props
 
     const userinfo = useStore((s) => s.userInfo)
@@ -157,7 +157,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
      */
     const handleOpenHubListAndDetail = useMemoizedFn((info: string) => {
         try {
-            const data = JSONParseLog(info, {page: "PluginHubList", fun: "handleOpenHubListAndDetail"}) as unknown as PluginHubPageInfoProps
+            const data = JSONParseLog(info, {
+                page: "PluginHubList",
+                fun: "handleOpenHubListAndDetail"
+            }) as unknown as PluginHubPageInfoProps
             if (!data) return
             handleSpecifiedPageAndDetail(data)
         } catch (error) {}
@@ -195,20 +198,26 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     /** ---------- 通信监听 Start ---------- */
 
     const barHint = useMemoizedFn((key: string) => {
-        const item = HubSideBarList(t).find((item) => item.value === key)
+        const item = HubSideBarList.find((item) => item.value === key)
         if (key !== active) {
             return `点击进入${item ? item.hint?.() : "列表"}`
         } else {
             if (noDetailTabs.current.includes(key as PluginSourceType)) return ""
-            return show ? "收起列表" : "展开列表"
+            if (key === "own" && !isLogin) return ""
+            if (isDetail) {
+                return !show ? "展开详情列表" : "收起详情列表"
+            } else {
+                return !show ? "展开高级筛选" : "收起高级筛选"
+            }
         }
     })
 
     return (
-        <div id={rootElementId} className={styles["plugin-hub-list"]}>
-            <div className={styles["side-bar"]}>
+        <div className={styles["plugin-hub-list"]}>
+            <div className={styles["side-bar-list"]}>
                 <YakitSideTab
-                    yakitTabs={HubSideBarList(t)}
+                    key={i18n.language}
+                    yakitTabs={HubSideBarList}
                     activeKey={active}
                     onActiveKey={(v) => {
                         setSearchParams(undefined)
@@ -217,6 +226,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                     show={show}
                     setShow={setShow}
                     barHint={barHint}
+                    t={t}
                 />
             </div>
 

@@ -40,7 +40,7 @@ interface LicenseAdminRequest {
 }
 export interface LicenseAdminPageProp {}
 export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const isInitRequestRef = useRef<boolean>(true)
     const [query, setQuery] = useState<LicenseAdminRequest>({
@@ -75,17 +75,17 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
         const differ = later - now
         const day = differ / 60 / 60 / 24
         if (day > 30) {
-            return <YakitTag color='green'>{t("normalUse")}</YakitTag>
+            return <YakitTag color='green'>{t("LicenseAdminPage.normalUse")}</YakitTag>
         } else if (0 < day && day <= 30) {
-            return <YakitTag color='yellow'>{t("expiringSoon")}</YakitTag>
+            return <YakitTag color='yellow'>{t("LicenseAdminPage.expiringSoon")}</YakitTag>
         } else {
-            return <YakitTag color='danger'>{t("expired")}</YakitTag>
+            return <YakitTag color='danger'>{t("LicenseAdminPage.expired")}</YakitTag>
         }
     }
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: t("companyName"),
+            title: t("LicenseAdminPage.companyName"),
             dataKey: "company",
             filterProps: {
                 filterKey: "keywords",
@@ -95,7 +95,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             fixed: "left"
         },
         {
-            title: t("status"),
+            title: t("LicenseAdminPage.status"),
             dataKey: "status",
             render: (text, record) => countDay(record.currentTime, record.durationDate),
             filterProps: {
@@ -103,48 +103,48 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 filtersType: "select",
                 filtersSelectAll: {
                     isAll: true,
-                    textAll: t("all")
+                    textAll: t("LicenseAdminPage.all")
                 },
                 filters: [
                     {
-                        label: t("expired"),
+                        label: t("LicenseAdminPage.expired"),
                         value: "1"
                     },
                     {
-                        label: t("expiringSoon"),
+                        label: t("LicenseAdminPage.expiringSoon"),
                         value: "2"
                     },
                     {
-                        label: t("normalUse"),
+                        label: t("LicenseAdminPage.normalUse"),
                         value: "3"
                     }
                 ]
             }
         },
         {
-            title: t("validUntil"),
+            title: t("LicenseAdminPage.validUntil"),
             dataKey: "durationDate",
             render: (text) => moment.unix(text).format("YYYY-MM-DD")
         },
         {
-            title: t("licenseUsedTotal"),
+            title: t("LicenseAdminPage.licenseUsedTotal"),
             dataKey: "useActivationNum",
             render: (text, record) => {
                 return `${text} / ${record.maxActivationNum}`
             }
         },
         {
-            title: t("totalUsers"),
+            title: t("LicenseAdminPage.totalUsers"),
             dataKey: "maxUser"
         },
         {
-            title: t("action"),
+            title: t("YakitTable.action"),
             dataKey: "action",
             width: 130,
             fixed: "right",
             render: (_, record: API.CompanyLicenseConfigList) => (
                 <div className={styles["table-action-icon"]}>
-                    <Tooltip title={t("generateLicense")} align={{offset: [-5, 10]}}>
+                    <Tooltip title={t("LicenseAdminPage.generateLicense")} align={{offset: [-5, 10]}}>
                         <OutlinePluscircleIcon
                             className={styles["action-icon"]}
                             onClick={() => {
@@ -161,7 +161,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                         }}
                     />
                     <YakitPopconfirm
-                        title={t("confirmDeleteCompany")}
+                        title={t("LicenseAdminPage.confirmDeleteCompany")}
                         onConfirm={() => onRemoveSingle(record.id)}
                         placement='right'
                     >
@@ -217,7 +217,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", t("viewLicenseFailed", { error: e }))
+                yakitNotify("error", t("LicenseAdminPage.viewLicenseFailed", {error: e}))
             })
             .finally(() => {
                 setLoading(false)
@@ -233,7 +233,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", t("deleteCompanySuccess"))
+                yakitNotify("success", t("LicenseAdminPage.deleteCompanySuccess"))
                 setResponse((prevResponse) => {
                     return {
                         ...prevResponse,
@@ -246,7 +246,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", t("deleteCompanyFailed", { error: err }))
+                yakitNotify("error", t("LicenseAdminPage.deleteCompanyFailed", {error: err}))
             })
     }
 
@@ -272,10 +272,10 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
                 extra={
                     <div className={styles["licenseAdminPage-table-extra"]}>
                         <YakitButton size='small' onClick={() => setEnterprisesPopShow(true)}>
-                            {t("addCompany")}
+                            {t("LicenseAdminPage.addCompany")}
                         </YakitButton>
                         <YakitButton size='small' onClick={() => setCreateLicensePopShow(true)}>
-                            {t("generateLicense")}
+                            {t("LicenseAdminPage.generateLicense")}
                         </YakitButton>
                     </div>
                 }
@@ -296,7 +296,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             ></TableVirtualResize>
             <YakitModal
                 visible={enterprisesPopShow}
-                title={editInfoRef.current ? t("editCompany") : t("createCompany")}
+                title={editInfoRef.current ? t("LicenseAdminPage.editCompany") : t("LicenseAdminPage.createCompany")}
                 destroyOnClose={true}
                 maskClosable={false}
                 width={600}
@@ -319,7 +319,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
             </YakitModal>
             <YakitModal
                 visible={createLicensePopShow}
-                title={t("generateLicense")}
+                title={t("LicenseAdminPage.generateLicense")}
                 destroyOnClose={true}
                 maskClosable={false}
                 width={600}
@@ -355,7 +355,7 @@ interface LicenseFormProps {
     editInfo?: API.CompanyLicenseConfigList
 }
 const LicenseForm: React.FC<LicenseFormProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -384,7 +384,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                 refresh()
             })
             .catch((err) => {
-                yakitNotify("error", t("companyOperationFailed", { error: err }))
+                yakitNotify("error", t("LicenseForm.companyOperationFailed", {error: err}))
             })
             .finally(() => {
                 setLoading(false)
@@ -409,7 +409,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     requestFun(params)
                     m.destroy()
                 },
-                content: t("changeUserCountWarning")
+                content: t("LicenseForm.changeUserCountWarning")
             })
         } else {
             requestFun(params)
@@ -419,18 +419,22 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
     return (
         <div style={{marginTop: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
-                <Form.Item name='company' label={t("companyName")} rules={[{required: true, message: t("required")}]}>
-                    <YakitInput placeholder={t("inputCompanyName")} allowClear disabled={!!editInfo} />
+                <Form.Item
+                    name='company'
+                    label={t("LicenseAdminPage.companyName")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
+                    <YakitInput placeholder={t("LicenseForm.inputCompanyName")} allowClear disabled={!!editInfo} />
                 </Form.Item>
                 <Form.Item
                     name='maxActivationNum'
-                    label={t("totalLicenses")}
+                    label={t("LicenseForm.totalLicenses")}
                     rules={[
-                        {required: true, message: t("required")},
+                        {required: true, message: t("YakitForm.requiredField")},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value && value < editInfo.maxActivationNum) {
-                                    return Promise.reject(t("licenseCannotDecrease"))
+                                    return Promise.reject(t("LicenseForm.licenseCannotDecrease"))
                                 } else {
                                     setDisabledSubmit(false)
                                     return Promise.resolve()
@@ -439,25 +443,25 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         }
                     ]}
                 >
-                    <YakitInputNumber placeholder={t("inputTotalLicenses")} min={0} />
+                    <YakitInputNumber placeholder={t("LicenseForm.inputTotalLicenses")} min={0} />
                 </Form.Item>
                 <Form.Item
                     name='maxUser'
-                    label={t("totalUsers")}
+                    label={t("LicenseAdminPage.totalUsers")}
                     tooltip={
                         editInfo
                             ? {
                                   icon: <OutlineInformationcircleIcon />,
-                                  title: t("changeUserCountTooltip")
+                                  title: t("LicenseForm.changeUserCountTooltip")
                               }
                             : null
                     }
                     rules={[
-                        {required: true, message: t("required")},
+                        {required: true, message: t("YakitForm.requiredField")},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value && value < editInfo.maxUser) {
-                                    return Promise.reject(t("userCountCannotDecrease"))
+                                    return Promise.reject(t("LicenseForm.userCountCannotDecrease"))
                                 } else {
                                     setDisabledSubmit(false)
                                     return Promise.resolve()
@@ -466,25 +470,25 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         }
                     ]}
                 >
-                    <YakitInputNumber placeholder={t("inputTotalUsers")} min={0} />
+                    <YakitInputNumber placeholder={t("LicenseForm.inputTotalUsers")} min={0} />
                 </Form.Item>
                 <Form.Item
                     name='durationDate'
-                    label={t("validityPeriod")}
+                    label={t("LicenseForm.validityPeriod")}
                     tooltip={
                         editInfo
                             ? {
                                   icon: <OutlineInformationcircleIcon />,
-                                  title: t("changeValidityPeriodTooltip")
+                                  title: t("LicenseForm.changeValidityPeriodTooltip")
                               }
                             : null
                     }
                     rules={[
-                        {required: true, message: t("required")},
+                        {required: true, message: t("YakitForm.requiredField")},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value && value.unix() < editInfo.durationDate) {
-                                    return Promise.reject(t("validityPeriodCannotShorten"))
+                                    return Promise.reject(t("LicenseForm.validityPeriodCannotShorten"))
                                 } else {
                                     setDisabledSubmit(false)
                                     return Promise.resolve()
@@ -496,7 +500,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     <YakitDatePicker
                         locale={locale}
                         format='YYYY-MM-DD'
-                        placeholder={t("clickToSetValidityPeriod")}
+                        placeholder={t("LicenseForm.clickToSetValidityPeriod")}
                         style={{width: "100%"}}
                     />
                 </Form.Item>
@@ -508,7 +512,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         htmlType='submit'
                         loading={loading}
                     >
-                        {t("confirm")}
+                        {t("YakitButton.confirm")}
                     </YakitButton>
                 </div>
             </Form>
@@ -532,7 +536,7 @@ interface CreateLicenseProps {
     refresh: () => void
 }
 const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const {company, onCancel, refresh} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -599,7 +603,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 setSelectData(opsd)
             })
             .catch((err) => {
-                yakitNotify("error", t("viewLicenseFailed", { error: err }))
+                yakitNotify("error", t("LicenseAdminPage.viewLicenseFailed", {error: err}))
             })
             .finally(() => {
                 setSelectLoading(false)
@@ -626,7 +630,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 onCancel()
                 refresh()
                 const m = showYakitModal({
-                    title: t("generateSuccess"),
+                    title: t("CreateLicense.generateSuccess"),
                     content: (
                         <div style={{padding: 15}}>
                             <Paragraph>
@@ -640,7 +644,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", t("companyOperationFailed", { error: err }))
+                yakitNotify("error", t("LicenseForm.companyOperationFailed", {error: err}))
             })
             .finally(() => {
                 setLoading(false)
@@ -658,12 +662,16 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     return (
         <div style={{marginTop: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
-                <Form.Item name='id' label={t("companyName")} rules={[{required: true, message: t("required")}]}>
+                <Form.Item
+                    name='id'
+                    label={t("LicenseAdminPage.companyName")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
                     <YakitSelect
                         disabled={!!company}
                         showSearch
                         optionFilterProp='children'
-                        placeholder={t("selectCompanyName")}
+                        placeholder={t("CreateLicense.selectCompanyName")}
                         filterOption={(input, option) => {
                             const val = (option?.label ?? "") + ""
                             return val.toLowerCase().includes(input.toLowerCase())
@@ -684,18 +692,30 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                         notFoundContent={<YakitEmpty />}
                     />
                 </Form.Item>
-                <Form.Item name='company_version' label={t("version")} rules={[{required: true, message: t("required")}]}>
-                    <YakitSelect placeholder={t("selectVersion")} allowClear>
-                        <YakitSelect.Option value='EnpriTrace'>{t("enterpriseEdition")}</YakitSelect.Option>
-                        <YakitSelect.Option value='EnpriTraceAgent'>{t("portableEdition")}</YakitSelect.Option>
+                <Form.Item
+                    name='company_version'
+                    label={t("CreateLicense.version")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
+                    <YakitSelect placeholder={t("CreateLicense.selectVersion")} allowClear>
+                        <YakitSelect.Option value='EnpriTrace'>
+                            {t("CreateLicense.enterpriseEdition")}
+                        </YakitSelect.Option>
+                        <YakitSelect.Option value='EnpriTraceAgent'>
+                            {t("CreateLicense.portableEdition")}
+                        </YakitSelect.Option>
                     </YakitSelect>
                 </Form.Item>
-                <Form.Item name='license' label={t("applicationCode")} rules={[{required: true, message: t("required")}]}>
-                    <YakitInput.TextArea placeholder={t("inputApplicationCode")} allowClear rows={13} />
+                <Form.Item
+                    name='license'
+                    label={t("CreateLicense.applicationCode")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
+                    <YakitInput.TextArea placeholder={t("CreateLicense.inputApplicationCode")} allowClear rows={13} />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
-                        {t("confirm")}
+                        {t("YakitButton.confirm")}
                     </YakitButton>
                 </div>
             </Form>

@@ -261,10 +261,10 @@ export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse>
 
 const openedAIModalMap = new Map<string, boolean>()
 
-export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean; t?: any}, null> = (
-    params,
-    hiddenError
-) => {
+export const isForcedSetAIModal: APIFunc<
+    IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean; t?: any},
+    null
+> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true, t} = params
 

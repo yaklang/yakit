@@ -1,23 +1,23 @@
-import React, { useEffect, useRef, useState } from "react"
-import { Checkbox, Divider, Form, Input, InputNumber, Space, Tooltip } from "antd"
-import { InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem } from "../../utils/inputUtil"
-import { failed, yakitInfo } from "../../utils/notification"
-import { PresetPorts } from "./schema"
-import { useGetState, useMemoizedFn } from "ahooks"
-import { ContentUploadInput } from "../../components/functionTemplate/ContentUploadTextArea"
-import { DeleteOutlined, PaperClipOutlined, ReloadOutlined } from "@ant-design/icons"
+import React, {useEffect, useRef, useState} from "react"
+import {Checkbox, Divider, Form, Input, InputNumber, Space, Tooltip} from "antd"
+import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {failed, yakitInfo} from "../../utils/notification"
+import {PresetPorts} from "./schema"
+import {useGetState, useMemoizedFn} from "ahooks"
+import {ContentUploadInput} from "../../components/functionTemplate/ContentUploadTextArea"
+import {DeleteOutlined, PaperClipOutlined, ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { SelectOptionProps } from "@/pages/fuzzer/HTTPFuzzerPage"
-import { PcapMetadata } from "@/models/Traffic"
-import { GlobalNetworkConfig } from "@/components/configNetwork/ConfigNetworkPage"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { HybridScanPluginConfig } from "@/models/HybridScan"
-import { StartBruteParams } from "../securityTool/newBrute/NewBruteType"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {PcapMetadata} from "@/models/Traffic"
+import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {HybridScanPluginConfig} from "@/models/HybridScan"
+import {StartBruteParams} from "../securityTool/newBrute/NewBruteType"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 export const ScanPortTemplate = "scan-port-template"
 
 export interface PortScanPageProp {
@@ -58,17 +58,17 @@ export interface PortScanParams {
 
     SynScanNetInterface?: string
     HostAliveConcurrent?: number
-    /**Plugin condition configuration */
+    /**插件条件的配置 */
     LinkPluginConfig?: HybridScanPluginConfig
-    /**Whether the crawler enables JS parsing */
+    /**爬虫是否启用 JS 解析 */
     BasicCrawlerEnableJSParser?: boolean
     TaskName?: string
 }
 
-export const ScanKind: { [key: string]: string } = {
+export const ScanKind: {[key: string]: string} = {
     syn: "SYN",
-    fingerprint: "fingerprint",
-    all: "syn+fingerprint"
+    fingerprint: "指纹",
+    all: "SYN+指纹"
 }
 export const ScanKindKeys: string[] = Object.keys(ScanKind)
 
@@ -78,23 +78,23 @@ export const defaultPorts =
 interface ScanPortFormProp {
     defaultParams: PortScanParams
     setParams: (p: PortScanParams) => any
-    // Whether the network card selection has been modified
+    // 网卡选择是否被修改
     isSetInterface?: boolean
     setInterface?: (v: boolean) => void
-    // Simple enterprise version display
+    // 简易企业版显示
     isSimpleDetectShow?: boolean
-    // Simple version scanning speed
+    // 简易版扫描速度
     deepLevel?: number
-    // Whether the speed has been modified in the simple version
+    // 简易版是否已修改速度
     isSetPort?: boolean
-    // Simple version BruteParams parameter change
+    // 简易版BruteParams参数更改
     bruteParams?: StartBruteParams
     setBruteParams?: (v: StartBruteParams) => void
 }
 
 export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
-    const { t } = useI18nNamespaces(["portscan"])
-    const { deepLevel, isSetPort, bruteParams, setBruteParams, setInterface, isSetInterface } = props
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
+    const {deepLevel, isSetPort, bruteParams, setBruteParams, setInterface, isSetInterface} = props
     const isSimpleDetectShow = props.isSimpleDetectShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
     const [simpleParams, setSimpleParams] = useState<StartBruteParams | undefined>(bruteParams)
@@ -103,7 +103,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
     const [passwordsValue, setPasswordsValue] = useState<string>()
     useEffect(() => {
         if (!params) return
-        props.setParams({ ...params })
+        props.setParams({...params})
     }, [params])
 
     useEffect(() => {
@@ -114,7 +114,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             Passwords: passwordsValue ? passwordsValue.split(/\n|,/) : []
         }
 
-        setBruteParams && setBruteParams({ ...bruteParams })
+        setBruteParams && setBruteParams({...bruteParams})
     }, [simpleParams, usernamesValue, passwordsValue])
 
     useEffect(() => {
@@ -142,12 +142,12 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     ]
 
-    const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // proxy representative
+    const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
     const globalNetworkConfig = useRef<GlobalNetworkConfig>()
     useEffect(() => {
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
             globalNetworkConfig.current = rsp
-            const { SynScanNetInterface } = rsp
+            const {SynScanNetInterface} = rsp
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
                 if (!data || data.AvailablePcapDevices.length === 0) {
                     return
@@ -157,11 +157,11 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     value: item.Name
                 }))
                 if (SynScanNetInterface.length === 0 && !isSetInterface) {
-                    setParams({ ...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName })
+                    setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName})
                 }
                 setNetInterfaceList(interfaceList)
                 if (SynScanNetInterface.length !== 0 && !isSetInterface) {
-                    setParams({ ...params, SynScanNetInterface })
+                    setParams({...params, SynScanNetInterface})
                 }
             })
         })
@@ -174,7 +174,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 SynScanNetInterface: params.SynScanNetInterface
             })
             .then(() => {
-                yakitInfo(t("portscan.updateConfigSuccess"))
+                yakitInfo(t("ScanPortForm.updateConfigSuccess"))
             })
     })
 
@@ -183,74 +183,71 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             onSubmitCapture={(e) => {
                 e.preventDefault()
             }}
-            labelCol={{ span: 5 }}
-            wrapperCol={{ span: 14 }}
+            labelCol={{span: 5}}
+            wrapperCol={{span: 14}}
         >
             {!isSimpleDetectShow && (
                 <>
                     <SelectOne
-                        label={t("portscan.scanMode")}
+                        label={t("ScanPortForm.scanMode")}
                         data={ScanKindKeys.map((item) => {
-                            let text = ScanKind[item];
-                            if (item === "fingerprint") text = t("portscan.fingerprint");
-                            if (item === "all") text = "SYN+" + t("portscan.fingerprint");
-                            return { value: item, text: text }
+                            return {value: item, text: ScanKind[item]}
                         })}
-                        help={t("portscan.synNeedRoot")}
-                        setValue={(Mode) => setParams({ ...params, Mode })}
+                        help={t("ScanPortForm.synNeedRoot")}
+                        setValue={(Mode) => setParams({...params, Mode})}
                         value={params.Mode}
                     />
                     <SelectOne
-                        label={t("portscan.scanProto")}
+                        label={t("ScanPortForm.scanProto")}
                         data={[
-                            { text: "TCP", value: "tcp" },
-                            { text: "UDP", value: "udp", disabled: params.Mode === "syn" || params.Mode === "all" }
+                            {text: "TCP", value: "tcp"},
+                            {text: "UDP", value: "udp", disabled: params.Mode === "syn" || params.Mode === "all"}
                         ]}
-                        setValue={(i) => setParams({ ...params, Proto: [i] })}
+                        setValue={(i) => setParams({...params, Proto: [i]})}
                         value={(params.Proto || []).length > 0 ? params.Proto[0] : "tcp"}
                     />
                 </>
             )}
             {(params.Mode === "all" || params.Mode === "syn") && (
                 <>
-                    <Divider orientation={"left"}>{t("portscan.networkCardConfig")}</Divider>
-                    <Form.Item label={<span>{t("portscan.networkCardSelect")}</span>}>
+                    <Divider orientation={"left"}>{t("ScanPortForm.networkCardConfig")}</Divider>
+                    <Form.Item label={<span>{t("ScanPortForm.networkCardSelect")}</span>}>
                         <YakitSelect
                             showSearch
                             options={netInterfaceList}
-                            placeholder={t("portscan.pleaseSelect")}
+                            placeholder={t("YakitSelect.pleaseSelect")}
                             size='small'
                             value={params.SynScanNetInterface}
                             onChange={(netInterface) => {
                                 setInterface && setInterface(true)
-                                setParams({ ...params, SynScanNetInterface: netInterface })
+                                setParams({...params, SynScanNetInterface: netInterface})
                             }}
                             maxTagCount={100}
                         />
                         <YakitButton onClick={updateGlobalNetworkConfig} size='small'>
-                            {t("portscan.syncToGlobalNetworkConfig")}
+                            {t("ScanPortForm.syncToGlobalNetworkConfig")}
                         </YakitButton>
                     </Form.Item>
                 </>
             )}
             {!isSimpleDetectShow && (params.Mode === "all" || params.Mode === "syn") && (
                 <>
-                    <Divider orientation={"left"}>{t("portscan.synConfig")}</Divider>
+                    <Divider orientation={"left"}>{t("ScanPortForm.synConfig")}</Divider>
                     <InputInteger
-                        label={t("portscan.synConcurrent")}
-                        help={t("portscan.synConcurrentHelp")}
+                        label={t("ScanPortForm.synConcurrent")}
+                        help={t("ScanPortForm.synConcurrentHelp")}
                         value={params.SynConcurrent}
                         min={10}
-                        setValue={(e) => setParams({ ...params, SynConcurrent: e })}
+                        setValue={(e) => setParams({...params, SynConcurrent: e})}
                     />
                 </>
             )}
             {(params.Mode === "all" || params.Mode === "fingerprint") && (
                 <>
-                    <Divider orientation={"left"}>{t("portscan.fingerprintScanConfig")}</Divider>
+                    <Divider orientation={"left"}>{t("ScanPortForm.fingerprintScanConfig")}</Divider>
                     {isSimpleDetectShow && (
                         <>
-                            <Form.Item label={t("portscan.presetPort")} className='form-item-margin'>
+                            <Form.Item label={t("ScanPortForm.presetPort")} className='form-item-margin'>
                                 <Checkbox.Group
                                     value={getPortroupValue()}
                                     onChange={(value) => {
@@ -264,37 +261,41 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                             res = PresetPorts["all"] || ""
                                         }
                                         if (!!res) {
-                                            setParams({ ...params, Ports: res })
+                                            setParams({...params, Ports: res})
                                         }
                                         setPortroupValue(value)
                                     }}
                                 >
-                                    <Checkbox value={"fast"}>{t("portscan.fast")}</Checkbox>
-                                    <Checkbox value={"middle"}>{t("portscan.middle")}</Checkbox>
-                                    <Checkbox value={"slow"}>{t("portscan.slow")}</Checkbox>
-                                    <Checkbox value={"top100"}>{t("portscan.top100")}</Checkbox>
-                                    <Checkbox value={"topweb"}>{t("portscan.topweb")}</Checkbox>
-                                    <Checkbox value={"top1000+"}>{t("portscan.top1000+")}</Checkbox>
-                                    <Checkbox value={"topdb"}>{t("portscan.topdb")}</Checkbox>
-                                    <Checkbox value={"topudp"}>{t("portscan.topudp")}</Checkbox>
-                                    <Checkbox value={"defect"}>{t("portscan.defect")}</Checkbox>
-                                    <Checkbox value={"all"}>{t("portscan.all")}</Checkbox>
+                                    <Checkbox value={"fast"}>{t("ScanPortForm.fast")}</Checkbox>
+                                    <Checkbox value={"middle"}>{t("ScanPortForm.middle")}</Checkbox>
+                                    <Checkbox value={"slow"}>{t("ScanPortForm.slow")}</Checkbox>
+                                    <Checkbox value={"top100"}>{t("ScanPortForm.top100")}</Checkbox>
+                                    <Checkbox value={"topweb"}>{t("ScanPortForm.topweb")}</Checkbox>
+                                    <Checkbox value={"top1000+"}>{t("ScanPortForm.top1000")}</Checkbox>
+                                    <Checkbox value={"topdb"}>{t("ScanPortForm.topdb")}</Checkbox>
+                                    <Checkbox value={"topudp"}>{t("ScanPortForm.topudp")}</Checkbox>
+                                    <Checkbox value={"defect"}>{t("ScanPortForm.defect")}</Checkbox>
+                                    <Checkbox value={"all"}>{t("ScanPortForm.all")}</Checkbox>
                                 </Checkbox.Group>
                             </Form.Item>
 
-                            <Form.Item label={t("portscan.scanPort")} className='form-item-margin' style={{ position: "relative" }}>
+                            <Form.Item
+                                label={t("ScanPortForm.scanPort")}
+                                className='form-item-margin'
+                                style={{position: "relative"}}
+                            >
                                 <Input.TextArea
-                                    style={{ width: "100%" }}
+                                    style={{width: "100%"}}
                                     rows={2}
                                     value={params.Ports}
-                                    onChange={(e) => setParams({ ...params, Ports: e.target.value })}
+                                    onChange={(e) => setParams({...params, Ports: e.target.value})}
                                 />
-                                <Space size={"small"} style={{ marginLeft: 8, position: "absolute", bottom: 0 }}>
-                                    <Tooltip title={t("portscan.resetToDefaultPort")}>
+                                <Space size={"small"} style={{marginLeft: 8, position: "absolute", bottom: 0}}>
+                                    <Tooltip title={t("ScanPortForm.resetToDefaultPort")}>
                                         <a
                                             href={"#"}
                                             onClick={() => {
-                                                setParams({ ...params, Ports: PresetPorts["top100"] })
+                                                setParams({...params, Ports: PresetPorts["top100"]})
                                             }}
                                         >
                                             <ReloadOutlined />
@@ -305,67 +306,67 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         </>
                     )}
                     <InputInteger
-                        label={t("portscan.fingerprintScanConcurrency")}
+                        label={t("ScanPortForm.fingerprintScanConcurrency")}
                         // help={"推荐最多同时扫描200个端口"}
                         value={params.Concurrent}
                         min={1}
                         // max={200}
-                        setValue={(e) => setParams({ ...params, Concurrent: e })}
+                        setValue={(e) => setParams({...params, Concurrent: e})}
                     />
                     <SwitchItem
-                        label={t("portscan.activeMode")}
-                        help={t("portscan.activeModeHelp")}
-                        setValue={(Active) => setParams({ ...params, Active })}
+                        label={t("ScanPortForm.activeMode")}
+                        help={t("ScanPortForm.activeModeHelp")}
+                        setValue={(Active) => setParams({...params, Active})}
                         value={params.Active}
                     />
                     <SelectOne
-                        label={t("portscan.serviceFingerprintLevel")}
-                        help={t("portscan.serviceFingerprintLevelHelp")}
+                        label={t("ScanPortForm.serviceFingerprintLevel")}
+                        help={t("ScanPortForm.serviceFingerprintLevelHelp")}
                         data={[
-                            { value: 1, text: t("portscan.basic") },
-                            { value: 3, text: t("portscan.middle") },
-                            { value: 7, text: t("portscan.detailed") },
-                            { value: 100, text: t("portscan.all") }
+                            {value: 1, text: t("ScanPortForm.basic")},
+                            {value: 3, text: "适中"},
+                            {value: 7, text: t("ScanPortForm.detailed")},
+                            {value: 100, text: "全部"}
                         ]}
                         value={params.ProbeMax}
-                        setValue={(ProbeMax) => setParams({ ...params, ProbeMax })}
+                        setValue={(ProbeMax) => setParams({...params, ProbeMax})}
                     />
                     <InputInteger
-                        label={t("portscan.activePacketTimeout")}
-                        help={t("portscan.activePacketTimeoutHelp")}
+                        label={t("ScanPortForm.activePacketTimeout")}
+                        help={t("ScanPortForm.activePacketTimeoutHelp")}
                         value={params.ProbeTimeout}
-                        setValue={(ProbeTimeout) => setParams({ ...params, ProbeTimeout })}
+                        setValue={(ProbeTimeout) => setParams({...params, ProbeTimeout})}
                     />
                     {!isSimpleDetectShow && (
                         <ManyMultiSelectForString
-                            label={t("portscan.tcpProxy")}
-                            help={t("portscan.tcpProxyHelp")}
+                            label={t("ScanPortForm.tcpProxy")}
+                            help={t("ScanPortForm.tcpProxyHelp")}
                             data={[
                                 "http://127.0.0.1:7890",
                                 "http://127.0.0.1:8082",
                                 "socks5://127.0.0.1:8082",
                                 "http://127.0.0.1:8083"
                             ].map((i) => {
-                                return { value: i, label: i }
+                                return {value: i, label: i}
                             })}
                             value={(params.Proxy || []).join(",")}
                             mode={"tags"}
-                            setValue={(e) => setParams({ ...params, Proxy: (e || "").split(",").filter((i) => !!i) })}
+                            setValue={(e) => setParams({...params, Proxy: (e || "").split(",").filter((i) => !!i)})}
                         />
                     )}
                     <SelectOne
-                        label={t("portscan.advancedFingerprintOptions")}
+                        label={t("ScanPortForm.advancedFingerprintOptions")}
                         data={[
-                            { value: "web", text: t("portscan.onlyWebFingerprint") },
-                            { value: "service", text: t("portscan.serviceFingerprint") },
-                            { value: "all", text: t("portscan.allFingerprint") }
+                            {value: "web", text: t("ScanPortForm.onlyWebFingerprint")},
+                            {value: "service", text: t("ScanPortForm.serviceFingerprint")},
+                            {value: "all", text: t("ScanPortForm.allFingerprint")}
                         ]}
-                        setValue={(FingerprintMode) => setParams({ ...params, FingerprintMode })}
+                        setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
                         value={params.FingerprintMode}
                     />
                     {isSimpleDetectShow && simpleParams && setSimpleParams && (
                         <>
-                            <Divider orientation={"left"}>{t("portscan.bruteForceConfig")}</Divider>
+                            <Divider orientation={"left"}>{t("ScanPortForm.bruteForceConfig")}</Divider>
                             <ContentUploadInput
                                 type='textarea'
                                 dragger={{
@@ -374,7 +375,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 beforeUpload={(f) => {
                                     if (!typeArr.includes(f.type)) {
-                                        failed(t("portscan.invalidFileType", { name: f.name }))
+                                        failed(t("ScanPortForm.invalidFileType", {name: f.name}))
                                         return false
                                     }
                                     setSimpleParams({
@@ -384,8 +385,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     return false
                                 }}
                                 item={{
-                                    style: { textAlign: "left" },
-                                    label: t("portscan.userDict")
+                                    style: {textAlign: "left"},
+                                    label: t("ScanPortForm.userDict")
                                 }}
                                 textarea={{
                                     isBubbing: true,
@@ -401,7 +402,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     <>
                                         <Checkbox
                                             checked={simpleParams.ReplaceDefaultUsernameDict}
-                                            style={{ marginLeft: 16 }}
+                                            style={{marginLeft: 16}}
                                             onChange={() => {
                                                 setSimpleParams({
                                                     ...simpleParams,
@@ -409,12 +410,12 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                                 })
                                             }}
                                         >
-                                            {t("portscan.useDefaultUserDict")}
+                                            {t("ScanPortForm.useDefaultUserDict")}
                                         </Checkbox>
                                         {simpleParams.UsernameFile && (
                                             <div>
                                                 <PaperClipOutlined />
-                                                <span style={{ marginLeft: 6, color: "#198fff" }}>
+                                                <span style={{marginLeft: 6, color: "#198fff"}}>
                                                     {simpleParams.UsernameFile}
                                                 </span>
                                                 <DeleteOutlined
@@ -439,7 +440,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 beforeUpload={(f) => {
                                     if (!typeArr.includes(f.type)) {
-                                        failed(t("portscan.invalidFileType", { name: f.name }))
+                                        failed(t("ScanPortForm.invalidFileType", {name: f.name}))
                                         return false
                                     }
                                     setSimpleParams({
@@ -449,8 +450,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     return false
                                 }}
                                 item={{
-                                    style: { textAlign: "left" },
-                                    label: t("portscan.passwordDict")
+                                    style: {textAlign: "left"},
+                                    label: t("ScanPortForm.passwordDict")
                                 }}
                                 textarea={{
                                     isBubbing: true,
@@ -466,7 +467,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     <>
                                         <Checkbox
                                             checked={simpleParams.ReplaceDefaultPasswordDict}
-                                            style={{ marginLeft: 16 }}
+                                            style={{marginLeft: 16}}
                                             onChange={() => {
                                                 setSimpleParams({
                                                     ...simpleParams,
@@ -474,12 +475,12 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                                 })
                                             }}
                                         >
-                                            {t("portscan.useDefaultPasswordDict")}
+                                            {t("ScanPortForm.useDefaultPasswordDict")}
                                         </Checkbox>
                                         {simpleParams.PasswordFile && (
                                             <div>
                                                 <PaperClipOutlined />
-                                                <span style={{ marginLeft: 6, color: "#198fff" }}>
+                                                <span style={{marginLeft: 6, color: "#198fff"}}>
                                                     {simpleParams.PasswordFile}
                                                 </span>
                                                 <DeleteOutlined
@@ -497,110 +498,107 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }
                             />
                             <InputInteger
-                                label={t("portscan.targetConcurrent")}
-                                help={t("portscan.targetConcurrentHelp")}
+                                label={t("ScanPortForm.targetConcurrent")}
+                                help={t("ScanPortForm.targetConcurrentHelp")}
                                 value={simpleParams.Concurrent}
-                                setValue={(e) => setSimpleParams({ ...simpleParams, Concurrent: e })}
+                                setValue={(e) => setSimpleParams({...simpleParams, Concurrent: e})}
                             />
                             <InputInteger
-                                label={t("portscan.innerTargetConcurrent")}
-                                help={t("portscan.innerTargetConcurrentHelp")}
+                                label={t("ScanPortForm.innerTargetConcurrent")}
+                                help={t("ScanPortForm.innerTargetConcurrentHelp")}
                                 value={simpleParams.TargetTaskConcurrent}
-                                setValue={(e) => setSimpleParams({ ...simpleParams, TargetTaskConcurrent: e })}
+                                setValue={(e) => setSimpleParams({...simpleParams, TargetTaskConcurrent: e})}
                             />
                             <SwitchItem
-                                label={t("portscan.autoStop")}
-                                help={t("portscan.autoStopHelp")}
-                                setValue={(OkToStop) => setSimpleParams({ ...simpleParams, OkToStop })}
+                                label={t("ScanPortForm.autoStop")}
+                                help={t("ScanPortForm.autoStopHelp")}
+                                setValue={(OkToStop) => setSimpleParams({...simpleParams, OkToStop})}
                                 value={simpleParams.OkToStop}
                             />
                             <InputInteger
-                                label={t("portscan.minDelay")}
+                                label={t("ScanPortForm.minDelay")}
                                 max={simpleParams.DelayMax}
                                 min={0}
-                                setValue={(DelayMin) => setSimpleParams({ ...simpleParams, DelayMin })}
+                                setValue={(DelayMin) => setSimpleParams({...simpleParams, DelayMin})}
                                 value={simpleParams.DelayMin}
                             />
                             <InputInteger
-                                label={t("portscan.maxDelay")}
-                                setValue={(DelayMax) => setSimpleParams({ ...simpleParams, DelayMax })}
+                                label={t("ScanPortForm.maxDelay")}
+                                setValue={(DelayMax) => setSimpleParams({...simpleParams, DelayMax})}
                                 value={simpleParams.DelayMax}
                                 min={simpleParams.DelayMin}
                             />
                         </>
                     )}
-                    <Divider orientation={"left"}>{t("portscan.basicCrawlerConfig")}</Divider>
-                    <Form.Item
-                        label={t("portscan.crawlerSettings")}
-                        help={t("portscan.crawlerSettingsHelp")}
-                    >
+                    <Divider orientation={"left"}>{t("ScanPortForm.basicCrawlerConfig")}</Divider>
+                    <Form.Item label={t("ScanPortForm.crawlerSettings")} help={t("ScanPortForm.crawlerSettingsHelp")}>
                         <Space>
                             <Checkbox
-                                onChange={(e) => setParams({ ...params, EnableBasicCrawler: e.target.checked })}
+                                onChange={(e) => setParams({...params, EnableBasicCrawler: e.target.checked})}
                                 checked={params.EnableBasicCrawler}
                             >
-                                {t("portscan.enableCrawler")}
+                                {t("ScanPortForm.enableCrawler")}
                             </Checkbox>
                             <InputNumber
-                                addonBefore={t("portscan.crawlerRequestCount")}
+                                addonBefore={t("ScanPortForm.crawlerRequestCount")}
                                 value={params.BasicCrawlerRequestMax}
-                                onChange={(e) => setParams({ ...params, BasicCrawlerRequestMax: e as number })}
+                                onChange={(e) => setParams({...params, BasicCrawlerRequestMax: e as number})}
                             />
                         </Space>
                     </Form.Item>
                 </>
             )}
 
-            <Divider orientation={"left"}>{t("portscan.otherConfig")}</Divider>
+            <Divider orientation={"left"}>{t("ScanPortForm.otherConfig")}</Divider>
             <SwitchItem
-                label={t("portscan.saveToDB")}
+                label={t("ScanPortForm.saveToDB")}
                 setValue={(SaveToDB) => {
-                    setParams({ ...params, SaveToDB, SaveClosedPorts: false })
+                    setParams({...params, SaveToDB, SaveClosedPorts: false})
                 }}
                 value={params.SaveToDB}
             />
             {params.SaveToDB && (
                 <SwitchItem
-                    label={t("portscan.saveClosedPorts")}
-                    setValue={(SaveClosedPorts) => setParams({ ...params, SaveClosedPorts })}
+                    label={t("ScanPortForm.saveClosedPorts")}
+                    setValue={(SaveClosedPorts) => setParams({...params, SaveClosedPorts})}
                     value={params.SaveClosedPorts}
                 />
             )}
             <SwitchItem
-                label={t("portscan.autoScanCClass")}
-                help={t("portscan.autoScanCClassHelp")}
+                label={t("ScanPortForm.autoScanCClass")}
+                help={t("ScanPortForm.autoScanCClassHelp")}
                 value={params.EnableCClassScan}
-                setValue={(EnableCClassScan) => setParams({ ...params, EnableCClassScan })}
+                setValue={(EnableCClassScan) => setParams({...params, EnableCClassScan})}
             />
             <SwitchItem
-                label={t("portscan.skipHostAliveScan")}
-                help={t("portscan.hostAliveScanHelp")}
+                label={t("ScanPortForm.skipHostAliveScan")}
+                help={t("ScanPortForm.hostAliveScanHelp")}
                 value={params.SkippedHostAliveScan}
-                setValue={(SkippedHostAliveScan) => setParams({ ...params, SkippedHostAliveScan })}
+                setValue={(SkippedHostAliveScan) => setParams({...params, SkippedHostAliveScan})}
             />
             {!params.SkippedHostAliveScan && (
                 <>
                     <InputInteger
-                        label={t("portscan.hostAliveConcurrent")}
+                        label={t("ScanPortForm.hostAliveConcurrent")}
                         value={params.HostAliveConcurrent}
-                        setValue={(HostAliveConcurrent) => setParams({ ...params, HostAliveConcurrent })}
+                        setValue={(HostAliveConcurrent) => setParams({...params, HostAliveConcurrent})}
                     />
                     <InputItem
-                        label={t("portscan.tcpPingPort")}
-                        help={t("portscan.tcpPingPortHelp")}
+                        label={t("ScanPortForm.tcpPingPort")}
+                        help={t("ScanPortForm.tcpPingPortHelp")}
                         value={params.HostAlivePorts}
-                        setValue={(HostAlivePorts) => setParams({ ...params, HostAlivePorts })}
+                        setValue={(HostAlivePorts) => setParams({...params, HostAlivePorts})}
                     />
                 </>
             )}
             <InputItem
-                label={t("portscan.excludeHosts")}
-                setValue={(ExcludeHosts) => setParams({ ...params, ExcludeHosts })}
+                label={t("ScanPortForm.excludeHosts")}
+                setValue={(ExcludeHosts) => setParams({...params, ExcludeHosts})}
                 value={params.ExcludeHosts}
             />
             <InputItem
-                label={t("portscan.excludePorts")}
-                setValue={(ExcludePorts) => setParams({ ...params, ExcludePorts })}
+                label={t("ScanPortForm.excludePorts")}
+                setValue={(ExcludePorts) => setParams({...params, ExcludePorts})}
                 value={params.ExcludePorts}
             />
         </Form>

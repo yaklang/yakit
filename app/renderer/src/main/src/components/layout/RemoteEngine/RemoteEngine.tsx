@@ -24,6 +24,7 @@ import yakitSS from "@/assets/yakitSS.png"
 import classNames from "classnames"
 import styles from "./RemoteEngine.module.scss"
 import {SolidIrifyMiniLogoIcon} from "@/assets/icon/colors"
+import {Trans} from "react-i18next"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -35,7 +36,7 @@ const DefaultRemoteLink: RemoteLinkInfo = {
 }
 
 export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["remote"])
+    const {t} = useI18nNamespaces(["remote", "yakitUi"])
     const {loading, setLoading, installedEngine, onSubmit, onSwitchLocalEngine} = props
 
     /** 远程主机参数 */
@@ -303,7 +304,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                     type='outline2'
                                     onClick={handleSwitchLocalEngine}
                                 >
-                                    {installedEngine ? EngineModeVerbose("local") : t("RemoteEngine.backButton")}
+                                    {installedEngine ? EngineModeVerbose("local") : t("YakitButton.back")}
                                 </YakitButton>
                             </Form.Item>
                         </Form>
@@ -337,15 +338,21 @@ WOG+9PGLcr4IRJx5LUEZ5FB1
 
 /** @name PEM示例弹窗 */
 const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["remote"])
+    const {t} = useI18nNamespaces(["remote"])
     const {children, setShow} = props
 
     const content = (
         <div className={classNames(styles["pem-example"], styles["pem-wrapper"])}>
-            <div className={styles["title-style"]}>{t("RemoteEngine.pemTitle")}</div>
-            {t("RemoteEngine.pemContent")}
+            <div className={styles["title-style"]}>{t("PEMExample.pemTitle")}</div>
+            <Trans
+                i18nKey='PEMExample.pemContent'
+                ns='remote'
+                components={{
+                    code: <div className={styles['content-code']}></div>
+                }}
+            />
             <br />
-            {t("RemoteEngine.pemExample")}
+            {t("PEMExample.pemExample")}
             <br />
             <div className={styles["code-pem"]}>
                 <YakEditor type='plaintext' readOnly={true} value={PemPlaceHolder} />
@@ -367,7 +374,7 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
 })
 /** @name PEM说明弹窗 */
 const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["remote"])
+    const {t} = useI18nNamespaces(["remote"])
     const {children, setShow} = props
 
     const [remotePath, setRemotePath] = useState<string>("")
@@ -386,9 +393,9 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
 
     const content = (
         <div className={classNames(styles["pem-hint"], styles["pem-wrapper"])}>
-            {t("RemoteEngine.saveHistoryNote", { appName: getReleaseEditionName() })}
+            {t("PEMHint.saveHistoryNote", {appName: getReleaseEditionName()})}
             <br />
-            {t("RemoteEngine.saveHistoryLocation")}
+            {t("PEMHint.saveHistoryLocation")}
             <br />
             <div className={styles["path-wrapper"]}>
                 <div className={styles["link-wrapper"]}>
@@ -401,7 +408,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
                     <CopyComponents className={styles["copy-icon"]} copyText={remotePath} />
                 </div>
                 <div className={styles["link-open"]} onClick={openFile}>
-                    {t("RemoteEngine.openLocation")}
+                    {t("PEMHint.openLocation")}
                 </div>
             </div>
         </div>

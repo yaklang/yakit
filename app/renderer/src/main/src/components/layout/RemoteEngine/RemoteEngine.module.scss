@@ -38,7 +38,8 @@
 
                 .select-title {
                     box-sizing: border-box;
-                    width: 80px;
+                    min-width: 80px;
+                    padding: 0 4px;
                     height: 32px;
                     display: flex;
                     justify-content: center;

@@ -27,7 +27,7 @@ export interface VulinboxManagerProp {}
 
 const {ipcRenderer} = window.require("electron")
 export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
-    const { t } = useI18nNamespaces(["vulinbox"])
+    const {t} = useI18nNamespaces(["vulinbox", "yakitUi"])
     const [available, setAvailable] = useState(false)
     const [started, setStarted] = useState(false)
     const [token, setToken] = useState(randomString(60))
@@ -280,10 +280,10 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                         onClick={() => {
                                                             setClipboardText(item.url, {
                                                                 hiddenHint: false,
-                                                                hintText: t("VulinboxManager.copySuccess")
+                                                                hintText: t("YakitNotification.copySuccess")
                                                             })
                                                         }}
-                                                        title={t("VulinboxManager.copySuccess")}
+                                                        title={t("YakitNotification.copySuccess")}
                                                     >
                                                         {item.url}
                                                     </code>
@@ -292,12 +292,12 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                         onClick={() => {
                                                             setClipboardText(item.url, {
                                                                 hiddenHint: false,
-                                                                hintText: t("VulinboxManager.copySuccess")
+                                                                hintText: t("YakitNotification.copySuccess")
                                                             })
                                                         }}
-                                                        title={t("VulinboxManager.copySuccess")}
+                                                        title={t("YakitNotification.copySuccess")}
                                                     >
-                                                        {t("VulinboxManager.copy")}
+                                                        {t("YakitButton.copy")}
                                                     </YakitButton>
                                                 </div>
                                             ))}
@@ -307,7 +307,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                 })
                             }}
                         >
-                            {t("VulinboxManager.downloadAddresses")}
+                            查看下载地址
                         </YakitButton>
                     </Space>
                 }
@@ -324,9 +324,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                             <h2 style={{fontSize: 18, fontWeight: 600, marginBottom: 16}}>
                                                 {t("VulinboxManager.info.title")}
                                             </h2>
-                                            <p style={{marginBottom: 16}}>
-                                                {t("VulinboxManager.info.description")}
-                                            </p>
+                                            <p style={{marginBottom: 16}}>{t("VulinboxManager.info.description")}</p>
 
                                             <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>
                                                 {t("VulinboxManager.info.coverageTitle")}
@@ -343,7 +341,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
+                                                        backgroundColor: "var(--Colors-Use-Neutral-Bg)",
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -353,7 +351,12 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                             {t("VulinboxManager.info.injectionTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            {(t("VulinboxManager.info.injectionItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>{t("VulinboxManager.info.sqlInjectionEnv")}</li>
+                                                            <li>{t("VulinboxManager.info.xssPracticeScenario")}</li>
+                                                            <li>{t("VulinboxManager.info.ssrfEnv")}</li>
+                                                            <li>
+                                                                {t("VulinboxManager.info.commandInjectionReproduce")}
+                                                            </li>
                                                         </ul>
                                                     </div>
 
@@ -362,7 +365,11 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                             {t("VulinboxManager.info.authTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            {(t("VulinboxManager.info.authItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>
+                                                                {t("VulinboxManager.info.cookieSecuritySimulation")}
+                                                            </li>
+                                                            <li>{t("VulinboxManager.info.jwtTokenScenario")}</li>
+                                                            <li>{t("VulinboxManager.info.sessionManagementDemo")}</li>
                                                         </ul>
                                                     </div>
 
@@ -371,7 +378,11 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                             {t("VulinboxManager.info.protocolTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            {(t("VulinboxManager.info.protocolItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>
+                                                                {t("VulinboxManager.info.websocketSecuritySimulation")}
+                                                            </li>
+                                                            <li>{t("VulinboxManager.info.httpProtocolWeaknessEnv")}</li>
+                                                            <li>{t("VulinboxManager.info.dnsSecurityDemo")}</li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -379,7 +390,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
+                                                        backgroundColor: "var(--Colors-Use-Neutral-Bg)",
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -389,7 +400,9 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                             {t("VulinboxManager.info.cryptoTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            {(t("VulinboxManager.info.cryptoItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>{t("VulinboxManager.info.aesEcbSecurityIssue")}</li>
+                                                            <li>{t("VulinboxManager.info.rsaAlgorithmWeakness")}</li>
+                                                            <li>{t("VulinboxManager.info.base64MisuseScenario")}</li>
                                                         </ul>
                                                     </div>
 
@@ -398,18 +411,30 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                             {t("VulinboxManager.info.apiTitle")}
                                                         </h4>
                                                         <ul style={{paddingLeft: 24, margin: 0}}>
-                                                            {(t("VulinboxManager.info.apiItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>
+                                                                {t(
+                                                                    "VulinboxManager.info.openapiSwaggerVulnerabilities"
+                                                                )}
+                                                            </li>
+                                                            <li>
+                                                                {t("VulinboxManager.info.restfulApiSecurityIssues")}
+                                                            </li>
+                                                            <li>
+                                                                {t("VulinboxManager.info.jsonParsingVulnerability")}
+                                                            </li>
                                                         </ul>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>{t("VulinboxManager.info.featuresTitle")}</h3>
+                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>
+                                                {t("VulinboxManager.info.featuresTitle")}
+                                            </h3>
                                             <div style={{display: "flex", gap: 16, marginBottom: 16}}>
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
+                                                        backgroundColor: "var(--Colors-Use-Neutral-Bg)",
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -417,13 +442,31 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                     <div style={{marginBottom: 8}}>
                                                         <b>{t("VulinboxManager.info.teachingTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            {(t("VulinboxManager.info.teachingItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>
+                                                                {t(
+                                                                    "VulinboxManager.info.detailedDescriptionForEachScenario"
+                                                                )}
+                                                            </li>
+                                                            <li>
+                                                                {t(
+                                                                    "VulinboxManager.info.provideVulnerabilityPrinciplesAndExploitationMethods"
+                                                                )}
+                                                            </li>
                                                         </ul>
                                                     </div>
                                                     <div style={{marginBottom: 8}}>
                                                         <b>{t("VulinboxManager.info.realismTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            {(t("VulinboxManager.info.realismItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>
+                                                                {t(
+                                                                    "VulinboxManager.info.simulateRealBusinessScenarios"
+                                                                )}
+                                                            </li>
+                                                            <li>
+                                                                {t(
+                                                                    "VulinboxManager.info.simulateRealBusinessScenarios"
+                                                                )}
+                                                            </li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -431,7 +474,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
+                                                        backgroundColor: "var(--Colors-Use-Neutral-Bg)",
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -439,28 +482,41 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                     <div style={{marginBottom: 8}}>
                                                         <b>{t("VulinboxManager.info.systematicTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            {(t("VulinboxManager.info.systematicItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>
+                                                                {t(
+                                                                    "VulinboxManager.info.comprehensiveVulnerabilityCoverage"
+                                                                )}
+                                                            </li>
+                                                            <li>
+                                                                {t("VulinboxManager.info.reasonableDifficultyGradient")}
+                                                            </li>
                                                         </ul>
                                                     </div>
                                                     <div style={{marginBottom: 8}}>
                                                         <b>{t("VulinboxManager.info.practiceTitle")}</b>
                                                         <ul style={{paddingLeft: 24, margin: "4px 0"}}>
-                                                            {(t("VulinboxManager.info.practiceItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                            <li>{t("VulinboxManager.info.handsOnSupport")}</li>
+                                                            <li>{t("VulinboxManager.info.instantFeedback")}</li>
                                                         </ul>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>{t("VulinboxManager.info.audienceTitle")}</h3>
+                                            <h3 style={{fontSize: 16, fontWeight: 600, marginBottom: 12}}>
+                                                {t("VulinboxManager.info.audienceTitle")}
+                                            </h3>
                                             <ul style={{paddingLeft: 24, margin: 0}}>
-                                                {(t("VulinboxManager.info.audienceItems", { returnObjects: true }) as unknown as string[]).map((item, index) => <li key={index}>{item}</li>)}
+                                                <li>{t("VulinboxManager.info.networkSecurityBeginners")}</li>
+                                                <li>{t("VulinboxManager.info.securityTestEngineers")}</li>
+                                                <li>{t("VulinboxManager.info.developerSecurityAwarenessTraining")}</li>
+                                                <li>{t("VulinboxManager.info.securityResearchers")}</li>
                                             </ul>
 
                                             <div
                                                 style={{
                                                     marginTop: 16,
                                                     padding: 12,
-                                                    backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
+                                                    backgroundColor: "var(--Colors-Use-Neutral-Bg)",
                                                     borderRadius: 4
                                                 }}
                                             >
@@ -496,7 +552,7 @@ interface VulinboxStartProp {
 }
 
 const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
-    const { t } = useI18nNamespaces(["vulinbox"])
+    const {t} = useI18nNamespaces(["vulinbox"])
     const [params, setParams] = useState<StartVulinboxParams>(props.params)
 
     return (
@@ -509,11 +565,11 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
             }}
             size={"small"}
         >
-            <Form.Item label={t("VulinboxManager.vulinboxStart.host")}>
+            <Form.Item label={"Host"}>
                 <YakitInput value={params.Host} onChange={(e) => setParams({...params, Host: e.target.value})} />
             </Form.Item>
 
-            <Form.Item label={t("VulinboxManager.vulinboxStart.port")}>
+            <Form.Item label={"Port"}>
                 <YakitInputNumber
                     value={params.Port}
                     onChange={(value) => setParams({...params, Port: Number(value) || 0})}
@@ -522,14 +578,14 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
                 />
             </Form.Item>
 
-            <Form.Item label={t("VulinboxManager.vulinboxStart.noHttps")}>
+            <Form.Item label={t("VulinboxStart.noHttps")}>
                 <YakitSwitch
                     checked={params.NoHttps}
                     onChange={(checked) => setParams({...params, NoHttps: checked})}
                 />
             </Form.Item>
 
-            <Form.Item label={t("VulinboxManager.vulinboxStart.safeMode")} help={t("VulinboxManager.vulinboxStart.safeModeTooltip")}>
+            <Form.Item label={t("VulinboxStart.safeMode")} help={t("VulinboxStart.safeModeTooltip")}>
                 <YakitSwitch
                     checked={params.SafeMode}
                     onChange={(checked) => setParams({...params, SafeMode: checked})}
@@ -538,7 +594,7 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
 
             <Form.Item colon={false} label={" "}>
                 <YakitButton style={{marginBottom: 8}} type='primary' htmlType='submit'>
-                    {t("VulinboxManager.vulinboxStart.start")}
+                    {t("VulinboxManager.startVulinbox")}
                 </YakitButton>
             </Form.Item>
         </Form>
@@ -550,7 +606,7 @@ export interface InstallVulinboxPromptProp {
 }
 
 const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
-    const { t } = useI18nNamespaces(["vulinbox"])
+    const {t} = useI18nNamespaces(["vulinbox"])
     const [token, setToken] = useState(randomString(60))
     const [data, setData, getData] = useGetState<string[]>([])
     const [percent, setPercent] = useState(0)
@@ -584,7 +640,7 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.invoke("InstallVulinbox", {}, token).then(() => {
-            success(t("VulinboxManager.installVulinboxPrompt.installing"))
+            success(t("InstallVulinboxPrompt.installing"))
             setLoading(true)
         })
         return () => {
@@ -599,7 +655,7 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
                     strokeColor='var(--Colors-Use-Main-Primary)'
                     trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
-                    format={(percent) => `${t("VulinboxManager.installVulinboxPrompt.downloading")} ${percent}%`}
+                    format={(percent) => `已下载 ${percent}%`}
                 />
             </div>
             <div className={styles["download-progress-messages"]}>

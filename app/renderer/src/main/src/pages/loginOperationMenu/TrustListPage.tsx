@@ -28,7 +28,7 @@ interface UserListRequest {
 }
 export interface TrustListPageProp {}
 export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<API.UserList[]>([])
@@ -84,7 +84,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: t("user"),
+            title: t("TrustListPage.user"),
             dataKey: "name",
             width: 450,
             render: (text, record) => (
@@ -100,28 +100,28 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             )
         },
         {
-            title: t("userRole"),
+            title: t("TrustListPage.userRole"),
             dataKey: "role",
             render: (text) => {
                 let role = text
                 switch (text) {
                     case "admin":
-                        role = t("administrator")
+                        role = t("TrustListPage.administrator")
                         break
                     case "superAdmin":
-                        role = t("superAdministrator")
+                        role = t("TrustListPage.superAdministrator")
                         break
                     case "licenseAdmin":
-                        role = t("licenseAdministrator")
+                        role = t("TrustListPage.licenseAdministrator")
                         break
                     case "trusted":
-                        role = t("trustedUser")
+                        role = t("TrustListPage.trustedUser")
                         break
                     case "operate":
-                        role = t("operationsSpecialist")
+                        role = t("TrustListPage.operationsSpecialist")
                         break
                     case "auditor":
-                        role = t("auditor")
+                        role = t("TrustListPage.auditor")
                         break
                     default:
                         role = "--"
@@ -131,27 +131,27 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         },
         {
-            title: t("createdAt"),
+            title: t("TrustListPage.createdAt"),
             dataKey: "created_at",
             ellipsis: true,
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
         {
-            title: t("action"),
+            title: t("YakitTable.action"),
             dataKey: "action",
             width: 80,
             fixed: "right",
             render: (_, record: API.UserList) => (
                 <>
                     <YakitPopconfirm
-                        title={t("confirmRemoveUser")}
+                        title={t("TrustListPage.confirmRemoveUser")}
                         onConfirm={() => {
                             onRemoveSingle(record.appid, record.id)
                         }}
                         placement='right'
                     >
                         <YakitButton type='text' colors='danger'>
-                            {t("remove")}
+                            {t("YakitButton.remove")}
                         </YakitButton>
                     </YakitPopconfirm>
                 </>
@@ -232,7 +232,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", t("getAccountListFailed", { error: e }))
+                yakitNotify("error", t("TrustListPage.getAccountListFailed", {error: e}))
             })
             .finally(() => {
                 setLoading(false)
@@ -249,7 +249,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", t("deleteUserSuccess"))
+                yakitNotify("success", t("TrustListPage.deleteUserSuccess"))
                 setSelectList((s) => s.filter((ele) => ele.id !== id))
                 setResponse({
                     data: response.data.filter((item) => item.id !== id),
@@ -260,7 +260,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", t("deleteUserFailed", { error: err }))
+                yakitNotify("error", t("TrustListPage.deleteUserFailed", {error: err}))
             })
     }
 
@@ -275,7 +275,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", t("deleteUserSuccess"))
+                yakitNotify("success", t("TrustListPage.deleteUserSuccess"))
                 setQuery((prevQuery) => ({
                     ...prevQuery,
                     page: 1
@@ -284,7 +284,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 setAllCheck(false)
             })
             .catch((err) => {
-                yakitNotify("error", t("deleteUserFailed", { error: err }))
+                yakitNotify("error", t("TrustListPage.deleteUserFailed", {error: err}))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     }
@@ -300,14 +300,14 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                     <div className={styles["virtual-table-header-wrap"]}>
                         <div className={styles["virtual-table-heard-left"]}>
                             <div className={styles["virtual-table-heard-left-item"]}>
-                                <span className={styles["virtual-table-heard-left-text"]}>{t("total")}</span>
+                                <span className={styles["virtual-table-heard-left-text"]}>Total</span>
                                 <span className={styles["virtual-table-heard-left-number"]}>
                                     {response.pagemeta.total}
                                 </span>
                             </div>
                             <Divider type='vertical' />
                             <div className={styles["virtual-table-heard-left-item"]}>
-                                <span className={styles["virtual-table-heard-left-text"]}>{t("selected")}</span>
+                                <span className={styles["virtual-table-heard-left-text"]}>Selected</span>
                                 <span className={styles["virtual-table-heard-left-number"]}>{selectNum}</span>
                             </div>
                         </div>
@@ -316,7 +316,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 extra={
                     <div className={styles["newTrustListPage-table-extra"]}>
                         <YakitInput.Search
-                            placeholder={t("searchUserPlaceholder")}
+                            placeholder={t("AccountAdminPage.searchUserPlaceholder")}
                             enterButton={true}
                             style={{width: 200}}
                             onSearch={(value) => {
@@ -324,7 +324,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                             }}
                         />
                         <YakitPopconfirm
-                            title={t("confirmDeleteSelectedUsers")}
+                            title={t("TrustListPage.confirmDeleteSelectedUsers")}
                             onConfirm={(e) => {
                                 e?.stopPropagation()
                                 onRemoveMultiple()
@@ -338,11 +338,11 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                                 icon={<TrashIcon />}
                                 disabled={selectNum === 0}
                             >
-                                {t("batchRemove")}
+                                {t("YakitButton.batchRemove")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton size='small' onClick={() => setCreateUserShow(!createUserShow)}>
-                            {t("addUser")}
+                            {t("TrustListPage.addUser")}
                         </YakitButton>
                     </div>
                 }
@@ -369,7 +369,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             ></TableVirtualResize>
             <YakitModal
                 visible={createUserShow}
-                title={t("addUser")}
+                title={t("TrustListPage.addUser")}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -400,7 +400,7 @@ interface CreateUserFormProps {
     refresh: () => void
 }
 const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const {onCancel, refresh} = props
     const [form] = Form.useForm()
     const appidRef = useRef<string>("")
@@ -426,7 +426,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                 refresh()
             })
             .catch((err) => {
-                yakitNotify("error", t("addFailed", { error: err }))
+                yakitNotify("error", t("CreateUserForm.addFailed", {error: err}))
             })
             .finally(() => {
                 setLoading(false)
@@ -459,7 +459,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                     setUserList({data: data || []})
                 })
                 .catch((err) => {
-                    yakitNotify("error", t("getNormalUserFailed", { error: err }))
+                    yakitNotify("error", t("CreateUserForm.getNormalUserFailed", {error: err}))
                 })
         }),
         300
@@ -474,7 +474,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             wrapperCol={{span: 15}}
             onFinish={onAdd}
         >
-            <Form.Item label={t("addUser")} name='name' rules={[{required: true, message: t("addUserRequired")}]}>
+            <Form.Item
+                label={t("TrustListPage.addUser")}
+                name='name'
+                rules={[{required: true, message: t("CreateUserForm.addUserRequired")}]}
+            >
                 <YakitSelect
                     showSearch
                     allowClear
@@ -484,7 +488,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         appidRef.current = option.record.appid
                     }}
                     onSearch={getUserList}
-                    placeholder={t("inputFullUsername")}
+                    placeholder={t("CreateUserForm.inputFullUsername")}
                     optionLabelProp='lable'
                 >
                     {userList.data.map((item) => {
@@ -502,36 +506,36 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                     })}
                 </YakitSelect>
             </Form.Item>
-            <Form.Item label={t("selectRole")} name='role'>
+            <Form.Item label={t("CreateUserForm.selectRole")} name='role'>
                 <YakitSelect
                     options={[
                         {
                             value: "trusted",
-                            label: t("trustedUser")
+                            label: t("TrustListPage.trustedUser")
                         },
                         {
                             value: "admin",
-                            label: t("administrator")
+                            label: t("TrustListPage.administrator")
                         },
                         {
                             value: "licenseAdmin",
-                            label: t("licenseAdministrator")
+                            label: t("TrustListPage.licenseAdministrator")
                         },
                         {
                             value: "operate",
-                            label: t("operationsSpecialist")
+                            label: t("TrustListPage.operationsSpecialist")
                         },
                         {
                             value: "auditor",
-                            label: t("auditor")
+                            label: t("TrustListPage.auditor")
                         }
                     ]}
-                    placeholder={t("selectRolePlaceholder")}
+                    placeholder={t("CreateUserForm.selectRolePlaceholder")}
                 ></YakitSelect>
             </Form.Item>
             <div style={{textAlign: "right"}}>
                 <YakitButton htmlType='submit' loading={loading}>
-                    {t("add")}
+                    {t("YakitButton.add")}
                 </YakitButton>
             </div>
         </Form>

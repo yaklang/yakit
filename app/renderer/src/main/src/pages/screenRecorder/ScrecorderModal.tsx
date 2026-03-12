@@ -9,7 +9,7 @@ import {Form} from "antd"
 import classNames from "classnames"
 import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
 import styles from "./ScrecorderModal.module.scss"
-import {Screen_Recorder_Framerate,Screen_Recorder_CoefficientPTS} from "./ScreenRecorderList"
+import {Screen_Recorder_Framerate, Screen_Recorder_CoefficientPTS} from "./ScreenRecorderList"
 
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
@@ -42,7 +42,7 @@ export const FramerateData = (t: any) => [
     },
     {
         value: "7",
-        label: `7fps(${t("recommended", { ns: "screenRecorder" })})`
+        label: `7fps(${t("ScrecorderModal.recommended")})`
     },
     {
         value: "10",
@@ -69,20 +69,20 @@ export const FramerateData = (t: any) => [
 export const CoefficientPTSData = (t: any) => [
     {
         value: 1,
-        label: `X1：1${t("speed", { ns: "screenRecorder" })}`
+        label: `X1：1${t("ScrecorderModal.speed")}`
     },
     {
         value: 0.33,
-        label: `X3：3${t("speed", { ns: "screenRecorder" })}`
+        label: `X3：3${t("ScrecorderModal.speed")}`
     },
     {
         value: 0.2,
-        label: `X5：5${t("speed", { ns: "screenRecorder" })}`
-    },
+        label: `X5：5${t("ScrecorderModal.speed")}`
+    }
 ]
 
 export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["screenRecorder"])
+    const {t} = useI18nNamespaces(["screenRecorder", "yakitUi"])
     const {onClose, token, onStartCallback, formStyle, footer, disabled} = props
     const [params, setParams] = useState<StartScrecorderParams>({
         CoefficientPTS: 1,
@@ -118,9 +118,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
     })
     return (
         <div className={styles["screcorder-modal-content"]}>
-            <div className={classNames(styles["tip"])}>
-                {t("screenRecorderDesc", { ns: "screenRecorder" })}
-            </div>
+            <div className={classNames(styles["tip"])}>{t("ScrecorderModal.screenRecorderDesc")}</div>
             <Form
                 layout='vertical'
                 style={{padding: "16px 24px 24px", ...formStyle}}
@@ -131,10 +129,10 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                 form={form}
             >
                 <Form.Item
-                    label={t("framerate", { ns: "screenRecorder" })}
-                    help={t("framerateHelp", { ns: "screenRecorder" })}
+                    label={t("ScrecorderModal.framerate")}
+                    help={t("ScrecorderModal.framerateHelp")}
                     tooltip={{
-                        title: t("framerateTooltip", { ns: "screenRecorder" }),
+                        title: t("ScrecorderModal.framerateTooltip"),
                         icon: <InformationCircleIcon style={{cursor: "auto"}} />
                     }}
                     name='Framerate'
@@ -142,8 +140,8 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                     <YakitSelect options={FramerateData(t)} disabled={disabled} />
                 </Form.Item>
                 <Form.Item
-                    label={t("speed", { ns: "screenRecorder" })}
-                    help={t("speedHelp", { ns: "screenRecorder" })}
+                    label={t("ScrecorderModal.speed")}
+                    help={t("ScrecorderModal.speedHelp")}
                     name='CoefficientPTS'
                 >
                     <YakitSelect options={CoefficientPTSData(t)} disabled={disabled} />
@@ -152,18 +150,18 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                     <Form.Item noStyle valuePropName='checked' name='DisableMouse'>
                         <YakitSwitch size='large' disabled={disabled} />
                     </Form.Item>
-                    {t("mouseCapture", { ns: "screenRecorder" })}
+                    {t("ScrecorderModal.mouseCapture")}
                 </div>
                 {footer ? (
                     footer
                 ) : (
                     <div className={styles["footer-btns"]}>
                         <YakitButton type='outline2' size='large' onClick={() => onClose()}>
-                            {t("cancel", { ns: "screenRecorder" })}
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton htmlType='submit' type='primary' size='large'>
                             <PlayIcon style={{height: 16}} />
-                            {t("startRecording", { ns: "screenRecorder" })}
+                            {t("ScrecorderModal.startRecording")}
                         </YakitButton>
                     </div>
                 )}

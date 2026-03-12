@@ -1,33 +1,28 @@
 {
-  "byKeyword": "按关键词",
-  "byGroup": "按组选",
-  "selectPlugin": "选择插件",
-  "selectPrompt": "请选择关键词或插件组进行扫描",
-  "searchKeywordPlaceholder": "请输入关键词搜索",
-  "selectAll": "全选",
-  "clear": "清空",
-  "noData": "暂无数据",
-  "noDataDesc": "可一键获取默认关键词与插件,下载后请重启 Yakit 获取默认关键词",
-  "oneClickDownload": "一键下载",
-  "searchGroupNamePlaceholder": "请输入组名搜索",
-  "manage": "管理",
-  "noGroupDataDesc": "可一键获取默认分组与插件,或点击管理手动新建",
-  "plugins": "个插件",
-  "specialVulnerabilityDetection": "专项漏洞检测",
-  "pluginGroups": "个插件组",
-  "stop": "停止",
-  "pause": "暂停",
-  "continue": "继续",
-  "execute": "执行",
-  "taskList": "任务列表",
-  "details": "详情",
-  "logs": "日志",
-  "loading": "加载中...",
-  "taskStartSuccess": "任务启动成功",
-  "taskStopSuccess": "任务停止成功",
-  "total": "总计",
-  "selected": "已选",
-  "target": "执行目标",
-  "timeConsuming": "耗时",
-  "timeout": "超时"
+  "YakPoC": {
+    "byKeyword": "按关键词",
+    "byGroup": "按组选",
+    "selectPlugin": "选择插件"
+  },
+  "PluginListByGroup": {
+    "selectPrompt": "请选择关键词或插件组进行扫描"
+  },
+  "PluginGroupByKeyWord": {
+    "noDataDesc": "可一键获取默认关键词与插件,下载后请重启 Yakit 获取默认关键词"
+  },
+  "PluginGroupGrid": {
+    "searchGroupNamePlaceholder": "请输入组名搜索",
+    "manage": "管理",
+    "noGroupDataDesc": "可一键获取默认分组与插件,或点击管理手动新建"
+  },
+  "PluginGroupByKeyWordItem": {
+    "plugins": "个插件"
+  },
+  "YakPoCExecuteContent": {
+    "taskList": "任务列表"
+  },
+  "PluginExecuteLog": {
+    "target": "执行目标",
+    "timeConsuming": "耗时"
+  }
 }

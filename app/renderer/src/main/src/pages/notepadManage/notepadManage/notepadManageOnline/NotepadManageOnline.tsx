@@ -43,7 +43,7 @@ import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["notepad"])
+    const {t, i18n} = useI18nNamespaces(["notepad", "yakitUi"])
     const userInfo = useStore((s) => s.userInfo)
     const emptyImageTarget = useEmptyImage("search")
     const {goAddNotepad} = useGoEditNotepad()
@@ -150,7 +150,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 }
             },
             {
-                title: t("NotepadManageOnline.action"),
+                title: t("YakitTable.action"),
                 dataIndex: "action",
                 width: 180,
                 render: (text, record) => {
@@ -177,7 +177,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 }
             }
         ]
-    }, [actionHashMapRef.current, sorterKey, timeSortVisible])
+    }, [actionHashMapRef.current, sorterKey, timeSortVisible, i18n.language])
     useEffect(() => {
         if (!userInfo.isLogin) return
         getList()
@@ -295,7 +295,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 setBatchDownInfo(res)
             })
             .catch((err) => {
-                failed(`下载失败：${err?.message || err}`)
+                failed(`${t("YakitNotification.downloadFailed", {colon: true})}${err?.message || err}`)
             })
             .finally(() =>
                 setTimeout(() => {
@@ -337,17 +337,19 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                         <FuncSearch
                             yakitCombinationSearchProps={{
                                 selectProps: {size: "small"},
-                                inputSearchModuleTypeProps: {size: "middle", placeholder: t("NotepadManageOnline.searchPlaceholder")}
+                                inputSearchModuleTypeProps: {
+                                    size: "middle",
+                                    placeholder: t("YakitInput.searchKeyWordPlaceholder")
+                                }
                             }}
                             value={search}
                             onChange={setSearch}
                             onSearch={onSearch}
                             includeSearchType={["keyword", "userName"]}
                         />
-                        <YakitPopconfirm
-                            title={t("NotepadManageOnline.confirmBatchDelete")}
-                            onConfirm={onBatchRemove}
-                        >
+                        <YakitPopconfirm title={selectNumber > 0
+                                ? t("NotepadManageLocalList.confirmDeleteSelected")
+                                : t("NotepadManageLocalList.confirmDeleteAll")} onConfirm={onBatchRemove}>
                             <YakitButton
                                 type='outline2'
                                 danger
@@ -355,7 +357,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                                 disabled={totalRef.current === 0}
                                 loading={pageLoading}
                             >
-                                {t("NotepadManageOnline.batchDelete")}
+                                {t("YakitButton.delete")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton
@@ -365,22 +367,22 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             onClick={onBatchDown}
                             loading={pageLoading}
                         >
-                            {t("NotepadManageOnline.batchDownload")}
+                            {t("YakitButton.batchDownload")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
-                            {t("NotepadManageOnline.newNotepad")}
+                            {t("YakitButton.new")}
                         </YakitButton>
                     </div>
                 </div>
                 {totalRef.current === 0 || +response.pagemeta.total === 0 ? (
                     totalRef.current === 0 ? (
-                        <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
+                        <YakitEmpty style={{paddingTop: 48}} description={t("NotepadManageOnline.noData")} />
                     ) : (
                         <YakitEmpty
                             image={emptyImageTarget}
                             imageStyle={{margin: "96px auto 12px", height: 200}}
-                            title='搜索结果“空”'
+                            title={t("YakitEmpty.searchEmpty")}
                         />
                     )
                 ) : (

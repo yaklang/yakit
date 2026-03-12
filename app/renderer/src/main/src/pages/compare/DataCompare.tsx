@@ -1,23 +1,23 @@
-import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from "react"
-import { Button, Space } from "antd"
+import React, {useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo} from "react"
+import {Button, Space} from "antd"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
-import { AutoCard } from "../../components/AutoCard"
-import { LineConversionIcon } from "../../assets/icons"
-import styles from "./DataCompare.module.scss";
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { RemoveIcon } from "@/assets/newIcon"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
-import { useHttpFlowStore } from "@/store/httpFlow"
-import { useTheme } from "@/hook/useTheme"
-import { applyYakitMonacoTheme } from "@/utils/monacoSpec/theme"
-import { randomString } from "@/utils/randomUtil"
-import { useEditorFontSize, fontSizeOptions } from "@/store/editorFontSize"
-import { useUpdateEffect, useMemoizedFn } from "ahooks"
-import { showByRightContext } from "@/components/yakitUI/YakitMenu/showByRightContext"
-import { YakitMenuItemType } from "@/components/yakitUI/YakitMenu/YakitMenu"
-import { yakitNotify } from "@/utils/notification"
+import {AutoCard} from "../../components/AutoCard"
+import {LineConversionIcon} from "../../assets/icons"
+import styles from "./DataCompare.module.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {RemoveIcon} from "@/assets/newIcon"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {useHttpFlowStore} from "@/store/httpFlow"
+import {useTheme} from "@/hook/useTheme"
+import {applyYakitMonacoTheme} from "@/utils/monacoSpec/theme"
+import {randomString} from "@/utils/randomUtil"
+import {useEditorFontSize, fontSizeOptions} from "@/store/editorFontSize"
+import {useUpdateEffect, useMemoizedFn} from "ahooks"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {yakitNotify} from "@/utils/notification"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 interface textModelProps {
     content: string
@@ -29,18 +29,18 @@ interface DataCompareProps {
     rightData?: string
 }
 export const DataCompare: React.FC<DataCompareProps> = (props) => {
-    const { leftData, rightData } = props
+    const {leftData, rightData} = props
     const [noWrap, setNoWrap] = useState<boolean>(false)
 
     const [left, setLeft] = useState<string>(leftData || "")
     const [right, setRight] = useState<string>(rightData || "")
-    const { t } = useI18nNamespaces(["comparer"])
+    const {t} = useI18nNamespaces(["comparer"])
 
     const codeComparisonRef = useRef<any>(null)
     return (
         <AutoCard
-            title={t("comparer.comparer")}
-            bodyStyle={{ padding: 0 }}
+            title={t("DataCompare.comparer")}
+            bodyStyle={{padding: 0}}
             bordered={false}
             extra={
                 <Space>
@@ -55,7 +55,15 @@ export const DataCompare: React.FC<DataCompareProps> = (props) => {
                 </Space>
             }
         >
-            <CodeComparison ref={codeComparisonRef} noWrap={noWrap} setNoWrap={setNoWrap} leftCode={left} setLeftCode={setLeft} rightCode={right} setRightCode={setRight} />
+            <CodeComparison
+                ref={codeComparisonRef}
+                noWrap={noWrap}
+                setNoWrap={setNoWrap}
+                leftCode={left}
+                setLeftCode={setLeft}
+                rightCode={right}
+                setRightCode={setRight}
+            />
         </AutoCard>
     )
 }
@@ -71,30 +79,28 @@ interface DataCompareModalProps {
 }
 
 export const DataCompareModal: React.FC<DataCompareModalProps> = (props) => {
-    const { onClose, leftCode, rightCode, leftTitle, rightTitle, loadCallBack, readOnly = false } = props
-    const { t, i18n } = useI18nNamespaces(["history"])
+    const {onClose, leftCode, rightCode, leftTitle, rightTitle, loadCallBack, readOnly = false} = props
+    const {t, i18n} = useI18nNamespaces(["comparer"])
 
     useEffect(() => {
         loadCallBack && loadCallBack()
     })
     return (
-        <div className={styles['data-compare-modal']}>
-            <div className={styles['header']}>
-                <div className={styles['title']}>{t("DataCompareModal.codeCompare")}</div>
-                <div className={styles['close']}>
+        <div className={styles["data-compare-modal"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>{t("DataCompareModal.codeCompare")}</div>
+                <div className={styles["close"]}>
                     <RemoveIcon onClick={() => onClose()} />
                 </div>
             </div>
-            <div className={styles['content']}>
-                {leftTitle && rightTitle && <div className={styles['content-title']}>
-                    <div className={styles['content-title-left']}>
-                        {leftTitle}
+            <div className={styles["content"]}>
+                {leftTitle && rightTitle && (
+                    <div className={styles["content-title"]}>
+                        <div className={styles["content-title-left"]}>{leftTitle}</div>
+                        <div className={styles["content-title-right"]}>{rightTitle}</div>
                     </div>
-                    <div className={styles['content-title-right']}>
-                        {rightTitle}
-                    </div>
-                </div>}
-                <div className={styles['code']}>
+                )}
+                <div className={styles["code"]}>
                     <CodeComparison leftCode={leftCode} rightCode={rightCode} fontSize={12} readOnly={readOnly} />
                 </div>
             </div>
@@ -120,16 +126,16 @@ interface CodeComparisonProps {
 }
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
-    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true, readOnly } = props;
-    const { t } = useI18nNamespaces(["yakitUi"])
-    const { fontSize, initFontSize, setFontSize } = useEditorFontSize()
+    const {noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true, readOnly} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
+    const {fontSize, initFontSize, setFontSize} = useEditorFontSize()
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
     const [language, setLanguage] = useState<string>("")
     // 从store获取对比数据
-    const { token, dataMap } = useHttpFlowStore()
-    const { theme } = useTheme()
+    const {token, dataMap} = useHttpFlowStore()
+    const {theme} = useTheme()
 
     // 构建右键菜单数据
     const rightContextMenu = useMemo<YakitMenuItemType[]>(
@@ -142,13 +148,13 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     label: `${size}${fontSize === size ? "\u00A0\u00A0\u00A0✓" : ""}`
                 }))
             },
-            { key: "change-all-occurrences", label: "Change All Occurrences", keyDesc: "Ctrl+F2" },
-            { type: "divider" },
-            { key: "cut", label: "Cut" },
-            { key: "copy", label: "Copy" },
-            { key: "paste", label: "Paste" },
-            { type: "divider" },
-            { key: "command-palette", label: "Command Palette", keyDesc: "F1" }
+            {key: "change-all-occurrences", label: "Change All Occurrences", keyDesc: "Ctrl+F2"},
+            {type: "divider"},
+            {key: "cut", label: "Cut"},
+            {key: "copy", label: "Copy"},
+            {key: "paste", label: "Paste"},
+            {type: "divider"},
+            {key: "command-palette", label: "Command Palette", keyDesc: "F1"}
         ],
         [fontSize, t]
     )
@@ -197,12 +203,16 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         }
     })
 
-    useImperativeHandle(ref, () => ({
-        // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
-        onChangeLineConversion: (newVal) => {
-            changeLineConversion()
-        }
-    }), [leftCode, rightCode, noWrap]);
+    useImperativeHandle(
+        ref,
+        () => ({
+            // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
+            onChangeLineConversion: (newVal) => {
+                changeLineConversion()
+            }
+        }),
+        [leftCode, rightCode, noWrap]
+    )
 
     //监听theme设置monaco主题
     useLayoutEffect(() => {
@@ -231,17 +241,18 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         })
 
         if (setNoWrap) setNoWrap(!noWrap)
-        setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
+        setModelEditor({content: leftCode, language: language}, {content: rightCode, language: language}, language)
     }
     const setModelEditor = (left?: textModelProps, right?: textModelProps, language = "yak") => {
-        const leftModel = monaco.createModel(left ? left.content : "", left ? left.language : language,)
+        const leftModel = monaco.createModel(left ? left.content : "", left ? left.language : language)
         leftModel.onDidChangeContent((e) => {
             if (setLeftCode) setLeftCode(leftModel.getValue())
         })
         const rightModel = monaco.createModel(right ? right.content : "", right ? right.language : language)
-        if (setRightCode) rightModel.onDidChangeContent((e) => {
-            setRightCode(rightModel.getValue())
-        })
+        if (setRightCode)
+            rightModel.onDidChangeContent((e) => {
+                setRightCode(rightModel.getValue())
+            })
         if (!diffEditorRef.current) return
         diffEditorRef.current.setModel({
             original: leftModel,
@@ -251,19 +262,19 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     useEffect(() => {
         //如果存在先销毁以前的组件
         if (diffEditorRef.current) diffEditorRef.current.dispose()
-        //替换 invoke("create-compare-token")  
+        //替换 invoke("create-compare-token")
         const getCreateCompareTokenRes = () => {
             if (token) {
-                return { token, info: dataMap.get(token) }
+                return {token, info: dataMap.get(token)}
             }
             const data = Array.from(dataMap.entries()).pop()
             if (data?.length) {
                 return {
                     token: data[0],
-                    info: data?.[1],
+                    info: data?.[1]
                 }
             } else {
-                return { token: `compare-${randomString(50)}`, }
+                return {token: `compare-${randomString(50)}`}
             }
         }
         const res = getCreateCompareTokenRes()
@@ -282,16 +293,16 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         })
 
         if (!!res.info) {
-            const { info } = res
+            const {info} = res
             if (info.type === 1) {
-                const { left } = info
+                const {left} = info
                 setLanguage(left.language)
                 if (setLeftCode) setLeftCode(left.content)
                 setModelEditor(left, undefined, left.language)
             }
 
             if (info.type === 2) {
-                const { right, left } = info
+                const {right, left} = info
                 setLanguage(right.language)
                 if (setRightCode) setRightCode(right.content)
                 if (left) {
@@ -305,17 +316,20 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
             setLanguage("yak")
             if (setLeftCode) setLeftCode(leftCode)
             if (setRightCode) setRightCode(rightCode)
-            setModelEditor({
-                content: leftCode,
-                language
-            }, {
-                content: rightCode,
-                language
-            })
+            setModelEditor(
+                {
+                    content: leftCode,
+                    language
+                },
+                {
+                    content: rightCode,
+                    language
+                }
+            )
         }
 
         ipcRenderer.on(`${res.token}-data`, (e, tokenDataRes) => {
-            const { left, right } = tokenDataRes.info
+            const {left, right} = tokenDataRes.info
 
             setModelEditor(left, right, language || left?.language || right?.language)
 
@@ -325,7 +339,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     }, [])
 
     useUpdateEffect(() => {
-        diffEditorRef.current?.updateOptions({ fontSize })
+        diffEditorRef.current?.updateOptions({fontSize})
     }, [fontSize])
 
     // 注册自定义右键菜单
@@ -337,30 +351,30 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
 
         const disposables: monacoEditor.IDisposable[] = []
 
-            ;[originalEditor, modifiedEditor].forEach((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
-                const disposable = editor.onContextMenu((e) => {
-                    e.event.preventDefault()
-                    e.event.stopPropagation()
+        ;[originalEditor, modifiedEditor].forEach((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+            const disposable = editor.onContextMenu((e) => {
+                e.event.preventDefault()
+                e.event.stopPropagation()
 
-                    showByRightContext(
-                        {
-                            data: rightContextMenu,
-                            onClick: ({ key }) => {
-                                handleContextMenuClick(key, editor)
-                            }
-                        },
-                        e.event.posx,
-                        e.event.posy,
-                        true
-                    )
-                })
-                disposables.push(disposable)
+                showByRightContext(
+                    {
+                        data: rightContextMenu,
+                        onClick: ({key}) => {
+                            handleContextMenuClick(key, editor)
+                        }
+                    },
+                    e.event.posx,
+                    e.event.posy,
+                    true
+                )
             })
+            disposables.push(disposable)
+        })
 
         return () => {
             disposables.forEach((d) => d.dispose())
         }
     }, [rightContextMenu])
 
-    return <div ref={diffDivRef} style={{ width: "100%", height: "100%" }}></div>
+    return <div ref={diffDivRef} style={{width: "100%", height: "100%"}}></div>
 })

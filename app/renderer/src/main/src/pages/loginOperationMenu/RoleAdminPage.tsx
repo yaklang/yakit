@@ -30,7 +30,7 @@ interface RemoveProps {
 }
 export interface RoleAdminPageProp {}
 export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<API.RoleList[]>([])
@@ -60,24 +60,24 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: t("roleName"),
+            title: t("RoleAdminPage.roleName"),
             dataKey: "name"
         },
         {
-            title: t("operationPermissions"),
+            title: t("RoleAdminPage.operationPermissions"),
             dataKey: "role",
             render: (text, record) => {
-                return <span>{["审核员"].includes(record.name) ? t("auditPlugin") : "-"}</span>
+                return <span>{["审核员"].includes(record.name) ? t("RoleAdminPage.auditPlugin") : "-"}</span>
             }
         },
         {
-            title: t("createdAt"),
+            title: t("RoleAdminPage.createdAt"),
             dataKey: "created_at",
             ellipsis: true,
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
         {
-            title: t("action"),
+            title: t("YakitTable.action"),
             dataKey: "action",
             fixed: "right",
             width: 65,
@@ -94,7 +94,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                             }}
                         />
                         <YakitPopconfirm
-                            title={t("confirmDeleteRole")}
+                            title={t("RoleAdminPage.confirmDeleteRole")}
                             onConfirm={() => {
                                 onRemoveSingle(record.id)
                             }}
@@ -177,7 +177,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", t("getRoleListFailed", { error: e }))
+                yakitNotify("error", t("RoleAdminPage.getRoleListFailed", {error: e}))
             })
             .finally(() => {
                 setLoading(false)
@@ -193,7 +193,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", t("deleteRoleSuccess"))
+                yakitNotify("success", t("RoleAdminPage.deleteRoleSuccess"))
                 setSelectList((s) => s.filter((ele) => ele.id !== rid))
                 setResponse({
                     data: response.data.filter((item) => item.id !== rid),
@@ -204,7 +204,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                 })
             })
             .catch((err) => {
-                yakitNotify("error", t("deleteRoleFailed", { error: err }))
+                yakitNotify("error", t("RoleAdminPage.deleteRoleFailed", {error: err}))
             })
     }
 
@@ -218,7 +218,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                yakitNotify("success", t("deleteRoleSuccess"))
+                yakitNotify("success", t("RoleAdminPage.deleteRoleSuccess"))
                 setQuery((prevQuery) => ({
                     ...prevQuery,
                     page: 1
@@ -227,7 +227,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                 setAllCheck(false)
             })
             .catch((err) => {
-                yakitNotify("error", t("deleteRoleFailed", { error: err }))
+                yakitNotify("error", t("RoleAdminPage.deleteRoleFailed", {error: err}))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     }
@@ -242,7 +242,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                 extra={
                     <Space>
                         <YakitPopconfirm
-                            title={t("confirmDeleteSelectedRoles")}
+                            title={t("RoleAdminPage.confirmDeleteSelectedRoles")}
                             onConfirm={(e) => {
                                 e?.stopPropagation()
                                 onRemoveMultiple()
@@ -251,11 +251,11 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                             disabled={selectNum === 0}
                         >
                             <YakitButton size='small' disabled={selectNum === 0}>
-                                {t("batchDelete")}
+                                {t("YakitButton.batchDelete")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton size='small' onClick={() => setRoleFormShow(true)}>
-                            {t("createRole")}
+                            {t("RoleAdminPage.createRole")}
                         </YakitButton>
                     </Space>
                 }
@@ -282,7 +282,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
             ></TableVirtualResize>
             <YakitModal
                 visible={roleFormShow}
-                title={roleInfoRef.current ? t("editRole") : t("createRole")}
+                title={t("RoleAdminPage.createRole")}
                 destroyOnClose={true}
                 maskClosable={false}
                 width={600}
@@ -319,7 +319,7 @@ interface RoleOperationFormProp {
     roleInfo?: API.RoleList
 }
 const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const {onCancel, refresh, roleInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -409,7 +409,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", t("failed", { error: err }))
+                yakitNotify("error", t("RoleOperationForm.failed", {error: err}))
             })
             .finally(() => {
                 setLoading(false)
@@ -443,11 +443,11 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
                     }
                 })
                 .catch((err) => {
-                yakitNotify("error", t("failed", { error: err }))
-            })
-            .finally(() => {
-                resolve(undefined)
-            })
+                    yakitNotify("error", t("RoleOperationForm.failed", {error: err}))
+                })
+                .finally(() => {
+                    resolve(undefined)
+                })
         })
     }
 
@@ -485,7 +485,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
                         }
                     }}
                 >
-                    {t("all")}
+                    {t("RoleOperationForm.all")}
                 </YakitCheckbox>
                 {originNode}
             </>
@@ -495,16 +495,24 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
     return (
         <div style={{marginTop: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
-                <Form.Item name='name' label={t("roleName")} rules={[{required: true, message: t("required")}]}>
-                    <YakitInput placeholder={t("inputRoleName")} allowClear />
+                <Form.Item
+                    name='name'
+                    label={t("RoleAdminPage.roleName")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
+                    <YakitInput placeholder={t("RoleOperationForm.inputRoleName")} allowClear />
                 </Form.Item>
-                <Form.Item name='treeSelect' label={t("pluginPermissions")} rules={[{required: true, message: t("required")}]}>
+                <Form.Item
+                    name='treeSelect'
+                    label={t("RoleOperationForm.pluginPermissions")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
                     <YakitTreeSelect
                         showSearch={false}
                         treeDataSimpleMode
                         style={{width: "100%"}}
                         dropdownStyle={{maxHeight: 400, overflow: "auto"}}
-                        placeholder={t("selectPluginPermissions")}
+                        placeholder={t("RoleOperationForm.selectPluginPermissions")}
                         treeCheckable={true}
                         onChange={onChange}
                         loadData={onLoadData}
@@ -513,7 +521,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
                         showCheckedStrategy='SHOW_PARENT'
                         maxTagCount={selectedAll ? 0 : 3}
                         maxTagPlaceholder={(omittedValues) =>
-                            selectedAll ? t("all") : <>+ {omittedValues.length} ...</>
+                            selectedAll ? t("RoleOperationForm.all") : <>+ {omittedValues.length} ...</>
                         }
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                         open={open}
@@ -542,7 +550,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
 
                 <div style={{textAlign: "center"}}>
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
-                        {t("confirm")}
+                        {t("YakitButton.confirm")}
                     </YakitButton>
                 </div>
             </Form>

@@ -67,7 +67,7 @@ interface TreeReduceCount {
 }
 export interface AccountAdminPageProp {}
 export const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin"])
     const [selectTitle, setSelectTitle] = useState<SelectTitleProps>()
     const [tableQuery, setTableQuery] = useState<QueryAccountAdminRequest>(defQueryAccountAdminRequest)
 
@@ -97,7 +97,7 @@ export const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                     <div className={styles["card-title"]}>
                         <YakitInput.Search
                             style={{width: 180}}
-                            placeholder={t("searchUserPlaceholder")}
+                            placeholder={t("AccountAdminPage.searchUserPlaceholder")}
                             onSearch={(value) => {
                                 setSelectTitle(undefined)
                                 setTableQuery((prevQuery) => ({...prevQuery, departmentId: undefined, keywords: value}))
@@ -181,7 +181,7 @@ interface OrganizationAdminProps {
     treeReduceCount: TreeReduceCount
 }
 const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t, i18n} = useI18nNamespaces(["admin", "yakitUi"])
     const {selectDepartmentId, onSelectDepartmentId, onSetSelectTitle, treeCount, treeReduceCount} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [treeHeight, setTreeHeight] = useState<number>()
@@ -232,7 +232,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 setDepartment((prev) => [...prev, ...newData])
             })
             .catch((err) => {
-                yakitNotify("error", t("getOrganizationFailed", { error: err }))
+                yakitNotify("error", t("OrganizationAdmin.getOrganizationFailed", {error: err}))
             })
             .finally(() => {
                 setLoading(false)
@@ -256,7 +256,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 setNoDepartmentNum(res.userNum)
             })
             .catch((err) => {
-                yakitNotify("error", t("getNoDepartmentFailed", { error: err }))
+                yakitNotify("error", t("OrganizationAdmin.getNoDepartmentFailed", {error: err}))
             })
             .finally(() => {
                 setLoading(false)
@@ -352,7 +352,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
         if (noDepartmentNum) {
             return [
                 {
-                    title: t("unassigned"),
+                    title: t("OrganizationAdmin.unassigned"),
                     key: -1,
                     userNum: noDepartmentNum,
                     isLeaf: true,
@@ -363,13 +363,13 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
         } else {
             return department
         }
-    }, [noDepartmentNum, department, t])
+    }, [noDepartmentNum, department, i18n.language])
 
     const refreshTreeData = (newDepartment: DataSourceProps[]) => {
         if (noDepartmentNum) {
             return [
                 {
-                    title: t("unassigned"),
+                    title: t("OrganizationAdmin.unassigned"),
                     key: -1,
                     userNum: noDepartmentNum,
                     isLeaf: true,
@@ -392,7 +392,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
         })
             .then((res: API.ActionSucceeded) => {
                 if (res.ok) {
-                    yakitNotify("success", t("deleteSuccess"))
+                    yakitNotify("success", t("YakitNotification.deleted"))
                     setLoading(true)
                     // 重置回显示全部
                     onSelectDepartmentId(undefined)
@@ -409,7 +409,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", t("deleteFailed", { error: err }))
+                yakitNotify("error", `${t("YakitNotification.deleteFailed", {colon: true})}${err}`)
             })
     }
 
@@ -428,7 +428,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
         })
             .then((res) => {
                 if (res) {
-                    yakitNotify("success", t("updateSuccess"))
+                    yakitNotify("success", t("YakitNotification.modifySuccess"))
                     // 第一层更新
                     if (pid === 0) {
                         const newDepartment = department.map((node) => {
@@ -456,7 +456,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", t("updateFailed", { error: err }))
+                yakitNotify("error", `${t("YakitNotification.modifyFailed", {colon: true})}${err}`)
             })
     }
 
@@ -520,7 +520,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
             title={
                 <div className={styles["card-title"]}>
-                    <span className={styles["card-title-text"]}>{t("organization")}</span>
+                    <span className={styles["card-title-text"]}>{t("OrganizationAdmin.organization")}</span>
                 </div>
             }
             extra={
@@ -530,7 +530,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                         type='text'
                         onClick={() => {
                             const m = showYakitModal({
-                                title: t("addFirstLevelDepartment"),
+                                title: t("OrganizationAdmin.addFirstLevelDepartment"),
                                 width: 500,
                                 content: (
                                     <CreateOrganizationForm
@@ -599,7 +599,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                     {isShowAllBtn && (
                                         <div className={styles["department-item-extra"]}>
                                             <YakitPopover
-                                                title={t("editName")}
+                                                title={t("OrganizationAdmin.editName")}
                                                 trigger={"click"}
                                                 destroyTooltipOnHide
                                                 content={
@@ -612,7 +612,10 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                                     resetName(e.target.value, key, pid)
                                                                 }
                                                             } else {
-                                                                yakitNotify("warning", t("cannotBeEmpty"))
+                                                                yakitNotify(
+                                                                    "warning",
+                                                                    t("OrganizationAdmin.cannotBeEmpty")
+                                                                )
                                                             }
                                                         }}
                                                     ></YakitInput>
@@ -631,7 +634,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                 ></YakitButton>
                                             </YakitPopover>
                                             <YakitPopconfirm
-                                                title={t("confirmDelete")}
+                                                title={t("OrganizationAdmin.confirmDelete")}
                                                 onConfirm={(e) => {
                                                     onRemove(key, pid)
                                                 }}
@@ -658,7 +661,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                             onSelectDepartmentId(key)
                                                         }
                                                         const m = showYakitModal({
-                                                            title: t("addSecondLevelDepartment"),
+                                                            title: t("OrganizationAdmin.addSecondLevelDepartment"),
                                                             width: 500,
                                                             content: (
                                                                 <CreateOrganizationForm
@@ -729,7 +732,7 @@ interface CreateOrganizationFormProps {
     refresh: (v?: {name: string; key: number}) => void
 }
 const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const {onClose, refresh, parentId} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -750,13 +753,13 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
         })
             .then((res: number) => {
                 if (res) {
-                    yakitNotify("success", t("createSuccess"))
+                    yakitNotify("success", t("YakitNotification.createSuccess"))
                     refresh({name: values.name, key: res})
                     onClose()
                 }
             })
             .catch((err) => {
-                yakitNotify("error", t("createFailed", { error: err }))
+                yakitNotify("error", `${t("YakitNotification.createFailed", {colon: true})}${err}`)
             })
             .finally(() => {
                 setLoading(false)
@@ -766,12 +769,16 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
     return (
         <div style={{margin: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
-                <Form.Item name='name' label={t("departmentName")} rules={[{required: true, message: t("required")}]}>
-                    <YakitInput placeholder={t("inputDepartmentName")} allowClear />
+                <Form.Item
+                    name='name'
+                    label={t("CreateOrganizationForm.departmentName")}
+                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                >
+                    <YakitInput placeholder={t("CreateOrganizationForm.inputDepartmentName")} allowClear />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
-                        {t("confirm")}
+                        {t("YakitButton.confirm")}
                     </YakitButton>
                 </div>
             </Form>
@@ -792,7 +799,7 @@ interface AccountListProps {
     onSetTreeReduceCount: (treeReduceCount: TreeReduceCount) => void
 }
 const AccountList: React.FC<AccountListProps> = (props) => {
-    const { t } = useI18nNamespaces(["admin"])
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const {selectTitle, onSetSelectTitle, onSetTreeCount, onSetTreeReduceCount} = props
     const [creatCountVisible, setCreatCountVisible] = useState<boolean>(false)
     const editInfoRef = useRef<API.UrmUserList>()
@@ -842,7 +849,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
     }
     const columns: ColumnsTypeProps[] = [
         {
-            title: t("username"),
+            title: t("AccountList.username"),
             dataKey: "user_name",
             render: (text, record) => (
                 <div className={styles["userNameWrapper"]}>
@@ -852,7 +859,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             )
         },
         {
-            title: t("organization"),
+            title: t("OrganizationAdmin.organization"),
             dataKey: "department_name",
             render: (text, record) => (
                 <div>
@@ -862,16 +869,16 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             )
         },
         {
-            title: t("role"),
+            title: t("AccountList.role"),
             dataKey: "role_name"
         },
         {
-            title: t("createdAt"),
+            title: t("AccountList.createdAt"),
             dataKey: "created_at",
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
         {
-            title: t("action"),
+            title: t("YakitTable.action"),
             dataKey: "action",
             width: 170,
             fixed: "right",
@@ -885,21 +892,21 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                         }}
                     />
                     <YakitPopconfirm
-                        title={t("resetPwdConfirm")}
+                        title={t("AccountList.resetPwdConfirm")}
                         onConfirm={() => onResetPwd(record.uid, record.user_name)}
                     >
-                        <Tooltip title={t("resetPwdTooltip")} align={{targetOffset: [0, -15]}}>
+                        <Tooltip title={t("AccountList.resetPwdTooltip")} align={{targetOffset: [0, -15]}}>
                             <OutlineRefreshIcon className={styles["action-icon"]} onClick={() => {}} />
                         </Tooltip>
                     </YakitPopconfirm>
-                    <Tooltip title={t("copySecretKeyTooltip")} align={{targetOffset: [0, -15]}}>
+                    <Tooltip title={t("AccountList.copySecretKeyTooltip")} align={{targetOffset: [0, -15]}}>
                         <OutlineDocumentduplicateIcon
                             className={styles["action-icon"]}
                             onClick={() => copySecretKey(record.user_name)}
                         />
                     </Tooltip>
                     <YakitPopconfirm
-                        title={t("deleteUserConfirm")}
+                        title={t("AccountList.deleteUserConfirm")}
                         onConfirm={() => onRemoveSingle(record.uid, record.department_id)}
                         placement='right'
                     >
@@ -987,7 +994,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", t("getListFailed", { error: e }))
+                yakitNotify("error", t("AccountList.getListFailed", {error: e}))
             })
             .finally(() => {
                 setLoading(false)
@@ -1467,7 +1474,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
                 user_name,
-                department:departmentId,
+                department: departmentId,
                 role_id: role_id?.key || role_id
             }
             NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
@@ -1537,7 +1544,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     const filterOption = (input: string, option) => {
         return (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
     }
-    
+
     return (
         <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
             <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>

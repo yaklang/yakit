@@ -35,10 +35,10 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const onOpenConfigModal = (mountContainer, t: any) => {
     const m = YakitModalConfirm({
-        title: t("AIAgent.AIModelSelect.configTitle", { ns: "aiAgent" }),
+        title: t("AIModelSelect.configTitle"),
         width: 420,
-        onOkText: t("AIAgent.AIModelSelect.toConfigure", { ns: "aiAgent" }),
-        content: <div>{t("AIAgent.AIModelSelect.configDesc", { ns: "aiAgent" })}</div>,
+        onOkText: t("AIModelSelect.toConfigure"),
+        content: <div>{t("AIModelSelect.configDesc")}</div>,
         closable: false,
         maskClosable: false,
         keyboard: false,
@@ -60,12 +60,12 @@ export const onOpenConfigModal = (mountContainer, t: any) => {
 }
 
 const modelType = (t: any) => [
-    t("AIAgent.AIModelList.intelligentModels", { ns: "aiAgent" }),
-    t("AIAgent.AIModelList.lightweightModels", { ns: "aiAgent" }),
-    t("AIAgent.AIModelList.visionModels", { ns: "aiAgent" })
+    t("AIModelList.intelligentModels"),
+    t("AIModelList.lightweightModels"),
+    t("AIModelList.visionModels")
 ]
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["aiAgent"])
+    const {t} = useI18nNamespaces(["aiAgent", "yakitUi"])
     const {isOpen = true, mountContainer} = props
 
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
@@ -336,7 +336,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             onSwitchAIAgentTab()
         }
 
-        yakitNotify("success", t("AIAgent.AIModelSelect.openModelTabSuccess", { ns: "aiAgent" }))
+        yakitNotify("success", t("AIModelSelect.openModelTabSuccess"))
     })
     const onSwitchAIAgentTab = useMemoizedFn(() => {
         emiter.emit(
@@ -359,12 +359,12 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                             <div className={styles["drop-select-wrapper"]}>
                                 <div className={styles["select-title"]}>
                                     <div className={styles["select-title-left"]}>
-                                        <span>{t("AIAgent.AIModelSelect.selectModel", { ns: "aiAgent" })}</span>
+                                        <span>{t("AIModelSelect.selectModel")}</span>
                                         {!execute && (
                                             <YakitSelect
                                                 size='small'
                                                 disabled={execute}
-                                                options={AIModelPolicyOptions(t)}
+                                                options={AIModelPolicyOptions}
                                                 value={policy}
                                                 onSelect={onSelectPolicy}
                                                 wrapperClassName={styles["select-policy-wrapper"]}
@@ -378,7 +378,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                         </Tooltip>
                                     </div>
                                     <div className={styles["select-title-right"]}>
-                                        <Tooltip title={t("AIAgent.AIModelSelect.openConfigTooltip", { ns: "aiAgent" })}>
+                                        <Tooltip title={t("AIModelSelect.openConfigTooltip")}>
                                             <YakitButton
                                                 size='small'
                                                 type='text2'
@@ -387,7 +387,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                             />
                                         </Tooltip>
                                         {aiType === "online" && (
-                                            <Tooltip title={t("AIAgent.AIModelSelect.refresh", { ns: "aiAgent" })}>
+                                            <Tooltip title={t("YakitButton.refresh")}>
                                                 <YakitButton
                                                     size='small'
                                                     type='text2'
@@ -402,8 +402,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                 <div className={styles["select-content"]}>
                                     {!!intelligentModels.length && (
                                         <AIModelSelectList
-                                            title={t("AIAgent.AIModelList.intelligentModels", { ns: "aiAgent" })}
-                                            subTitle={t("AIAgent.AIModelList.intelligentModelsDesc", { ns: "aiAgent" })}
+                                            title={t("AIModelList.intelligentModels")}
+                                            subTitle={t("AIModelList.intelligentModelsDesc")}
                                             list={intelligentModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
@@ -415,8 +415,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     )}
                                     {!execute && !!lightweightModels.length && (
                                         <AIModelSelectList
-                                            title={t("AIAgent.AIModelList.lightweightModels", { ns: "aiAgent" })}
-                                            subTitle={t("AIAgent.AIModelList.lightweightModelsDesc", { ns: "aiAgent" })}
+                                            title={t("AIModelList.lightweightModels")}
+                                            subTitle={t("AIModelList.lightweightModelsDesc")}
                                             list={lightweightModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
@@ -428,8 +428,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     )}
                                     {!execute && !!visionModels.length && (
                                         <AIModelSelectList
-                                            title={t("AIAgent.AIModelList.visionModels", { ns: "aiAgent" })}
-                                            subTitle={t("AIAgent.AIModelList.visionModelsDesc", { ns: "aiAgent" })}
+                                            title={t("AIModelList.visionModels")}
+                                            subTitle={t("AIModelList.visionModelsDesc")}
                                             list={visionModels}
                                             onSelect={(item, index) =>
                                                 onSelect(item, {
@@ -441,7 +441,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                                     )}
                                 </div>
                                 <YakitButton type='secondary2' onClick={onAddModel} className={styles["add-model-btn"]}>
-                                    {t("AIAgent.AIModelList.addModel", { ns: "aiAgent" })}
+                                    {t("AIModelList.addModel")}
                                 </YakitButton>
                             </div>
                         )

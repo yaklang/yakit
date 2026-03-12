@@ -47,7 +47,7 @@ interface SpaceEnginePageProps {
 }
 
 export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["spaceEngine"])
+    const {t, i18n} = useI18nNamespaces(["spaceEngine", "yakitUi"])
     const {pageId} = props
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -79,16 +79,16 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const defaultTabs = useCreation(() => {
         if (scanBeforeSave) {
             return [
-                {tabName: t("spaceEngine.scanPortList"), type: "port"},
-                {tabName: t("spaceEngine.logs"), type: "log"},
-                {tabName: t("spaceEngine.console"), type: "console"}
+                {tabName: t("SpaceEnginePage.scanPortList"), type: "port"},
+                {tabName: t("SpaceEnginePage.logs"), type: "log"},
+                {tabName: "Console", type: "console"}
             ]
         }
         return [
-            {tabName: t("spaceEngine.logs"), type: "log"},
-            {tabName: t("spaceEngine.console"), type: "console"}
+            {tabName: t("SpaceEnginePage.logs"), type: "log"},
+            {tabName: "Console", type: "console"}
         ]
-    }, [scanBeforeSave])
+    }, [scanBeforeSave, i18n.language])
 
     const [streamInfo, spaceEngineStreamEvent] = useHoldGRPCStream({
         tabs: defaultTabs,
@@ -103,7 +103,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
             }, 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", t("spaceEngine.taskStartSuccess", { id: rId }))
+            yakitNotify("info", t("SpaceEnginePage.taskStartSuccess", {id: rId}))
             setRuntimeId(rId)
         }
     })
@@ -172,13 +172,13 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         ? !isExpand && (
                               <>
                                   <YakitButton danger onClick={onStopExecute}>
-                                      {t("spaceEngine.stop")}
+                                      {t("YakitButton.stop")}
                                   </YakitButton>
                               </>
                           )
                         : !isExpand && (
                               <>
-                                  <YakitButton onClick={onExecuteInTop}>{t("spaceEngine.execute")}</YakitButton>
+                                  <YakitButton onClick={onExecuteInTop}>{t("YakitButton.execute")}</YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
                           )}
@@ -197,7 +197,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         wrapperCol={{span: 12}} //这样设置是为了让输入框居中
                         validateMessages={{
                             /* eslint-disable no-template-curly-in-string */
-                            required: t("spaceEngine.fieldRequired")
+                            required: t("YakitForm.requiredField")
                         }}
                         labelWrap={true}
                         initialValues={getDefaultSpaceEngineStartParams()}
@@ -207,7 +207,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                             <div className={styles["space-engine-form-operate"]}>
                                 {isExecuting ? (
                                     <YakitButton danger onClick={onStopExecute} size='large'>
-                                        {t("spaceEngine.stop")}
+                                        {t("YakitButton.stop")}
                                     </YakitButton>
                                 ) : (
                                     <YakitButton
@@ -215,7 +215,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                                         htmlType='submit'
                                         size='large'
                                     >
-                                        {t("spaceEngine.startExecute")}
+                                        {t("YakitButton.start_execution")}
                                     </YakitButton>
                                 )}
                             </div>
@@ -236,7 +236,7 @@ interface SpaceEngineFormContentProps {
 }
 
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["spaceEngine"])
+    const {t, i18n} = useI18nNamespaces(["spaceEngine"])
     const {disabled, inViewport} = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
     const [engineStatus, setEngineStatus] = useState<SpaceEngineStatus>()
@@ -252,7 +252,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 case "normal":
                     break
                 default:
-                    yakitNotify("error", t("spaceEngine.spaceEngineVerifyFailed") + value.Info || value.Status)
+                    yakitNotify(
+                        "error",
+                        t("SpaceEngineFormContent.spaceEngineVerifyFailed") + value.Info || value.Status
+                    )
                     onSetGlobalNetworkConfig(key)
                     break
             }
@@ -278,14 +281,14 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         })
 
         let m = showYakitModal({
-            title: t("spaceEngine.addThirdPartyApp"),
+            title: t("SpaceEngineFormContent.addThirdPartyApp"),
             width: 600,
             closable: true,
             maskClosable: false,
             footer: null,
             content: (
                 <>
-                    <div className={styles["ai-describe"]}>{t("spaceEngine.pleaseConfigureApiKey")}</div>
+                    <div className={styles["ai-describe"]}>{t("SpaceEngineFormContent.pleaseConfigureApiKey")}</div>
 
                     <NewThirdPartyApplicationConfig
                         formValues={{
@@ -319,7 +322,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                                             })
                                             break
                                         default:
-                                            yakitNotify("error", t("spaceEngine.setEngineFailed") + value.Info || value.Status)
+                                            yakitNotify(
+                                                "error",
+                                                t("SpaceEngineFormContent.setEngineFailed") + value.Info || value.Status
+                                            )
                                             break
                                     }
                                 })
@@ -334,22 +340,23 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     const codecItem: YakParamProps = useCreation(() => {
         return {
             Field: "Filter",
-            FieldVerbose: t("spaceEngine.searchCondition"),
+            FieldVerbose: t("SpaceEngineFormContent.searchCondition"),
             Required: true,
             TypeVerbose: "yak",
             DefaultValue: "",
             Help: ""
         }
-    }, [])
+    }, [i18n.language])
     const engineExtra: ReactNode = useCreation(() => {
         if (!engineStatus) return null
         return (
             <span className={styles["engine-help"]}>
                 {engineStatus.Info ? `${engineStatus.Info}，` : ""}
-                {t("spaceEngine.remainingQuota")}{Number(engineStatus.Remain) === -1 ? t("spaceEngine.unlimited") : engineStatus.Remain}
+                {t("SpaceEngineFormContent.remainingQuota")}
+                {Number(engineStatus.Remain) === -1 ? t("SpaceEngineFormContent.unlimited") : engineStatus.Remain}
                 {engineStatus.Type === "zoomeye" && (
                     <span className={styles["engine-help-zoomeye"]} onClick={() => onOpenHelpModal()}>
-                        <span>{t("spaceEngine.zoomeyeBasicSyntax")}</span> <OutlineQuestionmarkcircleIcon />
+                        <span>{t("SpaceEngineFormContent.zoomeyeBasicSyntax")}</span> <OutlineQuestionmarkcircleIcon />
                     </span>
                 )}
             </span>
@@ -357,11 +364,11 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     }, [engineStatus])
     const onOpenHelpModal = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: t("spaceEngine.zoomeyeBasicSyntax"),
+            title: t("SpaceEngineFormContent.zoomeyeBasicSyntax"),
             type: "white",
             width: "60vw",
             cancelButtonProps: {style: {display: "none"}},
-            okText: t("spaceEngine.gotIt"),
+            okText: t("SpaceEngineFormContent.gotIt"),
             onOk: () => m.destroy(),
             bodyStyle: {padding: "8px 24px"},
             content: <ZoomeyeHelp />
@@ -369,7 +376,12 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     })
     return (
         <>
-            <Form.Item name='Type' label={t("spaceEngine.engine")} rules={[{required: true}]} extra={engineExtra}>
+            <Form.Item
+                name='Type'
+                label={t("SpaceEngineFormContent.engine")}
+                rules={[{required: true}]}
+                extra={engineExtra}
+            >
                 <YakitSelect
                     options={[
                         {label: "ZoomEye", value: "zoomeye"},
@@ -383,34 +395,34 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 />
             </Form.Item>
             <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled} />
-            <Form.Item name='MaxPage' label={t("spaceEngine.maxPage")} rules={[{required: true}]}>
+            <Form.Item name='MaxPage' label={t("SpaceEngineFormContent.maxPage")} rules={[{required: true}]}>
                 <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
-            <Form.Item name='MaxRecord' label={t("spaceEngine.maxRecord")} rules={[{required: true}]}>
+            <Form.Item name='MaxRecord' label={t("SpaceEngineFormContent.maxRecord")} rules={[{required: true}]}>
                 <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='RandomDelay'
-                label={t("spaceEngine.randomDelay")}
+                label={t("SpaceEngineFormContent.randomDelay")}
                 rules={[{required: true}]}
                 tooltip={{
                     icon: <OutlineInformationcircleIcon />,
-                    title: t("spaceEngine.randomDelayHelp")
+                    title: t("SpaceEngineFormContent.randomDelayHelp")
                 }}
             >
                 <YakitInputNumber min={0} type='horizontal' disabled={disabled} />
             </Form.Item>
-            <Form.Item name='RetryTimes' label={t("spaceEngine.retryTimes")} rules={[{required: true}]}>
+            <Form.Item name='RetryTimes' label={t("SpaceEngineFormContent.retryTimes")} rules={[{required: true}]}>
                 <YakitInputNumber min={0} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='ScanBeforeSave'
-                label={t("spaceEngine.scanVerification")}
+                label={t("SpaceEngineFormContent.scanVerification")}
                 rules={[{required: true}]}
                 valuePropName='checked'
                 tooltip={{
                     icon: <OutlineInformationcircleIcon />,
-                    title: t("spaceEngine.scanVerificationHelp")
+                    title: t("SpaceEngineFormContent.scanVerificationHelp")
                 }}
             >
                 <YakitSwitch size='large' disabled={disabled} />

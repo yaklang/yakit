@@ -8,14 +8,14 @@ import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import { useUploadInfoByEnpriTrace } from "@/components/layout/utils"
 import { JSONParseLog } from "@/utils/tool"
 import { SystemInfo } from "@/constants/hardware"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
     setJudgeLogin: (v: boolean) => void
 }
 const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
-    const { t } = useI18nNamespaces(["core"])
+    const {t} = useI18nNamespaces(["core"])
     const {setJudgeLicense, setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
@@ -77,7 +77,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                 }
             })
             .catch((e) => {
-                info(t("License.reActivateNotice", { ns: "core" }))
+                info(t("EnterpriseJudgeLogin.reActivateNotice"))
                 setLoading(false)
                 setLicensePageLoading(false)
             })
@@ -92,7 +92,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
         <>
             {loading ? (
                 <div style={{paddingTop: 10, textAlign: "center"}}>
-                    <Spin tip={t("License.verifyingLicense", { ns: "core" })}></Spin>
+                    <Spin tip={t("EnterpriseJudgeLogin.verifyingLicense")}></Spin>
                 </div>
             ) : (
                 <>

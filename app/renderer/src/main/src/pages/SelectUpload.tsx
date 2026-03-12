@@ -9,7 +9,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import YakitCascader from "@/components/yakitUI/YakitCascader/YakitCascader"
 import {OutlineChevrondownIcon} from "@/assets/icon/outline"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -28,7 +28,7 @@ const layout = {
 }
 
 const SelectUpload: React.FC<SelectUploadProps> = (props) => {
-    const { t } = useI18nNamespaces(["core"])
+    const {t} = useI18nNamespaces(["core", "yakitUi"])
     const {onCancel} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [token, _] = useState(randomString(40))
@@ -59,16 +59,16 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 if (isCancle.current) return
                 if (TaskStatus) {
                     setPercent(1)
-                    success(t("SelectUpload.uploadSuccess", { ns: "core" }))
+                    success(t("SelectUpload.uploadSuccess"))
                     setTimeout(() => {
                         onCancel()
                     }, 200)
                 } else {
-                    failed(t("SelectUpload.uploadFailed", { ns: "core" }))
+                    failed(t("SelectUpload.uploadFailed"))
                 }
             })
             .catch((err) => {
-                failed(`${t("SelectUpload.uploadFailed", { ns: "core" })}:${err}`)
+                failed(`${t("SelectUpload.uploadFailed")}:${err}`)
             })
             .finally(() => {
                 if (isCancle.current) return
@@ -102,7 +102,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const cancleUpload = () => {
         ipcRenderer.invoke("cancel-ExportProject", token)
         ipcRenderer.invoke("cancle-split-upload").then(() => {
-            warn(t("SelectUpload.cancelSuccess", { ns: "core" }))
+            warn(t("SelectUpload.cancelSuccess"))
             setLoading(false)
             setPercent(0)
             isCancle.current = true
@@ -183,11 +183,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                         setData([...getData()])
                     }, 300)
                 } catch (e) {
-                    failed(t("SelectUpload.processDataFailed", { ns: "core", error: String(e) }))
+                    failed(t("SelectUpload.processDataFailed", {error: String(e)}))
                 }
             })
             .catch((e) => {
-                failed(t("SelectUpload.queryProjectsFailed", { ns: "core", error: String(e) }))
+                failed(t("SelectUpload.queryProjectsFailed", {error: String(e)}))
             })
     })
 
@@ -212,11 +212,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                         })
                     )
                 } catch (e) {
-                    failed(t("SelectUpload.processDataFailed", { ns: "core", error: String(e) }))
+                    failed(t("SelectUpload.processDataFailed", {error: String(e)}))
                 }
             })
             .catch((e) => {
-                failed(t("SelectUpload.queryProjectsFailed", { ns: "core", error: String(e) }))
+                failed(t("SelectUpload.queryProjectsFailed", {error: String(e)}))
             })
     })
 
@@ -226,11 +226,15 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
     return (
         <Form {...layout} form={form} onFinish={onFinish}>
-            <Form.Item name='name' label={t("SelectUpload.project", { ns: "core" })} rules={[{required: true, message: t("SelectUpload.required", { ns: "core" })}]}>
+            <Form.Item
+                name='name'
+                label={t("SelectUpload.project")}
+                rules={[{required: true, message: t("YakitForm.requiredField")}]}
+            >
                 <YakitCascader
                     disabled={loading}
                     options={data}
-                    placeholder={t("SelectUpload.selectProject", { ns: "core" })}
+                    placeholder={t("SelectUpload.selectProject")}
                     fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
                     loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                     showCheckedStrategy='SHOW_CHILD'
@@ -258,11 +262,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
             <div style={{textAlign: "center"}}>
                 {loading ? (
                     <YakitButton style={{width: 200}} type='primary' onClick={cancleUpload}>
-                        {t("SelectUpload.cancel", { ns: "core" })}
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                 ) : (
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit'>
-                        {t("SelectUpload.confirm", { ns: "core" })}
+                        {t("YakitButton.ok")}
                     </YakitButton>
                 )}
             </div>

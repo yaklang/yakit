@@ -43,7 +43,7 @@ interface ApplyFacadesRequest {
 export type FacadesRequest = SettingReverseParamsInfo & ApplyFacadesRequest
 
 export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
-    const { t } = useI18nNamespaces(["reverse"])
+    const {t} = useI18nNamespaces(["reverse"])
     const [status, setStatus] = useState<"setting" | "start">("setting")
     const [token, setToken, getToken] = useGetState(randomString(40))
     const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
@@ -65,11 +65,11 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
         ipcRenderer
             .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
             .then(() => {
-                info(t("startFacadeServer"))
+                info(t("NewReverseServerPage.startFacadeServer"))
                 setStatus("start")
             })
             .catch((e: any) => {
-                failed(t("startFacadeServerFailed") + `${e}`)
+                failed(t("NewReverseServerPage.startFacadeServerFailed") + `${e}`)
             })
     })
 
@@ -85,8 +85,8 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
                 <PageHeader
                     className='reverse-server-page-head'
                     backIcon={false}
-                    title={t("reverseServer")}
-                    subTitle={t("reverseServerSubTitle")}
+                    title={t("NewReverseServerPage.reverseServer")}
+                    subTitle={t("NewReverseServerPage.reverseServerSubTitle")}
                 >
                     <SettingReverseServer
                         defaultSetting={{...addrParams}}
@@ -122,7 +122,7 @@ export interface SettingReverseServerProp {
 export const BRIDGE_ADDR = "yak-bridge-addr"
 export const BRIDGE_SECRET = "yak-bridge-secret"
 export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) => {
-    const { t } = useI18nNamespaces(["reverse"])
+    const {t} = useI18nNamespaces(["reverse"])
     const [formInstance] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [params, setParams] = useState<SettingReverseParamsInfo>({...props.defaultSetting})
@@ -190,7 +190,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
             })
             .then((data: {IP: string}) => (remoteIp.current = data.IP))
             .catch((e: any) => {
-                failed(t("getRemoteAddrFailed") + `${e}`)
+                failed(t("SettingReverseServer.getRemoteAddrFailed") + `${e}`)
                 remoteIp.current = ""
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
@@ -214,20 +214,20 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                     onFinish={submit}
                 >
                     <Form.Item
-                        label={t("enablePublicTunnel")}
+                        label={t("SettingReverseServer.enablePublicTunnel")}
                         name='IsRemote'
                         help={
                             params.IsRemote && (
                                 <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
-                                    在自己的服务器安装 yak 核心引擎，执行{" "}
+                                    {t("SettingReverseServer.publicTunnelHelp")}{" "}
                                     <YakitTag
                                         enableCopy={true}
                                         color='blue'
                                         copyText={`yak bridge --secret [your-pass]`}
                                     ></YakitTag>{" "}
-                                    {t("yakBridgeService")} <Divider type={"vertical"} />
+                                    {t("SettingReverseServer.yakBridgeService")} <Divider type={"vertical"} />
                                     <Text style={{color: "var(--Colors-Use-Neutral-Text-4-Help-text)"}}>
-                                        {t("yakVersionRequirement")}
+                                        {t("SettingReverseServer.yakVersionRequirement")}
                                     </Text>
                                 </div>
                             )
@@ -242,7 +242,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                     {params.IsRemote && (
                         <>
                             <Form.Item
-                                label={t("publicBridgeAddr")}
+                                label={t("SettingReverseServer.publicBridgeAddr")}
                                 name={["BridgeParam", "Addr"]}
                                 rules={[{required: true, message: ""}]}
                             >
@@ -255,7 +255,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                     }}
                                 />
                             </Form.Item>
-                            <Form.Item label={t("password")} name={["BridgeParam", "Secret"]}>
+                            <Form.Item label={t("SettingReverseServer.password")} name={["BridgeParam", "Secret"]}>
                                 <YakitInput
                                     allowClear
                                     value={params.BridgeParam.Secret}
@@ -268,7 +268,11 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         </>
                     )}
                     {!params.IsRemote && (
-                        <Form.Item label={t("reverseAddr")} name='ReverseHost' rules={[{required: true, message: ""}]}>
+                        <Form.Item
+                            label={t("SettingReverseServer.reverseAddr")}
+                            name='ReverseHost'
+                            rules={[{required: true, message: ""}]}
+                        >
                             <YakitInput
                                 allowClear
                                 value={params.ReverseHost}
@@ -276,7 +280,11 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                             />
                         </Form.Item>
                     )}
-                    <Form.Item label={t("reversePort")} name='ReversePort' rules={[{required: true, message: ""}]}>
+                    <Form.Item
+                        label={t("SettingReverseServer.reversePort")}
+                        name='ReversePort'
+                        rules={[{required: true, message: ""}]}
+                    >
                         <YakitInputNumber
                             width='100%'
                             min={0}
@@ -289,7 +297,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
 
                     <Form.Item wrapperCol={{offset: 8}}>
                         <YakitButton type='primary' htmlType='submit'>
-                            {t("startFacadeServerBtn")}
+                            {t("SettingReverseServer.startFacadeServerBtn")}
                         </YakitButton>
                     </Form.Item>
                 </Form>
@@ -305,7 +313,7 @@ export interface StartReverseServerProp {
     stop: (isCancel?: boolean) => any
 }
 export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
-    const { t } = useI18nNamespaces(["reverse"])
+    const {t} = useI18nNamespaces(["reverse"])
     const {token, addr, remoteIp, stop} = props
     const reverseAddr = addr.IsRemote ? `${remoteIp}:${addr.ReversePort}` : `${addr.ReverseHost}:${addr.ReversePort}`
 
@@ -399,8 +407,8 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         setClassRequest({...value})
         ipcRenderer
             .invoke("ApplyClassToFacades", {Token: token, GenerateClassParams: {...data}})
-            .then((res) => info(t("applyToFacadeServerSuccess")))
-            .catch((err) => failed(`${t("applyToFacadeServerFailed")}${err}`))
+            .then((res) => info(t("StartReverseServer.applyToFacadeServerSuccess")))
+            .catch((err) => failed(`${t("StartReverseServer.applyToFacadeServerFailed")}${err}`))
             .finally(() => setTimeout(() => setLoading(false), 300))
         setCodeRefresh(!codeRefresh)
     })
@@ -439,8 +447,8 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                     <PageHeader
                         className='reverse-server-pagehead'
                         backIcon={false}
-                        title={t("reverseServer")}
-                        subTitle={t("reverseServerSubTitle")}
+                        title={t("NewReverseServerPage.reverseServer")}
+                        subTitle={t("NewReverseServerPage.reverseServerSubTitle")}
                         extra={
                             <div className='pagehead-extra-body'>
                                 <div
@@ -450,7 +458,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                         color: "var(--Colors-Use-Neutral-Text-1-Title)"
                                     }}
                                 >
-                                    {t("payloadConfig")}
+                                    {t("StartReverseServer.payloadConfig")}
                                     <YakitSwitch checked={isExtra} onChange={(checked) => setIsExtra(checked)} />
                                 </div>
                                 <YakitButton
@@ -460,7 +468,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                     size='small'
                                     onClick={() => stop()}
                                 >
-                                    {t("stopReverse")}
+                                    {t("StartReverseServer.stopReverse")}
                                 </YakitButton>
                             </div>
                         }
@@ -468,7 +476,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         <Row align='middle'>
                             <Col>
                                 <div className='addr-body'>
-                                    {t("httpReverseAddr")}&nbsp;&nbsp;
+                                    {t("StartReverseServer.httpReverseAddr")}&nbsp;&nbsp;
                                     <YakitTag
                                         enableCopy={true}
                                         color='blue'
@@ -480,7 +488,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                             </Col>
                             <Col>
                                 <div className='addr-body'>
-                                    {t("rmiReverseAddr")}&nbsp;&nbsp;
+                                    {t("StartReverseServer.rmiReverseAddr")}&nbsp;&nbsp;
                                     <YakitTag
                                         enableCopy={true}
                                         color='success'
@@ -490,7 +498,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                             </Col>
                             <Col>
                                 <div className='addr-body'>
-                                    {t("ldapReverseAddr")}&nbsp;&nbsp;
+                                    {t("StartReverseServer.ldapReverseAddr")}&nbsp;&nbsp;
                                     <YakitTag
                                         enableCopy={true}
                                         color='purple'

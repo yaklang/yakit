@@ -126,7 +126,7 @@ export interface UILayoutProp {
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
-    const { t } = useI18nNamespaces(["layout"])
+    const {t} = useI18nNamespaces(["layout"])
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
             currentPageTabRouteKey: s.currentPageTabRouteKey
@@ -156,7 +156,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [system, setSystem] = useState<YakitSystem>("Darwin")
 
     /** 本地引擎自检输出日志 */
-    const [checkLog, setCheckLog] = useState<string[]>([t("layout.softwareStarting")])
+    const [checkLog, setCheckLog] = useState<string[]>(["软件启动中，开始前置检查..."])
 
     /** 引擎是否安装 */
     const isEngineInstalled = useRef<boolean>(false)
@@ -199,7 +199,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.on("from-engineLinkWin", (e, data) => {
             setOldLink(data.useOldLink)
             if (!data.useOldLink) {
-                setNewCheckLog([t("layout.entering")])
+                setNewCheckLog([t("UILayout.entering")])
                 setShowLoadingPage(true)
                 handleFetchBaseInfo()
                 setCredential(data.credential)
@@ -219,6 +219,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setShowLoadingPage(false)
             }
         })
+        ipcRenderer.send("main-win-uilayout-render-ok")
         return () => {
             ipcRenderer.removeAllListeners("from-engineLinkWin")
         }
@@ -328,7 +329,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             hasError = true
-            failed(t("layout.projectSyncFailed", { name: value.ProjectName }))
+            failed(t("UILayout.projectSyncFailed", {name: value.ProjectName}))
         })
         ipcRenderer.once(`${token}-end`, (e, data) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
@@ -347,12 +348,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             apiSplitUpload(onlineParams, true)
                 .then((TaskStatus) => {
                     if (!TaskStatus) {
-                        failed(t("layout.projectSyncFailed", { name: projectName }))
+                        failed(t("UILayout.projectSyncFailed", {name: projectName}))
                     }
                     onExportProject()
                 })
                 .catch(() => {
-                    failed(t("layout.projectSyncFailed", { name: projectName }))
+                    failed(t("UILayout.projectSyncFailed", {name: projectName}))
                 })
         })
         const params: ExportProjectRequest = {
@@ -370,10 +371,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer
             .invoke("InitCVEDatabase")
             .then(() => {
-                info(t("layout.cveDbCheckComplete"))
+                info("漏洞信息库自检完成")
             })
             .catch((e) => {
-                info(t("layout.cveDbCheckError", { error: e }))
+                info(`漏洞信息库检查错误：${e}`)
             })
     })
 
@@ -419,11 +420,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const handleLinkEngineMode = useMemoizedFn(() => {
         if (!getOldLink()) return
         debugToPrintLog(`------ （旧）获取上次连接引擎的模式 ------`)
-        setCheckLog([t("layout.gettingEngineMode")])
+        setCheckLog(["获取上次连接引擎的模式..."])
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
             switch (val) {
                 case "remote":
-                    setCheckLog((arr) => arr.concat([t("layout.getEngineModeSuccessRemote")]))
+                    setCheckLog((arr) => arr.concat(["获取连接模式成功——远程模式"]))
                     debugToPrintLog(`------ （旧）连接引擎的模式: remote ------`)
                     setTimeout(() => {
                         handleChangeLinkMode(true)
@@ -431,14 +432,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                     return
                 case "local":
-                    setCheckLog((arr) => arr.concat([t("layout.getEngineModeSuccessLocal")]))
+                    setCheckLog((arr) => arr.concat(["获取连接模式成功——本地模式"]))
                     debugToPrintLog(`------ （旧）连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
                     }, 1000)
                     return
                 default:
-                    setCheckLog((arr) => arr.concat([t("layout.getEngineModeDefault")]))
+                    setCheckLog((arr) => arr.concat(["未获取到连接模式-默认(本地)模式"]))
                     debugToPrintLog(`------ （旧）连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
@@ -477,15 +478,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setLinkLocalEngine()
                 return
             }
-            setCheckLog([t("layout.checkingEngineInstalled")])
-            setCheckLog((arr) => arr.concat([t("layout.engineInstalledConnecting")]))
+            setCheckLog(["检查本地是否已安装引擎..."])
+            setCheckLog((arr) => arr.concat(["本地已安装引擎，准备连接中..."]))
             setTimeout(() => {
                 setLinkLocalEngine()
             }, 1000)
         } else {
             debugToPrintLog(`------ （旧）启动无本地引擎逻辑 ------`)
-            setCheckLog([t("layout.checkingEngineInstalled")])
-            setCheckLog((arr) => arr.concat([t("layout.engineNotInstalled")]))
+            setCheckLog(["检查本地是否已安装引擎..."])
+            setCheckLog((arr) => arr.concat(["本地未安装引擎，准备启动安装引擎弹窗"]))
             setTimeout(() => {
                 setYakitStatus("install")
                 onSetEngineMode(undefined)
@@ -644,7 +645,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const handleLinkLocalEngine = useMemoizedFn((port: number) => {
         if (!getOldLink()) return
         debugToPrintLog(`------ （旧）开始启动引擎, 指定端口: ${port} ------`)
-        setCheckLog([t("layout.startingLocalEngine", { port: port })])
+        setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${port}`])
         setCredential({
             Host: "127.0.0.1",
             IsTLS: false,
@@ -773,7 +774,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const openEngineLinkWin = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => {
         setShowLoadingPage(true)
-        setNewCheckLog(["即将退出..."])
+        setNewCheckLog([t("UILayout.exiting")])
         killCurrentProcess(() => {
             setTimeout(() => {
                 // 先销毁 antd 消息通知 弹窗
@@ -857,7 +858,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (getYakitStatus() === "link") {
                     setYakitStatus("break")
                     setTimeout(() => {
-                        getOldLink() && setCheckLog([t("layout.manuallyDisconnected")])
+                        getOldLink() && setCheckLog(["已主动断开, 请点击手动连接引擎"])
                         onDisconnect()
                     }, 100)
 
@@ -868,7 +869,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
 
             case "local":
-                info(t("layout.engineModeSwitched", { mode: EngineModeVerbose("local") }))
+                info(t("UILayout.engineModeSwitched", {mode: EngineModeVerbose("local")}))
                 delTemporaryProject()
                 onDisconnect()
                 onSetEngineMode(undefined)
@@ -883,7 +884,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 return
             case "remote":
-                info(t("layout.engineModeSwitched", { mode: EngineModeVerbose("remote") }))
+                info(t("UILayout.engineModeSwitched", {mode: EngineModeVerbose("remote")}))
                 delTemporaryProject()
                 onSetEngineMode(undefined)
                 setTimeout(() => {
@@ -898,13 +899,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "encryptionProject":
                 // 加密导出
                 if (!currentProject || !currentProject.Id) {
-                    failed(t("layout.cannotExportProject"))
+                    failed(t("UILayout.cannotExportProject"))
                     return
                 }
                 setShowProjectManage(true)
                 const encryption = structuredClone(currentProject)
                 if (encryption.ProjectName === "[temporary]") {
-                    encryption.ProjectName = t("layout.temporaryProject")
+                    encryption.ProjectName = t("UILayout.temporaryProject")
                     setIsExportTemporaryProjectFlag(true)
                 }
                 setProjectModalInfo({visible: true, isNew: false, isExport: true, project: encryption})
@@ -912,13 +913,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "plaintextProject":
                 // 明文导出
                 if (!currentProject || !currentProject.Id) {
-                    failed(t("layout.cannotExportProject"))
+                    failed(t("UILayout.cannotExportProject"))
                     return
                 }
                 setShowProjectManage(true)
                 const plaintext = structuredClone(currentProject)
                 if (plaintext.ProjectName === "[temporary]") {
-                    plaintext.ProjectName = t("layout.temporaryProject")
+                    plaintext.ProjectName = t("UILayout.temporaryProject")
                     setIsExportTemporaryProjectFlag(true)
                 }
                 setProjectTransferShow({
@@ -950,8 +951,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
     // 更新yaklang-modal文案
     const [yaklangKillPssText, setYaklangKillPssText] = useState<{title: string; content: string}>({
-        title: t("layout.updateEngineTitle"),
-        content: t("layout.updateEngineDesc")
+        title: t("UILayout.updateEngineTitle"),
+        content: t("UILayout.updateEngineDesc")
     })
     const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
     const yaklangLastVersionRef = useRef<string>("")
@@ -985,8 +986,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
             if (!yaklangSpecifyVersion) {
                 setYaklangKillPssText({
-                    title: t("layout.updateEngineTitle"),
-                    content: t("layout.updateEngineDesc")
+                    title: t("UILayout.updateEngineTitle"),
+                    content: t("UILayout.updateEngineDesc")
                 })
                 setYaklangDownload(true)
                 return

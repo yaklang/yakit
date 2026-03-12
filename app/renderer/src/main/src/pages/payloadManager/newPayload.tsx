@@ -116,7 +116,7 @@ interface UploadStatusInfoProps {
 }
 
 export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
-    const { t } = useI18nNamespaces(["yakrunner"])
+    const {t} = useI18nNamespaces(["payload", "yakitUi"])
     const {title, streamData, logInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
     useEffect(() => {
         if (autoClose && streamData.Progress === 1) {
@@ -142,7 +142,9 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
-                        <div className={styles["progress-title"]}>{t("CreateDictionaries.progress")} {Math.round(streamData.Progress * 100)}%</div>
+                        <div className={styles["progress-title"]}>
+                            {t("UploadStatusInfo.progress")} {Math.round(streamData.Progress * 100)}%
+                        </div>
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>
@@ -150,7 +152,9 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                             <div className={styles["divider-wrapper"]}>
                                 <div className={styles["divider-style"]}></div>
                             </div> */}
-                            <div>{t("CreateDictionaries.elapsedTime")} : {streamData.CostDurationVerbose}</div>
+                            <div>
+                                {t("UploadStatusInfo.elapsedTime")} : {streamData.CostDurationVerbose}
+                            </div>
                             {/* <div className={styles["divider-wrapper"]}>
                                 <div className={styles["divider-style"]}></div>
                             </div>
@@ -166,7 +170,7 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                     </div>
                     <div className={styles["download-btn"]}>
                         <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
-                            {t("CreateDictionaries.cancel")}
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                     </div>
                 </div>
@@ -193,7 +197,7 @@ export interface SavePayloadProgress {
 
 // 新建字典
 export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => {
-    const { t } = useI18nNamespaces(["yakrunner"])
+    const {t} = useI18nNamespaces(["payload", "yakitUi"])
     const {onClose, type, title, onQueryGroup, folder, group} = props
     const isDictionaries = type === "dictionaries"
     // 可上传文件类型
@@ -310,14 +314,14 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                 warn(t("CreateDictionaries.dictionaryNameExists"))
                 return
             }
-            failed(t("CreateDictionaries.savePayloadError", {error}))
+            failed(`[SavePayload] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             if (messageWarnRef.current) {
                 messageWarnRef.current = false
                 return
             }
-            info(t("CreateDictionaries.savePayloadFinished"))
+            info("[SavePayload] finished")
             logInfoRef.current = []
             cancelRun()
         })
@@ -351,14 +355,14 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                 warn(t("CreateDictionaries.dictionaryNameExists"))
                 return
             }
-            failed(t("CreateDictionaries.savePayloadFileError", {error}))
+            failed(`[SavePayloadFile] error:  ${error}`)
         })
         ipcRenderer.on(`${fileToken}-end`, (e: any, data: any) => {
             if (messageWarnRef.current) {
                 messageWarnRef.current = false
                 return
             }
-            info(t("CreateDictionaries.savePayloadFileFinished"))
+            info("[SavePayloadFile] finished")
             logInfoRef.current = []
             cancelRun()
         })
@@ -439,15 +443,11 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                 <div className={styles["content"]}>
                                     <div className={styles["item"]}>
                                         <div className={styles["dot"]}>1</div>
-                                        <div className={styles["text"]}>
-                                            {t("CreateDictionaries.fileStorage")}
-                                        </div>
+                                        <div className={styles["text"]}>{t("CreateDictionaries.fileStorage")}</div>
                                     </div>
                                     <div className={styles["item"]}>
                                         <div className={styles["dot"]}>2</div>
-                                        <div className={styles["text"]}>
-                                            {t("CreateDictionaries.databaseStorage")}
-                                        </div>
+                                        <div className={styles["text"]}>{t("CreateDictionaries.databaseStorage")}</div>
                                     </div>
                                     <div className={styles["item"]}>
                                         <div className={styles["dot"]}>3</div>
@@ -463,12 +463,13 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         {isDictionaries && (
                             <div className={styles["input-box"]}>
                                 <div className={styles["name"]}>
-                                    {t("CreateDictionaries.dictionaryName")}<span className={styles["must"]}>*</span>:
+                                    {t("CreateDictionaries.dictionaryName")}
+                                    <span className={styles["must"]}>*</span>:
                                 </div>
                                 <div>
                                     <YakitInput
                                         style={{width: "100%"}}
-                                        placeholder={t("CreateDictionaries.inputPlaceholder")}
+                                        placeholder={t("YakitInput.please_enter")}
                                         value={dictionariesName}
                                         onChange={(e) => {
                                             setDictionariesName(e.target.value)
@@ -589,7 +590,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                             icon={<SolidDatabaseIcon />}
                                             onClick={onSavePayload}
                                         >
-                                            {t("CreateDictionaries.saveToDatabase")}
+                                            数据库存储
                                         </YakitButton>
                                         <YakitButton
                                             size='large'
@@ -614,10 +615,10 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         ) : (
                             <>
                                 <YakitButton size='large' disabled={isDisabled} type='outline1' onClick={onClose}>
-                                    {t("CreateDictionaries.cancelAction")}
+                                    {t("YakitButton.cancel")}
                                 </YakitButton>
                                 <YakitButton size='large' disabled={isDisabled} onClick={onSavePayload}>
-                                    {t("CreateDictionaries.importAction")}
+                                    {t("YakitButton.import")}
                                 </YakitButton>
                             </>
                         )}
@@ -627,7 +628,11 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 
             {streamData && (
                 <UploadStatusInfo
-                    title={storeType === "database" ? t("CreateDictionaries.importing") : t("CreateDictionaries.deduplicating")}
+                    title={
+                        storeType === "database"
+                            ? t("CreateDictionaries.importing")
+                            : t("CreateDictionaries.deduplicating")
+                    }
                     streamData={streamData}
                     cancelRun={cancelRun}
                     logInfo={logInfoRef.current}
@@ -1345,7 +1350,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                             </>
                         ) : (
                             <div className={styles["option"]}>
-                                <Tooltip title={t("NewPayloadLocalList.batchExport")}>
+                                <Tooltip title={t("YakitButton.batchExport")}>
                                     <YakitButton
                                         type='text2'
                                         icon={<OutlineExportIcon />}
@@ -1367,7 +1372,9 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                 label: (
                                                     <div className={styles["extra-menu"]}>
                                                         <OutlineAddPayloadIcon />
-                                                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.newDictionary")}</div>
+                                                        <div className={styles["menu-name"]}>
+                                                            {t("NewPayloadLocalList.newDictionary")}
+                                                        </div>
                                                     </div>
                                                 )
                                             },
@@ -1376,7 +1383,9 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                 label: (
                                                     <div className={styles["extra-menu"]}>
                                                         <OutlineFolderaddIcon />
-                                                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.newFolder")}</div>
+                                                        <div className={styles["menu-name"]}>
+                                                            {t("YakitButton.newFolder")}
+                                                        </div>
                                                     </div>
                                                 )
                                             }
@@ -1430,7 +1439,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                         placement: "bottomRight"
                                     }}
                                 >
-                                    <Tooltip title={t("NewPayloadLocalList.add")}>
+                                    <Tooltip title={t("YakitButton.add_new")}>
                                         <YakitButton type='secondary2' icon={<OutlinePlusIcon />} />
                                     </Tooltip>
                                 </YakitDropdownMenu>
@@ -1512,7 +1521,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                 }
                                             }}
                                         >
-                                            {t("NewPayloadLocalList.selectAll")}
+                                            {t("YakitCheckbox.selectAll")}
                                         </YakitCheckbox>
                                     </div>
 
@@ -1737,7 +1746,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         userInfo,
         showType = "local"
     } = props
-    const {t} = useI18nNamespaces(["payload"])
+    const {t, i18n} = useI18nNamespaces(["payload"])
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
     const [inputName, setInputName] = useState<string>(folder.name)
@@ -1773,13 +1782,13 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         Name: inputName
                     })
                     .then(() => {
-                        success(t("NewPayloadLocalList.createFolderSuccess"))
+                        success(t("FolderComponent.createFolderSuccess"))
                         setInputName(inputName)
                         setFolderNameById()
                         setExportData && setExportData([])
                     })
                     .catch((e: any) => {
-                        failed(t("NewPayloadLocalList.createFolderFailed", {error: e}))
+                        failed(t("FolderComponent.createFolderFailed", {error: e}))
                         setData(data.filter((item) => !item.isCreate))
                     })
             }
@@ -1791,27 +1800,31 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         NewName: inputName
                     })
                     .then(() => {
-                        success(t("NewPayloadLocalList.modifySuccess"))
+                        success(t("YakitNotification.modifySuccess"))
                         setInputName(inputName)
                         setFolderNameById()
                     })
                     .catch((e: any) => {
                         setInputName(folder.name)
-                        failed(t("NewPayloadLocalList.editFailed", {error: e}))
+                        failed(`${t("YakitNotification.editFailed", {colon: true})}${e}}`)
                     })
             }
         } else {
-            !pass && warn(t("NewPayloadLocalList.nameNotAllowSpecial"))
+            !pass && warn(t("FolderComponent.nameNotAllowSpecial"))
             // 创建时为空则不创建
             if (folder.isCreate) {
                 setData(data.filter((item) => !item.isCreate))
-                allFolderName.includes(inputName) && inputName.length !== 0 && warn(t("NewPayloadLocalList.folderNameExistsCannotCreate"))
+                allFolderName.includes(inputName) &&
+                    inputName.length !== 0 &&
+                    warn(t("FolderComponent.folderNameExistsCannotCreate"))
             }
             // 编辑时为空恢复
             else {
                 // 没有修改
                 setInputName(folder.name)
-                folder.name !== inputName && allFolderName.includes(inputName) && warn(t("NewPayloadLocalList.folderNameExistsCannotEdit"))
+                folder.name !== inputName &&
+                    allFolderName.includes(inputName) &&
+                    warn(t("FolderComponent.folderNameExistsCannotEdit"))
             }
         }
     })
@@ -1835,14 +1848,14 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 Name: folder.name
             })
             .then(() => {
-                success(t("NewPayloadLocalList.deleteSuccess"))
+                success(t("YakitNotification.deleted"))
                 onDeleteFolderById(folder.id)
                 setDeleteVisible(false)
                 setExportData && setExportData([])
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
-                failed(t("NewPayloadLocalList.deleteFailed", {error: e}))
+                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
             })
     })
 
@@ -1870,7 +1883,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineDocumentduplicateIcon />
-                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.copyFuzztag")}</div>
+                        <div className={styles["menu-name"]}>{t("FolderComponent.copyFuzztag")}</div>
                     </div>
                 )
             },
@@ -1879,7 +1892,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineAddPayloadIcon />
-                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.addChildPayload")}</div>
+                        <div className={styles["menu-name"]}>{t("FolderComponent.addChildPayload")}</div>
                     </div>
                 )
             },
@@ -1888,7 +1901,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlinePencilaltIcon />
-                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.rename")}</div>
+                        <div className={styles["menu-name"]}>{t("YakitButton.rename")}</div>
                     </div>
                 )
             },
@@ -1897,7 +1910,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineUploadIcon />
-                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.upload")}</div>
+                        <div className={styles["menu-name"]}>{t("YakitButton.upload")}</div>
                     </div>
                 ),
                 disabled: !isPayloadOperator(userInfo)
@@ -1910,7 +1923,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineTrashIcon />
-                        <div className={styles["menu-name"]}>{t("NewPayloadLocalList.delete")}</div>
+                        <div className={styles["menu-name"]}>{t("YakitButton.delete")}</div>
                     </div>
                 ),
                 type: "danger"
@@ -1920,7 +1933,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             menu = menu.filter((item) => item.key !== "upload")
         }
         return menu
-    }, [userInfo])
+    }, [userInfo, i18n.language])
     return (
         <>
             {isEditInput ? (
@@ -2050,7 +2063,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                         hiddenHeader: true,
                                                         content: (
                                                             <CreateDictionaries
-                                                                title={t("NewPayloadLocalList.addChildPayload")}
+                                                                title={t("FolderComponent.addChildPayload")}
                                                                 type='dictionaries'
                                                                 onQueryGroup={onQueryGroup}
                                                                 folder={folder.name}
@@ -2223,7 +2236,7 @@ interface DeleteConfirmProps {
 // 删除确认弹窗
 export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
     const {visible, setVisible, onFinish} = props
-    const {t} = useI18nNamespaces(["payload"])
+    const {t} = useI18nNamespaces(["payload", "yakitUi"])
     const [check, setCheck] = useState<boolean>(false)
     const [showConfirm, setShowConfirm] = useState<boolean>(false)
     const NewPayloadDeleteConfirm = "NewPayloadDeleteConfirm"
@@ -2254,11 +2267,11 @@ export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
             {/* 删除确认弹框 */}
             <YakitHint
                 visible={showConfirm && visible}
-                title={t("NewPayloadLocalList.deleteConfirmTitle")}
-                content={t("NewPayloadLocalList.deleteConfirmContent")}
+                title={t("DeleteConfirm.deleteConfirmTitle")}
+                content={t("DeleteConfirm.deleteConfirmContent")}
                 footerExtra={
                     <YakitCheckbox value={check} onChange={(e) => onCheck(e.target.checked)}>
-                        {t("NewPayloadLocalList.dontRemindAgain")}
+                        {t("YakitCheckbox.dontRemindAgain")}
                     </YakitCheckbox>
                 }
                 onOk={() => {
@@ -2324,7 +2337,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         userInfo,
         showType
     } = props
-    const {t} = useI18nNamespaces(["payload"])
+    const {t, i18n} = useI18nNamespaces(["payload", "yakitUi"])
     const {theme} = useTheme()
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2411,23 +2424,25 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     NewName: inputName
                 })
                 .then(() => {
-                    success(t("NewPayloadLocalList.modifySuccess"))
+                    success(t("YakitNotification.modifySuccess"))
                     setInputName(inputName)
                     setFileById(file.id, inputName)
                     setExportData && setExportData([])
-                    
+
                     // 右边内容同步修改
-                    if(file.id === selectItem){
+                    if (file.id === selectItem) {
                         setSelectItem(`${file.type}-${inputName}`)
                     }
                 })
                 .catch((e: any) => {
                     setInputName(file.name)
-                    failed(t("NewPayloadLocalList.editFailed", {error: e}))
+                    failed(`${t("YakitNotification.editFailed", {colon: true})}${e}`)
                 })
         } else {
-            file.name !== inputName && allFileName.includes(inputName) && warn(t("NewPayloadLocalList.folderNameExistsCannotEdit"))
-            !pass && warn(t("NewPayloadLocalList.nameNotAllowSpecial"))
+            file.name !== inputName &&
+                allFileName.includes(inputName) &&
+                warn("名称重复，编辑失败")
+            !pass && warn(t("FolderComponent.nameNotAllowSpecial"))
             setInputName(file.name)
         }
     })
@@ -2467,14 +2482,14 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 Group: file.name
             })
             .then(() => {
-                success(t("NewPayloadLocalList.deleteSuccess"))
+                success(t("YakitNotification.deleted"))
                 onDeletePayloadById(file.id)
                 setDeleteVisible(false)
                 setExportData && setExportData([])
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
-                failed(t("NewPayloadLocalList.deleteFailed", {error: e}))
+                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
             })
     })
 
@@ -2526,7 +2541,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(t("NewPayloadLocalList.toDatabaseError", {error: error}))
+            failed(`[ToDatabase] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             logInfoRef.current = []
@@ -2534,7 +2549,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 Group: file.name,
                 Folder: folder || ""
             })
-            info(t("NewPayloadLocalList.toDatabaseFinished"))
+            info("[ToDatabase] finished")
         })
         return () => {
             ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
@@ -2554,7 +2569,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineDocumentduplicateIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.copyFuzztag")}</div>
+                                  <div className={styles["menu-name"]}>{t("FolderComponent.copyFuzztag")}</div>
                               </div>
                           )
                       },
@@ -2563,7 +2578,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineImportIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.extendDictionary")}</div>
+                                  <div className={styles["menu-name"]}>{t("FileComponent.extendDictionary")}</div>
                               </div>
                           )
                       },
@@ -2572,7 +2587,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineExportIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.exportDictionary")}</div>
+                                  <div className={styles["menu-name"]}>{t("FileComponent.exportDictionary")}</div>
                               </div>
                           )
                       },
@@ -2581,7 +2596,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlinePencilaltIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.rename")}</div>
+                                  <div className={styles["menu-name"]}>{t("YakitButton.rename")}</div>
                               </div>
                           )
                       },
@@ -2590,7 +2605,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineUploadIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.upload")}</div>
+                                  <div className={styles["menu-name"]}>{t("YakitButton.upload")}</div>
                               </div>
                           ),
                           disabled: !isPayloadOperator(userInfo)
@@ -2603,7 +2618,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineTrashIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.delete")}</div>
+                                  <div className={styles["menu-name"]}>{t("YakitButton.delete")}</div>
                               </div>
                           ),
                           type: "danger"
@@ -2615,7 +2630,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineDocumentduplicateIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.copyFuzztag")}</div>
+                                  <div className={styles["menu-name"]}>{t("FolderComponent.copyFuzztag")}</div>
                               </div>
                           )
                       },
@@ -2624,7 +2639,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineExportIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.exportDictionary")}</div>
+                                  <div className={styles["menu-name"]}>{t("FileComponent.exportDictionary")}</div>
                               </div>
                           )
                       },
@@ -2633,7 +2648,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlinePencilaltIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.rename")}</div>
+                                  <div className={styles["menu-name"]}>{t("YakitButton.rename")}</div>
                               </div>
                           )
                       },
@@ -2642,7 +2657,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineDatabasebackupIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.toDatabase")}</div>
+                                  <div className={styles["menu-name"]}>{t("FileComponent.toDatabase")}</div>
                               </div>
                           )
                       },
@@ -2651,7 +2666,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineUploadIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.upload")}</div>
+                                  <div className={styles["menu-name"]}>{t("YakitButton.upload")}</div>
                               </div>
                           ),
                           disabled: !isPayloadOperator(userInfo)
@@ -2664,7 +2679,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           label: (
                               <div className={styles["extra-menu"]}>
                                   <OutlineTrashIcon />
-                                  <div className={styles["menu-name"]}>{t("NewPayloadLocalList.delete")}</div>
+                                  <div className={styles["menu-name"]}>{t("YakitButton.delete")}</div>
                               </div>
                           ),
                           type: "danger"
@@ -2674,7 +2689,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             menu = menu.filter((item) => item.key !== "upload")
         }
         return menu
-    }, [userInfo, file.type])
+    }, [userInfo, file.type, i18n.language])
 
     // 右键展开菜单
     const handleRightClick = useMemoizedFn((e) => {
@@ -2820,7 +2835,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                         hiddenHeader: true,
                                                         content: (
                                                             <CreateDictionaries
-                                                                title={t("NewPayloadLocalList.extendTo", {name: inputName})}
+                                                                title={t("FileComponent.extendTo", {
+                                                                    name: inputName
+                                                                })}
                                                                 type='payload'
                                                                 onQueryGroup={onQueryGroup}
                                                                 folder={folder}
@@ -2887,7 +2904,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
-                    title={t("NewPayloadLocalList.toDatabaseWaiting")}
+                    title={t("FileComponent.toDatabaseWaiting")}
                     streamData={streamData}
                     cancelRun={() => {
                         cancelRemoveDuplicate()
@@ -2958,7 +2975,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
                 setFileArr(arr.filter((item) => item.file !== group))
             })
             .catch((e: any) => {
-                failed(t("NewPayloadLocalList.getDataFailed", {error: e}))
+                failed(t("MoveOrCopyPayload.getDataFailed", {error: e}))
             })
             .finally()
     }, [])
@@ -2971,7 +2988,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
                     let item = fileArr.filter((item) => item.file === val)[0]
                     copyMoveValueRef.current = item
                 }}
-                placeholder={t("NewPayloadLocalList.pleaseSelect")}
+                placeholder={t("MoveOrCopyPayload.pleaseSelect")}
             >
                 {fileArr.map((item) => (
                     <YakitSelect value={item.file} key={item.file}>
@@ -3002,7 +3019,7 @@ type ExportTypeProps = "csv" | "file" | "all"
 
 export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) => {
     const {isExpand, setExpand, showContentType, group, folder, onlyInsert, onClose} = props
-    const {t, i18n} = useI18nNamespaces(["payload"])
+    const {t, i18n} = useI18nNamespaces(["payload", "yakitUi"])
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
@@ -3109,10 +3126,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             .then(() => {
                 onQueryEditor(group, folder)
                 setEditMonaco(false)
-                success(t("PayloadLocalContent.saveSuccess"))
+                success(t("YakitNotification.saved"))
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.saveFailed", {error: e}))
+                failed(`UpdatePayloadToFile failed:${e}`)
             })
     })
 
@@ -3137,7 +3154,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 }
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.queryFailed", {error: e}))
+                failed(`QueryPayload failed：${e}`)
             })
     })
 
@@ -3152,10 +3169,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 }
                 onQueryPayload(page, pagination?.Limit)
                 setSelectPayloadArr([])
-                success(t("PayloadLocalContent.deleteSuccess"))
+                success(t("YakitNotification.deleted"))
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.deleteFailed", {error: e}))
+                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
             })
     })
 
@@ -3174,7 +3191,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                         Copy: isCopy
                     })
                     .then(() => {
-                        success(t("PayloadLocalContent.operationSuccess"))
+                        success(t("YakitNotification.success"))
                         onQueryPayload()
                         resolve(true)
                     })
@@ -3269,11 +3286,11 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(t("PayloadLocalContent.removeDuplicateError", {error: error}))
+            failed(`[RemoveDuplicate] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             logInfoRef.current = []
-            info(t("PayloadLocalContent.removeDuplicateFinished"))
+            info("[RemoveDuplicate] finished")
             onQueryEditor(group, folder)
         })
         return () => {
@@ -3293,10 +3310,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                     <div className={styles["title"]}>{group}</div>
                     <div className={styles["sub-title"]}>
                         {showContentType === "editor" && payloadFileData?.IsBigFile ? (
-                            <YakitTag color='danger'>{t("PayloadLocalContent.hugeDictionary")}</YakitTag>
+                            <YakitTag color='danger'>{t("PayloadOnlineContent.hugeDictionary")}</YakitTag>
                         ) : selectPayloadArr.length > 0 ? (
                             <div className={styles["total-item"]}>
-                                <span className={styles["total-item-text"]}>{t("PayloadLocalContent.selected")}</span>
+                                <span className={styles["total-item-text"]}>Selected</span>
                                 <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
                             </div>
                         ) : (
@@ -3307,7 +3324,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 {!onlyInsert && showContentType === "table" && (
                     <div className={styles["extra"]}>
                         <YakitInput.Search
-                            placeholder={t("PayloadLocalContent.searchPlaceholder")}
+                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                             value={params.Keyword}
                             onChange={(e) => {
                                 setParams({...params, Keyword: e.target.value})
@@ -3338,7 +3355,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     setExportVisible(true)
                                 }}
                             >
-                                {t("PayloadLocalContent.export")}
+                                {t("YakitButton.export")}
                             </YakitButton>
                         )}
                         {!isNoSelect && size && (
@@ -3430,10 +3447,10 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
                                 }}
                             >
-                                {t("PayloadLocalContent.cancel")}
+                                {t("YakitButton.cancel")}
                             </YakitButton>
                             <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
-                                {t("PayloadLocalContent.save")}
+                                {t("YakitButton.save")}
                             </YakitButton>
                             {setExpand && Expand()}
                         </div>
@@ -3451,7 +3468,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                     setExportVisible(true)
                                 }}
                             >
-                                {t("PayloadLocalContent.export")}
+                                {t("YakitButton.export")}
                             </YakitButton>
 
                             {payloadFileData?.IsBigFile === false && (
@@ -3470,7 +3487,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                         }}
                                         icon={<OutlinePencilaltIcon />}
                                     >
-                                        {t("PayloadLocalContent.edit")}
+                                        {t("YakitButton.edit")}
                                     </YakitButton>
                                 </>
                             )}
@@ -3569,13 +3586,12 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
 
 export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) => {
     const {isExpand, setExpand, showContentType, group, folder} = props
-    const {t} = useI18nNamespaces(["payload"])
+    const {t} = useI18nNamespaces(["payload", "yakitUi"])
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
 
     const [selectPayloadArr, setSelectPayloadArr] = useState<number[]>([])
-    const {t, i18n} = useI18nNamespaces(["payload"])
     const [params, setParams, getParams] = useGetState<API.PayloadRequest>({
         keyword: "",
         folder: "",
@@ -3650,7 +3666,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 setEditorValue(res.data || "")
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.editorDataGetFailed", {error: e}))
+                failed(t("PayloadOnlineContent.editorDataGetFailed", {error: e}))
             })
             .finally(() => {
                 setLoading(false)
@@ -3669,10 +3685,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
             .then(() => {
                 onQueryEditor(group, folder)
                 setEditMonaco(false)
-                success(t("PayloadLocalContent.saveSuccess"))
+                success(t("YakitNotification.saved"))
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.saveFailed", {error: e}))
+                failed(`UpdatePayloadToFile failed:${e}`)
             })
     })
 
@@ -3696,7 +3712,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 }
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.queryFailed", {error: e}))
+                failed(`QueryPayload failed：${e}`)
             })
     })
 
@@ -3710,10 +3726,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 }
                 onQueryPayload(page, pagination?.limit)
                 setSelectPayloadArr([])
-                success(t("PayloadLocalContent.deleteSuccess"))
+                success(t("YakitNotification.deleted"))
             })
             .catch((e: any) => {
-                failed(t("PayloadLocalContent.deleteFailed", {error: e}))
+                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
             })
     })
 
@@ -3726,10 +3742,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                     <div className={styles["title"]}>{group}</div>
                     <div className={styles["sub-title"]}>
                         {showContentType === "editor" && payloadFileData?.IsBigFile ? (
-                            <YakitTag color='danger'>{t("PayloadLocalContent.hugeDictionary")}</YakitTag>
+                            <YakitTag color='danger'>{t("PayloadOnlineContent.hugeDictionary")}</YakitTag>
                         ) : selectPayloadArr.length > 0 ? (
                             <div className={styles["total-item"]}>
-                                <span className={styles["total-item-text"]}>{t("PayloadLocalContent.selected")}</span>
+                                <span className={styles["total-item-text"]}>Selected</span>
                                 <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
                             </div>
                         ) : (
@@ -3740,7 +3756,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 {showContentType === "table" && (
                     <div className={styles["extra"]}>
                         <YakitInput.Search
-                            placeholder={t("PayloadLocalContent.searchPlaceholder")}
+                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                             value={params.keyword}
                             onChange={(e) => {
                                 setParams({...params, keyword: e.target.value})
@@ -3781,10 +3797,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                                     payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
                                 }}
                             >
-                                {t("PayloadLocalContent.cancel")}
+                                {t("YakitButton.cancel")}
                             </YakitButton>
                             <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
-                                {t("PayloadLocalContent.save")}
+                                {t("YakitButton.save")}
                             </YakitButton>
                             {setExpand && Expand()}
                         </div>
@@ -3803,7 +3819,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                                         icon={<OutlinePencilaltIcon />}
                                         disabled={!isPayloadOperator(userInfo)}
                                     >
-                                        {t("PayloadLocalContent.edit")}
+                                        {t("YakitButton.edit")}
                                     </YakitButton>
                                 </>
                             )}
@@ -3904,44 +3920,46 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        handleOpenFileSystemDialog({title: t("ExportByPayloadGrpc.selectFolder"), properties: ["openDirectory"]}).then((data) => {
-            if (data.filePaths.length) {
-                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                if (exportType === "all") {
-                    exportPathRef.current = absolutePath
-                    ipcRenderer.invoke(
-                        getExportGrpc,
-                        {
-                            Groups: group.split(","),
-                            SavePath: absolutePath
-                        },
-                        exportToken
-                    )
-                    setShowModal(true)
+        handleOpenFileSystemDialog({title: t("ExportByPayloadGrpc.selectFolder"), properties: ["openDirectory"]}).then(
+            (data) => {
+                if (data.filePaths.length) {
+                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                    if (exportType === "all") {
+                        exportPathRef.current = absolutePath
+                        ipcRenderer.invoke(
+                            getExportGrpc,
+                            {
+                                Groups: group.split(","),
+                                SavePath: absolutePath
+                            },
+                            exportToken
+                        )
+                        setShowModal(true)
+                    } else {
+                        ipcRenderer
+                            .invoke("pathJoin", {
+                                dir: absolutePath,
+                                file: `${group}.${exportType === "file" ? "txt" : "csv"}`
+                            })
+                            .then((currentPath: string) => {
+                                exportPathRef.current = currentPath
+                                ipcRenderer.invoke(
+                                    getExportGrpc,
+                                    {
+                                        Group: group,
+                                        Folder: folder,
+                                        SavePath: currentPath
+                                    },
+                                    exportToken
+                                )
+                                setShowModal(true)
+                            })
+                    }
                 } else {
-                    ipcRenderer
-                        .invoke("pathJoin", {
-                            dir: absolutePath,
-                            file: `${group}.${exportType === "file" ? "txt" : "csv"}`
-                        })
-                        .then((currentPath: string) => {
-                            exportPathRef.current = currentPath
-                            ipcRenderer.invoke(
-                                getExportGrpc,
-                                {
-                                    Group: group,
-                                    Folder: folder,
-                                    SavePath: currentPath
-                                },
-                                exportToken
-                            )
-                            setShowModal(true)
-                        })
+                    setExportVisible(false)
                 }
-            } else {
-                setExportVisible(false)
             }
-        })
+        )
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
@@ -3965,10 +3983,10 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
             }
         })
         ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-            failed(t("ExportByPayloadGrpc.exportError", {error: error}))
+            failed(`[ExportFile] error:  ${error}`)
         })
         ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-            info(t("ExportByPayloadGrpc.exportFinished"))
+            info("[ExportFile] finished")
             setShowModal(false)
             setExportVisible(false)
             if (exportPathRef.current) {
@@ -4019,7 +4037,7 @@ interface UploadOrDownloadByPayloadGrpcProps {
 // 上传与下载(默认上传)
 export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGrpcProps> = (props) => {
     const {group, folder, setUploadOrDownloadVisible, type = "upload", finished} = props
-    const {t} = useI18nNamespaces(["payload"])
+    const {t} = useI18nNamespaces(["payload", "yakitUi"])
     const userInfo = useStore((s) => s.userInfo)
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
@@ -4077,10 +4095,10 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
             }
         })
         ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-            failed(`${type === "upload" ? t("UploadOrDownloadByPayloadGrpc.uploadFile") : t("UploadOrDownloadByPayloadGrpc.downloadFile")} error:  ${error}`)
+            failed(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} error:  ${error}`)
         })
         ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-            info(`${type === "upload" ? t("UploadOrDownloadByPayloadGrpc.uploadFile") : t("UploadOrDownloadByPayloadGrpc.downloadFile")} finished`)
+            info(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} finished`)
             setShowModal(false)
             setUploadOrDownloadVisible(false)
             finished && finished()
@@ -4110,7 +4128,9 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
             bodyStyle={{padding: 0}}
         >
             <UploadStatusInfo
-                title={t("UploadOrDownloadByPayloadGrpc.waiting", {type: type === "upload" ? t("UploadOrDownloadByPayloadGrpc.upload") : t("UploadOrDownloadByPayloadGrpc.download")})}
+                title={t("UploadOrDownloadByPayloadGrpc.waiting", {
+                    type: type === "upload" ? t("YakitButton.upload") : t("YakitButton.download")
+                })}
                 streamData={exportStreamData}
                 cancelRun={() => {
                     cancelExportFile()
@@ -4125,7 +4145,7 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
 
 export interface NewPayloadProps {}
 export const NewPayload: React.FC<NewPayloadProps> = (props) => {
-    const {t} = useI18nNamespaces(["payload"])
+    const {t} = useI18nNamespaces(["payload", "yakitUi"])
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
     const [showContentType, setContentType] = useState<"editor" | "table">()
@@ -4424,7 +4444,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 footer={
                     <div style={{marginTop: 24, textAlign: "right"}}>
                         <YakitButton size='max' onClick={initNewPayload}>
-                            {t("NewPayload.confirm")}
+                            {t("YakitButton.ok")}
                         </YakitButton>
                     </div>
                 }
@@ -4442,7 +4462,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                 emiter.emit("closePage", JSON.stringify({route: YakitRoute.PayloadManager}))
                             }}
                         >
-                            {t("NewPayload.confirm")}
+                            {t("YakitButton.ok")}
                         </YakitButton>
                     </div>
                 }

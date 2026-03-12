@@ -49,15 +49,15 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 
-const yakitTab = (t: any): YakitTabsProps[] => [
+const yakitTab: YakitTabsProps[] = [
     {
         icon: <OutlineSearchIcon />,
-        label: t("NotepadManageLocal.fullTextSearch"),
-        value: t("NotepadManageLocal.fullTextSearch")
+        label: "NotepadManageLocal.fullTextSearch",
+        value: "全文搜索"
     }
 ]
 const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["notepad"])
+    const {t, i18n} = useI18nNamespaces(["notepad"])
     const [activeKey, setActiveKey] = useState<string>("全文搜索")
     const [show, setShow] = useState<boolean>(true)
     return (
@@ -72,11 +72,13 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props)
                 firstNode={
                     <div className={styles["note-local-left"]}>
                         <YakitSideTab
+                            key={i18n.language}
                             show={show}
                             setShow={setShow}
-                            yakitTabs={yakitTab(t)}
+                            yakitTabs={yakitTab}
                             activeKey={activeKey}
                             onActiveKey={setActiveKey}
+                            t={t}
                         />
                         <NotepadLocalSearch />
                     </div>
@@ -99,7 +101,7 @@ const timeShow = {
     updated_at: "UpdateAt"
 }
 const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
-    const { t } = useI18nNamespaces(["notepad"])
+    const {t, i18n} = useI18nNamespaces(["notepad", "yakitUi"])
     const {goAddNotepad} = useGoEditNotepad()
     const emptyImageTarget = useEmptyImage("search")
     const [pageLoading, setPageLoading] = useState<boolean>(false)
@@ -156,11 +158,11 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
     const columns: VirtualListColumns<Note>[] = useCreation(() => {
         return [
             {
-                title: t("NotepadManageLocal.title"),
+                title: t("NotepadManageLocalList.title"),
                 dataIndex: "Title"
             },
             {
-                title: t("NotepadManageLocal.updatedAt"),
+                title: t("NotepadManageLocalList.updatedAt"),
                 dataIndex: timeShow[sorterKey],
                 render: (text, record: Note) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
                 filterProps: {
@@ -170,11 +172,11 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                                 data: [
                                     {
                                         key: "updated_at",
-                                        label: t("NotepadManageLocal.updatedAt")
+                                        label: t("NotepadManageLocalList.updatedAt")
                                     },
                                     {
                                         key: "created_at",
-                                        label: t("NotepadManageLocal.createdAt")
+                                        label: t("NotepadManageLocalList.createdAt")
                                     }
                                 ],
                                 onClick: ({key}) => {
@@ -197,7 +199,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 }
             },
             {
-                title: t("NotepadManageLocal.action"),
+                title: t("YakitTable.action"),
                 dataIndex: "action",
                 width: 180,
                 render: (_, record: Note) => (
@@ -216,7 +218,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 )
             }
         ]
-    }, [sorterKey, timeSortVisible])
+    }, [sorterKey, timeSortVisible, i18n.language])
 
     const selectNumber = useCreation(() => {
         if (allCheck) {
@@ -344,13 +346,17 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                     <div className={styles["heard-extra"]}>
                         <YakitInput.Search
                             value={keyWord}
-                            placeholder={t("NotepadManageLocal.searchPlaceholder")}
+                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                             onChange={(e) => setKeyWord(e.target.value)}
                             onSearch={onSearch}
                         />
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitPopconfirm
-                            title={selectNumber > 0 ? t("NotepadManageLocal.confirmDeleteSelected") : t("NotepadManageLocal.confirmDeleteAll")}
+                            title={
+                                selectNumber > 0
+                                    ? t("NotepadManageLocalList.confirmDeleteSelected")
+                                    : t("NotepadManageLocalList.confirmDeleteAll")
+                            }
                             onConfirm={onBatchRemove}
                         >
                             <YakitButton
@@ -360,7 +366,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                                 disabled={totalRef.current === 0}
                                 loading={pageLoading}
                             >
-                                {t("NotepadManageLocal.delete")}
+                                {t("YakitButton.delete")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton
@@ -370,25 +376,25 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                             onClick={onBatchExport}
                             loading={pageLoading}
                         >
-                            {t("NotepadManageLocal.export")}
+                            {t("YakitButton.batchExport")}
                         </YakitButton>
                         <YakitButton type='outline2' icon={<OutlineImportIcon />} onClick={onBatchImport}>
-                            {t("NotepadManageLocal.import")}
+                            {t("YakitButton.import")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
-                            {t("NotepadManageLocal.new")}
+                            {t("YakitButton.new")}
                         </YakitButton>
                     </div>
                 </div>
                 {totalRef.current === 0 || +response.Total === 0 ? (
                     totalRef.current === 0 ? (
-                        <YakitEmpty style={{paddingTop: 48}} description={t("NotepadManageLocal.noData")} />
+                        <YakitEmpty style={{paddingTop: 48}} description={t("NotepadManageOnline.noData")} />
                     ) : (
                         <YakitEmpty
                             image={emptyImageTarget}
                             imageStyle={{margin: "96px auto 12px", height: 200}}
-                            title={t("NotepadManageLocal.searchEmpty")}
+                            title={t("YakitEmpty.searchEmpty")}
                         />
                     )
                 ) : (
@@ -433,7 +439,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
 }
 
 const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["notepad"])
+    const {t} = useI18nNamespaces(["notepad"])
     const {record, onSingleRemoveAfter} = props
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [editLoading, setEditLoading] = useState<boolean>(false)
@@ -492,7 +498,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
             <YakitButton type='text2' icon={<OutlineExportIcon />} onClick={onExport} />
 
             <Divider type='vertical' style={{margin: "0 8px"}} />
-            <YakitPopconfirm title={t("NotepadManage.confirmDelete")} onConfirm={() => onSingleRemove()}>
+            <YakitPopconfirm title={t("NotepadAction.confirmDelete")} onConfirm={() => onSingleRemove()}>
                 <YakitButton type='text' danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
             </YakitPopconfirm>
             {exportVisible && (

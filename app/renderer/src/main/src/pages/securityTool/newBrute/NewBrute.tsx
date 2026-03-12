@@ -57,7 +57,7 @@ export const NewBrute: React.FC<NewBruteProps> = React.memo((props) => {
 })
 
 const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["brute"])
+    const {t} = useI18nNamespaces(["brute"])
     const {hidden} = props
     const [tree, setTree] = useState<DataNode[]>([])
 
@@ -112,7 +112,7 @@ const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) =
             })}
         >
             <div className={styles["tree-heard"]}>
-                <span className={styles["tree-heard-title"]}>{t("brute.availableBruteTypes")}</span>
+                <span className={styles["tree-heard-title"]}>{t("BruteTypeTreeList.availableBruteTypes")}</span>
             </div>
             <YakitTree
                 checkable
@@ -130,7 +130,7 @@ const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) =
 })
 
 const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["brute"])
+    const {t} = useI18nNamespaces(["brute", "yakitUi"])
     const {bruteType, setBruteType, pageId} = props
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -190,10 +190,10 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
         <div className={styles["brute-execute-wrapper"]}>
             <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                 <div className={styles["brute-executor-title"]}>
-                    <span className={styles["brute-executor-title-text"]}>{t("brute.bruteForceDetection")}</span>
+                    <span className={styles["brute-executor-title-text"]}>{t("BruteExecute.bruteForceDetection")}</span>
                     {selectNum > 0 && (
                         <YakitTag closable onClose={onRemove} color='info'>
-                            {selectNum} {t("brute.types")}
+                            {selectNum} {t("BruteExecute.types")}
                         </YakitTag>
                     )}
                 </div>
@@ -205,7 +205,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
                         ? !isExpand && (
                               <>
                                   <YakitButton danger onClick={onStopExecute}>
-                                      {t("brute.stop")}
+                                      {t("YakitButton.stop")}
                                   </YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
@@ -213,7 +213,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
                         : !isExpand && (
                               <>
                                   <YakitButton onClick={onStartExecute} disabled={selectNum === 0}>
-                                      {t("brute.execute")}
+                                      {t("YakitButton.execute")}
                                   </YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
@@ -247,7 +247,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
 
 const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const { t } = useI18nNamespaces(["brute"])
+        const {t, i18n} = useI18nNamespaces(["brute", "yakitUi"])
         const {
             bruteType,
             isExpand,
@@ -271,12 +271,12 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
 
         const defaultTabs = useCreation(() => {
             const tabs = [
-                {tabName: t("brute.riskAndVulnerability"), type: "risk"},
-                {tabName: t("brute.logs"), type: "log"},
-                {tabName: t("brute.console"), type: "console"}
+                {tabName: t("BruteExecuteContent.riskAndVulnerability"), type: "risk"},
+                {tabName: t("BruteExecuteContent.logs"), type: "log"},
+                {tabName: "Console", type: "console"}
             ]
             return tabs
-        }, [])
+        }, [i18n.language])
         const [streamInfo, streamEvent] = useHoldGRPCStream({
             tabs: defaultTabs,
             taskName: "StartBrute",
@@ -320,7 +320,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
             })
         })
 
-        const [inputType,setInputType] = useState<"content"|"path">("content")
+        const [inputType, setInputType] = useState<"content" | "path">("content")
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
             const params: StartBruteParams = {
@@ -330,7 +330,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                     Type: bruteType.join(",")
                 })
             }
-            if(inputType === "path"){
+            if (inputType === "path") {
                 params.TargetFile = params.Targets
                 params.Targets = ""
             }
@@ -378,7 +378,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                         wrapperCol={{span: 12}} //这样设置是为了让输入框居中
                         validateMessages={{
                             /* eslint-disable no-template-curly-in-string */
-                            required: t("brute.fieldRequired")
+                            required: t("YakitForm.requiredField")
                         }}
                         labelWrap={true}
                     >
@@ -386,31 +386,35 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                             style={{width: "100%"}}
                             formItemProps={{
                                 name: "Targets",
-                                label: t("brute.inputTarget"),
+                                label: t("BruteExecuteContent.inputTarget"),
                                 rules: [{required: true}],
                                 initialValue: pageInfo.targets
                             }}
                             accept='.txt,.xlsx,.xls,.csv'
                             textareaProps={{
-                                placeholder: t("brute.targetPlaceholder"),
+                                placeholder: t("BruteExecuteContent.targetPlaceholder"),
                                 rows: 3
                             }}
-                            help={t("brute.dragFilesHelp")}
+                            help={t("BruteExecuteContent.dragFilesHelp")}
                             disabled={isExecuting}
                             onTextAreaType={setInputType}
                             textAreaType={inputType}
                         />
                         <Form.Item label={" "} colon={false}>
                             <div className={styles["form-extra"]}>
-                                <YakitTag>{t("brute.targetConcurrentLabel")}{extraParamsValue.Concurrent}</YakitTag>
+                                <YakitTag>
+                                    {t("BruteExecuteContent.targetConcurrentLabel")}
+                                    {extraParamsValue.Concurrent}
+                                </YakitTag>
                                 {extraParamsValue?.OkToStop ? (
-                                    <YakitTag>{t("brute.stopOnSuccess")}</YakitTag>
+                                    <YakitTag>{t("BruteExecuteContent.stopOnSuccess")}</YakitTag>
                                 ) : (
-                                    <YakitTag>{t("brute.continueOnSuccess")}</YakitTag>
+                                    <YakitTag>{t("BruteExecuteContent.continueOnSuccess")}</YakitTag>
                                 )}
                                 {(extraParamsValue?.DelayMax || 0) > 0 && (
                                     <YakitTag>
-                                        {t("brute.randomPause")}{extraParamsValue.DelayMin}-{extraParamsValue.DelayMax}s
+                                        {t("BruteExecuteContent.randomPause")}
+                                        {extraParamsValue.DelayMin}-{extraParamsValue.DelayMax}s
                                     </YakitTag>
                                 )}
                             </div>
@@ -419,7 +423,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (
                                     <YakitButton danger onClick={onStopExecute} size='large'>
-                                        {t("brute.stop")}
+                                        {t("YakitButton.stop")}
                                     </YakitButton>
                                 ) : (
                                     <YakitButton
@@ -428,7 +432,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                                         size='large'
                                         disabled={selectNum === 0}
                                     >
-                                        {t("brute.startExecute")}
+                                        {t("YakitButton.start_execution")}
                                     </YakitButton>
                                 )}
                                 <YakitButton
@@ -437,7 +441,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                                     disabled={isExecuting}
                                     size='large'
                                 >
-                                    {t("brute.extraParams")}
+                                    {t("BruteExecuteContent.extraParams")}
                                 </YakitButton>
                             </div>
                         </Form.Item>
@@ -462,7 +466,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                         pluginExecuteResultWrapper={styles["brute-execute-result-wrapper"]}
                     />
                 )}
-                <React.Suspense fallback={<div>{t("brute.loading")}</div>}>
+                <React.Suspense fallback={<div>loading...</div>}>
                     <BruteExecuteParamsDrawer
                         extraParamsValue={extraParamsValue}
                         visible={extraParamsVisible}

@@ -62,7 +62,7 @@ const NewPortScanExtraParamsDrawer = React.lazy(() => import("./NewPortScanExtra
 const {ipcRenderer} = window.require("electron")
 
 export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan"])
     const {id} = props
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
@@ -92,7 +92,7 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
             setFilters={setFilters}
             fixFilterList={[
                 {
-                    groupName: t("portscan.pluginType"),
+                    groupName: t("NewPortScan.pluginType"),
                     groupKey: "plugin_type",
                     sort: 1,
                     data: pluginTypeFilterList
@@ -120,7 +120,7 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
 })
 
 const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {selectList, setSelectList, pluginListSearchInfo, selectNum, allCheck, pageId} = props
 
     const {queryPagesDataById} = usePageInfo(
@@ -193,10 +193,12 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
         <div className={styles["port-scan-execute-wrapper"]}>
             <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                 <div className={styles["port-scan-executor-title"]}>
-                    <span className={styles["port-scan-executor-title-text"]}>{t("portscan.portFingerprintScan")}</span>
+                    <span className={styles["port-scan-executor-title-text"]}>
+                        {t("NewPortScanExecute.portFingerprintScan")}
+                    </span>
                     {selectNum > 0 && (
                         <YakitTag closable onClose={onRemove} color='info'>
-                            {selectNum} {t("portscan.plugins")}
+                            {selectNum} {t("NewPortScanExecute.plugins")}
                         </YakitTag>
                     )}
                 </div>
@@ -208,14 +210,14 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                         ? !isExpand && (
                               <>
                                   <YakitButton danger onClick={onStopExecute}>
-                                      {t("portscan.stop")}
+                                      {t("YakitButton.stop")}
                                   </YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
                           )
                         : !isExpand && (
                               <>
-                                  <YakitButton onClick={onStartExecute}>{t("portscan.execute")}</YakitButton>
+                                  <YakitButton onClick={onStartExecute}>{t("YakitButton.execute")}</YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
                           )}
@@ -226,7 +228,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                                 disabled={disabledReport}
                                 onClick={onCreateReport}
                             >
-                                {t("portscan.generateReport")}
+                                {t("NewPortScanExecute.generateReport")}
                             </YakitButton>
                             <div className={styles["divider-style"]}></div>
                         </>
@@ -297,7 +299,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const { t } = useI18nNamespaces(["portscan"])
+        const {t, i18n} = useI18nNamespaces(["portscan", "yakitUi"])
         const {
             isExpand,
             executeStatus,
@@ -328,13 +330,13 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 
         const defaultTabs = useCreation(() => {
             return [
-                {tabName: t("portscan.portScanList"), type: "port"},
-                {tabName: t("portscan.httpTraffic"), type: "http"},
-                {tabName: t("portscan.riskAndVulnerability"), type: "risk"},
-                {tabName: t("portscan.logs"), type: "log"},
-                {tabName: t("portscan.console"), type: "console"}
+                {tabName: t("NewPortScanExecuteContent.portScanList"), type: "port"},
+                {tabName: t("NewPortScanExecuteContent.httpTraffic"), type: "http"},
+                {tabName: t("NewPortScanExecuteContent.riskAndVulnerability"), type: "risk"},
+                {tabName: t("NewPortScanExecuteContent.logs"), type: "log"},
+                {tabName: "Console", type: "console"}
             ]
-        }, [])
+        }, [i18n.language])
         const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
             tabs: defaultTabs,
             taskName: isEnpriTrace() ? "Simple-Detect" : "Port-Scan",
@@ -429,7 +431,9 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             setRuntimeId("")
             if (isEnpriTrace()) {
                 uuidRef.current = uuidv4()
-                const taskName = `${executeParams.Targets.split(",")[0].split(/\n/)[0]}${t("portscan.riskAssessmentReport")}`
+                const taskName = `${executeParams.Targets.split(",")[0].split(/\n/)[0]}${t(
+                    "NewPortScanExecuteContent.riskAssessmentReport"
+                )}`
                 taskNameRef.current = taskName
                 let PortScanRequest = {...executeParams, TaskName: `${taskName}-${uuidRef.current}`}
                 const simpleDetectPrams: RecordPortScanRequest = {
@@ -501,7 +505,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                         wrapperCol={{span: 12}} //这样设置是为了让输入框居中
                         validateMessages={{
                             /* eslint-disable no-template-curly-in-string */
-                            required: t("portscan.fieldRequired")
+                            required: t("YakitForm.requiredField")
                         }}
                         labelWrap={true}
                     >
@@ -517,7 +521,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (
                                     <YakitButton danger onClick={onStopExecute} size='large'>
-                                        {t("portscan.stop")}
+                                        {t("YakitButton.stop")}
                                     </YakitButton>
                                 ) : (
                                     <YakitButton
@@ -525,7 +529,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                                         htmlType='submit'
                                         size='large'
                                     >
-                                        {t("portscan.startExecute")}
+                                        {t("YakitButton.start_execution")}
                                     </YakitButton>
                                 )}
                                 <YakitButton
@@ -534,7 +538,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                                     disabled={isExecuting}
                                     size='large'
                                 >
-                                    {t("portscan.extraParams")}
+                                    {t("NewPortScanExecuteContent.extraParams")}
                                 </YakitButton>
                             </div>
                         </Form.Item>
@@ -553,7 +557,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 {isShowResult && (
                     <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
                 )}
-                <React.Suspense fallback={<div>{t("portscan.loading")}</div>}>
+                <React.Suspense fallback={<div>loading...</div>}>
                     <NewPortScanExtraParamsDrawer
                         extraParamsValue={extraParamsValue}
                         visible={extraParamsVisible}
@@ -566,7 +570,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 )
 
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {inViewport, disabled, form, extraParamsValue, inputType, setInputType} = props
     const [portTemplates, setPortTemplates] = useState<{[key: string]: string}>({})
     const [saveTemplateVisible, setSaveTemplateVisible] = useState<boolean>(false)
@@ -599,7 +603,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
     const onShowSaveTemplate = useMemoizedFn(() => {
         const ports = form.getFieldValue("Ports")
         if (!ports) {
-            yakitNotify("error", t("portscan.enterPortsBeforeSave"))
+            yakitNotify("error", t("NewPortScanExecuteForm.enterPortsBeforeSave"))
             return
         }
         setTemplateName("")
@@ -608,7 +612,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
 
     const onSaveTemplate = useMemoizedFn(() => {
         if (!templateName.trim()) {
-            yakitNotify("error", t("portscan.enterTemplateName"))
+            yakitNotify("error", t("NewPortScanExecuteForm.enterTemplateName"))
             return
         }
         const ports = form.getFieldValue("Ports")
@@ -617,7 +621,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
             [templateName.trim()]: ports
         }
         ipcRenderer.invoke("set-local-cache", "ScanPortTemplates", JSON.stringify(newTemplates)).then(() => {
-            yakitNotify("success", t("portscan.saveTemplateSuccess"))
+            yakitNotify("success", t("NewPortScanExecuteForm.saveTemplateSuccess"))
             setPortTemplates(newTemplates)
             setSaveTemplateVisible(false)
             setTemplateName("")
@@ -628,7 +632,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
         const newTemplates = {...portTemplates}
         delete newTemplates[templateKey]
         ipcRenderer.invoke("set-local-cache", "ScanPortTemplates", JSON.stringify(newTemplates)).then(() => {
-            yakitNotify("success", t("portscan.deleteTemplateSuccess"))
+            yakitNotify("success", t("NewPortScanExecuteForm.deleteTemplateSuccess"))
             setPortTemplates(newTemplates)
         })
     })
@@ -654,30 +658,30 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
             <YakitFormDraggerContentPath
                 formItemProps={{
                     name: "Targets",
-                    label: t("portscan.scanTarget"),
+                    label: t("NewPortScanExecuteForm.scanTarget"),
                     rules: [{required: true}]
                 }}
                 accept='.txt,.xlsx,.xls,.csv'
                 textareaProps={{
-                    placeholder: t("portscan.scanTargetPlaceholder"),
+                    placeholder: t("NewPortScanExecuteForm.scanTargetPlaceholder"),
                     rows: 3
                 }}
-                help={t("portscan.dragFilesHelp")}
+                help={t("NewPortScanExecuteForm.dragFilesHelp")}
                 disabled={disabled}
                 onTextAreaType={setInputType}
                 textAreaType={inputType}
             />
-            <Form.Item label={t("portscan.presetPort")} name='presetPort'>
+            <Form.Item label={t("ScanPortForm.presetPort")} name='presetPort'>
                 <Checkbox.Group
                     className={styles["preset-port-group-wrapper"]}
                     onChange={onCheckPresetPort}
                     disabled={disabled}
                 >
-                    <YakitCheckbox value={"top100"}>{t("portscan.top100")}</YakitCheckbox>
-                    <YakitCheckbox value={"topweb"}>{t("portscan.topweb")}</YakitCheckbox>
-                    <YakitCheckbox value={"top1000+"}>{t("portscan.top1000+")}</YakitCheckbox>
-                    <YakitCheckbox value={"topdb"}>{t("portscan.topdb")}</YakitCheckbox>
-                    <YakitCheckbox value={"topudp"}>{t("portscan.topudp")}</YakitCheckbox>
+                    <YakitCheckbox value={"top100"}>{t("ScanPortForm.top100")}</YakitCheckbox>
+                    <YakitCheckbox value={"topweb"}>{t("ScanPortForm.topweb")}</YakitCheckbox>
+                    <YakitCheckbox value={"top1000+"}>{t("ScanPortForm.top1000")}</YakitCheckbox>
+                    <YakitCheckbox value={"topdb"}>{t("ScanPortForm.topdb")}</YakitCheckbox>
+                    <YakitCheckbox value={"topudp"}>{t("ScanPortForm.topudp")}</YakitCheckbox>
                     {Object.keys(portTemplates).map((templateKey) => (
                         <div key={templateKey} className={styles["template-checkbox-wrapper"]}>
                             <YakitCheckbox value={templateKey}>
@@ -706,7 +710,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                 </Checkbox.Group>
             </Form.Item>
             <Form.Item
-                label={t("portscan.scanPort")}
+                label={t("ScanPortForm.scanPort")}
                 name='Ports'
                 extra={
                     <div className={styles["ports-form-extra"]}>
@@ -717,7 +721,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                             onClick={onShowSaveTemplate}
                             disabled={disabled}
                         >
-                            {t("portscan.saveAsTemplate")}
+                            {t("NewPortScanExecuteForm.saveAsTemplate")}
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
@@ -726,7 +730,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                             onClick={onResetPort}
                             disabled={disabled}
                         >
-                            {t("portscan.defaultConfig")}
+                            {t("NewPortScanExecuteForm.defaultConfig")}
                         </YakitButton>
                     </div>
                 }
@@ -737,15 +741,21 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
             <Form.Item label={" "} colon={false}>
                 <div className={styles["form-extra"]}>
                     <Form.Item name='SkippedHostAliveScan' valuePropName='checked' noStyle>
-                        <YakitCheckbox disabled={disabled}>{t("portscan.skipHostAliveScan")}</YakitCheckbox>
+                        <YakitCheckbox disabled={disabled}>{t("ScanPortForm.skipHostAliveScan")}</YakitCheckbox>
                     </Form.Item>
-                    <YakitTag>{t("portscan.scanModeLabel")}{ScanKind[extraParamsValue.Mode]}</YakitTag>
-                    <YakitTag>{t("portscan.fingerprintScanConcurrencyLabel")}{extraParamsValue.Concurrent}</YakitTag>
+                    <YakitTag>
+                        {t("NewPortScanExecuteForm.scanModeLabel")}
+                        {ScanKind[extraParamsValue.Mode]}
+                    </YakitTag>
+                    <YakitTag>
+                        {t("NewPortScanExecuteForm.fingerprintScanConcurrencyLabel")}
+                        {extraParamsValue.Concurrent}
+                    </YakitTag>
                 </div>
             </Form.Item>
 
             <YakitModal
-                title={t("portscan.saveFingerprintConfig")}
+                title={t("NewPortScanExecuteForm.saveFingerprintConfig")}
                 visible={saveTemplateVisible}
                 onCancel={() => setSaveTemplateVisible(false)}
                 width={400}
@@ -753,7 +763,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
             >
                 <div>
                     <YakitInput.TextArea
-                        placeholder={t("portscan.templateNamePlaceholder")}
+                        placeholder={t("NewPortScanExecuteForm.templateNamePlaceholder")}
                         showCount
                         maxLength={50}
                         value={templateName}
@@ -768,10 +778,10 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                                 setSaveTemplateVisible(false)
                             }}
                         >
-                            {t("portscan.cancel")}
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={onSaveTemplate}>
-                            {t("portscan.save")}
+                            {t("YakitButton.save")}
                         </YakitButton>
                     </div>
                 </div>

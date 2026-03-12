@@ -39,7 +39,6 @@
     "missingParameter": "Missing parameter",
     "dataUploading": "Data is being uploaded",
     "uploadResult": "{SuccessCount} data entries uploaded successfully, {FailedCount} failed",
-    "advancedFilter": "Filter",
     "configured": "Configured",
     "protocolType": "Protocol Type",
     "all": "All",
@@ -209,9 +208,6 @@
     "fontSize": "Font Size",
     "fullScreen": "Full Screen",
     "showLineBreaks": "Show line breaks"
-  },
-  "DataCompareModal": {
-    "codeCompare": "Code Compare"
   },
   "WebsocketFrameHistory": {
     "websocket_data_frame": "Websocket Data Frame",

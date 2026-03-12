@@ -10,7 +10,7 @@ import {isEnterpriseEdition} from "@/utils/envfile"
 import {apiDownloadPluginMine} from "./plugins/utils"
 import { YakitModalConfirm } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface LoginProp {
@@ -23,7 +23,7 @@ interface LoginParamsProp {
 }
 
 const Login: React.FC<LoginProp> = (props) => {
-    const { t } = useI18nNamespaces(["core"])
+    const {t} = useI18nNamespaces(["core"])
     const [loading, setLoading] = useState<boolean>(false)
     // 打开企业登录面板
     const openEnterpriseModal = () => {
@@ -59,7 +59,7 @@ const Login: React.FC<LoginProp> = (props) => {
                     if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
                 })
                 .catch((err) => {
-                    failed(t("Login.loginError", { ns: "core", error: err }))
+                    failed(t("Login.loginError", {error: err}))
                 })
                 .finally(() => {
                     setTimeout(() => setLoading(false), 200)
@@ -73,9 +73,9 @@ const Login: React.FC<LoginProp> = (props) => {
             if (ok) {
                 const m = YakitModalConfirm({
                     type: "white",
-                    title: t("Login.dataSync", { ns: "core" }),
+                    title: t("Login.dataSync"),
                     icon: <ExclamationCircleOutlined />,
-                    content: t("Login.syncDataConfirm", { ns: "core" }),
+                    content: t("Login.syncDataConfirm"),
                     onOk() {
                         apiDownloadPluginMine()
                         setTimeout(() => setLoading(false), 200)
@@ -110,20 +110,20 @@ const Login: React.FC<LoginProp> = (props) => {
         >
             <YakitSpin spinning={loading}>
                 <div className='login-type-body'>
-                    <h2 className='login-text'>{t("Login.login", { ns: "core" })}</h2>
+                    <h2 className='login-text'>{t("Login.login")}</h2>
                     <div className='login-icon-body'>
                         {/*<div className='login-icon' onClick={() => githubAuth()}>*/}
                         <div className='login-icon' onClick={() => fetchLogin("github")}>
                             <div className='login-icon-text'>
                                 <GithubOutlined className='type-icon' />
-                                {t("Login.loginWithGithub", { ns: "core" })}
+                                {t("Login.loginWithGithub")}
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
                         <div className='login-icon' onClick={() => fetchLogin("wechat")}>
                             <div className='login-icon-text'>
                                 <WechatOutlined className='type-icon icon-wx' />
-                                {t("Login.loginWithWechat", { ns: "core" })}
+                                {t("Login.loginWithWechat")}
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>

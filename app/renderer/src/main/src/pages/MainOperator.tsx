@@ -70,6 +70,7 @@ import {parseUrl} from "@/hook/useProxy"
 import {JSONParseLog} from "@/utils/tool"
 import {apiGetGlobalNetworkConfig} from "./spaceEngine/utils"
 import {setAIModal} from "./ai-agent/aiModelList/AIModelList"
+import {Trans} from "react-i18next"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -139,7 +140,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["layout"])
+    const {t} = useI18nNamespaces(["layout"])
     const {userInfo, setStoreUserInfo, avatarColor} = props
 
     // OSS远程头像删除
@@ -147,7 +148,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
         httpDeleteOSSResource({file_name: [imgName]}, true)
             .then(() => {})
             .catch((err) => {
-                failed(t("mainOperator.avatarUpdateFailed", { ns: "layout", error: err }))
+                failed(t("SetUserInfo.avatarUpdateFailed", {error: err}))
             })
     })
 
@@ -166,7 +167,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 })
                     .then((result) => {
                         if (result.ok) {
-                            success(t("mainOperator.avatarUpdateSuccess", { ns: "layout" }))
+                            success(t("SetUserInfo.avatarUpdateSuccess"))
                             setStoreUserInfo({
                                 ...userInfo,
                                 companyHeadImg: imgUrl
@@ -176,12 +177,12 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                         }
                     })
                     .catch((err) => {
-                        failed(t("mainOperator.avatarUpdateFailed", { ns: "layout", error: err }))
+                        failed(t("SetUserInfo.avatarUpdateFailed", {error: err}))
                     })
                     .finally(() => {})
             })
             .catch((err) => {
-                failed(t("mainOperator.avatarUploadFailed", { ns: "layout" }))
+                failed(t("SetUserInfo.avatarUploadFailed"))
             })
             .finally(() => {})
     })
@@ -196,7 +197,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 showUploadList={false}
                 beforeUpload={(f) => {
                     if (!FileType.includes(f.type)) {
-                        failed(t("mainOperator.avatarFileTypeLimit", { ns: "layout", name: f.name }))
+                        failed(t("SetUserInfo.avatarFileTypeLimit", {name: f.name}))
                         return false
                     }
                     setAvatar(f)
@@ -220,7 +221,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 <div className='user-name'>{userInfo.companyName}</div>
                 {userInfo.role === "admin" && (
                     <>
-                        <div className='permission-show'>{t("mainOperator.admin", { ns: "layout" })}</div>
+                        <div className='permission-show'>{t("SetUserInfo.admin")}</div>
                         <span className='user-admin-icon'>
                             <EnterpriseLoginInfoIcon />
                         </span>
@@ -257,13 +258,12 @@ const getDefaultExpand = () => {
     return true
 }
 const Main: React.FC<MainProp> = React.memo((props) => {
-    const {t: tlayout} = useI18nNamespaces(["layout"])
     const [showRenderCrash, setShowRenderCrash] = useState(false)
     const [showProxyModal, setShowProxyModal] = useState(false)
     const [ProxyModalLoading, setProxyModalLoading] = useState(false)
     const ProxyHistoryName = MITMConsts.MITMDefaultDownstreamProxyHistory
     const ProxyWebFuzzerName = "web_fuzzer_proxy_list"
-    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const {t, i18n} = useI18nNamespaces(["mitm", "layout", "yakitUi"])
 
     const remoteProxyHistory = useMemoizedFn(() => {
         const cacheData = {
@@ -683,7 +683,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
                     <YakitModal
                         visible={passwordShow}
-                        title={tlayout("funcDomain.setPassword", { ns: "layout" })}
+                        title={t("Main.setPassword")}
                         destroyOnClose={true}
                         maskClosable={false}
                         bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -710,11 +710,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     <YakitHint
                         getContainer={chartCSDragAreaRef.current || undefined}
                         visible={showRenderCrash}
-                        title={tlayout("mainOperator.renderCrashTitle", { ns: "layout" })}
-                        content={tlayout("mainOperator.renderCrashDesc", { ns: "layout" })}
-                        okButtonText={tlayout("mainOperator.viewLog", { ns: "layout" })}
+                        title={t("Main.renderCrashTitle")}
+                        content={t("Main.renderCrashDesc")}
+                        okButtonText={t("Main.viewLog")}
                         onOk={() => handleShowRenderCrashCallback(true)}
-                        cancelButtonText={tlayout("mainOperator.ignore", { ns: "layout" })}
+                        cancelButtonText={t("Main.ignore")}
                         onCancel={() => handleShowRenderCrashCallback(false)}
                     />
                 </Layout>
@@ -722,14 +722,20 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             {controlShow && <ControlOperation controlName={controlName} />}
             <YakitHintModal
                 visible={false}
-                title={tlayout("mainOperator.remoteRequestTitle", { ns: "layout" })}
+                title={t("Main.remoteRequestTitle")}
                 content={
                     <div>
-                        {tlayout("mainOperator.remoteRequestContentRich", { ns: "layout", name: "Alex-null" })}
+                        <Trans
+                            i18nKey='Main.remoteRequestContent'
+                            ns='layout'
+                            components={{
+                                code: <span style={{color: "var(--Colors-Use-Main-Primary)"}}></span>
+                            }}
+                        />
                     </div>
                 }
-                cancelButtonText={tlayout("mainOperator.refuse", { ns: "layout" })}
-                okButtonText={tlayout("mainOperator.agree", { ns: "layout" })}
+                cancelButtonText={t("Main.refuse")}
+                okButtonText={t("Main.agree")}
                 onOk={() => {}}
                 onCancel={() => {}}
             />
@@ -737,12 +743,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             {/* irify-start */}
             <YakitHint
                 visible={isShowIRifyHint}
-                title={tlayout("mainOperator.migrateDataTitle", { ns: "layout" })}
-                content={tlayout("mainOperator.migrateDataDesc", { ns: "layout" })}
+                title={t("Main.migrateDataTitle")}
+                content={t("Main.migrateDataDesc")}
                 footer={
                     <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "flex-end"}}>
                         <YakitButton size='max' type='outline2' onClick={() => setIsShowIRifyHint(false)}>
-                            {tlayout("funcDomain.cancel", { ns: "layout" })}
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton
                             size='max'
@@ -751,7 +757,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 setIsAllowIRifyUpdate(true)
                             }}
                         >
-                            {tlayout("funcDomain.confirm", { ns: "layout" })}
+                            {t("YakitButton.confirm")}
                         </YakitButton>
                     </div>
                 }

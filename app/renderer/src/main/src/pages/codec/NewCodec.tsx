@@ -93,7 +93,7 @@ interface NewCodecRightEditorBoxProps {
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
     const {isExpand, setExpand, outputResponse, inputEditor, setInputEditor, runLoading} = props
-    const {t} = useI18nNamespaces(["codec"])
+    const {t, i18n} = useI18nNamespaces(["codec", "yakitUi"])
     const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
     const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
     const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
@@ -192,32 +192,34 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     // 保存
     const onSave = useMemoizedFn(() => {
         if (!outputResponse?.RawResult) {
-            warn(t("codec.noSavedContent"))
+            warn(t("NewCodecRightEditorBox.noSavedContent"))
             return
         }
-            handleOpenFileSystemDialog({title: t("codec.selectFolder"), properties: ["openDirectory"]})
-            .then((data) => {
-                const filesLength = data.filePaths.length
-                if (filesLength) {
-                    const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
-                    ipcRenderer
-                        .invoke("SaveCodecOutputToTxt", {
-                            data: Buffer.from(outputResponse.RawResult),
-                            outputDir: absolutePath,
-                            fileName: `Output-${new Date().getTime()}.txt`
-                        })
-                        .then((r) => {
-                            if (r?.ok) {
-                                success(t("codec.savedSuccess"))
-                                r?.outputDir && openABSFileLocated(r.outputDir)
-                            }
-                        })
-                        .catch((e) => {
-                            failed(`Save Codec failed ${e}`)
-                        })
-                        .finally(() => {})
-                }
-            })
+        handleOpenFileSystemDialog({
+            title: t("NewCodecRightEditorBox.selectFolder"),
+            properties: ["openDirectory"]
+        }).then((data) => {
+            const filesLength = data.filePaths.length
+            if (filesLength) {
+                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
+                ipcRenderer
+                    .invoke("SaveCodecOutputToTxt", {
+                        data: Buffer.from(outputResponse.RawResult),
+                        outputDir: absolutePath,
+                        fileName: `Output-${new Date().getTime()}.txt`
+                    })
+                    .then((r) => {
+                        if (r?.ok) {
+                            success(t("YakitNotification.saved"))
+                            r?.outputDir && openABSFileLocated(r.outputDir)
+                        }
+                    })
+                    .catch((e) => {
+                        failed(`Save Codec failed ${e}`)
+                    })
+                    .finally(() => {})
+            }
+        })
     })
 
     // 替换
@@ -242,7 +244,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineImportIcon />
-                        <div className={styles["menu-name"]}>{t("codec.import")}</div>
+                        <div className={styles["menu-name"]}>{t("YakitButton.import")}</div>
                     </div>
                 )
             },
@@ -251,12 +253,16 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 label: (
                     <div className={classNames(styles["extra-menu"], styles["menu-menu-size"])}>
                         <EnterOutlined />
-                        <div className={styles["menu-name"]}>{noInputWordwrap ? t("codec.autoWordwrap") : t("codec.noAutoWordwrap")}</div>
+                        <div className={styles["menu-name"]}>
+                            {noInputWordwrap
+                                ? t("NewCodecRightEditorBox.autoWordwrap")
+                                : t("NewCodecRightEditorBox.noAutoWordwrap")}
+                        </div>
                     </div>
                 )
             }
         ]
-    }, [noInputWordwrap])
+    }, [noInputWordwrap, i18n.language])
 
     const outputMenuData = useMemo(() => {
         return [
@@ -265,7 +271,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineStorageIcon />
-                        <div className={styles["menu-name"]}>{t("codec.save")}</div>
+                        <div className={styles["menu-name"]}>{t("YakitButton.save")}</div>
                     </div>
                 )
             },
@@ -274,7 +280,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 label: (
                     <div className={classNames(styles["extra-menu"], styles["menu-menu-stroke"])}>
                         <OutlineArrowBigUpIcon />
-                        <div className={styles["menu-name"]}>{t("codec.replaceOutputToInput")}</div>
+                        <div className={styles["menu-name"]}>{t("NewCodecRightEditorBox.replaceOutputToInput")}</div>
                     </div>
                 )
             },
@@ -283,7 +289,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 label: (
                     <div className={styles["extra-menu"]}>
                         <OutlineDocumentduplicateIcon />
-                        <div className={styles["menu-name"]}>{t("codec.copy")}</div>
+                        <div className={styles["menu-name"]}>{t("YakitButton.copy")}</div>
                     </div>
                 )
             },
@@ -292,12 +298,16 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 label: (
                     <div className={classNames(styles["extra-menu"], styles["menu-menu-size"])}>
                         <EnterOutlined />
-                        <div className={styles["menu-name"]}>{noOutputWordwrap ? t("codec.autoWordwrap") : t("codec.noAutoWordwrap")}</div>
+                        <div className={styles["menu-name"]}>
+                            {noOutputWordwrap
+                                ? t("NewCodecRightEditorBox.autoWordwrap")
+                                : t("NewCodecRightEditorBox.noAutoWordwrap")}
+                        </div>
                     </div>
                 )
             }
         ]
-    }, [noOutputWordwrap])
+    }, [noOutputWordwrap, i18n.language])
 
     return (
         <div className={styles["new-codec-editor-box"]} ref={editorBoxRef}>
@@ -317,18 +327,22 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <div className={styles["title"]}>
                                 <span className={styles["text"]}>Input</span>
                                 {inputObj.hidden && (
-                                    <Tooltip title={size && size.width > 450 ? null : t("codec.largeInput")}>
+                                    <Tooltip
+                                        title={size && size.width > 450 ? null : t("NewCodecRightEditorBox.largeInput")}
+                                    >
                                         <YakitTag style={{marginLeft: 8}} color='danger'>
                                             <div className={styles["tag-box"]}>
                                                 <ExclamationIcon className={styles["icon-style"]} />
-                                                {size && size.width > 450 && <span>{t("codec.largeInput")}</span>}
+                                                {size && size.width > 450 && (
+                                                    <span>{t("NewCodecRightEditorBox.largeInput")}</span>
+                                                )}
                                             </div>
                                         </YakitTag>
                                     </Tooltip>
                                 )}
                             </div>
                             <div className={styles["extra"]}>
-                                <Tooltip title={t("codec.import")}>
+                                <Tooltip title={t("YakitButton.import")}>
                                     <Upload
                                         className={classNames(styles["upload-box"], {
                                             [styles["upload-box-hidden"]]: size && size.width <= 300
@@ -351,7 +365,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                     </Upload>
                                 </Tooltip>
                                 {size && size.width > 300 && (
-                                    <Tooltip title={t("codec.noAutoWordwrap")}>
+                                    <Tooltip title={t("NewCodecRightEditorBox.noAutoWordwrap")}>
                                         <YakitButton
                                             size={"small"}
                                             type={noInputWordwrap ? "text" : "primary"}
@@ -398,7 +412,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                 )}
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                 <div className={styles["clear"]} onClick={onClear}>
-                                    {t("codec.clear")}
+                                    {t("YakitButton.clear")}
                                 </div>
                             </div>
                         </div>
@@ -438,13 +452,17 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                     )}
                                     {outPutObj.hidden && (
                                         <Tooltip
-                                            title={size && size.width > 450 ? null : t("codec.largeOutputTip")}
+                                            title={
+                                                size && size.width > 450
+                                                    ? null
+                                                    : t("NewCodecRightEditorBox.largeOutputTip")
+                                            }
                                         >
                                             <YakitTag style={{marginLeft: 8}} color='danger'>
                                                 <div className={styles["tag-box"]}>
                                                     <ExclamationIcon className={styles["icon-style"]} />
                                                     {size && size.width > 450 && (
-                                                        <span>{t("codec.largeOutputTip")}</span>
+                                                        <span>{t("NewCodecRightEditorBox.largeOutputTip")}</span>
                                                     )}
                                                 </div>
                                             </YakitTag>
@@ -452,7 +470,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                     )}
                                     {outputResponse?.IsFalseAppearance && (
                                         <YakitTag style={{marginLeft: 8}} color='danger'>
-                                            {t("codec.dataDistortion")}
+                                            {t("NewCodecRightEditorBox.dataDistortion")}
                                         </YakitTag>
                                     )}
                                 </div>
@@ -461,22 +479,22 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                         <>
                                             {size && size.width > 300 ? (
                                                 <>
-                                                    <Tooltip title={t("codec.save")}>
+                                                    <Tooltip title={t("YakitButton.save")}>
                                                         <div className={styles["extra-icon"]} onClick={onSave}>
                                                             <OutlineStorageIcon />
                                                         </div>
                                                     </Tooltip>
-                                                    <Tooltip title={t("codec.replaceOutputToInput")}>
+                                                    <Tooltip title={t("NewCodecRightEditorBox.replaceOutputToInput")}>
                                                         <div className={styles["extra-icon"]} onClick={onReplace}>
                                                             <OutlineArrowBigUpIcon />
                                                         </div>
                                                     </Tooltip>
-                                                    <Tooltip title={t("codec.copy")}>
+                                                    <Tooltip title={t("YakitButton.copy")}>
                                                         <div className={styles["extra-icon"]} onClick={onCopy}>
                                                             <OutlineDocumentduplicateIcon />
                                                         </div>
                                                     </Tooltip>
-                                                    <Tooltip title={t("codec.noAutoWordwrap")}>
+                                                    <Tooltip title={t("NewCodecRightEditorBox.noAutoWordwrap")}>
                                                         <YakitButton
                                                             size={"small"}
                                                             type={noOutputWordwrap ? "text" : "primary"}
@@ -585,7 +603,7 @@ interface NewCodecMiddleTypeItemProps {
 }
 
 export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (props) => {
-    const { t } = useI18nNamespaces(["codec"])
+    const {t} = useI18nNamespaces(["codec", "yakitUi"])
     const {data, outerKey, rightItems, setRightItems, provided} = props
 
     const {title, node} = data
@@ -760,7 +778,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     </div>
                 </div>
                 <div className={styles["type-extra"]}>
-                    <Tooltip title={itemStatus !== "shield" ? t("codec.disable") : t("codec.enable")}>
+                    <Tooltip title={itemStatus !== "shield" ? t("YakitButton.disable") : t("YakitButton.enable")}>
                         <div
                             className={classNames(styles["extra-icon"], {
                                 [styles["extra-icon-default"]]: itemStatus !== "shield",
@@ -771,7 +789,13 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                             <OutlineBanIcon />
                         </div>
                     </Tooltip>
-                    <Tooltip title={itemStatus !== "suspend" ? t("codec.enableBreakpoint") : t("codec.disableBreakpoint")}>
+                    <Tooltip
+                        title={
+                            itemStatus !== "suspend"
+                                ? t("NewCodecMiddleTypeItem.enableBreakpoint")
+                                : t("NewCodecMiddleTypeItem.disableBreakpoint")
+                        }
+                    >
                         <div
                             className={classNames(styles["extra-icon"], {
                                 [styles["extra-icon-default"]]: itemStatus !== "suspend",
@@ -853,7 +877,7 @@ interface CodecRunListHistoryStoreProps {
 }
 
 export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["codec"])
+    const {t} = useI18nNamespaces(["codec", "yakitUi"])
     const {popoverVisible, setPopoverVisible, onSelect, setCodecFlow, mitmSaveData, onMitmSaveFilter} = props
     useEffect(() => {
         onMitmSaveFilter()
@@ -863,7 +887,7 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
         ipcRenderer
             .invoke("DeleteCodecFlow", {FlowName, DeleteAll})
             .then(() => {
-                info(t("codec.deleteSuccess"))
+                info(t("YakitNotification.deleted"))
                 onMitmSaveFilter()
             })
             .catch((e) => {
@@ -879,17 +903,17 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
     return (
         <div className={styles["codec-run-list-history-store"]}>
             <div className={styles["header"]}>
-                <div className={styles["title"]}>{t("codec.historyStore")}</div>
+                <div className={styles["title"]}>{t("CodecRunListHistoryStore.historyStore")}</div>
                 {mitmSaveData.length !== 0 && (
                     <YakitPopconfirm
-                        title={t("codec.clearHistoryConfirm")}
+                        title={t("CodecRunListHistoryStore.clearHistoryConfirm")}
                         onConfirm={() => {
                             removeItem("", true)
                         }}
-                        placement="right"
+                        placement='right'
                     >
                         <YakitButton type='text' colors='danger'>
-                            清空
+                            {t("YakitButton.clear")}
                         </YakitButton>
                     </YakitPopconfirm>
                 )}
@@ -945,7 +969,7 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                     ))}
                 </div>
             ) : (
-                <div className={classNames(styles["no-data"])}>暂无数据</div>
+                <div className={classNames(styles["no-data"])}>{t("YakitEmpty.noData")}</div>
             )}
         </div>
     )
@@ -1015,7 +1039,7 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwardRef((props, ref) => {
-    const { t } = useI18nNamespaces(["codec"])
+    const {t} = useI18nNamespaces(["codec", "yakitUi"])
     const {
         id,
         fold,
@@ -1106,13 +1130,13 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
         const codecParams = getCodecParams()
         if (!codecParams) return
         if (rightItems.length === 0) {
-            warn(t("codec.dragHint"))
+            warn(t("NewCodecMiddleRunList.dragHint"))
             return
         }
         ipcRenderer
             .invoke("UpdateCodecFlow", codecParams)
             .then(() => {
-                info(t("codec.updateSuccess"))
+                info(t("YakitNotification.updated"))
             })
             .catch((e) => {
                 failed(`UpdateCodecFlow failed ${e}`)
@@ -1121,13 +1145,13 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
 
     const getCodecParams = useMemoizedFn(() => {
         if (!codecFlow && (typeof filterName !== "string" || filterName.length === 0)) {
-            warn(t("codec.pleaseEnterName"))
+            warn(t("NewCodecMiddleRunList.pleaseEnterName"))
             return
         }
         if (!codecFlow) {
             let isAlready = mitmSaveData.find((item) => item.FlowName === filterName)
             if (isAlready) {
-                warn(t("codec.nameAlreadyExists"))
+                warn(t("NewCodecMiddleRunList.nameAlreadyExists"))
                 return
             }
         }
@@ -1190,7 +1214,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
         ipcRenderer
             .invoke("SaveCodecFlow", codecParams)
             .then(() => {
-                info(t("codec.saveSuccess"))
+                info(t("YakitNotification.saveSuccess"))
                 setFilterName(undefined)
                 setCacheModal(false)
                 onMitmSaveFilter()
@@ -1203,7 +1227,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
     // 保存至历史
     const onSaveCodecRunListHistory = useMemoizedFn(() => {
         if (rightItems.length === 0) {
-            warn(t("codec.dragHint"))
+            warn(t("NewCodecMiddleRunList.dragHint"))
             return
         }
         setCacheModal(true)
@@ -1291,7 +1315,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                             checkFail.push({
                                 key,
                                 index: indexIn,
-                                message: t("codec.requiredField", {title: `${title}-${rightItem.title}`})
+                                message: t("YakitForm.field_required_with_label", {
+                                    label: `${title}-${rightItem.title}`
+                                })
                             })
                         }
                         // 校验正则
@@ -1301,7 +1327,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                                 checkFail.push({
                                     key,
                                     index: indexIn,
-                                    message: t("codec.regexCheckFailed", {title: `${title}-${rightItem.title}`, regex: String(regexp)})
+                                    message: t("NewCodecMiddleRunList.regexCheckFailed", {
+                                        title: `${title}-${rightItem.title}`,
+                                        regex: String(regexp)
+                                    })
                                 })
                             }
                         }
@@ -1315,7 +1344,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                             checkFail.push({
                                 key,
                                 index: indexIn,
-                                message: t("codec.requiredField", {title: `${title}-${rightItem.title}`})
+                                message: t("YakitForm.field_required_with_label", {
+                                    label: `${title}-${rightItem.title}`
+                                })
                             })
                         }
                     } else if (itemIn.type === "editor") {
@@ -1326,7 +1357,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                             checkFail.push({
                                 key,
                                 index: indexIn,
-                                message: t("codec.requiredField", {title: `${title}-${rightItem.title}`})
+                                message: t("YakitForm.field_required_with_label", {
+                                    label: `${title}-${rightItem.title}`
+                                })
                             })
                         }
                     } else if (itemIn.type === "inputSelect") {
@@ -1339,7 +1372,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                             checkFail.push({
                                 key,
                                 index: indexIn,
-                                message: t("codec.requiredField", {title: `${title}-${inputItem.title}`})
+                                message: t("YakitForm.field_required_with_label", {
+                                    label: `${title}-${inputItem.title}`
+                                })
                             })
                         }
                         // 校验input正则
@@ -1349,7 +1384,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                                 checkFail.push({
                                     key,
                                     index: indexIn,
-                                    message: t("codec.regexCheckFailed", {title: `${title}-${inputItem.title}`, regex: String(regexp)})
+                                    message: t("NewCodecMiddleRunList.regexCheckFailed", {
+                                        title: `${title}-${inputItem.title}`,
+                                        regex: String(regexp)
+                                    })
                                 })
                             }
                         }
@@ -1358,7 +1396,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                             checkFail.push({
                                 key,
                                 index: indexIn,
-                                message: t("codec.requiredField", {title: `${title}-${selectItem.title}`})
+                                message: t("YakitForm.field_required_with_label", {
+                                    label: `${title}-${selectItem.title}`
+                                })
                             })
                         }
                     } else if (itemIn.type === "flex") {
@@ -1397,7 +1437,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
             <div className={styles["header"]}>
                 <div className={styles["title"]}>
                     {!fold && (
-                        <Tooltip placement='right' title={t('codec.expandCodecCategory')}>
+                        <Tooltip placement='right' title={t("NewCodecMiddleRunList.expandCodecCategory")}>
                             <SideBarOpenIcon
                                 className={styles["fold-icon"]}
                                 onClick={() => {
@@ -1406,18 +1446,18 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                             />
                         </Tooltip>
                     )}
-                    <span>编解码顺序</span>
+                    <span>{t("NewCodecMiddleRunList.codecOrder")}</span>
                     <span className={styles["count"]}>{rightItems.length}</span>
                 </div>
                 <div className={styles["extra"]}>
                     {codecFlow ? (
-                        <Tooltip title={t("codec.saveUpdate")}>
+                        <Tooltip title={t("YakitButton.saveUpdate")}>
                             <div className={styles["extra-icon"]} onClick={onUpdateFun}>
                                 <OutlineFileUpIcon />
                             </div>
                         </Tooltip>
                     ) : (
-                        <Tooltip title={t("codec.save")}>
+                        <Tooltip title={t("YakitButton.save")}>
                             <div className={styles["extra-icon"]} onClick={onSaveCodecRunListHistory}>
                                 <OutlineStorageIcon />
                             </div>
@@ -1441,7 +1481,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                         onVisibleChange={setPopoverVisible}
                         visible={popoverVisible}
                     >
-                        <Tooltip title={t("codec.historyStore")}>
+                        <Tooltip title={t("CodecRunListHistoryStore.historyStore")}>
                             <div className={styles["extra-icon"]}>
                                 <OutlineClockIcon />
                             </div>
@@ -1449,7 +1489,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                     </YakitPopover>
                     <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                     <div className={styles["clear"]} onClick={onClear}>
-                        清空
+                        {t("YakitButton.clear")}
                     </div>
                 </div>
             </div>
@@ -1502,7 +1542,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                                 </>
                             ) : (
                                 <div className={styles["no-data"]}>
-                                    <YakitEmpty title={t('codec.dragHint')} />
+                                    <YakitEmpty title={t("NewCodecMiddleRunList.dragHint")} />
                                 </div>
                             )}
 
@@ -1517,7 +1557,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                     checked={autoRun}
                     onChange={(e) => setAutoRun(e.target.checked)}
                 >
-                    自动执行
+                    {t("YakitButton.autoRun")}
                 </YakitCheckbox>
                 <YakitButton
                     disabled={rightItems.length === 0 || inputEditor.length === 0}
@@ -1526,13 +1566,13 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                     icon={<SolidPlayIcon />}
                     onClick={runCodec}
                 >
-                    立即执行
+                    {t("YakitButton.runNow")}
                 </YakitButton>
             </div>
             <YakitModal
                 visible={cacheModal}
                 bodyStyle={{padding: 0}}
-                title={t('codec.saveCodecOrder')}
+                title={t("NewCodecMiddleRunList.saveCodecOrder")}
                 width={400}
                 footer={null}
                 onCancel={() => {
@@ -1543,7 +1583,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                 <div className={styles["codec-save-modal"]}>
                     <YakitInput.TextArea
                         value={filterName}
-                        placeholder={t('codec.codecOrderNamePlaceholder')}
+                        placeholder={t("NewCodecMiddleRunList.codecOrderNamePlaceholder")}
                         showCount
                         maxLength={50}
                         onChange={(e) => {
@@ -1558,10 +1598,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                                 setCacheModal(false)
                             }}
                         >
-                            {t("codec.cancel")}
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={onSaveFun}>
-                            保存
+                            {t("YakitButton.save")}
                         </YakitButton>
                     </div>
                 </div>
@@ -1615,7 +1655,6 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
 
 // 左边拖拽源
 export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> = (props) => {
-    const { t } = useI18nNamespaces(["codec"])
     const {node, collectList, parentItem, getCollectData, onClickToRunList} = props
 
     const dragListItemDom = useMemoizedFn((item: CodecMethod) => (
@@ -1769,7 +1808,7 @@ interface LeftDataProps {
 
 // codec左边拖拽列表
 export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props) => {
-    const { t } = useI18nNamespaces(["codec"])
+    const {t} = useI18nNamespaces(["codec", "yakitUi"])
     const {
         fold,
         setFold,
@@ -1793,9 +1832,9 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
             })}
         >
             <div className={styles["header"]}>
-                <div className={styles["title"]}>Codec 分类</div>
+                <div className={styles["title"]}>{t("NewCodecLeftDragList.codecCategory")}</div>
                 <div className={classNames(styles["extra"], styles["fold-icon"])}>
-                    <Tooltip placement='top' title={t('codec.collapseCodecCategory')}>
+                    <Tooltip placement='top' title={t("NewCodecLeftDragList.collapseCodecCategory")}>
                         <SideBarCloseIcon
                             className={styles["fold-icon"]}
                             onClick={() => {
@@ -1813,7 +1852,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                         </div>
                     }
                     style={{width: "100%"}}
-                    placeholder={t('codec.searchPlaceholder')}
+                    placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                     value={searchValue}
                     onChange={(e) => {
                         setSearchValue && setSearchValue(e.target.value)
@@ -1832,7 +1871,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                     getCollectData={getCollectData}
                                     onClickToRunList={onClickToRunList}
                                 />
-                                <div className={styles["to-end"]}>已经到底啦～</div>
+                                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
                             </div>
                         ) : (
                             <YakitCollapse
@@ -1857,7 +1896,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                             }
                                             key={item.title}
                                             extra={
-                                                item.title === t("codec.myFavoriteTools") ? (
+                                                item.title === t("NewCodecLeftDragList.myFavoriteTools") ? (
                                                     <>
                                                         {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
                                                         e.stopPropagation()
@@ -1892,7 +1931,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                         </YakitPanel>
                                     )
                                 })}
-                                <div className={styles["to-end"]}>已经到底啦～</div>
+                                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
                             </YakitCollapse>
                         )}
                     </>
@@ -2051,7 +2090,7 @@ export interface NewCodecProps {
     id: string
 }
 export const NewCodec: React.FC<NewCodecProps> = (props) => {
-    const { t } = useI18nNamespaces(["codec"])
+    const {t, i18n} = useI18nNamespaces(["codec", "yakitUi"])
     const {id} = props
     // codec分类展开收起
     const [fold, setFold] = useState<boolean>(true)
@@ -2090,17 +2129,16 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             })
     })
     useEffect(() => {
-        if (getSubscribeClose(YakitRoute.Codec)) return
         setSubscribeClose(YakitRoute.Codec, {
             close: {
-                title: t("codec.closeTitle"),
-                content: t("codec.closeContent"),
-                onOkText: t("codec.ok"),
-                onCancelText: t("codec.cancel"),
+                title: t("YakitModal.closePrompt"),
+                content: t("YakitModal.closeContent"),
+                onOkText: t("YakitButton.ok"),
+                onCancelText: t("YakitButton.cancel"),
                 onOk: (m) => onCloseTab(m)
             }
         })
-    }, [])
+    }, [i18n.language])
 
     const onCloseSubPageByJudgeFun = useMemoizedFn((res) => {
         try {
@@ -2111,8 +2149,8 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                     const m = YakitModalConfirm({
                         width: 420,
                         type: "white",
-                        title: t("codec.closeTitle"),
-                        content: t("codec.saveUpdateConfirm"),
+                        title: t("YakitModal.closePrompt"),
+                        content: t("NewCodec.saveUpdateConfirm"),
                         onCancel() {
                             m.destroy()
                         },
@@ -2133,7 +2171,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                                         m.destroy()
                                     }}
                                 >
-                                    不保存
+                                    {t("YakitButton.doNotSave")}
                                 </YakitButton>
 
                                 <YakitButton
@@ -2146,7 +2184,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                                         }, 200)
                                     }}
                                 >
-                                    保存
+                                    {t("YakitButton.save")}
                                 </YakitButton>
                             </div>
                         )
@@ -2205,8 +2243,8 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             }
         })
 
-        // 找到 title 为 t("codec.other") 的项的索引
-        const index = data.findIndex((item) => item.title === t("codec.other"))
+        // 找到 title 为 "其他" 的项的索引
+        const index = data.findIndex((item) => item.title === "其他")
         // 如果找到了，则将该项移动到数组尾部
         if (index !== -1) {
             const otherItem = data.splice(index, 1)[0]
@@ -2230,7 +2268,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             if (filterCodec.length > 0) {
                 setLeftCollectData([
                     {
-                        title: t("codec.myFavoriteTools"),
+                        title: t("NewCodecLeftDragList.myFavoriteTools"),
                         node: filterCodec
                     }
                 ])
@@ -2355,14 +2393,14 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         } as RightItemsInputSelectProps
                     default:
                         return {
-                            title: t("codec.unrecognizedData"),
+                            title: t("NewCodec.unrecognizedData"),
                             require: false,
                             type: "input"
                         } as RightItemsInputProps
                 }
             } catch (error) {
                 return {
-                    title: t("codec.unrecognizedData"),
+                    title: t("NewCodec.unrecognizedData"),
                     require: false,
                     type: "input"
                 } as RightItemsInputProps

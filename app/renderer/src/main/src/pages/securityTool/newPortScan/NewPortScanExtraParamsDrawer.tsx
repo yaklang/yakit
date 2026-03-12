@@ -79,7 +79,7 @@ const defaultExtraParamsFormValue = {
     其他配置: defaultOtherSetting
 }
 const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {extraParamsValue, visible, onSave} = props
     const [form] = Form.useForm()
     useEffect(() => {
@@ -101,11 +101,11 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
             visible={visible}
             onClose={onClose}
             width='65%'
-            title={t("portscan.extraParams")}
+            title={t("NewPortScanExecuteContent.extraParams")}
         >
             <Form size='small' labelWrap={true} labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
                 <NewPortScanExtraParams form={form} visible={visible} />
-                <div className={styles["to-end"]}>{t("portscan.atBottom")}</div>
+                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
             </Form>
         </YakitDrawer>
     )
@@ -117,15 +117,15 @@ interface NewPortScanExtraParamsProps {
     visible: boolean
 }
 const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {form, visible} = props
 
     const [activeKey, setActiveKey] = useState<string[]>([
-        t("portscan.networkCardConfig"),
-        t("portscan.synConfig"),
-        t("portscan.fingerprintScanConfig"),
-        t("portscan.basicCrawlerConfig"),
-        t("portscan.otherConfig")
+        "网卡配置",
+        "SYN 配置",
+        "指纹扫描配置",
+        "基础爬虫配置",
+        "其他配置"
     ])
 
     const mode = Form.useWatch("Mode", form)
@@ -146,10 +146,10 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
     const synCollapseNode = useMemoizedFn(() => {
         return (
             <>
-                <NetworkCardSettingsPanel key={t("portscan.networkCardConfig")} visible={visible} />
+                <NetworkCardSettingsPanel key='网卡配置' visible={visible} />
                 <YakitPanel
-                    header={t("portscan.synConfig")}
-                    key={t("portscan.synConfig")}
+                    header={t("ScanPortForm.synConfig")}
+                    key='SYN 配置'
                     extra={
                         <YakitButton
                             type='text'
@@ -157,17 +157,17 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                             size='small'
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onReset(t("portscan.synConfig"))
+                                onReset("SYN 配置")
                             }}
                         >
-                            {t("portscan.reset")}
+                            {t("YakitButton.reset")}
                         </YakitButton>
                     }
                 >
                     <Form.Item
-                        label={t("portscan.synConcurrent")}
+                        label={t("ScanPortForm.synConcurrent")}
                         name='SynConcurrent'
-                        extra={t("portscan.synConcurrentHelp")}
+                        extra={t("ScanPortForm.synConcurrentHelp")}
                         style={{marginBottom: 0}}
                     >
                         <YakitInputNumber type='horizontal' min={0} />
@@ -183,16 +183,16 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                 return (
                     <>
                         {synCollapseNode()}
-                        <ScanOtherSettingsPanel key={t("portscan.otherConfig")} />
+                        <ScanOtherSettingsPanel key='其他配置' />
                     </>
                 )
             //指纹
             case "fingerprint":
                 return (
                     <>
-                        <FingerprintSettingsPanel key={t("portscan.fingerprintScanConfig")} />
-                        <BasicCrawlerSettingsPanel key={t("portscan.basicCrawlerConfig")} />
-                        <ScanOtherSettingsPanel key={t("portscan.otherConfig")} />
+                        <FingerprintSettingsPanel key='指纹扫描配置' />
+                        <BasicCrawlerSettingsPanel key='基础爬虫配置' />
+                        <ScanOtherSettingsPanel key='其他配置' />
                     </>
                 )
             // all SYN+指纹
@@ -200,16 +200,21 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                 return (
                     <>
                         {synCollapseNode()}
-                        <FingerprintSettingsPanel key={t("portscan.fingerprintScanConfig")} />
-                        <BasicCrawlerSettingsPanel key={t("portscan.basicCrawlerConfig")} />
-                        <ScanOtherSettingsPanel key={t("portscan.otherConfig")} />
+                        <FingerprintSettingsPanel key='指纹扫描配置' />
+                        <BasicCrawlerSettingsPanel key='基础爬虫配置' />
+                        <ScanOtherSettingsPanel key='其他配置' />
                     </>
                 )
         }
     })
     return (
         <div className={styles["port-scan-params-wrapper"]}>
-            <Form.Item label={t("portscan.scanMode")} name='Mode' initialValue='fingerprint' extra={t("portscan.synNeedRoot")}>
+            <Form.Item
+                label={t("ScanPortForm.scanMode")}
+                name='Mode'
+                initialValue='fingerprint'
+                extra={t("ScanPortForm.synNeedRoot")}
+            >
                 <YakitRadioButtons
                     buttonStyle='solid'
                     options={ScanKindKeys.map((item) => ({
@@ -218,7 +223,7 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     }))}
                 />
             </Form.Item>
-            <Form.Item label={t("portscan.scanProto")} name='scanProtocol' initialValue='tcp'>
+            <Form.Item label={t("ScanPortForm.scanProto")} name='scanProtocol' initialValue='tcp'>
                 <YakitRadioButtons buttonStyle='solid' options={protoList} />
             </Form.Item>
             <YakitCollapse
@@ -240,7 +245,7 @@ interface NetworkCardSettingsPanelProps {
 }
 /**网卡配置 */
 export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {visible, key, ...restProps} = props
     const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
 
@@ -275,11 +280,11 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
             SynScanNetInterface: synScanNetInterface
         }
         apiSetGlobalNetworkConfig(params).then(() => {
-            yakitInfo(t("portscan.updateConfigSuccess"))
+            yakitInfo(t("ScanPortForm.updateConfigSuccess"))
         })
     })
     const onReset = useMemoizedFn(() => {
-        const value = defaultExtraParamsFormValue[t("portscan.networkCardConfig")]
+        const value = defaultExtraParamsFormValue["网卡配置"]
         form.setFieldsValue({
             ...value
         })
@@ -288,7 +293,7 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
         <>
             <YakitPanel
                 {...restProps} // 仅为了让Panel正确得渲染/展开折叠，暂无其他作用
-                header={t("portscan.networkCardConfig")}
+                header={t("ScanPortForm.networkCardConfig")}
                 key={key}
                 extra={
                     <YakitButton
@@ -300,24 +305,24 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
                             onReset()
                         }}
                     >
-                        {t("portscan.reset")}
+                        {t("YakitButton.reset")}
                     </YakitButton>
                 }
                 className={styles["form-Panel"]}
             >
                 <Form.Item
-                    label={t("portscan.networkCardSelect")}
+                    label={t("ScanPortForm.networkCardSelect")}
                     extra={
                         !isEnpriTraceAgent() && (
                             <YakitButton type='text' style={{paddingLeft: 0}} onClick={updateGlobalNetworkConfig}>
-                                {t("portscan.syncToGlobalNetworkConfig")}
+                                {t("ScanPortForm.syncToGlobalNetworkConfig")}
                             </YakitButton>
                         )
                     }
                     name='SynScanNetInterface'
                     style={{marginBottom: 0}}
                 >
-                    <YakitSelect allowClear placeholder={t("portscan.pleaseSelect")} options={netInterfaceList} />
+                    <YakitSelect allowClear placeholder={t("YakitSelect.pleaseSelect")} options={netInterfaceList} />
                 </Form.Item>
             </YakitPanel>
         </>
@@ -330,7 +335,7 @@ interface FingerprintSettingsPanelProps {
 }
 /**指纹扫描配置 */
 export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {key, isSimpleDetect, ...restProps} = props
     const form = Form.useFormInstance()
 
@@ -350,7 +355,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
         }
     })
     const onReset = useMemoizedFn(() => {
-        const value = defaultExtraParamsFormValue[t("portscan.fingerprintScanConfig")]
+        const value = defaultExtraParamsFormValue["指纹扫描配置"]
         if (isSimpleDetect) {
             form.setFieldsValue({
                 ...value,
@@ -368,7 +373,9 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
     })
 
     const enableFingerprintGroup = Form.useWatch("EnableFingerprintGroup")
-    const [groupsOptions, setGroupsOptions] = useState<{label: string; value: string}[]>([{label: t("portscan.allOption"), value: ""}]) // 选全部的时候，默认传给后端的是空数组
+    const [groupsOptions, setGroupsOptions] = useState<{label: string; value: string}[]>([
+        {label: t("FingerprintSettingsPanel.allOption"), value: ""}
+    ]) // 选全部的时候，默认传给后端的是空数组
     const onFingerprintGroupFocus = useMemoizedFn(() => {
         grpcFetchLocalFingerprintGroupList()
             .then(({Data}) => {
@@ -376,7 +383,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                     Data.map((item) => {
                         return {label: item.GroupName, value: item.GroupName}
                     }) || []
-                arr.unshift({label: t("portscan.allOption"), value: ""})
+                arr.unshift({label: t("FingerprintSettingsPanel.allOption"), value: ""})
                 setGroupsOptions(arr)
             })
             .catch(() => {})
@@ -386,7 +393,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
         <>
             <YakitPanel
                 {...restProps} // 仅为了让Panel正确得渲染/展开折叠，暂无其他作用
-                header={t("portscan.fingerprintScanConfig")}
+                header={t("ScanPortForm.fingerprintScanConfig")}
                 key={key}
                 extra={
                     <YakitButton
@@ -398,84 +405,85 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                             onReset()
                         }}
                     >
-                        {t("portscan.reset")}
+                        {t("YakitButton.reset")}
                     </YakitButton>
                 }
             >
                 {isSimpleDetect && (
                     <>
-                        <Form.Item label={t("portscan.presetPort")} name='presetPort'>
+                        <Form.Item label={t("ScanPortForm.presetPort")} name='presetPort'>
                             <Checkbox.Group
                                 className={styles["preset-port-group-wrapper"]}
                                 onChange={onCheckPresetPort}
                             >
-                                <YakitCheckbox value={"fast"}>{t("portscan.fast")}</YakitCheckbox>
-                                <YakitCheckbox value={"middle"}>{t("portscan.middle")}</YakitCheckbox>
-                                <YakitCheckbox value={"slow"}>{t("portscan.slow")}</YakitCheckbox>
-                                <YakitCheckbox value={"top100"}>{t("portscan.top100")}</YakitCheckbox>
-                                <YakitCheckbox value={"topweb"}>{t("portscan.topweb")}</YakitCheckbox>
-                                <YakitCheckbox value={"top1000+"}>{t("portscan.top1000+")}</YakitCheckbox>
-                                <YakitCheckbox value={"topdb"}>{t("portscan.topdb")}</YakitCheckbox>
-                                <YakitCheckbox value={"topudp"}>{t("portscan.topudp")}</YakitCheckbox>
-                                <YakitCheckbox value={"defect"}>{t("portscan.defect")}</YakitCheckbox>
-                                <YakitCheckbox value={"all"}>{t("portscan.all")}</YakitCheckbox>
+                                <YakitCheckbox value={"fast"}>{t("ScanPortForm.fast")}</YakitCheckbox>
+                                <YakitCheckbox value={"middle"}>{t("ScanPortForm.middle")}</YakitCheckbox>
+                                <YakitCheckbox value={"slow"}>{t("ScanPortForm.slow")}</YakitCheckbox>
+                                <YakitCheckbox value={"top100"}>{t("ScanPortForm.top100")}</YakitCheckbox>
+                                <YakitCheckbox value={"topweb"}>{t("ScanPortForm.topweb")}</YakitCheckbox>
+                                <YakitCheckbox value={"top1000+"}>{t("ScanPortForm.top1000")}</YakitCheckbox>
+                                <YakitCheckbox value={"topdb"}>{t("ScanPortForm.topdb")}</YakitCheckbox>
+                                <YakitCheckbox value={"topudp"}>{t("ScanPortForm.topudp")}</YakitCheckbox>
+                                <YakitCheckbox value={"defect"}>{t("ScanPortForm.defect")}</YakitCheckbox>
+                                <YakitCheckbox value={"all"}>{t("ScanPortForm.all")}</YakitCheckbox>
                             </Checkbox.Group>
                         </Form.Item>
                         <Form.Item
-                            label={t("portscan.scanPort")}
+                            label={t("ScanPortForm.scanPort")}
                             name='Ports'
                             extra={
                                 <div className={styles["ports-form-extra"]}>
-                                    <Tooltip title={t("portscan.resetToDefaultPort")}>
+                                    <Tooltip title={t("ScanPortForm.resetToDefaultPort")}>
                                         <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={onResetPort}>
-                                            {t("portscan.defaultConfig")}
+                                            {t("NewPortScanExecuteForm.defaultConfig")}
                                         </YakitButton>
                                     </Tooltip>
                                 </div>
                             }
-                            rules={[{required: true, message: t("portscan.pleaseEnter")}]}
+                            rules={[{required: true, message: "请输入扫描端口"}]}
                             initialValue={defaultPorts}
                         >
                             <YakitInput.TextArea rows={3} />
                         </Form.Item>
                     </>
                 )}
-                <Form.Item label={t("portscan.fingerprintScanConcurrency")} name='Concurrent'>
+                <Form.Item label={t("ScanPortForm.fingerprintScanConcurrency")} name='Concurrent'>
                     <YakitInputNumber type='horizontal' min={1} />
                 </Form.Item>
-                <Form.Item label={t("portscan.activeMode")} name='Active' valuePropName='checked' extra={t("portscan.activeModeHelp")}>
+                <Form.Item
+                    label={t("ScanPortForm.activeMode")}
+                    name='Active'
+                    valuePropName='checked'
+                    extra={t("ScanPortForm.activeModeHelp")}
+                >
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item
-                    label={t("portscan.serviceFingerprintLevel")}
+                    label={t("ScanPortForm.serviceFingerprintLevel")}
                     name='ProbeMax'
-                    extra={t("portscan.serviceFingerprintLevelHelp")}
+                    extra={t("ScanPortForm.serviceFingerprintLevelHelp")}
                 >
                     <YakitRadioButtons
                         buttonStyle='solid'
                         options={[
-                            {value: 1, label: t("portscan.basic")},
-                            {value: 3, label: t("portscan.middle")},
-                            {value: 7, label: t("portscan.detailed")},
-                            {value: 100, label: t("portscan.all")}
+                            {value: 1, label: t("ScanPortForm.basic")},
+                            {value: 3, label: "适中"},
+                            {value: 7, label: t("ScanPortForm.detailed")},
+                            {value: 100, label: t("FingerprintSettingsPanel.allOption")}
                         ]}
                     />
                 </Form.Item>
                 <Form.Item
-                    label={t("portscan.activePacketTimeout")}
+                    label={t("ScanPortForm.activePacketTimeout")}
                     name='ProbeTimeout'
-                    extra={t("portscan.activePacketTimeoutHelp")}
+                    extra={t("ScanPortForm.activePacketTimeoutHelp")}
                 >
                     <YakitInputNumber type='horizontal' min={1} />
                 </Form.Item>
-                <Form.Item
-                    label={t("portscan.tcpProxy")}
-                    name='Proxy'
-                    extra={t("portscan.tcpProxyHelp")}
-                >
+                <Form.Item label={t("ScanPortForm.tcpProxy")} name='Proxy' extra={t("ScanPortForm.tcpProxyHelp")}>
                     <YakitSelect
                         allowClear
-                        placeholder={t("portscan.pleaseSelect")}
+                        placeholder={t("YakitSelect.pleaseSelect")}
                         options={[
                             "http://127.0.0.1:7890",
                             "http://127.0.0.1:8082",
@@ -487,13 +495,13 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                         mode='tags'
                     />
                 </Form.Item>
-                <Form.Item label={t("portscan.advancedFingerprintOptions")} name='FingerprintMode'>
+                <Form.Item label={t("ScanPortForm.advancedFingerprintOptions")} name='FingerprintMode'>
                     <YakitRadioButtons
                         buttonStyle='solid'
                         options={[
-                            {value: "web", label: t("portscan.onlyWebFingerprint")},
-                            {value: "service", label: t("portscan.serviceFingerprint")},
-                            {value: "all", label: t("portscan.allFingerprint")}
+                            {value: "web", label: t("ScanPortForm.onlyWebFingerprint")},
+                            {value: "service", label: t("ScanPortForm.serviceFingerprint")},
+                            {value: "all", label: t("ScanPortForm.allFingerprint")}
                         ]}
                     />
                 </Form.Item>
@@ -502,14 +510,14 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                         <YakitFormDragger
                             formItemProps={{
                                 name: "UserFingerprintFilesStr",
-                                label: t("portscan.customFingerprint")
+                                label: t("FingerprintSettingsPanel.customFingerprint")
                             }}
                             accept='.yaml,.yml'
-                            help={t("portscan.dragYamlFilesHelp")}
+                            help={t("FingerprintSettingsPanel.dragYamlFilesHelp")}
                             selectType='file'
                             multiple={true}
                         />
-                        <Form.Item label={t("portscan.useFingerprintLib")}>
+                        <Form.Item label={t("FingerprintSettingsPanel.useFingerprintLib")}>
                             <div className={styles["form-no-style-wrapper"]}>
                                 <Form.Item noStyle name='EnableFingerprintGroup' valuePropName='checked'>
                                     <YakitSwitch />
@@ -547,12 +555,12 @@ interface BasicCrawlerSettingsPanelProps {
 }
 /** 基础爬虫配置 */
 export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {key, ...restProps} = props
     const form = Form.useFormInstance()
     const enableBasicCrawler = Form.useWatch("EnableBasicCrawler", form)
     const onReset = useMemoizedFn(() => {
-        const value = defaultExtraParamsFormValue[t("portscan.basicCrawlerConfig")]
+        const value = defaultExtraParamsFormValue["基础爬虫配置"]
         form.setFieldsValue({
             ...value
         })
@@ -561,7 +569,7 @@ export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps>
         <>
             <YakitPanel
                 {...restProps} // 仅为了让Panel正确得渲染/展开折叠，暂无其他作用
-                header={t("portscan.basicCrawlerConfig")}
+                header={t("ScanPortForm.basicCrawlerConfig")}
                 key={key}
                 extra={
                     <YakitButton
@@ -573,29 +581,26 @@ export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps>
                             onReset()
                         }}
                     >
-                        {t("portscan.reset")}
+                        {t("YakitButton.reset")}
                     </YakitButton>
                 }
             >
-                <Form.Item
-                    label={t("portscan.crawlerSettings")}
-                    extra={t("portscan.crawlerSettingsHelp")}
-                >
+                <Form.Item label={t("ScanPortForm.crawlerSettings")} extra={t("ScanPortForm.crawlerSettingsHelp")}>
                     <div className={styles["form-no-style-wrapper"]}>
                         <Form.Item noStyle name='EnableBasicCrawler' valuePropName='checked'>
                             <YakitCheckbox />
                         </Form.Item>
                         <Form.Item noStyle name='BasicCrawlerRequestMax'>
-                            <YakitInputNumber min={1} addonBefore={t("portscan.crawlerRequestCount")} />
+                            <YakitInputNumber min={1} addonBefore={t("ScanPortForm.crawlerRequestCount")} />
                         </Form.Item>
                     </div>
                 </Form.Item>
                 {enableBasicCrawler && (
                     <Form.Item
-                        label={t("portscan.jsSsaParser")}
+                        label={t("FingerprintSettingsPanel.jsSsaParser")}
                         name='BasicCrawlerEnableJSParser'
                         valuePropName='checked'
-                        extra={t("portscan.jsSsaParserHelp")}
+                        extra={t("FingerprintSettingsPanel.jsSsaParserHelp")}
                     >
                         <YakitSwitch />
                     </Form.Item>
@@ -609,13 +614,13 @@ interface ScanOtherSettingsPanelProps {
     key: string
 }
 export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["portscan"])
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {key, ...restProps} = props
     const form = Form.useFormInstance()
     const skippedHostAliveScan = Form.useWatch("SkippedHostAliveScan", form)
     const saveToDB = Form.useWatch("SaveToDB", form)
     const onReset = useMemoizedFn(() => {
-        const value = defaultExtraParamsFormValue[t("portscan.otherConfig")]
+        const value = defaultExtraParamsFormValue["其他配置"]
         form.setFieldsValue({
             ...value
         })
@@ -624,7 +629,7 @@ export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = Rea
         <>
             <YakitPanel
                 {...restProps} // 仅为了让Panel正确得渲染/展开折叠，暂无其他作用
-                header={t("portscan.otherConfig")}
+                header={t("ScanPortForm.otherConfig")}
                 key={key}
                 extra={
                     <YakitButton
@@ -636,57 +641,61 @@ export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = Rea
                             onReset()
                         }}
                     >
-                        {t("portscan.reset")}
+                        {t("YakitButton.reset")}
                     </YakitButton>
                 }
             >
-                <Form.Item label={t("portscan.saveToDB")} name='SaveToDB' valuePropName='checked'>
+                <Form.Item label={t("ScanPortForm.saveToDB")} name='SaveToDB' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item>
                 {saveToDB && (
                     <>
-                        <Form.Item label={t("portscan.saveClosedPorts")} name='SaveClosedPorts' valuePropName='checked'>
+                        <Form.Item
+                            label={t("ScanPortForm.saveClosedPorts")}
+                            name='SaveClosedPorts'
+                            valuePropName='checked'
+                        >
                             <YakitSwitch />
                         </Form.Item>
                     </>
                 )}
 
                 <Form.Item
-                    label={t("portscan.autoScanCClass")}
+                    label={t("ScanPortForm.autoScanCClass")}
                     name='EnableCClassScan'
                     valuePropName='checked'
-                    extra={t("portscan.autoScanCClassHelp")}
+                    extra={t("ScanPortForm.autoScanCClassHelp")}
                 >
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item
-                    label={t("portscan.skipHostAliveScan")}
+                    label={t("ScanPortForm.skipHostAliveScan")}
                     name='SkippedHostAliveScan'
                     valuePropName='checked'
-                    extra={t("portscan.hostAliveScanHelp")}
+                    extra={t("ScanPortForm.hostAliveScanHelp")}
                 >
                     <YakitSwitch />
                 </Form.Item>
                 {!skippedHostAliveScan && (
                     <>
-                        <Form.Item label={t("portscan.hostAliveConcurrent")} name='HostAliveConcurrent'>
+                        <Form.Item label={t("ScanPortForm.hostAliveConcurrent")} name='HostAliveConcurrent'>
                             <YakitInputNumber type='horizontal' min={1} />
                         </Form.Item>
                         <Form.Item
-                            label={t("portscan.tcpPingPort")}
+                            label={t("ScanPortForm.tcpPingPort")}
                             name='HostAlivePorts'
-                            extra={t("portscan.tcpPingPortHelp")}
+                            extra={t("ScanPortForm.tcpPingPortHelp")}
                         >
-                            <YakitInput placeholder={t("portscan.pleaseEnter")} />
+                            <YakitInput placeholder={t("YakitInput.please_enter")} />
                         </Form.Item>
                     </>
                 )}
 
-                <Form.Item label={t("portscan.excludeHosts")} name='ExcludeHosts'>
-                    <YakitInput placeholder={t("portscan.pleaseEnter")} />
+                <Form.Item label={t("ScanPortForm.excludeHosts")} name='ExcludeHosts'>
+                    <YakitInput placeholder={t("YakitInput.please_enter")} />
                 </Form.Item>
-                <Form.Item label={t("portscan.excludePorts")} name='ExcludePorts'>
-                    <YakitInput placeholder={t("portscan.pleaseEnter")} />
+                <Form.Item label={t("ScanPortForm.excludePorts")} name='ExcludePorts'>
+                    <YakitInput placeholder={t("YakitInput.please_enter")} />
                 </Form.Item>
             </YakitPanel>
         </>

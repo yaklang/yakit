@@ -1,33 +1,28 @@
 {
-  "byKeyword": "By Keyword",
-  "byGroup": "By Group",
-  "selectPlugin": "Select Plugins",
-  "selectPrompt": "Please select keywords or plugin groups to scan",
-  "searchKeywordPlaceholder": "Enter keywords to search",
-  "selectAll": "Select All",
-  "clear": "Clear",
-  "noData": "No Data",
-  "noDataDesc": "One-click to get default keywords and plugins. Please restart Yakit after downloading.",
-  "oneClickDownload": "One-click Download",
-  "searchGroupNamePlaceholder": "Enter group name to search",
-  "manage": "Manage",
-  "noGroupDataDesc": "One-click to get default groups and plugins, or click Manage to create manually",
-  "plugins": "Plugins",
-  "specialVulnerabilityDetection": "Special Vulnerability Detection",
-  "pluginGroups": "Plugin Groups",
-  "stop": "Stop",
-  "pause": "Pause",
-  "continue": "Continue",
-  "execute": "Execute",
-  "taskList": "Task List",
-  "details": "Details",
-  "logs": "Logs",
-  "loading": "Loading...",
-  "taskStartSuccess": "Task started successfully",
-  "taskStopSuccess": "Task stopped successfully",
-  "total": "Total",
-  "selected": "Selected",
-  "target": "Target",
-  "timeConsuming": "Time Consuming",
-  "timeout": "Timeout"
+  "YakPoC": {
+    "byKeyword": "By Keyword",
+    "byGroup": "By Group",
+    "selectPlugin": "Select Plugins"
+  },
+  "PluginListByGroup": {
+    "selectPrompt": "Please select keywords or plugin groups to scan"
+  },
+  "PluginGroupByKeyWord": {
+    "noDataDesc": "One-click to get default keywords and plugins. Please restart Yakit after downloading."
+  },
+  "PluginGroupGrid": {
+    "searchGroupNamePlaceholder": "Enter group name to search",
+    "manage": "Manage",
+    "noGroupDataDesc": "One-click to get default groups and plugins, or click Manage to create manually"
+  },
+  "PluginGroupByKeyWordItem": {
+    "plugins": " Plugins"
+  },
+  "YakPoCExecuteContent": {
+    "taskList": "Task List"
+  },
+  "PluginExecuteLog": {
+    "target": "Target",
+    "timeConsuming": "Time Consuming"
+  }
 }

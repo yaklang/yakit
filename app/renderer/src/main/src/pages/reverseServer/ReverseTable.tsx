@@ -19,13 +19,13 @@ import {isEmptyObject} from "@/utils/tool"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const DefaultType = (t: any): {label: string; value: string}[] => [
-    {value: "rmi", label: t("rmiConnection")},
-    {value: "rmi-handshake", label: t("rmiHandshake")},
-    {value: "http", label: t("http")},
-    {value: "https", label: t("https")},
-    {value: "tcp", label: t("tcp")},
-    {value: "tls", label: t("tls")},
-    {value: "ldap_flag", label: t("ldap")}
+    {value: "rmi", label: t("ReverseTable.rmiConnection")},
+    {value: "rmi-handshake", label: t("ReverseTable.rmiHandshake")},
+    {value: "http", label: "HTTP"},
+    {value: "https", label: "HTTPS"},
+    {value: "tcp", label: "TCP"},
+    {value: "tls", label: "TLS"},
+    {value: "ldap_flag", label: "LDAP"}
 ]
 const DefaultTypeClassName: {[key: string]: string} = {
     http: "red",
@@ -58,7 +58,7 @@ export interface ReverseTableProps {
 }
 
 export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
-    const { t } = useI18nNamespaces(["reverse"])
+    const {t} = useI18nNamespaces(["reverse", "yakitUi"])
     const {isPayload = false, total, data, isShowExtra = false, isExtra, onExtra, clearData} = props
     const maxWidth = isPayload ? 580 : 545
     const [loading, setLoading] = useState<boolean>(false)
@@ -157,7 +157,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                         <YakitSpin spinning={!!loading}>
                                             <div className='header-extra'>
                                                 <div className='extra-opt'>
-                                                    <div className='opt-title'>{t("onlyShowToken")}</div>
+                                                    <div className='opt-title'>{t("ReverseTable.onlyShowToken")}</div>
                                                     <YakitSwitch
                                                         checked={hasToken}
                                                         onChange={(check) => {
@@ -194,7 +194,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                                         clearData()
                                                     }}
                                                 >
-                                                    {t("clear")}
+                                                    {t("YakitButton.clear")}
                                                 </YakitButton>
                                                 {isShowExtra && (
                                                     <YakitButton
@@ -221,7 +221,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                             renderKey='uuid'
                             columns={[
                                 {
-                                    title: t("reverseType"),
+                                    title: t("ReverseTable.reverseType"),
                                     dataKey: "type",
                                     render: (text) => {
                                         const selectTag = DefaultType(t).filter((item) => item.value === text)
@@ -244,17 +244,17 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                     }
                                 },
                                 {
-                                    title: t("connectionSource"),
+                                    title: t("ReverseTable.connectionSource"),
                                     dataKey: "remote_addr",
                                     render: (text) => <YakitCopyText showText={text} />
                                 },
                                 {
-                                    title: t("token"),
+                                    title: "TOKEN",
                                     dataKey: "token",
                                     render: (text) => <YakitCopyText showText={text} />
                                 },
                                 {
-                                    title: t("response"),
+                                    title: t("ReverseTable.response"),
                                     dataKey: "response_info"
                                 }
                             ]}

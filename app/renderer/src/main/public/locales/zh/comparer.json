@@ -1,6 +1,8 @@
 {
-    "comparer": "数据对比",
-    "clearList": "清除对比列表",
-    "clearedList": "已清除对比列表",
-    "pleaseSelectData": "请选择对比数据"
+    "DataCompare": {
+        "comparer": "数据对比"
+    },
+    "DataCompareModal": {
+        "codeCompare": "代码对比"
+    }
 }

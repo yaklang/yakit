@@ -7,8 +7,10 @@
         "save_as": "Save As",
         "doNotSave": "Do Not Save",
         "save_template": "Save Template",
+        "saveUpdate": "Save Update",
         "edit": "Edit",
         "delete": "Delete",
+        "batchDelete": "Batch Delete",
         "new": "New",
         "add": "Add",
         "added": "Added",
@@ -17,12 +19,14 @@
         "importResources": "Import Resource",
         "importPlugin": "Import Plugin",
         "export": "Export",
+        "batchExport": "Batch Export",
         "exportJson": "Export JSON",
         "exportExcel": "Export Excel",
         "upload": "Upload",
         "download": "Download",
         "downloadInstall": "Download and Install",
         "oneClickDownload": "One-Click Download",
+        "batchDownload": "Batch Download",
         "redownload": "Redownload",
         "refresh": "Refresh",
         "manualRefresh": "Manual Refresh",
@@ -41,6 +45,8 @@
         "startScan": "Start Scan",
         "execute": "Execute",
         "start_execution": "Start Execution",
+        "autoRun": "Auto Run",
+        "runNow": "Run Now",
         "startAudit": "Start Audit",
         "reset": "Reset",
         "resetParams": "Reset Params",
@@ -68,8 +74,14 @@
         "restore": "Restore",
         "share": "Share",
         "ImportTutorial": "Import Tutorial",
-        "privacy_mode":"Privacy Mode",
-        "rename": "Rename"
+        "privacy_mode": "Privacy Mode",
+        "rename": "Rename",
+        "copy": "Copy",
+        "advancedFilter": "Filter",
+        "newFolder": "New Folder",
+        "remove": "Remove",
+        "batchRemove": "Batch Remove",
+        "keep": "Keep"
     },
     "YakitNotification": {
         "unknown_error": "Unknown Error",
@@ -81,6 +93,7 @@
         "exportFailed": "Export failed{colon}",
         "saved": "Saved successfully",
         "saveFailed": "Save failed{colon}",
+        "saveSuccess": "Saved successfully",
         "deleted": "Deleted successfully",
         "deleteFailed": "Deletion failed{colon}",
         "uploaded": "Uploaded successfully",
@@ -105,7 +118,12 @@
         "search_failed": "Search failed{colon}",
         "complete_variable_before_add": "Please complete the settings for Variable {index} before adding another one",
         "shareFailed": "Share failed{colon}",
-        "reName_success": "ReName Success"
+        "reName_success": "ReName Success",
+        "modifySuccess": "Modified successfully",
+        "modifyFailed": "Modifie failed{colon}",
+        "editFailed": "Edit failed{colon}",
+        "createSuccess": "Created successfully",
+        "createFailed": "Creation failed{colon}"
     },
     "YakitFormDragger": {
         "filePath": "File Path",
@@ -160,7 +178,8 @@
     "YakitEmpty": {
         "noData": "No data available",
         "noMoreData": "No More Data",
-        "end_of_list": "You've reached the end~"
+        "end_of_list": "You've reached the end~",
+        "searchEmpty": "Search result is empty"
     },
     "YakitDatePicker": {
         "oneMinute": "1 Minute",
@@ -185,7 +204,9 @@
     },
     "YakitModal": {
         "friendlyReminder": "Friendly Reminder",
-        "closePrompt": "Close Prompt"
+        "closePrompt": "Close Prompt",
+        "closeContent": "Closing the top-level menu will close all sub-menus under it?",
+        "doNotRemindAgain": "Do not remind again"
     },
     "YakitTag": {
         "critical": "critical",
@@ -198,9 +219,14 @@
         "loading": "loading"
     },
     "YakitSelect": {
+        "pleaseSelect": "Please select...",
         "YakitSelectCustom": {
             "cache_field_save_error": " Error saving data in cache field:"
         }
+    },
+    "YakitCheckbox": {
+        "selectAll": "Select All",
+        "dontRemindAgain": "Don't remind me again"
     },
     "YakitEditor": {
         "getPlugin": "Get Plugin",

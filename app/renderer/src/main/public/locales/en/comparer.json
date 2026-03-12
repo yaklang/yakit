@@ -1,6 +1,8 @@
 {
-    "comparer": "Data Comparer",
-    "clearList": "Clear Comparison List",
-    "clearedList": "Cleared comparison list",
-    "pleaseSelectData": "Please select comparison data"
+    "DataCompare": {
+        "comparer": "Data Comparer"
+    },
+    "DataCompareModal": {
+        "codeCompare": "Code Compare"
+    }
 }

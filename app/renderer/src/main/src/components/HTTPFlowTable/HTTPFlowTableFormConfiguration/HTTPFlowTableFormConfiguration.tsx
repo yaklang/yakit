@@ -182,7 +182,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             title={
                 <div className={styles["advanced-configuration-drawer-title"]}>
                     <div className={styles["advanced-configuration-drawer-title-text"]}>
-                        {t("HTTPFlowTableFormConfiguration.advancedFilter")}
+                        {t("YakitButton.advancedFilter")}
                     </div>
                     <div className={styles["advanced-configuration-drawer-title-btns"]}>
                         <YakitButton type='outline2' onClick={onClose}>
@@ -200,7 +200,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 <div className={styles["config-item-wrapper"]}>
                     <div className={styles["item-header"]}>
                         <div className={styles["header-title"]}>
-                            {t("HTTPFlowTableFormConfiguration.advancedFilter")}
+                            {t("YakitButton.advancedFilter")}
                         </div>
                         <YakitButton type='text' onClick={handleReset}>
                             {t("YakitButton.reset")}

@@ -69,7 +69,6 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["aiAgent"])
     const {isModify} = props
 
     const [saveLoading, setSaveLoading] = useState<boolean>(false)
@@ -611,7 +610,7 @@ export default AIToolEditor
 
 const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
     forwardRef((props, ref) => {
-        const { t } = useI18nNamespaces(["aiAgent"])
+        const {t} = useI18nNamespaces(["aiAgent"])
         const {content, mountContainer} = props
         const [expand, setExpand] = useState(true)
 
@@ -681,7 +680,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
         })
         const onGetDescriptionByAI = useMemoizedFn(() => {
             if (!content) {
-                yakitNotify("error", t("AIAgent.AIToolEditor.writeCodeFirst", { ns: "aiAgent" }))
+                yakitNotify("error", t("AIToolEditorInfoForm.writeCodeFirst"))
                 return
             }
             const params: AIToolGenerateMetadataRequest = getGrpcAIToolGenerateParams()
@@ -700,7 +699,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
         })
         const onGetKeywordsByAI = useMemoizedFn(() => {
             if (!content) {
-                yakitNotify("error", t("AIAgent.AIToolEditor.writeCodeFirst", { ns: "aiAgent" }))
+                yakitNotify("error", t("AIToolEditorInfoForm.writeCodeFirst"))
                 return
             }
             const params: AIToolGenerateMetadataRequest = getGrpcAIToolGenerateParams()
@@ -728,13 +727,13 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
             const {generate, loading} = params
             return (
                 <div className={styles["form-help"]}>
-                    {t("AIAgent.AIToolEditor.aiGenerateHelp", { ns: "aiAgent" })}
+                    {t("AIToolEditorInfoForm.aiGenerateHelp")}
                     <YakitButton type='text' onClick={generate} loading={loading}>
-                        {t("AIAgent.AIToolEditor.clickToGenerate", { ns: "aiAgent" })}
+                        {t("AIToolEditorInfoForm.clickToGenerate")}
                     </YakitButton>
-                    {t("AIAgent.AIToolEditor.notConfigured", { ns: "aiAgent" })}
+                    {t("AIToolEditorInfoForm.notConfigured")}
                     <YakitButton type='text' onClick={onConfig}>
-                        {t("AIAgent.AIToolEditor.clickToConfigure", { ns: "aiAgent" })}
+                        {t("AIToolEditorInfoForm.clickToConfigure")}
                     </YakitButton>
                 </div>
             )

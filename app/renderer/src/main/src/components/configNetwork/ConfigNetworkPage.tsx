@@ -1335,6 +1335,7 @@ interface AIModelGlobalConfigProps {
  */
 const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
     const {mountContainer} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>(cloneDeep(defaultAIGlobalConfig))
     const refRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(refRef)
@@ -1364,6 +1365,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
             index,
             fileName,
             mountContainer: undefined,
+            t,
             onSuccess: () => {
                 getAIConfig()
             }
@@ -1401,6 +1403,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
     const onAdd = useMemoizedFn(() => {
         setAIModal({
             mountContainer,
+            t,
             onSuccess: () => {
                 getAIConfig()
             }
@@ -1498,7 +1501,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
                     </YakitCollapse>
                 </div>
             </Form.Item>
-            <Form.Item label='调用模式' extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy)}</>}>
+            <Form.Item label='调用模式' extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}>
                 <YakitRadioButtons
                     buttonStyle='solid'
                     options={AIModelPolicyOptions}

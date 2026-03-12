@@ -40,7 +40,6 @@
     "missingParameter": "参数缺失",
     "dataUploading": "数据正在上传中",
     "uploadResult": "上传成功{SuccessCount}条数据，上传失败{FailedCount}条数据",
-    "advancedFilter": "高级筛选",
     "configured": "已配置",
     "protocolType": "协议类型",
     "all": "全部",
@@ -210,9 +209,6 @@
     "fontSize": "字号",
     "fullScreen": "全屏",
     "showLineBreaks": "是否显示换行符"
-  },
-  "DataCompareModal": {
-    "codeCompare": "代码对比"
   },
   "WebsocketFrameHistory": {
     "websocket_data_frame": "Websocket 数据帧",

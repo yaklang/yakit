@@ -11,7 +11,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {isCommunityEdition} from "@/utils/envfile"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {useGoEditNotepad} from "../hook/useGoEditNotepad"
-import { failed } from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
@@ -19,8 +19,8 @@ const NotepadManageOnline = React.lazy(() => import("./notepadManageOnline/Notep
 const NotepadManageLocal = React.lazy(() => import("./notepadManageLocal/NotepadManageLocal"))
 
 export const timeMap = (t: any) => ({
-    created_at: t("NotepadManage.createdAt"),
-    updated_at: t("NotepadManage.updatedAt")
+    created_at: t("NotepadAction.createdAt"),
+    updated_at: t("NotepadAction.updatedAt")
 })
 
 /**
@@ -38,7 +38,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 export default NotepadManage
 
 export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(["notepad"])
+    const {t} = useI18nNamespaces(["notepad", "yakitUi"])
     const {record, userInfo, onSingleDownAfter, onShareAfter, onSingleRemoveAfter} = props
 
     const {goEditNotepad} = useGoEditNotepad()
@@ -57,7 +57,7 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
                 onSingleDownAfter(res)
             })
             .catch((err) => {
-                failed(`${t("NotepadManage.downloadFailed")}${err?.message || err}`)
+                failed(`${t("YakitNotification.downloadFailed", {colon: true})}${err?.message || err}`)
             })
             .finally(() =>
                 setTimeout(() => {
@@ -136,7 +136,7 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
                         disabled={removeItemLoading}
                     />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitPopconfirm title={t("NotepadManage.confirmDelete")} onConfirm={() => onSingleRemove(record)}>
+                    <YakitPopconfirm title={t("NotepadAction.confirmDelete")} onConfirm={() => onSingleRemove(record)}>
                         <YakitButton danger type='text' icon={<OutlineTrashIcon />} loading={removeItemLoading} />
                     </YakitPopconfirm>
                 </>

@@ -14,12 +14,32 @@ import {defaultFilter, defaultSearch} from "../plugins/builtInData"
 import {convertLocalPluginsRequestParams} from "../plugins/utils"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
-export const HubSideBarList = (t: any): YakitTabsProps[] => [
-    {value: "online", label: t("HubSideBarList.online"), icon: <OutlineOnlinePluginIcon />, hint: () => t("HubSideBarHint.online")},
-    {value: "own", label: t("HubSideBarList.own"), icon: <OutlineOwnPluginIcon />, hint: () => t("HubSideBarHint.own")},
-    {value: "local", label: t("HubSideBarList.local"), icon: <OutlineLocalPluginIcon />, hint: () => t("HubSideBarHint.local")},
-    {value: "setting", label: t("HubSideBarList.setting"), icon: <OutlineAdjustmentsIcon />, hint: () => t("HubSideBarHint.setting")},
-    {value: "recycle", label: t("HubSideBarList.recycle"), icon: <OutlineTrashSecondIcon />, hint: () => t("HubSideBarHint.recycle")}
+export const HubSideBarList: YakitTabsProps[] = [
+    {
+        value: "online",
+        label: "PluginHubList.online",
+        icon: <OutlineOnlinePluginIcon />,
+        hint: () => "插件商店"
+    },
+    {value: "own", label: "PluginHubList.own", icon: <OutlineOwnPluginIcon />, hint: () => "我的插件"},
+    {
+        value: "local",
+        label: "PluginHubList.local",
+        icon: <OutlineLocalPluginIcon />,
+        hint: () => "本地插件"
+    },
+    {
+        value: "setting",
+        label: "PluginHubList.setting",
+        icon: <OutlineAdjustmentsIcon />,
+        hint: () => "配置"
+    },
+    {
+        value: "recycle",
+        label: "PluginHubList.recycle",
+        icon: <OutlineTrashSecondIcon />,
+        hint: () => "回收站"
+    }
 ]
 
 /** @name 插件导出-默认参数 */

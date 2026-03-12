@@ -11,18 +11,16 @@
     "saveHistoryLabel": "Save as History Connection",
     "connectionNameLabel": "Connection Name:",
     "connectionNameHelp": "After filling in, this record will be saved to the connection history for quick calls later",
-    "connectButton": "Start Connection",
-    "backButton": "Back",
-    "pemExampleTitle": "PEM Certificate Example",
-    "pemExampleContent": "Please paste the content of the server.pem certificate generated when the Yak server starts here",
-    "saveHistoryHintTitle": "Save as History Connection",
-    "saveHistoryHintContent": "After enabling, this connection will be recorded in [Connection History] for quick connection next time",
+    "connectButton": "Start Connection"
+  },
+  "PEMExample": {
     "pemTitle": "PEM format certificate required",
-    "pemContent": "When starting the core server with <div class=\"content-code\">yak grpc --tls</div>, the RootCA will be printed to the screen. Copy and paste it into this input box:",
-    "pemExample": "For example:",
-    "saveHistoryNote": "Note: {{appName}} will not upload the history to the internet",
+    "pemContent": "When starting the core server with <code>yak grpc --tls</code>, the RootCA will be printed to the screen. Copy and paste it into this input box:",
+    "pemExample": "For example:"
+  },
+  "PEMHint": {
+    "saveHistoryNote": "Note: {appName} will not upload the history to the internet",
     "saveHistoryLocation": "You can find the remote login information in your local directory (client directory)",
-    "openLocation": "Open remote information storage location",
-    "cancel": "Cancel"
+    "openLocation": "Open remote information storage location"
   }
 }
