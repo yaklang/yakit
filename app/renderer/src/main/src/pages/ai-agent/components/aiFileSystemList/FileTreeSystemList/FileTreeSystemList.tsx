@@ -143,6 +143,7 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({
                     isShowRightMenu={isShowRightMenu}
                     onResetTree={onResetTreeList}
                     expanded={expandedKeys.includes(nodeData.path)}
+                    selected={selected?.path === nodeData.path}
                     checkable={checkable}
                     checked={!!checkedKeys?.find((ele) => ele?.path === nodeData.path)}
                     setChecked={(c) => setCheckedKeys?.(c, nodeData)}

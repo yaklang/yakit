@@ -13,6 +13,8 @@ import {
     AIForgeEditorInfoFormProps,
     AIForgeEditorInfoFormRef,
     AIForgeEditorPromptAndActionProps,
+    AIForgeEditorSkillContentProps,
+    AIForgeEditorSkillDirectoryProps,
     ConfigTypeForgePromptAction,
     EditorAIForge,
     ForgeEditorProps,
@@ -27,11 +29,12 @@ import {
     OutlineExitIcon,
     OutlineIdentificationIcon,
     OutlineInformationcircleIcon,
+    OutlinePluscircleIcon,
     OutlineRefreshIcon,
     OutlineTagIcon
 } from "@/assets/icon/outline"
 import {SolidStoreIcon} from "@/assets/icon/solid"
-import {Form, Tooltip} from "antd"
+import {Form, Result, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
@@ -62,9 +65,48 @@ import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {AIForge} from "@/pages/ai-agent/type/forge"
+import FileTreeSystemList from "@/pages/ai-agent/components/aiFileSystemList/FileTreeSystemList/FileTreeSystemList"
+import type {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {
+    getCodeByPath,
+    getCodeSizeByPath,
+    grpcFetchCreateFile,
+    grpcFetchCreateFolder,
+    grpcFetchFileTree,
+    grpcFetchSaveFile,
+    MAX_FILE_SIZE_BYTES,
+    monacaLanguageType
+} from "@/pages/yakRunner/utils"
+import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {setClipboardText} from "@/utils/clipboard"
+import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 
 import classNames from "classnames"
 import styles from "./ForgeEditor.module.scss"
+
+const {ipcRenderer} = window.require("electron")
+
+const pathDirname = (value: string) => {
+    const normalized = value.replace(/\\/g, "/")
+    const index = normalized.lastIndexOf("/")
+    if (index <= 0) return normalized
+    return normalized.slice(0, index)
+}
+
+const pathJoin = (...parts: string[]) =>
+    parts
+        .filter(Boolean)
+        .join("/")
+        .replace(/\/+/g, "/")
+        .replace(/\/+$/, "")
+
+const pathBaseName = (value: string) => {
+    const normalized = value.replace(/\\/g, "/").replace(/\/+$/, "")
+    const index = normalized.lastIndexOf("/")
+    return index >= 0 ? normalized.slice(index + 1) : normalized
+}
 
 const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     const {isModify} = props
@@ -118,14 +160,23 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                 return
             }
 
-            grpcGetAIForge({ID: id})
-                .then((res) => {
+            grpcGetAIForge({ID: id, InflateSkillPath: true})
+                .then(async (res) => {
                     if (!res) {
                         yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)
                         setDelayCancelFetchDataLoading()
                         return
                     }
                     forgeData.current = cloneDeep(res)
+                    const nextSkillPath =
+                        res.ForgeType === "skillmd"
+                            ? res.SkillPath
+                                ? await grpcFetchFileTree(res.SkillPath)
+                                      .then(() => res.SkillPath || "")
+                                      .catch(async () => await createTemporarySkillDirectory())
+                                : await createTemporarySkillDirectory()
+                            : ""
+                    setSkillPath(nextSkillPath)
                     try {
                         if (infoFormRef.current) {
                             infoFormRef.current.resetFormValues()
@@ -135,7 +186,8 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                 Description: forgeData.current.Description || "",
                                 Tag: forgeData.current.Tag || [],
                                 ToolNames: forgeData.current.ToolNames || [],
-                                ToolKeywords: forgeData.current.ToolKeywords || []
+                                ToolKeywords: forgeData.current.ToolKeywords || [],
+                                SkillPath: forgeData.current.SkillPath || ""
                             })
                         }
                         setPromptAction({
@@ -180,6 +232,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     }
                     formData.ForgeContent = content || ""
                     if (formData.ForgeType === "config") {
+                        formData.SkillPath = undefined
                         formData.InitPrompt = promptAction.InitPrompt ?? ""
                         formData.PersistentPrompt = promptAction.PersistentPrompt ?? ""
                         formData.PlanPrompt = promptAction.PlanPrompt ?? ""
@@ -189,10 +242,23 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     if (formData.ForgeType === "yak") {
                         formData.ToolNames = undefined
                         formData.ToolKeywords = undefined
+                        formData.SkillPath = undefined
+                    }
+                    if (formData.ForgeType === "skillmd") {
+                        formData.SkillPath = skillPath || (await createTemporarySkillDirectory())
+                        formData.ForgeContent = undefined
+                        formData.ParamsUIConfig = undefined
+                        formData.ToolNames = undefined
+                        formData.ToolKeywords = undefined
+                        formData.Action = undefined
+                        formData.InitPrompt = promptAction.InitPrompt ?? ""
+                        formData.PersistentPrompt = undefined
+                        formData.PlanPrompt = undefined
+                        formData.ResultPrompt = undefined
                     }
 
                     // 解析参数UI数据
-                    if (content) {
+                    if (content && formData.ForgeType !== "skillmd") {
                         const codeInfo = await onCodeToInfo({type: "yak", code: content || ""}, true)
                         if (codeInfo) {
                             const params = codeInfo.CliParameter || []
@@ -270,6 +336,31 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     // #region forge 基础信息相关逻辑
     const infoFormRef = useRef<AIForgeEditorInfoFormRef>(null)
     const [type, setType] = useState<AIForge["ForgeType"]>("yak")
+    const [skillPath, setSkillPath] = useState("")
+    const [skillTab, setSkillTab] = useState<"content" | "files">("content")
+    const createTemporarySkillDirectory = useMemoizedFn(async () => {
+        const tempFile = (await ipcRenderer.invoke("SaveTextToTemporalFile", {Text: new Uint8Array()})) as {
+            FileName?: string
+        }
+        const tempFileName = tempFile?.FileName || ""
+        if (!tempFileName) throw new Error("failed to allocate temporary file path")
+        const baseDir = pathDirname(tempFileName)
+        const nextDir = pathJoin(baseDir, `yakit-skill-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
+        await grpcFetchCreateFolder(nextDir)
+        return nextDir
+    })
+    useUpdateEffect(() => {
+        if (type === "skillmd" && !skillPath) {
+            ;(async () => {
+                try {
+                    const tempDir = await createTemporarySkillDirectory()
+                    setSkillPath(tempDir)
+                } catch (error) {
+                    yakitNotify("error", `创建临时技能目录失败: ${error}`)
+                }
+            })()
+        }
+    }, [type])
     // #endregion
 
     // #region forge prompt和源码信息相关逻辑
@@ -295,6 +386,24 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
 
     const configHeadUI = useMemo(() => {
         if (type === "yak") return null
+
+        if (type === "skillmd") {
+            return (
+                <div className={styles["right-header"]}>
+                    <div className={styles["header-left"]}>
+                        <YakitRadioButtons
+                            buttonStyle='solid'
+                            value={skillTab}
+                            options={[
+                                {value: "content", label: "正文"},
+                                {value: "files", label: "文件"}
+                            ]}
+                            onChange={(e) => setSkillTab(e.target.value)}
+                        />
+                    </div>
+                </div>
+            )
+        }
 
         return (
             <div className={styles["right-header"]}>
@@ -322,20 +431,23 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                 </div>
             </div>
         )
-    }, [type, advanceMode, configTypeActiveTab])
+    }, [type, advanceMode, configTypeActiveTab, skillTab])
 
     const isShowCode = useMemo(() => {
         if (type === "yak") return true
+        if (type === "skillmd") return false
         return configTypeActiveTab === "code"
     }, [type, configTypeActiveTab])
     const isShowCodeBorderTop = useMemo(() => {
-        if (type === "yak") return false
+        if (type === "yak" || type === "skillmd") return false
         return configTypeActiveTab === "code"
     }, [type, configTypeActiveTab])
     const isShowPrompt = useMemo(() => {
-        if (type === "yak") return false
+        if (type === "yak" || type === "skillmd") return false
         return configTypeActiveTab === "prompt"
     }, [type, configTypeActiveTab])
+    const isShowSkillContent = useMemo(() => type === "skillmd" && skillTab === "content", [type, skillTab])
+    const isShowSkillFiles = useMemo(() => type === "skillmd" && skillTab === "files", [type, skillTab])
     // #endregion
 
     // #region 注册关闭页面时的触发事件
@@ -473,6 +585,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                 loading={saveLoading}
                                 type='outline1'
                                 icon={<OutlineExitIcon />}
+                                disabled={type === "skillmd"}
                                 onClick={handleSaveAndRun}
                             >
                                 保存并执行
@@ -503,6 +616,37 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                         content={content}
                                         setContent={handleChangeContent}
                                         triggerParse={triggerParseContent}
+                                    />
+                                </div>
+
+                                <div
+                                    tabIndex={isShowSkillContent ? 1 : -1}
+                                    className={classNames(styles["right-pane"], {
+                                        [styles["right-pane-hidden"]]: !isShowSkillContent
+                                    })}
+                                >
+                                    <AIForgeEditorSkillContent
+                                        className={styles["right-pane-code-and-params"]}
+                                        skillContent={promptAction.InitPrompt ?? ""}
+                                        setSkillContent={(value) =>
+                                            setPromptAction((old) => ({
+                                                ...old,
+                                                InitPrompt: value
+                                            }))
+                                        }
+                                    />
+                                </div>
+
+                                <div
+                                    tabIndex={type === "skillmd" ? 1 : -1}
+                                    className={classNames(styles["right-pane"], {
+                                        [styles["right-pane-hidden"]]: !isShowSkillFiles
+                                    })}
+                                >
+                                    <AIForgeEditorSkillFiles
+                                        className={styles["right-pane-code-and-params"]}
+                                        skillPath={skillPath}
+                                        setSkillPath={setSkillPath}
                                     />
                                 </div>
 
@@ -577,7 +721,8 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
                         Description: formData.Description ?? undefined,
                         Tag: formData.Tag ?? [],
                         ToolNames: formData.ToolNames ?? [],
-                        ToolKeywords: formData.ToolKeywords ?? []
+                        ToolKeywords: formData.ToolKeywords ?? [],
+                        SkillPath: formData.SkillPath ?? undefined
                     }
                     if (!info.ForgeType || !info.ForgeName) {
                         yakitNotify("error", "类型和名称不能为空")
@@ -601,12 +746,13 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
         const isTypeToConfig = useMemo(() => {
             return type === "config"
         }, [type])
-
         const handleTypeChange = useMemoizedFn((type: AIForge["ForgeType"]) => {
             if (type === "yak") {
                 setContent(DefaultForgeYakToCode)
-            } else {
+            } else if (type === "config") {
                 setContent(DefaultForgeConfigToCode)
+            } else {
+                setContent("")
             }
         })
 
@@ -908,6 +1054,258 @@ const AIForgeEditorPromptAndAction: React.FC<AIForgeEditorPromptAndActionProps> 
                 value={promptAction.Action ?? ""}
                 onChange={(value) => handleChangePromptAction("Action", value)}
             />
+        </div>
+    )
+})
+
+const AIForgeEditorSkillContent: React.FC<AIForgeEditorSkillContentProps> = memo((props) => {
+    const {skillContent, setSkillContent, className} = props
+
+    return (
+        <div className={classNames(styles["ai-forge-editor-skill-content"], className)}>
+            <PromptAndActiveTextarea
+                title='SKILL内容'
+                hint='这里填写 SKILL.md 的正文内容。模板名称、描述和 Tag 会自动参与技能头部元信息生成。'
+                placeholder='请输入技能说明、使用方法和注意事项...'
+                value={skillContent}
+                onChange={setSkillContent}
+            />
+        </div>
+    )
+})
+
+const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillDirectoryProps> = memo((props) => {
+    const {skillPath, setSkillPath, className} = props
+    const [selected, setSelected] = useState<FileNodeProps>()
+    const [treeRefresh, setTreeRefresh] = useState(0)
+    const [loading, setLoading] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [editorValue, setEditorValue] = useState("")
+    const [language, setLanguage] = useState<string>("plaintext")
+    const [isBinary, setIsBinary] = useState(false)
+    const [isOversize, setIsOversize] = useState(false)
+
+    useEffect(() => {
+        setSelected(undefined)
+    }, [skillPath])
+
+    const currentOperatePath = useMemo(() => {
+        if (!selected?.path) return skillPath
+        if (selected.isFolder) return selected.path
+        return selected.parent || skillPath
+    }, [selected, skillPath])
+
+    useEffect(() => {
+        if (!selected?.path || selected.isFolder) {
+            setEditorValue("")
+            setLanguage("plaintext")
+            setIsBinary(false)
+            setIsOversize(false)
+            return
+        }
+
+        let cancelled = false
+        ;(async () => {
+            setLoading(true)
+            try {
+                const {size, isPlainText} = await getCodeSizeByPath(selected.path)
+                if (cancelled) return
+                setIsOversize(size > MAX_FILE_SIZE_BYTES)
+                setIsBinary(!isPlainText)
+                if (size > MAX_FILE_SIZE_BYTES || !isPlainText) {
+                    setEditorValue("")
+                    return
+                }
+                const content = await getCodeByPath(selected.path)
+                if (cancelled) return
+                const file = await getLocalFileName(selected.path)
+                if (cancelled) return
+                setEditorValue(content)
+                setLanguage(monacaLanguageType(file.suffix) || "plaintext")
+            } catch (error) {
+                if (!cancelled) {
+                    yakitNotify("error", `加载文件失败: ${error}`)
+                }
+            } finally {
+                if (!cancelled) setLoading(false)
+            }
+        })()
+
+        return () => {
+            cancelled = true
+        }
+    }, [selected?.path])
+
+    const handleSaveFile = useMemoizedFn(async () => {
+        if (!selected?.path || selected.isFolder) return
+        try {
+            setSaving(true)
+            await grpcFetchSaveFile(selected.path, editorValue)
+            yakitNotify("success", "文件保存成功")
+        } catch (error) {
+            yakitNotify("error", `文件保存失败: ${error}`)
+        } finally {
+            setSaving(false)
+        }
+    })
+
+    const handleRefreshTree = useMemoizedFn(() => {
+        setTreeRefresh((old) => old + 1)
+    })
+
+    const handleCreateFile = useMemoizedFn(async () => {
+        const baseDir = currentOperatePath || skillPath
+        if (!baseDir) return
+        const fileName = window.prompt("请输入文件名")?.trim()
+        if (!fileName) return
+        try {
+            await grpcFetchCreateFile(pathJoin(baseDir, fileName), "")
+            yakitNotify("success", "文件创建成功")
+            handleRefreshTree()
+        } catch (error) {
+            yakitNotify("error", `新建文件失败: ${error}`)
+        }
+    })
+
+    const handleCreateFolder = useMemoizedFn(async () => {
+        const baseDir = currentOperatePath || skillPath
+        if (!baseDir) return
+        const folderName = window.prompt("请输入文件夹名称")?.trim()
+        if (!folderName) return
+        try {
+            await grpcFetchCreateFolder(pathJoin(baseDir, folderName))
+            yakitNotify("success", "文件夹创建成功")
+            handleRefreshTree()
+        } catch (error) {
+            yakitNotify("error", `新建文件夹失败: ${error}`)
+        }
+    })
+
+    const handleCopyPath = useMemoizedFn(() => {
+        const target = selected?.path || skillPath
+        if (!target) return
+        setClipboardText(target)
+        yakitNotify("success", "路径已复制")
+    })
+
+    const handleOpenInFolder = useMemoizedFn(() => {
+        const target = selected?.path || skillPath
+        if (!target) return
+        onOpenLocalFileByPath(target)
+    })
+
+    const menuData = useMemo(
+        () => [
+            {key: "createFile", label: "新建文件", disabled: !skillPath},
+            {key: "createFolder", label: "新建文件夹", disabled: !skillPath},
+            {type: "divider" as const},
+            {key: "copyPath", label: "复制路径", disabled: !skillPath},
+            {key: "openFileSystem", label: "在文件夹中显示", disabled: !skillPath}
+        ],
+        [skillPath]
+    )
+
+    const handleMenuSelect = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "createFile":
+                handleCreateFile()
+                break
+            case "createFolder":
+                handleCreateFolder()
+                break
+            case "copyPath":
+                handleCopyPath()
+                break
+            case "openFileSystem":
+                handleOpenInFolder()
+                break
+            default:
+                break
+        }
+    })
+
+    return (
+        <div className={classNames(styles["ai-forge-editor-skill-directory"], className)}>
+            <div className={styles["skill-directory-tree"]}>
+                {skillPath ? (
+                    <YakitResizeBox
+                        firstRatio='28%'
+                        firstMinSize={220}
+                        lineDirection='right'
+                        lineStyle={{width: 4}}
+                        firstNodeStyle={{width: "28%", padding: "8px", overflow: "hidden"}}
+                        secondNodeStyle={{width: "72%", overflow: "hidden"}}
+                        firstNode={
+                            <div className={styles["skill-file-tree-pane"]}>
+                                <div className={styles["skill-file-tree-header"]}>
+                                    <div className={styles["skill-file-tree-title"]}>文件列表</div>
+                                    <div className={styles["skill-file-tree-extra"]}>
+                                        <Tooltip title='刷新资源管理器'>
+                                            <YakitButton type='text2' disabled={!skillPath} icon={<OutlineRefreshIcon />} onClick={handleRefreshTree} />
+                                        </Tooltip>
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: menuData,
+                                                onClick: ({key}) => handleMenuSelect(String(key))
+                                            }}
+                                            dropdown={{trigger: ["click"], placement: "bottomLeft"}}
+                                        >
+                                            <YakitButton type='text2' icon={<OutlinePluscircleIcon />} disabled={!skillPath} />
+                                        </YakitDropdownMenu>
+                                    </div>
+                                </div>
+                                <FileTreeSystemList
+                                    key={`${skillPath}-${treeRefresh}`}
+                                    path={skillPath}
+                                    isFolder
+                                    isOpen={false}
+                                    selected={selected}
+                                    setSelected={setSelected}
+                                />
+                            </div>
+                        }
+                        secondNode={
+                            <div className={styles["skill-file-editor-pane"]}>
+                                <div className={styles["skill-file-editor-header"]}>
+                                    <div className={styles["skill-file-editor-title"]}>
+                                        {selected?.isFolder
+                                            ? selected.path
+                                            : selected?.path || "选择一个文件开始编辑"}
+                                    </div>
+                                    <YakitButton
+                                        type='outline1'
+                                        disabled={!selected || !!selected.isFolder || isBinary || isOversize}
+                                        loading={saving}
+                                        onClick={handleSaveFile}
+                                    >
+                                        保存文件
+                                    </YakitButton>
+                                </div>
+
+                                <div className={styles["skill-file-editor-body"]}>
+                                    {selected?.isFolder || !selected ? (
+                                        <div className={styles["skill-directory-empty"]}>请选择左侧文件树中的文件进行编辑。</div>
+                                    ) : isOversize ? (
+                                        <Result status='warning' subTitle='文件过大，当前不支持在模板编辑器中预览或编辑。' />
+                                    ) : isBinary ? (
+                                        <Result status='warning' subTitle='该文件不是可编辑的文本文件，当前不支持在模板编辑器中直接修改。' />
+                                    ) : (
+                                        <YakitSpin spinning={loading} wrapperClassName={styles["skill-file-editor-spin"]}>
+                                            <YakitEditor
+                                                type={language === "yak" ? "yak" : language || "plaintext"}
+                                                value={editorValue}
+                                                setValue={setEditorValue}
+                                            />
+                                        </YakitSpin>
+                                    )}
+                                </div>
+                            </div>
+                        }
+                    />
+                ) : (
+                    <div className={styles["skill-directory-empty"]}>技能文件目录初始化后，这里会显示文件树与编辑器。</div>
+                )}
+            </div>
         </div>
     )
 })

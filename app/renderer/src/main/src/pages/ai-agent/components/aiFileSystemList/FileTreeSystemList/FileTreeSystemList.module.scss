@@ -1,4 +1,22 @@
 .file-tree-system-list {
+    :global(.ant-tree .ant-tree-node-content-wrapper) {
+        padding: 0;
+        line-height: normal;
+        min-height: auto;
+        border-radius: 0;
+    }
+    :global(.ant-tree .ant-tree-node-content-wrapper:hover) {
+        background-color: transparent;
+    }
+    :global(.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected) {
+        background-color: transparent !important;
+    }
+    :global(.ant-tree.ant-tree-directory .ant-tree-treenode-selected::before) {
+        background: transparent !important;
+    }
+    :global(.ant-tree.ant-tree-directory .ant-tree-treenode-selected:hover::before) {
+        background: transparent !important;
+    }
     :global(.ant-tree-treenode-draggable .ant-tree-draggable-icon) {
         display: none;
     }

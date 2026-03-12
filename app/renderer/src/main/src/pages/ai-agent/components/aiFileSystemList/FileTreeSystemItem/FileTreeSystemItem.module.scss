@@ -6,6 +6,7 @@
     align-items: center;
     gap: 2px;
     height: 22px;
+    padding: 3px 8px;
     border-radius: 4px;
     span {
         font-size: 12px;
@@ -16,4 +17,13 @@
         width: 16px;
         height: 16px;
     }
+
+    &:hover {
+        background-color: var(--Colors-Use-Neutral-Bg);
+    }
+}
+
+.file-tree-system-item-selected {
+    border: 1px solid var(--Colors-Use-Main-Border);
+    background-color: var(--Colors-Use-Main-Focus);
 }

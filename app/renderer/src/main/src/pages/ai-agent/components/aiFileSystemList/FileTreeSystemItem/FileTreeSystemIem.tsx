@@ -1,6 +1,7 @@
 import {FolderDefault, FolderDefaultExpanded, KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {FC, useMemo} from "react"
 import styles from "./FileTreeSystemItem.module.scss"
+import classNames from "classnames"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {setClipboardText} from "@/utils/clipboard"
@@ -15,6 +16,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     data,
     isOpen,
     expanded,
+    selected,
     onResetTree,
     isShowRightMenu,
     checkable,
@@ -115,7 +117,11 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
                 visible: isShowRightMenu
             }}
         >
-            <div className={styles["file-tree-system-item"]}>
+            <div
+                className={classNames(styles["file-tree-system-item"], {
+                    [styles["file-tree-system-item-selected"]]: selected
+                })}
+            >
                 {checkable && (
                     <YakitProtoCheckbox
                         wrapperStyle={{marginBottom: 2}}
