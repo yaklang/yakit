@@ -1,6 +1,6 @@
-import React, {ReactNode, useEffect, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import styles from "./AIMCPForm.module.scss"
-import {Form} from "antd"
+import {Divider, Form, FormInstance} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -11,42 +11,139 @@ import {AIMCPFormProps} from "./type"
 import {AddMCPServerRequest, MCPServerType, UpdateMCPServerRequest} from "../../type/aiMCP"
 import {grpcAddMCPServer, grpcUpdateMCPServer} from "../utils"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {KVPair} from "@/models/kv"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
+import {SolidPlusIcon} from "@/assets/icon/solid"
+import {yakitFailed} from "@/utils/notification"
+
+const {YakitPanel} = YakitCollapse
+
+const EMPTY_KV_PAIR: KVPair = {Key: "", Value: ""}
+
+type MCPKVField = "Envs" | "Headers"
+
+interface MCPKVConfigPanelProps {
+    field: MCPKVField
+    form: FormInstance<AddMCPServerRequest>
+    title: string
+}
+
+const MCPKVConfigPanel: React.FC<MCPKVConfigPanelProps> = React.memo((props) => {
+    const {field, form, title} = props
+    const listRef = useRef<any>()
+    const [activeKey, setActiveKey] = useState<string[]>([title])
+    const values = Form.useWatch(field, form) as KVPair[] | undefined
+
+    const updateFieldValue = useMemoizedFn((nextValues: KVPair[]) => {
+        form.setFieldsValue({
+            [field]: nextValues
+        } as Partial<AddMCPServerRequest>)
+    })
+
+    const handleReset = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        e.stopPropagation()
+        updateFieldValue([{...EMPTY_KV_PAIR}])
+        listRef.current?.setVariableActiveKey?.(["0"])
+        setActiveKey([title])
+    })
+
+    const handleAdd = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        e.stopPropagation()
+        const variables = ((form.getFieldValue(field) || []) as KVPair[]).filter(Boolean)
+        const emptyIndex = variables.findIndex((item) => !item.Key && !item.Value)
+        if (emptyIndex !== -1) {
+            yakitFailed(`请先完善第 ${emptyIndex + 1} 项${title}`)
+            return
+        }
+
+        updateFieldValue([...variables, {...EMPTY_KV_PAIR}])
+        listRef.current?.setVariableActiveKey?.([...(listRef.current?.variableActiveKey || []), `${variables.length}`])
+        setActiveKey((prev) => Array.from(new Set([...prev, title])))
+    })
+
+    const handleRemove = useMemoizedFn((index: number) => {
+        const variables = [...(((form.getFieldValue(field) || []) as KVPair[]).filter(Boolean) || [])]
+        variables.splice(index, 1)
+        updateFieldValue(variables)
+    })
+
+    return (
+        <YakitCollapse
+            destroyInactivePanel={false}
+            activeKey={activeKey}
+            onChange={(key) => setActiveKey(key as string[])}
+            className={styles["kv-params-wrapper"]}
+        >
+            <YakitPanel
+                key={title}
+                forceRender={true}
+                header={
+                    <div className={styles["yakit-panel-heard"]}>
+                        {title}
+                        {values?.length ? <span className={styles["yakit-panel-heard-number"]}>{values.length}</span> : ""}
+                    </div>
+                }
+                extra={
+                    <>
+                        <YakitButton type='text' colors='danger' onClick={handleReset} size='small'>
+                            重置
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        <YakitButton type='text' onClick={handleAdd} style={{paddingRight: 0}} size='small'>
+                            新增
+                            <SolidPlusIcon className={styles["plus-icon"]} />
+                        </YakitButton>
+                    </>
+                }
+            >
+                <VariableList
+                    ref={listRef}
+                    field={field}
+                    onDel={handleRemove}
+                    collapseWrapperClassName={styles["variable-list-wrapper"]}
+                />
+            </YakitPanel>
+        </YakitCollapse>
+    )
+})
+
 export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
     const {onCancel, defaultValues} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [form] = Form.useForm<AddMCPServerRequest>()
-    const type = Form.useWatch("Type", form)
+    const type = Form.useWatch("Type", form) || defaultValues?.Type || AIMCPServerTypeEnum.SSE
+
     useEffect(() => {
-        if (!!defaultValues) {
-            form.setFieldsValue({
-                Name: defaultValues.Name || "",
-                Type: defaultValues.Type || AIMCPServerTypeEnum.SSE,
-                URL: defaultValues.URL || "",
-                Command: defaultValues.Command || "",
-                Enable: !!defaultValues.Enable
-            })
-        }
-    }, [defaultValues])
+        form.setFieldsValue({
+            Name: defaultValues?.Name || "",
+            Type: defaultValues?.Type || AIMCPServerTypeEnum.SSE,
+            URL: defaultValues?.URL || "",
+            Command: defaultValues?.Command || "",
+            Enable: !!defaultValues?.Enable,
+            Envs: defaultValues?.Envs || [],
+            Headers: defaultValues?.Headers || []
+        })
+    }, [defaultValues, form])
+
     const typeOptions: YakitSelectProps["options"] = useCreation(() => {
         return [
             {label: "sse", value: AIMCPServerTypeEnum.SSE},
             {label: "stdio", value: AIMCPServerTypeEnum.Stdio}
         ]
     }, [])
+
     const handleSubmit = useMemoizedFn(() => {
         form.validateFields().then(async (value: AddMCPServerRequest) => {
             try {
-                console.log("handleSubmit", value)
                 setLoading(true)
                 if (!!defaultValues?.ID) {
                     const updateValue: UpdateMCPServerRequest = {
                         ...value,
                         ID: defaultValues.ID
                     }
-                    // 更新
                     await grpcUpdateMCPServer(updateValue)
                 } else {
-                    // 新增
                     await grpcAddMCPServer(value)
                 }
                 onCancel()
@@ -58,6 +155,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
             }
         })
     })
+
     const renderContentByType = useMemoizedFn((key: MCPServerType) => {
         let content: ReactNode = <></>
         switch (key) {
@@ -80,6 +178,15 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
         }
         return content
     })
+
+    const extraConfigItems = useMemo(
+        () => [
+            {field: "Envs" as MCPKVField, title: "环境变量"},
+            {field: "Headers" as MCPKVField, title: "请求头"}
+        ],
+        []
+    )
+
     return (
         <div>
             <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 18}} className={styles["ai-mcp-form"]}>
@@ -100,6 +207,11 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                 <Form.Item noStyle shouldUpdate={(prev, curr) => prev.Type !== curr.Type}>
                     {renderContentByType(type)}
                 </Form.Item>
+                {extraConfigItems.map((item) => (
+                    <Form.Item key={item.field} label={item.title} className={styles["extra-form-item"]}>
+                        <MCPKVConfigPanel form={form} field={item.field} title={item.title} />
+                    </Form.Item>
+                ))}
             </Form>
             <div className={styles["button-group"]}>
                 <YakitButton type='outline2' size='large' onClick={onCancel}>

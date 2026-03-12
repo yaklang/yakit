@@ -312,7 +312,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     const handleNewAIMCP = useMemoizedFn(() => {
         const m = showYakitModal({
             title: "添加MCP Server",
-            width: 600,
+            width: 720,
             content: (
                 <AIMCPForm
                     onCancel={() => {
@@ -447,7 +447,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         const defaultValues: UpdateMCPServerRequest = omit(item, ["Tools"])
         const m = showYakitModal({
             title: "修改MCP",
-            width: "50%",
+            width: 720,
             content: (
                 <AIMCPForm
                     defaultValues={defaultValues}

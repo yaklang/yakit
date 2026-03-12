@@ -1,4 +1,5 @@
 import {PaginationSchema} from "@/pages/invoker/schema"
+import {KVPair} from "@/models/kv"
 
 export interface GetAllMCPServersRequest {
     Keyword: string
@@ -21,6 +22,8 @@ export interface MCPServer {
     Enable: boolean
     Tools: MCPServerTool[]
     ErrorMsg: string
+    Envs: KVPair[]
+    Headers: KVPair[]
 }
 
 export interface MCPServerTool {
@@ -43,12 +46,16 @@ export interface UpdateMCPServerRequest {
     URL: string
     Command: string
     Enable: boolean
+    Envs: KVPair[]
+    Headers: KVPair[]
 }
 export interface MCPServerFormData {
     Name: string
     Type: string
     URL: string
     Command: string
+    Envs: KVPair[]
+    Headers: KVPair[]
 }
 
 export interface AddMCPServerRequest {
@@ -57,6 +64,8 @@ export interface AddMCPServerRequest {
     URL: string
     Command: string
     Enable: boolean
+    Envs: KVPair[]
+    Headers: KVPair[]
 }
 
 export interface DeleteMCPServerRequest {
