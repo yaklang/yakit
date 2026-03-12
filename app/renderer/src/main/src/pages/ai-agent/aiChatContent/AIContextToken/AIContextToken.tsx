@@ -31,6 +31,7 @@ import {getIconByAI} from "../../aiModelList/aiModelSelect/AIModelSelect"
 import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatData} from "../../type/aiChat"
 import {AIDetailsDashIcon} from "../../aiChatWelcome/icon"
+import {Tooltip} from "antd"
 
 const AIContextToken: FC<{
     session?: string
@@ -231,16 +232,18 @@ const AIContextToken: FC<{
                         tierConsumption={aiPerfData?.consumption?.tier_consumption}
                         pressure={aiPerfData?.pressure}
                         firstCost={aiPerfData?.firstCost}
+                        onClose={() => setVisible(false)}
                     />
                 }
                 destroyTooltipOnHide={true}
                 trigger='click'
-                placement='bottom'
                 overlayClassName={styles["echarts-details-popover"]}
                 visible={visible}
                 onVisibleChange={setVisible}
             >
-                <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type='outline2' />
+                <Tooltip title='查看详情'>
+                    <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type='outline2' />
+                </Tooltip>
             </YakitPopover>
             <div className={styles["divider-style"]}></div>
         </>
@@ -259,9 +262,10 @@ interface AIEchartsDetailsProps {
     tierConsumption?: AIAgentGrpcApi.Consumption["tier_consumption"]
     pressure?: AIChatData["aiPerfData"]["pressure"]
     firstCost?: AIChatData["aiPerfData"]["firstCost"]
+    onClose: () => void
 }
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
-    const {overallToken, tierConsumption, pressure, firstCost} = props
+    const {overallToken, tierConsumption, pressure, firstCost, onClose} = props
     const [currentModel, setCurrentModel] = useState<CurrentModel>()
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(ref)
@@ -344,7 +348,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
                     <OutlinePresentationchartlineIcon />
                     <span>数据详情</span>
                 </div>
-                <YakitButton icon={<OutlineXIcon />} type='text2' />
+                <YakitButton icon={<OutlineXIcon />} type='text2' onClick={onClose} />
             </div>
             <div className={styles["echarts-details-content"]}>
                 <div className={styles["token-wrapper"]}>
