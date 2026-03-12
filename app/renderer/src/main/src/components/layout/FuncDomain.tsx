@@ -1568,7 +1568,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
     })
 
     const handleOpenPath = useMemoizedFn(async () => {
-        const EditionName = getReleaseEditionName()
+        const EditionName = getReleaseEditionName().replace(/\s+/g, "")
         const Version = lastVersion || version
         const cleanVersion = Version.startsWith("v") ? Version.substring(1) : Version
         const filename = `${EditionName}-${cleanVersion}`
