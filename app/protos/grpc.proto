@@ -529,6 +529,7 @@ service Yak {
   rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
   rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
   rpc QueryMITMReplacerRules(QueryMITMReplacerRulesRequest) returns (QueryMITMReplacerRulesResponse);
+  rpc DeduplicateMITMReplacerRules(Empty) returns (DbOperateMessage);
   rpc GenerateURL(GenerateURLRequest) returns (GenerateURLResponse);
 
   rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
@@ -638,6 +639,8 @@ service Yak {
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
+  rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
   /*
     ChaosMakerRule: Bas
   */
@@ -3281,6 +3284,18 @@ message ExportMITMRuleExtractedDataResponse {
   string Verbose = 4;
 }
 
+message DeleteMITMRuleExtractedDataRequest {
+  int64 Id = 1;
+  repeated int64 Ids = 2;
+}
+
+message DeduplicateMITMRuleExtractedDataRequest {
+  ExtractedDataFilter Filter = 1;
+}
+
+message DeduplicateMITMRuleExtractedDataResponse {
+  int64 DeletedCount = 1;
+}
 
 message ExportProjectRequest {
   string ProjectName = 1;
@@ -6616,6 +6631,7 @@ message AnalyzedHTTPFlowFilter{
   repeated string ResultIds = 1;
   repeated string RuleVerboseNames = 2;
   repeated string Rule = 3;
+  string Keyword = 4;
 }
 
 
