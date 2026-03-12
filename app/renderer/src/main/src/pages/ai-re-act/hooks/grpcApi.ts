@@ -245,6 +245,7 @@ export declare namespace AIAgentGrpcApi {
     /** 上下文压力 */
     export interface Pressure {
         current_cost_token_size: number
+        model_name: string
         model_tier: AIModelTypeEnum
         pressure_token_size: number
         timestamp: number
