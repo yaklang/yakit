@@ -61,10 +61,10 @@ import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import KnowledgeSidebarList, {KnowledgeModalRef} from "./KnowledgeSidebarList/KnowledgeSidebarList"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import Tabs from "./Tabs/Tabs"
 import ForgeName, {ForgeNameRef} from "../forgeName/ForgeName"
 import AIToolList from "../aiToolList/AIToolList"
+import {SplitView} from "@/pages/yakRunner/SplitView/SplitView"
 
 // const sideberRadioOptions = [
 //     {
@@ -448,7 +448,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     className={styles["drawer"]}
                     mask={false}
                     placement='left'
-                    style={{transform: 'translateX(0)'}}
+                    style={{transform: "translateX(0)"}}
                     onClose={() => setOpenDrawer(false)}
                     closable={false}
                     title={
@@ -462,13 +462,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                         </div>
                     }
                 >
-                    <YakitResizeBox
-                        isVer
-                        firstNodeStyle={{
-                            padding: "0 12px"
-                        }}
-                        firstNode={<FileTreeList />}
-                        secondNode={<Tabs items={items} />}
+                    <SplitView
+                        isVertical
+                        elements={[{element: <FileTreeList />}, {element: <Tabs items={items} />}]}
+                        sashClassName={styles["split-view-line"]}
                     />
                 </YakitDrawer>
                 <div className={styles["content"]}>

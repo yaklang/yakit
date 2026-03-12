@@ -13,6 +13,10 @@ export interface SplitViewProp {
     /** 每个分屏的默认尺寸配置（横向时为宽度，纵向时为高度）
      * undefined 表示该分屏自适应剩余空间 */
     defaultSizes?: (number | undefined)[]
+    /** 根节点类名 */
+    className?: string
+    /** 分割线类名 */
+    sashClassName?: string
 }
 
 export interface SplitViewPositionProp {
