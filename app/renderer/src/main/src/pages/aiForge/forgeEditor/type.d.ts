@@ -47,3 +47,15 @@ export interface AIForgeEditorCodeAndParamsProps {
     triggerParse?: boolean
     className?: string
 }
+
+export interface AIForgeEditorSkillDirectoryProps {
+    skillPath: string
+    setSkillPath: (value: string) => void
+    className?: string
+}
+
+export interface AIForgeEditorSkillContentProps {
+    skillContent: string
+    setSkillContent: (value: string) => void
+    className?: string
+}

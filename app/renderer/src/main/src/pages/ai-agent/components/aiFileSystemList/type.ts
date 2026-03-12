@@ -38,6 +38,7 @@ export interface FileTreeSystemItemProps {
     data: FileNodeProps
     isOpen?: boolean
     expanded?: boolean
+    selected?: boolean
     onResetTree?: () => void
     /**是否显示右键菜单 */
     isShowRightMenu?: boolean

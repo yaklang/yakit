@@ -1,11 +1,13 @@
 import {ReactNode} from "react"
 import {SolidCollectionPluginIcon, SolidYakitPluginIcon} from "@/assets/icon/colors"
+import {SolidStoreIcon} from "@/assets/icon/solid"
 import {AIForge} from "../ai-agent/type/forge"
 
 /** @name forge-类型 */
 export const DefaultForgeTypeList: {key: AIForge["ForgeType"]; name: string; icon: ReactNode; color: string}[] = [
     {key: "yak", name: "Yak模板", icon: <SolidYakitPluginIcon />, color: "warning"},
-    {key: "config", name: "简易模板", icon: <SolidCollectionPluginIcon />, color: "cyan"}
+    {key: "config", name: "简易模板", icon: <SolidCollectionPluginIcon />, color: "cyan"},
+    {key: "skillmd", name: "技能模板", icon: <SolidStoreIcon />, color: "blue"}
 ]
 
 /** @name forge-tag预设选项 */

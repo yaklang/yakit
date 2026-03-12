@@ -99,6 +99,152 @@
 .right-pane-code-and-params {
     border-top: 1px solid var(--Colors-Use-Neutral-Border);
 }
+
+.ai-forge-editor-skill-directory {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-forge-editor-skill-content {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    overflow: hidden;
+}
+
+.skill-directory-content {
+    padding: 12px 12px 0;
+}
+
+.skill-directory-header {
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.skill-directory-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+}
+
+.skill-directory-path {
+    margin: 0 12px 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Text-2-Body);
+    font-size: 12px;
+    line-height: 16px;
+    word-break: break-all;
+}
+
+.skill-directory-tree {
+    flex: 1;
+    min-height: 0;
+    padding: 0 12px 12px;
+    overflow: hidden;
+}
+
+.skill-directory-empty {
+    width: 100%;
+    height: 100%;
+    border: 1px dashed var(--Colors-Use-Neutral-Border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--Colors-Use-Neutral-Text-2-Body);
+    font-size: 12px;
+    line-height: 16px;
+    padding: 24px;
+}
+
+.skill-file-tree-pane {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 6px;
+    background: var(--Colors-Use-Basic-Background);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    :global(.ant-tree-directory) {
+        height: 100%;
+        overflow: auto;
+        padding: 8px;
+    }
+}
+
+.skill-file-tree-header {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+}
+
+.skill-file-tree-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+}
+
+.skill-file-tree-extra {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.skill-file-editor-pane {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 6px;
+    background: var(--Colors-Use-Basic-Background);
+}
+
+.skill-file-editor-header {
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+}
+
+.skill-file-editor-title {
+    flex: 1;
+    min-width: 0;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    line-height: 16px;
+    word-break: break-all;
+}
+
+.skill-file-editor-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.skill-file-editor-spin {
+    width: 100%;
+    height: 100%;
+}
 // #endregion
 
 // #region AIForgeEditorInfoForm
