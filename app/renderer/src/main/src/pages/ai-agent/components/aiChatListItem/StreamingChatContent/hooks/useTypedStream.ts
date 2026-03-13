@@ -30,7 +30,7 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
     const {chatType, token, session, step = 3, interval = 20} = options
 
     // 获取流数据和是否需要打字效果
-    const {stream: rawStream, shouldType} = useStreamingChatContent({chatType, token, session})
+    const {renderNumber, stream: rawStream, shouldType} = useStreamingChatContent({chatType, token, session})
 
     const content = rawStream?.data?.content || ""
 
@@ -56,7 +56,7 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
                 status: isTyping ? "start" : rawStream.data.status
             }
         }
-    }, [rawStream, displayedContent, shouldType, isTyping])
+    }, [renderNumber, rawStream, displayedContent, shouldType, isTyping])
 
     return {stream, isTyping}
 }

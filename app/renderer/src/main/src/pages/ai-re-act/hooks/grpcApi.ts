@@ -5,7 +5,7 @@ import {AITaskInfoProps} from "./aiRender"
 import {AITool} from "@/pages/ai-agent/type/aiTool"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase/types"
-import {AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "@/pages/ai-agent/defaultConstant"
+import {AIModelTypeEnum, AttachedResourceKeyEnum, AttachedResourceTypeEnum} from "@/pages/ai-agent/defaultConstant"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -100,6 +100,8 @@ export interface AIStartParams {
     UserInteractLimit?: number
     /** timeline sessionID  用于多轮对话保持上下文 */
     TimelineSessionID?: string
+    // Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告 （40*1024）
+    AICallTokenLimit?: number
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -237,19 +239,37 @@ export declare namespace AIAgentGrpcApi {
         input_consumption: number
         output_consumption: number
         consumption_uuid: string
+        tier_consumption: Record<AIModelTypeEnum, {input_consumption: number; output_consumption: number}>
     }
 
     /** 上下文压力 */
     export interface Pressure {
         current_cost_token_size: number
+        model_name: string
+        model_tier: AIModelTypeEnum
         pressure_token_size: number
         timestamp: number
     }
 
-    /**  (首字符响应|总对话)耗时 */
-    export interface AICostMS {
+    /**  首字符响应耗时 */
+    export interface AIFirstCostMS {
+        model_name: string
+        model_tier: AIModelTypeEnum
         ms: number
+        provider_name: string
         second: number
+        timestamp: number
+    }
+    /** 总对话耗时 */
+    export interface AITotalCostMS {
+        model_name: string
+        model_tier: AIModelTypeEnum
+        ms: number
+        output_bytes: number
+        output_duration_ms: number
+        provider_name: string
+        second: number
+        token_rate: number
         timestamp: number
     }
 

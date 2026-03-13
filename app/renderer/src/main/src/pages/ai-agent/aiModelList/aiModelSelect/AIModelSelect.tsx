@@ -479,7 +479,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     )
 })
 
-const getIconByAI = (value) => {
+export const getIconByAI = (value) => {
     return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus isRunning={true} size='small' />
 }
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {

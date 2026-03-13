@@ -1,6 +1,7 @@
 import {SetStateAction} from "react"
 import type {AIChatData} from "../type/aiChat"
 import {AIChatQSData, ReActChatBaseInfo} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIModelTypeEnum} from "../defaultConstant"
 
 export type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
@@ -27,10 +28,40 @@ export class ChatDataStore {
             runTimeIDs: [],
             yakExecResult: {card: [], execFileRecord: new Map(), yakExecResultLogs: []},
             aiPerfData: {
-                consumption: {},
-                pressure: [],
-                firstCost: [],
-                totalCost: []
+                consumption: {
+                    input_consumption: 0,
+                    output_consumption: 0,
+                    consumption_uuid: "",
+                    tier_consumption: {
+                        [AIModelTypeEnum.TierIntelligent]: {
+                            input_consumption: 0,
+                            output_consumption: 0
+                        },
+                        [AIModelTypeEnum.TierLightweight]: {
+                            input_consumption: 0,
+                            output_consumption: 0
+                        },
+                        [AIModelTypeEnum.TierVision]: {
+                            input_consumption: 0,
+                            output_consumption: 0
+                        }
+                    }
+                },
+                pressure: {
+                    [AIModelTypeEnum.TierIntelligent]: [],
+                    [AIModelTypeEnum.TierLightweight]: [],
+                    [AIModelTypeEnum.TierVision]: []
+                },
+                firstCost: {
+                    [AIModelTypeEnum.TierIntelligent]: [],
+                    [AIModelTypeEnum.TierLightweight]: [],
+                    [AIModelTypeEnum.TierVision]: []
+                },
+                totalCost: {
+                    [AIModelTypeEnum.TierIntelligent]: [],
+                    [AIModelTypeEnum.TierLightweight]: [],
+                    [AIModelTypeEnum.TierVision]: []
+                }
             },
             casualChat: {
                 elements: [],

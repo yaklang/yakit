@@ -240,3 +240,15 @@ const AIDownAngleRight = () => (
 export const AIDownAngleRightIcon = (props: Partial<IconProps>) => {
     return <Icon component={AIDownAngleRight} {...props} />
 }
+
+const AIDetailsDash = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='15' height='3' viewBox='0 0 15 3' fill='none'>
+        <path d='M1.5 1.5H13.5' stroke='currentColor' strokeWidth='3' strokeLinecap='round' strokeDasharray='0.5 5' />
+    </svg>
+)
+/**
+ * @description  模型详情的虚线
+ */
+export const AIDetailsDashIcon = (props: Partial<IconProps>) => {
+    return <Icon component={AIDetailsDash} {...props} />
+}
