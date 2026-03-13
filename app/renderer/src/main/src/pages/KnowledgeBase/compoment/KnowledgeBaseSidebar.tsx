@@ -1,5 +1,5 @@
-import React, {Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useRef, type FC} from "react"
-import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useSafeState} from "ahooks"
+import React, {Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useRef, useState, type FC} from "react"
+import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useRequest, useSafeState} from "ahooks"
 
 import {
     OutlineFolderopenIcon,
@@ -14,16 +14,15 @@ import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
 import {
     apiFetchQueryOnlieRageLatest,
-    BuildingOnlineKnowledgeBase,
     ClearAllKnowledgeBase,
     downloadWithEvents,
-    downloadOnlineRagWithEvents,
     insertModaOptions,
     KnowledgeTabList,
     KnowledgeTabListEnum,
     OnlieRageLatestResponse,
     prioritizeProcessingItems,
-    targetIcon
+    targetIcon,
+    exclude
 } from "../utils"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
@@ -55,6 +54,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OutlineBotIcon} from "@/assets/icon/colors"
 import {convertBodyLength} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {YakitPanel} = YakitCollapse
 
@@ -266,9 +266,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         }
     })
 
-    // 本地已下载线上知识库
-    const [downloadedOnlineRags, setDownloadedOnlineRags] = useSafeState<OnlieRageLatestResponse[]>([])
-
     const [installOnlineRagsTokens, setInstallOnlineRagsTokens] = useSafeState<string[]>([])
 
     const [onlineRagProgress, setOnlineRagProgress] = useSafeState<Record<string, number>>({})
@@ -452,6 +449,52 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     useAsyncEffect(async () => {
         await onRefreshOnlineRag()
     }, [refreshOlineRag])
+
+    const [overallProgress, setOverallProgress] = useState(0)
+    const progressMap = useRef<Record<string, number>>({})
+    // 并发安装所有
+    const {run: runInstallAll, loading: InstallAllLoading} = useRequest(
+        async () => {
+            const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
+            const filteredInstall = binariesToInstall?.filter((item) => !exclude.includes(item.Name)) ?? []
+            const emptyInstallPathItem = filteredInstall?.filter((item) => item.InstallPath === "") ?? []
+            if (!emptyInstallPathItem || emptyInstallPathItem.length === 0) {
+                return
+            } else {
+                setOverallProgress(0)
+                progressMap.current = {}
+                const tokens = emptyInstallPathItem.map((it) => it.installToken)
+                setInstallTokens(tokens)
+
+                // 并发执行安装
+                const promises = emptyInstallPathItem.map((b) =>
+                    installWithEvents("InstallThirdPartyBinary", {Name: b.Name, Force: true}, b.installToken)
+                )
+                await Promise.all(promises)
+            }
+
+            return "ok"
+        },
+        {
+            manual: true,
+            onSuccess: async () => {
+                try {
+                    success("知识库所需插件安装完成")
+                    setOverallProgress(100)
+                    // onInstallPlug(false)
+                    setInstallTokens([])
+                    await binariesToInstallRefreshAsync?.()
+                } catch (error) {
+                    failed(error + "")
+                }
+            },
+            onError: (err) => {
+                failed(`插件安装失败: ${err}`)
+                setInstallTokens([])
+                setOverallProgress(0)
+            }
+        }
+    )
 
     const renderTabContent = useMemoizedFn((key: KnowledgeTabListEnum) => {
         let content: ReactNode = <></>
@@ -856,6 +899,21 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                             />
                                         </Tooltip>
                                     </div>
+                                    <YakitButton
+                                        className={styles["knowledge-base-info-header-all-install"]}
+                                        type='outline1'
+                                        icon={<CloudDownloadIcon />}
+                                        onClick={() => {
+                                            try {
+                                                runInstallAll()
+                                            } catch (error) {
+                                                failed(error + "")
+                                            }
+                                        }}
+                                        loading={InstallAllLoading}
+                                    >
+                                        一键下载插件
+                                    </YakitButton>
                                 </div>
                                 <div className={styles["install-box"]}>
                                     {binariesToInstall?.map((it, key) => (
@@ -869,7 +927,14 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                     [styles["middle-width"]]: eachProgress?.[it.installToken] < 100
                                                 })}
                                             >
-                                                <div className={styles["title"]}>{it.Name}</div>
+                                                <div
+                                                    className={classNames(styles["title-left"], {
+                                                        [styles["title-left-exclude"]]: exclude.includes(it.Name)
+                                                    })}
+                                                >
+                                                    <span className={styles["title"]}>{it.Name}</span>
+                                                    {exclude.includes(it.Name) && <YakitTag>可不下载</YakitTag>}
+                                                </div>
                                                 <Tooltip title={it.Description}>
                                                     <div className={styles["describe"]}>{it.Description}</div>
                                                 </Tooltip>

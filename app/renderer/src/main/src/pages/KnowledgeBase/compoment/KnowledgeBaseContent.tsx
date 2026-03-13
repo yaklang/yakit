@@ -83,6 +83,8 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {OutlinePlusIcon} from "@/assets/newIcon"
 import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
+import {InstallPluginModal} from "./InstallPluginModal/InstallPluginModal"
+import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
 
 interface KnowledgeBaseContentProps {
     knowledgeBaseID: string
@@ -125,6 +127,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     } = props
     const [showFreeChat, setShowFreeChat] = useSafeState(false)
     const [streams, api] = useMultipleHoldGRPCStream()
+    const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
 
     const [addMode, setAddMode] = useSafeState<string[]>(["manual"])
     const [isAIModelAvailable, setIsAIModelAvailable] = useSafeState(false)
@@ -267,7 +270,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                     editKnowledgeBase(kb.ID, {
                         ...kb,
                         streamstep: "success",
-                        historyGenerateKnowledgeList: kb.historyGenerateKnowledgeList.filter(
+                        historyGenerateKnowledgeList: kb.historyGenerateKnowledgeList?.filter(
                             (it) => it.token !== history.token
                         )
                     })
@@ -421,7 +424,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
-        return activeChat?.SessionID 
+        return activeChat?.SessionID
     }, [activeChat])
 
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
@@ -732,7 +735,22 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                                 <div className={styles["knowledge-base-container-empty"]}>
                                     <YakitEmpty />
                                     <div className={styles["empty-button"]}>
-                                        <YakitButton onClick={() => handleCreateKnowledgeBase()}>
+                                        <YakitButton
+                                            onClick={async () => {
+                                                try {
+                                                    const result = await ThirdPartyBinaryRunAsync()
+                                                    const targetInstallPlugins = reseultKnowledgePlugin(result)
+                                                    targetInstallPlugins
+                                                        ? InstallPluginModal({
+                                                              getContainer: "#main-operator-page-body-ai-repository",
+                                                              callback: () => {
+                                                                  refreshPluginStatus()
+                                                              }
+                                                          })
+                                                        : handleCreateKnowledgeBase()
+                                                } catch (error) {}
+                                            }}
+                                        >
                                             创建知识库
                                         </YakitButton>
                                         <YakitButton

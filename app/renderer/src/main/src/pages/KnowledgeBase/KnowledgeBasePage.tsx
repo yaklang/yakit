@@ -9,7 +9,7 @@ import {randomString} from "@/utils/randomUtil"
 
 import KnowledgeBaseContent from "./compoment/KnowledgeBaseContent"
 
-import {compareKnowledgeBaseChangeList, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChangeList, exclude, targetInstallList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -74,11 +74,9 @@ const KnowledgeBase: FC = () => {
                 const resultList = targetInstallList
                     .map((name) => result.find((it) => it.Name === name && !it.InstallPath))
                     .filter((v) => v !== undefined)
-                const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
 
                 const filteredInstall = resultList.filter((item) => !exclude.includes(item.Name))
                 if (filteredInstall?.length !== 0) {
-                    info(`使用知识库缺少第三方依赖，需安装${filteredInstall?.length}个`)
                     setInstallPlug(true)
                 } else {
                     setInstallPlug(false)
@@ -86,7 +84,8 @@ const KnowledgeBase: FC = () => {
             },
             onError: (err) => {
                 failed(`获取插件失败: ${err}`)
-            }
+            },
+            manual: true
         }
     )
 
@@ -211,9 +210,16 @@ const KnowledgeBase: FC = () => {
         {leading: true}
     ).run
 
-    useEffect(() => {
-        if (!inViewport) return
-        getAIModelListOption()
+    useAsyncEffect(async () => {
+        if (inViewport) {
+            try {
+                await binariesToInstallRefreshAsync()
+            } catch (error) {
+                failed(error + "")
+            }
+        } else {
+            getAIModelListOption()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inViewport])
 

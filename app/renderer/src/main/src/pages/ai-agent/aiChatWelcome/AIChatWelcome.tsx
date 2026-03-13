@@ -65,6 +65,8 @@ import Tabs from "./Tabs/Tabs"
 import ForgeName, {ForgeNameRef} from "../forgeName/ForgeName"
 import AIToolList from "../aiToolList/AIToolList"
 import {SplitView} from "@/pages/yakRunner/SplitView/SplitView"
+import {InstallPluginModal} from "@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal"
+import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
 
 // const sideberRadioOptions = [
 //     {
@@ -135,6 +137,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
         // 控制下拉菜单
         const [openDrawer, setOpenDrawer] = useState<boolean>(true)
+        const [knowledgeInstallPlug, setKnowledgeInstallPlug] = useState<boolean>(false)
 
         const lineStartRef = useRef<HTMLDivElement>(null)
         const welcomeRef = useRef<HTMLDivElement>(null)
@@ -366,13 +369,21 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
         const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
         const forgeNameRef = useRef<ForgeNameRef>(null)
+        const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
 
         const items = useMemo(() => {
             return [
                 {
                     label: "知识库",
                     key: "knowledge",
-                    children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
+                    children: (
+                        <KnowledgeSidebarList
+                            ref={knowledgeSidebarListRef}
+                            api={api}
+                            streams={streams}
+                            onInstallPlugChange={setKnowledgeInstallPlug}
+                        />
+                    ),
                     extra: [
                         <YakitButton
                             key='import'
@@ -384,9 +395,19 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                         />,
                         <YakitButton
                             key='add'
-                            disabled={knowledgeSidebarListRef.current?.installPlug}
-                            onClick={() => {
-                                knowledgeSidebarListRef.current?.openAdd()
+                            onClick={async () => {
+                                try {
+                                    const result = await ThirdPartyBinaryRunAsync()
+                                    const targetInstallPlugins = reseultKnowledgePlugin(result)
+                                    targetInstallPlugins
+                                        ? InstallPluginModal({
+                                              getContainer: "#main-operator-page-body-ai-agent",
+                                              callback: () => {
+                                                  refreshPluginStatus()
+                                              }
+                                          })
+                                        : knowledgeSidebarListRef.current?.openAdd()
+                                } catch (error) {}
                             }}
                             type='text2'
                             icon={<OutlinePluscircleIcon />}
@@ -432,7 +453,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 }
             ]
-        }, [api, streams])
+        }, [api, streams, knowledgeInstallPlug, installPlug])
 
         return (
             <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>

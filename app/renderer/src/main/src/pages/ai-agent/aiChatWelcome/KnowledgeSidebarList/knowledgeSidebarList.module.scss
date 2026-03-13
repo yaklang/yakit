@@ -61,8 +61,13 @@
         height: 0;
         flex: 1;
         overflow-y: auto;
+        :global {
+            .ant-spin-container {
+                gap: 8px;
+            }
+        }
         &-spin {
-           overflow-y: auto;
+            overflow-y: auto;
         }
         .knowledge-base-info-card {
             width: 100%;
@@ -326,7 +331,7 @@
         }
     }
 }
-.download-btn{
+.download-btn {
     display: flex;
     margin: 30px auto 0 auto;
 }
