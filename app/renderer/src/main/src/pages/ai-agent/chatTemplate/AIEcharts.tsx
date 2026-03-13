@@ -509,7 +509,7 @@ export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.m
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 420, height: 160}} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
 })
 
 const getResponseSpeedOption = (
@@ -644,11 +644,11 @@ const getResponseSpeedDetailsOption = (
 ): EChartsOption => {
     const {data, xData} = dataEcharts
     const intelligent = getIntelligent({data: data.intelligent, colors})
-    const lightweightLength = data.intelligent?.length
+    const intelligentLength = data.intelligent?.length
 
     const lightweight = getLightweight({data: data.lightweight, colors})
 
-    const intelligentLength = data.lightweight.length
+    const lightweightLength = data.lightweight.length
 
     const seriesBase = {
         symbolSize: 0,
