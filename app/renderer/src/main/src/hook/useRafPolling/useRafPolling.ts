@@ -36,13 +36,15 @@ export interface UseRafPollingOptions<T> {
 /**
  * 基于 requestAnimationFrame 的轮询 Hook。
  */
-export function useRafPolling<T>(options: UseRafPollingOptions<T>){
+export function useRafPolling<T>(options: UseRafPollingOptions<T>) {
     const {getData, interval = 200, shouldStop, shouldUpdate, clone, resetDeps = []} = options
 
-    const [data, setData] = useState<T | null>(() => getData())
+    const [renderNumber, setRenderNumber] = useState<number>(0)
+    // const [data, setData] = useState<T | null>(() => getData())
     const [running, setRunning] = useState<boolean>(true)
 
-    const dataRef = useRef<T | null>(data)
+    const aiDataRef = useRef<T | null>(getData())
+    const dataRef = useRef<T | null>(aiDataRef.current)
 
     const getDataRef = useLatest(getData)
     const shouldStopRef = useLatest(shouldStop)
@@ -56,6 +58,7 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>){
 
         if (shouldStopRef.current?.(result)) {
             setRunning(false)
+            setRenderNumber(0)
         }
         // 进行数据克隆，确保引用变化
         const clonedResult = cloneRef.current ? cloneRef.current(result) : result
@@ -66,7 +69,9 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>){
         dataRef.current = clonedResult
 
         if (needUpdate) {
-            setData(clonedResult)
+            // setData(clonedResult)
+            aiDataRef.current = result
+            setRenderNumber((prev) => prev + 1)
         }
     })
 
@@ -75,12 +80,14 @@ export function useRafPolling<T>(options: UseRafPollingOptions<T>){
         const cloned = initial && cloneRef.current ? cloneRef.current(initial) : initial
 
         dataRef.current = cloned ?? null
-        setData(cloned ?? null)
+        // setData(cloned ?? null)
+        aiDataRef.current = cloned ?? null
+        setRenderNumber((prev) => prev + 1)
 
         setRunning(true)
     }, resetDeps)
 
     useInterval(tick, running ? interval : undefined)
 
-    return data
+    return {renderNumber, aiDataRef: aiDataRef.current}
 }

@@ -111,7 +111,7 @@ const getLightweight = (options: AIEchartsHelperProps) => {
     //#endregion
     return value
 }
-const symbolSize = 3
+const symbolSize = 2
 interface ContextPressureOptionProps extends ContextPressureEchartsProps {
     colors: Record<string, string>
 }

@@ -43,7 +43,7 @@ const AIContextToken: FC<{
         return data
     }, [session])
 
-    const aiPerfData = useRafPolling({
+    const {renderNumber, aiDataRef} = useRafPolling({
         getData: getPerfData,
         interval: 2000,
         shouldStop: () => !execute,
@@ -77,9 +77,9 @@ const AIContextToken: FC<{
     })
     // 上下文压力集合
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
-        const value = getPressuresData(aiPerfData?.pressure, 100)
+        const value = getPressuresData(aiDataRef?.pressure, 100)
         return {data: value.data}
-    }, [aiPerfData?.pressure])
+    }, [renderNumber, aiDataRef?.pressure])
     // 最新的上下文压力
     const lastPressure = useCreation(() => {
         let pressure: Record<AIModelTypeEnum, number> = {
@@ -104,13 +104,13 @@ const AIContextToken: FC<{
 
     // 上下文压力预设值
     const pressureThreshold = useCreation(() => {
-        return getThreshold(aiPerfData?.pressure)
-    }, [aiPerfData?.pressure])
+        return getThreshold(aiDataRef?.pressure)
+    }, [renderNumber, aiDataRef?.pressure])
 
     // 首字符延迟集合
     const currentCostEcharts: ResponseSpeedEchartsProps["dataEcharts"] = useCreation(() => {
-        return {data: getCostData(aiPerfData?.firstCost, 100).data}
-    }, [aiPerfData?.firstCost])
+        return {data: getCostData(aiDataRef?.firstCost, 100).data}
+    }, [renderNumber, aiDataRef?.firstCost])
     // 最新的首字符延迟
     const lastFirstCost = useCreation(() => {
         let cost: Record<AIModelTypeEnum, number> = {
@@ -134,12 +134,12 @@ const AIContextToken: FC<{
     }, [currentCostEcharts])
     // AI的Token消耗
     const token = useCreation(() => {
-        const {consumption} = aiPerfData || {}
+        const {consumption} = aiDataRef || {}
         if (isEmpty(consumption)) return [0, 0]
         const input = consumption?.input_consumption || 0
         const output = consumption?.output_consumption || 0
         return [formatNumberUnits(input), formatNumberUnits(output)]
-    }, [aiPerfData?.consumption])
+    }, [renderNumber, aiDataRef?.consumption])
 
     const isShowCost = useCreation(() => {
         return !!(
@@ -173,24 +173,30 @@ const AIContextToken: FC<{
             {isShowPressure && (
                 <div className={styles["echarts-wrapper"]}>
                     <div className={styles["title"]}>
-                        <span>上下文压力</span>
+                        <span className={styles["text"]}>上下文压力</span>
                         {lastPressure.intelligent > 0 && (
-                            <span
-                                className={classNames(styles["intelligent"], {
-                                    [styles["intelligent-height"]]: lastPressure.intelligent > maxIntelligentPressure
-                                })}
-                            >
-                                {formatNumberUnits(lastPressure.intelligent)}
-                            </span>
+                            <Tooltip title='高质模型'>
+                                <span
+                                    className={classNames(styles["intelligent"], {
+                                        [styles["intelligent-height"]]:
+                                            lastPressure.intelligent > maxIntelligentPressure
+                                    })}
+                                >
+                                    {formatNumberUnits(lastPressure.intelligent)}
+                                </span>
+                            </Tooltip>
                         )}
                         {lastPressure.lightweight > 0 && (
-                            <span
-                                className={classNames(styles["lightweight"], {
-                                    [styles["lightweight-height"]]: lastPressure.lightweight > maxLightweightPressure
-                                })}
-                            >
-                                {formatNumberUnits(lastPressure.lightweight)}
-                            </span>
+                            <Tooltip title='轻量模型'>
+                                <span
+                                    className={classNames(styles["lightweight"], {
+                                        [styles["lightweight-height"]]:
+                                            lastPressure.lightweight > maxLightweightPressure
+                                    })}
+                                >
+                                    {formatNumberUnits(lastPressure.lightweight)}
+                                </span>
+                            </Tooltip>
                         )}
                     </div>
                     <ContextPressureEcharts dataEcharts={currentPressuresEcharts} threshold={pressureThreshold} />
@@ -199,17 +205,21 @@ const AIContextToken: FC<{
             {isShowCost && (
                 <div className={styles["echarts-wrapper"]}>
                     <div className={styles["title"]}>
-                        <span>响应速度</span>
-                        {lastFirstCost.intelligent > 0 && (
-                            <span
-                                className={classNames(styles["intelligent"])}
-                            >{`${lastFirstCost.intelligent}ms`}</span>
-                        )}
-                        {lastFirstCost.lightweight > 0 && (
-                            <span
-                                className={classNames(styles["lightweight"])}
-                            >{`${lastFirstCost.lightweight}ms`}</span>
-                        )}
+                        <span className={styles["text"]}>响应速度</span>
+                        <Tooltip title='高质模型'>
+                            {lastFirstCost.intelligent > 0 && (
+                                <span
+                                    className={classNames(styles["intelligent"])}
+                                >{`${lastFirstCost.intelligent}ms`}</span>
+                            )}
+                        </Tooltip>
+                        <Tooltip title='轻量模型'>
+                            {lastFirstCost.lightweight > 0 && (
+                                <span
+                                    className={classNames(styles["lightweight"])}
+                                >{`${lastFirstCost.lightweight}ms`}</span>
+                            )}
+                        </Tooltip>
                     </div>
                     <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
                 </div>
@@ -229,10 +239,11 @@ const AIContextToken: FC<{
                 content={
                     <AIEchartsDetails
                         overallToken={[token[0], token[1]]}
-                        tierConsumption={aiPerfData?.consumption?.tier_consumption}
-                        pressure={aiPerfData?.pressure}
-                        firstCost={aiPerfData?.firstCost}
+                        tierConsumption={aiDataRef?.consumption?.tier_consumption}
+                        pressure={aiDataRef?.pressure}
+                        firstCost={aiDataRef?.firstCost}
                         onClose={() => setVisible(false)}
+                        renderNumber={renderNumber}
                     />
                 }
                 destroyTooltipOnHide={true}
@@ -259,13 +270,17 @@ interface CurrentModel {
 }
 interface AIEchartsDetailsProps {
     overallToken: [number | string, number | string]
+    /** ref */
     tierConsumption?: AIAgentGrpcApi.Consumption["tier_consumption"]
+    /** ref */
     pressure?: AIChatData["aiPerfData"]["pressure"]
+    /** ref */
     firstCost?: AIChatData["aiPerfData"]["firstCost"]
     onClose: () => void
+    renderNumber: number
 }
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
-    const {overallToken, tierConsumption, pressure, firstCost, onClose} = props
+    const {overallToken, tierConsumption, pressure, firstCost, onClose, renderNumber} = props
     const [currentModel, setCurrentModel] = useState<CurrentModel>()
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(ref)
@@ -289,27 +304,27 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
         const input = tierConsumption.intelligent.input_consumption || 0
         const output = tierConsumption.intelligent.output_consumption || 0
         return [formatNumberUnits(input), formatNumberUnits(output)]
-    }, [tierConsumption?.intelligent])
+    }, [renderNumber, tierConsumption?.intelligent])
 
     const lightweightToken = useCreation(() => {
         if (!tierConsumption?.lightweight) return [0, 0]
         const input = tierConsumption.lightweight.input_consumption || 0
         const output = tierConsumption.lightweight.output_consumption || 0
         return [formatNumberUnits(input), formatNumberUnits(output)]
-    }, [tierConsumption?.lightweight])
+    }, [renderNumber, tierConsumption?.lightweight])
 
     // 上下文压力集合
     const pressuresEcharts: AIPressureDetailsEchartsProps["dataEcharts"] = useCreation(() => {
         return getPressuresData(pressure)
-    }, [pressure?.intelligent, pressure?.lightweight])
+    }, [renderNumber, pressure?.intelligent, pressure?.lightweight])
     // 首字符延迟集合
     const costEcharts: AICostDetailsEchartsProps["dataEcharts"] = useCreation(() => {
         return getCostData(firstCost)
-    }, [firstCost?.intelligent, firstCost?.lightweight])
+    }, [renderNumber, firstCost?.intelligent, firstCost?.lightweight])
     // 上下文压力预设值
     const threshold = useCreation(() => {
         return getThreshold(pressure)
-    }, [pressure?.intelligent, pressure?.lightweight])
+    }, [renderNumber, pressure?.intelligent, pressure?.lightweight])
     const getEchartsHeard = useMemoizedFn((title: string) => {
         return (
             <div className={styles["echarts-heard"]}>
