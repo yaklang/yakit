@@ -247,7 +247,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     }}
                     initialValue={40}
                 >
-                    <YakitInput suffix='KB' size='small' className={styles["input-kb-suffix"]} />
+                    <YakitInput suffix='K' size='small' className={styles["input-kb-suffix"]} />
                 </Form.Item>
             </Form>
         </div>
