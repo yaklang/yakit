@@ -11,6 +11,8 @@ export interface UseStreamingChatContentParams {
 }
 
 export interface UseStreamingChatContentResult {
+    /**渲染 */
+    renderNumber: number
     /** 流数据 */
     stream: ChatStream | null
     /** 是否需要打字效果（经历过 start 状态） */
@@ -29,7 +31,7 @@ export function useStreamingChatContent(params: UseStreamingChatContentParams): 
         return fetchChatDataStore?.getContentMap({session, chatType, mapKey: token}) as ChatStream
     }, [fetchChatDataStore, session, chatType, token])
 
-    const stream = useRafPolling<ChatStream>({
+    const {renderNumber, aiDataRef} = useRafPolling<ChatStream>({
         getData,
         interval: 200,
         shouldStop: (data) => {
@@ -44,5 +46,5 @@ export function useStreamingChatContent(params: UseStreamingChatContentParams): 
             return prev.data.content !== next.data.content || prev.data.status !== next.data.status
         }
     })
-    return {stream, shouldType}
+    return {renderNumber, stream: aiDataRef, shouldType}
 }

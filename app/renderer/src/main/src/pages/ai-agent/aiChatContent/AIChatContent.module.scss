@@ -63,6 +63,7 @@
         .extra {
             @extend %display-flex-center;
             gap: 16px;
+            overflow-x: auto;
         }
         .info-token {
             display: flex;
@@ -89,6 +90,12 @@
             .title {
                 @extend %display-flex-center;
                 gap: 4px;
+                .text {
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    word-break: break-all;
+                }
             }
             .intelligent {
                 color: var(--Colors-Use-Purple-Primary);
