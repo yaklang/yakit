@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Dropdown, Form, Space, Tooltip} from "antd"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useSize} from "ahooks"
 import {InformationCircleIcon, RefreshIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined, FullscreenOutlined} from "@ant-design/icons/lib"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -13,11 +13,16 @@ import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {yakitNotify} from "@/utils/notification"
 import {
+    OutlineChevrondownIcon,
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
+    OutlineFileUpIcon,
+    OutlineStorageIcon,
     OutlineTerminalIcon,
     OutlineTrashIcon,
-    OutlineXIcon
+    OutlineXIcon,
+    OutlineArrowsexpandIcon,
+    OutlineArrowscollapseIcon
 } from "@/assets/icon/outline"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultWebFuzzerPageInfo, HotPatchDefaultContent, HotPatchTempDefault} from "@/defaultConstants/HTTPFuzzerPage"
@@ -34,6 +39,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DbOperateMessage} from "../layout/mainOperatorContent/utils"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -43,11 +49,16 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {getHotPatchCache, setHotPatchCache} from "./hotPatchCache"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
+    onChangeCode?: (code: string) => any
+    onChangeHotPatchCodeWithParamGetterCode?: (code: string) => any
     onSaveCode: (code: string) => any
     onSaveHotPatchCodeWithParamGetterCode: (code: string) => any
+    hotPatchEnabled?: boolean
+    onHotPatchEnabledChange?: (enabled: boolean) => void
     onCancel: () => void
     initialHotPatchCode: string
     initialHotPatchCodeWithParamGetter?: string
@@ -474,16 +485,429 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
 export const getHotPatchCodeInfo = async () => {
     let hotPatchCode = HotPatchDefaultContent
     try {
-        const res = await getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode)
-        if (res) {
-            const obj = JSON.parse(res) || {}
-            if (obj.hotPatchCodeOpen) {
-                hotPatchCode = obj.hotPatchCode
-            }
+        const {hotPatchCodeOpen, hotPatchCode: cacheHotPatchCode} = await getHotPatchCache()
+        if (hotPatchCodeOpen) {
+            hotPatchCode = cacheHotPatchCode
         }
     } catch (error) {}
     return hotPatchCode
 }
+
+interface HTTPFuzzerHotPatchSidebarProp {
+    pageId: string
+    visible: boolean
+    hotPatchCode: string
+    hotPatchCodeWithParamGetter: string
+    selectedTemplateName?: string
+    onChangeCode?: (code: string) => void
+    onChangeHotPatchCodeWithParamGetterCode?: (code: string) => void
+    onSaveCode: (code: string) => void
+    onSaveHotPatchCodeWithParamGetterCode: (code: string) => void
+    hotPatchEnabled: boolean
+    onHotPatchEnabledChange: (enabled: boolean) => void
+    onSelectedTemplateNameChange?: (name: string) => void
+    onInsert?: (s: string) => void
+}
+
+export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> = React.memo((props) => {
+    const {visible, hotPatchCode, hotPatchCodeWithParamGetter, pageId, hotPatchEnabled, selectedTemplateName: selectedTemplateNameProp} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
+    const [code, setCode, getCode] = useGetState(hotPatchCode)
+    const [template, setTemplate, getTemplate] = useGetState(`{{yak(handle|{{params(test)}})}}`)
+    const [loading, setLoading] = useState(false)
+    const [hotPatchEditorHeight, setHotPatchEditorHeight] = useState(420)
+    const [isFullScreen, setIsFullScreen] = useState(false)
+    const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
+    const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
+    const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
+    const [selectedTemplateName, setSelectedTemplateName] = useState<string>(selectedTemplateNameProp || "")
+    const tempNameRef = useRef<string>("")
+    const tokenRef = useRef<string>("")
+    const resizeBodyRef = useRef<HTMLDivElement>(null)
+    const resizeBodySize = useSize(resizeBodyRef)
+
+    const resizeBoxFirstMinSize = 120
+    const resizeBoxSecondMinSize = 120
+    const resizeLineSize = 8
+
+    const resizeBoxFirstRatio = useMemo(() => {
+        const bodyHeight = resizeBodySize?.height || 0
+        if (!bodyHeight) return `${hotPatchEditorHeight}px`
+
+        const minRequiredHeight = resizeBoxFirstMinSize + resizeBoxSecondMinSize + resizeLineSize
+        if (bodyHeight <= minRequiredHeight) {
+            return "50%"
+        }
+
+        const maxFirstHeight = bodyHeight - resizeBoxSecondMinSize - resizeLineSize
+        const nextFirstHeight = Math.max(resizeBoxFirstMinSize, Math.min(hotPatchEditorHeight, maxFirstHeight))
+        return `${Math.round(nextFirstHeight)}px`
+    }, [hotPatchEditorHeight, resizeBodySize?.height])
+
+    useEffect(() => {
+        if (visible) {
+            setCode(hotPatchCode)
+            getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
+                if (!!e) {
+                    setTemplate(`${e}`)
+                }
+            })
+        }
+    }, [visible, hotPatchCode, setCode, setTemplate])
+
+    useEffect(() => {
+        tempNameRef.current = selectedTemplateNameProp || ""
+        setSelectedTemplateName(selectedTemplateNameProp || "")
+        if (!visible || !selectedTemplateNameProp) {
+            return
+        }
+
+        const matchedTemplate = hotPatchTempLocal.find((item) => item.name === selectedTemplateNameProp)
+        if (matchedTemplate?.isDefault) {
+            setCode(matchedTemplate.temp)
+            props.onChangeCode?.(matchedTemplate.temp)
+            return
+        }
+
+        ipcRenderer
+            .invoke("QueryHotPatchTemplate", {
+                Type: "fuzzer",
+                Name: [selectedTemplateNameProp]
+            })
+            .then((res: QueryHotPatchTemplateResponse) => {
+                const nextCode = res.Data?.[0]?.Content
+                if (nextCode) {
+                    setCode(nextCode)
+                    props.onChangeCode?.(nextCode)
+                }
+            })
+            .catch(() => {})
+    }, [visible, selectedTemplateNameProp, hotPatchTempLocal, setCode, props])
+
+    useEffect(() => {
+        if (!visible) {
+            setIsFullScreen(false)
+        }
+    }, [visible])
+
+    const canSaveSelectedTemplate = useMemo(() => {
+        const currentTemplateName = selectedTemplateName || selectedTemplateNameProp || tempNameRef.current
+        if (!currentTemplateName) return false
+
+        const selectedTemplate = hotPatchTempLocal.find((item) => item.name === currentTemplateName)
+        if (selectedTemplate) {
+            return !selectedTemplate.isDefault
+        }
+
+        return !HotPatchTempDefault.some((item) => item.name === currentTemplateName)
+    }, [hotPatchTempLocal, selectedTemplateName, selectedTemplateNameProp])
+
+    const updateCode = useMemoizedFn((nextCode: string) => {
+        setCode(nextCode)
+        props.onChangeCode?.(nextCode)
+    })
+
+    const persistHotPatchState = useMemoizedFn((enabled: boolean, currentCode: string) => {
+        setRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO, getTemplate())
+        setHotPatchCache({hotPatchCodeOpen: enabled, hotPatchCode: currentCode})
+    })
+
+    const saveCode = useMemoizedFn((c: string, notify?: boolean) => {
+        props.onSaveCode(c)
+        persistHotPatchState(hotPatchEnabled, c)
+        if (notify) {
+            yakitNotify("success", t("YakitNotification.saved"))
+        }
+    })
+
+    const onUpdateTemplate = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("UpdateHotPatchTemplate", {
+                Condition: {Type: "fuzzer", Name: [tempNameRef.current]},
+                Data: {Type: "fuzzer", Content: code, Name: tempNameRef.current}
+            })
+            .then(() => {
+                yakitNotify("success", t("HTTPFuzzerHotPatch.updateTemplateSuccess", {tempName: tempNameRef.current}))
+            })
+            .catch((error) => {
+                yakitNotify("error", t("HTTPFuzzerHotPatch.updateTemplateFailed", {tempName: tempNameRef.current}) + error)
+            })
+    })
+
+    const onCancelDebug = useMemoizedFn(() => {
+        if (tokenRef.current) {
+            ipcRenderer.invoke("cancel-StringFuzzer", tokenRef.current).catch(() => {})
+            setLoading(false)
+            tokenRef.current = ""
+            yakitNotify("info", t("HTTPFuzzerHotPatch.debugCancelled"))
+        }
+    })
+
+    const onDebugSubmit = useMemoizedFn(() => {
+        saveCode(code)
+        setLoading(true)
+        tokenRef.current = `string-fuzzer-${Date.now()}-${Math.random()}`
+        ipcRenderer
+            .invoke(
+                "StringFuzzer",
+                {
+                    Template: template,
+                    HotPatchCode: code,
+                    HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
+                    TimeoutSeconds: 20,
+                    Limit: 300
+                },
+                tokenRef.current
+            )
+            .then((response: {Results: Uint8Array[]}) => {
+                const data: string[] = (response.Results || []).map((buf) => new Buffer(buf).toString("utf8"))
+                showYakitDrawer({
+                    title: "HotPatch Tag Result",
+                    width: "45%",
+                    className: styles["hotPatch-result-drawer"],
+                    content: (
+                        <AutoCard
+                            size={"small"}
+                            bordered={false}
+                            title={
+                                <span style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                    {t("HTTPFuzzerHotPatch.resultDisplay")}
+                                </span>
+                            }
+                            extra={
+                                <Space>
+                                    <YakitButton type='text' onClick={() => setClipboardText(data.join("\n"))}>
+                                        {t("HTTPFuzzerHotPatch.copyFuzzResult")}
+                                    </YakitButton>
+                                </Space>
+                            }
+                        >
+                            <YakitEditor value={data.join("\r\n")} readOnly={true} />
+                        </AutoCard>
+                    )
+                })
+            })
+            .catch((err) => {
+                if (tokenRef.current) {
+                    yakitNotify("error", `${t("HTTPFuzzerHotPatch.debugFailed")}: ${err}`)
+                }
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                    tokenRef.current = ""
+                }, 300)
+            })
+    })
+
+    const onEnabledChange = useMemoizedFn((checked: boolean) => {
+        if (checked) {
+            props.onSaveCode(code)
+        }
+        props.onHotPatchEnabledChange(checked)
+        persistHotPatchState(checked, getCode())
+    })
+
+    return (
+        <div
+            className={classNames(styles["hotPatch-sidebar"], {[styles["hotPatch-sidebar-full-screen"]]: isFullScreen})}
+            style={{display: visible ? "" : "none"}}
+        >
+            <div className={styles["hotPatch-sidebar-header"]}>
+                <div className={styles["hotPatch-sidebar-toolbar"]}>
+                    <div className={styles["hotPatch-sidebar-toolbar-row"]}>
+                        <div className={styles["hotPatch-sidebar-template-select"]}>
+                            <HotCodeTemplate
+                                type='fuzzer'
+                                hotPatchTempLocal={hotPatchTempLocal}
+                                onSetHotPatchTempLocal={setHotPatchTempLocal}
+                                onClickHotCode={(temp, tempName) => {
+                                    const nextName = tempName || ""
+                                    tempNameRef.current = nextName
+                                    setSelectedTemplateName(nextName)
+                                    props.onSelectedTemplateNameChange?.(nextName)
+                                    updateCode(temp)
+                                }}
+                                refreshList={refreshHotCodeList}
+                                onDeleteLocalTempOk={() => {
+                                    tempNameRef.current = ""
+                                    setSelectedTemplateName("")
+                                    props.onSelectedTemplateNameChange?.("")
+                                }}
+                                triggerNode={
+                                    <YakitButton type='text' size='small' className={styles["hotPatch-sidebar-template-trigger"]}>
+                                        <span className={classNames(styles["hotPatch-sidebar-template-text"], "content-ellipsis")}>
+                                            {selectedTemplateName ? t(selectedTemplateName) : t("HotCodeTemplate.code_template")}
+                                        </span>
+                                        <OutlineChevrondownIcon className={styles["hotPatch-sidebar-template-icon"]} />
+                                    </YakitButton>
+                                }
+                            />
+                        </div>
+                        <div className={styles["hotPatch-sidebar-toolbar-actions"]}>
+                            <YakitPopconfirm
+                                title={t("HTTPFuzzerHotPatch.resetHotReloadWarning")}
+                                onConfirm={() => {
+                                    tempNameRef.current = ""
+                                    setSelectedTemplateName("")
+                                    props.onSelectedTemplateNameChange?.("")
+                                    updateCode(HotPatchDefaultContent)
+                                }}
+                            >
+                                <Tooltip title={t("YakitButton.reset")}>
+                                    <YakitButton
+                                        icon={<RefreshIcon />}
+                                        type='text'
+                                        size='small'
+                                        className={styles["hotPatch-sidebar-icon-button"]}
+                                    />
+                                </Tooltip>
+                            </YakitPopconfirm>
+                            <Tooltip title={t("YakitButton.save_as")}>
+                                <YakitButton
+                                    disabled={!code}
+                                    type='text'
+                                    size='small'
+                                    icon={<OutlineFileUpIcon />}
+                                    className={styles["hotPatch-sidebar-icon-button"]}
+                                    onClick={() => setAddHotCodeTemplateVisible(true)}
+                                />
+                            </Tooltip>
+                            <Tooltip title={t("YakitButton.save")}>
+                                <YakitButton
+                                    disabled={!canSaveSelectedTemplate}
+                                    type='text'
+                                    size='small'
+                                    icon={<OutlineStorageIcon />}
+                                    className={styles["hotPatch-sidebar-icon-button"]}
+                                    onClick={() => {
+                                        saveCode(code, true)
+                                    }}
+                                />
+                            </Tooltip>
+                        </div>
+                        <div className={styles["hotPatch-sidebar-header-right"]}>
+                            <div className={styles["hotPatch-sidebar-switch-wrap"]}>
+                                {t("YakitButton.enable")}
+                                <Tooltip title={t("HTTPFuzzerHotPatch.webFuzzerHotReloadOpenTips")}>
+                                    <InformationCircleIcon className={styles["info-icon"]} />
+                                </Tooltip>
+                                <YakitSwitch checked={hotPatchEnabled} onChange={onEnabledChange} />
+                            </div>
+                            {isFullScreen ? (
+                                <OutlineArrowscollapseIcon
+                                    className={styles["expand-icon"]}
+                                    onClick={() => setIsFullScreen(false)}
+                                />
+                            ) : (
+                                <OutlineArrowsexpandIcon
+                                        className={classNames(styles["expand-icon"], styles["expand-icon-active"])}
+                                    onClick={() => {
+                                        setIsFullScreen(true)
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className={styles["hotPatch-sidebar-body"]} ref={resizeBodyRef}>
+                <YakitResizeBox
+                    isVer={true}
+                    firstRatio={resizeBoxFirstRatio}
+                    firstMinSize={resizeBoxFirstMinSize}
+                    secondMinSize={resizeBoxSecondMinSize}
+                    isShowDefaultLineStyle={true}
+                    style={{height: "100%", flex: 1, minHeight: 0, overflow: "hidden"}}
+                    firstNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden"}}
+                    secondNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden"}}
+                    onMouseUp={({firstSizeNum}) => {
+                        const bodyHeight = resizeBodySize?.height || 0
+                        if (!bodyHeight) {
+                            setHotPatchEditorHeight(Math.round(firstSizeNum))
+                            return
+                        }
+
+                        const maxFirstHeight = Math.max(
+                            resizeBoxFirstMinSize,
+                            bodyHeight - resizeBoxSecondMinSize - resizeLineSize
+                        )
+                        setHotPatchEditorHeight(Math.round(Math.min(firstSizeNum, maxFirstHeight)))
+                    }}
+                    firstNode={
+                        <div className={styles["hotPatch-sidebar-editor-section"]} style={{height: "100%"}}>
+                            <div className={styles["hotPatch-sidebar-editor"]}>
+                                <YakitEditor type='yak' value={code} setValue={updateCode} noMiniMap={true} />
+                            </div>
+                        </div>
+                    }
+                    secondNode={
+                        <div className={styles["hotPatch-sidebar-template-content"]} style={{height: "100%"}}>
+                            <div className={styles["hotPatch-sidebar-section-header"]}>
+                                <div>
+                                    <span className={styles["hotPatch-sidebar-section-label"]}>{t("HTTPFuzzerHotPatch.templateContent")}</span>
+                                    {props.onInsert && (
+                                        <YakitButton
+                                            type='primary'
+                                            size='small'
+                                            onClick={() => {
+                                                props.onInsert?.(template)
+                                            }}
+                                        >
+                                            {t("HTTPFuzzerHotPatch.insertAtEditorPosition")}
+                                        </YakitButton>
+                                    )}
+                                </div>
+                                <div className={styles["hotPatch-section-header-right"]}>
+                                    <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
+                                        <YakitButton
+                                            type='text'
+                                            size='small'
+                                            className={styles["hotPatch-sidebar-icon-button"]}
+                                            onClick={openConsoleNewWindow}
+                                            icon={<OutlineTerminalIcon className={styles["engineConsole-icon-style"]} />}
+                                        />
+                                    </Tooltip>
+                                    <YakitButton
+                                        type='primary'
+                                        size='small'
+                                        className={styles["hotPatch-sidebar-debug-button"]}
+                                        loading={loading}
+                                        onClick={onDebugSubmit}
+                                    >
+                                        {t("YakitButton.debugExecution")}
+                                    </YakitButton>
+                                    {loading && (
+                                        <YakitButton danger size='small' onClick={onCancelDebug}>
+                                            {t("YakitButton.cancel")}
+                                        </YakitButton>
+                                    )}
+                                </div>
+                            </div>
+                            <div className={styles["hotPatch-sidebar-template-editor"]}>
+                                <YakitEditor type='http' value={template} setValue={setTemplate} noMiniMap={true} />
+                            </div>
+                        </div>
+                    }
+                />
+            </div>
+            <AddHotCodeTemplate
+                type='fuzzer'
+                title={t("YakitButton.save_as")}
+                hotPatchTempLocal={hotPatchTempLocal}
+                hotPatchCode={code}
+                visible={addHotCodeTemplateVisible}
+                onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                onSaveHotCodeOk={(tempName) => {
+                    tempNameRef.current = tempName || ""
+                    setSelectedTemplateName(tempName || "")
+                    props.onSelectedTemplateNameChange?.(tempName || "")
+                    setRefreshHotCodeList((prev) => !prev)
+                }}
+            />
+        </div>
+    )
+})
 
 interface QueryHotPatchTemplateListResponse {
     Pagination: Paging
@@ -521,6 +945,7 @@ interface HotCodeTemplateProps {
     onSetHotPatchTempLocal: (hotPatchTempLocal: HotPatchTempItem[]) => void
     onClickHotCode: (temp: string, tempName?: string) => void
     dropdown?: boolean
+    triggerNode?: React.ReactNode
     refreshList?: boolean
     onDeleteLocalTempOk?: () => void
 }
@@ -531,6 +956,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         onSetHotPatchTempLocal,
         onClickHotCode,
         dropdown = true,
+        triggerNode,
         refreshList,
         onDeleteLocalTempOk
     } = props
@@ -599,7 +1025,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     const onClickHotCodeName = (item: HotPatchTempItem, click?: boolean) => {
         if (item.isDefault) {
             if (click) {
-                onClickHotCode(item.temp)
+                onClickHotCode(item.temp, item.name)
                 setHotCodeTempVisible(false)
             }
             setViewCurrHotCode(item.temp)
@@ -907,7 +1333,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     trigger={["click"]}
                     overlay={overlayCont}
                 >
-                    <YakitButton type='text'>{t("HotCodeTemplate.code_template")}</YakitButton>
+                    {triggerNode || <YakitButton type='text'>{t("HotCodeTemplate.code_template")}</YakitButton>}
                 </Dropdown>
             ) : (
                 <div style={{width: 250}}>{overlayCont}</div>

@@ -212,7 +212,8 @@
     "crack_signature": "Crack Signature",
     "third_party_captcha_bypass": "Third-party CAPTCHA Bypass",
     "source": "Source",
-    "executionResult": "Execution Result"
+    "executionResult": "Execution Result",
+    "webFuzzerHotReloadOpenTips": "When enabled, each request will execute the latest hot-loaded content."
   },
   "HTTPFuzzerHistorySelector": {
     "confirmDeletePackets": "This will delete the data packets and cached data. Are you sure you want to delete them?",

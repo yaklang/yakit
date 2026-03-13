@@ -1,5 +1,5 @@
 import React, {useMemo} from "react"
-import {Button, ButtonProps} from "antd"
+import {Button, ButtonProps, ConfigProvider} from "antd"
 
 import styles from "./yakitButton.module.scss"
 import classNames from "classnames"
@@ -57,6 +57,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
     }, [radius])
 
     return (
+        <ConfigProvider autoInsertSpaceInButton={false}>
         <Button
             {...resePopover}
             size='middle'
@@ -75,5 +76,6 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
         >
             {children}
         </Button>
+        </ConfigProvider>
     )
 })

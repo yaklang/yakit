@@ -6,7 +6,7 @@ import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
 import { yakitFailed, yakitNotify } from "@/utils/notification"
 import { HotPatchTempItem, AddHotCodeTemplate } from "@/pages/fuzzer/HTTPFuzzerHotPatch"
-import { HotPatchTempDefault } from "@/defaultConstants/HTTPFuzzerPage"
+import { HotPatchDefaultContent, HotPatchTempDefault } from "@/defaultConstants/HTTPFuzzerPage"
 import { MITMHotPatchTempDefault } from "@/defaultConstants/mitm"
 import { cloneDeep } from "lodash"
 import {
@@ -38,6 +38,7 @@ import styles from "./ConfigManagement.module.scss"
 import { SolidDotsverticalIcon, SolidPlayIcon, SolidStopIcon } from "@/assets/icon/solid"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 import { DEFAULT_GLOBAL_TEMPLATE_CONTENT, DEFAULT_GLOBAL_TEMPLATE_NAME, useGlobalHotPatch, useGlobalHotPatchTag } from "@/store/globalHotPatch"
+import { HotPatchTemplate } from "@/pages/invoker/data/MITMPluginTamplate"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -114,6 +115,7 @@ const ConfigManagement: React.FC = memo(() => {
 export default ConfigManagement
 
 type HotCodeType = "fuzzer" | "mitm" | "global"
+type PanelHotCodeType = Exclude<HotCodeType, "global">
 
 interface QueryHotPatchTemplateListResponse {
     Name: string[]
@@ -163,6 +165,8 @@ const HOT_PATCH_PARAMS_GETTER_DEFAULT = `__getParams__ = func() {
 
 export const HotPatchManagement: React.FC = () => {
     const [activeType, setActiveType] = useState<HotCodeType>("global")
+    const [panelType, setPanelType] = useState<PanelHotCodeType>("mitm")
+    const [globalTemplateList, setGlobalTemplateList] = useState<HotPatchTempItem[]>([])
     const [templateList, setTemplateList] = useState<HotPatchTempItem[]>([])
     const [templateListOnline, setTemplateListOnline] = useState<HotPatchTempItem[]>([])
     const [selectedTemplate, setSelectedTemplate] = useState("")
@@ -172,9 +176,12 @@ export const HotPatchManagement: React.FC = () => {
     const { globalHotPatchConfig, loadGlobalHotPatchConfig: loadGlobalHotPatchConfigStore } = useGlobalHotPatch()
     const { globalEnabledTemplateName } = useGlobalHotPatchTag()
     const [globalConfigLoading, setGlobalConfigLoading] = useState(false)
+    const [globalConfigLoaded, setGlobalConfigLoaded] = useState(false)
+    const [globalTemplateListLoading, setGlobalTemplateListLoading] = useState(false)
     const [createModalVisible, setCreateModalVisible] = useState(false)
+    const [createTemplateType, setCreateTemplateType] = useState<HotCodeType>("mitm")
     const [createModalValue, setCreateModalValue] = useState("")
-    const [editingTemplate, setEditingTemplate] = useState("")
+    const [editingTemplateKey, setEditingTemplateKey] = useState("")
     const [editingValue, setEditingValue] = useState("")
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -190,14 +197,61 @@ export const HotPatchManagement: React.FC = () => {
 
     const isGlobalType = useMemo(()=> activeType === "global", [activeType])
 
+    const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType) => {
+        return cloneDeep(type === "fuzzer" ? HotPatchTempDefault : MITMHotPatchTempDefault)
+    })
+
+    const getDefaultTemplateContentByType = useMemoizedFn((type: HotCodeType) => {
+        switch (type) {
+            case "global":
+                return DEFAULT_GLOBAL_TEMPLATE_CONTENT
+            case "fuzzer":
+                return HotPatchDefaultContent
+            case "mitm":
+                return HotPatchTemplate
+            default:
+                return ""
+        }
+    })
+
+    const sortGlobalTemplateList = useMemoizedFn((list: HotPatchTempItem[], enabledName?: string) => {
+        if (!enabledName) return list
+
+        const enabledIndex = list.findIndex((item) => item.name === enabledName)
+        if (enabledIndex <= 0) return list
+
+        const nextList = [...list]
+        const [enabledItem] = nextList.splice(enabledIndex, 1)
+        nextList.unshift(enabledItem)
+        return nextList
+    })
+
+    const getTemplateKey = useMemoizedFn((type: HotCodeType, name: string) => `${type}:${name}`)
+
+    const parseTemplateKey = useMemoizedFn((templateKey: string) => {
+        const [type, ...nameParts] = templateKey.split(":")
+        return {
+            type: type as HotCodeType,
+            name: nameParts.join(":")
+        }
+    })
+
+    const syncSelectedTemplate = useMemoizedFn((type: HotCodeType, templateName?: string, source: "local" | "online" = "local") => {
+        if (!templateName) return
+        setActiveType(type)
+        setSelectedTemplate(templateName)
+        setSelectedTemplateSource(source)
+    })
+
     // 验证模板名称
-    const validateTemplateName = useMemoizedFn((name: string) => {
+    const validateTemplateName = useMemoizedFn((name: string, type: HotCodeType) => {
         const trimmedName = name.trim()
         if (!trimmedName) {
             yakitNotify("warning", t("AddHotCodeTemplate.template_empty_message"))
             return false
         }
-        if (templateList.find((item) => item.name === trimmedName)) {
+        const list = type === "global" ? globalTemplateList : templateList
+        if (list.find((item) => item.name === trimmedName)) {
             yakitNotify("warning", t("AddHotCodeTemplate.template_repeat_message"))
             return false
         }
@@ -206,7 +260,10 @@ export const HotPatchManagement: React.FC = () => {
 
     const withGlobalLoading = useMemoizedFn(async (action: () => Promise<void>) => {
         setGlobalConfigLoading(true)
-        await action().finally(() => setGlobalConfigLoading(false))
+        await action().finally(() => {
+            setGlobalConfigLoading(false)
+            setGlobalConfigLoaded(true)
+        })
     })
 
     // 获取已启用的全局热加载模板
@@ -225,67 +282,91 @@ export const HotPatchManagement: React.FC = () => {
                 })
             }
             await useGlobalHotPatch.getState().enableGlobalHotPatch(nameToEnable)
+            loadGlobalTemplateList(undefined, nameToEnable)
         })
     )
     // 停用全局热加载模板
     const onDisableGlobalHotPatch = useMemoizedFn(() =>
-        withGlobalLoading(() => useGlobalHotPatch.getState().disableGlobalHotPatch())
+        withGlobalLoading(async () => {
+            await useGlobalHotPatch.getState().disableGlobalHotPatch()
+            loadGlobalTemplateList()
+        })
     )
-    
-    const loadTemplateList = useMemoizedFn((autoSelectFirst = false) => {
-        const isWebFuzzer = activeType === "fuzzer"
-        const defaultTemplates = cloneDeep(isWebFuzzer ? HotPatchTempDefault : MITMHotPatchTempDefault)
-        // 加载本地模板
-        setTemplateListLoading(true)
+
+    const loadGlobalTemplateList = useMemoizedFn((selectedName?: string, enabledName?: string) => {
+        setGlobalTemplateListLoading(true)
         ipcRenderer
-            .invoke("QueryHotPatchTemplateList", { Type: activeType })
+            .invoke("QueryHotPatchTemplateList", {Type: "global"})
             .then(async (res: QueryHotPatchTemplateListResponse) => {
                 const nameArr = res.Name || []
-                let newList: HotPatchTempItem[] = []
-                if (isGlobalType) {
-                    let allNames = [...nameArr]
-                    if (!nameArr.includes(DEFAULT_GLOBAL_TEMPLATE_NAME)) {
-                        await ipcRenderer.invoke("CreateHotPatchTemplate", {
-                            Type: "global",
-                            Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,
-                            Name: DEFAULT_GLOBAL_TEMPLATE_NAME
-                        })
-                        allNames = [DEFAULT_GLOBAL_TEMPLATE_NAME, ...allNames]
-                    }
-                    newList = allNames.map((name) => ({
-                        name,
-                        temp: "",
-                        isDefault: false
-                    }))
-                } else {
-                    newList = [...defaultTemplates]
-                    nameArr.forEach((name) => {
-                        const index = newList.findIndex((item) => item.name === name)
-                        if (index === -1) {
-                            newList.push({
-                                name,
-                                temp: "",
-                                isDefault: false
-                            })
-                        }
+                let allNames = [...nameArr]
+                if (!nameArr.includes(DEFAULT_GLOBAL_TEMPLATE_NAME)) {
+                    await ipcRenderer.invoke("CreateHotPatchTemplate", {
+                        Type: "global",
+                        Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,
+                        Name: DEFAULT_GLOBAL_TEMPLATE_NAME
                     })
+                    allNames = [DEFAULT_GLOBAL_TEMPLATE_NAME, ...allNames]
                 }
+                const newList = allNames.map((name) => ({
+                    name,
+                    temp: "",
+                    isDefault: false
+                }))
+                const currentEnabledName = enabledName || (globalHotPatchConfig?.Enabled ? globalEnabledTemplateName : "")
+                const nextList = sortGlobalTemplateList(newList, currentEnabledName)
+                setGlobalTemplateList(nextList)
+
+                const defaultSelectedName = selectedName || (activeType === "global" && !selectedTemplate ? currentEnabledName || nextList[0]?.name : "")
+                const defaultSelectedTemplate = nextList.find((item) => item.name === defaultSelectedName)
+                if (defaultSelectedTemplate) {
+                    onSelectTemplate("global", defaultSelectedTemplate, "local")
+                }
+            })
+            .catch((error) => {
+                yakitFailed(error + "")
+                setGlobalTemplateList([])
+            })
+            .finally(() => setGlobalTemplateListLoading(false))
+    })
+
+    const loadTemplateList = useMemoizedFn((type: PanelHotCodeType, selectedName?: string) => {
+        const isWebFuzzer = type === "fuzzer"
+        const defaultTemplates = getDefaultTemplates(type)
+        setTemplateListLoading(true)
+        ipcRenderer
+            .invoke("QueryHotPatchTemplateList", {Type: type})
+            .then(async (res: QueryHotPatchTemplateListResponse) => {
+                const nameArr = res.Name || []
+                const newList: HotPatchTempItem[] = [...defaultTemplates]
+                nameArr.forEach((name) => {
+                    const index = newList.findIndex((item) => item.name === name)
+                    if (index === -1) {
+                        newList.push({
+                            name,
+                            temp: "",
+                            isDefault: false
+                        })
+                    }
+                })
                 setTemplateList(newList)
-                // 自动选中第一个模板
-                if (autoSelectFirst && newList.length > 0) {
-                    onSelectTemplate(newList[0], "local")
+                if (selectedName && newList.some((item) => item.name === selectedName)) {
+                    syncSelectedTemplate(type, selectedName)
+                } else if (panelType === type && activeType !== "global" && !selectedTemplate && newList.length > 0) {
+                    onSelectTemplate(type, newList[0], "local")
                 }
             })
             .catch((error) => {
                 yakitFailed(error + "")
                 setTemplateList(defaultTemplates)
-                if (autoSelectFirst && defaultTemplates.length > 0) {
-                    onSelectTemplate(defaultTemplates[0], "local")
+                if (selectedName && defaultTemplates.some((item) => item.name === selectedName)) {
+                    syncSelectedTemplate(type, selectedName)
+                } else if (panelType === type && activeType !== "global" && !selectedTemplate && defaultTemplates.length > 0) {
+                    onSelectTemplate(type, defaultTemplates[0], "local")
                 }
             })
             .finally(() => setTemplateListLoading(false))
 
-        // 加载线上模板（仅企业版）
         if (isEnpriTrace() && isWebFuzzer) {
             NetWorkApi<GetOnlineHotPatchTemplateRequest, API.HotPatchTemplateResponse>({
                 method: "get",
@@ -293,7 +374,7 @@ export const HotPatchManagement: React.FC = () => {
                 data: {
                     page: 1,
                     limit: 1000,
-                    type: activeType
+                    type
                 }
             })
                 .then((res) => {
@@ -305,31 +386,42 @@ export const HotPatchManagement: React.FC = () => {
                     yakitFailed(t("HotCodeTemplate.fetch_online_template_list_failed") + err)
                     setTemplateListOnline([])
                 })
+        } else {
+            setTemplateListOnline([])
         }
     })
 
     useEffect(() => {
+        if (!inViewport || !globalConfigLoaded) return
+        loadGlobalTemplateList()
+    }, [globalConfigLoaded, inViewport, loadGlobalTemplateList])
+
+    useEffect(() => {
+        if (!inViewport) return
+        loadTemplateList(panelType)
+    }, [inViewport, loadTemplateList, panelType])
+
+    useEffect(() => {
         loadGlobalHotPatchConfig()
-        loadTemplateList(true)
-    }, [])
+    }, [loadGlobalHotPatchConfig])
 
     const resetDebug = useMemoizedFn(() => {
         setDebugResult("")
         setEditorTab("source")
     })
 
-    const onSelectTemplate = useMemoizedFn((item: HotPatchTempItem, source: "local" | "online") => {
+    const onSelectTemplate = useMemoizedFn((type: HotCodeType, item: HotPatchTempItem, source: "local" | "online") => {
+        setActiveType(type)
         setSelectedTemplate(item.name)
         setSelectedTemplateSource(source)
         resetDebug()
-        
+
         if (source === "online" || item.isDefault) {
             setCode(item.temp)
             return
         }
-        
         ipcRenderer
-            .invoke("QueryHotPatchTemplate", { Type: activeType, Name: [item.name] })
+            .invoke("QueryHotPatchTemplate", {Type: type, Name: [item.name]})
             .then((res: QueryHotPatchTemplateResponse) => {
                 setCode(res.Data[0]?.Content || "")
             })
@@ -339,33 +431,40 @@ export const HotPatchManagement: React.FC = () => {
             })
     })
 
-    const onAddNewTemplate = useMemoizedFn(() => {
+    const onAddNewTemplate = useMemoizedFn((type: HotCodeType) => {
+        setCreateTemplateType(type)
         setCreateModalValue("")
         setCreateModalVisible(true)
     })
 
-    const onRenameTemplate = useMemoizedFn((item: HotPatchTempItem) => {
-        setEditingTemplate(item.name)
+    const onRenameTemplate = useMemoizedFn((item: HotPatchTempItem, type: HotCodeType) => {
+        setEditingTemplateKey(getTemplateKey(type, item.name))
         setEditingValue(item.name)
     })
 
     const onConfirmCreate = useMemoizedFn(() => {
         const newName = createModalValue.trim()
-        if (!validateTemplateName(newName)) return
+        if (!validateTemplateName(newName, createTemplateType)) return
+        const defaultTemplateContent = getDefaultTemplateContentByType(createTemplateType)
 
         ipcRenderer
             .invoke("CreateHotPatchTemplate", {
-                Type: activeType,
-                Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,  
+                Type: createTemplateType,
+                Content: defaultTemplateContent,
                 Name: newName
             })
             .then(() => {
                 yakitNotify("success", t("AddHotCodeTemplate.add_template_success"))
                 setCreateModalVisible(false)
-                loadTemplateList()
-                setSelectedTemplate(newName)
+                if (createTemplateType === "global") {
+                    loadGlobalTemplateList(newName)
+                } else {
+                    setPanelType(createTemplateType)
+                    loadTemplateList(createTemplateType, newName)
+                }
+                syncSelectedTemplate(createTemplateType, newName)
                 resetDebug()
-                setCode(DEFAULT_GLOBAL_TEMPLATE_CONTENT)
+                setCode(defaultTemplateContent)
             })
             .catch((error) => {
                 yakitFailed(error + "")
@@ -373,28 +472,32 @@ export const HotPatchManagement: React.FC = () => {
     })
 
     const onConfirmRename = useMemoizedFn(async () => {
-        const oldName = editingTemplate
+        const {type: currentEditingType, name: oldName} = parseTemplateKey(editingTemplateKey)
         const newName = editingValue.trim()
 
-        setEditingTemplate("")
+        setEditingTemplateKey("")
         setEditingValue("")
 
-        if (oldName === newName) return
-        if (!validateTemplateName(newName)) return
+        if (!oldName || oldName === newName) return
+        if (!validateTemplateName(newName, currentEditingType)) return
 
         try {
             await ipcRenderer.invoke("UpdateHotPatchTemplate", {
-                Condition: { Type: activeType, Name: [oldName] },
-                Data: { Name: newName }
+                Condition: {Type: currentEditingType, Name: [oldName]},
+                Data: {Name: newName}
             })
 
             yakitNotify("success", t("YakitNotification.reName_success"))
-            loadTemplateList()
-            if (selectedTemplate === oldName) {
-                setSelectedTemplate(newName)
+            if (currentEditingType === "global") {
+                loadGlobalTemplateList(newName)
+            } else {
+                loadTemplateList(currentEditingType, newName)
+            }
+            if (activeType === currentEditingType && selectedTemplate === oldName) {
+                syncSelectedTemplate(currentEditingType, newName)
                 resetDebug()
             }
-            if (isGlobalType && globalEnabledTemplateName === oldName) {
+            if (currentEditingType === "global" && globalEnabledTemplateName === oldName) {
                 await useGlobalHotPatch.getState().enableGlobalHotPatch(newName)
             }
         } catch (error) {
@@ -402,16 +505,27 @@ export const HotPatchManagement: React.FC = () => {
         }
     })
 
-    const onDeleteTemplate = useMemoizedFn((item: HotPatchTempItem, source: "local" | "online") => {
+    const onDeleteTemplate = useMemoizedFn((item: HotPatchTempItem, source: "local" | "online", type: HotCodeType) => {
+        const isCurrentSelected = activeType === type && selectedTemplate === item.name && selectedTemplateSource === source
         if (source === "local") {
             ipcRenderer
                 .invoke("DeleteHotPatchTemplate", {
-                    Condition: { Type: activeType, Name: [item.name] }
+                    Condition: {Type: type, Name: [item.name]}
                 })
                 .then(async () => {
                     yakitNotify("success", t("YakitNotification.deleted"))
-                    loadTemplateList(selectedTemplate === item.name)
-                    if (isGlobalType && globalEnabledTemplateName === item.name) {
+                    if (type === "global") {
+                        loadGlobalTemplateList()
+                    } else {
+                        loadTemplateList(type)
+                    }
+                    if (isCurrentSelected) {
+                        setSelectedTemplate("")
+                        setSelectedTemplateSource("local")
+                        setCode("")
+                        resetDebug()
+                    }
+                    if (type === "global" && globalEnabledTemplateName === item.name) {
                         await useGlobalHotPatch.getState().disableGlobalHotPatch()
                     }
                 })
@@ -423,14 +537,22 @@ export const HotPatchManagement: React.FC = () => {
                 method: "delete",
                 url: "hot/patch/template",
                 data: {
-                    type: activeType,
+                    type,
                     name: item.name
                 }
             })
                 .then((res) => {
                     if (res.ok) {
                         yakitNotify("success", t("HotCodeTemplate.online_delete_success"))
-                        loadTemplateList(selectedTemplate === item.name)
+                        if (type !== "global") {
+                            loadTemplateList(type)
+                        }
+                        if (isCurrentSelected) {
+                            setSelectedTemplate("")
+                            setSelectedTemplateSource("local")
+                            setCode("")
+                            resetDebug()
+                        }
                     }
                 })
                 .catch((err) => {
@@ -439,24 +561,34 @@ export const HotPatchManagement: React.FC = () => {
         }
     })
 
-    const onSaveTemplate = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("UpdateHotPatchTemplate", {
+    const onSaveTemplate = useMemoizedFn(async () => {
+        try {
+            await ipcRenderer.invoke("UpdateHotPatchTemplate", {
                 Condition: { Type: activeType, Name: [selectedTemplate] },
                 Data: { Type: activeType, Content: getCode(), Name: selectedTemplate }
             })
-            .then(() => {
-                yakitNotify("success", t("YakitNotification.saved"))
-            })
-            .catch((error) => {
-                yakitFailed(error + "")
-            })
+            const isCurrentGlobalEnabled =
+                activeType === "global" && globalHotPatchConfig?.Enabled && globalEnabledTemplateName === selectedTemplate
+
+            if (isCurrentGlobalEnabled) {
+                await withGlobalLoading(() => useGlobalHotPatch.getState().enableGlobalHotPatch(selectedTemplate))
+            }
+
+            yakitNotify("success", t("YakitNotification.saved"))
+        }catch(error){
+            yakitFailed(error + "")
+        }
     })
 
     const onSaveAsSuccess = useMemoizedFn((tempName?: string) => {
         if (!tempName) return
-        loadTemplateList()
-        setSelectedTemplate(tempName)
+        if (activeType === "global") {
+            loadGlobalTemplateList(tempName)
+        } else {
+            setPanelType(activeType)
+            loadTemplateList(activeType, tempName)
+        }
+        syncSelectedTemplate(activeType, tempName)
         resetDebug()
     })
 
@@ -516,23 +648,36 @@ export const HotPatchManagement: React.FC = () => {
                 value: "fuzzer"
             }
         ],
-        [i18n.language]
+        [t]
     )
 
-    const renderTemplateItem = useMemoizedFn((item: HotPatchTempItem, source: "local" | "online") => {
+    const onChangePanelType = useMemoizedFn((type: PanelHotCodeType) => {
+        setPanelType(type)
+        if (activeType !== "global") {
+            setActiveType(type)
+            setSelectedTemplate("")
+            setSelectedTemplateSource("local")
+            setCode("")
+            resetDebug()
+        }
+    })
+
+    const renderTemplateItem = useMemoizedFn((type: HotCodeType, item: HotPatchTempItem, source: "local" | "online") => {
+        const currentTemplateKey = getTemplateKey(type, item.name)
         return (
         <div
-            key={`${source}-${item.name}`}
+            key={`${type}-${source}-${item.name}`}
             className={classNames(styles["type-template-item"], {
-                [styles["type-template-item-active"]]: selectedTemplate === item.name && selectedTemplateSource === source
+                [styles["type-template-item-active"]]:
+                    activeType === type && selectedTemplate === item.name && selectedTemplateSource === source
             })}
             onClick={() => {
-                if (editingTemplate !== item.name) {
-                    onSelectTemplate(item, source)
+                if (editingTemplateKey !== currentTemplateKey) {
+                    onSelectTemplate(type, item, source)
                 }
             }}
         >
-            {editingTemplate === item.name && source === "local" ? (
+            {editingTemplateKey === currentTemplateKey && source === "local" ? (
                 <YakitInput
                     value={editingValue}
                     autoFocus
@@ -549,16 +694,15 @@ export const HotPatchManagement: React.FC = () => {
                     <span className={styles["template-name"]} title={item.name}>
                         {item.name}
                     </span>
-                    {isGlobalType && globalEnabledTemplateName === item.name && (
+                    {type === "global" && globalEnabledTemplateName === item.name && (
                         <YakitTag className={styles["global-enabled-tag"]} color='info'>{t("GlobalHotPatch.enabled")}</YakitTag>
                     )}
                     {((!item.isDefault && source === "local") || (source === "online" && hasPermissions)) && (
                         <YakitPopover
                             overlayClassName={styles["template-popover"]}
-                            placement='bottomRight'
                             content={
                                 <>
-                                    {isGlobalType && (() => {
+                                    {type === "global" && (() => {
                                         const isThisItemEnabled = globalHotPatchConfig?.Enabled && globalEnabledTemplateName === item.name
                                         return (
                                             <div
@@ -584,7 +728,7 @@ export const HotPatchManagement: React.FC = () => {
                                             className={styles["popover-menu-item"]}
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                onRenameTemplate(item)
+                                                onRenameTemplate(item, type)
                                             }}
                                         >
                                             <OutlinePencilaltIcon className={styles["popover-menu-icon"]} />
@@ -598,7 +742,7 @@ export const HotPatchManagement: React.FC = () => {
                                         )}
                                         onClick={(e) => {
                                             e.stopPropagation()
-                                            onDeleteTemplate(item, source)
+                                            onDeleteTemplate(item, source, type)
                                         }}
                                     >
                                         <OutlineTrashIcon className={styles["popover-menu-icon"]} />
@@ -622,47 +766,92 @@ export const HotPatchManagement: React.FC = () => {
     const renderMenu = useMemoizedFn(() => {
         return (
             <div className={styles["type-panel"]}>
-                <div className={styles["type-panel-header"]}>
-                    {/* TODO: 产品要求暂时隐藏 */}
-                    {/* <YakitRadioButtons
-                        value={activeType}
-                        onChange={(e) => setActiveType(e.target.value)}
-                        buttonStyle='solid'
-                        options={hotCodeTypeOptions}
-                    /> */}
-                    <div>
-                        {t("GlobalHotPatch.Global_hot_template")}
-                        <Tooltip title={t("GlobalHotPatch.Global_hot_template_tip")}>
-                            <OutlineInformationcircleIcon className={styles["info-icon"]} />
-                        </Tooltip>
-                    </div>
-                    <YakitButton size='small' type='outline1' icon={<OutlinePlusIcon />} onClick={onAddNewTemplate} />
-                </div>
-                <div className={styles["type-template"]}>
-                    <YakitSpin spinning={templateListLoading}>
-                        <div className={styles["template-section"]}>
-                            {templateList.map((item) => renderTemplateItem(item, "local"))}
-                        </div>
-                        {isEnpriTrace() && activeType === "fuzzer" && (
-                            <>
-                                <div className={styles["template-divider"]} />
-                                <div className={styles["template-section"]}>
-                                    <div className={styles["template-section-title"]}>{t("HotCodeTemplate.online_template")}</div>
-                                    {templateListOnline.map((item) => renderTemplateItem(item, "online"))}
+                <YakitResizeBox
+                    isVer={true}
+                    lineDirection='bottom'
+                    firstRatio='38%'
+                    firstMinSize='160px'
+                    secondMinSize='220px'
+                    firstNode={
+                        <div className={styles["type-panel-section"]}>
+                            <div className={styles["type-panel-header"]}>
+                                <div>
+                                    <span className={styles["template-title"]}>{t("GlobalHotPatch.Global_hot_template")}</span>
+                                    <Tooltip title={t("GlobalHotPatch.Global_hot_template_tip")}>
+                                        <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                                    </Tooltip>
                                 </div>
-                            </>
-                        )}
-                    </YakitSpin>
-                </div> 
+                                <YakitButton
+                                    size='small'
+                                    type='outline1'
+                                    icon={<OutlinePlusIcon />}
+                                    onClick={() => onAddNewTemplate("global")}
+                                />
+                            </div>
+                            <div className={styles["type-template"]}>
+                                <YakitSpin spinning={globalTemplateListLoading}>
+                                    <div className={styles["type-template-scroll"]}>
+                                        <div className={styles["template-section"]}>
+                                            {globalTemplateList.map((item) => renderTemplateItem("global", item, "local"))}
+                                        </div>
+                                    </div>
+                                </YakitSpin>
+                            </div>
+                        </div>
+                    }
+                    secondNode={
+                        <div className={styles["type-panel-section"]}>
+                            <div className={styles["type-panel-header"]}>
+                                <YakitRadioButtons
+                                    value={panelType}
+                                    onChange={(e) => onChangePanelType(e.target.value as PanelHotCodeType)}
+                                    buttonStyle='solid'
+                                    options={hotCodeTypeOptions}
+                                />
+                                <YakitButton
+                                    size='small'
+                                    type='outline1'
+                                    icon={<OutlinePlusIcon />}
+                                    onClick={() => onAddNewTemplate(panelType)}
+                                />
+                            </div>
+                            <div className={styles["type-template"]}>
+                                <YakitSpin spinning={templateListLoading}>
+                                    <div className={styles["type-template-scroll"]}>
+                                        <div className={styles["template-section"]}>
+                                            {templateList.map((item) => renderTemplateItem(panelType, item, "local"))}
+                                        </div>
+                                        {isEnpriTrace() && panelType === "fuzzer" && (
+                                            <>
+                                                <div className={styles["template-divider"]} />
+                                                <div className={styles["template-section"]}>
+                                                    <div className={styles["template-section-title"]}>{t("HotCodeTemplate.online_template")}</div>
+                                                    {templateListOnline.map((item) => renderTemplateItem(panelType, item, "online"))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </YakitSpin>
+                            </div>
+                        </div>
+                    }
+                />
             </div>
         )
     })
 
 
     const currentTemplate = useMemo(() => {
-        const list = selectedTemplateSource === "local" ? templateList : templateListOnline
+        const list = activeType === "global"
+            ? globalTemplateList
+            : selectedTemplateSource === "local"
+              ? templateList
+              : templateListOnline
         return list.find((item) => item.name === selectedTemplate)
-    }, [templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
+    }, [activeType, globalTemplateList, templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
+
+
+    const hideTemplateContent = useMemo(()=> isGlobalType || activeType === 'mitm', [isGlobalType, activeType])
 
     return (
         <div className={styles["hot-patch-management"]} ref={selectRef}>
@@ -670,9 +859,9 @@ export const HotPatchManagement: React.FC = () => {
             <div className={styles["editor-panel"]}>
                 <div className={styles["editor-title"]}>{selectedTemplate}</div>
                 <div className={styles["editor-header"]}>
-                    {/* 产品要求暂时去掉 */}
                     <div>
-                        {/* <YakitRadioButtons
+                    {!hideTemplateContent && (
+                        <YakitRadioButtons
                             value={editorTab}
                             onChange={(e) => {
                                 setEditorTab(e.target.value)
@@ -688,9 +877,11 @@ export const HotPatchManagement: React.FC = () => {
                                     label: t("HTTPFuzzerHotPatch.executionResult")
                                 }
                             ]}
-                        /> */}
+                        />
+                    )}
                     </div>
                     <div className={styles["editor-header-right"]}>
+                        {hideTemplateContent && (
                         <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
                             <YakitButton
                                 type='text'
@@ -698,6 +889,7 @@ export const HotPatchManagement: React.FC = () => {
                                 icon={<OutlineTerminalIcon />}
                             />
                         </Tooltip>
+                        )}
                         {/* 产品要求暂时去掉 */}
                         {/* <YakitButton type='primary' loading={loading} onClick={onDebugExecution}>
                             {t("YakitButton.debugExecution")}
@@ -741,11 +933,11 @@ export const HotPatchManagement: React.FC = () => {
                             )}
                         </div>
                     }
-                    firstRatio={isGlobalType ? "100%": "70%"}
+                    firstRatio={hideTemplateContent ? "100%": "70%"}
                     firstMinSize='400px'
                     secondRatio='30%'
                     secondMinSize='280px'
-                    secondNodeStyle={isGlobalType? { display: 'none'}: {}}
+                    secondNodeStyle={hideTemplateContent ? { display: 'none'}: {}}
                     secondNode={
                         <div className={styles["template-content-panel"]}>
                             <div className={styles["template-content-header"]}>
