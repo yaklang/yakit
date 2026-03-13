@@ -1,34 +1,12 @@
 import React, {useEffect, useRef} from "react"
 import ReactECharts, {EChartsOption} from "echarts-for-react"
-import {useDebounceFn, useUpdateEffect} from "ahooks"
+import {useDebounceFn} from "ahooks"
 import {AIModelTypeEnum} from "../defaultConstant"
 import {formatTimestamp} from "@/utils/timeUtil"
 import moment from "moment"
 import {formatNumberUnits} from "../utils"
-import {getAllYakitColorVars} from "@/utils/monacoSpec/theme"
 import EChartsReact from "echarts-for-react"
-
-const varColor = getAllYakitColorVars()
-
-const pressureColor: Record<AIModelTypeEnum, any> = {
-    [AIModelTypeEnum.TierIntelligent]: {
-        getColor: () => {
-            return varColor["--Colors-Use-Purple-Primary"]
-        },
-        getHeightColor: () => {
-            return varColor["--Colors-Use-Error-Primary"]
-        }
-    },
-    [AIModelTypeEnum.TierLightweight]: {
-        getColor: () => {
-            return varColor["--Colors-Use-Warning-Primary"]
-        },
-        getHeightColor: () => {
-            return varColor["--Colors-Use-Error-Primary"]
-        }
-    },
-    [AIModelTypeEnum.TierVision]: {}
-}
+import useGetColorsByTheme from "@/hook/useGetColorsByTheme"
 
 export interface AIEchartsDataKey {
     modelName: string
@@ -44,7 +22,11 @@ export interface ContextPressureEchartsProps {
 export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = React.memo((props) => {
     const {dataEcharts, threshold} = props
     const chartRef = useRef<EChartsReact>(null)
-    const optionRef = useRef<echarts.EChartsOption>(getContextPressureOption({dataEcharts, threshold}))
+    const colorRef = useGetColorsByTheme()
+    const optionRef = useRef<echarts.EChartsOption>(
+        getContextPressureOption({dataEcharts, threshold, colors: colorRef})
+    )
+
     useEffect(() => {
         onSetOption()
     }, [dataEcharts, threshold])
@@ -52,7 +34,7 @@ export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = Rea
         () => {
             const echartsInstance = chartRef.current?.getEchartsInstance()
             if (!echartsInstance) return
-            const newOption = getContextPressureOption({dataEcharts, threshold})
+            const newOption = getContextPressureOption({dataEcharts, threshold, colors: colorRef})
             optionRef.current = newOption
             echartsInstance.setOption(newOption, false, true)
         },
@@ -61,7 +43,13 @@ export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = Rea
     return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
 })
 
-const getIntelligent = (data: AIEchartsDataKey[], threshold: ContextPressureEchartsProps["threshold"]) => {
+interface AIEchartsHelperProps {
+    data: AIEchartsDataKey[]
+    threshold?: ContextPressureEchartsProps["threshold"]
+    colors: Record<string, string>
+}
+const getIntelligent = (options: AIEchartsHelperProps) => {
+    const {data, threshold = 0, colors} = options
     //#region 计算高质模型的最大值、最小值和最大值索引
     const intelligentData: number[] = []
     let maxValueIntelligent = 0
@@ -81,8 +69,8 @@ const getIntelligent = (data: AIEchartsDataKey[], threshold: ContextPressureEcha
 
     const value = {
         data: intelligentData || [],
-        color: pressureColor.intelligent.getColor(),
-        heightColor: pressureColor.intelligent.getHeightColor(),
+        color: colors["--Colors-Use-Purple-Primary"],
+        heightColor: colors["--Colors-Use-Error-Primary"],
         yMax: threshold > maxValueIntelligent ? threshold * 2 : minValueIntelligent + maxValueIntelligent,
         maxValueIntelligent,
         minValueIntelligent,
@@ -91,7 +79,8 @@ const getIntelligent = (data: AIEchartsDataKey[], threshold: ContextPressureEcha
     //#endregion
     return value
 }
-const getLightweight = (data: AIEchartsDataKey[], threshold: ContextPressureEchartsProps["threshold"]) => {
+const getLightweight = (options: AIEchartsHelperProps) => {
+    const {data, threshold = 0, colors} = options
     //#region 计算轻量模型的最大值、最小值和最大值索引
     const lightweightData: number[] = []
     let maxValueLightweight = 0
@@ -111,8 +100,8 @@ const getLightweight = (data: AIEchartsDataKey[], threshold: ContextPressureEcha
 
     const value = {
         data: lightweightData,
-        color: pressureColor.lightweight.getColor(),
-        heightColor: pressureColor.lightweight.getHeightColor(),
+        color: colors["--Colors-Use-Warning-Primary"],
+        heightColor: colors["--Colors-Use-Error-Primary"],
         yMax: threshold > maxValueLightweight ? threshold * 2 : minValueLightweight + maxValueLightweight,
         maxValueLightweight,
         minValueLightweight,
@@ -123,14 +112,17 @@ const getLightweight = (data: AIEchartsDataKey[], threshold: ContextPressureEcha
     return value
 }
 const symbolSize = 3
+interface ContextPressureOptionProps extends ContextPressureEchartsProps {
+    colors: Record<string, string>
+}
 /**获取 上下文压力echarts得option*/
-const getContextPressureOption = (value: ContextPressureEchartsProps): EChartsOption => {
-    const {dataEcharts, threshold} = value
+const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOption => {
+    const {dataEcharts, threshold, colors} = value
     const {data} = dataEcharts
-    const intelligent = getIntelligent(data.intelligent, threshold)
+    const intelligent = getIntelligent({data: data.intelligent, threshold, colors})
     const intelligentLength = data.intelligent.length
 
-    const lightweight = getLightweight(data.lightweight, threshold)
+    const lightweight = getLightweight({data: data.lightweight, threshold, colors})
     const lightweightLength = data.lightweight?.length
     const option: EChartsOption = {
         grid: {
@@ -230,15 +222,18 @@ export interface AIPressureDetailsEchartsProps {
 export const AIPressureDetailsEcharts: React.FC<AIPressureDetailsEchartsProps> = React.memo((props) => {
     const {dataEcharts, threshold} = props
     const chartRef = useRef<EChartsReact>(null)
-    const optionRef = useRef<echarts.EChartsOption>(getPressureDetailsOption({dataEcharts, threshold}))
-    useUpdateEffect(() => {
+    const colorRef = useGetColorsByTheme()
+    const optionRef = useRef<echarts.EChartsOption>(
+        getPressureDetailsOption({dataEcharts, threshold, colors: colorRef})
+    )
+    useEffect(() => {
         onSetOption()
     }, [dataEcharts, threshold])
     const onSetOption = useDebounceFn(
         () => {
             const echartsInstance = chartRef.current?.getEchartsInstance()
             if (!echartsInstance) return
-            const newOption = getPressureDetailsOption({dataEcharts, threshold})
+            const newOption = getPressureDetailsOption({dataEcharts, threshold, colors: colorRef})
             optionRef.current = newOption
             echartsInstance.setOption(newOption, false, true)
         },
@@ -248,18 +243,20 @@ export const AIPressureDetailsEcharts: React.FC<AIPressureDetailsEchartsProps> =
 })
 
 const symbolSizeByDetails = 6
+interface PressureDetailsOptionProps extends AIPressureDetailsEchartsProps {
+    colors: Record<string, string>
+}
 /**获取详情版本 */
-const getPressureDetailsOption = (value: AIPressureDetailsEchartsProps): EChartsOption => {
-    const {dataEcharts, threshold} = value
+const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOption => {
+    const {dataEcharts, threshold, colors} = value
     const {data, xData} = dataEcharts
-    const intelligent = getIntelligent(data.intelligent, threshold)
+    const intelligent = getIntelligent({data: data.intelligent, threshold, colors})
     const intelligentLength = data.intelligent?.length
 
-    const lightweight = getLightweight(data.lightweight, threshold)
+    const lightweight = getLightweight({data: data.lightweight, threshold, colors})
 
     const lightweightLength = data.lightweight.length
 
-    const xAxisLineColor = varColor["--Colors-Use-Neutral-Border"]
     const option: EChartsOption = {
         grid: {
             left: 24, // 留足空间给 y 轴文字
@@ -284,18 +281,19 @@ const getPressureDetailsOption = (value: AIPressureDetailsEchartsProps): ECharts
             axisLabel: {
                 rotate: 0,
                 fontSize: 11,
-                color: "#868C97",
+                color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
                 formatter: (v) => moment.unix(v).format("HH:mm")
             },
             axisLine: {
                 lineStyle: {
-                    color: xAxisLineColor
+                    color: colors["--Colors-Use-Neutral-Border"]
                 }
             },
             splitLine: {
                 show: true,
                 lineStyle: {
-                    type: "dashed"
+                    type: "dashed",
+                    color: colors["--Colors-Use-Neutral-Border"]
                 }
             },
             // 隐藏刻度线
@@ -314,11 +312,12 @@ const getPressureDetailsOption = (value: AIPressureDetailsEchartsProps): ECharts
             nameGap: 20, // 与轴的距离
             axisLabel: {
                 fontSize: 11,
-                color: "#868C97"
+                color: colors["--Colors-Use-Neutral-Text-3-Secondary"]
             },
             splitLine: {
                 lineStyle: {
-                    type: "dashed"
+                    type: "dashed",
+                    color: colors["--Colors-Use-Neutral-Border"]
                 }
             }
         },
@@ -411,7 +410,8 @@ export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.m
     const {dataEcharts} = props
 
     const chartRef = useRef<EChartsReact>(null)
-    const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedOption(dataEcharts))
+    const colorRef = useGetColorsByTheme()
+    const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedOption(dataEcharts, colorRef))
     useEffect(() => {
         onSetOption()
     }, [dataEcharts])
@@ -419,7 +419,7 @@ export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.m
         () => {
             const echartsInstance = chartRef.current?.getEchartsInstance()
             if (!echartsInstance) return
-            const newOption = getResponseSpeedOption(dataEcharts)
+            const newOption = getResponseSpeedOption(dataEcharts, colorRef)
             optionRef.current = newOption
             echartsInstance.setOption(newOption, false, true)
         },
@@ -428,12 +428,15 @@ export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.m
     return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
 })
 
-const getResponseSpeedOption = (dataEcharts: ResponseSpeedEchartsProps["dataEcharts"]): EChartsOption => {
+const getResponseSpeedOption = (
+    dataEcharts: ResponseSpeedEchartsProps["dataEcharts"],
+    colors: Record<string, string>
+): EChartsOption => {
     const {data} = dataEcharts
-    const intelligent = getIntelligent(data.intelligent, 0)
+    const intelligent = getIntelligent({data: data.intelligent, colors})
     const intelligentLength = data.intelligent?.length
 
-    const lightweight = getLightweight(data.lightweight, 0)
+    const lightweight = getLightweight({data: data.lightweight, colors})
 
     const lightweightLength = data.lightweight.length
     const option: EChartsOption = {
@@ -516,9 +519,9 @@ export interface AICostDetailsEchartsProps {
 }
 export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.memo((props) => {
     const {dataEcharts} = props
-
+    const colorRef = useGetColorsByTheme()
     const chartRef = useRef<EChartsReact>(null)
-    const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedDetailsOption(dataEcharts))
+    const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedDetailsOption(dataEcharts, colorRef))
     useEffect(() => {
         onSetOption()
     }, [dataEcharts])
@@ -526,7 +529,7 @@ export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.m
         () => {
             const echartsInstance = chartRef.current?.getEchartsInstance()
             if (!echartsInstance) return
-            const newOption = getResponseSpeedDetailsOption(dataEcharts)
+            const newOption = getResponseSpeedDetailsOption(dataEcharts, colorRef)
             optionRef.current = newOption
             echartsInstance.setOption(newOption, false, true)
         },
@@ -535,15 +538,17 @@ export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.m
     return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 432, height: 160}} />
 })
 
-const getResponseSpeedDetailsOption = (dataEcharts: AICostDetailsEchartsProps["dataEcharts"]): EChartsOption => {
+const getResponseSpeedDetailsOption = (
+    dataEcharts: AICostDetailsEchartsProps["dataEcharts"],
+    colors: Record<string, string>
+): EChartsOption => {
     const {data, xData} = dataEcharts
-    const intelligent = getIntelligent(data.intelligent, 0)
+    const intelligent = getIntelligent({data: data.intelligent, colors})
     const lightweightLength = data.intelligent?.length
 
-    const lightweight = getLightweight(data.lightweight, 0)
+    const lightweight = getLightweight({data: data.lightweight, colors})
 
     const intelligentLength = data.lightweight.length
-    const xAxisLineColor = varColor["--Colors-Use-Neutral-Border"]
     const option: EChartsOption = {
         grid: {
             left: 24, // 留足空间给 y 轴文字
@@ -568,18 +573,19 @@ const getResponseSpeedDetailsOption = (dataEcharts: AICostDetailsEchartsProps["d
             axisLabel: {
                 rotate: 0,
                 fontSize: 11,
-                color: "#868C97",
+                color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
                 formatter: (v) => moment.unix(v).format("HH:mm")
             },
             axisLine: {
                 lineStyle: {
-                    color: xAxisLineColor
+                    color: colors["--Colors-Use-Neutral-Border"]
                 }
             },
             splitLine: {
                 show: true,
                 lineStyle: {
-                    type: "dashed"
+                    type: "dashed",
+                    color: colors["--Colors-Use-Neutral-Border"]
                 }
             },
             // 隐藏刻度线
@@ -598,11 +604,12 @@ const getResponseSpeedDetailsOption = (dataEcharts: AICostDetailsEchartsProps["d
             nameGap: 20, // 与轴的距离
             axisLabel: {
                 fontSize: 11,
-                color: "#868C97"
+                color: colors["--Colors-Use-Neutral-Text-3-Secondary"]
             },
             splitLine: {
                 lineStyle: {
-                    type: "dashed"
+                    type: "dashed",
+                    color: colors["--Colors-Use-Neutral-Border"]
                 }
             }
         },
