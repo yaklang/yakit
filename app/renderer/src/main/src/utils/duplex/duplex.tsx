@@ -66,7 +66,7 @@ export const startupDuplexConn = () => {
     ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
         try {
             const resultData: Buffer = data.Data
-            const obj = JSONParseLog(Uint8ArrayToString(resultData),{page: "duplex", fun: "startupDuplexConn"})
+            const obj = JSONParseLog(Uint8ArrayToString(resultData), {page: "duplex", fun: "startupDuplexConn"})
             switch (data.MessageType) {
                 // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
                 case "global":
@@ -123,20 +123,7 @@ export const startupDuplexConn = () => {
                     break
                 case "httpflow_slow_insert_sql":
                 case "httpflow_slow_query_sql":
-                    yakitFailed({
-                        message: (
-                            <div>
-                                {`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后使用"yak vacuum-sqlite"这个命令，来回收数据库空间。`}
-                                <YakitButton
-                                    icon={<OutlineTrashSecondIcon />}
-                                    danger
-                                    type='text'
-                                    size='small'
-                                    onClick={() => emiter.emit("onUIOpSettingMenuSelect", "reclaimDatabaseSpace")}
-                                ></YakitButton>
-                            </div>
-                        )
-                    })
+                    yakitFailed(`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置或者在首页回收数据库空间。`)
                     break
                 case "mitm_slow_rule_hook":
                     emiter.emit("onMitmRuleMoreLimt")
