@@ -41,13 +41,14 @@ export const ScrollText: FC<{ text?: string }> = ({ text = "" }) => {
 const TaskLoading: FC<{
     taskStatus: PlanLoadingStatus
     systemStream?: string
-}> = ({taskStatus, systemStream}) => {
+    className?: string
+}> = ({taskStatus, systemStream, className}) => {
     const {displayValue, mode} = useAISystemStream({
         value: taskStatus.task,
         systemStream
     })
     return (
-        <div className={styles["task-loading"]}>
+        <div className={`${styles["task-loading"]} ${className || ""}`}>
             {taskStatus.loading && (
                 <>
                     <Loading

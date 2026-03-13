@@ -25,7 +25,9 @@ const clearLocalChats = (sessions: AIChatInfo[]) =>
 const renderClearConfirm = (label: string, title: string, onConfirm: () => void) => {
     return (
         <YakitPopconfirm placement='bottomRight' title={title} onConfirm={onConfirm}>
-            <div onClick={(e) => e.stopPropagation()}>{label}</div>
+            <div className={styles["clear-confirm-trigger"]} onClick={(e) => e.stopPropagation()}>
+                {label}
+            </div>
         </YakitPopconfirm>
     )
 }
@@ -163,7 +165,7 @@ const HistoryChat = memo(() => {
                                     type='outline1'
                                     loading={clearLoading}
                                 >
-                                    清空
+                                    删除
                                 </YakitButton>
                             </Tooltip>
                         </YakitDropdownMenu>

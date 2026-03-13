@@ -140,8 +140,9 @@ const useVirtuosoAutoScroll = (options: UseVirtuosoAutoScrollOptions) => {
         requestIdleCallback(() => {
             virtuosoRef.current?.scrollToIndex({
                 index,
-                align: isLast ? "end" : "center",
-                behavior: behavior || "smooth"
+                align: isLast ? "end" : "start",
+                behavior: behavior || "smooth",
+                offset: isLast ? 0 : -100
             })
         })
     })
