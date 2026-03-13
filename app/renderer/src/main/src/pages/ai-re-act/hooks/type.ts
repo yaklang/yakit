@@ -230,6 +230,8 @@ export interface UseChatIPCEvents {
     onReset: () => void
     /** 取消任务规划当前的Review */
     handleTaskReviewRelease: (id: string) => void
+    /** 删除会话操作的关联逻辑 */
+    onDelChats: (session: string[]) => void
 }
 // #endregion
 

@@ -8,7 +8,7 @@ import classNames from "classnames"
 import styles from "./SplitView.module.scss"
 
 export const SplitView: React.FC<SplitViewProp> = memo((props) => {
-    const {isVertical = false, elements = [], minWidth = 220, minHeight = 200, isLastHidden, defaultSizes} = props
+    const {isVertical = false, elements = [], minWidth = 220, minHeight = 200, isLastHidden, defaultSizes, className, sashClassName} = props
 
     const [isVer, _] = useState<boolean>(isVertical || false)
 
@@ -309,7 +309,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
     /** ---------- 分割线移动逻辑 End ---------- */
 
     return (
-        <div ref={wrapperRef} data-split-view-id={wrapperId} className={styles["split-view"]}>
+        <div ref={wrapperRef} data-split-view-id={wrapperId} className={classNames(styles["split-view"], className)}>
             {/* 位移线 */}
             {!isLastHidden && (
                 <div className={classNames(styles["sash-container"], {[styles["hover"]]: !isOver})}>
@@ -319,7 +319,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
                             <div
                                 ref={(ref) => (sashDivs.current[index] = ref)}
                                 key={sashIDs.current[index] || `sash-${wrapperId}-${index}`}
-                                className={classNames(styles["split-view-sash"], {
+                                className={classNames(styles["split-view-sash"], sashClassName, {
                                     [styles["vertical"]]: isVer,
                                     [styles["horizontal"]]: !isVer,
                                     [styles["active"]]: isDown && indexSash.current === index

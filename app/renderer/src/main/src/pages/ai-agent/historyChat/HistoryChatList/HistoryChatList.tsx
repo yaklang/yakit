@@ -10,12 +10,49 @@ import {YakitAIAgentPageID} from "../../defaultConstant"
 import {EditChatNameModal} from "../../UtilModals"
 import {AIChatInfo} from "../../type/aiChat"
 import {useInfiniteScroll, useMemoizedFn} from "ahooks"
-import { grpcDeleteAISession, grpcUpdateAISessionTitle} from "../../grpc"
+import {grpcDeleteAISession, grpcUpdateAISessionTitle} from "../../grpc"
 import useAIAgentStore from "../../useContext/useStore"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {yakitNotify} from "@/utils/notification"
-import {aiChatDataStore} from "../../store/ChatDataStore"
 import {onNewChat} from "../HistoryChat"
+import emiter from "@/utils/eventBus/eventBus"
+
+export const HOUR_MS = 60 * 60 * 1000
+export const DAY_MS = 24 * HOUR_MS
+export const WEEK_MS = 7 * DAY_MS
+export const THIRTY_DAYS_MS = 30 * DAY_MS
+
+const CHAT_GROUPS = [
+    {key: "justNow", label: "刚刚"},
+    {key: "oneHour", label: "一小时前"},
+    {key: "oneDay", label: "一天前"},
+    {key: "oneWeek", label: "一周前"},
+    {key: "thirtyDays", label: "30天前"}
+] as const
+
+type ChatGroupKey = (typeof CHAT_GROUPS)[number]["key"]
+
+export const normalizeTimestamp = (timestamp?: number | string) => {
+    if (!timestamp) return 0
+    const value = Number(timestamp)
+    if (Number.isNaN(value)) return 0
+    return value < 1e12 ? value * 1000 : value
+}
+
+export const getChatTimestamp = (item: AIChatInfo) => {
+    return normalizeTimestamp(item.UpdatedAt || item.CreatedAt)
+}
+
+const getChatGroupKey = (timestamp?: number | string): ChatGroupKey => {
+    const time = normalizeTimestamp(timestamp)
+    const diff = Math.max(Date.now() - time, 0)
+
+    if (diff <= HOUR_MS) return "justNow"
+    if (diff <= DAY_MS) return "oneHour"
+    if (diff <= WEEK_MS) return "oneDay"
+    if (diff <= THIRTY_DAYS_MS) return "oneWeek"
+    return "thirtyDays"
+}
 
 const HistoryChatList: FC<{
     search: string
@@ -56,6 +93,23 @@ const HistoryChatList: FC<{
         return chats.filter((item) => item.Title.toLowerCase().includes(search.toLowerCase()))
     }, [chats, search])
 
+    const groupedHistory = useMemo(() => {
+        const groupMap = CHAT_GROUPS.reduce<Record<ChatGroupKey, AIChatInfo[]>>((acc, item) => {
+            acc[item.key] = []
+            return acc
+        }, {} as Record<ChatGroupKey, AIChatInfo[]>)
+
+        showHistory.forEach((item) => {
+            const groupKey = getChatGroupKey(getChatTimestamp(item))
+            groupMap[groupKey].push(item)
+        })
+
+        return CHAT_GROUPS.map((item) => ({
+            ...item,
+            list: groupMap[item.key]
+        })).filter((item) => item.list.length > 0)
+    }, [showHistory])
+    
     const handleCallbackEditName = useMemoizedFn(async (result: boolean, info?: AIChatInfo) => {
         if (result && info) {
             try {
@@ -105,7 +159,7 @@ const HistoryChatList: FC<{
 
         try {
             grpcDeleteAISession({Filter: {SessionID: [SessionID]}}, true)
-            aiChatDataStore.remove(SessionID)
+            emiter.emit("onDelChats", JSON.stringify([SessionID]))
         } catch (error) {
             yakitNotify("error", "删除会话失败:" + error)
         } finally {
@@ -124,60 +178,67 @@ const HistoryChatList: FC<{
 
     return (
         <div ref={listRef} className={styles["history-chat-list"]}>
-            {showHistory.map((item) => {
-                const {SessionID, Title} = item
-                const delStatus = delLoading.includes(SessionID)
+            {groupedHistory.map((group) => {
                 return (
-                    <div
-                        key={SessionID}
-                        className={classNames(styles["history-item"], {
-                            [styles["history-item-active"]]: activeSessionId === SessionID
-                        })}
-                        onClick={() => handleSetActiveChat(item)}
-                    >
-                        <div className={styles["item-info"]}>
-                            <div className={styles["item-icon"]}>
-                                <SolidChatalt2Icon />
-                            </div>
-                            <div
-                                className={classNames(styles["info-title"], "yakit-content-single-ellipsis")}
-                                title={Title}
-                            >
-                                {Title}
-                            </div>
-                        </div>
+                    <div key={group.key} className={styles["history-group"]}>
+                        <div className={styles["history-group-title"]}>{group.label}</div>
+                        {group.list.map((item) => {
+                            const {SessionID, Title} = item
+                            const delStatus = delLoading.includes(SessionID)
+                            return (
+                                <div
+                                    key={SessionID}
+                                    className={classNames(styles["history-item"], {
+                                        [styles["history-item-active"]]: activeSessionId === SessionID
+                                    })}
+                                    onClick={() => handleSetActiveChat(item)}
+                                >
+                                    <div className={styles["item-info"]}>
+                                        <div className={styles["item-icon"]}>
+                                            <SolidChatalt2Icon />
+                                        </div>
+                                        <div
+                                            className={classNames(styles["info-title"], "yakit-content-single-ellipsis")}
+                                            title={Title}
+                                        >
+                                            {Title}
+                                        </div>
+                                    </div>
 
-                        <div className={styles["item-extra"]}>
-                            <Tooltip
-                                title={"编辑对话标题"}
-                                placement='topRight'
-                                overlayClassName={styles["history-item-extra-tooltip"]}
-                            >
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlinePencilaltIcon />}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleOpenEditName(item)
-                                    }}
-                                />
-                            </Tooltip>
-                            <YakitPopconfirm
-                                title='是否确认删除该历史对话，删除后将无法恢复'
-                                placement='bottom'
-                                onConfirm={(e) => {
-                                    e?.stopPropagation()
-                                    handleDeleteChat(item)
-                                }}
-                            >
-                                <YakitButton
-                                    loading={delStatus}
-                                    type='text2'
-                                    icon={<OutlineTrashIcon className={styles["del-icon"]} />}
-                                    onClick={(e) => e.stopPropagation()}
-                                />
-                            </YakitPopconfirm>
-                        </div>
+                                    <div className={styles["item-extra"]}>
+                                        <Tooltip
+                                            title={"编辑对话标题"}
+                                            placement='topRight'
+                                            overlayClassName={styles["history-item-extra-tooltip"]}
+                                        >
+                                            <YakitButton
+                                                type='text2'
+                                                icon={<OutlinePencilaltIcon />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleOpenEditName(item)
+                                                }}
+                                            />
+                                        </Tooltip>
+                                        <YakitPopconfirm
+                                            title='是否确认删除该历史对话，删除后将无法恢复'
+                                            placement='bottom'
+                                            onConfirm={(e) => {
+                                                e?.stopPropagation()
+                                                handleDeleteChat(item)
+                                            }}
+                                        >
+                                            <YakitButton
+                                                loading={delStatus}
+                                                type='text2'
+                                                icon={<OutlineTrashIcon className={styles["del-icon"]} />}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </YakitPopconfirm>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
                 )
             })}

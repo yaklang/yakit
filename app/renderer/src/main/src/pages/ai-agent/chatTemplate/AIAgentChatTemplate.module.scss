@@ -157,19 +157,28 @@
 
 /* ---------- AIAgentChatStream ----------*/
 .ai-agent-chat-stream {
-    padding-left: 12px;
+    // padding-left: 12px;
     width: 100%;
     height: 100%;
     overflow: hidden auto;
     .item-wrapper {
         width: 100%;
         box-sizing: border-box;
-        padding-right: 12px;
+        padding: 0 12px;
         .item-inner {
             padding-top: 4px;
         }
         &:first-child {
             padding-top: 12px;
+        }
+    }
+    .item-wrapper-highlighted {
+        .item-inner {
+            border-radius: 12px;
+            // 虚线
+            outline: 2px dashed transparent;
+            outline-offset: 2px;
+            animation: ai-chat-item-highlight 0.75s ease-in-out 2;
         }
     }
     // 后代类名ai-stream-chat-content-wrapper且下一个也是 的不要 padding-top
@@ -180,17 +189,23 @@
             }
         }
     }
-    .spin {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        gap: 4px;
-        padding: 4px;
-        box-sizing: border-box;
-        div {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            font-size: 12px;
-        }
+    .task-loading-footer{
+        padding: 0 12px;
+    }
+}
+
+@keyframes ai-chat-item-highlight {
+    0% {
+        outline-color: transparent;
+        box-shadow: 0 0 0 0 transparent;
+    }
+    30% {
+        outline-color: var(--Colors-Use-Main-Primary);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--Colors-Use-Main-Primary) 18%, transparent);
+    }
+    100% {
+        outline-color: transparent;
+        box-shadow: 0 0 0 0 transparent;
     }
 }
 

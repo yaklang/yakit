@@ -118,14 +118,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 if (!sessionID) {
                     // 创建新的聊天记录
                     const newChat: AIChatInfo = {
-                        id: extraParams?.chatId || session,
+                        Id: extraParams?.chatId || session,
                         Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
                         question: qs,
-                        createdAt: new Date().getTime(),
-                        updatedAt: new Date().getTime(),
+                        CreatedAt: new Date().getTime(),
+                        UpdatedAt: new Date().getTime(),
                         request,
                         SessionID: session,
-                        titleInitialized: false
+                        TitleInitialized: false
                     }
 
                     setActiveChat && setActiveChat(newChat)

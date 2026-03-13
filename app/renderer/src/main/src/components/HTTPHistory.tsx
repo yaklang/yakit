@@ -296,7 +296,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         })
     })
     const onChatFromHistory = useMemoizedFn((session: string) => {
-        histroyAiStore.remove(session)
+        events.onDelChats([session])
     })
 
     const onStop = useMemoizedFn(() => {

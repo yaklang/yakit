@@ -29,7 +29,7 @@ export type AIAgentEventProps = {
 
     /**  AIModelList=> AIModelSelect{AIAgentTriggerEventInfo}
      * @name type "online"|"local"
-     * @name params 传递的值, 
+     * @name params 传递的值,
      * params.fileName {AIModelTypeFileName} 当前变化的模型类型
      */
     aiModelSelectChange: string
@@ -41,4 +41,7 @@ export type AIAgentEventProps = {
      * @name aiReviewRiskControlScore {AIStartParams["AIReviewRiskControlScore"]
      */
     onRefreshAIReviewRuleSelect: string
+
+    /** 删除会话列表里的会话时, 通知useChatIPC-hook对应会话数据已被删除，不需断开保存操作 */
+    onDelChats: string
 }

@@ -113,7 +113,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     const updateCoordinatorIDs = useMemoizedFn((id: string) => {
         const ids = getChatDataStore()?.coordinatorIDs
         if (!ids) {
-            cacheDataStore?.updater(chatID.current, {coordinatorIDs: [id]})
+            try {
+                cacheDataStore?.updater(chatID.current, {coordinatorIDs: [id]})
+            } catch (error) {}
         } else {
             if (!ids.includes(id)) ids.push(id)
         }
@@ -367,6 +369,28 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
+    // #region 外界进行删除会话数据操作时的重置逻辑
+    const delChats = useRef<string[]>([])
+    const onDelChats = useMemoizedFn((session: string[]) => {
+        const filterSessions = session.filter((item) => !delChats.current.includes(item))
+        delChats.current.push(...filterSessions)
+
+        let failedSessions: string[] = []
+        let err: any = null
+        for (let item of filterSessions) {
+            try {
+                cacheDataStore?.remove(item)
+            } catch (error) {
+                failedSessions.push(item)
+                err = error
+            }
+        }
+        if (failedSessions.length > 0 && !!err) {
+            yakitNotify("error", `删除会话(${failedSessions.join(",")})失败: ${err}`)
+        }
+    })
+    // #endregion
+
     /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
     const handleResetGrpcStatus = useMemoizedFn(() => {
         taskChatEvent.handleCloseGrpc()
@@ -436,6 +460,12 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     /** 保存state类型的数据 */
     const saveStateDataOfEnd = useMemoizedFn((session: string) => {
+        if (delChats.current.includes(session)) {
+            // 该session对应的会话数据实例已被删除
+            delChats.current = delChats.current.filter((item) => item !== session)
+            return
+        }
+
         const answer: DeepPartial<AIChatData> = {
             runTimeIDs: cloneDeep(runTimeIDs),
             yakExecResult: cloneDeep(yakExecResult),
@@ -445,8 +475,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             reActTimelines: cloneDeep(reActTimelines)
         }
         try {
-            cacheDataStore?.updater(chatID.current, answer)
-        } catch{}
+            cacheDataStore?.updater(session, answer)
+        } catch {}
     })
 
     const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
@@ -930,7 +960,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             onSend,
             onClose,
             onReset,
-            handleTaskReviewRelease
+            handleTaskReviewRelease,
+            onDelChats
         }
     }, [])
 

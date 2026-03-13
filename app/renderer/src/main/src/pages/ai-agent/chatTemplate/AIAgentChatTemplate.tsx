@@ -1,4 +1,4 @@
-import React, {memo, useCallback, useEffect, useMemo, useState} from "react"
+import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from "react"
 import {useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect} from "ahooks"
 import {AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps} from "../aiAgentType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
@@ -148,6 +148,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         total: streams.length,
         atBottomThreshold: 100
     })
+    const [highlightedItem, setHighlightedItem] = useState<{index: number; token: number} | null>(null)
+    const highlightStartTimerRef = useRef<number | null>(null)
     useUpdateEffect(() => {
         scrollToIndex("LAST")
     }, [scrollToBottom])
@@ -156,6 +158,26 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         chatIPCData: {systemStream}
     } = useChatIPCStore()
     const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
+    useEffect(() => {
+        if (!highlightedItem) return
+
+        const clearTimer = window.setTimeout(() => {
+            setHighlightedItem(null)
+        }, 1600)
+
+        return () => {
+            window.clearTimeout(clearTimer)
+        }
+    }, [highlightedItem])
+
+    useEffect(() => {
+        return () => {
+            if (highlightStartTimerRef.current) {
+                window.clearTimeout(highlightStartTimerRef.current)
+            }
+        }
+    }, [])
+
     const renderItem = (index: number, stream: ReActChatRenderItem) => {
         if (!stream.token) return null
         const hasNext = streams.length - index > 1
@@ -164,15 +186,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     const Item = useCallback(
         ({children, style, "data-index": dataIndex}) => (
-            <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+            <div
+                key={dataIndex}
+                style={style}
+                data-index={dataIndex}
+                className={classNames(styles["item-wrapper"], {
+                    [styles["item-wrapper-highlighted"]]: highlightedItem?.index === Number(dataIndex)
+                })}
+            >
                 <div className={styles["item-inner"]}>{children}</div>
             </div>
         ),
-        []
+        [highlightedItem]
     )
 
     const Footer = useCallback(
-        () => <TaskLoading taskStatus={taskStatus} systemStream={systemStream} />,
+        () => <TaskLoading className={styles["task-loading-footer"]} taskStatus={taskStatus} systemStream={systemStream} />,
         [taskStatus, systemStream]
     )
 
@@ -196,6 +225,13 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         })
         if (index !== -1) {
             scrollToIndex(index, "auto")
+            setHighlightedItem(null)
+            if (highlightStartTimerRef.current) {
+                window.clearTimeout(highlightStartTimerRef.current)
+            }
+            highlightStartTimerRef.current = window.setTimeout(() => {
+                setHighlightedItem({index, token: Date.now()})
+            }, 80)
         }
     })
     useMount(() => {

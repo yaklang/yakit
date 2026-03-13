@@ -536,7 +536,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     const createNewEvents = (id: string) => {
         setKnowledgeBaseID(id)
         onStop()
-        const findChatsItems = chats.find((it) => it.id === id)
+        const findChatsItems = chats.find((it) => it.Id === id)
         events.onReset()
         if (findChatsItems) {
             setActiveChat({...findChatsItems})
