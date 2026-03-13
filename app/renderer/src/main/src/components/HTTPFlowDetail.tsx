@@ -2,7 +2,7 @@ import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, us
 import {Button, Card, Col, Descriptions, PageHeader, Row, Space, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
+import {IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
 import {failed, yakitNotify} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse, RandomChunkedResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -48,8 +48,10 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { formatTimestamp } from "@/utils/timeUtil"
-import { JSONParseLog } from "@/utils/tool"
+import {formatTimestamp} from "@/utils/timeUtil"
+import {JSONParseLog} from "@/utils/tool"
+import {HTTPFlowCodec} from "@/utils/encodec"
+import {YakitMenu} from "./yakitUI/YakitMenu/YakitMenu"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -222,7 +224,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
-    const fromMITM = useMemo(()=> props.pageType === 'MITM', [props.pageType])
+    const fromMITM = useMemo(() => props.pageType === "MITM", [props.pageType])
 
     const sendCodeCompareMenuItem = (type: string) => {
         return {
@@ -234,12 +236,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         children: [
                             {
                                 key: "code-compare-left",
-                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
                                 // disabled: [false, true, false][compareState]
                             },
                             {
                                 key: "code-compare-right",
-                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
                                 // disabled: [false, false, true][compareState]
                             }
                         ]
@@ -282,7 +284,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }
 
-    const formatUpdatedAt = useMemo(()=> formatTimestamp(flow?.UpdatedAt || 0), [flow] ) 
+    const formatUpdatedAt = useMemo(() => formatTimestamp(flow?.UpdatedAt || 0), [flow])
     return (
         <YakitSpin
             spinning={loading}
@@ -338,13 +340,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Descriptions.Item key={"method"} span={1} label={t("HTTPFlowDetail.hTTPMethod")}>
                                 <YakitTag color='blue'>{flow.Method}</YakitTag>
                             </Descriptions.Item>
-                            <Descriptions.Item 
-                                key={"UpdatedAt"} 
-                                span={1} 
+                            <Descriptions.Item
+                                key={"UpdatedAt"}
+                                span={1}
                                 label={t("HTTPFlowTable.updatedAt")}
-                                style={{ padding: '0 0 0 16px'}}
+                                style={{padding: "0 0 0 16px"}}
                             >
-                                <span style={{ fontSize: 12 }}>{formatUpdatedAt}</span>
+                                <span style={{fontSize: 12}}>{formatUpdatedAt}</span>
                             </Descriptions.Item>
                             <Descriptions.Item key={"url"} span={2} label={t("HTTPFlowDetail.requestURL")}>
                                 <div style={{display: "flex"}}>
@@ -663,7 +665,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     )
 }
 
-type HTTPFlowInfoType = "domains" | "json" | "rules"
+type HTTPFlowInfoType = "domains" | "json" | "rules" | "codec"
 
 export interface HistoryHighLightText extends HighLightText {
     IsMatchRequest?: boolean
@@ -685,6 +687,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const lastIdRef = useRef<number>()
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
+    const [popoverVisible,setPopoverVisible] = useState<boolean>(false)
 
     const compareAnalyzedIds = useCampare(analyzedIds)
     useDebounceEffect(
@@ -721,7 +724,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             getRemoteValue("HISTORY_FOLD").then((result: string) => {
                 if (!result) setFold(true)
                 try {
-                    const foldResult: boolean = JSONParseLog(result,{page:"HTTPFlowDetail", fun:"useEffect-inViewport"} )
+                    const foldResult: boolean = JSONParseLog(result, {
+                        page: "HTTPFlowDetail",
+                        fun: "useEffect-inViewport"
+                    })
                     setFold(foldResult)
                 } catch (e) {
                     setFold(true)
@@ -741,7 +747,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             if (!data) {
                 return
             }
-            const parseData = JSONParseLog(data,{page: "httpFlowDetail", fun: "update"})
+            const parseData = JSONParseLog(data, {page: "httpFlowDetail", fun: "update"})
             if (parseData.id == lastIdRef.current) {
                 setFold(parseData.is)
             }
@@ -841,11 +847,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
 
                 if (existedExtraInfos.length > 0) {
-                    setInfoType(existedExtraInfos[0])
-                    setExistedInfoType([...existedExtraInfos])
+                    let newExistedInfoType: HTTPFlowInfoType[] = [...existedExtraInfos, "codec"]
+                    setInfoType(newExistedInfoType[0])
+                    setExistedInfoType(newExistedInfoType)
                 } else {
-                    setInfoType(undefined)
-                    setExistedInfoType([])
+                    setInfoType("codec")
+                    setExistedInfoType(["codec"])
                 }
             })
     }
@@ -933,6 +940,15 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         return type === "null" ? "" : type
     }, [flow?.ContentType])
 
+    const [decodeStr, setDecodeStr] = useState<string>("")
+    const onDecode = useMemoizedFn((text: string) => {
+        setDecodeStr(text)
+    })
+
+    useEffect(() => {
+        setDecodeStr("")
+    }, [id])
+
     const detailRequestAndResponse = useMemoizedFn(() => {
         if (!flow) return <></>
         return (
@@ -942,9 +958,26 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 flowResponseLoad={flowResponseLoad}
                 highLightText={highLightText}
                 highLightItem={highLightItem}
+                onDecode={onDecode}
                 {...props}
             />
         )
+    })
+
+    const getContextMenu = useMemo(()=>{
+        return [{
+            key: "export",
+            label: t("YakitButton.export"),
+        }]
+    },[])
+
+    const onMultipleClick = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "export":
+                exportMITMRuleExtractedData()
+                break
+        }
+        setPopoverVisible(false)
     })
 
     return isSelect ? (
@@ -1012,10 +1045,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     </div>
                                 ) : (
                                     <div className={styles["http-history-detail-wrapper"]}>
-                                        {infoType !== "rules" &&
+                                        {!["rules", "codec"].includes(infoType || "") &&
                                             existedInfoType.filter((i) => i !== "rules").length > 0 && (
                                                 <NewHTTPPacketEditor
-                                                    fromMITM={props.pageType === 'MITM'}
+                                                    fromMITM={props.pageType === "MITM"}
                                                     title={
                                                         <Button.Group size={"small"}>
                                                             {existedInfoType.map((i) => {
@@ -1090,7 +1123,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
                                                     onSetExportMITMRuleFilter={setExportMITMRuleFilter}
                                                     title={
-                                                        <div className={styles["table-header"]}>
+                                                        <div className={styles["table-header-rules"]}>
                                                             <Space>
                                                                 <Button.Group size={"small"}>
                                                                     {existedInfoType.map((i) => {
@@ -1141,13 +1174,32 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             </Space>
 
                                                             <Space>
-                                                                <YakitButton
-                                                                    type='primary'
-                                                                    size='small'
-                                                                    onClick={exportMITMRuleExtractedData}
+                                                                <YakitPopover
+                                                                    overlayClassName={
+                                                                        styles["http-flow-mini-drop-down-popover"]
+                                                                    }
+                                                                    content={
+                                                                        <YakitMenu
+                                                                            width={150}
+                                                                            selectedKeys={[]}
+                                                                            data={getContextMenu}
+                                                                            onClick={({key}) => {
+                                                                                onMultipleClick(key)
+                                                                            }}
+                                                                        />
+                                                                    }
+                                                                    trigger='click'
+                                                                    placement='bottomLeft'
+                                                                    onVisibleChange={setPopoverVisible}
+                                                                    visible={popoverVisible}
                                                                 >
-                                                                    {t("YakitButton.export")}
-                                                                </YakitButton>
+                                                                    <YakitButton
+                                                                        type='text'
+                                                                        size='small'
+                                                                    >
+                                                                        {t("HTTPFlowDetailMini.more")}
+                                                                    </YakitButton>
+                                                                </YakitPopover>
                                                                 <div
                                                                     className={classNames(
                                                                         styles["http-history-fold-box"]
@@ -1183,6 +1235,58 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     onSetExtractedData={setExtractedData}
                                                 />
                                             )}
+                                        {infoType === "codec" && (
+                                            <NewHTTPCard
+                                                title={
+                                                    <div className={styles["table-header"]} style={{width: "100%"}}>
+                                                        <Space>
+                                                            <Button.Group size={"small"}>
+                                                                {existedInfoType.map((i) => {
+                                                                    return (
+                                                                        <YakitButton
+                                                                            size='small'
+                                                                            type={
+                                                                                infoType === i ? "primary" : "outline2"
+                                                                            }
+                                                                            onClick={() => {
+                                                                                setInfoType(i)
+                                                                            }}
+                                                                            key={i}
+                                                                        >
+                                                                            {infoTypeVerbose(i, t)}
+                                                                        </YakitButton>
+                                                                    )
+                                                                })}
+                                                            </Button.Group>
+                                                        </Space>
+                                                        <Space>
+                                                            <div
+                                                                className={classNames(styles["http-history-fold-box"])}
+                                                            >
+                                                                <div className={styles["http-history-icon-box"]}>
+                                                                    <Tooltip
+                                                                        placement='top'
+                                                                        title={t("HTTPFlowDetailMini.collapseRight")}
+                                                                    >
+                                                                        <SideBarOpenIcon
+                                                                            className={styles["fold-icon"]}
+                                                                            onClick={() => {
+                                                                                setRemoteValue(
+                                                                                    "IsFoldValue",
+                                                                                    JSON.stringify({is: true, id})
+                                                                                )
+                                                                                setFold(true)
+                                                                            }}
+                                                                        />
+                                                                    </Tooltip>
+                                                                </div>
+                                                            </div>
+                                                        </Space>
+                                                    </div>
+                                                }
+                                                children={<HTTPFlowCodec data={decodeStr} />}
+                                            />
+                                        )}
                                         {existedInfoType.length === 0 && (
                                             <div className={styles["empty-box"]}>
                                                 <div className={classNames(styles["empty-box-fold-box"])}>
@@ -1229,6 +1333,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     pageType?: HTTPHistorySourcePageType
     highLightText?: HistoryHighLightText[]
     highLightItem?: HistoryHighLightText
+    onDecode: (text: string) => void
 }
 
 interface HTTPFlowBareProps {
@@ -1255,7 +1360,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         showEditTag = true,
         showJumpTree = true,
         noPacketModifier = false,
-        noOpenPacketNewWindow = false
+        noOpenPacketNewWindow = false,
+        onDecode
     } = props
     const {t, i18n} = useI18nNamespaces(["history"])
 
@@ -1271,12 +1377,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         children: [
                             {
                                 key: "code-compare-left",
-                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
                                 // disabled: [false, true, false][compareState]
                             },
                             {
                                 key: "code-compare-right",
-                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
                                 // disabled: [false, false, true][compareState]
                             }
                         ]
@@ -1334,6 +1440,30 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
+
+    useEffect(() => {
+        if (reqEditor) {
+            reqEditor.onMouseUp((e) => {
+                const selection = reqEditor.getSelection()
+                if (selection) {
+                    const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
+                    onDecode(selectedText)
+                }
+            })
+        }
+    }, [reqEditor])
+
+    useEffect(() => {
+        if (resEditor) {
+            resEditor.onMouseUp((e) => {
+                const selection = resEditor.getSelection()
+                if (selection) {
+                    const selectedText = resEditor.getModel()?.getValueInRange(selection) || ""
+                    onDecode(selectedText)
+                }
+            })
+        }
+    }, [resEditor])
 
     useUpdateEffect(() => {
         setOriginResValue(fetchSsafeHTTPRequest() || "")
@@ -1607,7 +1737,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             }
         })
     }
-    const fromMITM = useMemo(()=> props.pageType === 'MITM', [props.pageType])
+    const fromMITM = useMemo(() => props.pageType === "MITM", [props.pageType])
 
     return (
         <YakitResizeBox
@@ -1719,9 +1849,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }
                         defaultSearchKeyword={search}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST'
-                        extraEditorProps={{
-                            isShowSelectRangeMenu: true
-                        }}
                         dataCompare={{
                             rightCode: beforeResValue,
                             leftCode: resType === "request" ? flow?.RequestString || "" : undefined,
@@ -1867,9 +1994,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHttps={flow.IsHTTPS}
                         webFuzzerValue={flow?.RequestString || ""}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
-                        extraEditorProps={{
-                            isShowSelectRangeMenu: true
-                        }}
                         dataCompare={{
                             rightCode: beforeRspValue,
                             leftCode: rspType === "response" ? flow?.ResponseString || "" : undefined,
@@ -2019,6 +2143,8 @@ function infoTypeVerbose(i: HTTPFlowInfoType, t: (text: string) => string) {
             return t("HTTPFlowDetailMini.object")
         case "rules":
             return t("HTTPFlowDetailMini.rule")
+        case "codec":
+            return t("HTTPFlowDetailMini.codec")
         default:
             return "-"
     }

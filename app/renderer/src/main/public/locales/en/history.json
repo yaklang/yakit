@@ -181,7 +181,9 @@
     "nextRule": "Next Rule",
     "domain": "Domain",
     "object": "Object",
-    "rule": "Rule"
+    "rule": "Rule",
+    "codec": "Codec",
+    "more": "More"
   },
   "CodingPopover": {
     "encoding": "Encoding"

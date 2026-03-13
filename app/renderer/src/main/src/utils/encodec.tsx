@@ -1,13 +1,17 @@
-import React, {} from "react"
+import React, {useEffect, useState} from "react"
 import {showModal} from "./showModal"
-import {Button, Space} from "antd"
+import {Space} from "antd"
 import {IMonacoActionDescriptor, IMonacoCodeEditor, YakEditor} from "./editors"
 import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../pages/fuzzer/fuzzerTemplates"
 import {failed} from "./notification"
 import {AutoCard} from "../components/AutoCard"
 import {Buffer} from "buffer"
-import {useGetState} from "ahooks"
+import {useGetState, useUpdateEffect} from "ahooks"
 import {StringToUint8Array} from "@/utils/str"
+import styles from "./encodec.module.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import classNames from "classnames"
 
 export type CodecType =
     | "fuzz"
@@ -171,21 +175,42 @@ export interface AutoDecodeResult {
     Result: Uint8Array
     Modify: boolean
 }
-const AutoDecode: React.FC<{data: AutoDecodeResult[]}> = React.memo((prop: {data: AutoDecodeResult[]}) => {
-    const {data} = prop
+
+interface AutoDecodeProps {
+    data: AutoDecodeResult[]
+    source?: string
+    isShowSource?: boolean
+}
+const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps) => {
+    const {data, source, isShowSource = false} = prop
     const [result, setResult, getResult] = useGetState<AutoDecodeResult[]>(data)
+    useUpdateEffect(() => {
+        setResult(data)
+    }, [data])
     return (
         <Space style={{width: "100%"}} direction={"vertical"}>
+            {isShowSource && (
+                <AutoCard title={`选择内容`} size={"small"}>
+                    <div style={{height: 120}}>
+                        <YakEditor noMiniMap={true} type={"html"} value={source} readOnly={true} />
+                    </div>
+                </AutoCard>
+            )}
+
             {result.map((i, index) => {
                 return (
                     <AutoCard
-                        title={`解码步骤[${index + 1}]: ${i.TypeVerbose}(${i.Type})`}
+                        title={
+                            <div
+                                className={classNames(styles["decode-step-title"], "yakit-single-line-ellipsis")}
+                            >{`解码步骤[${index + 1}]: ${i.TypeVerbose}(${i.Type})`}</div>
+                        }
                         size={"small"}
                         extra={
-                            <Button
+                            <YakitButton
                                 size={"small"}
                                 onClick={() => {
-                                    showModal({
+                                    showYakitModal({
                                         title: "原文",
                                         width: "50%",
                                         content: (
@@ -197,12 +222,14 @@ const AutoDecode: React.FC<{data: AutoDecodeResult[]}> = React.memo((prop: {data
                                                     value={new Buffer(i.Origin).toString("utf8")}
                                                 />
                                             </div>
-                                        )
+                                        ),
+                                        footer: null,
+                                        centered: true
                                     })
                                 }}
                             >
                                 查看本次编码原文
-                            </Button>
+                            </YakitButton>
                         }
                     >
                         <div style={{height: 120}}>
@@ -268,7 +295,7 @@ export const execCodec = async (
                             title={"编码结果"}
                             bordered={false}
                             extra={
-                                <Button
+                                <YakitButton
                                     type={"primary"}
                                     onClick={() => {
                                         if (clear) {
@@ -282,7 +309,7 @@ export const execCodec = async (
                                     size={"small"}
                                 >
                                     替换内容
-                                </Button>
+                                </YakitButton>
                             }
                             size={"small"}
                         >
@@ -315,3 +342,30 @@ export const execCodec = async (
             failed(`CODEC[${typeStr}] 执行失败：${e}`)
         })
 }
+
+interface HTTPFlowCodecProps {
+    data: string
+}
+
+export const HTTPFlowCodec: React.FC<HTTPFlowCodecProps> = React.memo((props) => {
+    const {data} = props
+    const [codec, setCodec] = useState<AutoDecodeResult[]>([])
+
+    useEffect(() => {
+        ipcRenderer
+            .invoke("AutoDecode", {Data: data})
+            .then((e: {Results: AutoDecodeResult[]}) => {
+                setCodec(e.Results)
+            })
+            .catch((e) => {
+                failed(`自动解码失败：${e}`)
+            })
+            .finally(() => {})
+    }, [data])
+
+    return (
+        <div className={styles["http-flow-codec"]}>
+            <AutoDecode data={codec} source={data} isShowSource={true} />
+        </div>
+    )
+})
