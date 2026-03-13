@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useRef} from "react"
 import ReactECharts, {EChartsOption} from "echarts-for-react"
 import {useDebounceFn, useUpdateEffect} from "ahooks"
 import {AIModelTypeEnum} from "../defaultConstant"
@@ -6,6 +6,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import moment from "moment"
 import {formatNumberUnits} from "../utils"
 import {getAllYakitColorVars} from "@/utils/monacoSpec/theme"
+import EChartsReact from "echarts-for-react"
 
 const varColor = getAllYakitColorVars()
 
@@ -42,18 +43,22 @@ export interface ContextPressureEchartsProps {
 }
 export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = React.memo((props) => {
     const {dataEcharts, threshold} = props
-    const [option, setOption] = useState<EChartsOption>(getContextPressureOption({dataEcharts, threshold}))
-    useUpdateEffect(() => {
+    const chartRef = useRef<EChartsReact>(null)
+    const optionRef = useRef<echarts.EChartsOption>(getContextPressureOption({dataEcharts, threshold}))
+    useEffect(() => {
         onSetOption()
     }, [dataEcharts, threshold])
     const onSetOption = useDebounceFn(
         () => {
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
             const newOption = getContextPressureOption({dataEcharts, threshold})
-            setOption(newOption)
+            optionRef.current = newOption
+            echartsInstance.setOption(newOption, false, true)
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts option={option} style={{width: 72, height: 24}} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
 })
 
 const getIntelligent = (data: AIEchartsDataKey[], threshold: ContextPressureEchartsProps["threshold"]) => {
@@ -224,21 +229,22 @@ export interface AIPressureDetailsEchartsProps {
 }
 export const AIPressureDetailsEcharts: React.FC<AIPressureDetailsEchartsProps> = React.memo((props) => {
     const {dataEcharts, threshold} = props
-    const [option, setOption] = useState<EChartsOption>(getPressureDetailsOption({dataEcharts, threshold}))
+    const chartRef = useRef<EChartsReact>(null)
+    const optionRef = useRef<echarts.EChartsOption>(getPressureDetailsOption({dataEcharts, threshold}))
     useUpdateEffect(() => {
         onSetOption()
-    }, [dataEcharts])
+    }, [dataEcharts, threshold])
     const onSetOption = useDebounceFn(
         () => {
-            const newOption = getPressureDetailsOption({
-                dataEcharts,
-                threshold
-            })
-            setOption(newOption)
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
+            const newOption = getPressureDetailsOption({dataEcharts, threshold})
+            optionRef.current = newOption
+            echartsInstance.setOption(newOption, false, true)
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts option={option} style={{width: 432, height: 160}} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 432, height: 160}} />
 })
 
 const symbolSizeByDetails = 6
@@ -403,18 +409,23 @@ export interface ResponseSpeedEchartsProps {
 }
 export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.memo((props) => {
     const {dataEcharts} = props
-    const [option, setOption] = useState<EChartsOption>(getResponseSpeedOption(dataEcharts))
-    useUpdateEffect(() => {
+
+    const chartRef = useRef<EChartsReact>(null)
+    const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedOption(dataEcharts))
+    useEffect(() => {
         onSetOption()
     }, [dataEcharts])
     const onSetOption = useDebounceFn(
         () => {
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
             const newOption = getResponseSpeedOption(dataEcharts)
-            setOption(newOption)
+            optionRef.current = newOption
+            echartsInstance.setOption(newOption, false, true)
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts option={option} style={{width: 72, height: 24}} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
 })
 
 const getResponseSpeedOption = (dataEcharts: ResponseSpeedEchartsProps["dataEcharts"]): EChartsOption => {
@@ -505,18 +516,23 @@ export interface AICostDetailsEchartsProps {
 }
 export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.memo((props) => {
     const {dataEcharts} = props
-    const [option, setOption] = useState<EChartsOption>(getResponseSpeedDetailsOption(dataEcharts))
-    useUpdateEffect(() => {
+
+    const chartRef = useRef<EChartsReact>(null)
+    const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedDetailsOption(dataEcharts))
+    useEffect(() => {
         onSetOption()
     }, [dataEcharts])
     const onSetOption = useDebounceFn(
         () => {
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
             const newOption = getResponseSpeedDetailsOption(dataEcharts)
-            setOption(newOption)
+            optionRef.current = newOption
+            echartsInstance.setOption(newOption, false, true)
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts option={option} style={{width: 432, height: 160}} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 432, height: 160}} />
 })
 
 const getResponseSpeedDetailsOption = (dataEcharts: AICostDetailsEchartsProps["dataEcharts"]): EChartsOption => {
