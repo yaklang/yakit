@@ -190,14 +190,11 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                         AIInputInnerFeatureEnum.AIModelSelect,
                         {
                             type: AIInputInnerFeatureEnum.AIFocusMode,
-                            component: (
-                                <div className={classNames([styles["select-option"], styles["defualt-focus-mode"]])}>
-                                    <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
-                                    <span className={styles["select-option-text"]} title={`http_flow_analyze`}>
-                                        http_flow_analyze
-                                    </span>
-                                </div>
-                            )
+                            props: {
+                                value: "http_flow_analyze",
+                                onChange: () => {},
+                                disabled: true
+                            }
                         }
                     ],
                     filterMentionType: ["focusMode"]

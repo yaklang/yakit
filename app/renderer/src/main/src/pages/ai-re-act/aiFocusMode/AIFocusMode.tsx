@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AIFocusModeProps} from "./type"
-import {OutlineMicroscopeIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineMicroscopeIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
@@ -11,10 +11,16 @@ import {grpcQueryAIFocus} from "@/pages/ai-agent/grpc"
 import {AIFocus} from "@/pages/ai-agent/type/forge"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
+import i18n from "@/i18n/i18n"
+import {Tooltip} from "antd"
+
 export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
+    const lang = i18n.language
     const {value, onChange, className} = props
 
     const [focusModeList, setFocusModeList] = useState<YakitSelectProps["options"]>([])
+    const [focusModeRaw, setFocusModeRaw] = useState<AIFocus[]>([])
+
     const [open, setOpen] = useState<boolean>(false)
     const ref = useRef<HTMLDivElement>(null)
 
@@ -23,12 +29,23 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
     useEffect(() => {
         if (inViewPort) getFocusMode()
     }, [inViewPort])
+
+    useEffect(() => {
+        const list = focusModeRaw.map((item) => ({
+            label: lang === "zh" ? item.VerboseNameZh : item.Name,
+            value: item.Name
+        }))
+
+        setFocusModeList(list)
+    }, [focusModeRaw, lang])
+
     const getFocusMode = useMemoizedFn(() => {
         grpcQueryAIFocus().then((res) => {
-            const list = (res?.Data || []).map((item: AIFocus) => ({label: item.Name, value: item.Name}))
-            setFocusModeList(list)
+            const data = res?.Data || []
+            setFocusModeRaw(data)
         })
     })
+
     const onSelectModel = useMemoizedFn((value: AIInputEvent["FocusModeLoop"]) => {
         onChange(value)
     })
@@ -40,6 +57,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
         onChange(undefined)
         setOpen(false)
     })
+
     return (
         <div ref={ref} className={className}>
             <AIChatSelect
@@ -49,6 +67,9 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                             <div className={styles["select-title"]}>
                                 <OutlineMicroscopeIcon />
                                 专注模式
+                                <Tooltip title={"复杂场景限定使用框架，限制AI思考范围"}>
+                                    <OutlineQuestionmarkcircleIcon />
+                                </Tooltip>
                             </div>
                             {menu}
                         </div>
@@ -70,6 +91,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                 optionLabelProp='label'
                 open={open}
                 setOpen={onSetOpen}
+                disabled={props.disabled}
             >
                 {focusModeList?.map((item) => (
                     <YakitSelect.Option
@@ -81,7 +103,9 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                                 <span className={styles["select-option-text"]} title={`${item.label}`}>
                                     {item.label}
                                 </span>
-                                <OutlineXIcon className={styles["icon-wrapper"]} onClick={onRemove} />
+                                {props.disabled ?? (
+                                    <OutlineXIcon className={styles["icon-wrapper"]} onClick={onRemove} />
+                                )}
                             </div>
                         }
                     >

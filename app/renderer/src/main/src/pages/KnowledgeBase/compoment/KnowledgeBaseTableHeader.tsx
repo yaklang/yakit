@@ -25,6 +25,8 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {PluginExecuteDetailDrawer} from "./PluginExecuteDetailDrawer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {CheckboxOptionType, Tooltip} from "antd"
+import {InstallPluginModal} from "./InstallPluginModal/InstallPluginModal"
+import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
 
 export interface KnowledgeBaseTableHeaderProps extends KnowledgeBaseTableProps {
     setTableProps: Dispatch<
@@ -70,11 +72,9 @@ const KnowledgeBaseTableHeader: FC<
     onOpenAddKnowledgeBaseModal,
     knowledgeBaseIndexRun
 }) => {
+    const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+
     const [searchValue, setSearchValue] = useSafeState("")
-    const [addModalData, setAddModalData] = useSafeState<{visible: boolean; KnowledgeBaseName: string}>({
-        visible: false,
-        KnowledgeBaseName: ""
-    })
     const [buildingDrawer, setBuildingDrawer] = useSafeState<{
         visible: boolean
         streamToken?: string
@@ -210,7 +210,20 @@ const KnowledgeBaseTableHeader: FC<
                         disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== "success"}
                         icon={<PlusIcon />}
                         type='secondary2'
-                        onClick={() => onOpenAddKnowledgeBaseModal()}
+                        onClick={async () => {
+                            try {
+                                const result = await ThirdPartyBinaryRunAsync()
+                                const targetInstallPlugins = reseultKnowledgePlugin(result)
+                                targetInstallPlugins
+                                    ? InstallPluginModal({
+                                          getContainer: "#main-operator-page-body-ai-repository",
+                                          callback: () => {
+                                              refreshPluginStatus()
+                                          }
+                                      })
+                                    : onOpenAddKnowledgeBaseModal()
+                            } catch (error) {}
+                        }}
                     >
                         添加
                     </YakitButton>

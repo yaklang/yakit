@@ -2,7 +2,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import styles from "../knowledgeSidebarList.module.scss"
 import Dragger from "antd/lib/upload/Dragger"
 import {failed, success} from "@/utils/notification"
-import {useDebounceFn, useRequest} from "ahooks"
+import {useDebounceFn, useRequest, useUpdateEffect} from "ahooks"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {randomString} from "@/utils/randomUtil"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
@@ -11,11 +11,14 @@ import {CloudDownloadIcon} from "@/assets/newIcon"
 import {useState, useEffect, FC, Dispatch, SetStateAction} from "react"
 import {KnowledgeBaseContentProps} from "@/pages/KnowledgeBase/TKnowledgeBase"
 import {mergeKnowledgeBaseList} from "@/pages/KnowledgeBase/utils"
+import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
+import {InstallPluginModal} from "@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal"
 
 const {ipcRenderer} = window.require("electron")
 
 const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({setAddMode}) => {
     const {knowledgeBases, addKnowledgeBase, editKnowledgeBase, initialize} = useKnowledgeBase()
+    const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
     const [allDownloadToken, setAllDownloadToken] = useState<string>("")
     const [allDownloadProgress, setAllDownloadProgress] = useState<number>(0)
 
@@ -182,6 +185,12 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
         }
     }, [allDownloadToken])
 
+    useUpdateEffect(() => {
+        if (allDownloadProgress === 100) {
+            setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
+        }
+    }, [allDownloadProgress])
+
     // 获取数据库 列表数据
     const {run} = useRequest(
         async (Keyword?: string) => {
@@ -214,9 +223,20 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                     multiple={true}
                     style={{borderRadius: 8, backgroundColor: "var(--Colors-Use-Neutral-Bg)"}}
                     showUploadList={false}
-                    beforeUpload={(_, fileList: any) => {
-                        beforeUploadFun(fileList)
-                        return false
+                    beforeUpload={async (_, fileList: any) => {
+                        try {
+                            const result = await ThirdPartyBinaryRunAsync()
+                            const targetInstallPlugins = reseultKnowledgePlugin(result)
+                            targetInstallPlugins
+                                ? InstallPluginModal({
+                                      getContainer: "#main-operator-page-body-ai-agent",
+                                      callback: () => {
+                                          refreshPluginStatus()
+                                      }
+                                  })
+                                : beforeUploadFun(fileList)
+                            return false
+                        } catch (error) {}
                     }}
                 >
                     <div className={styles["upload-info"]}>
