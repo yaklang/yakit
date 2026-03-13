@@ -551,12 +551,36 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                 }
             })
         }
-    }, [visible, hotPatchCode])
+    }, [visible, hotPatchCode, setCode, setTemplate])
 
     useEffect(() => {
         tempNameRef.current = selectedTemplateNameProp || ""
         setSelectedTemplateName(selectedTemplateNameProp || "")
-    }, [selectedTemplateNameProp])
+        if (!visible || !selectedTemplateNameProp) {
+            return
+        }
+
+        const matchedTemplate = hotPatchTempLocal.find((item) => item.name === selectedTemplateNameProp)
+        if (matchedTemplate?.isDefault) {
+            setCode(matchedTemplate.temp)
+            props.onChangeCode?.(matchedTemplate.temp)
+            return
+        }
+
+        ipcRenderer
+            .invoke("QueryHotPatchTemplate", {
+                Type: "fuzzer",
+                Name: [selectedTemplateNameProp]
+            })
+            .then((res: QueryHotPatchTemplateResponse) => {
+                const nextCode = res.Data?.[0]?.Content
+                if (nextCode) {
+                    setCode(nextCode)
+                    props.onChangeCode?.(nextCode)
+                }
+            })
+            .catch(() => {})
+    }, [visible, selectedTemplateNameProp, hotPatchTempLocal, setCode, props])
 
     useEffect(() => {
         if (!visible) {
@@ -565,10 +589,16 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     }, [visible])
 
     const canSaveSelectedTemplate = useMemo(() => {
-        if (!selectedTemplateName) return false
-        const selectedTemplate = hotPatchTempLocal.find((item) => item.name === selectedTemplateName)
-        return !!selectedTemplate && !selectedTemplate.isDefault
-    }, [hotPatchTempLocal, selectedTemplateName])
+        const currentTemplateName = selectedTemplateName || selectedTemplateNameProp || tempNameRef.current
+        if (!currentTemplateName) return false
+
+        const selectedTemplate = hotPatchTempLocal.find((item) => item.name === currentTemplateName)
+        if (selectedTemplate) {
+            return !selectedTemplate.isDefault
+        }
+
+        return !HotPatchTempDefault.some((item) => item.name === currentTemplateName)
+    }, [hotPatchTempLocal, selectedTemplateName, selectedTemplateNameProp])
 
     const updateCode = useMemoizedFn((nextCode: string) => {
         setCode(nextCode)

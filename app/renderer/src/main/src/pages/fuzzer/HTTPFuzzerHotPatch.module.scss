@@ -250,7 +250,10 @@
             display: flex;
             align-items: center;
             color: var(--Colors-Use-Warning-Primary);
-            gap: 2px;
+            
+            .info-icon {
+                color: var(--Colors-Use-Neutral-Disable);
+            }
         }
 
         .hotPatch-sidebar-template-select {

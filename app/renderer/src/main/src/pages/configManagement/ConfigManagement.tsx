@@ -6,7 +6,7 @@ import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
 import { yakitFailed, yakitNotify } from "@/utils/notification"
 import { HotPatchTempItem, AddHotCodeTemplate } from "@/pages/fuzzer/HTTPFuzzerHotPatch"
-import { HotPatchTempDefault } from "@/defaultConstants/HTTPFuzzerPage"
+import { HotPatchDefaultContent, HotPatchTempDefault } from "@/defaultConstants/HTTPFuzzerPage"
 import { MITMHotPatchTempDefault } from "@/defaultConstants/mitm"
 import { cloneDeep } from "lodash"
 import {
@@ -38,6 +38,7 @@ import styles from "./ConfigManagement.module.scss"
 import { SolidDotsverticalIcon, SolidPlayIcon, SolidStopIcon } from "@/assets/icon/solid"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 import { DEFAULT_GLOBAL_TEMPLATE_CONTENT, DEFAULT_GLOBAL_TEMPLATE_NAME, useGlobalHotPatch, useGlobalHotPatchTag } from "@/store/globalHotPatch"
+import { HotPatchTemplate } from "@/pages/invoker/data/MITMPluginTamplate"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -198,6 +199,19 @@ export const HotPatchManagement: React.FC = () => {
 
     const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType) => {
         return cloneDeep(type === "fuzzer" ? HotPatchTempDefault : MITMHotPatchTempDefault)
+    })
+
+    const getDefaultTemplateContentByType = useMemoizedFn((type: HotCodeType) => {
+        switch (type) {
+            case "global":
+                return DEFAULT_GLOBAL_TEMPLATE_CONTENT
+            case "fuzzer":
+                return HotPatchDefaultContent
+            case "mitm":
+                return HotPatchTemplate
+            default:
+                return ""
+        }
     })
 
     const sortGlobalTemplateList = useMemoizedFn((list: HotPatchTempItem[], enabledName?: string) => {
@@ -431,11 +445,12 @@ export const HotPatchManagement: React.FC = () => {
     const onConfirmCreate = useMemoizedFn(() => {
         const newName = createModalValue.trim()
         if (!validateTemplateName(newName, createTemplateType)) return
+        const defaultTemplateContent = getDefaultTemplateContentByType(createTemplateType)
 
         ipcRenderer
             .invoke("CreateHotPatchTemplate", {
                 Type: createTemplateType,
-                Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,
+                Content: defaultTemplateContent,
                 Name: newName
             })
             .then(() => {
@@ -449,7 +464,7 @@ export const HotPatchManagement: React.FC = () => {
                 }
                 syncSelectedTemplate(createTemplateType, newName)
                 resetDebug()
-                setCode(DEFAULT_GLOBAL_TEMPLATE_CONTENT)
+                setCode(defaultTemplateContent)
             })
             .catch((error) => {
                 yakitFailed(error + "")
@@ -510,7 +525,7 @@ export const HotPatchManagement: React.FC = () => {
                         setCode("")
                         resetDebug()
                     }
-                    if (isGlobalType && globalEnabledTemplateName === item.name) {
+                    if (type === "global" && globalEnabledTemplateName === item.name) {
                         await useGlobalHotPatch.getState().disableGlobalHotPatch()
                     }
                 })
@@ -679,16 +694,15 @@ export const HotPatchManagement: React.FC = () => {
                     <span className={styles["template-name"]} title={item.name}>
                         {item.name}
                     </span>
-                    {globalEnabledTemplateName === item.name && (
+                    {type === "global" && globalEnabledTemplateName === item.name && (
                         <YakitTag className={styles["global-enabled-tag"]} color='info'>{t("GlobalHotPatch.enabled")}</YakitTag>
                     )}
                     {((!item.isDefault && source === "local") || (source === "online" && hasPermissions)) && (
                         <YakitPopover
                             overlayClassName={styles["template-popover"]}
-                            placement='bottom'
                             content={
                                 <>
-                                    {isGlobalType && (() => {
+                                    {type === "global" && (() => {
                                         const isThisItemEnabled = globalHotPatchConfig?.Enabled && globalEnabledTemplateName === item.name
                                         return (
                                             <div
