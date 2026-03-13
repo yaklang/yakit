@@ -325,7 +325,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
             {
                 type: "piecewise",
                 show: false,
-                dimension: 0,
+                dimension: 1,
                 seriesIndex: 0,
                 max: intelligent.maxValueIntelligent,
                 min: intelligent.minValueIntelligent,
@@ -337,7 +337,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
             {
                 type: "piecewise",
                 show: false,
-                dimension: 0,
+                dimension: 1,
                 seriesIndex: 1,
                 max: lightweight.maxValueLightweight,
                 min: lightweight.minValueLightweight,

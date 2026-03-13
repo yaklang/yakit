@@ -134,18 +134,19 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
  */
 export const getThreshold = (pressure?: Record<AIModelTypeEnum, AIAgentGrpcApi.Pressure[]>) => {
     let threshold: number = 0
-    let isUpdate = true
-    if (!!pressure?.intelligent?.length) {
+    const intelligentLength = pressure?.intelligent?.length || 0
+    const lightweightLength = pressure?.lightweight?.length || 0
+    const visionLength = pressure?.vision?.length || 0
+    const maxLength = Math.max(intelligentLength, lightweightLength, visionLength)
+    if (!!pressure?.intelligent?.length && maxLength === intelligentLength) {
         const i = pressure.intelligent.length
         threshold = pressure.intelligent[i - 1].pressure_token_size || 0
-        isUpdate = false
     }
-    if (!!pressure?.lightweight?.length && isUpdate) {
+    if (!!pressure?.lightweight?.length && maxLength === lightweightLength) {
         const l = pressure.lightweight.length
         threshold = pressure.lightweight[l - 1].pressure_token_size || 0
-        isUpdate = false
     }
-    if (!!pressure?.vision?.length && isUpdate) {
+    if (!!pressure?.vision?.length && maxLength === visionLength) {
         const v = pressure.vision.length
         threshold = pressure.vision[v - 1].pressure_token_size || 0
     }
