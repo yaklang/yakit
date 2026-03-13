@@ -148,7 +148,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         total: streams.length,
         atBottomThreshold: 100
     })
-    const [highlightedItem, setHighlightedItem] = useState<{index: number; token: number} | null>({index:14, token:11111})
+    const [highlightedItem, setHighlightedItem] = useState<{index: number; token: number} | null>(null)
     const highlightStartTimerRef = useRef<number | null>(null)
     useUpdateEffect(() => {
         scrollToIndex("LAST")

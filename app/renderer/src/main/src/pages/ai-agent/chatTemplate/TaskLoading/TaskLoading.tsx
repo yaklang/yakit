@@ -3,6 +3,7 @@ import {PlanLoadingStatus} from "@/pages/ai-re-act/hooks/type"
 import {FC, memo, useEffect, useRef, useState} from "react"
 import styles from "./TaskLoading.module.scss"
 import useAISystemStream from "@/pages/ai-re-act/hooks/useAISystemStream"
+import classNames from "classnames"
 
 export const ScrollText: FC<{ text?: string }> = ({ text = "" }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -48,7 +49,7 @@ const TaskLoading: FC<{
         systemStream
     })
     return (
-        <div className={`${styles["task-loading"]} ${className || ""}`}>
+        <div className={classNames(styles["task-loading-wrapper"], className)}>
             {taskStatus.loading && (
                 <>
                     <Loading
