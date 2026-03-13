@@ -311,9 +311,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [loading, setLoading] = useState(false)
 
-    // 修改密码弹框
-    const [passwordShow, setPasswordShow] = useState<boolean>(false)
-
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
 
@@ -679,18 +676,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </AutoSpin>
 
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-                    <YakitModal
-                        visible={passwordShow}
-                        title={"修改密码"}
-                        destroyOnClose={true}
-                        maskClosable={false}
-                        bodyStyle={{padding: "10px 24px 24px 24px"}}
-                        width={520}
-                        onCancel={() => setPasswordShow(false)}
-                        footer={null}
-                    >
-                        <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-                    </YakitModal>
 
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />

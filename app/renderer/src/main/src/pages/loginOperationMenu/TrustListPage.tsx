@@ -68,6 +68,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
     const judgeSource = (record) => {
         switch (record.from_platform) {
             case "company":
+            case "ccb":
                 return <UserOutlined />
             case "github":
                 return <GithubOutlined />

@@ -49,7 +49,8 @@ module.exports = {
             const typeApi = {
                 github: "auth/from-github/callback",
                 wechat: "auth/from-wechat/callback",
-                qq: "auth/from-qq/callback"
+                qq: "auth/from-qq/callback",
+                ccb: "auth/from-ccb/callback"
             }
 
             const {url = "", type} = arg
@@ -122,7 +123,7 @@ module.exports = {
                     authWindow = null
                 })
             }
-            if (type === "github") {
+            if (["github", "ccb"].includes(type)) {
                 if (server) {
                     // 关闭之前 HTTP 服务器
                     server.close()
@@ -280,6 +281,7 @@ module.exports = {
         })
 
         ipcMain.on("sync-update-user", (event, user) => {
+            const isCCB = user.platform === "ccb"
             USER_INFO.isLogin = user.isLogin
             USER_INFO.platform = user.platform
             USER_INFO.githubName = user.githubName
@@ -291,8 +293,8 @@ module.exports = {
             USER_INFO.role = user.role
             USER_INFO.token = user.token
             USER_INFO.user_id = user.user_id
-            USER_INFO.companyName = user.companyName
-            USER_INFO.companyHeadImg = user.companyHeadImg
+            USER_INFO.companyName = isCCB ? user.ccbName : user.companyName 
+            USER_INFO.companyHeadImg = isCCB? user.ccbHeadImg : user.companyHeadImg
             event.returnValue = user
         })
 
