@@ -79,11 +79,11 @@
     .fuzzer-firstNode-extra {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
         .fuzzer-flipping-pages {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
     }
 }
@@ -324,7 +324,7 @@
 .resize-card-icon {
     width: 20px;
     height: 20px;
-    margin-left: 8px;
+    margin-left: 4px;
     cursor: pointer;
     border-radius: 4px;
     display: flex;

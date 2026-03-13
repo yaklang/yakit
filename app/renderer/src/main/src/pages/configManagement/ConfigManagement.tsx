@@ -175,6 +175,7 @@ export const HotPatchManagement: React.FC = () => {
     const { globalHotPatchConfig, loadGlobalHotPatchConfig: loadGlobalHotPatchConfigStore } = useGlobalHotPatch()
     const { globalEnabledTemplateName } = useGlobalHotPatchTag()
     const [globalConfigLoading, setGlobalConfigLoading] = useState(false)
+    const [globalConfigLoaded, setGlobalConfigLoaded] = useState(false)
     const [globalTemplateListLoading, setGlobalTemplateListLoading] = useState(false)
     const [createModalVisible, setCreateModalVisible] = useState(false)
     const [createTemplateType, setCreateTemplateType] = useState<HotCodeType>("mitm")
@@ -197,6 +198,18 @@ export const HotPatchManagement: React.FC = () => {
 
     const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType) => {
         return cloneDeep(type === "fuzzer" ? HotPatchTempDefault : MITMHotPatchTempDefault)
+    })
+
+    const sortGlobalTemplateList = useMemoizedFn((list: HotPatchTempItem[], enabledName?: string) => {
+        if (!enabledName) return list
+
+        const enabledIndex = list.findIndex((item) => item.name === enabledName)
+        if (enabledIndex <= 0) return list
+
+        const nextList = [...list]
+        const [enabledItem] = nextList.splice(enabledIndex, 1)
+        nextList.unshift(enabledItem)
+        return nextList
     })
 
     const getTemplateKey = useMemoizedFn((type: HotCodeType, name: string) => `${type}:${name}`)
@@ -233,7 +246,10 @@ export const HotPatchManagement: React.FC = () => {
 
     const withGlobalLoading = useMemoizedFn(async (action: () => Promise<void>) => {
         setGlobalConfigLoading(true)
-        await action().finally(() => setGlobalConfigLoading(false))
+        await action().finally(() => {
+            setGlobalConfigLoading(false)
+            setGlobalConfigLoaded(true)
+        })
     })
 
     // 获取已启用的全局热加载模板
@@ -252,14 +268,18 @@ export const HotPatchManagement: React.FC = () => {
                 })
             }
             await useGlobalHotPatch.getState().enableGlobalHotPatch(nameToEnable)
+            loadGlobalTemplateList(undefined, nameToEnable)
         })
     )
     // 停用全局热加载模板
     const onDisableGlobalHotPatch = useMemoizedFn(() =>
-        withGlobalLoading(() => useGlobalHotPatch.getState().disableGlobalHotPatch())
+        withGlobalLoading(async () => {
+            await useGlobalHotPatch.getState().disableGlobalHotPatch()
+            loadGlobalTemplateList()
+        })
     )
 
-    const loadGlobalTemplateList = useMemoizedFn((selectedName?: string) => {
+    const loadGlobalTemplateList = useMemoizedFn((selectedName?: string, enabledName?: string) => {
         setGlobalTemplateListLoading(true)
         ipcRenderer
             .invoke("QueryHotPatchTemplateList", {Type: "global"})
@@ -279,11 +299,14 @@ export const HotPatchManagement: React.FC = () => {
                     temp: "",
                     isDefault: false
                 }))
-                setGlobalTemplateList(newList)
-                if (selectedName && newList.some((item) => item.name === selectedName)) {
-                    syncSelectedTemplate("global", selectedName)
-                } else if (activeType === "global" && !selectedTemplate && newList.length > 0) {
-                    onSelectTemplate("global", newList[0], "local")
+                const currentEnabledName = enabledName || (globalHotPatchConfig?.Enabled ? globalEnabledTemplateName : "")
+                const nextList = sortGlobalTemplateList(newList, currentEnabledName)
+                setGlobalTemplateList(nextList)
+
+                const defaultSelectedName = selectedName || (activeType === "global" && !selectedTemplate ? currentEnabledName || nextList[0]?.name : "")
+                const defaultSelectedTemplate = nextList.find((item) => item.name === defaultSelectedName)
+                if (defaultSelectedTemplate) {
+                    onSelectTemplate("global", defaultSelectedTemplate, "local")
                 }
             })
             .catch((error) => {
@@ -355,9 +378,9 @@ export const HotPatchManagement: React.FC = () => {
     })
 
     useEffect(() => {
-        if (!inViewport) return
+        if (!inViewport || !globalConfigLoaded) return
         loadGlobalTemplateList()
-    }, [inViewport, loadGlobalTemplateList])
+    }, [globalConfigLoaded, inViewport, loadGlobalTemplateList])
 
     useEffect(() => {
         if (!inViewport) return
@@ -656,13 +679,13 @@ export const HotPatchManagement: React.FC = () => {
                     <span className={styles["template-name"]} title={item.name}>
                         {item.name}
                     </span>
-                    {isGlobalType && globalEnabledTemplateName === item.name && (
+                    {globalEnabledTemplateName === item.name && (
                         <YakitTag className={styles["global-enabled-tag"]} color='info'>{t("GlobalHotPatch.enabled")}</YakitTag>
                     )}
                     {((!item.isDefault && source === "local") || (source === "online" && hasPermissions)) && (
                         <YakitPopover
                             overlayClassName={styles["template-popover"]}
-                            placement='bottomRight'
+                            placement='bottom'
                             content={
                                 <>
                                     {isGlobalType && (() => {
@@ -813,6 +836,9 @@ export const HotPatchManagement: React.FC = () => {
         return list.find((item) => item.name === selectedTemplate)
     }, [activeType, globalTemplateList, templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
 
+
+    const hideTemplateContent = useMemo(()=> isGlobalType || activeType === 'mitm', [isGlobalType, activeType])
+
     return (
         <div className={styles["hot-patch-management"]} ref={selectRef}>
             {renderMenu()}
@@ -820,7 +846,7 @@ export const HotPatchManagement: React.FC = () => {
                 <div className={styles["editor-title"]}>{selectedTemplate}</div>
                 <div className={styles["editor-header"]}>
                     <div>
-                    {!isGlobalType && (
+                    {!hideTemplateContent && (
                         <YakitRadioButtons
                             value={editorTab}
                             onChange={(e) => {
@@ -841,7 +867,7 @@ export const HotPatchManagement: React.FC = () => {
                     )}
                     </div>
                     <div className={styles["editor-header-right"]}>
-                        {isGlobalType && (
+                        {hideTemplateContent && (
                         <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
                             <YakitButton
                                 type='text'
@@ -893,11 +919,11 @@ export const HotPatchManagement: React.FC = () => {
                             )}
                         </div>
                     }
-                    firstRatio={isGlobalType ? "100%": "70%"}
+                    firstRatio={hideTemplateContent ? "100%": "70%"}
                     firstMinSize='400px'
                     secondRatio='30%'
                     secondMinSize='280px'
-                    secondNodeStyle={isGlobalType? { display: 'none'}: {}}
+                    secondNodeStyle={hideTemplateContent ? { display: 'none'}: {}}
                     secondNode={
                         <div className={styles["template-content-panel"]}>
                             <div className={styles["template-content-header"]}>

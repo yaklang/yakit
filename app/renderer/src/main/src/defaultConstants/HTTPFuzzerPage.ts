@@ -35,7 +35,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     noFixContentLength: false,
     noSystemProxy: false,
     disableUseConnPool: false,
-    disableHotPatch: false,
+    disableHotPatch: true,
     maxBodySize: 5,
     sNI: "",
     overwriteSNI: "auto",

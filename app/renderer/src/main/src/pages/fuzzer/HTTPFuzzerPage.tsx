@@ -120,6 +120,7 @@ import { prettifyPacketCode } from "@/utils/prettifyPacket"
 import { WebFuzzerType } from "./WebFuzzerPage/WebFuzzerPageType"
 import { setHotPatchCache } from "./hotPatchCache"
 import cloneDeep from "lodash/cloneDeep"
+import { useGlobalHotPatch, useGlobalHotPatchTag } from "@/store/globalHotPatch"
 
 import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import { defYakitAutoCompleteRef } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
@@ -769,6 +770,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
+    const [hotPatchSidebarVisible, setHotPatchSidebarVisible] = useState<boolean>(false)
     const [currentFuzzerPage, setCurrentFuzzerPage] = useGetSetState<boolean>(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
@@ -841,6 +843,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(fuzzerRef)
     const inViewportRef = useRef<boolean>(inViewport)
+    const { globalEnabledTemplateName, onDisableGlobalHotPatch } = useGlobalHotPatchTag()
 
     const [hex, setHex] = useState<boolean>(false)
     const [privacy, setPrivacy] = useState(false)
@@ -895,6 +898,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         inViewportRef.current = inViewport
         if (inViewport) {
+            if (!useGlobalHotPatch.getState().globalHotPatchConfig) {
+                useGlobalHotPatch.getState().loadGlobalHotPatchConfig()
+            }
             registerShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
             getStorageHttpFuzzerShortcutKeyEvents()
             onRefWebFuzzerValue()
@@ -915,6 +921,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const value = JSON.parse(data)
             const { type } = value
             if (type === "sequence") return
+            if (type === "hot-patch") {
+                const nextVisible = type === advancedConfigShowType ? !hotPatchSidebarVisible : true
+                emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({ type, checked: nextVisible }))
+                setAdvancedConfigShowType("hot-patch")
+                setHotPatchSidebarVisible(nextVisible)
+                return
+            }
             let newValue = {
                 ...advancedConfigShow
             }
@@ -949,6 +962,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             setCurrentFuzzerPage(true)
             const value = JSON.parse(data)
+            setHotPatchSidebarVisible(value.type === "hot-patch")
             setAdvancedConfigShowType(value.type)
         } catch (error) { }
     })
@@ -1656,6 +1670,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const hotPatchTrigger = useMemoizedFn(() => {
+        setHotPatchSidebarVisible(true)
         emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "hot-patch"}))
         emiter.emit("sequenceSendSwitchTypeToFuzzer", JSON.stringify({type: "hot-patch"}))
         emiter.emit("onCurrentFuzzerPage", true)
@@ -2193,7 +2208,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return false
         }
     }, [advancedConfigShowType, advancedConfigShow])
-    const hotPatchVisible = useCreation(() => advancedConfigShowType === "hot-patch", [advancedConfigShowType])
+    const hotPatchVisible = useCreation(
+        () => advancedConfigShowType === "hot-patch" && hotPatchSidebarVisible,
+        [advancedConfigShowType, hotPatchSidebarVisible]
+    )
 
     useShortcutKeyTrigger(
         "sendRequest*httpFuzzer",
@@ -2349,13 +2367,24 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     )
 
     const renderHotPatchTag = useMemo(
-        () =>
-            hotPatchEnabled ? (
-                <YakitTag className={styles["proxy-text"]} closable onClose={() => onChangeHotPatchEnabled(false)}>
-                    {`${t("HTTPFuzzerPage.hotReload")}${t("GlobalHotPatch.started")}`}
-                </YakitTag>
-            ) : null,
-        [hotPatchEnabled, onChangeHotPatchEnabled, i18n.language]
+        () => (
+            <div>
+                {globalEnabledTemplateName && (
+                    <YakitTag className={styles["proxy-text"]} closable onClose={onDisableGlobalHotPatch}>
+                        <Tooltip title={globalEnabledTemplateName}>
+                            {t("GlobalHotPatch.Global_hot_template")}{t("GlobalHotPatch.started")}
+                        </Tooltip>
+                    </YakitTag>
+                )}
+                {globalEnabledTemplateName && hotPatchEnabled ? " -> " : ""}
+                {hotPatchEnabled ? (
+                    <YakitTag className={styles["proxy-text"]} closable onClose={() => onChangeHotPatchEnabled(false)}>
+                        {`${t("HTTPFuzzerPage.hotReload")}${t("GlobalHotPatch.started")}`}
+                    </YakitTag>
+                ) : null}
+            </div>
+        ),
+        [globalEnabledTemplateName, hotPatchEnabled, onChangeHotPatchEnabled, onDisableGlobalHotPatch, t]
     )
 
     const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)

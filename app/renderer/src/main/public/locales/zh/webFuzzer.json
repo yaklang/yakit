@@ -212,7 +212,8 @@
     "crack_signature": "破解 Signature",
     "third_party_captcha_bypass": "第三方验证码绕过",
     "source": "源码",
-    "executionResult": "执行结果"
+    "executionResult": "执行结果",
+    "webFuzzerHotReloadOpenTips": "启用后,每次发送请求将执行当前最新热加载内容"
   },
   "HTTPFuzzerHistorySelector": {
     "confirmDeletePackets": "将会删除数据包与缓存数据，确定删除吗？",

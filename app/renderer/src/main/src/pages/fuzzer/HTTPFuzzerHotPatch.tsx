@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Dropdown, Form, Space, Tooltip} from "antd"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useSize} from "ahooks"
 import {ArrowsExpandIcon, ArrowsRetractIcon, InformationCircleIcon, RefreshIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined, FullscreenOutlined} from "@ant-design/icons/lib"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -521,6 +521,26 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     const [selectedTemplateName, setSelectedTemplateName] = useState<string>(selectedTemplateNameProp || "")
     const tempNameRef = useRef<string>("")
     const tokenRef = useRef<string>("")
+    const resizeBodyRef = useRef<HTMLDivElement>(null)
+    const resizeBodySize = useSize(resizeBodyRef)
+
+    const resizeBoxFirstMinSize = 120
+    const resizeBoxSecondMinSize = 120
+    const resizeLineSize = 8
+
+    const resizeBoxFirstRatio = useMemo(() => {
+        const bodyHeight = resizeBodySize?.height || 0
+        if (!bodyHeight) return `${hotPatchEditorHeight}px`
+
+        const minRequiredHeight = resizeBoxFirstMinSize + resizeBoxSecondMinSize + resizeLineSize
+        if (bodyHeight <= minRequiredHeight) {
+            return "50%"
+        }
+
+        const maxFirstHeight = bodyHeight - resizeBoxSecondMinSize - resizeLineSize
+        const nextFirstHeight = Math.max(resizeBoxFirstMinSize, Math.min(hotPatchEditorHeight, maxFirstHeight))
+        return `${Math.round(nextFirstHeight)}px`
+    }, [hotPatchEditorHeight, resizeBodySize?.height])
 
     useEffect(() => {
         if (visible) {
@@ -737,6 +757,9 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                         <div className={styles["hotPatch-sidebar-header-right"]}>
                             <div className={styles["hotPatch-sidebar-switch-wrap"]}>
                                 {t("YakitButton.enable")}
+                                <Tooltip title={t("HTTPFuzzerHotPatch.webFuzzerHotReloadOpenTips")}>
+                                    <InformationCircleIcon className={styles["info-icon"]} />
+                                </Tooltip>
                                 <YakitSwitch checked={hotPatchEnabled} onChange={onEnabledChange} />
                             </div>
                             {isFullScreen ? (
@@ -756,18 +779,28 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                     </div>
                 </div>
             </div>
-            <div className={styles["hotPatch-sidebar-body"]}>
+            <div className={styles["hotPatch-sidebar-body"]} ref={resizeBodyRef}>
                 <YakitResizeBox
                     isVer={true}
-                    firstRatio={`${hotPatchEditorHeight}px`}
-                    firstMinSize={180}
-                    secondMinSize={120}
+                    firstRatio={resizeBoxFirstRatio}
+                    firstMinSize={resizeBoxFirstMinSize}
+                    secondMinSize={resizeBoxSecondMinSize}
                     isShowDefaultLineStyle={true}
                     style={{height: "100%", flex: 1, minHeight: 0, overflow: "hidden"}}
                     firstNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden"}}
                     secondNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden"}}
                     onMouseUp={({firstSizeNum}) => {
-                        setHotPatchEditorHeight(Math.round(firstSizeNum))
+                        const bodyHeight = resizeBodySize?.height || 0
+                        if (!bodyHeight) {
+                            setHotPatchEditorHeight(Math.round(firstSizeNum))
+                            return
+                        }
+
+                        const maxFirstHeight = Math.max(
+                            resizeBoxFirstMinSize,
+                            bodyHeight - resizeBoxSecondMinSize - resizeLineSize
+                        )
+                        setHotPatchEditorHeight(Math.round(Math.min(firstSizeNum, maxFirstHeight)))
                     }}
                     firstNode={
                         <div className={styles["hotPatch-sidebar-editor-section"]} style={{height: "100%"}}>
