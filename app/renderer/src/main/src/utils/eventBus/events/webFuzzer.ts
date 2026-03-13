@@ -1,5 +1,6 @@
 export type WebFuzzerEventProps = {
     onRefWebFuzzer?: string
+    onSelectFuzzerHotPatchTemplate?: string
     /**设置fuzzer tab高级配置显示/隐藏对应得tab样式 */
     onGetFuzzerAdvancedConfigShow: string
     onImportYamlPopEditorContent: string

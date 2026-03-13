@@ -304,6 +304,13 @@
                 @extend .display-flex-center;
                 gap: 8px;
 
+                .proxy-text {
+                    margin-right: 0;
+                    max-width: 500px;
+                    display: inline-block;
+                    line-height: 16px;
+                }
+
                 &-title {
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
@@ -444,6 +451,20 @@
         &:hover {
             color: var(--Colors-Use-Main-Hover);
         }
+    }
+}
+
+.hot-patch-trigger {
+    display: inline-flex;
+
+    .hot-patch-trigger-main {
+        border-radius: 4px 0 0 4px;
+    }
+
+    .hot-patch-trigger-dropdown {
+        border-radius: 0 4px 4px 0;
+        padding: 0;
+        margin-left: 1px;
     }
 }
 

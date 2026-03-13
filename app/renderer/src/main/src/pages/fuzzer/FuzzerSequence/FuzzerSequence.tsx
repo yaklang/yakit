@@ -37,6 +37,7 @@ import {
     useUpdateEffect
 } from "ahooks"
 import {
+    OutlineChevrondownIcon,
     OutlineArrowcirclerightIcon,
     OutlineCodeIcon,
     OutlineCogIcon,
@@ -107,7 +108,8 @@ import {
     DefFuzzerTableMaxData,
     defaultAdvancedConfigValue,
     defaultWebFuzzerPageInfo,
-    emptyFuzzer
+    emptyFuzzer,
+    HotPatchTempDefault
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {WebsiteGV} from "@/enums/website"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
@@ -115,7 +117,8 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import {isEqual} from "lodash"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {cloneDeep, isEqual} from "lodash"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {updateConcurrentLoad} from "@/utils/duplex/duplex"
@@ -124,6 +127,8 @@ import { isEmpty } from "lodash"
 import { AdvancedSetV2, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurrency"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import { useProxy } from "@/hook/useProxy"
+import {HotCodeTemplate, HotPatchTempItem} from "../HTTPFuzzerHotPatch"
+import {useGlobalHotPatchTag} from "@/store/globalHotPatch"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -2423,6 +2428,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         isConcurrency,
     } = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer"])
+    const { globalEnabledTemplateName, onDisableGlobalHotPatch } = useGlobalHotPatchTag()
     const {
         onlyOneResponse: httpResponse,
         successCount,
@@ -2441,6 +2447,33 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     const onlyOneResponse: boolean = useCreation(() => {
         return cachedTotal === 1
     }, [cachedTotal])
+    const hotPatchEnabled = !advancedConfigValue?.disableHotPatch
+    const onChangeHotPatchEnabled = useMemoizedFn((enabled: boolean) => {
+        setAdvancedConfigValue({
+            ...(advancedConfigValue || defaultAdvancedConfigValue),
+            disableHotPatch: !enabled
+        })
+    })
+    const renderHotPatchTag = useMemo(
+        () => (
+            <div>
+                {globalEnabledTemplateName && (
+                    <YakitTag className={styles["proxy-text"]} closable onClose={onDisableGlobalHotPatch}>
+                        <Tooltip title={globalEnabledTemplateName}>
+                            {t("GlobalHotPatch.Global_hot_template")}{t("GlobalHotPatch.started")}
+                        </Tooltip>
+                    </YakitTag>
+                )}
+                {globalEnabledTemplateName && hotPatchEnabled ? " -> " : ""}
+                {hotPatchEnabled ? (
+                    <YakitTag className={styles["proxy-text"]} closable onClose={() => onChangeHotPatchEnabled(false)}>
+                        {`${t("HTTPFuzzerPage.hotReload")}${t("GlobalHotPatch.started")}`}
+                    </YakitTag>
+                ) : null}
+            </div>
+        ),
+        [globalEnabledTemplateName, hotPatchEnabled, onChangeHotPatchEnabled, onDisableGlobalHotPatch, t]
+    )
 
     // 跳转插件调试页面
     const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
@@ -2485,6 +2518,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                     onlyOneResponse={onlyOneResponse}
                     httpResponse={httpResponse}
                 />
+                {renderHotPatchTag}
             </div>
             <div style={{display: "flex"}}>
                 {isConcurrency ? <Divider type='vertical' style={{ margin: 8, visibility: "hidden"}} /> : <>
@@ -2590,6 +2624,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
         const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+        const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
 
         const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
         const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
@@ -2772,15 +2807,39 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 >
                     {t("YakitButton.beautify")}
                 </YakitButton>
-                <YakitButton
-                    size='small'
-                    type='primary'
-                    onClick={() => {
-                        hotPatchTrigger()
-                    }}
-                >
-                    {t("SequenceResponse.hotReload")}
-                </YakitButton>
+                <div className={styles["hot-patch-trigger"]}>
+                    <YakitButton
+                        size='small'
+                        type='primary'
+                        className={styles["hot-patch-trigger-main"]}
+                        onClick={() => {
+                            hotPatchTrigger()
+                        }}
+                    >
+                        {t("SequenceResponse.hotReload")}
+                    </YakitButton>
+                    <HotCodeTemplate
+                        type='fuzzer'
+                        hotPatchTempLocal={hotPatchTempLocal}
+                        onSetHotPatchTempLocal={setHotPatchTempLocal}
+                        onClickHotCode={(temp, tempName) => {
+                            setHotPatchCode(temp)
+                            emiter.emit(
+                                "onSelectFuzzerHotPatchTemplate",
+                                JSON.stringify({pageId, templateName: tempName || ""})
+                            )
+                            hotPatchTrigger()
+                        }}
+                        triggerNode={
+                            <YakitButton
+                                size='small'
+                                type='primary'
+                                className={styles["hot-patch-trigger-dropdown"]}
+                                icon={<OutlineChevrondownIcon />}
+                            />
+                        }
+                    />
+                </div>
                 <div className={styles["resize-card-icon"]} onClick={() => setFirstFull(!firstFull)}>
                     {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
                 </div>

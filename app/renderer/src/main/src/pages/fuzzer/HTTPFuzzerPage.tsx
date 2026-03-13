@@ -881,8 +881,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowResponseInfoSecondEditor(true)
             })
         emiter.on("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
+        emiter.on("onSelectFuzzerHotPatchTemplate", onSelectFuzzerHotPatchTemplate)
         return () => {
             emiter.off("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
+            emiter.off("onSelectFuzzerHotPatchTemplate", onSelectFuzzerHotPatchTemplate)
         }
     }, [])
 
@@ -970,6 +972,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onCurrentFuzzerPage = useMemoizedFn((data) => {
         if (!inViewport) return
         setCurrentFuzzerPage(data)
+    })
+    const onSelectFuzzerHotPatchTemplate = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            if (value?.pageId !== props.id) {
+                return
+            }
+            setSelectedHotPatchTemplateName(value?.templateName || "")
+        } catch (error) {}
     })
     /**更新热加载代码 */
     const onUpdatePatchCode = useMemoizedFn(() => {

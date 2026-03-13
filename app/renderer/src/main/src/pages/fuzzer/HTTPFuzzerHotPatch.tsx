@@ -3,7 +3,7 @@ import {Dropdown, Form, Space, Tooltip} from "antd"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn, useSize} from "ahooks"
-import {ArrowsExpandIcon, ArrowsRetractIcon, InformationCircleIcon, RefreshIcon} from "@/assets/newIcon"
+import {InformationCircleIcon, RefreshIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined, FullscreenOutlined} from "@ant-design/icons/lib"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -20,7 +20,9 @@ import {
     OutlineStorageIcon,
     OutlineTerminalIcon,
     OutlineTrashIcon,
-    OutlineXIcon
+    OutlineXIcon,
+    OutlineArrowsexpandIcon,
+    OutlineArrowscollapseIcon
 } from "@/assets/icon/outline"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultWebFuzzerPageInfo, HotPatchDefaultContent, HotPatchTempDefault} from "@/defaultConstants/HTTPFuzzerPage"
@@ -793,12 +795,12 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                                 <YakitSwitch checked={hotPatchEnabled} onChange={onEnabledChange} />
                             </div>
                             {isFullScreen ? (
-                                <ArrowsRetractIcon
+                                <OutlineArrowscollapseIcon
                                     className={styles["expand-icon"]}
                                     onClick={() => setIsFullScreen(false)}
                                 />
                             ) : (
-                                <ArrowsExpandIcon
+                                <OutlineArrowsexpandIcon
                                         className={classNames(styles["expand-icon"], styles["expand-icon-active"])}
                                     onClick={() => {
                                         setIsFullScreen(true)

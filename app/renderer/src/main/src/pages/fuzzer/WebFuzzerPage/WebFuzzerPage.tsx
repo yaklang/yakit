@@ -34,6 +34,11 @@ export const webFuzzerTabs = (t: (text: string) => string) => {
             icon: <OutlineClipboardlistIcon />
         },
         {
+            key: "hot-patch",
+            label: t("HTTPFuzzerPage.hotReload"),
+            icon: <OutlineLightningboltIcon />
+        },
+        {
             key: "sequence",
             label: t("WebFuzzerPage.sequence"),
             icon: <OutlineCollectionIcon />
@@ -42,11 +47,6 @@ export const webFuzzerTabs = (t: (text: string) => string) => {
             key: "concurrency",
             label: t("WebFuzzerPage.concurrency"),
             icon: <OutlineViewboardsIcon />
-        },
-        {
-            key: "hot-patch",
-            label: t("HTTPFuzzerPage.hotReload"),
-            icon: <OutlineLightningboltIcon />
         }
     ]
 }
