@@ -13,6 +13,9 @@ import {
 import {HybridScanActiveTask, HybridScanControlAfterRequest} from "@/models/HybridScan"
 import omit from "lodash/omit"
 import isEqual from "lodash/isEqual"
+import {DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME} from "@/defaultConstants/HoldGRPCStream"
+import {getRemoteValue} from "@/utils/kv"
+import emiter from "@/utils/eventBus/eventBus"
 import { JSONParseLog } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
@@ -31,6 +34,18 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         setTaskStatus,
         onGetInputValue
     } = params
+
+    // 插件日志条数
+    const [limitLogNum, setLimitLogNum] = useState<number>(DEFAULT_LOG_LIMIT)
+
+    useEffect(() => {
+        getRemoteValue(LIMIT_LOG_NUM_NAME).then((num) => {
+            if (num) setLimitLogNum(Number(num))
+        })
+
+        emiter.on("onUpdateLimitLogNum", setLimitLogNum)
+        return () => emiter.off("onUpdateLimitLogNum", setLimitLogNum)
+    }, [])
 
     const [streamInfo, setStreamInfo] = useState<BatchHoldGRPCStreamInfo>({
         progressState: [],
@@ -80,8 +95,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     /** 放入日志队列 */
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
         messages.current.unshift(log)
-        // 只缓存 100 条结果（日志类型 + 数据类型）
-        if (messages.current.length > 100) {
+        // 只缓存 全局配置的插件日志条数的结果（日志类型 + 数据类型）
+        if (messages.current.length > limitLogNum) {
             messages.current.pop()
         }
     })
@@ -202,6 +217,9 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
                 startTime: time
             }
             pluginLog.current.unshift(item)
+            if (pluginLog.current.length > limitLogNum) {
+                pluginLog.current.pop()
+            }
         }
         if (updateActiveTask.Operator === "remove") {
             pluginLog.current = pluginLog.current.filter((item) => item.Index !== updateActiveTask.Index)
