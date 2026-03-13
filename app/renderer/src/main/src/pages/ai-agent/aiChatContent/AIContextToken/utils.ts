@@ -17,24 +17,24 @@ export const getPressuresData = (
         [AIModelTypeEnum.TierLightweight]: [],
         [AIModelTypeEnum.TierVision]: []
     }
-    let xData: number[] = []
+    let xData: Record<AIModelTypeEnum, number[]> = {
+        [AIModelTypeEnum.TierIntelligent]: [],
+        [AIModelTypeEnum.TierLightweight]: [],
+        [AIModelTypeEnum.TierVision]: []
+    }
     if (!pressure) return {data, xData}
-    const intelligentLength = pressure?.intelligent?.length || 0
-    const lightweightLength = pressure?.lightweight?.length || 0
-    const visionLength = pressure?.vision?.length || 0
-    const maxLength = Math.max(intelligentLength, lightweightLength, visionLength)
     if (!!pressure?.intelligent?.length) {
         let intelligent: AIAgentGrpcApi.Pressure[] = pressure?.intelligent
         if (!!sliceLength) {
             intelligent = pressure?.intelligent.slice(-sliceLength)
         }
-
+        
         intelligent.forEach((item) => {
             data.intelligent.push({
                 modelName: item.model_name || "",
                 value: item.current_cost_token_size
             })
-            if (maxLength === intelligentLength) xData.push(item.timestamp || 0)
+            xData.intelligent.push(item.timestamp || 0)
         })
     }
     if (!!pressure?.lightweight?.length) {
@@ -47,7 +47,7 @@ export const getPressuresData = (
                 modelName: item.model_name || "",
                 value: item.current_cost_token_size
             })
-            if (maxLength === lightweightLength) xData.push(item.timestamp || 0)
+            xData.lightweight.push(item.timestamp || 0)
         })
     }
     if (!!pressure?.vision?.length) {
@@ -60,7 +60,7 @@ export const getPressuresData = (
                 modelName: item.model_name || "",
                 value: item.current_cost_token_size
             })
-            if (maxLength === visionLength) xData.push(item.timestamp || 0)
+            xData.vision.push(item.timestamp || 0)
         })
     }
     return {data, xData}
@@ -78,13 +78,13 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
         [AIModelTypeEnum.TierLightweight]: [],
         [AIModelTypeEnum.TierVision]: []
     }
-    let xData: number[] = []
+    let xData: Record<AIModelTypeEnum, number[]> = {
+        [AIModelTypeEnum.TierIntelligent]: [],
+        [AIModelTypeEnum.TierLightweight]: [],
+        [AIModelTypeEnum.TierVision]: []
+    }
 
     if (!cost) return {data, xData}
-    const intelligentLength = cost?.intelligent?.length || 0
-    const lightweightLength = cost?.lightweight?.length || 0
-    const visionLength = cost?.vision?.length || 0
-    const maxLength = Math.max(intelligentLength, lightweightLength, visionLength)
     if (!!cost?.intelligent?.length) {
         let intelligent: AIAgentGrpcApi.AIFirstCostMS[] = cost?.intelligent
         if (!!sliceLength) {
@@ -95,7 +95,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
                 modelName: item.model_name || "",
                 value: item.ms
             })
-            if (maxLength === intelligentLength) xData.push(item.timestamp || 0)
+            xData.intelligent.push(item.timestamp || 0)
         })
     }
     if (!!cost?.lightweight?.length) {
@@ -108,7 +108,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
                 modelName: item.model_name || "",
                 value: item.ms
             })
-            if (maxLength === lightweightLength) xData.push(item.timestamp || 0)
+            xData.lightweight.push(item.timestamp || 0)
         })
     }
     if (!!cost?.vision?.length) {
@@ -121,7 +121,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
                 modelName: item.model_name || "",
                 value: item.ms
             })
-            if (maxLength === visionLength) xData.push(item.ms || 0)
+            xData.vision.push(item.timestamp || 0)
         })
     }
     return {data, xData}

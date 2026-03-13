@@ -77,8 +77,7 @@ const AIContextToken: FC<{
     })
     // 上下文压力集合
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
-        const value = getPressuresData(aiDataRef?.pressure, 100)
-        return {data: value.data}
+        return getPressuresData(aiDataRef?.pressure, 100)
     }, [renderNumber, aiDataRef?.pressure])
     // 最新的上下文压力
     const lastPressure = useCreation(() => {
@@ -109,7 +108,7 @@ const AIContextToken: FC<{
 
     // 首字符延迟集合
     const currentCostEcharts: ResponseSpeedEchartsProps["dataEcharts"] = useCreation(() => {
-        return {data: getCostData(aiDataRef?.firstCost, 100).data}
+        return getCostData(aiDataRef?.firstCost, 100)
     }, [renderNumber, aiDataRef?.firstCost])
     // 最新的首字符延迟
     const lastFirstCost = useCreation(() => {

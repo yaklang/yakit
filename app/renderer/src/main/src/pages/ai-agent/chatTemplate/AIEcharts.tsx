@@ -16,6 +16,7 @@ export interface AIEchartsDataKey {
 export interface ContextPressureEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
+        xData: Record<AIModelTypeEnum, number[]>
     }
     threshold: number
 }
@@ -43,6 +44,84 @@ export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = Rea
     return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
 })
 
+const AIModelTypeMap: Record<
+    AIModelTypeEnum,
+    {
+        backgroundColor?: string
+    }
+> = {
+    [AIModelTypeEnum.TierIntelligent]: {
+        backgroundColor: "--Colors-Use-Purple-Primary"
+    },
+    [AIModelTypeEnum.TierLightweight]: {
+        backgroundColor: "--Colors-Use-Warning-Primary"
+    },
+    [AIModelTypeEnum.TierVision]: {}
+}
+const getDetailsXAxis = (data: {
+    xData: number[]
+    colors: Record<string, string>
+    type: AIModelTypeEnum
+    valueFormatter: (v: number) => string | number
+}) => {
+    const {xData, colors, type, valueFormatter} = data
+
+    const axisPointerLabel = AIModelTypeMap[type]
+    const xAxis = {
+        type: "category",
+        data: xData,
+        axisLabel: {
+            rotate: 0,
+            fontSize: 11,
+            color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
+            formatter: (v) => moment.unix(v).format("HH:mm")
+        },
+        axisLine: {
+            lineStyle: {
+                color: colors["--Colors-Use-Neutral-Border"]
+            }
+        },
+        splitLine: {
+            show: true,
+            lineStyle: {
+                type: "dashed",
+                color: colors["--Colors-Use-Neutral-Border"]
+            }
+        },
+        // 隐藏刻度线
+        axisTick: {
+            show: false // 不显示刻度线
+        },
+        axisPointer: {
+            label: {
+                fontSize: 10,
+                backgroundColor: colors[axisPointerLabel?.backgroundColor || ""],
+                formatter: (params) => {
+                    return `${formatTimestamp(+params.value)}\r\n${
+                        params?.seriesData?.length ? params.seriesData[0].data?.modelName : ""
+                    }:${params?.seriesData?.length ? valueFormatter?.(params.seriesData[0].data?.value) : ""}`
+                }
+            }
+        },
+        boundaryGap: false
+    }
+    return xAxis
+}
+
+const getXAxis = (data: {xData: number[]}) => {
+    const {xData} = data
+    const xAxis = {
+        show: false,
+        type: "category",
+        data: xData,
+        axisLine: {
+            show: false
+        },
+
+        boundaryGap: false
+    }
+    return xAxis
+}
 interface AIEchartsHelperProps {
     data: AIEchartsDataKey[]
     threshold?: ContextPressureEchartsProps["threshold"]
@@ -118,12 +197,23 @@ interface ContextPressureOptionProps extends ContextPressureEchartsProps {
 /**获取 上下文压力echarts得option*/
 const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOption => {
     const {dataEcharts, threshold, colors} = value
-    const {data} = dataEcharts
+    const {data, xData} = dataEcharts
     const intelligent = getIntelligent({data: data.intelligent, threshold, colors})
     const intelligentLength = data.intelligent.length
 
     const lightweight = getLightweight({data: data.lightweight, threshold, colors})
     const lightweightLength = data.lightweight?.length
+    const seriesBase = {
+        animation: false,
+        type: "line",
+        smooth: true,
+        lineStyle: {
+            width: 1
+        },
+        emphasis: {
+            focus: "series"
+        }
+    }
     const option: EChartsOption = {
         grid: {
             top: 4, // 上边距
@@ -131,10 +221,14 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
             bottom: 4, // 下边距
             left: 0 // 左边距
         },
-        xAxis: {
-            show: false,
-            type: "category"
-        },
+        xAxis: [
+            getXAxis({
+                xData: xData.intelligent
+            }),
+            getXAxis({
+                xData: xData.lightweight
+            })
+        ],
         yAxis: {
             show: false
         },
@@ -142,7 +236,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
             {
                 type: "piecewise",
                 show: false,
-                dimension: 0,
+                dimension: 1,
                 seriesIndex: 0,
                 max: intelligent.maxValueIntelligent,
                 min: intelligent.minValueIntelligent,
@@ -154,7 +248,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
             {
                 type: "piecewise",
                 show: false,
-                dimension: 0,
+                dimension: 1,
                 seriesIndex: 1,
                 max: lightweight.maxValueLightweight,
                 min: lightweight.minValueLightweight,
@@ -166,6 +260,9 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
         ],
         series: [
             {
+                ...seriesBase,
+                name: "高质模型",
+                xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
                         return {
@@ -178,15 +275,12 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
                             symbolSize: intelligentLength === 1 ? symbolSize : 0
                         }
                     }
-                }), // 高质
-                animation: false,
-                type: "line",
-                smooth: true,
-                lineStyle: {
-                    width: 1
-                }
+                })
             },
             {
+                ...seriesBase,
+                name: "轻量模型",
+                xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex - 1 === index && val >= lightweight.maxValueLightweight) {
                         return {
@@ -215,7 +309,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
 export interface AIPressureDetailsEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
-        xData: number[]
+        xData: Record<AIModelTypeEnum, number[]>
     }
     threshold: number
 }
@@ -257,59 +351,53 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
 
     const lightweightLength = data.lightweight.length
 
+    const seriesBase = {
+        animation: false,
+        type: "line",
+        smooth: true,
+        lineStyle: {
+            width: 1
+        },
+        emphasis: {
+            focus: "series"
+        }
+    }
     const option: EChartsOption = {
         grid: {
             left: 24, // 留足空间给 y 轴文字
-            right: 12,
+            right: 14,
             bottom: 12, // 留足空间给 x 轴文字
             top: 12, // 留足空间给标题
             containLabel: true // 确保轴标签在 grid 内
         },
         tooltip: {
-            trigger: "axis",
-            formatter: (params) => {
-                let result = formatTimestamp(Number(params[0]?.name)) + "<br/>"
-                params.forEach((param) => {
-                    result += `${param.marker} ${param.data?.modelName}: ${formatNumberUnits(param.value)}<br/>`
-                })
-                return result
+            trigger: "none",
+            axisPointer: {
+                type: "cross"
             }
         },
-        xAxis: {
-            type: "category",
-            data: xData,
-            axisLabel: {
-                rotate: 0,
-                fontSize: 11,
-                color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
-                formatter: (v) => moment.unix(v).format("HH:mm")
-            },
-            axisLine: {
-                lineStyle: {
-                    color: colors["--Colors-Use-Neutral-Border"]
-                }
-            },
-            splitLine: {
-                show: true,
-                lineStyle: {
-                    type: "dashed",
-                    color: colors["--Colors-Use-Neutral-Border"]
-                }
-            },
-            // 隐藏刻度线
-            axisTick: {
-                show: false // 不显示刻度线
-            },
-            boundaryGap: false
-        },
+        xAxis: [
+            getDetailsXAxis({
+                xData: xData.intelligent,
+                colors,
+                type: AIModelTypeEnum.TierIntelligent,
+                valueFormatter: (v: number) => `${formatNumberUnits(v)}`
+            }),
+            getDetailsXAxis({
+                xData: xData.lightweight,
+                colors,
+                type: AIModelTypeEnum.TierLightweight,
+                valueFormatter: (v: number) => `${formatNumberUnits(v)}`
+            })
+        ],
         yAxis: {
             type: "value",
-            name: "压力值 (k)",
-            nameLocation: "end", // 'start' | 'middle' | 'end'
-            nameTextStyle: {
-                fontSize: 11
-            },
-            nameGap: 20, // 与轴的距离
+            // name: "压力值 (k)",
+            // nameLocation: "end", // 'start' | 'middle' | 'end'
+            // nameTextStyle: {
+            //     fontSize: 11
+            // },
+            // nameGap: 20, // 与轴的距离
             axisLabel: {
                 fontSize: 11,
                 color: colors["--Colors-Use-Neutral-Text-3-Secondary"]
@@ -349,6 +437,9 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         ],
         series: [
             {
+                ...seriesBase,
+                name: "高质模型",
+                xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
                         return {
@@ -363,15 +454,12 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
                             symbolSize: intelligentLength === 1 ? symbolSizeByDetails : 0
                         }
                     }
-                }), // 高质
-                animation: false,
-                type: "line",
-                smooth: true,
-                lineStyle: {
-                    width: 1
-                }
+                }) // 高质
             },
             {
+                ...seriesBase,
+                name: "轻量模型",
+                xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
                         return {
@@ -386,16 +474,11 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
                             symbolSize: lightweightLength === 1 ? symbolSizeByDetails : 0
                         }
                     }
-                }), // 轻量
-                animation: false,
-                type: "line",
-                smooth: true,
-                lineStyle: {
-                    width: 1
-                }
+                }) // 轻量
             }
         ]
     }
+    console.log("getPressureDetailsOption-option", option)
     return option
 }
 //#endregion
@@ -404,6 +487,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
 export interface ResponseSpeedEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
+        xData: Record<AIModelTypeEnum, number[]>
     }
 }
 export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.memo((props) => {
@@ -425,20 +509,30 @@ export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.m
         },
         {wait: 500, leading: true}
     ).run
-    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 72, height: 24}} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{width: 420, height: 160}} />
 })
 
 const getResponseSpeedOption = (
     dataEcharts: ResponseSpeedEchartsProps["dataEcharts"],
     colors: Record<string, string>
 ): EChartsOption => {
-    const {data} = dataEcharts
+    const {data, xData} = dataEcharts
     const intelligent = getIntelligent({data: data.intelligent, colors})
     const intelligentLength = data.intelligent?.length
 
     const lightweight = getLightweight({data: data.lightweight, colors})
 
     const lightweightLength = data.lightweight.length
+
+    const seriesBase = {
+        symbolSize: 0,
+        animation: false,
+        type: "line",
+        smooth: true,
+        emphasis: {
+            focus: "series"
+        }
+    }
     const option: EChartsOption = {
         grid: {
             top: 4, // 上边距
@@ -446,15 +540,22 @@ const getResponseSpeedOption = (
             bottom: 4, // 下边距
             left: 0 // 左边距
         },
-        xAxis: {
-            show: false,
-            type: "category"
-        },
+        xAxis: [
+            getXAxis({
+                xData: xData.intelligent
+            }),
+            getXAxis({
+                xData: xData.lightweight
+            })
+        ],
         yAxis: {
             show: false
         },
         series: [
             {
+                ...seriesBase,
+                name: "高质模型",
+                xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
                         return {
@@ -481,6 +582,9 @@ const getResponseSpeedOption = (
                 }
             },
             {
+                ...seriesBase,
+                name: "轻量模型",
+                xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
                         return {
@@ -494,10 +598,6 @@ const getResponseSpeedOption = (
                         }
                     }
                 }), // 轻量
-                symbol: "circle",
-                animation: false,
-                type: "line",
-                smooth: true,
                 lineStyle: {
                     width: 1,
                     color: lightweight.color
@@ -514,7 +614,7 @@ const getResponseSpeedOption = (
 export interface AICostDetailsEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
-        xData: number[]
+        xData: Record<AIModelTypeEnum, number[]>
     }
 }
 export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.memo((props) => {
@@ -549,59 +649,52 @@ const getResponseSpeedDetailsOption = (
     const lightweight = getLightweight({data: data.lightweight, colors})
 
     const intelligentLength = data.lightweight.length
+
+    const seriesBase = {
+        symbolSize: 0,
+        animation: false,
+        type: "line",
+        smooth: true,
+        emphasis: {
+            focus: "series"
+        }
+    }
     const option: EChartsOption = {
         grid: {
             left: 24, // 留足空间给 y 轴文字
-            right: 12,
+            right: 14,
             bottom: 12, // 留足空间给 x 轴文字
             top: 12, // 留足空间给标题
             containLabel: true // 确保轴标签在 grid 内
         },
         tooltip: {
-            trigger: "axis",
-            formatter: (params) => {
-                let result = formatTimestamp(Number(params[0]?.name)) + "<br/>"
-                params.forEach((param) => {
-                    result += `${param.marker} ${param?.data?.modelName}: ${param.value}ms<br/>`
-                })
-                return result
+            trigger: "none",
+            axisPointer: {
+                type: "cross"
             }
         },
-        xAxis: {
-            type: "category",
-            data: xData,
-            axisLabel: {
-                rotate: 0,
-                fontSize: 11,
-                color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
-                formatter: (v) => moment.unix(v).format("HH:mm")
-            },
-            axisLine: {
-                lineStyle: {
-                    color: colors["--Colors-Use-Neutral-Border"]
-                }
-            },
-            splitLine: {
-                show: true,
-                lineStyle: {
-                    type: "dashed",
-                    color: colors["--Colors-Use-Neutral-Border"]
-                }
-            },
-            // 隐藏刻度线
-            axisTick: {
-                show: false // 不显示刻度线
-            },
-            boundaryGap: false
-        },
+        xAxis: [
+            getDetailsXAxis({
+                xData: xData.intelligent,
+                colors,
+                type: AIModelTypeEnum.TierIntelligent,
+                valueFormatter: (v: number) => `${v}ms`
+            }),
+            getDetailsXAxis({
+                xData: xData.lightweight,
+                colors,
+                type: AIModelTypeEnum.TierLightweight,
+                valueFormatter: (v: number) => `${v}ms`
+            })
+        ],
         yAxis: {
             type: "value",
-            name: "延迟(ms)",
-            nameLocation: "end", // 'start' | 'middle' | 'end'
-            nameTextStyle: {
-                fontSize: 11
-            },
-            nameGap: 20, // 与轴的距离
+            // name: "延迟(ms)",
+            // nameLocation: "end", // 'start' | 'middle' | 'end'
+            // nameTextStyle: {
+            //     fontSize: 11
+            // },
+            // nameGap: 20, // 与轴的距离
             axisLabel: {
                 fontSize: 11,
                 color: colors["--Colors-Use-Neutral-Text-3-Secondary"]
@@ -615,6 +708,9 @@ const getResponseSpeedDetailsOption = (
         },
         series: [
             {
+                ...seriesBase,
+                name: "高质模型",
+                xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
                         return {
@@ -630,10 +726,6 @@ const getResponseSpeedDetailsOption = (
                         }
                     }
                 }), // 高质
-                symbolSize: 0,
-                animation: false,
-                type: "line",
-                smooth: true,
                 lineStyle: {
                     width: 1,
                     color: intelligent.color
@@ -643,6 +735,9 @@ const getResponseSpeedDetailsOption = (
                 }
             },
             {
+                ...seriesBase,
+                name: "轻量模型",
+                xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
                         return {
@@ -658,10 +753,6 @@ const getResponseSpeedDetailsOption = (
                         }
                     }
                 }), // 轻量
-                symbolSize: 0,
-                animation: false,
-                type: "line",
-                smooth: true,
                 lineStyle: {
                     width: 1,
                     color: lightweight.color
