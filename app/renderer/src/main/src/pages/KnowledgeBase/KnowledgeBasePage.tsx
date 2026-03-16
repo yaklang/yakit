@@ -4,12 +4,11 @@ import {useAsyncEffect, useDebounceFn, useInViewport, useRequest, useSafeState, 
 
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import AllInstallPlugins from "./compoment/AllInstallPlugins"
-import {failed, info} from "@/utils/notification"
-import {randomString} from "@/utils/randomUtil"
+import {failed} from "@/utils/notification"
 
 import KnowledgeBaseContent from "./compoment/KnowledgeBaseContent"
 
-import {compareKnowledgeBaseChangeList, exclude, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChangeList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -21,6 +20,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {KnowledgeBaseTableHeaderProps} from "./compoment/KnowledgeBaseTableHeader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {isForcedSetAIModal} from "../ai-agent/aiModelList/utils"
+import {useCheckKnowledgePlugin} from "./hooks/useCheckKnowledgePlugin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -40,54 +40,16 @@ const KnowledgeBase: FC = () => {
         previousKnowledgeBases
     } = useKnowledgeBase()
 
-    const [installPlug, setInstallPlug] = useSafeState(false)
     const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
+    const {
+        installPlug,
+        loading: binariesToInstallLoading,
+        ThirdPartyBinaryRunAsync,
+        setInstallPlug,
+        binariesToInstall
+    } = useCheckKnowledgePlugin()
 
     const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
-
-    // 拉取还没安装的 binaries
-    const {
-        data: binariesToInstall,
-        loading,
-        refreshAsync: binariesToInstallRefreshAsync
-    } = useRequest(
-        async () => {
-            const result = await ipcRenderer.invoke("ListThirdPartyBinary", {
-                Pagination: {
-                    Limit: 999
-                }
-            })
-            const binariesList =
-                result?.Binaries?.map((it) => ({
-                    Name: it?.Name,
-                    InstallPath: it?.InstallPath,
-                    installToken: randomString(50),
-                    Description: it.Description
-                })) ?? []
-            const resultList = targetInstallList
-                .map((name) => binariesList.find((it) => it.Name === name))
-                .filter((v) => v !== undefined)
-            return resultList
-        },
-        {
-            onSuccess: (result) => {
-                const resultList = targetInstallList
-                    .map((name) => result.find((it) => it.Name === name && !it.InstallPath))
-                    .filter((v) => v !== undefined)
-
-                const filteredInstall = resultList.filter((item) => !exclude.includes(item.Name))
-                if (filteredInstall?.length !== 0) {
-                    setInstallPlug(true)
-                } else {
-                    setInstallPlug(false)
-                }
-            },
-            onError: (err) => {
-                failed(`获取插件失败: ${err}`)
-            },
-            manual: true
-        }
-    )
 
     // 获取数据库侧边栏是否存在数据
     const {
@@ -147,7 +109,7 @@ const KnowledgeBase: FC = () => {
     }, [existsKnowledgeBase])
 
     useAsyncEffect(async () => {
-        if (!installPlug && !loading) {
+        if (!installPlug && !binariesToInstallLoading) {
             try {
                 const res = await existsKnowledgeBaseAsync()
                 const initKnowledgeBase =
@@ -163,7 +125,7 @@ const KnowledgeBase: FC = () => {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [installPlug, loading])
+    }, [installPlug, binariesToInstallLoading])
 
     useEffect(() => {
         const FirstknowledgeBaseID = knowledgeBases?.find((item) => item.IsImported === false)?.ID
@@ -193,7 +155,7 @@ const KnowledgeBase: FC = () => {
     }, [])
 
     const refRef = useRef<HTMLDivElement>(null)
-    const [aiModelOptions, setAIModelOptions] = useSafeState<string>("")
+    const [_, setAIModelOptions] = useSafeState<string>("")
     const [inViewport = true] = useInViewport(refRef)
 
     // getAIModelListOption mirror AIModelSelect trigger
@@ -213,7 +175,7 @@ const KnowledgeBase: FC = () => {
     useAsyncEffect(async () => {
         if (inViewport) {
             try {
-                await binariesToInstallRefreshAsync()
+                await ThirdPartyBinaryRunAsync()
             } catch (error) {
                 failed(error + "")
             }
@@ -226,13 +188,13 @@ const KnowledgeBase: FC = () => {
     const knowledgeBaseEntrance = useMemo(() => {
         switch (true) {
             // 缺失插件时展示需下载插件页面
-            case installPlug:
+            case installPlug && !knowledgeBases?.length:
                 return (
-                    <YakitSpin spinning={loading || existsKnowledgeLoading}>
+                    <YakitSpin spinning={binariesToInstallLoading || existsKnowledgeLoading}>
                         <AllInstallPlugins
                             onInstallPlug={setInstallPlug}
                             binariesToInstall={binariesToInstall}
-                            binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
+                            binariesToInstallRefreshAsync={ThirdPartyBinaryRunAsync}
                         />
                     </YakitSpin>
                 )
@@ -248,11 +210,9 @@ const KnowledgeBase: FC = () => {
                         previousKnowledgeBases={previousKnowledgeBases}
                         editKnowledgeBase={editKnowledgeBase}
                         clearAll={clearAll}
-                        binariesToInstall={binariesToInstall}
                         apiRef={apiRef}
                         refreshAsync={refreshAsync}
                         loading={existsKnowledgeLoading}
-                        binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
                         inViewport={inViewport}
                         streamsRef={streamsRef}
                     />
@@ -261,7 +221,7 @@ const KnowledgeBase: FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         installPlug,
-        loading,
+        binariesToInstallLoading,
         existsKnowledgeLoading,
         binariesToInstall,
         existsKnowledgeBase?.length,

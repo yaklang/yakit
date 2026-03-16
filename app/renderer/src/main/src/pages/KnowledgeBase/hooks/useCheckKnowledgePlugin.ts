@@ -1,6 +1,5 @@
 import {useRequest} from "ahooks"
 import {useSafeState} from "ahooks"
-import {info, failed} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {targetInstallList, exclude} from "../utils"
 
@@ -51,6 +50,7 @@ export const useCheckKnowledgePlugin = () => {
     )
 
     return {
+        setInstallPlug,
         installPlug,
         binariesToInstall: data,
         loading,

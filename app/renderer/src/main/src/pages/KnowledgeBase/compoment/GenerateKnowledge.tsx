@@ -15,6 +15,8 @@ import moment from "moment"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {KnowledgeBaseEntry} from "../TKnowledgeBase"
+import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
+import {InstallPluginModal} from "./InstallPluginModal/InstallPluginModal"
 
 interface GenerateKnowledgeProps {
     generateKnowledgeDataList?: Array<Entity & KnowledgeBaseEntry>
@@ -118,6 +120,26 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
         }
     })
 
+    const {refresh: binariesToInstallRefresh, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+    const createKnowledgeBase = useMemoizedFn(async (callback?: () => void) => {
+        try {
+            const result = await ThirdPartyBinaryRunAsync()
+            const targetInstallPlugins = reseultKnowledgePlugin(result)
+
+            if (targetInstallPlugins) {
+                InstallPluginModal({
+                    // getContainer: "#main-operator-page-body-ai-repository",
+                    callback: () => {
+                        binariesToInstallRefresh()
+                    }
+                })
+                return
+            }
+
+            callback?.()
+        } catch (error) {}
+    })
+
     return (
         <div style={{height: 24}}>
             <YakitDropdownMenu
@@ -128,10 +150,12 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
                         setDropdownMenuVisible(false)
                         switch (key) {
                             case "oneClickGeneration":
-                                onGenerateKnowledge()
+                                createKnowledgeBase(onGenerateKnowledge)
+
                                 break
                             case "supplementaryConditions":
-                                setAdditionalConditionsVisible(true)
+                                createKnowledgeBase(() => setAdditionalConditionsVisible(true))
+
                                 break
                             default:
                                 break
