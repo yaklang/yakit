@@ -501,7 +501,6 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
             }
         ]
     }
-    console.log("getPressureDetailsOption-option", option)
     return option
 }
 //#endregion
