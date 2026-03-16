@@ -137,7 +137,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
         // 控制下拉菜单
         const [openDrawer, setOpenDrawer] = useState<boolean>(true)
-        const [knowledgeInstallPlug, setKnowledgeInstallPlug] = useState<boolean>(false)
 
         const lineStartRef = useRef<HTMLDivElement>(null)
         const welcomeRef = useRef<HTMLDivElement>(null)
@@ -376,14 +375,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 {
                     label: "知识库",
                     key: "knowledge",
-                    children: (
-                        <KnowledgeSidebarList
-                            ref={knowledgeSidebarListRef}
-                            api={api}
-                            streams={streams}
-                            onInstallPlugChange={setKnowledgeInstallPlug}
-                        />
-                    ),
+                    children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
                     extra: [
                         <YakitButton
                             key='import'
@@ -453,7 +445,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 }
             ]
-        }, [api, streams, knowledgeInstallPlug, installPlug])
+        }, [api, streams, installPlug])
 
         return (
             <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>

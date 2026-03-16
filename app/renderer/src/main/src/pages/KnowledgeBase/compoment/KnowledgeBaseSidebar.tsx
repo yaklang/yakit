@@ -55,6 +55,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OutlineBotIcon} from "@/assets/icon/colors"
 import {convertBodyLength} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
 
 const {YakitPanel} = YakitCollapse
 
@@ -76,9 +77,7 @@ export interface TKnowledgeBaseSidebarProps {
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
     streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
     setOpenQA: Dispatch<SetStateAction<boolean>>
-    binariesToInstall?: BinaryInfo[]
     refreshAsync?: () => Promise<CreateKnowledgeBaseData[] | undefined>
-    binariesToInstallRefreshAsync?: () => Promise<any[]>
     addMode: string[]
     setAddMode: Dispatch<SetStateAction<string[]>>
     handleValidateAIModelUsable: () => Promise<void>
@@ -97,9 +96,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     setKnowledgeBaseID,
     api,
     setOpenQA,
-    binariesToInstall,
     refreshAsync,
-    binariesToInstallRefreshAsync,
     addMode,
     setAddMode,
     handleValidateAIModelUsable,
@@ -116,6 +113,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
     const [eachProgress, setEachProgress] = useSafeState<Record<string, number>>({})
     const [installTokens, setInstallTokens] = useSafeState<string[]>([])
+
+    const {ThirdPartyBinaryRunAsync: binariesToInstallRefreshAsync, binariesToInstall} = useCheckKnowledgePlugin()
 
     const [clearAllVisible, setClearAllVisible] = useSafeState(false)
     const [clearAllContent, setClearAllContent] = useSafeState({

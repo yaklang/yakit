@@ -6,7 +6,6 @@ import {useMemoizedFn, useSafeState} from "ahooks"
 import {PlusIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {createMenuList} from "../utils"
 import {KnowledgeBaseFormModal} from "./KnowledgeBaseFormModal"
 import {Form} from "antd"
 import {ImportModal} from "./ImportModal"
@@ -19,7 +18,7 @@ const AddKnowledgenBaseDropdownMenu: FC<{
 }> = ({setKnowledgeBaseID, setAddMode}) => {
     const [form] = Form.useForm()
 
-    const {installPlug, refresh: binariesToInstallRefresh, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+    const {refresh: binariesToInstallRefresh, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
 
     const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
     const [visible, setVisible] = useSafeState(false)

@@ -1,6 +1,6 @@
 import {forwardRef, Ref, useEffect, useImperativeHandle, useRef} from "react"
 
-import {useAsyncEffect, useDebounceEffect, useInViewport, useMemoizedFn, useRequest, useSafeState} from "ahooks"
+import {useAsyncEffect, useDebounceEffect, useInViewport, useMemoizedFn, useSafeState} from "ahooks"
 
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {
@@ -8,8 +8,7 @@ import {
     BuildingKnowledgeBaseEntry,
     insertModaOptions,
     prioritizeProcessingItems,
-    targetIcon,
-    targetInstallList
+    targetIcon
 } from "@/pages/KnowledgeBase/utils"
 import {OutlineLoadingIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {OperateKnowledgenBaseItem} from "@/pages/KnowledgeBase/compoment/OperateKnowledgenBaseItem"
@@ -18,7 +17,7 @@ import classNames from "classnames"
 import styles from "./knowledgeSidebarList.module.scss"
 import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import {failed, info} from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteDetailDrawer} from "@/pages/KnowledgeBase/compoment/PluginExecuteDetailDrawer"
 import {KnowledgeBaseTableHeaderProps} from "@/pages/KnowledgeBase/compoment/KnowledgeBaseTableHeader"
@@ -30,13 +29,11 @@ import {Form} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import DragKnowledge from "./DragKnowledge/DragKnowledge"
-
-const {ipcRenderer} = window.require("electron")
+import {useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
 
 interface KnowledgeSidebarListProps {
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
     streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
-    onInstallPlugChange?: (v: boolean) => void
 }
 
 export interface KnowledgeModalRef {
@@ -44,12 +41,7 @@ export interface KnowledgeModalRef {
     openImport: () => void
 }
 
-const KnowledgeSidebarList = (
-    {api, streams, onInstallPlugChange}: KnowledgeSidebarListProps,
-    ref: Ref<KnowledgeModalRef>
-) => {
-    const [installPlug, setInstallPlug] = useSafeState(false)
-
+const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Ref<KnowledgeModalRef>) => {
     const {knowledgeBases, editKnowledgeBase} = useKnowledgeBase()
     const refRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(refRef)
@@ -61,6 +53,8 @@ const KnowledgeSidebarList = (
         KnowledgeBaseTableHeaderProps["knowledgeBaseItems"]
     >({} as KnowledgeBaseTableHeaderProps["knowledgeBaseItems"])
 
+    const {installPlug, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+
     const [buildingDrawer, setBuildingDrawer] = useSafeState<{
         visible: boolean
         streamToken?: string
@@ -70,49 +64,6 @@ const KnowledgeSidebarList = (
         streamToken: "",
         type: ""
     })
-
-    // 拉取还没安装的 binaries
-    const {refreshAsync: binariesToInstallRefreshAsync} = useRequest(
-        async () => {
-            const result = await ipcRenderer.invoke("ListThirdPartyBinary", {
-                Pagination: {
-                    Limit: 999
-                }
-            })
-            const binariesList =
-                result?.Binaries?.map((it) => ({
-                    Name: it?.Name,
-                    InstallPath: it?.InstallPath,
-                    installToken: randomString(50),
-                    Description: it.Description
-                })) ?? []
-            const resultList = targetInstallList
-                .map((name) => binariesList.find((it) => it.Name === name))
-                .filter((v) => v !== undefined)
-            return resultList
-        },
-        {
-            onSuccess: (result) => {
-                const resultList = targetInstallList
-                    .map((name) => result.find((it) => it.Name === name && !it.InstallPath))
-                    .filter((v) => v !== undefined)
-                const exclude = ["llama-server", "model-Qwen3-Embedding-0.6B-Q4"]
-
-                const filteredInstall = resultList.filter((item) => !exclude.includes(item.Name))
-                if (filteredInstall.length !== 0) {
-                    setInstallPlug(true)
-                    onInstallPlugChange?.(true)
-                } else {
-                    setInstallPlug(false)
-                    onInstallPlugChange?.(false)
-                }
-            },
-            manual: true,
-            onError: (err) => {
-                failed(`获取插件失败: ${err}`)
-            }
-        }
-    )
 
     const onCloseViewBuildProcess = useMemoizedFn(() => {
         setBuildingDrawer({visible: false, streamToken: "", type: ""})
@@ -311,7 +262,7 @@ const KnowledgeSidebarList = (
     useAsyncEffect(async () => {
         if (inViewport) {
             try {
-                await binariesToInstallRefreshAsync()
+                await ThirdPartyBinaryRunAsync()
             } catch (error) {
                 failed(error + "")
             }

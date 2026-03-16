@@ -93,10 +93,8 @@ interface KnowledgeBaseContentProps {
     previousKnowledgeBases: KnowledgeBaseItem[] | null
     editKnowledgeBase: (id: string, data: Partial<KnowledgeBaseItem>) => void
     clearAll: () => void
-    binariesToInstall: BinaryInfo[] | undefined
     apiRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["api"] | undefined>
     refreshAsync: () => Promise<CreateKnowledgeBaseData[] | undefined>
-    binariesToInstallRefreshAsync?: () => Promise<any[]>
     inViewport: boolean
     streamsRef: React.MutableRefObject<KnowledgeBaseTableHeaderProps["streams"] | undefined>
     loading: boolean
@@ -118,16 +116,14 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         previousKnowledgeBases,
         editKnowledgeBase,
         clearAll,
-        binariesToInstall,
         apiRef,
         refreshAsync,
-        binariesToInstallRefreshAsync,
         inViewport,
         loading
     } = props
     const [showFreeChat, setShowFreeChat] = useSafeState(false)
     const [streams, api] = useMultipleHoldGRPCStream()
-    const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
+    const {refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
 
     const [addMode, setAddMode] = useSafeState<string[]>(["manual"])
     const [isAIModelAvailable, setIsAIModelAvailable] = useSafeState(false)
@@ -690,9 +686,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         api={api}
                         streams={streams}
                         setOpenQA={setShowFreeChat}
-                        binariesToInstall={binariesToInstall}
                         refreshAsync={refreshAsync}
-                        binariesToInstallRefreshAsync={binariesToInstallRefreshAsync}
                         setAddMode={setAddMode}
                         addMode={addMode}
                         handleValidateAIModelUsable={handleValidateAIModelUsable}
