@@ -51,7 +51,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {JSONParseLog} from "@/utils/tool"
 import {HTTPFlowCodec} from "@/utils/encodec"
-import {YakitMenu} from "./yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu, YakitMenuItemType} from "./yakitUI/YakitMenu/YakitMenu"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -964,11 +964,14 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         )
     })
 
-    const getContextMenu = useMemo(()=>{
-        return [{
-            key: "export",
-            label: t("YakitButton.export"),
-        }]
+    const getContextMenu: YakitMenuItemType[] = useMemo(()=>{
+        return [
+            {
+                key: "export",
+                label: t("YakitButton.export"),
+            },
+            {label: t("HTTPFlowDetail.batchDeletion"), key: "delete", type: "danger"}
+        ]
     },[])
 
     const onMultipleClick = useMemoizedFn((key: string) => {
@@ -976,6 +979,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             case "export":
                 exportMITMRuleExtractedData()
                 break
+            case "delete":
+                httpFlowTableRef.current?.onDelete()
         }
         setPopoverVisible(false)
     })
