@@ -528,7 +528,7 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
     )
 })
 
-const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
+export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
     const {visible, setVisible, onSave, initFormVal, updateIndex} = props
     const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const [form] = Form.useForm()
