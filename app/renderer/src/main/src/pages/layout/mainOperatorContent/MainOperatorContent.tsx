@@ -392,6 +392,14 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
     if (isMemfit()) {
         return [
             {
+                routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+                verbose: "首页",
+                menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                route: YakitRoute.NewHome,
+                singleNode: true,
+                multipleNode: []
+            },
+            {
                 routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
                 verbose: "AIAgent",
                 menuName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
@@ -513,7 +521,8 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
 // 软件初始化时的默认当前打开页面的key
 const getInitActiveTabKey = (softMode: SoftMode) => {
     if (isMemfit()) {
-        return YakitRoute.AI_Agent
+        return YakitRoute.NewHome
+        // return YakitRoute.AI_Agent
     }
 
     if (isIRify()) {

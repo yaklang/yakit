@@ -525,7 +525,7 @@ export const NoScrollRoutes: YakitRoute[] = [
 /** 通过版本获取一级tab固定展示tab  */
 export const getDefaultFixedTabs = (softMode: SoftMode) => {
     if (isMemfit()) {
-        return [YakitRoute.AI_Agent, YakitRoute.AI_REPOSITORY]
+        return [YakitRoute.AI_Agent, YakitRoute.AI_REPOSITORY, YakitRoute.NewHome]
     }
     if (isIRify()) {
         return [YakitRoute.NewHome]
