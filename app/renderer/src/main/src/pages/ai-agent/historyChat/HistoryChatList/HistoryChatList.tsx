@@ -54,11 +54,26 @@ const getChatGroupKey = (timestamp?: number | string): ChatGroupKey => {
     return "thirtyDays"
 }
 
+const getNextActiveChat = (chats: AIChatInfo[], currentIndex: number) => {
+    const prev = chats[currentIndex - 1]
+    const next = chats[currentIndex + 1]
+    return prev ?? next
+}
+
+const updateChatTitle = (list: AIChatInfo[], info: AIChatInfo) => {
+    return list.map((item) => {
+        if (item.SessionID === info.SessionID) {
+            return info
+        }
+        return item
+    })
+}
+
 const HistoryChatList: FC<{
     search: string
 }> = ({search}) => {
     const {chats, activeChat} = useAIAgentStore()
-    const {setChats, setActiveChat, loadHistoryData} = useAIAgentDispatcher()
+    const {setChats, setActiveChat, loadHistoryData, getChats} = useAIAgentDispatcher()
     const listRef = useRef<HTMLDivElement | null>(null)
     const chatTotalRef = useRef(0)
     const editInfo = useRef<AIChatInfo>()
@@ -71,13 +86,13 @@ const HistoryChatList: FC<{
 
     const {loading} = useInfiniteScroll(
         async () => {
-            const total = await loadHistoryData?.(true)
+            const total = await loadHistoryData?.()
             chatTotalRef.current = total ?? 0
             return {list: []}
         },
         {
             target: listRef,
-            isNoMore: () => chats.length >= chatTotalRef.current,
+            isNoMore: () => (getChats?.().length || 0) >= chatTotalRef.current,
             threshold: 100
         }
     )
@@ -109,19 +124,12 @@ const HistoryChatList: FC<{
             list: groupMap[item.key]
         })).filter((item) => item.list.length > 0)
     }, [showHistory])
-    
+
     const handleCallbackEditName = useMemoizedFn(async (result: boolean, info?: AIChatInfo) => {
         if (result && info) {
             try {
                 await grpcUpdateAISessionTitle({SessionID: info.SessionID, Title: info.Title})
-                setChats?.((old) => {
-                    return old.map((item) => {
-                        if (item.SessionID === info.SessionID) {
-                            return info
-                        }
-                        return item
-                    })
-                })
+                setChats?.((old) => updateChatTitle(old, info))
             } catch (error) {
                 yakitNotify("error", "修改对话标题失败:" + error)
             }
@@ -146,9 +154,7 @@ const HistoryChatList: FC<{
         if (newChats.length === 0) {
             onNewChat()
         } else {
-            const prev = chats[findIndex - 1]
-            const next = chats[findIndex + 1]
-            active = prev ?? next
+            active = getNextActiveChat(chats, findIndex)
         }
 
         setChats && setChats(newChats)
