@@ -20,6 +20,7 @@ const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
     jumpDataProjectHighLight: (direction: "next" | "prev") => void
+    onDelete: () => void
 }
 export interface HTTPFlowExtractedDataTableProp {
     ref?: React.ForwardedRef<HTTPFlowExtractedDataTableRefProps>
@@ -87,11 +88,29 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         trigger: "onSetCurrId"
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+
+    const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlowExtractedData[], checked: boolean) => {
+        setIsAllSelect(checked)
+        setSelectedRowKeys(newSelectedRowKeys)
+    }
+
+    const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlowExtractedData) => {
+        if (c) {
+            setSelectedRowKeys([...selectedRowKeys, keys])
+        } else {
+            setIsAllSelect(false)
+            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
+            setSelectedRowKeys(newSelectedRowKeys)
+        }
+    })
 
     useImperativeHandle(
         ref,
         () => ({
-            jumpDataProjectHighLight
+            jumpDataProjectHighLight,
+            onDelete
         }),
         []
     )
@@ -173,6 +192,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 AnalyzedIds: props.analyzedIds
             }
         }
+        setIsAllSelect(false)
+        setSelectedRowKeys([])
         setParams(newParams)
         update(1, 10, newParams.Filter)
     })
@@ -256,15 +277,6 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                                 value={tagsFilter}
                                 onSelect={(v, item) => {
                                     if (Array.isArray(v)) {
-                                        // const newParams = {
-                                        //     ...params,
-                                        //     Filter: {
-                                        //         TraceID: [props.hiddenIndex],
-                                        //         AnalyzedIds: props.analyzedIds,
-                                        //         RuleVerbose: v
-                                        //     }
-                                        // }
-                                        // setParams(newParams)
                                         setTagsFilter(v)
                                     }
                                 }}
@@ -289,7 +301,16 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                     <div className={styles["table-rule-content"]}>
                         <Text
                             ellipsis={{
-                                tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
+                                tooltip: (
+                                    <div
+                                        style={{
+                                            maxHeight: 300,
+                                            overflowY: "auto"
+                                        }}
+                                    >
+                                        {i.Data}
+                                    </div>
+                                )
                             }}
                         >
                             {i.Data}
@@ -320,13 +341,33 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         })
     })
 
+    const onDelete = useMemoizedFn((i?: number) => {
+        const Ids: number[] = i ? [i] : selectedRowKeys.map((item) => parseInt(item))
+        ipcRenderer
+            .invoke("DeleteMITMRuleExtractedData", {Ids})
+            .then(() => {
+                yakitNotify("success", t("HTTPFlowExtractedDataTable.deleteSuccess"))
+                resetUpdate()
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `${e}`)
+            })
+    })
+
     const onRowContextMenu = (rowData: HTTPFlowExtractedData, _, event: React.MouseEvent) => {
         showByRightContext(
             {
                 width: 180,
                 data: [
-                    {label: "定位", key: "location"},
-                    {label: "删除", key: "delete", type: "danger"}
+                    {
+                        label: t("HTTPFlowExtractedDataTable.locate"),
+                        key: "location"
+                    },
+                    {
+                        label: t("YakitButton.delete"),
+                        key: "delete",
+                        type: "danger"
+                    }
                 ],
                 onClick: ({key}) => {
                     switch (key) {
@@ -334,6 +375,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                             onLocation(rowData)
                             return
                         case "delete":
+                            onDelete(parseInt(rowData.Id + ""))
                             return
                     }
                 }
@@ -355,6 +397,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             }
         }
         setParams(newParams)
+        setIsAllSelect(false)
+        setSelectedRowKeys([])
         update(1, 10, newParams.Filter)
     }).run
     return (
@@ -369,6 +413,13 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 isRefresh={isRefresh}
                 loading={loading}
                 onRowContextMenu={onRowContextMenu}
+                rowSelection={{
+                    isAll: isAllSelect,
+                    type: "checkbox",
+                    selectedRowKeys,
+                    onSelectAll,
+                    onChangeCheckboxSingle: onSelectChange
+                }}
                 pagination={{
                     page: pagination.Page,
                     limit: pagination.Limit,
