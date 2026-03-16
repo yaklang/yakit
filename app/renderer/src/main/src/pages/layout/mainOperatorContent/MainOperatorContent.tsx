@@ -3188,6 +3188,11 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
     const {softMode, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory, onSaveHistory} =
         props
+    const pageRenderListRef = useRef<Map<string, boolean>>(new Map<string, boolean>(new Map().set(getInitPageCache(softMode)[0].routeKey, true)))
+    const pageRenderList = useMemo(() => {
+        pageRenderListRef.current.set(currentTabKey, true)
+        return pageRenderListRef.current
+    }, [currentTabKey])
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -3205,7 +3210,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                         className={styles["page-body"]}
                         id={"main-operator-page-body-" + pageItem.routeKey}
                     >
-                        {pageItem.singleNode ? (
+                        {pageItem.singleNode ? pageRenderList.get(pageItem.routeKey) && (
                             <React.Suspense fallback={<>loading page ...</>}>
                                 <PageItem routeKey={pageItem.route} params={pageItem.pageParams} />
                             </React.Suspense>
