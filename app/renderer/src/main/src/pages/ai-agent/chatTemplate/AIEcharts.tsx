@@ -102,8 +102,7 @@ const getDetailsXAxis = (data: {
                     }:${params?.seriesData?.length ? valueFormatter?.(params.seriesData[0].data?.value) : ""}`
                 }
             }
-        },
-        boundaryGap: false
+        }
     }
     return xAxis
 }
@@ -116,9 +115,7 @@ const getXAxis = (data: {xData: number[]}) => {
         data: xData,
         axisLine: {
             show: false
-        },
-
-        boundaryGap: false
+        }
     }
     return xAxis
 }
@@ -362,6 +359,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
             focus: "series"
         }
     }
+    const max = Math.max(intelligent.yMax, lightweight.yMax)
     const option: EChartsOption = {
         grid: {
             left: 24, // 留足空间给 y 轴文字
@@ -392,15 +390,15 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         ],
         yAxis: {
             type: "value",
-            // name: "压力值 (k)",
-            // nameLocation: "end", // 'start' | 'middle' | 'end'
-            // nameTextStyle: {
-            //     fontSize: 11
-            // },
-            // nameGap: 20, // 与轴的距离
             axisLabel: {
                 fontSize: 11,
-                color: colors["--Colors-Use-Neutral-Text-3-Secondary"]
+                color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
+                formatter: (v: number) => {
+                    if (v >= max) {
+                        return "压力值"
+                    }
+                    return `${formatNumberUnits(v)}`
+                }
             },
             splitLine: {
                 lineStyle: {
@@ -475,6 +473,31 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
                         }
                     }
                 }) // 轻量
+            },
+            {
+                name: `阈值分割线 (${formatNumberUnits(threshold)})`,
+                type: "line",
+                markLine: {
+                    silent: true,
+                    symbol: "none",
+                    lineStyle: {
+                        color: colors["--Colors-Use-Error-Primary"],
+                        width: 1.5,
+                        type: "dashed"
+                    },
+                    label: {
+                        show: true,
+                        position: "start",
+                        fontSize: 11,
+                        color: colors["--Colors-Use-Error-Primary"],
+                        formatter: `限制 ${formatNumberUnits(threshold)}`
+                    },
+                    data: [
+                        {
+                            yAxis: 10240
+                        }
+                    ]
+                }
             }
         ]
     }
@@ -659,6 +682,7 @@ const getResponseSpeedDetailsOption = (
             focus: "series"
         }
     }
+    const max = Math.max(intelligent.yMax, lightweight.yMax)
     const option: EChartsOption = {
         grid: {
             left: 24, // 留足空间给 y 轴文字
@@ -689,15 +713,15 @@ const getResponseSpeedDetailsOption = (
         ],
         yAxis: {
             type: "value",
-            // name: "延迟(ms)",
-            // nameLocation: "end", // 'start' | 'middle' | 'end'
-            // nameTextStyle: {
-            //     fontSize: 11
-            // },
-            // nameGap: 20, // 与轴的距离
             axisLabel: {
                 fontSize: 11,
-                color: colors["--Colors-Use-Neutral-Text-3-Secondary"]
+                color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
+                formatter: (v: number) => {
+                    if (v >= max) {
+                        return "延迟(ms)"
+                    }
+                    return v
+                }
             },
             splitLine: {
                 lineStyle: {
