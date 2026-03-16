@@ -96,6 +96,12 @@
                     overflow: hidden;
                     word-break: break-all;
                 }
+
+                .tip {
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                    line-height: 16px;
+                    letter-spacing: 0.5px;
+                }
             }
             .intelligent {
                 color: var(--Colors-Use-Purple-Primary);

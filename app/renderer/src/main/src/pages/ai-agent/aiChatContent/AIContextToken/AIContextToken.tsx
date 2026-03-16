@@ -154,31 +154,19 @@ const AIContextToken: FC<{
             currentPressuresEcharts?.data?.vision?.length > 0
         )
     }, [currentPressuresEcharts.data])
-
-    const maxIntelligentPressure = useCreation(() => {
-        if (!!currentPressuresEcharts.data?.intelligent?.length) {
-            return Math.max(...currentPressuresEcharts.data.intelligent.map((item) => item.value))
-        }
-        return 0
-    }, [currentPressuresEcharts.data?.intelligent])
-    const maxLightweightPressure = useCreation(() => {
-        if (!!currentPressuresEcharts.data?.lightweight?.length) {
-            return Math.max(...currentPressuresEcharts.data.lightweight.map((item) => item.value))
-        }
-        return 0
-    }, [currentPressuresEcharts.data?.lightweight])
     return (
         <>
             {isShowPressure && (
                 <div className={styles["echarts-wrapper"]}>
                     <div className={styles["title"]}>
-                        <span className={styles["text"]}>上下文压力</span>
+                        <span className={styles["text"]}>
+                            上下文压力<span className={styles["tip"]}>(峰值)</span>
+                        </span>
                         {lastPressure.intelligent > 0 && (
                             <Tooltip title='高质模型'>
                                 <span
                                     className={classNames(styles["intelligent"], {
-                                        [styles["intelligent-height"]]:
-                                            lastPressure.intelligent > maxIntelligentPressure
+                                        [styles["intelligent-height"]]: lastPressure.intelligent > pressureThreshold
                                     })}
                                 >
                                     {formatNumberUnits(lastPressure.intelligent)}
@@ -189,8 +177,7 @@ const AIContextToken: FC<{
                             <Tooltip title='轻量模型'>
                                 <span
                                     className={classNames(styles["lightweight"], {
-                                        [styles["lightweight-height"]]:
-                                            lastPressure.lightweight > maxLightweightPressure
+                                        [styles["lightweight-height"]]: lastPressure.lightweight > pressureThreshold
                                     })}
                                 >
                                     {formatNumberUnits(lastPressure.lightweight)}
@@ -204,7 +191,9 @@ const AIContextToken: FC<{
             {isShowCost && (
                 <div className={styles["echarts-wrapper"]}>
                     <div className={styles["title"]}>
-                        <span className={styles["text"]}>响应速度</span>
+                        <span className={styles["text"]}>
+                            响应速度<span className={styles["tip"]}>(峰值)</span>
+                        </span>
                         <Tooltip title='高质模型'>
                             {lastFirstCost.intelligent > 0 && (
                                 <span
