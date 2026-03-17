@@ -87,11 +87,6 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 return theme === "dark" ? IrifyDarkEmptyPng : IrifyEmptyPng
             case "memfit":
                 return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
-            case "enterprise":
-            case "simple-enterprise":
-            case "yakit":
-                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
-
             default:
                 return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
         }

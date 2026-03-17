@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -13,23 +13,14 @@ import styles from "./ScreenRecorderPage.module.scss"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitRoute} from "@/enums/yakitRoute"
-
-import {fetchEnv} from "@/utils/envfile"
-import {useTheme} from "@/hook/useTheme"
-
-import screcorderEmpty from "./screcorderEmpty.png"
-import screcorderDarkEmpty from "./screcorderDarkEmpty.png"
-import IrifyScrecorderEmpty from "./IrifyscrecorderEmpty.png"
-import IrifyScrecorderDarkEmpty from "./IrifyScrecorderDarkEmpty.png"
-import MemfitScrecorderEmpty from "./MemfitScrecorderEmpty.png"
-import MemfitScrecorderDarkEmpty from "./MemfitScrecorderDarkEmpty.png"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 export interface ScreenRecorderPageProp {}
 
 const {ipcRenderer} = window.require("electron")
 
 export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
-    const {theme} = useTheme()
+    const screcorderEmptyImageTarget = useEmptyImage("screenRecording")
 
     const [available, setAvailable] = useState(false)
     const [refreshTrigger, setRefreshTrigger] = useState(false)
@@ -52,23 +43,6 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
     useEffect(() => {
         init()
     }, [])
-
-    const screcorderEmptyImageTarget = useMemo(() => {
-        switch (fetchEnv()) {
-            case "irify":
-            case "irify-enterprise":
-                return theme === "dark" ? IrifyScrecorderDarkEmpty : IrifyScrecorderEmpty
-            case "memfit":
-                return theme === "dark" ? MemfitScrecorderDarkEmpty : MemfitScrecorderEmpty
-            case "enterprise":
-            case "simple-enterprise":
-            case "yakit":
-                return theme === "dark" ? screcorderDarkEmpty : screcorderEmpty
-
-            default:
-                return theme === "dark" ? screcorderDarkEmpty : screcorderEmpty
-        }
-    }, [theme])
 
     return (
         <YakitSpin spinning={loading}>

@@ -31,11 +31,9 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
                 return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
             case "enterprise":
             case "simple-enterprise":
-            case "yakit":
-                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
 
             default:
-                break
+                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
         }
     }, [theme])
 

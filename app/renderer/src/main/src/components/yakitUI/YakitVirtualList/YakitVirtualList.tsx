@@ -23,9 +23,9 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {AuthorImg} from "@/pages/plugins/funcTemplate"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>) => {
     const {
@@ -136,7 +136,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
         return rowSelection?.isAll || (list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length)
     }, [rowSelection?.isAll, list.length, data.length, rowSelection?.selectedRowKeys?.length])
 
-    const onClickRowFun = useMemoizedFn((ele:T)=>{
+    const onClickRowFun = useMemoizedFn((ele: T) => {
         onClickRow?.(ele)
     })
     return (
@@ -200,9 +200,13 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                     >
                         <div ref={wrapperRef} className={styles["virtual-list-wrapper"]}>
                             {list.map((ele) => (
-                                <div className={classNames(styles["virtual-list-item"],{
-                                [styles["virtual-list-item-click"]]: !!onClickRow,
-                                }) } onClick={() => onClickRowFun(ele.data)} key={ele.data[renderKey] || ele.index}>
+                                <div
+                                    className={classNames(styles["virtual-list-item"], {
+                                        [styles["virtual-list-item-click"]]: !!onClickRow
+                                    })}
+                                    onClick={() => onClickRowFun(ele.data)}
+                                    key={ele.data[renderKey] || ele.index}
+                                >
                                     {columns.map((item, index) => {
                                         return (
                                             <div
@@ -267,6 +271,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
  */
 export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = React.memo((props) => {
     const {children, option = [], placement, filterOption, onSetValue} = props
+    const emptyImageTarget = useEmptyImage("search")
     const [selectKeys, setSelectKeys] = useControllableValue<string[]>(props, {
         defaultValue: []
     })
@@ -347,7 +352,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
                     </div>
                     {option.length > 0 && list.length === 0 && (
                         <YakitEmpty
-                            image={SearchResultEmpty}
+                            image={emptyImageTarget}
                             imageStyle={{margin: "24px auto 12px", width: 160}}
                             title='搜索结果“空”'
                         />

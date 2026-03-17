@@ -6,17 +6,13 @@ import {isEnpriTrace} from "@/utils/envfile"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineClouddownloadIcon,
-    OutlineDatabasebackupIcon,
     OutlineDocumentduplicateIcon,
-    OutlineExportIcon,
-    OutlineImportIcon,
     OutlinePencilaltIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import NoPermissions from "@/assets/no_permissions.png"
 import Login from "../../Login"
 import {
     SolidChevrondownIcon,
@@ -24,7 +20,6 @@ import {
     SolidDatabaseIcon,
     SolidDocumenttextIcon,
     SolidDotsverticalIcon,
-    SolidDragsortIcon,
     SolidFolderopenIcon
 } from "@/assets/icon/solid"
 import classNames from "classnames"
@@ -32,7 +27,6 @@ import {
     DataItem,
     DeleteConfirm,
     findFoldersById,
-    findItemByGroup,
     isIncludeSpecial,
     isPayloadOperator,
     UploadOrDownloadByPayloadGrpc
@@ -44,7 +38,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {failed, success, warn} from "@/utils/notification"
 import {apiDeleteOnlinePayloadList, apiGetOnlinePayloadGroup, apiRenameOnlinePayload} from "../utils"
 import emiter from "@/utils/eventBus/eventBus"
-const {ipcRenderer} = window.require("electron")
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 interface OnlineFolderComponentProps {
     folder: DataItem
@@ -688,6 +682,7 @@ interface OnlinePayloadGroupListProps {
 
 export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (props) => {
     const {userInfo, onQueryGroup, data, setData, selectItem, setSelectItem, setContentType, loading, showType} = props
+    const powerEmptyImage = useEmptyImage("power")
 
     const [loginShow, setLoginShow] = useState<boolean>(false)
     // 用于记录不展开的文件夹(默认展开)
@@ -711,7 +706,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
             onQueryGroup()
         }
     }, [isLoadList])
-    
+
     return (
         <div className={styles["new-payload-group-list"]}>
             {isLoadList ? (
@@ -767,7 +762,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
             ) : (
                 <>
                     <YakitEmpty
-                        image={<img src={NoPermissions} alt='' />}
+                        image={<img src={powerEmptyImage} alt='' />}
                         imageStyle={{width: 220, height: 150, margin: "auto"}}
                         title='暂无查看权限'
                         description='登录后即可查看'
