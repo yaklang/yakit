@@ -18,7 +18,7 @@ interface GuideFooterProps {
 export const GuideFooter = ({step = 1, onPrev, onNext, onFinish, stopList}: GuideFooterProps) => {
     return (
         <div className={styles.wrapper}>
-            {stopList?.[step - 1]?.images && <img src={stopList[step - 1].images} alt='' style={{width: "100%"}} />}
+            {stopList?.[step - 1]?.images && <video src={stopList[step - 1].images} autoPlay loop style={{width: "100%"}} />}
 
             <div className={styles.text}>
                 <div className={styles.title}>{stopList?.[step - 1]?.title}</div>
