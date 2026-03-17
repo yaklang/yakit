@@ -2248,10 +2248,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
 
         // 获取关闭页面后展示页面的信息
-        const {route, pluginId = 0, pluginName = ""} = getPageCache()[activeIndex]
-        const key = routeConvertKey(route, pluginName)
-        if (currentTabKey === routeConvertKey(data.route, data.pluginName)) {
-            setCurrentTabKey(key)
+        if (activeIndex !== -1) {
+            const {route, pluginId = 0, pluginName = ""} = getPageCache()[activeIndex]
+            const key = routeConvertKey(route, pluginName)
+            if (currentTabKey === routeConvertKey(data.route, data.pluginName)) {
+                setCurrentTabKey(key)
+            }
         }
         if (index === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
@@ -3188,7 +3190,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
     const {softMode, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory, onSaveHistory} =
         props
-    const pageRenderListRef = useRef<Map<string, boolean>>(new Map<string, boolean>(new Map().set(getInitPageCache(softMode)[0].routeKey, true)))
+    const pageRenderListRef = useRef<Map<string, boolean>>(new Map<string, boolean>(new Map().set(getInitPageCache(softMode)?.[0]?.routeKey, true)))
     const pageRenderList = useMemo(() => {
         pageRenderListRef.current.set(currentTabKey, true)
         return pageRenderListRef.current
