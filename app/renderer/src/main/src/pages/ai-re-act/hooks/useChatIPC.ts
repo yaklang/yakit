@@ -165,14 +165,14 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
-    //#region 时间线相关逻辑
+    // #region 时间线相关逻辑
     // 实时时间线
     const [reActTimelines, setReActTimelines] = useThrottleState<AIAgentGrpcApi.TimelineItem[]>([], {wait: 100})
 
     const handleResetReActTimelines = useMemoizedFn(() => {
         setReActTimelines([])
     })
-    //#endregion
+    // #endregion
 
     // #region 系统信息流展示相关逻辑
     /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
@@ -880,8 +880,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         setSwitchLoading(true)
         if (execute) {
             endAfterSession.current = session || "clear"
-            // 通过停止流接口后的end触发切换数据逻辑
-            ipcRenderer.invoke("cancel-ai-re-act", chatID.current).catch(() => {})
+            // 这里使用chatID是因为session是替换chatID的新值，所以需要先取消旧session的会话
+            onClose(chatID.current)
         } else {
             endAfterSession.current = ""
             // 直接切换数据逻辑
