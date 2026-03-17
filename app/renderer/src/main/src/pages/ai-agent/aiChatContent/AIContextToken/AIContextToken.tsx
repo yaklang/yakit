@@ -79,27 +79,6 @@ const AIContextToken: FC<{
     const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useCreation(() => {
         return getPressuresData(aiDataRef?.pressure, 100)
     }, [renderNumber, aiDataRef?.pressure])
-    // 最新的上下文压力
-    const lastPressure = useCreation(() => {
-        let pressure: Record<AIModelTypeEnum, number> = {
-            [AIModelTypeEnum.TierIntelligent]: 0,
-            [AIModelTypeEnum.TierLightweight]: 0,
-            [AIModelTypeEnum.TierVision]: 0
-        }
-        if (!!currentPressuresEcharts?.data?.intelligent?.length) {
-            const i = currentPressuresEcharts.data.intelligent.length
-            pressure.intelligent = currentPressuresEcharts?.data?.intelligent[i - 1].value || 0
-        }
-        if (!!currentPressuresEcharts?.data?.lightweight?.length) {
-            const l = currentPressuresEcharts.data.lightweight.length
-            pressure.lightweight = currentPressuresEcharts?.data?.lightweight[l - 1].value || 0
-        }
-        if (!!currentPressuresEcharts?.data?.vision?.length) {
-            const v = currentPressuresEcharts.data.vision.length
-            pressure.vision = currentPressuresEcharts?.data?.vision[v - 1].value || 0
-        }
-        return pressure
-    }, [currentPressuresEcharts.data])
 
     // 上下文压力预设值
     const pressureThreshold = useCreation(() => {
@@ -110,27 +89,6 @@ const AIContextToken: FC<{
     const currentCostEcharts: ResponseSpeedEchartsProps["dataEcharts"] = useCreation(() => {
         return getCostData(aiDataRef?.firstCost, 100)
     }, [renderNumber, aiDataRef?.firstCost])
-    // 最新的首字符延迟
-    const lastFirstCost = useCreation(() => {
-        let cost: Record<AIModelTypeEnum, number> = {
-            [AIModelTypeEnum.TierIntelligent]: 0,
-            [AIModelTypeEnum.TierLightweight]: 0,
-            [AIModelTypeEnum.TierVision]: 0
-        }
-        if (!!currentCostEcharts?.data?.intelligent?.length) {
-            const i = currentCostEcharts.data.intelligent.length
-            cost.intelligent = currentCostEcharts?.data?.intelligent[i - 1].value || 0
-        }
-        if (!!currentCostEcharts?.data?.lightweight?.length) {
-            const l = currentCostEcharts.data.lightweight.length
-            cost.lightweight = currentCostEcharts?.data?.lightweight[l - 1].value || 0
-        }
-        if (!!currentCostEcharts?.data?.vision?.length) {
-            const v = currentCostEcharts.data.vision.length
-            cost.vision = currentCostEcharts?.data?.vision[v - 1].value || 0
-        }
-        return cost
-    }, [currentCostEcharts])
     // AI的Token消耗
     const token = useCreation(() => {
         const {consumption} = aiDataRef || {}
@@ -154,6 +112,19 @@ const AIContextToken: FC<{
             currentPressuresEcharts?.data?.vision?.length > 0
         )
     }, [currentPressuresEcharts.data])
+    const maxIntelligentPressure = useCreation(() => {
+        return currentPressuresEcharts.maxValue.intelligent
+    }, [currentPressuresEcharts.maxValue.intelligent])
+    const maxLightweightPressure = useCreation(() => {
+        return currentPressuresEcharts.maxValue.lightweight
+    }, [currentPressuresEcharts.maxValue.lightweight])
+
+    const maxIntelligentCost = useCreation(() => {
+        return currentCostEcharts.maxValue.intelligent
+    }, [currentCostEcharts.maxValue.intelligent])
+    const maxLightweightCost = useCreation(() => {
+        return currentCostEcharts.maxValue.lightweight
+    }, [currentCostEcharts.maxValue.lightweight])
     return (
         <>
             {isShowPressure && (
@@ -162,25 +133,25 @@ const AIContextToken: FC<{
                         <span className={styles["text"]}>
                             上下文压力<span className={styles["tip"]}>(峰值)</span>
                         </span>
-                        {lastPressure.intelligent > 0 && (
+                        {maxIntelligentPressure && (
                             <Tooltip title='高质模型'>
                                 <span
                                     className={classNames(styles["intelligent"], {
-                                        [styles["intelligent-height"]]: lastPressure.intelligent > pressureThreshold
+                                        [styles["intelligent-height"]]: maxIntelligentPressure > pressureThreshold
                                     })}
                                 >
-                                    {formatNumberUnits(lastPressure.intelligent)}
+                                    {formatNumberUnits(maxIntelligentPressure)}
                                 </span>
                             </Tooltip>
                         )}
-                        {lastPressure.lightweight > 0 && (
+                        {maxLightweightPressure && (
                             <Tooltip title='轻量模型'>
                                 <span
                                     className={classNames(styles["lightweight"], {
-                                        [styles["lightweight-height"]]: lastPressure.lightweight > pressureThreshold
+                                        [styles["lightweight-height"]]: maxLightweightPressure > pressureThreshold
                                     })}
                                 >
-                                    {formatNumberUnits(lastPressure.lightweight)}
+                                    {formatNumberUnits(maxLightweightPressure)}
                                 </span>
                             </Tooltip>
                         )}
@@ -195,17 +166,13 @@ const AIContextToken: FC<{
                             响应速度<span className={styles["tip"]}>(峰值)</span>
                         </span>
                         <Tooltip title='高质模型'>
-                            {lastFirstCost.intelligent > 0 && (
-                                <span
-                                    className={classNames(styles["intelligent"])}
-                                >{`${lastFirstCost.intelligent}ms`}</span>
+                            {maxIntelligentCost && (
+                                <span className={classNames(styles["intelligent"])}>{`${maxIntelligentCost}ms`}</span>
                             )}
                         </Tooltip>
                         <Tooltip title='轻量模型'>
-                            {lastFirstCost.lightweight > 0 && (
-                                <span
-                                    className={classNames(styles["lightweight"])}
-                                >{`${lastFirstCost.lightweight}ms`}</span>
+                            {maxLightweightCost && (
+                                <span className={classNames(styles["lightweight"])}>{`${maxLightweightCost}ms`}</span>
                             )}
                         </Tooltip>
                     </div>
@@ -316,7 +283,12 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     const getEchartsHeard = useMemoizedFn((title: string) => {
         return (
             <div className={styles["echarts-heard"]}>
-                <span className={styles["title"]}>{title}</span>
+                <div className={styles["echarts-heard-left"]}>
+                    <div className={styles["title"]}>{title}</div>
+                    {title === "上下文压力" && (
+                        <div className={styles["threshold"]}>限制:{formatNumberUnits(threshold)}</div>
+                    )}
+                </div>
                 <div className={styles["extra"]}>
                     <div className={styles["intelligent"]}>
                         <AIDetailsDashIcon className={styles["intelligent-icon"]} />

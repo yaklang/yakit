@@ -17,6 +17,7 @@ export interface ContextPressureEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
         xData: Record<AIModelTypeEnum, number[]>
+        maxValue: Record<AIModelTypeEnum, number>
     }
     threshold: number
 }
@@ -307,6 +308,7 @@ export interface AIPressureDetailsEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
         xData: Record<AIModelTypeEnum, number[]>
+        maxValue: Record<AIModelTypeEnum, number>
     }
     threshold: number
 }
@@ -486,15 +488,11 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
                         type: "dashed"
                     },
                     label: {
-                        show: true,
-                        position: "start",
-                        fontSize: 11,
-                        color: colors["--Colors-Use-Error-Primary"],
-                        formatter: `限制 ${formatNumberUnits(threshold)}`
+                        show: false
                     },
                     data: [
                         {
-                            yAxis: 10240
+                            yAxis: threshold
                         }
                     ]
                 }
@@ -510,6 +508,7 @@ export interface ResponseSpeedEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
         xData: Record<AIModelTypeEnum, number[]>
+        maxValue: Record<AIModelTypeEnum, number>
     }
 }
 export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.memo((props) => {
@@ -637,6 +636,7 @@ export interface AICostDetailsEchartsProps {
     dataEcharts: {
         data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
         xData: Record<AIModelTypeEnum, number[]>
+        maxValue: Record<AIModelTypeEnum, number>
     }
 }
 export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.memo((props) => {

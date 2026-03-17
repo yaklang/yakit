@@ -22,13 +22,20 @@ export const getPressuresData = (
         [AIModelTypeEnum.TierLightweight]: [],
         [AIModelTypeEnum.TierVision]: []
     }
-    if (!pressure) return {data, xData}
+    // 要求总数据的最大值，不受sliceLength的影响
+    let maxValue: Record<AIModelTypeEnum, number> = {
+        [AIModelTypeEnum.TierIntelligent]: 0,
+        [AIModelTypeEnum.TierLightweight]: 0,
+        [AIModelTypeEnum.TierVision]: 0
+    }
+    if (!pressure) return {data, xData, maxValue}
     if (!!pressure?.intelligent?.length) {
         let intelligent: AIAgentGrpcApi.Pressure[] = pressure?.intelligent
+        maxValue.intelligent = Math.max(...intelligent.map((item) => item.current_cost_token_size || 0))
         if (!!sliceLength) {
             intelligent = pressure?.intelligent.slice(-sliceLength)
         }
-        
+
         intelligent.forEach((item) => {
             data.intelligent.push({
                 modelName: item.model_name || "",
@@ -39,6 +46,7 @@ export const getPressuresData = (
     }
     if (!!pressure?.lightweight?.length) {
         let lightweight: AIAgentGrpcApi.Pressure[] = pressure?.lightweight
+        maxValue.lightweight = Math.max(...lightweight.map((item) => item.current_cost_token_size || 0))
         if (!!sliceLength) {
             lightweight = pressure?.lightweight.slice(-sliceLength)
         }
@@ -52,6 +60,7 @@ export const getPressuresData = (
     }
     if (!!pressure?.vision?.length) {
         let vision: AIAgentGrpcApi.Pressure[] = pressure?.vision
+        maxValue.vision = Math.max(...vision.map((item) => item.current_cost_token_size || 0))
         if (!!sliceLength) {
             vision = pressure?.vision.slice(-sliceLength)
         }
@@ -63,7 +72,7 @@ export const getPressuresData = (
             xData.vision.push(item.timestamp || 0)
         })
     }
-    return {data, xData}
+    return {data, xData, maxValue}
 }
 
 /**
@@ -83,10 +92,16 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
         [AIModelTypeEnum.TierLightweight]: [],
         [AIModelTypeEnum.TierVision]: []
     }
-
-    if (!cost) return {data, xData}
+    // 要求总数据的最大值，不受sliceLength的影响
+    let maxValue: Record<AIModelTypeEnum, number> = {
+        [AIModelTypeEnum.TierIntelligent]: 0,
+        [AIModelTypeEnum.TierLightweight]: 0,
+        [AIModelTypeEnum.TierVision]: 0
+    }
+    if (!cost) return {data, xData, maxValue}
     if (!!cost?.intelligent?.length) {
         let intelligent: AIAgentGrpcApi.AIFirstCostMS[] = cost?.intelligent
+        maxValue.intelligent = Math.max(...intelligent.map((item) => item.ms || 0))
         if (!!sliceLength) {
             intelligent = cost?.intelligent.slice(-sliceLength)
         }
@@ -100,6 +115,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
     }
     if (!!cost?.lightweight?.length) {
         let lightweight: AIAgentGrpcApi.AIFirstCostMS[] = cost?.lightweight
+        maxValue.lightweight = Math.max(...lightweight.map((item) => item.ms || 0))
         if (!!sliceLength) {
             lightweight = cost?.lightweight.slice(-sliceLength)
         }
@@ -113,6 +129,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
     }
     if (!!cost?.vision?.length) {
         let vision: AIAgentGrpcApi.AIFirstCostMS[] = cost?.vision
+        maxValue.vision = Math.max(...vision.map((item) => item.ms || 0))
         if (!!sliceLength) {
             vision = cost?.vision.slice(-sliceLength)
         }
@@ -124,7 +141,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
             xData.vision.push(item.timestamp || 0)
         })
     }
-    return {data, xData}
+    return {data, xData, maxValue}
 }
 
 /**
