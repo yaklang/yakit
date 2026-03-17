@@ -29,7 +29,7 @@ import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TabKey} from "../components/aiFileSystemList/type"
 import {onNewChat} from "../historyChat/HistoryChat"
-import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
+// import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
 import useAIAgentStore from "../useContext/useStore"
 import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
@@ -373,7 +373,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                                 <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
                                     新建会话
                                 </YakitButton>
-                                <SideSettingButton />
+                                {/* <SideSettingButton /> */}
                             </div>
                             <div className={styles["extra"]}>
                                 <AIContextToken execute={execute} session={activeChat?.SessionID} />

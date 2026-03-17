@@ -71,7 +71,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 向进行中的grpc流接口发送请求 */
     const sendRequest = useMemoizedFn((request: AIInputEvent) => {
         if (!chatID.current) return
-        console.log("send-ai-re-act---\n", chatID.current, request)
+        // console.log("send-ai-re-act---\n", chatID.current, request)
         ipcRenderer.invoke("send-ai-re-act", chatID.current, request)
     })
 
@@ -512,7 +512,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 })
 
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
-                console.log("onStart-res", res, ipcContent)
+                // console.log("onStart-res", res, ipcContent)
 
                 if (res.Type === "structured" && res.NodeId === "session_title") {
                     // 生成会话的名称
@@ -794,7 +794,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             }
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
-            console.log("end", res)
+            // console.log("end", res)
             saveStateDataOfEnd(token)
             handleResetGrpcStatus()
             if (endAfterSession.current) {
@@ -808,10 +808,10 @@ function useChatIPC(params?: UseChatIPCParams) {
             ipcRenderer.removeAllListeners(`${token}-error`)
         })
         ipcRenderer.on(`${token}-error`, (e, err: any) => {
-            console.log("error", err)
+            // console.log("error", err)
             yakitNotify("error", `AI执行失败: ${err}`)
         })
-        console.log("start-ai-re-act", token, params)
+        // console.log("start-ai-re-act", token, params)
 
         // 初次用户对话的问题，属于自由对话中的问题
         casualChatEvent.handleSend({

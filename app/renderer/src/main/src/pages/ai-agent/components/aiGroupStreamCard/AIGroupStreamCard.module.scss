@@ -101,8 +101,7 @@
     text-align: left;
     position: relative;
 
-    &::before {
-        content: "";
+    .ai-mask {
         width: 100%;
         height: 100%;
         position: absolute;
@@ -132,9 +131,6 @@
         line-height: 14px;
         letter-spacing: 0.5px;
     }
-}
-.collapsed::before {
-    background: none;
 }
 .single-stream-text {
     border-left: 2px solid var(--Colors-Use-Neutral-Bg-Hover);

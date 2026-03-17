@@ -298,40 +298,54 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
 
     return (
         <div ref={wrapperRef} className={classNames("stream-markdown", wrapperClassName)}>
-            <Streamdown
-                plugins={plugins}
-                shikiTheme={["github-light", "github-dark"]}
-                controls={{
-                    mermaid: {
-                        fullscreen: true,
-                        download: true,
-                        copy: false,
-                        panZoom: false
+            <ErrorBoundary
+                FallbackComponent={({error, resetErrorBoundary}) => {
+                    if (!error) {
+                        return <div>未知错误</div>
                     }
+                    return (
+                        <div>
+                            <p>ai-agent逻辑性崩溃，请关闭重试！</p>
+                            <pre>{error?.message}</pre>
+                        </div>
+                    )
                 }}
-                mermaid={{
-                    config: {
-                        theme: theme === "dark" ? "dark" : "default"
-                    }
-                }}
-                rehypePlugins={[rehypeSlug as any]}
-                components={{
-                    a: (aProps) => {
-                        return (
-                            <a
-                                {...aProps}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    ipcRenderer.invoke("open-url", aProps.href || "")
-                                }}
-                            />
-                        )
-                    }
-                }}
-                {...restProps}
             >
-                {content}
-            </Streamdown>
+                <Streamdown
+                    plugins={plugins}
+                    shikiTheme={["github-light", "github-dark"]}
+                    controls={{
+                        mermaid: {
+                            fullscreen: true,
+                            download: true,
+                            copy: false,
+                            panZoom: false
+                        }
+                    }}
+                    mermaid={{
+                        config: {
+                            theme: theme === "dark" ? "dark" : "default"
+                        }
+                    }}
+                    rehypePlugins={[rehypeSlug as any]}
+                    components={{
+                        a: (aProps) => {
+                            return (
+                                <a
+                                    {...aProps}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        ipcRenderer.invoke("open-url", aProps.href || "")
+                                    }}
+                                />
+                            )
+                        }
+                    }}
+                    {...restProps}
+                >
+                    {content}
+                </Streamdown>
+            </ErrorBoundary>
         </div>
     )
 })
