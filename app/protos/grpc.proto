@@ -640,7 +640,7 @@ service Yak {
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(Empty) returns (DeduplicateMITMRuleExtractedDataResponse);
   /*
     ChaosMakerRule: Bas
   */
@@ -3270,6 +3270,7 @@ message ExtractedDataFilter {
   repeated string TraceID = 1;
   repeated string RuleVerbose = 2;
   repeated int64 AnalyzedIds = 3;
+  string Keyword = 4;
 }
 
 message ExportMITMRuleExtractedDataRequest {
@@ -3287,10 +3288,6 @@ message ExportMITMRuleExtractedDataResponse {
 message DeleteMITMRuleExtractedDataRequest {
   int64 Id = 1;
   repeated int64 Ids = 2;
-}
-
-message DeduplicateMITMRuleExtractedDataRequest {
-  ExtractedDataFilter Filter = 1;
 }
 
 message DeduplicateMITMRuleExtractedDataResponse {
@@ -6631,7 +6628,6 @@ message AnalyzedHTTPFlowFilter{
   repeated string ResultIds = 1;
   repeated string RuleVerboseNames = 2;
   repeated string Rule = 3;
-  string Keyword = 4;
 }
 
 
