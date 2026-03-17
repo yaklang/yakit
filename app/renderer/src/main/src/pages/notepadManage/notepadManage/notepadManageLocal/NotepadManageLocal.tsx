@@ -33,7 +33,6 @@ import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
 import {Divider} from "antd"
 import {timeMap} from "../NotepadManage"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -45,6 +44,7 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 
@@ -98,6 +98,7 @@ const timeShow = {
 }
 const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
     const {goAddNotepad} = useGoEditNotepad()
+    const emptyImageTarget = useEmptyImage("search")
     const [pageLoading, setPageLoading] = useState<boolean>(false)
 
     const [refresh, setRefresh] = useState<boolean>(true)
@@ -381,7 +382,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                         <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
                     ) : (
                         <YakitEmpty
-                            image={SearchResultEmpty}
+                            image={emptyImageTarget}
                             imageStyle={{margin: "96px auto 12px", height: 200}}
                             title='搜索结果“空”'
                         />
@@ -418,7 +419,9 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 <NotepadImport
                     onClose={() => setImportVisible(false)}
                     onImportSuccessAfter={() => setRefresh(!refresh)}
-                    getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined
+                    }
                 />
             )}
         </YakitSpin>

@@ -17,16 +17,8 @@ import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
 
-import YakitEmptyPng from "@/components/yakitUI/YakitEmpty/YakitEmptyPng.png"
-import YakitDarkEmptyPng from "@/components/yakitUI/YakitEmpty/YakitDarkEmptyPng.png"
-import IrifyDarkEmptyPng from "@/components/yakitUI/YakitEmpty/IrifyDarkEmptyPng.png"
-import IrifyEmptyPng from "@/components/yakitUI/YakitEmpty/IrifyEmptyPng.png"
-import MemfitEmptyPng from "@/components/yakitUI/YakitEmpty/MemfitEmptyPng.png"
-import MemfitDarkEmptyPng from "@/components/yakitUI/YakitEmpty/MemfitDarkEmptyPng.png"
-
-import {useTheme} from "@/hook/useTheme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {fetchEnv} from "@/utils/envfile"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 const {Option, OptGroup} = Select
 
@@ -51,7 +43,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     ref: React.Ref<YakitBaseSelectRef>
 ) => {
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
-    const {theme} = useTheme()
+    const emptyImageTarget = useEmptyImage("empty")
     const selectRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(selectRef)
     // 鼠标移入项 用于判断是否显示 ×
@@ -77,23 +69,6 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         }),
         [cacheHistoryData, props.value]
     )
-
-    const emptyImageTarget = useMemo(() => {
-        switch (fetchEnv()) {
-            case "irify":
-            case "irify-enterprise":
-                return theme === "dark" ? IrifyDarkEmptyPng : IrifyEmptyPng
-            case "memfit":
-                return theme === "dark" ? MemfitDarkEmptyPng : MemfitEmptyPng
-            case "enterprise":
-            case "simple-enterprise":
-            case "yakit":
-                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
-
-            default:
-                return theme === "dark" ? YakitDarkEmptyPng : YakitEmptyPng
-        }
-    }, [theme])
 
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string[]) => {

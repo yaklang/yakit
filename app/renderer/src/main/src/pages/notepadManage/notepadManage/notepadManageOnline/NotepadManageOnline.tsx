@@ -35,14 +35,15 @@ import {
     onOpenLocalFileByPath
 } from "../utils"
 import styles from "./NotepadManageOnline.module.scss"
-import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
-import { failed } from "@/utils/notification"
+import {failed} from "@/utils/notification"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
+    const emptyImageTarget = useEmptyImage("search")
     const {goAddNotepad} = useGoEditNotepad()
     const [listLoading, setListLoading] = useState<boolean>(true)
     const [pageLoading, setPageLoading] = useState<boolean>(false)
@@ -291,7 +292,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             .then((res) => {
                 setBatchDownInfo(res)
             })
-            .catch((err)=>{
+            .catch((err) => {
                 failed(`下载失败：${err?.message || err}`)
             })
             .finally(() =>
@@ -375,7 +376,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                         <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
                     ) : (
                         <YakitEmpty
-                            image={SearchResultEmpty}
+                            image={emptyImageTarget}
                             imageStyle={{margin: "96px auto 12px", height: 200}}
                             title='搜索结果“空”'
                         />
@@ -394,7 +395,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             type: "checkbox",
                             selectedRowKeys,
                             onSelectAll: onSelectAll,
-                            onChangeCheckboxSingle: onSelectChange,
+                            onChangeCheckboxSingle: onSelectChange
                             // getCheckboxProps: (record) => {
                             //     return {
                             //         disabled: record.userName !== userInfo.companyName

@@ -74,13 +74,8 @@ import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {DefaultRuleContent, DefaultRuleGroupFilterPageMeta, RuleLanguageList} from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
-import {
-    AuditNodeMapProps,
-    AuditNodeProps,
-    AuditYakUrlProps,
-    SSAProjectResponse
-} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {genDefaultPagination} from "../invoker/schema"
+import {AuditNodeMapProps, AuditNodeProps, AuditYakUrlProps} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import useRuleDebug from "./useRuleDebug"
@@ -96,7 +91,6 @@ import {RightAuditDetail} from "../yakRunnerAuditCode/RightAuditDetail/RightAudi
 import {RightBugAuditResult, SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import NoPermissions from "@/assets/no_permissions.png"
 import {API} from "@/services/swagger/resposeType"
 import Login from "../Login"
 import {isEnpriTraceIRify} from "@/utils/envfile"
@@ -108,6 +102,7 @@ import {CodeScoreModal} from "../plugins/funcTemplate"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -2218,6 +2213,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
 export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
     React.forwardRef((props, ref) => {
         const {isrefresh, onGroupChange, currentPageTabRouteKey, canDel, userInfo, onRefreshRuleManagement} = props
+        const powerEmptyImage = useEmptyImage("power")
 
         useImperativeHandle(ref, () => ({
             handleReset
@@ -2368,7 +2364,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                 {!canFetchList ? (
                     <>
                         <YakitEmpty
-                            image={<img src={NoPermissions} alt='' />}
+                            image={<img src={powerEmptyImage} alt='' />}
                             imageStyle={{width: 220, height: 150, margin: "auto"}}
                             title='暂无查看权限'
                             description='登录后即可查看'

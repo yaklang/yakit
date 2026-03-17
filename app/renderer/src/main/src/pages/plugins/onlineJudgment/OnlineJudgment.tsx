@@ -5,16 +5,13 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useNetwork, useMemoizedFn} from "ahooks"
 import React, {forwardRef, useState, useImperativeHandle, useEffect, useMemo} from "react"
 import {OnlineJudgmentProps, OnlineResponseStatusProps} from "./OnlineJudgmentType"
-import Online from "@/assets/online.png"
-import DarkOnline from "@/assets/darkOnline.png"
-import Server from "@/assets/server.png"
-import NoPermissions from "@/assets/no_permissions.png"
 
 import {yakitNotify} from "@/utils/notification"
 
 import styles from "./OnlineJudgment.module.scss"
 import Login from "@/pages/Login"
 import {useStore} from "@/store"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 import {useTheme} from "@/hook/useTheme"
 
 const {ipcRenderer} = window.require("electron")
@@ -26,11 +23,12 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
         const [initLoading, setInitLoading] = useState<boolean>(true)
         const [loading, setLoading] = useState<boolean>(true)
         const [loginShow, setLoginShow] = useState<boolean>(false)
+
         const {theme} = useTheme()
 
-        const targetNetworkImg = useMemo(() => {
-            return theme === "dark" ? DarkOnline : Online
-        }, [theme])
+        const networkEmptyImage = useEmptyImage("network")
+        const serverEmptyImage = useEmptyImage("server")
+        const powerEmptyImage = useEmptyImage("power")
 
         const [onlineResponseStatus, setOnlineResponseStatus] = useState<OnlineResponseStatusProps>({
             code: 200,
@@ -105,7 +103,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     return (
                         <>
                             <YakitEmpty
-                                image={<img src={Server} alt='' />}
+                                image={<img src={serverEmptyImage} alt='' />}
                                 imageStyle={{width: 272, height: 265, marginBottom: 16}}
                                 title='服务器故障'
                                 description='服务器故障，请联系管理员修复'
@@ -148,7 +146,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                                 />
                             )} */}
                             <YakitEmpty
-                                image={<img src={NoPermissions} alt='' />}
+                                image={<img src={powerEmptyImage} alt='' />}
                                 imageStyle={{width: 320, height: 250, marginBottom: 16}}
                                 title='暂无访问权限'
                                 description='登录后即可访问该页面'
@@ -164,7 +162,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     return (
                         <>
                             <YakitEmpty
-                                image={<img src={targetNetworkImg} alt='' />}
+                                image={<img src={networkEmptyImage} alt='' />}
                                 imageStyle={{width: 300, height: 210, marginBottom: 16}}
                                 title='请检查私有域配置与网络连接'
                                 description='连网后才可访问 Yakit 插件商店'
@@ -180,7 +178,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                         </>
                     )
             }
-        }, [onlineResponseStatus])
+        }, [onlineResponseStatus, theme])
         const onLogin = useMemoizedFn(() => {
             setLoginShow(true)
         })

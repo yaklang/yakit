@@ -30,13 +30,14 @@ import useGetSetState from "../hooks/useGetSetState"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginOperateHint} from "../defaultConstant"
 
-import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 interface HubListRecycleProps {}
 /** @name 插件回收站 */
 export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     const {} = props
+    const emptyImageTarget = useEmptyImage("search")
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
@@ -454,7 +455,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
                             />
                         ) : listTotal > 0 ? (
                             <YakitEmpty
-                                image={SearchResultEmpty}
+                                image={emptyImageTarget}
                                 imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
                                 title='搜索结果“空”'
                                 className={styles["hub-list-empty"]}

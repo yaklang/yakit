@@ -84,7 +84,6 @@ import {
     apiPluginStars
 } from "./utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {API} from "@/services/swagger/resposeType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -101,6 +100,7 @@ import styles from "./funcTemplate.module.scss"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
 import {debugToPrintLogs} from "@/utils/logCollection"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -655,7 +655,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
         setShowIndex,
         isShowSearchResultEmpty
     } = props
-
+    const emptyImageTarget = useEmptyImage("search")
     // useWhyDidYouUpdate("ListShowContainer", {...props})
 
     const listId = useMemo(() => {
@@ -670,7 +670,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
     }, [id])
     return isShowSearchResultEmpty ? (
         <YakitEmpty
-            image={SearchResultEmpty}
+            image={emptyImageTarget}
             imageStyle={{width: 274, height: 180, marginBottom: 24}}
             title='搜索结果“空”'
             style={{paddingTop: "10%"}}

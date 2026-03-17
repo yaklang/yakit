@@ -78,10 +78,10 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 import classNames from "classnames"
-import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
-import { JSONParseLog } from "@/utils/tool"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {JSONParseLog} from "@/utils/tool"
+import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
@@ -103,6 +103,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         onChangeOnline
     } = props
 
+    const emptyImageTarget = useEmptyImage("search")
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
     const [inViewPort = true] = useInViewport(divRef)
@@ -938,7 +939,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 更新本地插件信息，存在则进行局部更新，不存在则刷新列表
     const handleUpdatePluginInfo = useMemoizedFn(async (content: string) => {
         try {
-            const info: KeyParamsFetchPluginDetail = JSONParseLog(content, {page: "HubListLocal", fun: "handleUpdatePluginInfo"})
+            const info: KeyParamsFetchPluginDetail = JSONParseLog(content, {
+                page: "HubListLocal",
+                fun: "handleUpdatePluginInfo"
+            })
             if (!info.name) return
             const plugin: YakScript = await grpcFetchLocalPluginDetail({Name: info.name, UUID: info.uuid || undefined})
             plugin.isLocalPlugin = privateDomain.current !== plugin.OnlineBaseUrl
@@ -964,7 +968,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const handleDetailDeleteToLocal = useMemoizedFn((info: string) => {
         if (!info) return
         try {
-            const plugin: {name: string; id: number} = JSONParseLog(info, {page: "HubListLocal", fun: "handleDetailDeleteToLocal"})
+            const plugin: {name: string; id: number} = JSONParseLog(info, {
+                page: "HubListLocal",
+                fun: "handleDetailDeleteToLocal"
+            })
             if (!plugin.name) return
             const index = selectList.findIndex((ele) => ele.ScriptName === plugin.name || ele.Id === Number(plugin.id))
             const data: YakScript = {
@@ -1123,8 +1130,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                         <HubOuterList
                             title={
                                 <>
-                                    {t("PluginTabName.localPlugin")} 
-                                     {!!externalSearchParams && (
+                                    {t("PluginTabName.localPlugin")}
+                                    {!!externalSearchParams && (
                                         <YakitButton
                                             onClick={() => onChangeOnline?.(getSearch())}
                                             type='primary'
@@ -1361,7 +1368,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                 />
                             ) : listTotal > 0 ? (
                                 <YakitEmpty
-                                    image={SearchResultEmpty}
+                                    image={emptyImageTarget}
                                     imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
                                     title='搜索结果“空”'
                                     className={styles["hub-list-empty"]}
