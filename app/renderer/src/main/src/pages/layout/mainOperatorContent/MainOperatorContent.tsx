@@ -3595,9 +3595,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     useEffect(() => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode.slice() || [])
-    }, [pageItem.multipleNode])
 
-    useEffect(() => {
         // 新增的时候选中的item
         const multipleNodeLength = pageItem.multipleNode.length
         if (multipleNodeLength > 0) {
@@ -3614,7 +3612,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 setSelectSubMenu({...currentNode})
             }
         }
-    }, [pageItem.multipleLength])
+    }, [pageItem.multipleNode])
     useUpdateEffect(() => {
         if (type !== "sequence") {
             emiter.emit("onRefWebFuzzer")
