@@ -148,7 +148,8 @@
     "cookieParameters": "POST 参数",
     "rawHTTPRequest": "原始 HTTP 请求",
     "rawHTTPResponse": "原始 HTTP 响应",
-    "batchDeletion": "批量删除"
+    "batchDeletion": "批量删除",
+    "deduplicate": "去重"
   },
   "RandomChunkedDataTable": {
     "chunkDetails": "分块详情",
@@ -165,7 +166,8 @@
     "ruleData": "规则数据",
     "locate": "定位",
     "binaryStreamLocateError": "含有二进制流的数据包无法定位",
-    "deleteSuccess": "删除成功"
+    "deleteSuccess": "删除成功",
+    "deduplicateSuccess": "去重成功"
   },
   "FuzzableParamList": {
     "parameterName": "参数名",

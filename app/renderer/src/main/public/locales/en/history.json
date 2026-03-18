@@ -147,7 +147,8 @@
     "cookieParameters": "Cookie Parameters",
     "rawHTTPRequest": "Raw HTTP Request",
     "rawHTTPResponse": "Raw HTTP Response",
-    "batchDeletion": "Batch Deletion"
+    "batchDeletion": "Batch Deletion",
+    "deduplicate": "Deduplicate"
   },
   "RandomChunkedDataTable": {
     "chunkDetails": "Chunk Details",
@@ -164,7 +165,8 @@
     "ruleData": "Rule Data",
     "locate": "Locate",
     "binaryStreamLocateError": "Cannot locate data packets containing binary streams",
-    "deleteSuccess": "Delete successful"
+    "deleteSuccess": "Delete successful",
+    "deduplicateSuccess": "Deduplicate successful"
   },
   "FuzzableParamList": {
     "parameterName": "Parameter Name",

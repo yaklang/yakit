@@ -970,6 +970,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 key: "export",
                 label: t("YakitButton.export"),
             },
+            {
+                key: "deduplicate",
+                label: t("HTTPFlowDetail.deduplicate")
+            },
             {label: t("HTTPFlowDetail.batchDeletion"), key: "delete", type: "danger"}
         ]
     },[])
@@ -978,6 +982,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         switch (key) {
             case "export":
                 exportMITMRuleExtractedData()
+                break
+            case "deduplicate":
+                httpFlowTableRef.current?.onDeduplicate()
                 break
             case "delete":
                 httpFlowTableRef.current?.onDelete()
