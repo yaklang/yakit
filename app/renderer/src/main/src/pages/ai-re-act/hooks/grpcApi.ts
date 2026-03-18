@@ -641,6 +641,39 @@ export declare namespace AIAgentGrpcApi {
             T_total: number
         }
     }
+
+    /** 任务规划历史数据-任务进度信息 */
+    export interface PlanHistoryProgress {
+        total_tasks: number
+        completed_tasks: number
+        skipped_tasks: number
+        aborted_tasks: number
+        current_index: number
+        current_task_index: string
+        current_task: string
+        current_goal: string
+        phase: "NotCompleted"
+        updated_at: number
+    }
+    /** 任务规划历史数据 */
+    export interface PlanHistory {
+        coordinator_id: string
+        created_at: string
+        created_at_unix: number
+        session_id: string
+        task_progress: PlanHistoryProgress
+        task_tree: AITaskInfoProps[]
+        updated_at: string
+        updated_at_unix: number
+        /** 任务树根节点的name(前端逻辑，仅供UI使用) */
+        root_task_name: string
+    }
+    /** 任务规划历史列表 */
+    export interface PlanHistoryList {
+        records: PlanHistory[]
+        total: number
+        session_id: string
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构

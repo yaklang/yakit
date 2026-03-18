@@ -185,6 +185,8 @@ export interface UseChatIPCState {
     focusMode: string
     /** 切换session时的loading状态 */
     switchLoading: boolean
+    /** 任务规划历史数据-任务树 */
+    planHistoryList: AIAgentGrpcApi.PlanHistoryList
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
