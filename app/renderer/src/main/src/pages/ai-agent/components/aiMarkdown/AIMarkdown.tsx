@@ -5,7 +5,7 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import styles from "./AIMarkdown.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon, OutlineDownloadIcon} from "@/assets/icon/outline"
+import {OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon, OutlineDownloadIcon, OutlineNotebookIcon} from "@/assets/icon/outline"
 import ModalInfo from "../ModelInfo"
 import {ColorsPreViewMDIcon, ColorsSourceCodeIcon} from "@/assets/icon/colors"
 import ChatCard from "../ChatCard"
@@ -14,9 +14,14 @@ import {StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import moment from "moment"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
+import {ModifyNotepadPageInfoProps} from "@/store/pageInfo"
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
     const {content, nodeLabel, className, modalInfo, referenceNode} = props
+
+    const {goAddNotepad} = useGoEditNotepad()
+
     const [type, setType] = useState<"preview" | "code">("preview")
     const [expand, setExpand] = useState<boolean>(true)
     const item: ReportItem = useCreation(() => {
@@ -60,12 +65,22 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
         const time = moment().valueOf()
         saveABSFileToOpen(`${nodeLabel}-${time}.md`, item.content)
     })
+    const onGoToNote = useMemoizedFn(() => {
+        const params: ModifyNotepadPageInfoProps = {
+            title: "",
+            content: item.content
+        }
+        goAddNotepad(params)
+    })
     return (
         <ChatCard
             titleText={nodeLabel}
             titleExtra={<ModalInfo {...modalInfo} />}
             titleMore={
                 <div className={styles["header-extra"]}>
+                    <Tooltip title='从记事本中打开'>
+                        <YakitButton type='text' icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
+                    </Tooltip>
                     <Tooltip title='下载md文件'>
                         <YakitButton type='text' icon={<OutlineDownloadIcon />} onClick={onDown} />
                     </Tooltip>
