@@ -138,7 +138,7 @@ const configOption = {
         "!backups/**/*",
         "!app/renderer/src/**/*",
         "!cli/*",
-        "!secret/**"
+        "!**/*.p12"
     ],
     asar: true,
     publish: [
