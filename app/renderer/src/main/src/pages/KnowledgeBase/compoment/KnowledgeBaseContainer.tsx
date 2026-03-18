@@ -190,7 +190,7 @@ const KnowledgeBaseContainer: FC<
                             <div>{findKnowledgeBaseItems.KnowledgeBaseName}</div>
                             <div className={styles["tag"]}>
                                 <OutlineLoadingIcon className={styles["loading-icon"]} />
-                                知识库生成中，大概需要 3～5 秒，请耐心等待...
+                                知识库生成中，请耐心等待...
                             </div>
                         </div>
                         <div className={styles["header-right"]}>

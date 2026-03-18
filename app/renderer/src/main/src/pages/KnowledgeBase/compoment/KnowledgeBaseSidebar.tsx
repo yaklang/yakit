@@ -1,10 +1,11 @@
-import React, {Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useRef, useState, type FC} from "react"
-import {useAsyncEffect, useDebounceEffect, useMemoizedFn, useRequest, useSafeState} from "ahooks"
+import React, {Dispatch, ReactNode, SetStateAction, useEffect, useRef, useState, type FC} from "react"
+import {useAsyncEffect, useMemoizedFn, useRequest, useSafeState} from "ahooks"
 
 import {
     OutlineFolderopenIcon,
     OutlineLoadingIcon,
     OutlinePaintbrushIcon,
+    OutlineQuestionmarkcircleIcon,
     OutlineRefreshIcon,
     OutlineStethoscopeIcon
 } from "@/assets/icon/outline"
@@ -56,6 +57,8 @@ import {OutlineBotIcon} from "@/assets/icon/colors"
 import {convertBodyLength} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
+import {setLocalValue} from "@/utils/kv"
+import {KnowledgeBaseGV} from "@/yakitGV"
 
 const {YakitPanel} = YakitCollapse
 
@@ -88,6 +91,12 @@ export interface TKnowledgeBaseSidebarProps {
     loading?: boolean
     refreshOlineRag?: boolean
     setRefreshOlineRag?: Dispatch<SetStateAction<boolean>>
+    setJoyrideRun?: React.Dispatch<
+        React.SetStateAction<{
+            step: number
+            visible: boolean
+        }>
+    >
 }
 
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
@@ -104,7 +113,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     progress,
     loading,
     refreshOlineRag,
-    setRefreshOlineRag
+    setRefreshOlineRag,
+    setJoyrideRun
 }) => {
     const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
     const [expand, setExpand] = useSafeState<boolean>(true)
@@ -532,6 +542,19 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 <div className={styles["knowledge-base-info-header-button"]}>
                                     <div className={styles["header-title"]}>知识库管理</div>
                                     <div className={styles["knowledge-size"]}>{knowledgeBases.length ?? 0}</div>
+                                    <Tooltip title='查看知识库功能引导'>
+                                        <OutlineQuestionmarkcircleIcon
+                                            className={styles["knowledge-icon"]}
+                                            onClick={() => {
+                                                setJoyrideRun?.({
+                                                    step: 1,
+                                                    visible: true
+                                                })
+                                                setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep, false)
+                                                setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible, false)
+                                            }}
+                                        />
+                                    </Tooltip>
                                 </div>
                                 <div className={styles["header-operate"]}>
                                     <AddKnowledgenBaseDropdownMenu
