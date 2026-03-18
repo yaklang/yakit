@@ -179,7 +179,8 @@ function createWindow() {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: true,
             contextIsolation: false,
-            sandbox: true
+            sandbox: true,
+            backgroundThrottling: false
         },
         titleBarStyle: "hidden",
         show: false,
