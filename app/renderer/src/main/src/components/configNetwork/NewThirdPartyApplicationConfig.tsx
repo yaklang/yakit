@@ -20,7 +20,12 @@ import {AIModelTypeEnum} from "@/pages/ai-agent/defaultConstant"
 import {JSONParseLog} from "@/utils/tool"
 import {YakitSelectProps} from "../yakitUI/YakitSelect/YakitSelectType"
 import {AIConfigAPIKeyFormItem} from "@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm"
-import {grpcGetAIThirdPartyAppConfigTemplate} from "@/pages/ai-agent/aiModelList/utils"
+import {
+    AI_API_TYPE_OPTIONS,
+    DEFAULT_AI_API_TYPE,
+    grpcGetAIThirdPartyAppConfigTemplate,
+    normalizeAIAPIType
+} from "@/pages/ai-agent/aiModelList/utils"
 import {cloneDeep} from "lodash"
 const {ipcRenderer} = window.require("electron")
 
@@ -95,6 +100,7 @@ const aiModelTypeOptions: SelectOptionsProps[] = [
     {label: "轻量模型:用于执行简单任务和会话", value: AIModelTypeEnum.TierLightweight},
     {label: "视觉模式:用于识别图片等,生成知识库和任务执行都会用到", value: AIModelTypeEnum.TierVision}
 ]
+const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({label: item, value: item}))
 const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
     Name: "model_type",
     Required: true,
@@ -105,6 +111,17 @@ const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
         options: aiModelTypeOptions
     })}`,
     Verbose: "模型类型"
+}
+const aiAPITypeItem: ThirdPartyAppConfigItemTemplate = {
+    Name: "api_type",
+    Required: true,
+    Type: "list",
+    DefaultValue: DEFAULT_AI_API_TYPE,
+    Desc: "可选值: chat_completions / responses",
+    Extra: `${JSON.stringify({
+        options: aiAPITypeOptions
+    })}`,
+    Verbose: "API类型"
 }
 const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     cloneDeep(aiModelTypeItem),
@@ -117,6 +134,7 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
         Type: "list",
         Verbose: "ApiKey"
     },
+    cloneDeep(aiAPITypeItem),
     {
         DefaultValue: "",
         Desc: "email / username",
@@ -129,6 +147,30 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
 ]
 
 const aiOptionItems: ThirdPartyAppConfigItemTemplate[] = [cloneDeep(aiModelTypeItem)]
+const buildAIFormItems = (items: ThirdPartyAppConfigItemTemplate[]) => {
+    let nextItems = items.map((item) => {
+        if (["api_type", "APIType"].includes(item.Name)) {
+            return {
+                ...item,
+                Name: "api_type",
+                Required: true,
+                Type: "list",
+                DefaultValue: normalizeAIAPIType(item.DefaultValue),
+                Extra: `${JSON.stringify({options: aiAPITypeOptions})}`,
+                Verbose: item.Verbose || "API类型"
+            }
+        }
+        return item
+    })
+
+    if (!nextItems.some((item) => item.Name === "api_type")) {
+        const apiKeyIndex = nextItems.findIndex((item) => item.Name === "api_key")
+        const insertIndex = apiKeyIndex === -1 ? 0 : apiKeyIndex + 1
+        nextItems.splice(insertIndex, 0, cloneDeep(aiAPITypeItem))
+    }
+
+    return [...aiOptionItems, ...nextItems]
+}
 interface NewThirdPartyApplicationConfigBaseProps extends Omit<ThirdPartyApplicationConfigProp, "onAdd" | "onCancel"> {
     ref?: React.ForwardedRef<{form: FormInstance}>
 }
@@ -166,7 +208,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                 grpcGetAIThirdPartyAppConfigTemplate().then((res: GetThirdPartyAppConfigTemplateResponse) => {
                     const templates = res.Templates
                     let newOptions: SelectOptionsProps[] = []
-                    setTemplates(templates.map((ele) => ({...ele, Items: [...aiOptionItems, ...ele.Items]})))
+                    setTemplates(templates.map((ele) => ({...ele, Items: buildAIFormItems(ele.Items)})))
                     newOptions = templates.map((item) => ({label: item.Verbose, value: item.Name}))
                     setOptions(newOptions)
                 })
@@ -364,6 +406,10 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
 
         const initialValues = useMemo(() => {
             const copyFormValues = {...formValues}
+            if (isOnlyShowAiType) {
+                const aiFormValues = copyFormValues as typeof copyFormValues & {api_type?: string}
+                aiFormValues.api_type = normalizeAIAPIType(aiFormValues.api_type)
+            }
             Object.keys(copyFormValues).forEach((key) => {
                 if (copyFormValues[key] === "true") {
                     copyFormValues[key] = true
