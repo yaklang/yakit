@@ -31,10 +31,13 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
     }, [inViewPort])
 
     useEffect(() => {
-        const list = focusModeRaw.map((item) => ({
-            label: lang === "zh" ? item.VerboseNameZh : item.Name,
-            value: item.Name
-        }))
+        const list = focusModeRaw.map((item) => {
+            const resultVerboseNameZh = item?.VerboseNameZh?.length ? item.VerboseNameZh : item.Name
+            return {
+                label: lang === "zh" ? resultVerboseNameZh : item.Name,
+                value: item.Name
+            }
+        })
 
         setFocusModeList(list)
     }, [focusModeRaw, lang])
