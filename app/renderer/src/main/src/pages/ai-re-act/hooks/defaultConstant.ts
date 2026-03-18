@@ -89,7 +89,6 @@ export enum AIStreamContentType {
     /** tool 错误输出 */
     LOG_TOOL_ERROR_OUTPUT = "log/tool-error-output",
 
-
     //TIP - 下面类型都展示为编辑器,截取后面得type为编辑器的语言类型Type, 例如 code/yaklang 展示为编辑器, 编辑器类型为 yak
     /** YakitEditor */
     CODE_YAKLANG = "code/yaklang",
@@ -133,4 +132,10 @@ export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
     loading: false,
     plan: "加载中...",
     task: "加载中..."
+}
+
+export const DefaultPlanHistoryList: AIAgentGrpcApi.PlanHistoryList = {
+    records: [],
+    total: 0,
+    session_id: ""
 }

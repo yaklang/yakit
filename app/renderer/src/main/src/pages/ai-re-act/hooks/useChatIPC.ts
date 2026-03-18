@@ -7,7 +7,7 @@ import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat from "./useCasualChat"
 import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import useTaskChat from "./useTaskChat"
-import {genErrorLogData, handleGrpcDataPushLog} from "./utils"
+import {genErrorLogData, genExecTasks, handleGrpcDataPushLog} from "./utils"
 import {
     AIChatIPCNotifyMessage,
     AIChatIPCStartParams,
@@ -30,6 +30,7 @@ import {
     DeafultAIQuestionQueues,
     DefaultCasualLoadingStatus,
     DefaultMemoryList,
+    DefaultPlanHistoryList,
     DefaultPlanLoadingStatus
 } from "./defaultConstant"
 import useThrottleState from "@/hook/useThrottleState"
@@ -210,6 +211,36 @@ function useChatIPC(params?: UseChatIPCParams) {
     const handleResetFocusMode = useMemoizedFn(() => {
         focusOfTaskID.current = ""
         setFocusMode("")
+    })
+    // #endregion
+
+    // #region 历史任务规划列表相关逻辑
+    const [planHistoryList, setPlanHistoryList] = useState<AIAgentGrpcApi.PlanHistoryList>(
+        cloneDeep(DefaultPlanHistoryList)
+    )
+    const handlePlanHistoryListChange = useMemoizedFn((list: AIAgentGrpcApi.PlanHistoryList) => {
+        try {
+            const arr = cloneDeep(list.records)
+            if (!arr || arr.length === 0) {
+                setPlanHistoryList({...list})
+                return
+            }
+            for (let item of arr) {
+                // 因为后端给过来的task_progress是一个json的string类型数据
+                item.task_progress = JSON.parse(
+                    item.task_progress as unknown as string
+                ) as AIAgentGrpcApi.PlanHistoryProgress
+                // 因为后端给过来的task_tree是一个json的string类型数据，所以需要转换成树形结构的数据，供UI展示使用
+                const tree = JSON.parse(item.task_tree as unknown as string) as AIAgentGrpcApi.PlanTask
+                // 记录任务虎根节点的名字，供UI展示使用
+                item.root_task_name = tree.name
+                item.task_tree = genExecTasks(tree)
+            }
+            setPlanHistoryList({...list, records: arr})
+        } catch (error) {}
+    })
+    const handleResetPlanHistoryList = useMemoizedFn(() => {
+        setPlanHistoryList(cloneDeep(DefaultPlanHistoryList))
     })
     // #endregion
 
@@ -416,6 +447,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetReActTimelines()
         handleResetSystemStream()
         handleResetFocusMode()
+        handleResetPlanHistoryList()
         handleResetCasualChatLoading()
         handleResetTaskChatLoading()
 
@@ -427,7 +459,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 需要轮询获取最新的数据请求 */
     const handleStartQuestionQueue = useMemoizedFn(() => {
         // 获取最新问题队列数据
-        sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
+        sendRequest({IsSyncMessage: true, SyncType: "plan_exec_tasks" as any})
         // 获取最新记忆列表数据
         sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT})
     })
@@ -625,6 +657,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (planCoordinatorId.current === res.CoordinatorId) return
                     // 问题队列清空操作
                     handleReActTaskCleared(res)
+                    return
+                }
+
+                if (res.Type === "structured" && res.NodeId === "plan_exec_tasks") {
+                    // 任务规划历史数据列表
+                    const list = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanHistoryList
+                    handlePlanHistoryListChange(list)
                     return
                 }
 
@@ -930,7 +969,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             taskStatus,
             systemStream,
             focusMode,
-            switchLoading
+            switchLoading,
+            planHistoryList
         }
     }, [
         execute,
@@ -946,7 +986,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         taskStatus,
         systemStream,
         focusMode,
-        switchLoading
+        switchLoading,
+        planHistoryList
     ])
 
     const event: UseChatIPCEvents = useCreation(() => {
