@@ -21,6 +21,7 @@ const {Text} = Typography
 export interface HTTPFlowExtractedDataTableRefProps {
     jumpDataProjectHighLight: (direction: "next" | "prev") => void
     onDelete: () => void
+    onDeduplicate: () => void
 }
 export interface HTTPFlowExtractedDataTableProp {
     ref?: React.ForwardedRef<HTTPFlowExtractedDataTableRefProps>
@@ -110,7 +111,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         ref,
         () => ({
             jumpDataProjectHighLight,
-            onDelete
+            onDelete,
+            onDeduplicate
         }),
         []
     )
@@ -319,7 +321,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                     </div>
                 ),
                 filterProps: {
-                    filterKey: "ruleData",
+                    filterKey: "Keyword",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
                 }
@@ -339,6 +341,21 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             hoverVal: i.RuleName,
             IsMatchRequest: i.IsMatchRequest
         })
+    })
+
+    const onDeduplicate = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeduplicateMITMRuleExtractedData",{
+                TraceID: [props.hiddenIndex],
+                AnalyzedIds: props.analyzedIds
+            })
+            .then(() => {
+                yakitNotify("success", t("HTTPFlowExtractedDataTable.deduplicateSuccess"))
+                resetUpdate()
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `${e}`)
+            })
     })
 
     const onDelete = useMemoizedFn((i?: number) => {
@@ -386,14 +403,14 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     }
 
     const onTableChange = useDebounceFn((page: number, limit: number, sort: SortProps, filter: any) => {
-        console.log("onTableChange---", filter)
         // 处理表格变化
         const newParams = {
             ...params,
             Filter: {
                 TraceID: [props.hiddenIndex],
                 RuleVerbose: [...tagsFilter],
-                AnalyzedIds: props.analyzedIds
+                AnalyzedIds: props.analyzedIds,
+                Keyword: filter?.Keyword
             }
         }
         setParams(newParams)
