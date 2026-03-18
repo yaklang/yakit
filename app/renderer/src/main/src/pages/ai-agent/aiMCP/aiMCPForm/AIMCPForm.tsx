@@ -77,16 +77,133 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
         switch (key) {
             case AIMCPServerTypeEnum.SSE:
                 content = (
-                    <Form.Item label='服务器URL' name='URL' rules={[{required: true, message: "请输入服务器URL"}]}>
-                        <YakitInput placeholder='例如: http://localhost:3000/sse' />
-                    </Form.Item>
+                    <>
+                        <Form.Item label='服务器URL' name='URL' rules={[{required: true, message: "请输入服务器URL"}]}>
+                            <YakitInput placeholder='例如: http://localhost:3000/sse' />
+                        </Form.Item>
+                        <Form.Item label={"Header"} name='Headers'>
+                            {(headers || []).map((i, index) => {
+                                return (
+                                    <YakitTag
+                                        key={index}
+                                        onClick={() => {
+                                            headerItemRef.current = {
+                                                Header: i.Key,
+                                                Value: i.Value
+                                            }
+                                            headerItemIndexRef.current = index
+                                            setVisibleHTTPHeader(true)
+                                        }}
+                                        closable
+                                        onClose={() => {
+                                            onRemoveHeaders(index)
+                                        }}
+                                    >
+                                        {i.Key}
+                                    </YakitTag>
+                                )
+                            })}
+                            <YakitButton
+                                type={"outline1"}
+                                onClick={() => {
+                                    headerItemRef.current = undefined
+                                    headerItemIndexRef.current = undefined
+                                    setVisibleHTTPHeader(true)
+                                }}
+                            >
+                                添加
+                            </YakitButton>
+                        </Form.Item>
+                    </>
                 )
                 break
             case AIMCPServerTypeEnum.Stdio:
                 content = (
-                    <Form.Item label='执行命令' name='Command' rules={[{required: true, message: "请输入执行命令"}]}>
-                        <YakitInput placeholder='例如: npx -y @modelcontextprotocol/server-filesystem /path' />
-                    </Form.Item>
+                    <>
+                        <Form.Item
+                            label='执行命令'
+                            name='Command'
+                            rules={[{required: true, message: "请输入执行命令"}]}
+                        >
+                            <YakitInput placeholder='例如: npx -y @modelcontextprotocol/server-filesystem /path' />
+                        </Form.Item>
+                        <Form.Item label='环境变量' className={styles["envs-rules"]}>
+                            <Form.List name='Envs'>
+                                {(fields, {add, remove}) => (
+                                    <>
+                                        <div className={styles["envs-rules-header"]}>
+                                            <YakitButton
+                                                type='text'
+                                                style={{paddingLeft: 0}}
+                                                icon={<OutlinePluscircleIcon />}
+                                                onClick={() => {
+                                                    const envs = form.getFieldValue("Envs") || []
+                                                    if (envs.length > 0) {
+                                                        const {Key, Value} = envs[envs.length - 1]
+                                                        if (!Key && !Value) {
+                                                            yakitNotify("error", "请设置完成后再添加")
+                                                            return
+                                                        }
+                                                    }
+                                                    add({Key: "", Value: ""})
+                                                    setTimeout(() => {
+                                                        if (tableRef.current) {
+                                                            tableRef.current.scrollTop = tableRef.current.scrollHeight
+                                                        }
+                                                    }, 100)
+                                                }}
+                                            >
+                                                添加
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                danger
+                                                onClick={() => {
+                                                    form.setFieldsValue({Envs: [{Key: "", Value: ""}]})
+                                                }}
+                                            >
+                                                重置
+                                            </YakitButton>
+                                        </div>
+                                        <div ref={tableRef} className={styles["envs-rules-table"]}>
+                                            <div className={styles["table-header"]}>
+                                                <div className={styles["header-cell"]}>Key</div>
+                                                <div className={styles["header-cell"]}>Value</div>
+                                            </div>
+                                            {fields.map((field) => (
+                                                <div key={field.key} className={styles["table-row"]}>
+                                                    <div className={styles["table-cell"]}>
+                                                        <Form.Item
+                                                            {...field}
+                                                            name={[field.name, "Key"]}
+                                                            style={{marginBottom: 0}}
+                                                        >
+                                                            <YakitInput size='small' style={{width: "100%"}} />
+                                                        </Form.Item>
+                                                    </div>
+                                                    <div className={styles["table-cell"]}>
+                                                        <Form.Item
+                                                            {...field}
+                                                            name={[field.name, "Value"]}
+                                                            style={{marginBottom: 0, flex: 1}}
+                                                        >
+                                                            <YakitInput size='small' style={{width: "100%"}} />
+                                                        </Form.Item>
+                                                        <YakitButton
+                                                            type='text'
+                                                            onClick={() => remove(field.name)}
+                                                            icon={<OutlineTrashIcon />}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </Form.List>
+                        </Form.Item>
+                    </>
                 )
                 break
             default:
@@ -134,115 +251,6 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                 </Form.Item>
                 <Form.Item noStyle shouldUpdate={(prev, curr) => prev.Type !== curr.Type}>
                     {renderContentByType(type)}
-                </Form.Item>
-                <Form.Item label='环境变量' className={styles["envs-rules"]}>
-                    <Form.List name='Envs'>
-                        {(fields, {add, remove}) => (
-                            <>
-                                <div className={styles["envs-rules-header"]}>
-                                    <YakitButton
-                                        type='text'
-                                        style={{paddingLeft: 0}}
-                                        icon={<OutlinePluscircleIcon />}
-                                        onClick={() => {
-                                            const envs = form.getFieldValue("Envs") || []
-                                            if (envs.length > 0) {
-                                                const {Key, Value} = envs[envs.length - 1]
-                                                if (!Key && !Value) {
-                                                    yakitNotify("error", "请设置完成后再添加")
-                                                    return
-                                                }
-                                            }
-                                            add({Key: "", Value: ""})
-                                            setTimeout(() => {
-                                                if (tableRef.current) {
-                                                    tableRef.current.scrollTop = tableRef.current.scrollHeight
-                                                }
-                                            }, 100)
-                                        }}
-                                    >
-                                        添加
-                                    </YakitButton>
-                                    <Divider type='vertical' style={{margin: 0}} />
-                                    <YakitButton
-                                        type='text'
-                                        danger
-                                        onClick={() => {
-                                            form.setFieldsValue({Envs: [{Key: "", Value: ""}]})
-                                        }}
-                                    >
-                                        重置
-                                    </YakitButton>
-                                </div>
-                                <div ref={tableRef} className={styles["envs-rules-table"]}>
-                                    <div className={styles["table-header"]}>
-                                        <div className={styles["header-cell"]}>Key</div>
-                                        <div className={styles["header-cell"]}>Value</div>
-                                    </div>
-                                    {fields.map((field) => (
-                                        <div key={field.key} className={styles["table-row"]}>
-                                            <div className={styles["table-cell"]}>
-                                                <Form.Item
-                                                    {...field}
-                                                    name={[field.name, "Key"]}
-                                                    style={{marginBottom: 0}}
-                                                >
-                                                    <YakitInput size='small' style={{width: "100%"}} />
-                                                </Form.Item>
-                                            </div>
-                                            <div className={styles["table-cell"]}>
-                                                <Form.Item
-                                                    {...field}
-                                                    name={[field.name, "Value"]}
-                                                    style={{marginBottom: 0, flex: 1}}
-                                                >
-                                                    <YakitInput size='small' style={{width: "100%"}} />
-                                                </Form.Item>
-                                                <YakitButton
-                                                    type='text'
-                                                    onClick={() => remove(field.name)}
-                                                    icon={<OutlineTrashIcon />}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </Form.List>
-                </Form.Item>
-                <Form.Item label={"Header"} name="Headers">
-                    {(headers || []).map((i, index) => {
-                        return (
-                            <YakitTag
-                                key={index}
-                                onClick={() => {
-                                    headerItemRef.current = {
-                                        Header: i.Key,
-                                        Value: i.Value
-                                    }
-                                    headerItemIndexRef.current = index
-                                    setVisibleHTTPHeader(true)
-                                }}
-                                closable
-                                onClose={() => {
-                                    onRemoveHeaders(index)
-                                }}
-                            >
-                                {i.Key}
-                            </YakitTag>
-                        )
-                    })}
-                    <YakitButton
-                        type={"outline1"}
-                        onClick={() => {
-                            headerItemRef.current = undefined
-                            headerItemIndexRef.current = undefined
-                            setVisibleHTTPHeader(true)
-                        }}
-                    >
-                        添加
-                    </YakitButton>
                 </Form.Item>
             </Form>
             <InputHTTPHeaderForm
