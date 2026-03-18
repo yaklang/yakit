@@ -2914,9 +2914,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         )
 
         const hotPatchTrigger = useMemoizedFn(() => {
-            emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "hot-patch"}))
-            emiter.emit("sequenceSendSwitchTypeToFuzzer", JSON.stringify({type: "hot-patch"}))
-            emiter.emit("onCurrentFuzzerPage", true)
+            if (!pageId) return
+            emiter.emit("switchSubMenuItem", JSON.stringify({pageId}))
+            setTimeout(() => {
+                emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "hot-patch"}))
+                emiter.emit("sequenceSendSwitchTypeToFuzzer", JSON.stringify({type: "hot-patch"}))
+                emiter.emit("onCurrentFuzzerPage", true)
+            }, 100)
         })
 
         const moreLimtAlertMsg = useMemo(

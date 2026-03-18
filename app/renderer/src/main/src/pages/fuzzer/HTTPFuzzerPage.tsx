@@ -2223,6 +2223,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         () => advancedConfigShowType === "hot-patch" && hotPatchSidebarVisible,
         [advancedConfigShowType, hotPatchSidebarVisible]
     )
+    const topPanelVisible = useCreation(() => advancedConfigVisible || hotPatchVisible, [advancedConfigVisible, hotPatchVisible])
+    const defaultTopPanelFirstRatio = "300px"
+    const [hotPatchTopPanelFirstRatio, setHotPatchTopPanelFirstRatio] = useState<string>(defaultTopPanelFirstRatio)
+    const topPanelDraggable = useCreation(() => topPanelVisible && hotPatchVisible, [topPanelVisible, hotPatchVisible])
+    const topPanelFirstRatio = useCreation(() => {
+        if (!topPanelVisible) {
+            return "0px"
+        }
+        return hotPatchVisible ? hotPatchTopPanelFirstRatio : defaultTopPanelFirstRatio
+    }, [topPanelVisible, hotPatchVisible, hotPatchTopPanelFirstRatio])
+
+    const onTopPanelResize = useMemoizedFn(({ firstSizeNum }) => {
+        if (!hotPatchVisible) return
+        setHotPatchTopPanelFirstRatio(`${firstSizeNum}px`)
+    })
 
     useShortcutKeyTrigger(
         "sendRequest*httpFuzzer",
@@ -2410,54 +2425,65 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
-                <React.Suspense fallback={<>{t("YakitSpin.loading")}...</>}>
-                    <HttpQueryAdvancedConfig
-                        advancedConfigValue={advancedConfigValue}
-                        visible={advancedConfigVisible}
-                        onInsertYakFuzzer={onInsertYakFuzzerFun}
-                        onValuesChange={onGetFormValue}
-                        defaultHttpResponse={
-                            Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
-                        }
-                        webFuzzerValue={requestRef.current}
-                        outsideShowResponseMatcherAndExtraction={
-                            onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
-                        }
-                        onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
-                        inViewportCurrent={inViewport === true}
-                        id={props.id}
-                        matchSubmitFun={matchSubmitFun}
-                        showFormContentType={advancedConfigShowType}
-                        proxyListRef={proxyListRef}
-                        isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
-                        cachedTotal={cachedTotal}
-                    />
-                </React.Suspense>
-                <HTTPFuzzerHotPatchSidebar
-                    pageId={props.id}
-                    visible={hotPatchVisible}
-                    hotPatchCode={hotPatchCodeRef.current}
-                    hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                    selectedTemplateName={selectedHotPatchTemplateName}
-                    onChangeCode={onChangeHotPatchCode}
-                    onChangeHotPatchCodeWithParamGetterCode={onChangeHotPatchCodeWithParamGetter}
-                    onSaveCode={(code) => {
-                        setHotPatchCode(code)
-                    }}
-                    onSaveHotPatchCodeWithParamGetterCode={(code) => {
-                        setHotPatchCodeWithParamGetter(code)
-                        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-                    }}
-                    hotPatchEnabled={hotPatchEnabled}
-                    onHotPatchEnabledChange={onChangeHotPatchEnabled}
-                    onSelectedTemplateNameChange={setSelectedHotPatchTemplateName}
-                    onInsert={(tag) => {
-                        if (webFuzzerNewEditorRef.current.reqEditor)
-                            monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
-                    }}
-                />
-                <div className={styles["http-fuzzer-page"]}>
-                    <div className={styles["fuzzer-heard"]}>
+                <YakitResizeBox
+                    freeze={topPanelDraggable}
+                    firstRatio={topPanelFirstRatio}
+                    secondRatio={topPanelVisible ? `calc(100% - ${defaultTopPanelFirstRatio})` : "100%"}
+                    firstMinSize={topPanelVisible ? defaultTopPanelFirstRatio : 0}
+                    lineDirection='right'
+                    lineStyle={{ display: topPanelDraggable ? "" : "none" }}
+                    onMouseUp={onTopPanelResize}
+                    firstNode={
+                        <React.Suspense fallback={<>{t("YakitSpin.loading")}...</>}>
+                            <HttpQueryAdvancedConfig
+                                advancedConfigValue={advancedConfigValue}
+                                visible={advancedConfigVisible}
+                                onInsertYakFuzzer={onInsertYakFuzzerFun}
+                                onValuesChange={onGetFormValue}
+                                defaultHttpResponse={
+                                    Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
+                                }
+                                webFuzzerValue={requestRef.current}
+                                outsideShowResponseMatcherAndExtraction={
+                                    onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
+                                }
+                                onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
+                                inViewportCurrent={inViewport === true}
+                                id={props.id}
+                                matchSubmitFun={matchSubmitFun}
+                                showFormContentType={advancedConfigShowType}
+                                proxyListRef={proxyListRef}
+                                isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
+                                cachedTotal={cachedTotal}
+                            />
+                            <HTTPFuzzerHotPatchSidebar
+                                pageId={props.id}
+                                visible={hotPatchVisible}
+                                hotPatchCode={hotPatchCodeRef.current}
+                                hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                                selectedTemplateName={selectedHotPatchTemplateName}
+                                onChangeCode={onChangeHotPatchCode}
+                                onChangeHotPatchCodeWithParamGetterCode={onChangeHotPatchCodeWithParamGetter}
+                                onSaveCode={(code) => {
+                                    setHotPatchCode(code)
+                                }}
+                                onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                                    setHotPatchCodeWithParamGetter(code)
+                                    setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                                }}
+                                hotPatchEnabled={hotPatchEnabled}
+                                onHotPatchEnabledChange={onChangeHotPatchEnabled}
+                                onSelectedTemplateNameChange={setSelectedHotPatchTemplateName}
+                                onInsert={(tag) => {
+                                    if (webFuzzerNewEditorRef.current.reqEditor)
+                                        monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
+                                }}
+                            />
+                        </React.Suspense>
+                    }
+                    secondNode={
+                        <div className={styles["http-fuzzer-page"]}>
+                            <div className={styles["fuzzer-heard"]}>
                         <div className={styles["fuzzer-heard-left"]}>
                             {!loading ? (
                                 <>
@@ -2846,6 +2872,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         }
                     />
                 </div>
+                }
+            />
                 <React.Suspense fallback={<>loading...</>}>
                     <PluginDebugDrawer
                         getContainer={fuzzerRef.current}
