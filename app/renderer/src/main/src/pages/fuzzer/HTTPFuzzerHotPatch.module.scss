@@ -187,11 +187,9 @@
 .hotPatch-sidebar {
     display: flex;
     flex-direction: column;
-    width: 300px;
-    min-width: 300px;
-    max-width: 300px;
     height: 100%;
     border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    background-color: var(--Colors-Use-Neutral-Bg);
     
 
     &.hotPatch-sidebar-full-screen {
@@ -328,7 +326,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px;
+        padding: 6px 8px;
         font-size: 16px;
         font-weight: 600;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -365,8 +363,9 @@
         gap: 0;
         flex: 1;
         min-height: 0;
-        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         overflow: hidden;
+        margin-top: -4px;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .hotPatch-sidebar-template-editor {

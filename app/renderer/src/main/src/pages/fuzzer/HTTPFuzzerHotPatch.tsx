@@ -510,7 +510,7 @@ interface HTTPFuzzerHotPatchSidebarProp {
 }
 
 export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> = React.memo((props) => {
-    const {visible, hotPatchCode, hotPatchCodeWithParamGetter, pageId, hotPatchEnabled, selectedTemplateName: selectedTemplateNameProp} = props
+    const {visible, hotPatchCode, hotPatchCodeWithParamGetter, onChangeCode, hotPatchEnabled, selectedTemplateName: selectedTemplateNameProp} = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [code, setCode, getCode] = useGetState(hotPatchCode)
     const [template, setTemplate, getTemplate] = useGetState(`{{yak(handle|{{params(test)}})}}`)
@@ -565,7 +565,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         const matchedTemplate = hotPatchTempLocal.find((item) => item.name === selectedTemplateNameProp)
         if (matchedTemplate?.isDefault) {
             setCode(matchedTemplate.temp)
-            props.onChangeCode?.(matchedTemplate.temp)
+            onChangeCode?.(matchedTemplate.temp)
             return
         }
 
@@ -578,11 +578,11 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                 const nextCode = res.Data?.[0]?.Content
                 if (nextCode) {
                     setCode(nextCode)
-                    props.onChangeCode?.(nextCode)
+                    onChangeCode?.(nextCode)
                 }
             })
             .catch(() => {})
-    }, [visible, selectedTemplateNameProp, hotPatchTempLocal, setCode, props])
+    }, [visible, selectedTemplateNameProp, hotPatchTempLocal, setCode, onChangeCode])
 
     useEffect(() => {
         if (!visible) {
@@ -604,7 +604,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
 
     const updateCode = useMemoizedFn((nextCode: string) => {
         setCode(nextCode)
-        props.onChangeCode?.(nextCode)
+        onChangeCode?.(nextCode)
     })
 
     const persistHotPatchState = useMemoizedFn((enabled: boolean, currentCode: string) => {
@@ -621,6 +621,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     })
 
     const onUpdateTemplate = useMemoizedFn(() => {
+        saveCode(code)
         ipcRenderer
             .invoke("UpdateHotPatchTemplate", {
                 Condition: {Type: "fuzzer", Name: [tempNameRef.current]},
@@ -780,9 +781,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                                     size='small'
                                     icon={<OutlineStorageIcon />}
                                     className={styles["hotPatch-sidebar-icon-button"]}
-                                    onClick={() => {
-                                        saveCode(code, true)
-                                    }}
+                                    onClick={onUpdateTemplate}
                                 />
                             </Tooltip>
                         </div>
@@ -818,9 +817,10 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                     firstMinSize={resizeBoxFirstMinSize}
                     secondMinSize={resizeBoxSecondMinSize}
                     isShowDefaultLineStyle={true}
+                    lineStyle={{backgroundColor: "var(--Colors-Use-Neutral-Bg)"}}
                     style={{height: "100%", flex: 1, minHeight: 0, overflow: "hidden"}}
-                    firstNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden"}}
-                    secondNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden"}}
+                    firstNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: 0}}
+                    secondNodeStyle={{display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: 0}}
                     onMouseUp={({firstSizeNum}) => {
                         const bodyHeight = resizeBodySize?.height || 0
                         if (!bodyHeight) {
