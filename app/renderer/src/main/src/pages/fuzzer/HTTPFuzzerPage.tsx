@@ -988,7 +988,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (!currentItem) return
         const hotPatchCode = currentItem.pageParamsInfo.webFuzzerPageInfo?.hotPatchCode
-        setHotPatchCode(hotPatchCode || "")
     })
     /**更新请求包 */
     const onUpdateRequest = useMemoizedFn(() => {
@@ -1264,6 +1263,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
         //如果有新增的代理配置 则存配置项
         checkProxyEndpoints(advancedConfigValue.proxy)
+        setHotPatchCache({ hotPatchCodeOpen: hotPatchEnabled, hotPatchCode: hotPatchCodeRef.current })
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
@@ -1677,7 +1677,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ...prev,
             disableHotPatch: !enabled
         }))
-        setHotPatchCache({hotPatchCodeOpen: enabled, hotPatchCode: hotPatchCodeRef.current})
     })
 
     const hotPatchTrigger = useMemoizedFn(() => {
