@@ -346,8 +346,10 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     const onDeduplicate = useMemoizedFn(() => {
         ipcRenderer
             .invoke("DeduplicateMITMRuleExtractedData",{
-                TraceID: [props.hiddenIndex],
-                AnalyzedIds: props.analyzedIds
+                Filter: {
+                    TraceID: [props.hiddenIndex],
+                    AnalyzedIds: props.analyzedIds
+                }
             })
             .then(() => {
                 yakitNotify("success", t("HTTPFlowExtractedDataTable.deduplicateSuccess"))
