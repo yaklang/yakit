@@ -15,9 +15,11 @@ import {
     AIModelConfig,
     AIModelTypeFileName,
     AIProvider,
+    DEFAULT_AI_API_TYPE,
     grpcGetAIGlobalConfig,
     grpcQueryAIProviderAll,
-    grpcSetAIGlobalConfig
+    grpcSetAIGlobalConfig,
+    normalizeAIAPIType
 } from "../utils"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
@@ -30,6 +32,7 @@ import {cloneDeep} from "lodash"
 
 const defaultFormValues = {
     Type: "",
+    api_type: DEFAULT_AI_API_TYPE,
     model_type: AIModelTypeEnum.TierIntelligent
 }
 /**是否认为是同一个ai model */
@@ -105,6 +108,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 model_type: aiModelType,
 
                 api_key: item.Provider.APIKey,
+                api_type: normalizeAIAPIType(item.Provider.APIType),
                 api_key_id: item.ProviderId,
 
                 model: item.ModelName,
@@ -144,6 +148,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 Provider: {
                     Type: res.Type,
                     APIKey: res.api_key,
+                    APIType: normalizeAIAPIType(res.api_type),
                     Domain: res.domain,
                     Proxy: res.proxy,
                     NoHttps: res.no_https,
@@ -213,7 +218,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                     ...newItem.Provider
                 }
             }
-            debugger
+
             if (aiModelType !== modelType) {
                 const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))
                 if (isHave) {
@@ -324,6 +329,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
         form.setFieldsValue({
             api_key: option.label,
             api_key_id: value,
+            api_type: normalizeAIAPIType(item?.Config?.APIType),
             domain: item?.Config?.Domain,
             proxy: item?.Config?.Proxy,
             no_https: item?.Config?.NoHttps

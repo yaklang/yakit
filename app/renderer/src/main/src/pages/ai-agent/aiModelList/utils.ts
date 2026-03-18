@@ -30,6 +30,13 @@ import { TFunction } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
+export const AI_API_TYPE_OPTIONS = ["chat_completions", "responses"] as const
+export type AIAPIType = (typeof AI_API_TYPE_OPTIONS)[number]
+export const DEFAULT_AI_API_TYPE: AIAPIType = "chat_completions"
+export const normalizeAIAPIType = (value?: string): AIAPIType => {
+    return AI_API_TYPE_OPTIONS.includes(value as AIAPIType) ? (value as AIAPIType) : DEFAULT_AI_API_TYPE
+}
+
 export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> = (hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer

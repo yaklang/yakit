@@ -2814,6 +2814,7 @@ message ThirdPartyApplicationConfig {
   bool Disabled = 9;
   string Proxy = 10;
   bool NoHttps = 11;
+  string APIType = 12;
 }
 
 message DiagnoseNetworkRequest {
@@ -8258,14 +8259,14 @@ message SyntaxflowsProgress {
 message HotPatchTemplate {
   string Name = 1;
   string Content = 2;
-  string Type = 3; // fuzzer/mitm/httpflow-analyze
+  string Type = 3; // fuzzer/mitm/httpflow-analyze/global
 }
 
 message HotPatchTemplateRequest {
   repeated int64 Id = 1;
   repeated string Name = 2;
   repeated string ContentKeyword = 3;
-  string Type = 4; // fuzzer/mitm/httpflow-analyze
+  string Type = 4; // fuzzer/mitm/httpflow-analyze/global
 }
 
 message UpdateHotPatchTemplateRequest {
