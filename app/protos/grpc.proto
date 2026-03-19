@@ -3271,6 +3271,7 @@ message ExtractedDataFilter {
   repeated string RuleVerbose = 2;
   repeated int64 AnalyzedIds = 3;
   string Keyword = 4;
+  repeated int64 Ids = 5;
 }
 
 message ExportMITMRuleExtractedDataRequest {
@@ -3286,8 +3287,7 @@ message ExportMITMRuleExtractedDataResponse {
 }
 
 message DeleteMITMRuleExtractedDataRequest {
-  int64 Id = 1;
-  repeated int64 Ids = 2;
+  ExtractedDataFilter Filter = 1;
 }
 
 message DeduplicateMITMRuleExtractedDataRequest {
