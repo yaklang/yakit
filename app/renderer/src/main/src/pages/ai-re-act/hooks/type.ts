@@ -1,6 +1,6 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AIYakExecFileRecord, ReActChatRenderItem} from "./aiRender"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams, AITaskStatus} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {Dispatch, SetStateAction} from "react"
@@ -206,13 +206,19 @@ export interface AIChatSendParams {
     extraValue?: AIChatIPCStartParams["extraValue"]
 }
 
+/** 任务规划的taskID和状态 */
+export interface TaskChatTaskInfo {
+    taskID: string
+    status: AITaskStatus
+}
+
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
     /** 获取当前执行接口流的请求参数 */
     fetchAIRequest: () => AIStartParams | undefined
-    /** 获取当前执行任务规划的问题id */
-    fetchTaskChatID: () => string
+    /** 获取当前执行任务规划的问题详情 */
+    fetchTaskChatID: () => TaskChatTaskInfo | undefined
     /** 获取当前外界传入的数据类实例 */
     fetchChatDataStore: () => UseChatIPCParams["cacheDataStore"]
     /** 切换历史会话展示 */
