@@ -652,7 +652,7 @@ export declare namespace AIAgentGrpcApi {
         current_task_index: string
         current_task: string
         current_goal: string
-        phase: "NotCompleted"
+        phase: "NotCompleted" | "Completed"
         updated_at: number
     }
     /** 任务规划历史数据 */
