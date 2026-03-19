@@ -1,16 +1,14 @@
-import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {Typography, Table, Tooltip} from "antd"
+import React, {useImperativeHandle, useMemo, useState} from "react"
+import {Typography} from "antd"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@/pages/invoker/schema"
-import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
 import styles from "./hTTPFlowDetail.module.scss"
-import {OutlinePositionIcon, OutlineSearchIcon} from "@/assets/icon/outline"
-import {HTTPFlowsFieldGroupResponse, MultipleSelect} from "./HTTPFlowTable/HTTPFlowTable"
-import classNames from "classnames"
+import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {MultipleSelect} from "./HTTPFlowTable/HTTPFlowTable"
 import {yakitNotify} from "@/utils/notification"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
-import {ColumnsType} from "antd/lib/table"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {CopyComponents} from "./yakitUI/YakitTag/YakitTag"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
@@ -327,7 +325,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 }
             }
         ]
-    }, [tags, params.Filter.RuleVerbose, ruleVerboseSearchVal, tagsFilter])
+    }, [tags, ruleVerboseSearchVal, tagsFilter])
 
     const onLocation = useMemoizedFn((i: HTTPFlowExtractedData) => {
         if (props.invalidForUTF8Request || props.InvalidForUTF8Response) {
@@ -419,7 +417,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         setIsAllSelect(false)
         setSelectedRowKeys([])
         update(1, 10, newParams.Filter)
-    }).run
+    },{wait: 500}).run
     return (
         <div className={styles["httpFlow-data-table"]}>
             <TableVirtualResize<HTTPFlowExtractedData>

@@ -21,7 +21,7 @@ import {
     HTTPFlowExtractedDataTableRefProps,
     QueryMITMRuleExtractedDataRequest
 } from "@/components/HTTPFlowExtractedDataTable"
-import {ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
+import {ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon} from "@/assets/newIcon"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -32,7 +32,7 @@ import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import {OutlineLog2Icon} from "@/assets/icon/outline"
+import {OutlineCloseIcon, OutlineLog2Icon, OutlineOpenIcon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {RemoteGV} from "@/yakitGV"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
@@ -976,7 +976,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             },
             {label: t("HTTPFlowDetail.batchDeletion"), key: "delete", type: "danger"}
         ]
-    },[])
+    },[i18n.language])
 
     const onMultipleClick = useMemoizedFn((key: string) => {
         switch (key) {
@@ -1045,7 +1045,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             style={{height: 32}}
                                         >
                                             <Tooltip placement='top' title={t("HTTPFlowDetailMini.expandLeft")}>
-                                                <SideBarCloseIcon
+                                                <OutlineCloseIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
                                                         setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
@@ -1091,7 +1091,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                     placement='top'
                                                                     title={t("HTTPFlowDetailMini.collapseRight")}
                                                                 >
-                                                                    <SideBarOpenIcon
+                                                                    <OutlineOpenIcon
                                                                         className={styles["fold-icon"]}
                                                                         onClick={() => {
                                                                             setRemoteValue(
@@ -1224,7 +1224,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                                 "HTTPFlowDetailMini.collapseRight"
                                                                             )}
                                                                         >
-                                                                            <SideBarOpenIcon
+                                                                            <OutlineOpenIcon
                                                                                 className={styles["fold-icon"]}
                                                                                 onClick={() => {
                                                                                     setRemoteValue(
@@ -1280,7 +1280,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                         placement='top'
                                                                         title={t("HTTPFlowDetailMini.collapseRight")}
                                                                     >
-                                                                        <SideBarOpenIcon
+                                                                        <OutlineOpenIcon
                                                                             className={styles["fold-icon"]}
                                                                             onClick={() => {
                                                                                 setRemoteValue(
@@ -1307,7 +1307,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             placement='top'
                                                             title={t("HTTPFlowDetailMini.collapseRight")}
                                                         >
-                                                            <SideBarOpenIcon
+                                                            <OutlineOpenIcon
                                                                 className={styles["fold-icon"]}
                                                                 onClick={() => {
                                                                     setRemoteValue(
