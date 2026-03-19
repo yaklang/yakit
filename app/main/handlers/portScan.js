@@ -1,7 +1,6 @@
 const { ipcMain } = require("electron");
 const FS = require("fs")
-const xlsx = require("node-xlsx")
-const handlerHelper = require("./handleStreamWithContext");
+const XLSX = require("xlsx")
 module.exports = (win, getClient) => {
     const handlerHelper = require("./handleStreamWithContext");
 
@@ -18,13 +17,17 @@ module.exports = (win, getClient) => {
             const typeArr = ['csv', 'xls', 'xlsx']
             // 读取Excel
             if (typeArr.includes(type)) {
-                // 读取xlsx
                 try {
-                    const obj = xlsx.parse(params)
-                    resolve(obj)
-                } catch (error) {
-                    reject(err)
-                }
+                const workbook = XLSX.readFile(params)
+                const result = workbook.SheetNames.map(name => ({
+                    name,
+                    data: XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1 })
+                }))
+
+                resolve(result)
+            } catch (err) {
+                reject(err)
+            }
             }
             // 读取txt
             else {
