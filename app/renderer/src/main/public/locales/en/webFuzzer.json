@@ -539,7 +539,7 @@
     "Global_hot_template_tip": "After implementing global hot reloading of traffic, unified processing can be achieved across all systems.",
     "enabled": "Enabled",
     "started": "(Started)",
-    "MITM_hot_patch_started": "MITM Hot-Reload"
+    "MITM_hot_patch": "MITM Hot-Reload"
   },
   "MatcherAndExtraction": {
     "apply_changes_prompt": "Apply the modified content?",

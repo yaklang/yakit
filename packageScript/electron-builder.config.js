@@ -1,5 +1,11 @@
 // app 信息配置
 let appInfoOption = null
+let files = null
+// 需要固定包含在构建包中的文件（不受 files 选项的影响）
+let fixedFile = [
+    "app/assets/yakitlogo.png",
+    "app/assets/导入模板.xlsx",
+]
 
 // 各平台图标配置
 let macIcon = null
@@ -23,6 +29,12 @@ switch (platform) {
             productName: "EnpriTrace",
             copyright: "Copyright © 2021 v1ll4n"
         }
+        files = [
+            "!app/assets/**/*",
+            "app/assets/yakit-close.png",
+            "app/assets/yakiteelogo*",
+            ...fixedFile
+        ]
         macIcon = "app/assets/yakiteelogo.icns"
         linuxIcon = "app/assets/yakiteelogo.icns"
         winIcon = "app/assets/yakiteelogo.ico"
@@ -36,6 +48,12 @@ switch (platform) {
             productName: "EnpriTraceAgent",
             copyright: "Copyright © 2021 v1ll4n"
         }
+        files = [
+            "!app/assets/**/*",
+            "app/assets/yakit-close.png",
+            "app/assets/yakitselogo*",
+            ...fixedFile
+        ]
         macIcon = "app/assets/yakitselogo.icns"
         linuxIcon = "app/assets/yakitselogo.icns"
         winIcon = "app/assets/yakitselogo.ico"
@@ -49,6 +67,12 @@ switch (platform) {
             productName: "IRify",
             copyright: "Copyright © 2021 v1ll4n"
         }
+        files = [
+            "!app/assets/**/*",
+            "app/assets/irify-close.png",
+            "app/assets/yakitsslogo*",
+            ...fixedFile
+        ]
         macIcon = "app/assets/yakitsslogo.icns"
         linuxIcon = "app/assets/yakitsslogo.icns"
         winIcon = "app/assets/yakitsslogo.ico"
@@ -62,6 +86,12 @@ switch (platform) {
             productName: "IRifyEnpriTrace",
             copyright: "Copyright © 2021 v1ll4n"
         }
+        files = [
+            "!app/assets/**/*",
+            "app/assets/irify-close.png",
+            "app/assets/yakitsslogo*",
+            ...fixedFile
+        ]
         macIcon = "app/assets/yakitsslogo.icns"
         linuxIcon = "app/assets/yakitsslogo.icns"
         winIcon = "app/assets/yakitsslogo.ico"
@@ -75,6 +105,12 @@ switch (platform) {
             productName: "Memfit AI",
             copyright: "Copyright © 2021 v1ll4n"
         }
+        files = [
+            "!app/assets/**/*",
+            "app/assets/memfit-close.png",
+            "app/assets/memfitlogo*",
+            ...fixedFile
+        ]
         macIcon = "app/assets/memfitlogo.icns"
         linuxIcon = "app/assets/memfitlogo.icns"
         winIcon = "app/assets/memfitlogo.ico"
@@ -89,6 +125,14 @@ switch (platform) {
             productName: "Yakit",
             copyright: "Copyright © 2024 yaklang.io"
         }
+        files = [
+            // 先排除整个目录（后面的规则可以“打破前面的排除”）
+            "!app/assets/**/*",
+            // 再单独放行 assets 目录下的yakit开头的文件
+            "app/assets/yakit-close.png",
+            "app/assets/yakitlogo*",
+            ...fixedFile
+        ]
         macIcon = "app/assets/yakitlogo.icns"
         linuxIcon = "app/assets/yakitlogo.icns"
         winIcon = "app/assets/yakitlogo.ico"
@@ -128,6 +172,7 @@ const configOption = {
     },
     files: [
         "**/*",
+        ...(files || []),
         "!bins/**/*",
         "!.github/**/*",
         "!multibuilder/**/*",
@@ -137,8 +182,18 @@ const configOption = {
         "!build/**/*",
         "!backups/**/*",
         "!app/renderer/src/**/*",
+        // 先排除整个目录（后面的规则可以“打破前面的排除”）
+        "!app/renderer/engine-link-startup/**/*",
+        // 再单独放行 dist
+        "app/renderer/engine-link-startup/dist/**/*",
         "!cli/*",
-        "!**/*.p12"
+        "!**/*.p12",
+        "!imgs/**/*",
+        "!vitest.config.ts",
+        "!package.json.pre-commit.bak",
+        "!prettier.config.js",
+        "!ELECTRON_GUIDE.md",
+        "!README*",
     ],
     asar: true,
     publish: [
