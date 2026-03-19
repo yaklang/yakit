@@ -44,4 +44,9 @@ export type AIAgentEventProps = {
 
     /** 删除会话列表里的会话时, 通知useChatIPC-hook对应会话数据已被删除，不需断开保存操作 */
     onDelChats: string
+
+    /**
+     * @name 刷新AI历史列表
+     */
+    onRefreshAITaskHistoryList?: string
 }

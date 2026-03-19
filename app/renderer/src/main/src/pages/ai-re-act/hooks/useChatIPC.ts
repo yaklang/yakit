@@ -574,7 +574,11 @@ function useChatIPC(params?: UseChatIPCParams) {
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 设置任务规划对应的问题ID, 并清除自由对话(ReAct)的loading状态
-                        taskChatID.current = {taskID: startInfo["re-act_task"], status: AITaskStatus.inProgress}
+                        taskChatID.current = {
+                            taskID: startInfo["re-act_task"],
+                            status: AITaskStatus.inProgress,
+                            coordinatorId: startInfo.coordinator_id
+                        }
                         casualChatID.current -= 1
                         setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         // 标记grpc流里属于任务规划的流
