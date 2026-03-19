@@ -4,6 +4,7 @@ import type {AITaskInfoProps} from "@/pages/ai-re-act/hooks/aiRender"
 export interface AITreeProps {
     tasks: AITaskInfoProps[]
     onNodeClick?: AITreeNodeProps["onClick"]
+    className?: string
 }
 
 export interface AITreeNodeProps {

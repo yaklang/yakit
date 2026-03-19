@@ -13,7 +13,7 @@ import {
     AITaskStartInfo,
     ReActChatRenderItem
 } from "@/pages/ai-re-act/hooks/aiRender"
-import {AIEventQueryRequest} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIEventQueryRequest, AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
 import StreamCard from "../components/StreamCard"
@@ -32,15 +32,21 @@ import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import TaskLoading from "./TaskLoading/TaskLoading"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import {HistoryTaskTree} from "./historyTaskTree/HistoryTaskTree"
 
 export enum AIChatLeft {
     TaskTree = "task-tree",
-    Timeline = "timeline"
+    Timeline = "timeline",
+    HistoryTaskTree = "history-task-tree"
 }
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks} = props
+
+    const {chatIPCData} = useChatIPCStore()
+    const {handleSendSyncMessage} = useChatIPCDispatcher()
+
     const {taskChat, memoryList} = useChatIPCStore().chatIPCData
     const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
     const [expand, setExpand] = useControllableValue<boolean>(props, {
@@ -48,15 +54,28 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         valuePropName: "expand",
         trigger: "setExpand"
     })
+    const planHistoryList = useCreation(() => {
+        return (
+            chatIPCData.planHistoryList || {
+                total: 0,
+                records: [],
+                session_id: ""
+            }
+        )
+    }, [chatIPCData.planHistoryList])
     const length = useCreation(() => {
         return memoryList?.memories?.length
     }, [memoryList?.memories?.length])
+
     const handleCancelExpand = useMemoizedFn(() => {
         setExpand(false)
     })
 
-    const hasTaskTree = (taskChat?.elements?.length ?? 0) > 0
+    const onSendPlayHistoryList = useMemoizedFn(() => {
+        handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
+    })
 
+    const hasTaskTree = (taskChat?.elements?.length ?? 0) > 0
     const renderDom = useMemoizedFn(() => {
         switch (activeTab) {
             case AIChatLeft.TaskTree:
@@ -67,6 +86,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                 )
             case AIChatLeft.Timeline:
                 return <TimelineCard />
+            case AIChatLeft.HistoryTaskTree:
+                return <HistoryTaskTree data={planHistoryList} handleTabChange={handleTabChange} />
             default:
                 break
         }
@@ -74,24 +95,29 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
     const handleTabChange = useMemoizedFn((value: AIChatLeft) => {
         setActiveTab(value)
+        if (chatIPCData.execute && value === AIChatLeft.HistoryTaskTree) {
+            onSendPlayHistoryList()
+        }
     })
 
     const button = useMemo(() => {
         if (!hasTaskTree) return <YakitButton size='middle'>时间线</YakitButton>
+        let options = [
+            {label: "任务树", value: AIChatLeft.TaskTree},
+            {label: "时间线", value: AIChatLeft.Timeline},
+            {label: "历史任务", value: AIChatLeft.HistoryTaskTree}
+        ]
         return (
             <YakitRadioButtons
                 buttonStyle='solid'
                 size='middle'
                 defaultValue={AIChatLeft.TaskTree}
-                options={[
-                    {label: "任务树", value: AIChatLeft.TaskTree},
-                    {label: "时间线", value: AIChatLeft.Timeline}
-                ]}
+                options={options}
                 value={activeTab}
                 onChange={({target}) => handleTabChange(target.value)}
             />
         )
-    }, [activeTab, handleTabChange, hasTaskTree])
+    }, [activeTab, handleTabChange, hasTaskTree, planHistoryList.total])
     const extraProps = useCreation(() => {
         let p: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = {}
         if (!length) {

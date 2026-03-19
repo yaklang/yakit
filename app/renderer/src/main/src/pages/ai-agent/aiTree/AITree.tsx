@@ -27,12 +27,12 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-    const {tasks} = props
+    const {tasks, className} = props
     const onClick = useMemoizedFn((id) => {
         emiter.emit("onAITreeLocatePlanningList", id)
     })
     return (
-        <div className={styles["ai-tree"]}>
+        <div className={classNames(styles["ai-tree"], className || "")}>
             {tasks.map((item, index) => {
                 const prev = tasks[index - 1]
                 const next = tasks[index + 1]

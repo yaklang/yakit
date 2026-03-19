@@ -210,6 +210,7 @@ export interface AIChatSendParams {
 export interface TaskChatTaskInfo {
     taskID: string
     status: AITaskStatus
+    coordinatorId:AIOutputEvent["CoordinatorId"]
 }
 
 export interface UseChatIPCEvents {

@@ -734,7 +734,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onExtraAction} = props
+    const {reviewInfo, planReviewTreeKeywordsMap, footerExtra} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -754,35 +754,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                 >
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
-                <div className={styles["review-footer-extra"]}>
-                    {showCancelSubtask && (
-                        <YakitPopconfirm
-                            placement='top'
-                            onConfirm={() => onExtraAction("stopSubTask")}
-                            title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
-                        >
-                            <YakitButton type='outline2' icon={<RedoDotIcon />}>
-                                跳过子任务
-                            </YakitButton>
-                        </YakitPopconfirm>
-                    )}
-                    {node}
-                    <YakitPopconfirm
-                        placement='top'
-                        onConfirm={() => onExtraAction("stopTask")}
-                        title='是否确认取消整个任务，确认将停止执行'
-                    >
-                        <Tooltip overlay='终止任务' placement='top'>
-                            <YakitButton
-                                className={styles["task-button"]}
-                                radius='28px'
-                                colors='danger'
-                                type='primary'
-                                icon={<OutlineExitIcon />}
-                            />
-                        </Tooltip>
-                    </YakitPopconfirm>
-                </div>
+                <div className={styles["review-footer-extra"]}>{footerExtra(node)}</div>
             </div>
         )
     })

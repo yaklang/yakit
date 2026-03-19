@@ -119,15 +119,13 @@ export enum AIInputEventSyncTypeEnum {
     SYNC_TYPE_PLAN = "plan",
     SYNC_TYPE_CONSUMPTION = "consumption",
     SYNC_TYPE_PING = "ping",
-    SYNC_TYPE_SET_CONFIG = "set_config",
     SYNC_TYPE_PROCESS_EVENT = "sync_process_event",
     /** 获取队列信息 */
     SYNC_TYPE_QUEUE_INFO = "queue_info",
     /** 查看上下文 */
     SYNC_TYPE_TIMELINE = "timeline",
     SYNC_TYPE_KNOWLEDGE = "enhance_knowledge",
-    /**@deprecated 更新AI配置 更改为hotpatchType*/
-    SYNC_TYPE_UPDATE_CONFIG = "update_config",
+    SYNC_TYPE_UPDATE_CONFIG = "set_config",
     /** 获取当前会话的记忆列表 */
     SYNC_TYPE_MEMORY_CONTEXT = "memory_sync",
     SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_task",
@@ -137,13 +135,16 @@ export enum AIInputEventSyncTypeEnum {
     SYNC_TYPE_REACT_REMOVE_TASK = "react_remove_task",
     /** 清空队列 */
     SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task",
+    /** 恢复任务 */
+    SYNC_TYPE_RECOVERY_PLAN_AND_EXEC = "recovery_plan_and_exec",
     /** 取消指定任务 */
     SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task",
     /** 取消指定的任务树上的某个节点 */
     SYNC_TYPE_SKIP_SUBTASK_IN_PLAN = "skip_subtask_in_plan",
     /** 重跑指定的任务树上的某个节点 */
-    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan"
-    /** */
+    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan",
+    /** 获取历史任务列表 */
+    SYNC_TYPE_PLAN_EXEC_TASKS = "plan_exec_tasks"
 }
 
 export interface AIInputEvent {
