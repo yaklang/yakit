@@ -233,18 +233,21 @@ function useChatIPC(params?: UseChatIPCParams) {
                 setPlanHistoryList({...list})
                 return
             }
-            for (let item of arr) {
-                // 因为后端给过来的task_progress是一个json的string类型数据
-                item.task_progress = JSON.parse(
-                    item.task_progress as unknown as string
-                ) as AIAgentGrpcApi.PlanHistoryProgress
-                // 因为后端给过来的task_tree是一个json的string类型数据，所以需要转换成树形结构的数据，供UI展示使用
-                const tree = JSON.parse(item.task_tree as unknown as string) as AIAgentGrpcApi.PlanTask
-                // 记录任务虎根节点的名字，供UI展示使用
-                item.root_task_name = tree.name
-                item.task_tree = genExecTasks(tree)
-            }
-            setPlanHistoryList({...list, records: arr})
+            const newArr = arr
+                .map((item) => {
+                    // 因为后端给过来的task_progress是一个json的string类型数据
+                    item.task_progress = JSON.parse(
+                        item.task_progress as unknown as string
+                    ) as AIAgentGrpcApi.PlanHistoryProgress
+                    // 因为后端给过来的task_tree是一个json的string类型数据，所以需要转换成树形结构的数据，供UI展示使用
+                    const tree = JSON.parse(item.task_tree as unknown as string) as AIAgentGrpcApi.PlanTask
+                    // 记录任务虎根节点的名字，供UI展示使用
+                    item.root_task_name = tree.name
+                    item.task_tree = genExecTasks(tree)
+                    return item
+                })
+                .filter((item) => item.task_progress.phase !== "Completed")
+            setPlanHistoryList({...list, records: newArr})
         } catch (error) {}
     })
     const handleResetPlanHistoryList = useMemoizedFn(() => {
