@@ -363,7 +363,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     const onDelete = useMemoizedFn((i?: number) => {
         const Ids: number[] = i ? [i] : selectedRowKeys.map((item) => parseInt(item))
         ipcRenderer
-            .invoke("DeleteMITMRuleExtractedData", {Ids})
+            .invoke("DeleteMITMRuleExtractedData", {Filter: {Ids}})
             .then(() => {
                 yakitNotify("success", t("HTTPFlowExtractedDataTable.deleteSuccess"))
                 resetUpdate()
