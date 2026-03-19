@@ -2223,7 +2223,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         [advancedConfigShowType, hotPatchSidebarVisible]
     )
     const topPanelVisible = useCreation(() => advancedConfigVisible || hotPatchVisible, [advancedConfigVisible, hotPatchVisible])
-    const defaultTopPanelFirstRatio = "300px"
+    const defaultTopPanelFirstRatio = useMemo(()=> i18n.language === 'zh' ? "300px" : "460px", [i18n.language])
     const [hotPatchTopPanelFirstRatio, setHotPatchTopPanelFirstRatio] = useState<string>(defaultTopPanelFirstRatio)
     const topPanelDraggable = useCreation(() => topPanelVisible && hotPatchVisible, [topPanelVisible, hotPatchVisible])
     const topPanelFirstRatio = useCreation(() => {
@@ -2231,7 +2231,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return "0px"
         }
         return hotPatchVisible ? hotPatchTopPanelFirstRatio : defaultTopPanelFirstRatio
-    }, [topPanelVisible, hotPatchVisible, hotPatchTopPanelFirstRatio])
+    }, [topPanelVisible, hotPatchVisible, hotPatchTopPanelFirstRatio, defaultTopPanelFirstRatio])
 
     const onTopPanelResize = useMemoizedFn(({ firstSizeNum }) => {
         if (!hotPatchVisible) return
@@ -2429,6 +2429,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     firstRatio={topPanelFirstRatio}
                     secondRatio={topPanelVisible ? `calc(100% - ${defaultTopPanelFirstRatio})` : "100%"}
                     firstMinSize={topPanelVisible ? defaultTopPanelFirstRatio : 0}
+                    isRecalculateWH={false}
+                    firstNodeStyle={{ overflowY: 'auto' }}
                     lineDirection='right'
                     lineStyle={{ display: topPanelDraggable ? "" : "none" }}
                     onMouseUp={onTopPanelResize}
