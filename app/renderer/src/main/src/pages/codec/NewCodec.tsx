@@ -8,17 +8,19 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDragsortIcon, SolidPlayIcon, SolidStarIcon} from "@/assets/icon/solid"
-import {ExclamationIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
+import {ExclamationIcon} from "@/assets/newIcon"
 import {
     OutlineArrowBigUpIcon,
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineBanIcon,
     OutlineClockIcon,
+    OutlineCloseIcon,
     OutlineDocumentduplicateIcon,
     OutlineDotshorizontalIcon,
     OutlineFileUpIcon,
     OutlineImportIcon,
+    OutlineOpenIcon,
     OutlinePauseIcon,
     OutlinePencilaltIcon,
     OutlinePlayIcon,
@@ -1393,7 +1395,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
                 <div className={styles["title"]}>
                     {!fold && (
                         <Tooltip placement='right' title='展开Codec分类'>
-                            <SideBarOpenIcon
+                            <OutlineOpenIcon
                                 className={styles["fold-icon"]}
                                 onClick={() => {
                                     setFold(true)
@@ -1789,7 +1791,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                 <div className={styles["title"]}>Codec 分类</div>
                 <div className={classNames(styles["extra"], styles["fold-icon"])}>
                     <Tooltip placement='top' title='收起Codec分类'>
-                        <SideBarCloseIcon
+                        <OutlineCloseIcon
                             className={styles["fold-icon"]}
                             onClick={() => {
                                 setFold(false)
