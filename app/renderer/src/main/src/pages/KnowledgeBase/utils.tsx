@@ -44,6 +44,7 @@ import {OutlineBookOpenTextIcon, OutlineChipIcon, OutlinePuzzleIcon} from "@/ass
 import knowledgeJoyrideFirst from "@/pages/KnowledgeBase/images/knowledge-joyride-first.mp4"
 import knowledgeJoyrideLast from "@/pages/KnowledgeBase/images/knowledge-joyride-last.mp4"
 import joyrideFirstStepImg from "@/pages/KnowledgeBase/images/joyride-first-step.png"
+import knowledgeJoyrideThree from "@/pages/KnowledgeBase/images/knowledge-joyride-three.mp4"
 import {Step} from "react-joyride"
 import styles from "./knowledgeBase.module.scss"
 
@@ -942,6 +943,11 @@ const stopList = [
         description:
             "可从已经生成的实体和知识中，选择需要的实体或知识再次生成相关知识，当感觉知识内容有缺少时可用此方法对知识进行补充",
         images: knowledgeJoyrideLast
+    },
+    {
+        title: "知识图谱演示",
+        description: "通过勾选实体可以动态绘制知识图谱，便于查看实体之间的关联",
+        images: knowledgeJoyrideThree
     }
 ]
 
