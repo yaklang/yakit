@@ -255,6 +255,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 dataKey: "RuleName",
                 ellipsis: true,
                 width: 150,
+                enableDrag: true,
                 filterProps: {
                     filterKey: "RuleVerbose",
                     filterMultiple: true,
@@ -418,6 +419,13 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         setSelectedRowKeys([])
         update(1, 10, newParams.Filter)
     },{wait: 500}).run
+
+    const onSetCurrentRow = useDebounceFn(
+            (rowData: HTTPFlowExtractedData | undefined) => {
+               rowData && onLocation(rowData)
+            },
+            {wait: 200, leading: true}
+        ).run
     return (
         <div className={styles["httpFlow-data-table"]}>
             <TableVirtualResize<HTTPFlowExtractedData>
@@ -430,6 +438,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 isRefresh={isRefresh}
                 loading={loading}
                 onRowContextMenu={onRowContextMenu}
+                enableDrag={true}
                 rowSelection={{
                     isAll: isAllSelect,
                     type: "checkbox",
@@ -446,6 +455,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                     }
                 }}
                 onChange={onTableChange}
+                onSetCurrentRow={onSetCurrentRow}
+                useUpAndDown={true}
             />
         </div>
     )
