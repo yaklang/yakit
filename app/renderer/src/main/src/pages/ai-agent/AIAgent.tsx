@@ -42,7 +42,7 @@ export const AIAgentCacheClearValue = "20260113"
 
 const initialHistoryPagination = {
     Page: 1,
-    Limit: 2,
+    Limit: 10,
     OrderBy: "",
     Order: "",
     total: 0
