@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {AIFocusModeProps} from "./type"
 import {OutlineMicroscopeIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -9,16 +9,20 @@ import {AIInputEvent} from "../hooks/grpcApi"
 import styles from "./AIFocusMode.module.scss"
 import {grpcQueryAIFocus} from "@/pages/ai-agent/grpc"
 import {AIFocus} from "@/pages/ai-agent/type/forge"
-import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 import i18n from "@/i18n/i18n"
 import {Tooltip} from "antd"
+import {DefaultOptionType} from "antd/lib/select"
+
+type FocusModeListType = DefaultOptionType & {
+    description: string
+}
 
 export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
     const lang = i18n.language
     const {value, onChange, className} = props
 
-    const [focusModeList, setFocusModeList] = useState<YakitSelectProps["options"]>([])
+    const [focusModeList, setFocusModeList] = useState<FocusModeListType[]>([])
     const [focusModeRaw, setFocusModeRaw] = useState<AIFocus[]>([])
 
     const [open, setOpen] = useState<boolean>(false)
@@ -32,10 +36,12 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
 
     useEffect(() => {
         const list = focusModeRaw.map((item) => {
+            const description = item.Description.length ? item.Description : "暂无描述"
             const resultVerboseNameZh = item?.VerboseNameZh?.length ? item.VerboseNameZh : item.Name
             return {
                 label: lang === "zh" ? resultVerboseNameZh : item.Name,
-                value: item.Name
+                value: item.Name,
+                description
             }
         })
 
@@ -112,14 +118,16 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                             </div>
                         }
                     >
-                        <div
-                            className={classNames(styles["select-option-wrapper"], {
-                                [styles["select-option-active-wrapper"]]: item.value === value
-                            })}
-                        >
-                            <div className={styles["text"]}>{item.label}</div>
-                            <div className={styles["describe"]}> {item.describe}</div>
-                        </div>
+                        <Tooltip title={item.description} placement='right'>
+                            <div
+                                className={classNames(styles["select-option-wrapper"], {
+                                    [styles["select-option-active-wrapper"]]: item.value === value
+                                })}
+                            >
+                                <div className={styles["text"]}>{item.label}</div>
+                                <div className={styles["describe"]}> {item.describe}</div>
+                            </div>
+                        </Tooltip>
                     </YakitSelect.Option>
                 ))}
             </AIChatSelect>

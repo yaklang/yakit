@@ -594,6 +594,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     const refRef = useRef<HTMLDivElement>(null)
     const [run, setRun] = useSafeState(false)
+    const [stepIndex, setStepIndex] = useSafeState(0)
     const [knowledgeBaseContentViewport = false] = useInViewport(refRef)
     const [joyrideStep, setJoyrideStep] = useSafeState({
         step: 1,
@@ -620,18 +621,25 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
     // Joyride 回调
     const handleJoyrideCallback = (data: CallBackProps) => {
-        const {status, action} = data
+        const {status, action, index, type} = data
+        if (type === "step:after") {
+            setStepIndex(index + 1)
+        }
         if (action === ACTIONS.CLOSE) {
             setRun(false)
+            setStepIndex(0)
             setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep, true)
             return
         }
 
         if (status === STATUS.SKIPPED) {
             setRun(true)
+            setStepIndex(0)
         }
         if (status === STATUS.READY || status === STATUS.FINISHED) {
             setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep, true)
+            setRun(false)
+            setStepIndex(0)
         }
     }
 
@@ -678,6 +686,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         callback={handleJoyrideCallback}
                         disableScrollParentFix={true}
                         tooltipComponent={CustomJoyrideTooltip}
+                        stepIndex={stepIndex}
                     />
                     <KnowledgeBaseSidebar
                         knowledgeBases={knowledgeBases}
@@ -697,6 +706,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                         loading={loading}
                         refreshOlineRag={refreshOlineRag}
                         setRefreshOlineRag={setRefreshOlineRag}
+                        setJoyrideRun={setJoyrideStep}
                     />
 
                     <YakitResizeBox

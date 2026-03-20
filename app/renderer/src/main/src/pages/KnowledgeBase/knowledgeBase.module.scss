@@ -637,6 +637,13 @@
                 font-weight: 400;
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
+            .knowledge-icon {
+                svg {
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                    height: 16px;
+                    width: 16px;
+                }
+            }
         }
         .knowledge-base-info-header-all-install {
             margin: 8px 12px 4px 12px;
