@@ -174,6 +174,7 @@ export type FilterMatcherType = "word" | "regexp" | "glob" | "mime" | "suffix"
 export interface FilterDataItem {
     MatcherType: FilterMatcherType
     Group: string[]
+    RuleName?: string
 }
 export interface MITMFilterData {
     IncludeHostnames: FilterDataItem[]
@@ -203,6 +204,7 @@ export type MITMFilterArrayKey = {
 export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))
 }
+
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
     const {t} = useI18nNamespaces(["mitm"])
     const {visible = true} = props
@@ -219,6 +221,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
         trigger: "setFilterData"
     })
     const [searchValue, setSearchValue] = useState("")
+    const [groupByRuleName, setGroupByRuleName] = useState(false)
 
     const onEdit = useMemoizedFn((field: string, value, index: number) => {
         filterData[index][field] = value
@@ -270,7 +273,14 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     accordion={!searchValue}
                     className={styles["filter-collapse"]}
                 >
-                    {filterData!.map((filterItem, index) => {
+                    {(groupByRuleName
+                        ? [...filterData.keys()].sort((a, b) => {
+                              const na = (filterData[a]?.RuleName || "").localeCompare(filterData[b]?.RuleName || "")
+                              return na !== 0 ? na : a - b
+                          })
+                        : [...filterData.keys()]
+                    ).map((index) => {
+                        const filterItem = filterData[index]
                         const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
 
                         if (
@@ -418,6 +428,8 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
                 }}
                 onAddGroup={onAddGroup}
                 searchValue={searchValue}
+                supportCommaSeparated
+                includeCommaDelimiter={item.Field === "ExcludeHostnames" || item.Field === "IncludeHostnames"}
             />
         </>
     )

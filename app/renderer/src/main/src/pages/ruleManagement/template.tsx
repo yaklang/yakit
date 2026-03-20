@@ -26,6 +26,7 @@ import {
     OutlineExclamationIcon,
     OutlineLightbulbIcon,
     OutlineOpenIcon,
+    OutlineSparklesIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
     OutlinePlusIcon,
@@ -703,6 +704,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     })
 
     const [loading, setLoading] = useState<boolean>(false)
+    const [beautifyLoading, setBeautifyLoading] = useState<boolean>(false)
     // 触发新建|编辑接口
     const onSubmitApi = useMemoizedFn((request: SyntaxFlowRuleInput) => {
         setLoading(true)
@@ -733,6 +735,30 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         }
         return info
     })
+    // 规则美化：使用 sf_rule_completion 补全 desc 与 alert
+    const handleBeautify = useMemoizedFn(async () => {
+        if (beautifyLoading || !content || content.trim() === "") {
+            if (!content || content.trim() === "") {
+                yakitNotify("warning", "请先输入规则内容")
+            }
+            return
+        }
+        setBeautifyLoading(true)
+        try {
+            const result = await ipcRenderer.invoke("run-sf-rule-completion", content)
+            if (result && typeof result === "string") {
+                setContent(result)
+                yakitNotify("success", "规则美化完成")
+            } else {
+                yakitNotify("error", "规则美化未返回有效结果")
+            }
+        } catch (e) {
+            yakitNotify("error", `规则美化失败: ${e instanceof Error ? e.message : String(e)}`)
+        } finally {
+            setBeautifyLoading(false)
+        }
+    })
+
     // 表单验证
     const handleFormSubmit = useMemoizedFn(() => {
         if (loading) return
@@ -963,6 +989,16 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                         <YakitButton loading={loading} onClick={handleFormSubmit}>
                             保存
                         </YakitButton>
+                        <Tooltip title='使用 AI 补全 desc 与 alert 块'>
+                            <YakitButton
+                                loading={beautifyLoading}
+                                type='outline2'
+                                icon={<OutlineSparklesIcon />}
+                                onClick={handleBeautify}
+                            >
+                                美化
+                            </YakitButton>
+                        </Tooltip>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
                     </div>
