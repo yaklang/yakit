@@ -1325,7 +1325,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         <>
             {dropdown ? (
                 <Dropdown
-                    overlayStyle={{borderRadius: 4, width: 250}}
+                    overlayStyle={{borderRadius: 4, width: 250, minWidth: 250}}
                     visible={hotCodeTempVisible}
                     onVisibleChange={(v) => {
                         setHotCodeTempVisible(v)
