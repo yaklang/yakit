@@ -26,6 +26,7 @@ import {KVPair} from "@/models/kv"
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
 import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 import {AIModelPolicyEnum, defaultAIGlobalConfig} from "../defaultConstant"
+import { TFunction } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -262,7 +263,7 @@ export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse>
 const openedAIModalMap = new Map<string, boolean>()
 
 export const isForcedSetAIModal: APIFunc<
-    IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean; t?: any},
+    IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean; t?: TFunction},
     null
 > = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
@@ -275,7 +276,7 @@ export const isForcedSetAIModal: APIFunc<
                     // 每个 tab / 页面只弹一次
                     if (!openedAIModalMap.get(pageKey)) {
                         openedAIModalMap.set(pageKey, true)
-                        isOpen && onOpenConfigModal(mountContainer, t)
+                        isOpen && t && onOpenConfigModal(mountContainer, t)
                     }
                     noDataCall?.(res)
                 } else {

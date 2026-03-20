@@ -132,7 +132,7 @@ import {JSONParseLog} from "@/utils/tool"
 import {useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {getAllYakitColorVars} from "@/utils/monacoSpec/theme"
 import {SystemInfo} from "@/constants/hardware"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {cloneDeep} from "lodash"
 
 const {ipcRenderer} = window.require("electron")
@@ -141,7 +141,7 @@ const removePrefixV = (version: string) => {
     return version.startsWith("v") ? version.substring(1) : version
 }
 
-const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean, t: any) => {
+const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean, t: TFunction) => {
     const {companyHeadImg, companyName} = userInfo
     // 点击且已被远程控制
     const activeConnect: boolean = active && dynamicConnect

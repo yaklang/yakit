@@ -16,9 +16,9 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {Uint8ArrayToString} from "@/utils/str"
 import {isEmptyObject} from "@/utils/tool"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-const DefaultType = (t: any): {label: string; value: string}[] => [
+const DefaultType = (t: TFunction): {label: string; value: string}[] => [
     {value: "rmi", label: t("ReverseTable.rmiConnection")},
     {value: "rmi-handshake", label: t("ReverseTable.rmiHandshake")},
     {value: "http", label: "HTTP"},

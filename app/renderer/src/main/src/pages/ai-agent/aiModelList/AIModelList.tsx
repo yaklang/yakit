@@ -92,14 +92,14 @@ import {AIModelForm, getModelTypeByFileName, isEqualAIModel} from "./aiModelForm
 import {AIModelFormProps} from "./aiModelForm/AIModelFormType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const setAIModal = (params: {
     modelType?: AIModelFormProps["aiModelType"]
     item?: AIModelFormProps["item"]
     onSuccess: () => void
     mountContainer?: AIOnlineModelListProps["mountContainer"]
-    t: any
+    t: TFunction
 }) => {
     const {modelType, item, onSuccess, mountContainer, t} = params
     let m = showYakitModal({
@@ -138,7 +138,7 @@ export const onEditAIModel = (data: {
     fileName: string
     mountContainer?: AIOnlineModelListProps["mountContainer"]
     onSuccess: () => void
-    t: any
+    t: TFunction
 }) => {
     const {aiGlobalConfig, index, fileName, mountContainer, onSuccess, t} = data
     try {
@@ -423,7 +423,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
 export default AIModelList
 
-export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: any) => {
+export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: TFunction) => {
     switch (routingPolicy) {
         case AIModelPolicyEnum.PolicyAuto:
             return t("AIModelList.policyAuto")

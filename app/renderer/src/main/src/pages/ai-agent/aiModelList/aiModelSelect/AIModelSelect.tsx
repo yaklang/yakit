@@ -31,9 +31,9 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-export const onOpenConfigModal = (mountContainer, t: any) => {
+export const onOpenConfigModal = (mountContainer, t: TFunction) => {
     const m = YakitModalConfirm({
         title: t("AIModelSelect.configTitle"),
         width: 420,
@@ -59,7 +59,7 @@ export const onOpenConfigModal = (mountContainer, t: any) => {
     })
 }
 
-const modelType = (t: any) => [
+const modelType = (t: TFunction) => [
     t("AIModelList.intelligentModels"),
     t("AIModelList.lightweightModels"),
     t("AIModelList.visionModels")

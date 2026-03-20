@@ -12,13 +12,13 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {useGoEditNotepad} from "../hook/useGoEditNotepad"
 import {failed} from "@/utils/notification"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 const NotepadManageOnline = React.lazy(() => import("./notepadManageOnline/NotepadManageOnline"))
 const NotepadManageLocal = React.lazy(() => import("./notepadManageLocal/NotepadManageLocal"))
 
-export const timeMap = (t: any) => ({
+export const timeMap = (t: TFunction) => ({
     created_at: t("NotepadAction.createdAt"),
     updated_at: t("NotepadAction.updatedAt")
 })

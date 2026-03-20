@@ -40,7 +40,7 @@ import noPictures from "@/assets/noPictures.png"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -66,7 +66,7 @@ interface UploadScreenRecorderRequest {
     Keywords?: string
     Ids?: string[]
 }
-const batchMenuDataEnterprise = (t: any): YakitMenuItemProps[] => [
+const batchMenuDataEnterprise = (t: TFunction): YakitMenuItemProps[] => [
     // {
     //     key: "upload",
     //     label: "上传"

@@ -18,11 +18,11 @@ import {formatJson} from "../yakitStore/viewers/base"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import styles from "./DomainAssetPage.module.scss"
 const {ipcRenderer} = window.require("electron")
 
-const batchRefreshMenuData = (t: any): YakitMenuItemProps[] => [
+const batchRefreshMenuData = (t: TFunction): YakitMenuItemProps[] => [
     {
         key: "noResetRefresh",
         label: t("YakitButton.refreshOnly")

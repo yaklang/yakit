@@ -11,7 +11,7 @@ import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
 import styles from "./ScrecorderModal.module.scss"
 import {Screen_Recorder_Framerate, Screen_Recorder_CoefficientPTS} from "./ScreenRecorderList"
 
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -31,7 +31,7 @@ export interface StartScrecorderParams {
     DisableMouse: boolean
 }
 
-export const FramerateData = (t: any) => [
+export const FramerateData = (t: TFunction) => [
     {
         value: "3",
         label: "3fps"
@@ -66,7 +66,7 @@ export const FramerateData = (t: any) => [
     }
 ]
 
-export const CoefficientPTSData = (t: any) => [
+export const CoefficientPTSData = (t: TFunction) => [
     {
         value: 1,
         label: `X1：1${t("ScrecorderModal.speed")}`
