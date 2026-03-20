@@ -134,7 +134,7 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
         Type: "list",
         Verbose: "ApiKey"
     },
-    cloneDeep(aiAPITypeItem),
+    // cloneDeep(aiAPITypeItem),
     {
         DefaultValue: "",
         Desc: "email / username",
@@ -148,27 +148,11 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
 
 const aiOptionItems: ThirdPartyAppConfigItemTemplate[] = [cloneDeep(aiModelTypeItem)]
 const buildAIFormItems = (items: ThirdPartyAppConfigItemTemplate[]) => {
-    let nextItems = items.map((item) => {
-        if (["api_type", "APIType"].includes(item.Name)) {
-            return {
-                ...item,
-                Name: "api_type",
-                Required: true,
-                Type: "list",
-                DefaultValue: normalizeAIAPIType(item.DefaultValue),
-                Extra: `${JSON.stringify({options: aiAPITypeOptions})}`,
-                Verbose: item.Verbose || "API类型"
-            }
-        }
-        return item
-    })
-
-    if (!nextItems.some((item) => item.Name === "api_type")) {
-        const apiKeyIndex = nextItems.findIndex((item) => item.Name === "api_key")
-        const insertIndex = apiKeyIndex === -1 ? 0 : apiKeyIndex + 1
-        nextItems.splice(insertIndex, 0, cloneDeep(aiAPITypeItem))
-    }
-
+    let nextItems = [...items].filter((item) => item.Name !== "api_type")
+    const apiKeyIndex = nextItems.findIndex((item) => item.Name === "api_key")
+    const insertIndex = apiKeyIndex === -1 ? 0 : apiKeyIndex + 1
+    // TODO - aiAPITypeItem项是需要后端控制返回的，目前先固定插入
+    nextItems.splice(insertIndex, 0, cloneDeep(aiAPITypeItem))
     return [...aiOptionItems, ...nextItems]
 }
 interface NewThirdPartyApplicationConfigBaseProps extends Omit<ThirdPartyApplicationConfigProp, "onAdd" | "onCancel"> {
