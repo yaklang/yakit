@@ -18,6 +18,7 @@
                 line-height: 24px;
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 word-break: keep-all;
+                white-space: nowrap;
             }
             .heard-subTitle-text {
                 font-weight: 400;
@@ -31,6 +32,7 @@
             align-items: center;
             justify-content: flex-end;
             min-width: 635px;
+            flex-shrink: 0;
             .refresh-icon {
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 margin-left: 16px;
