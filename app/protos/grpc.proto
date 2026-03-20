@@ -6960,6 +6960,7 @@ message MITMRequest {
 message FilterDataItem {
   string MatcherType = 1;
   repeated string Group = 2;
+  string RuleName = 3;  // 规则名称，用于前端展示
 }
 
 message MITMFilterData {

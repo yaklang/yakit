@@ -64,7 +64,8 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
         }
         const item: FilterDataItem = {
             MatcherType: matcherType,
-            Group: value
+            Group: value,
+            RuleName: undefined
         }
         data[arrayField] = [item]
     })
@@ -74,7 +75,8 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
         if (item.Field) {
             data[item.Field].push({
                 MatcherType: item.MatcherType,
-                Group: item.Group
+                Group: item.Group,
+                RuleName: item.RuleName
             })
         }
     })
@@ -144,7 +146,8 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
                 const list = advancedList.map((item) => ({
                     Field: key,
                     Group: item.Group,
-                    MatcherType: item.MatcherType
+                    MatcherType: item.MatcherType,
+                    RuleName: item.RuleName
                 }))
                 advancedFilters = [...advancedFilters, ...list]
             }

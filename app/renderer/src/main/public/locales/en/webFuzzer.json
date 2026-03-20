@@ -607,7 +607,11 @@
   "ExtractorCollapse": {
     "max_length_20": "Character length should not exceed 20",
     "edit_name": "Edit Name",
-    "no_condition_set": "No conditions set yet"
+    "no_condition_set": "No conditions set yet",
+    "ruleName": "Rule Name",
+    "ruleContent": "Rule Content",
+    "multiValueHintWithComma": ", supports multiple values separated by commas, semicolons, or line breaks",
+    "multiValueHintWithoutComma": ", supports multiple values separated by semicolons or line breaks"
   },
   "ExtractorItem": {
     "match_regex_group": "Match Regex Group",

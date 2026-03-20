@@ -174,6 +174,7 @@ export type FilterMatcherType = "word" | "regexp" | "glob" | "mime" | "suffix"
 export interface FilterDataItem {
     MatcherType: FilterMatcherType
     Group: string[]
+    RuleName?: string
 }
 export interface MITMFilterData {
     IncludeHostnames: FilterDataItem[]
@@ -194,6 +195,7 @@ export interface MITMFilterData {
 
 export interface MITMAdvancedFilter extends FilterDataItem {
     Field?: MITMFilterArrayKey
+    RuleName?: string
 }
 
 export type MITMFilterArrayKey = {
@@ -203,6 +205,9 @@ export type MITMFilterArrayKey = {
 export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))
 }
+
+type MITMAdvancedFilterSearchType = "ruleName" | "ruleContent"
+
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
     const {t} = useI18nNamespaces(["mitm"])
     const {visible = true} = props
@@ -219,10 +224,35 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
         trigger: "setFilterData"
     })
     const [searchValue, setSearchValue] = useState("")
+    const [searchType, setSearchType] = useState<MITMAdvancedFilterSearchType>("ruleName")
+    const [editNameVisible, setEditNameVisible] = useState(false)
+    const [currentIndex, setCurrentIndex] = useState<number>(-1)
+    const [draftRuleName, setDraftRuleName] = useState("")
+    const {t} = useI18nNamespaces(["webFuzzer"])
 
     const onEdit = useMemoizedFn((field: string, value, index: number) => {
         filterData[index][field] = value
         setFilterData([...filterData])
+    })
+
+    const resetDraftRuleName = useMemoizedFn(() => {
+        setDraftRuleName("")
+        setCurrentIndex(-1)
+    })
+
+    const onStartEditName = useMemoizedFn((index: number, ruleName?: string) => {
+        setDraftRuleName(ruleName || "")
+        setCurrentIndex(index)
+    })
+
+    const onCloseEditName = useMemoizedFn(() => {
+        if (currentIndex !== -1) {
+            const nextRuleName = draftRuleName.trim()
+            if (nextRuleName) {
+                onEdit("RuleName", nextRuleName, currentIndex)
+            }
+        }
+        resetDraftRuleName()
     })
 
     const onAddAdvancedSetting = useMemoizedFn(() => {
@@ -237,6 +267,32 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
         const index = newFilterData.length - 1 || 0
         setActiveKey(`ID:${index}`)
     })
+
+    const isMatchedSearch = useMemoizedFn(
+        (item: MITMAdvancedFilter, value: string, index, type: MITMAdvancedFilterSearchType = searchType) => {
+            const keyword = value.trim().toLowerCase()
+            if (!keyword) return true
+
+            if (type === "ruleName") {
+                return (item.RuleName || `规则_${index}`).toLowerCase().includes(keyword)
+            } else {
+                return item.Group.some(g => g.toLowerCase().includes(keyword))
+            }
+        }
+    )
+
+    const isSearchName = useMemo(()=> searchType === "ruleName", [searchType])
+
+    useEffect(() => {
+        if (!searchValue.trim()) return
+
+        if (isSearchName) {
+            setActiveKey([])
+            return
+        }
+
+        setActiveKey(filterData.map((_, index) => `ID:${index}`))
+    }, [isSearchName, searchValue])
 
     return (
         <div
@@ -317,7 +373,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                                 <MITMAdvancedFiltersItem
                                     item={filterItem}
                                     onEdit={(field, value) => onEdit(field, value, index)}
-                                    searchValue={searchValue}
+                                    searchValue={isSearchName ? "" : searchValue}
                                 />
                             </YakitPanel>
                         )
@@ -418,6 +474,8 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
                 }}
                 onAddGroup={onAddGroup}
                 searchValue={searchValue}
+                supportCommaSeparated
+                includeCommaDelimiter={item.Field === "ExcludeHostnames" || item.Field === "IncludeHostnames"}
             />
         </>
     )

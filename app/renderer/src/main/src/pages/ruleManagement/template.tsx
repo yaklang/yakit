@@ -733,6 +733,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         }
         return info
     })
+
     // 表单验证
     const handleFormSubmit = useMemoizedFn(() => {
         if (loading) return

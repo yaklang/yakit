@@ -1025,9 +1025,22 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
 })
 
 export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps> = React.memo((props) => {
-    const {showRegex, group, notEditable, onEditGroup, onAddGroup, httpResponse, searchValue} = props
+    const {showRegex, group, notEditable, onEditGroup, onAddGroup, httpResponse, searchValue, supportCommaSeparated, includeCommaDelimiter} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const onChangeGroupItemValue = useMemoizedFn((v: string, number: number) => {
+        const splitRe = supportCommaSeparated && includeCommaDelimiter ? /[,;\n]+/ : supportCommaSeparated ? /[;\n]+/ : null
+        if (splitRe && splitRe.test(v)) {
+            const parts = v
+                .split(splitRe)
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0)
+            if (parts.length > 1) {
+                const newGroup = [...group]
+                newGroup.splice(number, 1, ...parts)
+                onEditGroup(newGroup)
+                return
+            }
+        }
         group[number] = v
         onEditGroup(group)
     })
@@ -1046,7 +1059,14 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
                                     onChange={(e) => {
                                         onChangeGroupItemValue(e.target.value, number)
                                     }}
-                                    placeholder={t("YakitInput.please_enter")}
+                                    placeholder={
+                                        supportCommaSeparated
+                                            ? t("YakitInput.please_enter") +
+                                                                                            (includeCommaDelimiter
+                                                                                                    ? t("ExtractorCollapse.multiValueHintWithComma")
+                                                                                                    : t("ExtractorCollapse.multiValueHintWithoutComma"))
+                                            : t("YakitInput.please_enter")
+                                    }
                                     className={styles["matcher-item-textarea"]}
                                 />
                                 <ResizerIcon className={styles["resizer-icon"]} />
