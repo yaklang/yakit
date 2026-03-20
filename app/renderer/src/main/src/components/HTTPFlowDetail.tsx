@@ -687,7 +687,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const lastIdRef = useRef<number>()
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
-    const [popoverVisible,setPopoverVisible] = useState<boolean>(false)
+    const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
 
     const compareAnalyzedIds = useCampare(analyzedIds)
     useDebounceEffect(
@@ -964,25 +964,18 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         )
     })
 
-    const getContextMenu: YakitMenuItemType[] = useMemo(()=>{
+    const getContextMenu: YakitMenuItemType[] = useMemo(() => {
         return [
-            {
-                key: "export",
-                label: t("YakitButton.export"),
-            },
             {
                 key: "deduplicate",
                 label: t("HTTPFlowDetail.deduplicate")
             },
             {label: t("HTTPFlowDetail.batchDeletion"), key: "delete", type: "danger"}
         ]
-    },[i18n.language])
+    }, [i18n.language])
 
     const onMultipleClick = useMemoizedFn((key: string) => {
         switch (key) {
-            case "export":
-                exportMITMRuleExtractedData()
-                break
             case "deduplicate":
                 httpFlowTableRef.current?.onDeduplicate()
                 break
@@ -1205,13 +1198,17 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                     onVisibleChange={setPopoverVisible}
                                                                     visible={popoverVisible}
                                                                 >
-                                                                    <YakitButton
-                                                                        type='text'
-                                                                        size='small'
-                                                                    >
+                                                                    <YakitButton type='text' size='small'>
                                                                         {t("HTTPFlowDetailMini.more")}
                                                                     </YakitButton>
                                                                 </YakitPopover>
+                                                                <YakitButton
+                                                                    type='primary'
+                                                                    size='small'
+                                                                    onClick={exportMITMRuleExtractedData}
+                                                                >
+                                                                    {t("YakitButton.export")}
+                                                                </YakitButton>
                                                                 <div
                                                                     className={classNames(
                                                                         styles["http-history-fold-box"]
@@ -1889,6 +1886,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onClickOpenPacketNewWindowMenu={getPacketNewWindow}
                         noPacketModifier={noPacketModifier}
                         noOpenPacketNewWindow={noOpenPacketNewWindow}
+                        extraEditorProps={{
+                            renderLineHighlight: "none"
+                        }}
                     />
                 )
             }}
@@ -2024,6 +2024,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onClickOpenPacketNewWindowMenu={getPacketNewWindow}
                         noPacketModifier={noPacketModifier}
                         noOpenPacketNewWindow={noOpenPacketNewWindow}
+                        extraEditorProps={{
+                            renderLineHighlight: "none"
+                        }}
                     />
                 )
             }}
