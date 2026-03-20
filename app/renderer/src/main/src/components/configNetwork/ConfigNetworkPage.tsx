@@ -143,6 +143,7 @@ export interface ThirdPartyApplicationConfig {
     Disabled?: boolean
     Proxy?: string
     NoHttps?: boolean
+    APIType?: string
 }
 type TenumBuffer = Buffer | Uint8Array
 

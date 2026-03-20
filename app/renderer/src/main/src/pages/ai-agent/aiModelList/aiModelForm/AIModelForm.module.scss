@@ -1,0 +1,115 @@
+.ai-model-test-panel {
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid var(--yakit-border-color, #e9edf3);
+    border-radius: 12px;
+    background: var(--yakit-card-background-color, #f8fafc);
+}
+
+.ai-model-test-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ai-model-test-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--yakit-header-color, #1f2937);
+}
+
+.ai-model-test-desc {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--yakit-body-color, #6b7280);
+}
+
+.ai-model-test-input {
+    margin-top: 12px;
+}
+
+.ai-model-test-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.ai-model-test-result {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--yakit-border-color, #dbe2ea);
+}
+
+.ai-model-test-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ai-model-test-metric {
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--yakit-background-color, #ffffff);
+    border: 1px solid var(--yakit-border-color, #e9edf3);
+}
+
+.ai-model-test-metric-label {
+    font-size: 12px;
+    color: var(--yakit-body-color, #6b7280);
+}
+
+.ai-model-test-metric-value {
+    margin-top: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--yakit-header-color, #111827);
+    word-break: break-all;
+}
+
+.ai-model-test-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #b91c1c;
+    font-size: 12px;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.ai-model-test-section {
+    margin-top: 12px;
+}
+
+.ai-model-test-section-label {
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--yakit-header-color, #374151);
+}
+
+.ai-model-test-output {
+    :global(.ant-input) {
+        font-family: "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+}
+
+.ai-model-test-collapse {
+    margin-top: 12px;
+}
+
+.ai-model-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+@media (max-width: 960px) {
+    .ai-model-test-metrics {
+        grid-template-columns: 1fr;
+    }
+}

@@ -314,6 +314,32 @@ export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> =
             })
     })
 }
+
+export interface TestAIModelRequest {
+    Config: ThirdPartyApplicationConfig
+    Content: string
+}
+
+export interface TestAIModelResponse {
+    FirstByteCostMs: number
+    TotalCostMs: number
+    RawRequest: string
+    ResponseStatusCode: number
+    ResponseContent: string
+    ErrorMessage: string
+}
+
+export const grpcTestAIModel: APIFunc<TestAIModelRequest, TestAIModelResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("TestAIModel", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcTestAIModel 失败:" + err)
+                reject(err)
+            })
+    })
+}
 export interface AIGlobalConfig {
     Enabled: boolean
     /**调用模式 */
