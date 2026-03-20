@@ -36,7 +36,6 @@ import useMultipleHoldGRPCStream from "../hooks/useMultipleHoldGRPCStream"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {Divider, Tooltip} from "antd"
-import {BinaryInfo} from "./AllInstallPluginsProps"
 import {YakitLogoSvgIcon, YakitSpinLogoSvgIcon} from "../icon/sidebarIcon"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {CreateKnowledgeBaseData, TClearKnowledgeResponse} from "../TKnowledgeBase"
@@ -320,6 +319,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                 all ? {Force: true, All: true} : {RagName: ragItem?.name, Force: true, All: false},
                 token
             )
+            await refreshAsync?.()
+
             await binariesToInstallRefreshAsync?.()
 
             setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
@@ -364,6 +365,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             await installOnlineRagWithEvents("DownloadRAGs", {Force: true, All: true}, token)
 
             await binariesToInstallRefreshAsync?.()
+            await refreshAsync?.()
             setAddMode((pre) => (pre.includes("external") ? pre : pre.concat("external")))
             setKnowledgeBaseID(knowledgeBase?.[0]?.ID ?? "")
 
