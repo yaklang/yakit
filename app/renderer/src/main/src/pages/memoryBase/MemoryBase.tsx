@@ -70,7 +70,7 @@ import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType
 import {yakitNotify} from "@/utils/notification"
 import {NoPromptHint} from "../pluginHub/utilsUI/UtilsTemplate"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-import { ParamsTProps } from "@/hook/useVirtualTableHook/useVirtualTableHookType"
+import {ParamsTProps} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 
 const {YakitPanel} = YakitCollapse
 
@@ -184,6 +184,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
         keyword: "",
         aiInput: ""
     })
+    const [batchLoading, setBatchLoading] = useState<boolean>(false)
 
     const tableBoxRef = useRef<HTMLDivElement>(null)
     const boxHeightRef = useRef<number>()
@@ -198,7 +199,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn(() => {
         const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({query: queryParams, search})
-        if (!!filter.SemanticQuery)return
+        if (!!filter.SemanticQuery) return
         debugVirtualTableEvent.startT()
     })
     const onFirst = useMemoizedFn(() => {
@@ -316,11 +317,18 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                 MemoryID: selectList.map((ele) => ele.MemoryID)
             }
         }
+        setBatchLoading(true)
         grpcDeleteAIMemoryEntity({
             Filter: filterParams
-        }).then((res) => {
-            debugVirtualTableEvent.noResetRefreshT()
         })
+            .then((res) => {
+                debugVirtualTableEvent.noResetRefreshT()
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setBatchLoading(false)
+                }, 200)
+            })
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         let sort = {...newSort}
@@ -497,7 +505,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
             const newParams: ParamsTProps = {
                 Pagination: {
                     ...tableParams.Pagination,
-                    FixedLimit: !!filter.SemanticQuery? 200 : undefined
+                    FixedLimit: !!filter.SemanticQuery ? 200 : undefined
                 },
                 Filter: {
                     ...tableParams.Filter,
@@ -617,7 +625,12 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                         </YakitButton>
                                     </YakitDropdownMenu>
                                     <YakitPopconfirm title={"确定删除吗?"} onConfirm={onBatchRemove}>
-                                        <YakitButton danger type='outline1' disabled={disabledBatchRemove}>
+                                        <YakitButton
+                                            danger
+                                            type='outline1'
+                                            disabled={!batchLoading && disabledBatchRemove}
+                                            loading={batchLoading}
+                                        >
                                             批量删除
                                         </YakitButton>
                                     </YakitPopconfirm>

@@ -6287,7 +6287,6 @@ export const OutlineChevronsDownUpIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineChevronsDownUp} {...props} />
 }
 
-
 const OutlineMessageCirclePlus = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
         <path
@@ -6330,4 +6329,22 @@ const OutlineAI = () => (
  */
 export const OutlineAIIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineAI} {...props} />
+}
+
+const OutlineNotebook = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M2 6H6M2 10H6M2 14H6M2 18H6M16 2V22M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/*
+ * @description Outline/Notebook
+ */
+export const OutlineNotebookIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineNotebook} {...props} />
 }

@@ -3,7 +3,7 @@ import {FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState} 
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import type {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {grpcQueryAIToolDetails, grpcQueryHTTPFlows} from "../grpc"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
@@ -50,7 +50,7 @@ interface ToolInvokerCardProps {
     token: string
 }
 interface PreWrapperProps {
-    code: ReactNode
+    code: string
     autoScrollBottom?: boolean
     className?: string
     style?: React.CSSProperties
@@ -424,16 +424,21 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
     }, [code, isAtBottom, autoScrollBottom])
 
     return (
-        <pre
-            ref={containerRef}
-            className={classNames(styles["file-system-wrapper"], className)}
-            style={{
-                ...style,
-                overflow: isScroll ? "auto" : "hidden"
-            }}
-            onClick={() => setIsScroll(true)}
-        >
-            <code>{code}</code>
-        </pre>
+        <div className={styles["pre-wrapper"]}>
+            <pre
+                ref={containerRef}
+                className={classNames(styles["file-system-wrapper"], className)}
+                style={{
+                    ...style,
+                    overflow: isScroll ? "auto" : "hidden"
+                }}
+                onClick={() => setIsScroll(true)}
+            >
+                <code>{code}</code>
+                <div className={styles["copy-btn"]}>
+                    <CopyComponents copyText={code} className={styles["copy-icon"]} />
+                </div>
+            </pre>
+        </div>
     )
 })
