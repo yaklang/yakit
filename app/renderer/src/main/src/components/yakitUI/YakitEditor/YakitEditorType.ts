@@ -61,6 +61,8 @@ export interface YakitEditorProps {
     lineNumbersMinChars?: number
     /** @name 配置项-字体大小(默认为12) */
     fontSize?: number
+    /** @name 配置项-行高亮 */
+    renderLineHighlight?: "none" | "all" | "gutter" | "line" | undefined
 
     /** @name 是否展示换行字符(只有在[type="http"]下有效,同时可在右键菜单中关闭显示功能) */
     showLineBreaks?: boolean
