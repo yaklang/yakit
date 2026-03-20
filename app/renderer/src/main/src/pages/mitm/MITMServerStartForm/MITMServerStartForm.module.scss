@@ -442,6 +442,10 @@
                 @extend .flex-center;
                 gap: 4px;
                 margin-right: 8px;
+                
+                .icon-active {
+                    color: var(--Colors-Use-Main-Primary);
+                }
             }
             .header-number {
                 @include HTTPFuzzerPageShare.circle-number;
@@ -458,12 +462,16 @@
 .filter-operation {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     padding: 12px 0 12px 12px;
 
     .filter-operation-label {
         font-size: 12px;
         color: var(--yakit-body-text-color);
+    }
+
+    .filter-content-search{
+        width: 300px;
     }
 }
 
@@ -576,3 +584,22 @@
     }
 }
 
+.edit-name-popover {
+    :global {
+        .ant-popover-inner-content {
+            padding: 12px;
+        }
+    }
+    &-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        &-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 16px;
+        }
+    }
+}

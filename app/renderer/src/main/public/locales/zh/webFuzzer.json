@@ -607,7 +607,9 @@
   "ExtractorCollapse": {
     "max_length_20": "字符长度不超过20",
     "edit_name": "修改名称",
-    "no_condition_set": "暂未设置条件"
+    "no_condition_set": "暂未设置条件",
+    "ruleName": "规则名",
+    "ruleContent": "规则内容"
   },
   "ExtractorItem": {
     "match_regex_group": "匹配正则分组",
