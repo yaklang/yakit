@@ -4,6 +4,7 @@ const {USER_INFO, HttpSetting} = require("../state")
 const {templateStr} = require("./wechatWebTemplate/index")
 const urltt = require("url")
 const http = require("http")
+const {printLogOutputFile} = require("../logFile")
 
 // http 服务
 let server = null
@@ -143,9 +144,14 @@ module.exports = {
                             res.end()
                         } else if (pathname === "/judgeSignin") {
                             const {query} = urltt.parse(req.url, true)
+                            printLogOutputFile("ccb-------judgeSignin", JSON.stringify({
+                                url: req.url,
+                                query
+                            }))
                             // 处理回调的逻辑
                             const ghCode = query.code
                             if (!ghCode) {
+                                printLogOutputFile("ccb-------ghCode:" + ghCode)
                                 res.end(
                                     JSON.stringify({
                                         login: false,
@@ -155,6 +161,10 @@ module.exports = {
                                 return
                             }
                             await new Promise((resolve, reject) => {
+                                printLogOutputFile("ccb-------请求:" + JSON.stringify({
+                                    url: typeApi[type],
+                                    params: {code: ghCode},
+                                }))
                                 httpApi({
                                     method: "get",
                                     url: typeApi[type],
@@ -162,6 +172,7 @@ module.exports = {
                                     headers: {Accept: "application/json, text/plain, */*"}
                                 })
                                     .then((resp) => {
+                                        printLogOutputFile("ccb-------响应:" + JSON.stringify(resp))
                                         if (resp.code !== 200) {
                                             win.webContents.send("fetch-signin-data", {
                                                 ok: false,
@@ -184,6 +195,7 @@ module.exports = {
                                         resolve()
                                     })
                                     .catch((err) => {
+                                        printLogOutputFile("ccb-------错误:" + JSON.stringify(err))
                                         win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
                                         res.end(
                                             JSON.stringify({
