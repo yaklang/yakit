@@ -1,0 +1,47 @@
+{
+  "Login": {
+    "loginError": "Login error: {error}",
+    "dataSync": "Data Sync",
+    "syncDataConfirm": "Do you want to sync remote data to local?",
+    "login": "Login",
+    "loginWithGithub": "Login with GitHub account",
+    "loginWithWechat": "Login with WeChat account"
+  },
+  "EnterpriseJudgeLogin": {
+    "reActivateNotice": "Please re-activate License",
+    "verifyingLicense": "Verifying License"
+  },
+  "LicensePage": {
+    "getLicenseFailed": "Failed to get License: {error}",
+    "loadingLicense": "Loading license",
+    "emptyLicense": "Empty License...",
+    "registerProduct": "Register your product with License",
+    "licenseRequestCode": "License Request Code",
+    "requestCodeHelp": "When applying for a license, please give this request code to the salesperson to generate your exclusive License",
+    "copyRequestCode": "Click to copy the License request code",
+    "yourLicense": "Your License",
+    "activateProduct": "Click to activate your product with License"
+  },
+  "SetPassword": {
+    "passwordMismatch": "New passwords do not match, please check and try again",
+    "updateSuccess": "Password modified successfully, please login again",
+    "updateFailed": "Password modification failed: {error}",
+    "passwordRule": "Password must be 8-20 characters long and include uppercase/lowercase letters, numbers, and special characters",
+    "oldPassword": "Old Password",
+    "inputOldPassword": "Please enter your old password",
+    "newPassword": "New Password",
+    "inputNewPassword": "Please enter your new password",
+    "confirmPassword": "Confirm Password",
+    "inputConfirmPassword": "Please confirm your password",
+    "updatePassword": "Change Password"
+  },
+  "SelectUpload": {
+    "uploadSuccess": "Data uploaded successfully",
+    "uploadFailed": "Project upload failed",
+    "cancelSuccess": "Upload canceled successfully",
+    "processDataFailed": "Failed to process project data: {error}",
+    "queryProjectsFailed": "Failed to query Projects: {error}",
+    "project": "Project",
+    "selectProject": "Please select a project"
+  }
+}

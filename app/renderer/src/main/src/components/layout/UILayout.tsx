@@ -99,6 +99,7 @@ import styles from "./uiLayout.module.scss"
 import {JSONParseLog} from "@/utils/tool"
 import {LocalGVS} from "@/enums/localGlobal"
 import {useSoftMode} from "@/store/softMode"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {
     CustomPluginExecuteFormValue,
@@ -125,6 +126,7 @@ export interface UILayoutProp {
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
             currentPageTabRouteKey: s.currentPageTabRouteKey
@@ -197,7 +199,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.on("from-engineLinkWin", (e, data) => {
             setOldLink(data.useOldLink)
             if (!data.useOldLink) {
-                setNewCheckLog(["即将进入..."])
+                setNewCheckLog([t("UILayout.entering")])
                 setShowLoadingPage(true)
                 handleFetchBaseInfo()
                 setCredential(data.credential)
@@ -217,6 +219,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setShowLoadingPage(false)
             }
         })
+        ipcRenderer.send("main-win-uilayout-render-ok")
         return () => {
             ipcRenderer.removeAllListeners("from-engineLinkWin")
         }
@@ -326,7 +329,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             hasError = true
-            failed(`${value.ProjectName}项目数据同步失败,请手动上传`)
+            failed(t("UILayout.projectSyncFailed", {name: value.ProjectName}))
         })
         ipcRenderer.once(`${token}-end`, (e, data) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
@@ -345,12 +348,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             apiSplitUpload(onlineParams, true)
                 .then((TaskStatus) => {
                     if (!TaskStatus) {
-                        failed(`${projectName}项目数据同步失败,请手动上传`)
+                        failed(t("UILayout.projectSyncFailed", {name: projectName}))
                     }
                     onExportProject()
                 })
                 .catch(() => {
-                    failed(`${projectName}项目数据同步失败,请手动上传`)
+                    failed(t("UILayout.projectSyncFailed", {name: projectName}))
                 })
         })
         const params: ExportProjectRequest = {
@@ -771,7 +774,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const openEngineLinkWin = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => {
         setShowLoadingPage(true)
-        setNewCheckLog(["即将退出..."])
+        setNewCheckLog([t("UILayout.exiting")])
         killCurrentProcess(() => {
             setTimeout(() => {
                 // 先销毁 antd 消息通知 弹窗
@@ -866,7 +869,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
 
             case "local":
-                info(`引擎状态切换为: ${EngineModeVerbose("local")}`)
+                info(t("UILayout.engineModeSwitched", {mode: EngineModeVerbose("local")}))
                 delTemporaryProject()
                 onDisconnect()
                 onSetEngineMode(undefined)
@@ -881,7 +884,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 return
             case "remote":
-                info(`引擎状态切换为: ${EngineModeVerbose("remote")}`)
+                info(t("UILayout.engineModeSwitched", {mode: EngineModeVerbose("remote")}))
                 delTemporaryProject()
                 onSetEngineMode(undefined)
                 setTimeout(() => {
@@ -896,13 +899,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "encryptionProject":
                 // 加密导出
                 if (!currentProject || !currentProject.Id) {
-                    failed("当前项目无关键信息，无法导出!")
+                    failed(t("UILayout.cannotExportProject"))
                     return
                 }
                 setShowProjectManage(true)
                 const encryption = structuredClone(currentProject)
                 if (encryption.ProjectName === "[temporary]") {
-                    encryption.ProjectName = "临时项目"
+                    encryption.ProjectName = t("UILayout.temporaryProject")
                     setIsExportTemporaryProjectFlag(true)
                 }
                 setProjectModalInfo({visible: true, isNew: false, isExport: true, project: encryption})
@@ -910,13 +913,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "plaintextProject":
                 // 明文导出
                 if (!currentProject || !currentProject.Id) {
-                    failed("当前项目无关键信息，无法导出!")
+                    failed(t("UILayout.cannotExportProject"))
                     return
                 }
                 setShowProjectManage(true)
                 const plaintext = structuredClone(currentProject)
                 if (plaintext.ProjectName === "[temporary]") {
-                    plaintext.ProjectName = "临时项目"
+                    plaintext.ProjectName = t("UILayout.temporaryProject")
                     setIsExportTemporaryProjectFlag(true)
                 }
                 setProjectTransferShow({
@@ -948,8 +951,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
     // 更新yaklang-modal文案
     const [yaklangKillPssText, setYaklangKillPssText] = useState<{title: string; content: string}>({
-        title: "更新引擎，需关闭所有本地进程",
-        content: "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+        title: t("UILayout.updateEngineTitle"),
+        content: t("UILayout.updateEngineDesc")
     })
     const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
     const yaklangLastVersionRef = useRef<string>("")
@@ -983,8 +986,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
             if (!yaklangSpecifyVersion) {
                 setYaklangKillPssText({
-                    title: "更新引擎，需关闭所有本地进程",
-                    content: "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+                    title: t("UILayout.updateEngineTitle"),
+                    content: t("UILayout.updateEngineDesc")
                 })
                 setYaklangDownload(true)
                 return

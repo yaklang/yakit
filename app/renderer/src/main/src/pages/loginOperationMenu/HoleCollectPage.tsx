@@ -20,12 +20,15 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {RiskDetails, cellColorFontSetting} from "../risks/RiskTable"
 import {Risk} from "../risks/schema"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 const {Paragraph} = Typography
 const {Option} = YakitSelect
+
 export interface HoleCollectPageProps {}
 
 export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
+    const {t} = useI18nNamespaces(["admin", "yakitUi"])
     const [response, setResponse] = useState<API.RiskLists[]>([])
     const [params, setParams, getParams] = useGetState<PaginationSchema>({
         ...genDefaultPagination(20)
@@ -69,7 +72,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         })
             .then((res) => {
                 if (res) {
-                    setRiskType(res?.data||[])
+                    setRiskType(res?.data || [])
                 }
             })
             .catch((e) => {
@@ -117,7 +120,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         })
             .then((res) => {
                 if (res.ok) {
-                    success("删除成功")
+                    success(t("YakitNotification.deleted"))
                     setSelectedRowKeys([])
                     update()
                 }
@@ -135,7 +138,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
 
     const columns = [
         {
-            title: "标题",
+            title: t("HoleCollectPage.title"),
             dataIndex: "title_verbose",
             render: (_, i: API.RiskLists) => (
                 <Paragraph style={{maxWidth: 400, marginBottom: 0}} ellipsis={{tooltip: true}}>
@@ -145,13 +148,13 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             width: 400
         },
         {
-            title: "类型",
+            title: t("HoleCollectPage.type"),
             dataIndex: "risk_type_verbose",
             width: 90,
             render: (_, i: API.RiskLists) => i?.risk_type_verbose || i.risk_type
         },
         {
-            title: "等级",
+            title: t("HoleCollectPage.level"),
             dataIndex: "severity",
             render: (_, i: API.RiskLists) => {
                 const title = TitleColor.filter((item) => item.key.includes(i.severity || ""))[0]
@@ -175,26 +178,26 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             width: 400
         },
         {
-            title: "上传账号",
+            title: t("HoleCollectPage.uploadAccount"),
             dataIndex: "user_name",
             render: (_, i: API.RiskLists) => <div style={{minWidth: 120}}>{i?.user_name}</div>
         },
         {
-            title: "发现时间",
+            title: t("HoleCollectPage.discoveryTime"),
             dataIndex: "risk_created_at",
             render: (_, i: API.RiskLists) => (
                 <YakitTag>{i.risk_created_at > 0 ? formatTimestamp(i.risk_created_at) : "-"}</YakitTag>
             )
         },
         {
-            title: "上传时间",
+            title: t("HoleCollectPage.uploadTime"),
             dataIndex: "created_at",
             render: (_, i: API.RiskLists) => (
                 <YakitTag>{i.created_at > 0 ? formatTimestamp(i.created_at) : "-"}</YakitTag>
             )
         },
         {
-            title: "操作",
+            title: t("YakitTable.action"),
             dataIndex: "action",
             render: (_, i: API.RiskLists) => {
                 return (
@@ -228,7 +231,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                 }
                                 showModal({
                                     width: "80%",
-                                    title: "详情",
+                                    title: t("YakitButton.detail"),
                                     content: (
                                         <div style={{overflow: "auto"}}>
                                             <RiskDetails
@@ -241,16 +244,16 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                 })
                             }}
                         >
-                            详情
+                            {t("YakitButton.detail")}
                         </YakitButton>
                         <YakitPopconfirm
-                            title={"确定删除该漏洞吗？"}
+                            title={t("HoleCollectPage.deleteHoleConfirm")}
                             onConfirm={() => {
                                 delItem(i.hash)
                             }}
                         >
-                            <YakitButton type={"text"} colors="danger">
-                                删除
+                            <YakitButton type={"text"} colors='danger'>
+                                {t("YakitButton.delete")}
                             </YakitButton>
                         </YakitPopconfirm>
                     </Space>
@@ -321,7 +324,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                     })
                 })
                 .catch((e) => {
-                    failed("数据导出失败 " + `${e}`)
+                    failed(t("HoleCollectPage.exportFailed", {error: e}))
                 })
                 .finally(() => {})
         })
@@ -346,8 +349,8 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                         <div>
                             <div className={styles["table-title"]}>
                                 <Space>
-                                    风险与漏洞
-                                    <Tooltip title='刷新会重置所有查询条件'>
+                                    {t("HoleCollectPage.riskAndVulnerability")}
+                                    <Tooltip title={t("HoleCollectPage.refreshTooltip")}>
                                         <YakitButton
                                             size={"small"}
                                             type={"text"}
@@ -359,17 +362,20 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                     </Tooltip>
                                 </Space>
                                 <Space>
-                                    <ExportExcel getData={getData} fileName='风险与漏洞' />
+                                    <ExportExcel
+                                        getData={getData}
+                                        fileName={t("HoleCollectPage.riskAndVulnerability")}
+                                    />
                                     <YakitPopconfirm
                                         title={
                                             selectedRowKeys.length > 0
-                                                ? "确定删除选择的风险与漏洞吗？不可恢复"
-                                                : "确定删除所有风险与漏洞吗? 不可恢复"
+                                                ? t("HoleCollectPage.deleteSelectedConfirm")
+                                                : t("HoleCollectPage.deleteAllConfirm")
                                         }
                                         onConfirm={onRemove}
                                     >
-                                        <YakitButton type="primary" colors="danger">
-                                            删除数据
+                                        <YakitButton type='primary' colors='danger'>
+                                            {t("HoleCollectPage.deleteData")}
                                         </YakitButton>
                                     </YakitPopconfirm>
                                 </Space>
@@ -381,36 +387,43 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                     layout='inline'
                                     className={styles["filter-box-form"]}
                                 >
-                                    <Form.Item name='search' label='漏洞标题'>
-                                        <YakitInput style={{width: 180}} placeholder='请输入漏洞标题' allowClear />
+                                    <Form.Item name='search' label={t("HoleCollectPage.vulnerabilityTitle")}>
+                                        <YakitInput
+                                            placeholder={t("HoleCollectPage.inputVulnerabilityTitle")}
+                                            allowClear
+                                        />
                                     </Form.Item>
-                                    <Form.Item name='risk_type' label='漏洞类型'>
+                                    <Form.Item name='risk_type' label={t("HoleCollectPage.vulnerabilityType")}>
                                         <YakitSelect
                                             mode='multiple'
                                             allowClear
                                             style={{width: 180}}
-                                            placeholder='请选择漏洞类型'
+                                            placeholder={t("HoleCollectPage.selectVulnerabilityType")}
                                         >
                                             {RiskType.map((item) => {
                                                 return <Option key={item.risk_type}>{item.risk_type}</Option>
                                             })}
                                         </YakitSelect>
                                     </Form.Item>
-                                    <Form.Item name='net_work' label='IP'>
-                                        <YakitInput placeholder='请输入IP' allowClear style={{width: 180}} />
+                                    <Form.Item name='net_work' label={"ip"}>
+                                        <YakitInput
+                                            placeholder={t("HoleCollectPage.inputIp")}
+                                            allowClear
+                                            style={{width: 180}}
+                                        />
                                     </Form.Item>
-                                    <Form.Item name='severity' label='漏洞级别'>
+                                    <Form.Item name='severity' label={t("HoleCollectPage.vulnerabilityLevel")}>
                                         <YakitSelect defaultValue='all' style={{width: 180}}>
-                                            <Option value='all'>全部</Option>
-                                            <Option value='info'>信息</Option>
-                                            <Option value='critical'>严重</Option>
-                                            <Option value='high'>高危</Option>
-                                            <Option value='warning'>中危</Option>
-                                            <Option value='low'>低危</Option>
+                                            <Option value='all'>{t("HoleCollectPage.all")}</Option>
+                                            <Option value='info'>{t("YakitTag.info")}</Option>
+                                            <Option value='critical'>{t("YakitTag.critical")}</Option>
+                                            <Option value='high'>{t("YakitTag.high")}</Option>
+                                            <Option value='warning'>{t("YakitTag.warning")}</Option>
+                                            <Option value='low'>{t("YakitTag.low")}</Option>
                                         </YakitSelect>
                                     </Form.Item>
-                                    <Form.Item name='user_name' label='上传账号'>
-                                        <YakitInput style={{width: 180}} placeholder='请输入上传账号' allowClear />
+                                    <Form.Item name='user_name' label={t("HoleCollectPage.uploadAccount")}>
+                                        <YakitInput placeholder={t("HoleCollectPage.inputUploadAccount")} allowClear />
                                     </Form.Item>
                                 </Form>
                                 <div className={styles["filter-btn"]}>
@@ -420,7 +433,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                             form.submit()
                                         }}
                                     >
-                                        搜索
+                                        {t("HoleCollectPage.search")}
                                     </YakitButton>
                                 </div>
                             </div>

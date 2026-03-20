@@ -266,23 +266,39 @@ function createWindow() {
 /**
  * ---------------- 通用方法 ----------------
  */
-// 窗口加载完再发送数据
+// 窗口render准备好再发送数据
+const renderMap = new Map()
+const messageQueue = new Map()
 function safeSend(targetWin, channel, data) {
     if (!targetWin || targetWin.isDestroyed()) return
 
-    const sendFn = () => {
-        try {
-            targetWin.webContents.send(channel, data)
-        } catch (e) {
-            console.warn(`[safeSend] send failed: ${channel}`, e)
+    const id = targetWin.id
+    if (!renderMap.get(id)) {
+        if (!messageQueue.has(id)) {
+            messageQueue.set(id, [])
         }
+        messageQueue.get(id).push({channel, data})
+        return
     }
+    targetWin.webContents.send(channel, data)
+}
+// render真正渲染出来
+function markRenderOk(curWin) {
+    const id = curWin.id
 
-    if (targetWin.webContents.isLoading()) {
-        targetWin.webContents.once("did-finish-load", sendFn)
-    } else {
-        sendFn()
-    }
+    renderMap.set(id, true)
+
+    const queue = messageQueue.get(id) || []
+
+    queue.forEach(({channel, data}) => {
+        curWin.webContents.send(channel, data)
+    })
+    messageQueue.delete(id)
+}
+// 关闭、reload清理渲染map
+function clearRenderMap(targetWin) {
+    renderMap.delete(targetWin.id)
+    messageQueue.delete(targetWin.id)
 }
 // 窗口隐藏
 function winHide(targetWin) {
@@ -421,6 +437,8 @@ function registerGlobalIPC() {
     // ------------------- 刷新相关 -------------------
     /** 刷新缓存 */
     ipcMain.handle("trigger-reload", () => {
+        clearRenderMap(engineLinkWin)
+        clearRenderMap(win)
         win.webContents.reload()
         winHide(win)
         engineLinkWin.webContents.reload()
@@ -431,6 +449,8 @@ function registerGlobalIPC() {
     })
     /** 强制清空刷新缓存 */
     ipcMain.handle("trigger-reload-cache", () => {
+        clearRenderMap(engineLinkWin)
+        clearRenderMap(win)
         win.webContents.reloadIgnoringCache()
         winHide(win)
         engineLinkWin.webContents.reloadIgnoringCache()
@@ -447,6 +467,14 @@ function registerGlobalIPC() {
             engineLinkWin,
             win
         ].forEach((w) => safeSend(w, "theme-updated", theme))
+    })
+
+    // ------------------- render已准备好 -------------------
+    ipcMain.on("engine-win-render-ok", (event) => {
+        markRenderOk(engineLinkWin)
+    })
+    ipcMain.on("main-win-uilayout-render-ok", (event) => {
+        markRenderOk(win)
     })
 
     // ------------------- 窗口发送数据操作 -------------------
@@ -471,6 +499,8 @@ function registerGlobalIPC() {
 
     // ------------------- 软件重启逻辑 -------------------
     ipcMain.handle("relaunch", () => {
+        clearRenderMap(engineLinkWin)
+        clearRenderMap(win)
         winClose(engineLinkWin, true)
         winClose(win, true)
         closeAllLogHandles()
@@ -484,6 +514,8 @@ function registerGlobalIPC() {
         const parentWindow = getActiveWindow()
 
         const exitCleanupOperation = () => {
+            clearRenderMap(engineLinkWin)
+            clearRenderMap(win)
             winClose(engineLinkWin, false)
             winClose(win, false)
             closeAllLogHandles()

@@ -90,7 +90,6 @@ import {
 import cloneDeep from "lodash/cloneDeep"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {FormExtraSettingProps} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {AgentConfigModal} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"

@@ -26,6 +26,7 @@ import {KVPair} from "@/models/kv"
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
 import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 import {AIModelPolicyEnum, defaultAIGlobalConfig} from "../defaultConstant"
+import { TFunction } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -261,12 +262,12 @@ export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse>
 
 const openedAIModalMap = new Map<string, boolean>()
 
-export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean}, null> = (
-    params,
-    hiddenError
-) => {
+export const isForcedSetAIModal: APIFunc<
+    IsForcedSetAIModalRequest & {pageKey?: string; isOpen?: boolean; t?: TFunction},
+    null
+> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true} = params
+        const {noDataCall, haveDataCall, mountContainer = null, pageKey = "global", isOpen = true, t} = params
 
         getAIModelAvailableInfo(hiddenError)
             .then((res) => {
@@ -275,7 +276,7 @@ export const isForcedSetAIModal: APIFunc<IsForcedSetAIModalRequest & {pageKey?: 
                     // 每个 tab / 页面只弹一次
                     if (!openedAIModalMap.get(pageKey)) {
                         openedAIModalMap.set(pageKey, true)
-                        isOpen && onOpenConfigModal(mountContainer)
+                        isOpen && t && onOpenConfigModal(mountContainer, t)
                     }
                     noDataCall?.(res)
                 } else {

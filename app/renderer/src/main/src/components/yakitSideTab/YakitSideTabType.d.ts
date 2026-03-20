@@ -41,5 +41,5 @@ export interface YakitTabsItemProps {
     onTabPaneRender?: (item: YakitTabsProps, node: ReactNode[]) => ReactNode
     rotate?: "left" | "right"
     barHint?: (k: string) => string
-    t?: (keys: KeyOrKeys, vars?: Vars, defaultValue?: string) => string
+    t?: TFunction
 }

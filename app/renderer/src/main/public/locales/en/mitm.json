@@ -1,27 +1,4 @@
 {
-  "MitmPage": {
-    "ImportLocalPlugin": {
-      "importLocalPluginSuccess": "Local plugin imported successfully",
-      "pluginSource": "Plugin Source",
-      "proxy": "Proxy",
-      "accessRepoViaProxy": "Access code repositories that are inaccessible from mainland China via proxy: e.g., http://127.0.0.1:7890",
-      "localPluginPath": "Local Plugin Path",
-      "enterLocalPluginPath": "Please enter the local plugin path",
-      "password": "Password",
-      "nucleiPoCLocalPath": "Nuclei PoC Local Path",
-      "pluginID": "Plugin ID",
-      "enterPluginID": "Please enter plugin IDs, separated by 'commas' or 'new lines'...",
-      "importOnlineNuclei": "Import Online Nuclei",
-      "enterNucleiPoCLocalPath": "Please enter the Nuclei PoC local path",
-      "importLocalNuclei": "Import Local Nuclei",
-      "pluginImportSuccess": "Plugin imported successfully",
-      "pluginImportMethod": "Plugin Import Method",
-      "externalResourceWarning": "Importing external resources has potential risks and may introduce malicious code or payloads, leading to data leaks, system compromises, and other serious consequences. Please carefully consider the necessity of importing external resources and ensure the source is trustworthy and the content is safe. If you must use external resources, it is recommended to prioritize official, secure versions or write your own controllable data sources. Additionally, please keep your system and software up to date, promptly fix known vulnerabilities, and maintain daily security protection.",
-      "onlineNuclei": "Online Nuclei",
-      "localPlugin": "Local Plugin",
-      "localNuclei": "Local Nuclei"
-    }
-  },
   "MITMRule": {
     "request": "Request",
     "response": "Response",
@@ -153,8 +130,8 @@
     "please_enter_password": "Please Enter Password",
     "proxy_address_placeholder": "Please select or enter a proxy address. If the proxy requires a password, the format is: http://user:pass@ip:port",
     "data_migration": "data Migration",
-    "migration":"Migration",
-    "not_migration":"Not Migration",
+    "migration": "Migration",
+    "not_migration": "Not Migration",
     "migration_title": "Whether to migrate the downstream agent configuration data to the new version; if not, it is considered that the historical data should be abandoned.",
     "recordPointsCount": "There are {i} existing points.",
     "recordRoutesCount": "There are {i} existing rules.",
@@ -163,9 +140,9 @@
     "address_tip": "After configuration, only the target address uses the proxy, and all other traffic does not use the proxy.",
     "delete_point_title": "Delete Points",
     "delete_point_tips": "This Points is still referenced by {i} rules; deleting it will remove it from those rules as well. Continue?",
-    "disabled": "Disabled" ,
-    "detectionStart":"Start Detection",
-    "detectionLoading":"Testing in progress, please wait patiently...",
+    "disabled": "Disabled",
+    "detectionStart": "Start Detection",
+    "detectionLoading": "Testing in progress, please wait patiently...",
     "detectionSuccess": "Test passed",
     "proxyDetection": "Proxy Detection",
     "customDetectionTarget": "Custom Detection Target",
@@ -173,27 +150,120 @@
     "disable_point_title": "Disable Points",
     "disable_point_tips": "This Points is still referenced by {i} rules; Disable it will remove it from those rules as well. Continue?",
     "downstream_agent": "Downstream Agent",
-    "select_disabled_tip":"The selected proxy has been disabled. We recommend using a different, available proxy.",
+    "select_disabled_tip": "The selected proxy has been disabled. We recommend using a different, available proxy.",
     "destination_address_tips": "To specify a lightning strike area that doesn't use a proxy, add an exclamation mark (!) indicating a distant location, for example: !*.example.com"
   },
   "RegexTester": {
     "test_content": "Test Content",
     "matching_results": "Matching Results"
   },
-   "YakScriptLoader":{
-    "reset_parameters":"Reset Parameters"
+  "YakScriptLoader": {
+    "reset_parameters": "Reset Parameters"
   },
-  "AdvancedConfiguration":{
-    "sni_config" :"SNI Config",
-    "map_rules":"Map Rules",
-    "host_rules":"Host Rules",
-    "SNI_value":"SNI Value",
-    "SNI_extra":"An empty value indicates that no SNI is sent, and the mapping rule has higher priority than the forced SNI.",
-    "mandatory_SNI":"Mandatory SNI:",
-    "add_message":"Please add after completing the setup"
+  "AdvancedConfiguration": {
+    "sni_config": "SNI Config",
+    "map_rules": "Map Rules",
+    "host_rules": "Host Rules",
+    "SNI_value": "SNI Value",
+    "SNI_extra": "An empty value indicates that no SNI is sent, and the mapping rule has higher priority than the forced SNI.",
+    "mandatory_SNI": "Mandatory SNI:",
+    "add_message": "Please add after completing the setup"
   },
-  "MITMPage":{
-    "passive_plugin" :"Passive Plugin",
-    "MITMPage_tips": "For interactive plugins, please click 'Hijack Startup' and then check the box to use."
+  "MITMPage": {
+    "serverClosed": "MITM hijacking server has been closed",
+    "serverErrorOrClosed": "MITM hijacking server error or closed",
+    "startMitmServerError": "Start MITM Server ERROR!",
+    "startMitmFailed": "Failed to start MITM hijacking: ",
+    "ruleGroup": "Rule Group: ",
+    "downstreamProxy": "Downstream Proxy: ",
+    "onlyGMTLS": "|GM-TLS Only",
+    "enableProxyAuth": "|Enable Proxy Auth",
+    "or": "or"
+  },
+  "MITMServer": {
+    "passive_plugin": "Passive Plugin",
+    "loadingPlugin": "Loading MITM plugin [{id}]",
+    "clearFailed": "Clear failed: ",
+    "startPluginSuccess": "MITM plugin started successfully",
+    "startPluginFailed": "Failed to start MITM plugin: ",
+    "MITMPage_tips": "Interactive plugins: please click 'Start Hijacker' before checking them"
+  },
+  "ImportLocalPlugin": {
+    "importLocalPluginSuccess": "Local plugin imported successfully",
+    "pluginSource": "Plugin Source",
+    "proxy": "Proxy",
+    "accessRepoViaProxy": "Access code repositories that are inaccessible from mainland China via proxy: e.g., http://127.0.0.1:7890",
+    "localPluginPath": "Local Plugin Path",
+    "enterLocalPluginPath": "Please enter the local plugin path",
+    "password": "Password",
+    "nucleiPoCLocalPath": "Nuclei PoC Local Path",
+    "pluginID": "Plugin ID",
+    "enterPluginID": "Please enter plugin IDs, separated by 'commas' or 'new lines'...",
+    "importOnlineNuclei": "Import Online Nuclei",
+    "enterNucleiPoCLocalPath": "Please enter the Nuclei PoC local path",
+    "importLocalNuclei": "Import Local Nuclei",
+    "pluginImportSuccess": "Plugin imported successfully",
+    "pluginImportMethod": "Plugin Import Method",
+    "externalResourceWarning": "Importing external resources has potential risks and may introduce malicious code or payloads, leading to data leaks, system compromises, and other serious consequences. Please carefully consider the necessity of importing external resources and ensure the source is trustworthy and the content is safe. If you must use external resources, it is recommended to prioritize official, secure versions or write your own controllable data sources. Additionally, please keep your system and software up to date, promptly fix known vulnerabilities, and maintain daily security protection.",
+    "onlineNuclei": "Online Nuclei",
+    "localPlugin": "Local Plugin",
+    "localNuclei": "Local Nuclei"
+  },
+  "MITMFilters": {
+    "includeHostname": "Include Hostname",
+    "excludeHostname": "Exclude Hostname",
+    "includeUri": "Include URL Path",
+    "includeUriHelp": "Matched as URI, e.g., /main/index.php?a=123",
+    "excludeUri": "Exclude URL Path",
+    "excludeUriHelp": "Filtered as URI, e.g., /main/index",
+    "includeSuffix": "Include File Suffix",
+    "excludeSuffix": "Exclude File Suffix",
+    "excludeContentTypes": "Exclude Content-Type",
+    "filterJS": "Filter JS",
+    "filterJSHelp": "When enabled, filter static JS from build/bundle artifacts",
+    "excludeMethod": "Exclude HTTP Method"
+  },
+  "MITMAdvancedFilters": {
+    "pleaseCompleteCondition": "Please complete the added condition before adding a new one",
+    "addAdvancedConfig": "Add Advanced Config",
+    "notSetCondition": "No condition set",
+    "ruleIndex": "Rule_{index}"
+  },
+  "MITMAdvancedFiltersItem": {
+    "scope": "Usage Scope",
+    "matcherType": "Matcher Type",
+    "regexp": "Regex"
+  },
+  "MITMServerForm": {
+    "hijackHost": "Hijack Proxy Listen Host",
+    "hijackHostHelp": "Remote mode can be changed to 0.0.0.0 to listen on all network interfaces",
+    "hijackPort": "Hijack Proxy Listen Port",
+    "downstreamProxyLabel": "Downstream Proxy",
+    "downstreamProxyHelp": "Set proxy for requests passing through this MITM, usually used to access sites unreachable from mainland China or special/internal networks. Also for passive scanning. Format: http://user:pass@ip:port",
+    "proxyPlaceholder": "e.g., http://127.0.0.1:7890 or socks5://127.0.0.1:7890",
+    "http2Support": "HTTP/2.0 Support",
+    "http2SupportHelp": "Enable HTTP/2.0 hijacking. If disabled, it falls back to HTTP/1.1. If HTTP2 negotiation fails, it also falls back automatically.",
+    "httpsConfig": "HTTPS Configuration",
+    "httpsConfigHelp": {
+      "gmTLS": "GM-TLS hijacking, connects to targets using GM-TLS",
+      "randomJA3": "Randomize ClientHello to evade server TLS fingerprint detection (TLS fingerprinting identifies clients by handshake features)",
+      "default": "No GM-TLS or random TLS fingerprinting"
+    },
+    "gmSecret": "GM-TLS",
+    "randomTLS": "Random TLS Fingerprint",
+    "default": "Default",
+    "disableKeepAlive": "Disable Keep-Alive",
+    "disableKeepAliveHelp": "Disable keep-alive for MITM. Each hijacked connection handles one request/response then closes.",
+    "contentRule": "Content Rules",
+    "contentRuleHelp": "Use rules to match, replace, tag, or colorize, and set effective locations.",
+    "defaultConfig": "Default Config",
+    "existingRules": "{count} Existing Rules",
+    "enablePlugin": "Enable Plugins",
+    "startHijack": "Start Hijacker",
+    "startHijackV2": "MITM Hijack v2",
+    "advancedConfig": "Advanced Configuration",
+    "replaceRuleWarning": "Replacement rules are enabled and may affect hijacking. Confirm starting?",
+    "goConfigure": "Configure",
+    "usingV1": "Currently using MITM v1"
   }
 }

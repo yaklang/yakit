@@ -9,6 +9,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import YakitCascader from "@/components/yakitUI/YakitCascader/YakitCascader"
 import {OutlineChevrondownIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,6 +28,7 @@ const layout = {
 }
 
 const SelectUpload: React.FC<SelectUploadProps> = (props) => {
+    const {t} = useI18nNamespaces(["core", "yakitUi"])
     const {onCancel} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [token, _] = useState(randomString(40))
@@ -57,16 +59,16 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 if (isCancle.current) return
                 if (TaskStatus) {
                     setPercent(1)
-                    success("上传数据成功")
+                    success(t("SelectUpload.uploadSuccess"))
                     setTimeout(() => {
                         onCancel()
                     }, 200)
                 } else {
-                    failed(`项目上传失败`)
+                    failed(t("SelectUpload.uploadFailed"))
                 }
             })
             .catch((err) => {
-                failed(`项目上传失败:${err}`)
+                failed(`${t("SelectUpload.uploadFailed")}:${err}`)
             })
             .finally(() => {
                 if (isCancle.current) return
@@ -100,7 +102,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const cancleUpload = () => {
         ipcRenderer.invoke("cancel-ExportProject", token)
         ipcRenderer.invoke("cancle-split-upload").then(() => {
-            warn("取消上传成功")
+            warn(t("SelectUpload.cancelSuccess"))
             setLoading(false)
             setPercent(0)
             isCancle.current = true
@@ -181,11 +183,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                         setData([...getData()])
                     }, 300)
                 } catch (e) {
-                    failed("处理项目数据失败: " + `${e}`)
+                    failed(t("SelectUpload.processDataFailed", {error: String(e)}))
                 }
             })
             .catch((e) => {
-                failed(`查询 Projects 失败：${e}`)
+                failed(t("SelectUpload.queryProjectsFailed", {error: String(e)}))
             })
     })
 
@@ -210,11 +212,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                         })
                     )
                 } catch (e) {
-                    failed("处理项目数据失败: " + `${e}`)
+                    failed(t("SelectUpload.processDataFailed", {error: String(e)}))
                 }
             })
             .catch((e) => {
-                failed(`查询 Projects 失败：${e}`)
+                failed(t("SelectUpload.queryProjectsFailed", {error: String(e)}))
             })
     })
 
@@ -224,11 +226,15 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
     return (
         <Form {...layout} form={form} onFinish={onFinish}>
-            <Form.Item name='name' label='项目' rules={[{required: true, message: "该项为必填"}]}>
+            <Form.Item
+                name='name'
+                label={t("SelectUpload.project")}
+                rules={[{required: true, message: t("YakitForm.requiredField")}]}
+            >
                 <YakitCascader
                     disabled={loading}
                     options={data}
-                    placeholder='请选择项目'
+                    placeholder={t("SelectUpload.selectProject")}
                     fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
                     loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                     showCheckedStrategy='SHOW_CHILD'
@@ -256,11 +262,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
             <div style={{textAlign: "center"}}>
                 {loading ? (
                     <YakitButton style={{width: 200}} type='primary' onClick={cancleUpload}>
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                 ) : (
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit'>
-                        确定
+                        {t("YakitButton.ok")}
                     </YakitButton>
                 )}
             </div>

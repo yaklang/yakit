@@ -15,6 +15,7 @@ import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {StartBruteParams} from "../securityTool/newBrute/NewBruteType"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 export const ScanPortTemplate = "scan-port-template"
@@ -92,6 +93,7 @@ interface ScanPortFormProp {
 }
 
 export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
+    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
     const {deepLevel, isSetPort, bruteParams, setBruteParams, setInterface, isSetInterface} = props
     const isSimpleDetectShow = props.isSimpleDetectShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
@@ -172,7 +174,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 SynScanNetInterface: params.SynScanNetInterface
             })
             .then(() => {
-                yakitInfo("更新配置成功")
+                yakitInfo(t("ScanPortForm.updateConfigSuccess"))
             })
     })
 
@@ -187,16 +189,16 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             {!isSimpleDetectShow && (
                 <>
                     <SelectOne
-                        label={"扫描模式"}
+                        label={t("ScanPortForm.scanMode")}
                         data={ScanKindKeys.map((item) => {
                             return {value: item, text: ScanKind[item]}
                         })}
-                        help={"SYN 扫描需要 yak 启动时具有root"}
+                        help={t("ScanPortForm.synNeedRoot")}
                         setValue={(Mode) => setParams({...params, Mode})}
                         value={params.Mode}
                     />
                     <SelectOne
-                        label={"扫描协议"}
+                        label={t("ScanPortForm.scanProto")}
                         data={[
                             {text: "TCP", value: "tcp"},
                             {text: "UDP", value: "udp", disabled: params.Mode === "syn" || params.Mode === "all"}
@@ -208,12 +210,12 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             )}
             {(params.Mode === "all" || params.Mode === "syn") && (
                 <>
-                    <Divider orientation={"left"}>网卡配置</Divider>
-                    <Form.Item label={<span>网卡选择</span>}>
+                    <Divider orientation={"left"}>{t("ScanPortForm.networkCardConfig")}</Divider>
+                    <Form.Item label={<span>{t("ScanPortForm.networkCardSelect")}</span>}>
                         <YakitSelect
                             showSearch
                             options={netInterfaceList}
-                            placeholder='请选择...'
+                            placeholder={t("YakitSelect.pleaseSelect")}
                             size='small'
                             value={params.SynScanNetInterface}
                             onChange={(netInterface) => {
@@ -223,17 +225,17 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                             maxTagCount={100}
                         />
                         <YakitButton onClick={updateGlobalNetworkConfig} size='small'>
-                            同步到全局网络配置
+                            {t("ScanPortForm.syncToGlobalNetworkConfig")}
                         </YakitButton>
                     </Form.Item>
                 </>
             )}
             {!isSimpleDetectShow && (params.Mode === "all" || params.Mode === "syn") && (
                 <>
-                    <Divider orientation={"left"}>SYN 配置</Divider>
+                    <Divider orientation={"left"}>{t("ScanPortForm.synConfig")}</Divider>
                     <InputInteger
-                        label={"SYN 并发"}
-                        help={"每秒发送 SYN 数据包数量，可视为 SYN 并发量"}
+                        label={t("ScanPortForm.synConcurrent")}
+                        help={t("ScanPortForm.synConcurrentHelp")}
                         value={params.SynConcurrent}
                         min={10}
                         setValue={(e) => setParams({...params, SynConcurrent: e})}
@@ -242,10 +244,10 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             )}
             {(params.Mode === "all" || params.Mode === "fingerprint") && (
                 <>
-                    <Divider orientation={"left"}>指纹扫描配置</Divider>
+                    <Divider orientation={"left"}>{t("ScanPortForm.fingerprintScanConfig")}</Divider>
                     {isSimpleDetectShow && (
                         <>
-                            <Form.Item label='预设端口' className='form-item-margin'>
+                            <Form.Item label={t("ScanPortForm.presetPort")} className='form-item-margin'>
                                 <Checkbox.Group
                                     value={getPortroupValue()}
                                     onChange={(value) => {
@@ -264,20 +266,24 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         setPortroupValue(value)
                                     }}
                                 >
-                                    <Checkbox value={"fast"}>快速默认端口</Checkbox>
-                                    <Checkbox value={"middle"}>适中默认端口</Checkbox>
-                                    <Checkbox value={"slow"}>慢速默认端口</Checkbox>
-                                    <Checkbox value={"top100"}>常见100端口</Checkbox>
-                                    <Checkbox value={"topweb"}>常见 Web 端口</Checkbox>
-                                    <Checkbox value={"top1000+"}>常见一两千</Checkbox>
-                                    <Checkbox value={"topdb"}>常见数据库与 MQ</Checkbox>
-                                    <Checkbox value={"topudp"}>常见 UDP 端口</Checkbox>
-                                    <Checkbox value={"defect"}>常见弱口令端口</Checkbox>
-                                    <Checkbox value={"all"}>全端口</Checkbox>
+                                    <Checkbox value={"fast"}>{t("ScanPortForm.fast")}</Checkbox>
+                                    <Checkbox value={"middle"}>{t("ScanPortForm.middle")}</Checkbox>
+                                    <Checkbox value={"slow"}>{t("ScanPortForm.slow")}</Checkbox>
+                                    <Checkbox value={"top100"}>{t("ScanPortForm.top100")}</Checkbox>
+                                    <Checkbox value={"topweb"}>{t("ScanPortForm.topweb")}</Checkbox>
+                                    <Checkbox value={"top1000+"}>{t("ScanPortForm.top1000")}</Checkbox>
+                                    <Checkbox value={"topdb"}>{t("ScanPortForm.topdb")}</Checkbox>
+                                    <Checkbox value={"topudp"}>{t("ScanPortForm.topudp")}</Checkbox>
+                                    <Checkbox value={"defect"}>{t("ScanPortForm.defect")}</Checkbox>
+                                    <Checkbox value={"all"}>{t("ScanPortForm.all")}</Checkbox>
                                 </Checkbox.Group>
                             </Form.Item>
 
-                            <Form.Item label='扫描端口' className='form-item-margin' style={{position: "relative"}}>
+                            <Form.Item
+                                label={t("ScanPortForm.scanPort")}
+                                className='form-item-margin'
+                                style={{position: "relative"}}
+                            >
                                 <Input.TextArea
                                     style={{width: "100%"}}
                                     rows={2}
@@ -285,7 +291,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     onChange={(e) => setParams({...params, Ports: e.target.value})}
                                 />
                                 <Space size={"small"} style={{marginLeft: 8, position: "absolute", bottom: 0}}>
-                                    <Tooltip title={"重置为默认扫描端口"}>
+                                    <Tooltip title={t("ScanPortForm.resetToDefaultPort")}>
                                         <a
                                             href={"#"}
                                             onClick={() => {
@@ -300,7 +306,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         </>
                     )}
                     <InputInteger
-                        label={"指纹扫描并发"}
+                        label={t("ScanPortForm.fingerprintScanConcurrency")}
                         // help={"推荐最多同时扫描200个端口"}
                         value={params.Concurrent}
                         min={1}
@@ -308,35 +314,33 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         setValue={(e) => setParams({...params, Concurrent: e})}
                     />
                     <SwitchItem
-                        label={"主动模式"}
-                        help={"允许指纹探测主动发包"}
+                        label={t("ScanPortForm.activeMode")}
+                        help={t("ScanPortForm.activeModeHelp")}
                         setValue={(Active) => setParams({...params, Active})}
                         value={params.Active}
                     />
                     <SelectOne
-                        label={"服务指纹级别"}
-                        help={"级别越高探测的详细程度越多，主动发包越多，时间越长"}
+                        label={t("ScanPortForm.serviceFingerprintLevel")}
+                        help={t("ScanPortForm.serviceFingerprintLevelHelp")}
                         data={[
-                            {value: 1, text: "基础"},
+                            {value: 1, text: t("ScanPortForm.basic")},
                             {value: 3, text: "适中"},
-                            {value: 7, text: "详细"},
+                            {value: 7, text: t("ScanPortForm.detailed")},
                             {value: 100, text: "全部"}
                         ]}
                         value={params.ProbeMax}
                         setValue={(ProbeMax) => setParams({...params, ProbeMax})}
                     />
                     <InputInteger
-                        label={"主动发包超时时间"}
-                        help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
+                        label={t("ScanPortForm.activePacketTimeout")}
+                        help={t("ScanPortForm.activePacketTimeoutHelp")}
                         value={params.ProbeTimeout}
                         setValue={(ProbeTimeout) => setParams({...params, ProbeTimeout})}
                     />
                     {!isSimpleDetectShow && (
                         <ManyMultiSelectForString
-                            label={"TCP 代理"}
-                            help={
-                                "支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"
-                            }
+                            label={t("ScanPortForm.tcpProxy")}
+                            help={t("ScanPortForm.tcpProxyHelp")}
                             data={[
                                 "http://127.0.0.1:7890",
                                 "http://127.0.0.1:8082",
@@ -351,18 +355,18 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         />
                     )}
                     <SelectOne
-                        label={"高级指纹选项"}
+                        label={t("ScanPortForm.advancedFingerprintOptions")}
                         data={[
-                            {value: "web", text: "仅web指纹"},
-                            {value: "service", text: "服务指纹"},
-                            {value: "all", text: "全部指纹"}
+                            {value: "web", text: t("ScanPortForm.onlyWebFingerprint")},
+                            {value: "service", text: t("ScanPortForm.serviceFingerprint")},
+                            {value: "all", text: t("ScanPortForm.allFingerprint")}
                         ]}
                         setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
                         value={params.FingerprintMode}
                     />
                     {isSimpleDetectShow && simpleParams && setSimpleParams && (
                         <>
-                            <Divider orientation={"left"}>弱口令配置</Divider>
+                            <Divider orientation={"left"}>{t("ScanPortForm.bruteForceConfig")}</Divider>
                             <ContentUploadInput
                                 type='textarea'
                                 dragger={{
@@ -371,7 +375,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 beforeUpload={(f) => {
                                     if (!typeArr.includes(f.type)) {
-                                        failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                                        failed(t("ScanPortForm.invalidFileType", {name: f.name}))
                                         return false
                                     }
                                     setSimpleParams({
@@ -382,7 +386,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 item={{
                                     style: {textAlign: "left"},
-                                    label: "用户字典:"
+                                    label: t("ScanPortForm.userDict")
                                 }}
                                 textarea={{
                                     isBubbing: true,
@@ -406,7 +410,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                                 })
                                             }}
                                         >
-                                            同时使用默认用户字典
+                                            {t("ScanPortForm.useDefaultUserDict")}
                                         </Checkbox>
                                         {simpleParams.UsernameFile && (
                                             <div>
@@ -436,7 +440,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 beforeUpload={(f) => {
                                     if (!typeArr.includes(f.type)) {
-                                        failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                                        failed(t("ScanPortForm.invalidFileType", {name: f.name}))
                                         return false
                                     }
                                     setSimpleParams({
@@ -447,7 +451,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 item={{
                                     style: {textAlign: "left"},
-                                    label: "密码字典:"
+                                    label: t("ScanPortForm.passwordDict")
                                 }}
                                 textarea={{
                                     isBubbing: true,
@@ -471,7 +475,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                                 })
                                             }}
                                         >
-                                            同时使用默认密码字典
+                                            {t("ScanPortForm.useDefaultPasswordDict")}
                                         </Checkbox>
                                         {simpleParams.PasswordFile && (
                                             <div>
@@ -494,52 +498,49 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }
                             />
                             <InputInteger
-                                label={"目标并发"}
-                                help={"同时爆破 n 个目标"}
+                                label={t("ScanPortForm.targetConcurrent")}
+                                help={t("ScanPortForm.targetConcurrentHelp")}
                                 value={simpleParams.Concurrent}
                                 setValue={(e) => setSimpleParams({...simpleParams, Concurrent: e})}
                             />
                             <InputInteger
-                                label={"目标内并发"}
-                                help={"每个目标同时执行多少爆破任务"}
+                                label={t("ScanPortForm.innerTargetConcurrent")}
+                                help={t("ScanPortForm.innerTargetConcurrentHelp")}
                                 value={simpleParams.TargetTaskConcurrent}
                                 setValue={(e) => setSimpleParams({...simpleParams, TargetTaskConcurrent: e})}
                             />
                             <SwitchItem
-                                label={"自动停止"}
-                                help={"遇到第一个爆破结果时终止任务"}
+                                label={t("ScanPortForm.autoStop")}
+                                help={t("ScanPortForm.autoStopHelp")}
                                 setValue={(OkToStop) => setSimpleParams({...simpleParams, OkToStop})}
                                 value={simpleParams.OkToStop}
                             />
                             <InputInteger
-                                label={"最小延迟"}
+                                label={t("ScanPortForm.minDelay")}
                                 max={simpleParams.DelayMax}
                                 min={0}
                                 setValue={(DelayMin) => setSimpleParams({...simpleParams, DelayMin})}
                                 value={simpleParams.DelayMin}
                             />
                             <InputInteger
-                                label={"最大延迟"}
+                                label={t("ScanPortForm.maxDelay")}
                                 setValue={(DelayMax) => setSimpleParams({...simpleParams, DelayMax})}
                                 value={simpleParams.DelayMax}
                                 min={simpleParams.DelayMin}
                             />
                         </>
                     )}
-                    <Divider orientation={"left"}>基础爬虫配置</Divider>
-                    <Form.Item
-                        label={"爬虫设置"}
-                        help={"在发现网站内容是一个 HTTP(s) 服务后，进行最基础的爬虫以发现更多数据"}
-                    >
+                    <Divider orientation={"left"}>{t("ScanPortForm.basicCrawlerConfig")}</Divider>
+                    <Form.Item label={t("ScanPortForm.crawlerSettings")} help={t("ScanPortForm.crawlerSettingsHelp")}>
                         <Space>
                             <Checkbox
                                 onChange={(e) => setParams({...params, EnableBasicCrawler: e.target.checked})}
                                 checked={params.EnableBasicCrawler}
                             >
-                                启用爬虫
+                                {t("ScanPortForm.enableCrawler")}
                             </Checkbox>
                             <InputNumber
-                                addonBefore={"爬虫请求数"}
+                                addonBefore={t("ScanPortForm.crawlerRequestCount")}
                                 value={params.BasicCrawlerRequestMax}
                                 onChange={(e) => setParams({...params, BasicCrawlerRequestMax: e as number})}
                             />
@@ -548,9 +549,9 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 </>
             )}
 
-            <Divider orientation={"left"}>其他配置</Divider>
+            <Divider orientation={"left"}>{t("ScanPortForm.otherConfig")}</Divider>
             <SwitchItem
-                label={"扫描结果入库"}
+                label={t("ScanPortForm.saveToDB")}
                 setValue={(SaveToDB) => {
                     setParams({...params, SaveToDB, SaveClosedPorts: false})
                 }}
@@ -558,45 +559,45 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             />
             {params.SaveToDB && (
                 <SwitchItem
-                    label={"保存关闭的端口"}
+                    label={t("ScanPortForm.saveClosedPorts")}
                     setValue={(SaveClosedPorts) => setParams({...params, SaveClosedPorts})}
                     value={params.SaveClosedPorts}
                 />
             )}
             <SwitchItem
-                label={"自动扫相关C段"}
-                help={"可以把域名 /IP 转化为 C 段目标，直接进行扫描"}
+                label={t("ScanPortForm.autoScanCClass")}
+                help={t("ScanPortForm.autoScanCClassHelp")}
                 value={params.EnableCClassScan}
                 setValue={(EnableCClassScan) => setParams({...params, EnableCClassScan})}
             />
             <SwitchItem
-                label={"跳过主机存活检测"}
-                help={"主机存活检测，根据当前用户权限使用 ICMP/TCP Ping 探测主机是否存活"}
+                label={t("ScanPortForm.skipHostAliveScan")}
+                help={t("ScanPortForm.hostAliveScanHelp")}
                 value={params.SkippedHostAliveScan}
                 setValue={(SkippedHostAliveScan) => setParams({...params, SkippedHostAliveScan})}
             />
             {!params.SkippedHostAliveScan && (
                 <>
                     <InputInteger
-                        label={"存活检测并发"}
+                        label={t("ScanPortForm.hostAliveConcurrent")}
                         value={params.HostAliveConcurrent}
                         setValue={(HostAliveConcurrent) => setParams({...params, HostAliveConcurrent})}
                     />
                     <InputItem
-                        label={"TCP Ping 端口"}
-                        help={"配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据"}
+                        label={t("ScanPortForm.tcpPingPort")}
+                        help={t("ScanPortForm.tcpPingPortHelp")}
                         value={params.HostAlivePorts}
                         setValue={(HostAlivePorts) => setParams({...params, HostAlivePorts})}
                     />
                 </>
             )}
             <InputItem
-                label={"排除主机"}
+                label={t("ScanPortForm.excludeHosts")}
                 setValue={(ExcludeHosts) => setParams({...params, ExcludeHosts})}
                 value={params.ExcludeHosts}
             />
             <InputItem
-                label={"排除端口"}
+                label={t("ScanPortForm.excludePorts")}
                 setValue={(ExcludePorts) => setParams({...params, ExcludePorts})}
                 value={params.ExcludePorts}
             />

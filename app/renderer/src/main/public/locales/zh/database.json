@@ -1,0 +1,19 @@
+{
+  "DomainAssetPage": {
+    "domain": "域名"
+  },
+  "PortAssetPage": {
+    "PortAssetTable": {
+      "title": "端口资产列表",
+      "searchPlaceholder": "请输入网络地址、端口、服务指纹、title关键词搜索",
+      "confirmDeleteSelected": "确定删除勾选数据吗？",
+      "confirmClearList": "确定清空列表数据吗?"
+    },
+    "PortAssetQuery": {
+      "noFingerprint": "暂无指纹信息"
+    },
+    "PortAssetDescription": {
+      "state": "状态"
+    }
+  }
+}

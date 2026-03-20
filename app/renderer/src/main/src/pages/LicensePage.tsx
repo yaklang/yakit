@@ -6,6 +6,7 @@ import CopyToClipboard from "react-copy-to-clipboard"
 import "./LicensePage.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 const {Item} = Form
 
@@ -19,6 +20,7 @@ interface LicensePostProps {
     licenseActivation: string
 }
 const LicensePage: React.FC<LicensePageProps> = (props) => {
+    const {t} = useI18nNamespaces(["core", "yakitUi"])
     const {judgeLicense, licensePageLoading, setLicensePageLoading} = props
     const [licenseRequest, setLicenseRequest] = useState("")
     const [paramsObj, setParamsObj] = useState<LicensePostProps>({licenseActivation: ""})
@@ -31,7 +33,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                 setLicenseRequest(e.License)
             })
             .catch((e) => {
-                failed(`获取License失败: ${e}`)
+                failed(t("LicensePage.getLicenseFailed", {error: e}))
             })
             .finally(() => {
                 setLicensePageLoading(false)
@@ -39,7 +41,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
     }, [])
 
     if (!licenseRequest) {
-        return <Spin className='license-spin-box' tip={"加载 license"} />
+        return <Spin className='license-spin-box' tip={t("LicensePage.loadingLicense")} />
     }
 
     const UploadLicense = () => {
@@ -48,7 +50,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
     }
 
     return (
-        <div style={{height:"100%",overflow:"auto"}}>
+        <div style={{height: "100%", overflow: "auto"}}>
             <Spin spinning={licensePageLoading}>
                 <Row style={{paddingTop: 50}}>
                     <Col span={4} />
@@ -61,7 +63,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                                 e.preventDefault()
 
                                 if (!paramsObj.licenseActivation) {
-                                    Modal.error({title: "空 License..."})
+                                    Modal.error({title: t("LicensePage.emptyLicense")})
                                     return
                                 }
 
@@ -69,10 +71,10 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                             }}
                         >
                             <Item label={" "} colon={false}>
-                                <h1>使用 License 注册您的产品</h1>
+                                <h1>{t("LicensePage.registerProduct")}</h1>
                             </Item>
                             <InputItem
-                                label={"License 申请码"}
+                                label={t("LicensePage.licenseRequestCode")}
                                 textarea={true}
                                 textareaRow={10}
                                 disable={true}
@@ -87,24 +89,24 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                                 label={" "}
                                 colon={false}
                                 style={{textAlign: "left"}}
-                                help={"在申请 license 时，请把这一串申请码给销售人员以便生成您专属的 License"}
+                                help={t("LicensePage.requestCodeHelp")}
                             >
                                 <CopyToClipboard
                                     text={licenseRequest}
-                                    onCopy={(t, ok) => {
+                                    onCopy={(t_, ok) => {
                                         if (ok) {
-                                            yakitNotify("success", "复制成功")
+                                            yakitNotify("success", t("YakitNotification.copySuccess"))
                                         }
                                     }}
                                 >
                                     <YakitButton type={"text"} size={"small"}>
-                                        点此复制该 License 请求码
+                                        {t("LicensePage.copyRequestCode")}
                                     </YakitButton>
                                 </CopyToClipboard>
                             </Item>
                             <Divider />
                             <InputItem
-                                label={"您的许可证"}
+                                label={t("LicensePage.yourLicense")}
                                 textarea={true}
                                 textareaRow={13}
                                 setValue={(licenseActivation) => setParamsObj({...paramsObj, licenseActivation})}
@@ -112,7 +114,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                             />
                             <Item label={" "} colon={false}>
                                 <YakitButton type={"primary"} htmlType={"submit"} style={{width: "100%", height: 60}}>
-                                    点此使用 License 激活您的产品
+                                    {t("LicensePage.activateProduct")}
                                 </YakitButton>
                             </Item>
                         </Form>

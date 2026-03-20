@@ -1,27 +1,4 @@
 {
-  "MitmPage": {
-    "ImportLocalPlugin": {
-      "importLocalPluginSuccess": "导入本地插件成功",
-      "pluginSource": "插件源",
-      "proxy": "代理",
-      "accessRepoViaProxy": "通过代理访问中国大陆无法访问的代码仓库：例如http://127.0.0.1:7890",
-      "localPluginPath": "本地插件路径",
-      "enterLocalPluginPath": "请输入本地插件路径",
-      "password": "密码",
-      "nucleiPoCLocalPath": "Nuclei PoC 本地路径",
-      "pluginID": "插件ID",
-      "enterPluginID": "请输入插件ID，多个ID用”英文逗号“或”换行“分割...",
-      "importOnlineNuclei": "导入线上Nuclei",
-      "enterNucleiPoCLocalPath": "请输入Nuclei PoC 本地路径",
-      "importLocalNuclei": "导入本地Nuclei",
-      "pluginImportSuccess": "插件导入成功",
-      "pluginImportMethod": "导入插件方式",
-      "externalResourceWarning": "导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。",
-      "onlineNuclei": "线上 Nuclei",
-      "localPlugin": "本地插件",
-      "localNuclei": "本地 Nuclei"
-    }
-  },
   "MITMRule": {
     "request": "请求",
     "response": "响应",
@@ -153,8 +130,8 @@
     "please_enter_password": "请输入密码",
     "proxy_address_placeholder": "请选择或输入代理地址,代理如有密码格式为:http://user:pass@ip:port",
     "data_migration": "数据迁移",
-    "migration":"迁移",
-    "not_migration":"不迁移",
+    "migration": "迁移",
+    "not_migration": "不迁移",
     "migration_title": "是否将下游代理配置数据迁移到新版本，不迁移则认为放弃历史数据。",
     "recordPointsCount": "现有节点 {i}个",
     "recordRoutesCount": "现有规则 {i}条",
@@ -164,8 +141,8 @@
     "delete_point_title": "删除代理节点",
     "delete_point_tips": "该节点仍被 {i} 条规则引用，删除后会同时从这些规则中移除。是否继续？",
     "disabled": "已禁用",
-    "detectionStart":"开始检测",
-    "detectionLoading":"检测中，请耐心等待...",
+    "detectionStart": "开始检测",
+    "detectionLoading": "检测中，请耐心等待...",
     "detectionSuccess": "检测通过",
     "proxyDetection": "代理检测",
     "customDetectionTarget": "自定义检测目标",
@@ -173,27 +150,120 @@
     "disable_point_title": "禁用代理节点",
     "disable_point_tips": "该节点仍被 {i} 条规则引用，禁用后会同时从这些规则中移除。是否继续？",
     "downstream_agent": "下游代理",
-    "select_disabled_tip":"选中的代理已被禁用，建议更换可用的代理",
+    "select_disabled_tip": "选中的代理已被禁用，建议更换可用的代理",
     "destination_address_tips": "如需屏蔽指定域名不走代理则可加上“!”前缀，例如：!*.example.com"
   },
   "RegexTester": {
     "test_content": "测试内容",
     "matching_results": "匹配结果"
   },
-  "YakScriptLoader":{
-    "reset_parameters":"重置参数"
+  "YakScriptLoader": {
+    "reset_parameters": "重置参数"
   },
-  "AdvancedConfiguration":{
-    "sni_config" :"SNI 配置",
-    "map_rules":"映射规则",
-    "host_rules":"Host 规则",
-    "SNI_value":"SNI 值",
-    "SNI_extra":"为空表示不发送SNI，映射规则优先级大于强制SNI",
-    "mandatory_SNI":"强制 SNI:",
-    "add_message":"请设置完成后再添加"
+  "AdvancedConfiguration": {
+    "sni_config": "SNI 配置",
+    "map_rules": "映射规则",
+    "host_rules": "Host 规则",
+    "SNI_value": "SNI 值",
+    "SNI_extra": "为空表示不发送SNI，映射规则优先级大于强制SNI",
+    "mandatory_SNI": "强制 SNI:",
+    "add_message": "请设置完成后再添加"
   },
-  "MITMPage":{
-    "passive_plugin" :"被动插件",
+  "MITMPage": {
+    "serverClosed": "MITM 劫持服务器已关闭",
+    "serverErrorOrClosed": "MITM 劫持服务器异常或被关闭",
+    "startMitmServerError": "启动 MITM 服务器 ERROR!",
+    "startMitmFailed": "启动中间人劫持失败：",
+    "ruleGroup": "规则组：",
+    "downstreamProxy": "下游代理：",
+    "onlyGMTLS": "|仅国密 TLS",
+    "enableProxyAuth": "|开启代理认证",
+    "or": "或"
+  },
+  "MITMServer": {
+    "passive_plugin": "被动插件",
+    "loadingPlugin": "加载 MITM 插件[{id}]",
+    "clearFailed": "清空失败:",
+    "startPluginSuccess": "启动 MITM 插件成功",
+    "startPluginFailed": "启动 MITM 插件失败:",
     "MITMPage_tips": "交互插件请点击“劫持启动”后再勾选使用"
+  },
+  "ImportLocalPlugin": {
+    "importLocalPluginSuccess": "导入本地插件成功",
+    "pluginSource": "插件源",
+    "proxy": "代理",
+    "accessRepoViaProxy": "通过代理访问中国大陆无法访问的代码仓库：例如http://127.0.0.1:7890",
+    "localPluginPath": "本地插件路径",
+    "enterLocalPluginPath": "请输入本地插件路径",
+    "password": "密码",
+    "nucleiPoCLocalPath": "Nuclei PoC 本地路径",
+    "pluginID": "插件ID",
+    "enterPluginID": "请输入插件ID，多个ID用”英文逗号“或”换行“分割...",
+    "importOnlineNuclei": "导入线上Nuclei",
+    "enterNucleiPoCLocalPath": "请输入Nuclei PoC 本地路径",
+    "importLocalNuclei": "导入本地Nuclei",
+    "pluginImportSuccess": "插件导入成功",
+    "pluginImportMethod": "导入插件方式",
+    "externalResourceWarning": "导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。",
+    "onlineNuclei": "线上 Nuclei",
+    "localPlugin": "本地插件",
+    "localNuclei": "本地 Nuclei"
+  },
+  "MITMFilters": {
+    "includeHostname": "包含 Hostname",
+    "excludeHostname": "排除 Hostname",
+    "includeUri": "包含 URL 路径",
+    "includeUriHelp": "可理解为 URI 匹配，例如 /main/index.php?a=123",
+    "excludeUri": "排除 URL 路径",
+    "excludeUriHelp": "可理解为 URI 过滤，例如 /main/index ",
+    "includeSuffix": "包含文件后缀",
+    "excludeSuffix": "排除文件后缀",
+    "excludeContentTypes": "排除 Content-Type",
+    "filterJS": "过滤 JS",
+    "filterJSHelp": "开启后过滤打包/构建产物的静态 JS",
+    "excludeMethod": "排除 HTTP 方法"    
+  },
+  "MITMAdvancedFilters": {
+    "pleaseCompleteCondition": "请将已添加条件配置完成后再新增",
+    "addAdvancedConfig": "添加高级配置",
+    "notSetCondition": "暂未设置条件",
+    "ruleIndex": "规则_{index}"
+  },
+  "MITMAdvancedFiltersItem": {
+    "scope": "使用范围",
+    "matcherType": "匹配类型",
+    "regexp": "正则"
+  },
+  "MITMServerForm": {
+    "hijackHost": "劫持代理监听主机",
+    "hijackHostHelp": "远程模式可以修改为 0.0.0.0 以监听主机所有网卡",
+    "hijackPort": "劫持代理监听端口",
+    "downstreamProxyLabel": "下游代理",
+    "downstreamProxyHelp": "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port",
+    "proxyPlaceholder": "例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890",
+    "http2Support": "HTTP/2.0 支持",
+    "http2SupportHelp": "开启该选项将支持 HTTP/2.0 劫持，关闭后自动降级为 HTTP/1.1，开启后 HTTP2 协商失败也会自动降级",
+    "httpsConfig": "HTTPS 配置",
+    "httpsConfigHelp": {
+      "gmTLS": "适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接",
+      "randomJA3": "访问时随机客户端握手(ClientHello)消息，用于规避服务器对 TLS 指纹的检测(TLS指纹是一种用于通过分析客户端在建立安全连接时发送的握手信息来识别和分类SSL/TLS客户端的特征方法)",
+      "default": "不配置国密和随机TLS指纹"
+    },
+    "gmSecret": "国密",
+    "randomTLS": "随机TLS指纹",
+    "default": "默认",
+    "disableKeepAlive": "禁用劫持长连接",
+    "disableKeepAliveHelp": "MITM劫持禁用长连接，每个劫持连接处理一个请求响应后会自动关闭",
+    "contentRule": "内容规则",
+    "contentRuleHelp": "使用规则进行匹配、替换、标记、染色，同时配置生效位置",
+    "defaultConfig": "默认配置",
+    "existingRules": "现有规则 {count} 条",
+    "enablePlugin": "启用插件",
+    "startHijack": "劫持启动",
+    "startHijackV2": "MITM 劫持 v2",
+    "advancedConfig": "高级配置",
+    "replaceRuleWarning": "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+    "goConfigure": "去配置",
+    "usingV1": "当前使用的是MITM v1版本"
   }
 }

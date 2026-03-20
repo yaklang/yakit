@@ -40,6 +40,7 @@ import noPictures from "@/assets/noPictures.png"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -65,14 +66,14 @@ interface UploadScreenRecorderRequest {
     Keywords?: string
     Ids?: string[]
 }
-const batchMenuDataEnterprise: YakitMenuItemProps[] = [
+const batchMenuDataEnterprise = (t: TFunction): YakitMenuItemProps[] => [
     // {
     //     key: "upload",
     //     label: "上传"
     // },
     {
         key: "remove",
-        label: "删除"
+        label: t("YakitButton.delete")
     }
 ]
 interface QueryScreenRecordersProps {
@@ -81,6 +82,7 @@ interface QueryScreenRecordersProps {
 export const Screen_Recorder_Framerate = "Screen_Recorder_Framerate"
 export const Screen_Recorder_CoefficientPTS = "Screen_Recorder_CoefficientPTS"
 export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
+    const {t} = useI18nNamespaces(["screenRecorder", "yakitUi"])
     const [params, setParams] = useState<QueryScreenRecordersProps>({
         Keywords: ""
     })
@@ -141,7 +143,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setTotal(item.Total)
             })
             .catch((e) => {
-                yakitNotify("error", "获取列表数据失败：" + e)
+                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e}))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -196,7 +198,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setIsShowScreenRecording(!(item.Total > 0))
             })
             .catch((e) => {
-                yakitNotify("error", "获取列表数据失败：" + e)
+                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e}))
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
@@ -221,7 +223,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const {userInfo} = useStore()
     const onBatchUpload = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
-            yakitNotify("warning", "请先登录，登录后方可使用")
+            yakitNotify("warning", t("ScreenRecorderList.loginRequired"))
         }
         let paramsUpload: UploadScreenRecorderRequest = {
             Token: userInfo.token
@@ -241,12 +243,12 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         ipcRenderer
             .invoke("UploadScreenRecorders", paramsUpload)
             .then(() => {
-                yakitNotify("success", "上传成功")
+                yakitNotify("success", t("YakitNotification.uploaded"))
                 onSearch()
                 setSelected([])
             })
             .catch((err) => {
-                yakitNotify("error", "上传失败：" + err)
+                yakitNotify("error", `${t("YakitNotification.uploadFailed", {colon: true})}${err}`)
             })
     })
     const onBatchRemove = useMemoizedFn(() => {
@@ -264,13 +266,13 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         ipcRenderer
             .invoke("DeleteScreenRecorders", paramsRemove)
             .then((e) => {
-                yakitNotify("success", "删除成功")
+                yakitNotify("success", t("YakitNotification.deleted"))
                 onSearch()
                 setSelected([])
                 setDelShow(false)
             })
             .catch((err) => {
-                yakitNotify("error", "删除失败：" + err)
+                yakitNotify("error", `${t("YakitNotification.deleteFailed", {colon: true})}${err}`)
             })
     })
     const onRefresh = useMemoizedFn(() => {
@@ -307,7 +309,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     })
     return isShowScreenRecording ? (
         <div className={styles["screen-recorder-empty"]}>
-            <div className={styles["empty-title"]}>录屏管理</div>
+            <div className={styles["empty-title"]}>{t("ScreenRecorderList.screenRecorder")}</div>
             <ScrecorderModal
                 disabled={screenRecorderInfo.isRecording}
                 onClose={() => {}}
@@ -331,12 +333,12 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 size='large'
                             >
                                 <StopIcon />
-                                停止录屏
+                                {t("ScreenRecorderList.stopRecording")}
                             </YakitButton>
                         ) : (
                             <YakitButton htmlType='submit' type='primary' size='large'>
                                 <PlayIcon style={{height: 16}} />
-                                开始录屏
+                                {t("ScrecorderModal.startRecording")}
                             </YakitButton>
                         )}
                         {loading ? (
@@ -345,7 +347,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             </YakitButton>
                         ) : (
                             <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
-                                刷新
+                                {t("YakitButton.refresh")}
                             </YakitButton>
                         )}
                     </div>
@@ -356,9 +358,9 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         <div className={styles["screen-recorder"]}>
             <div className={styles["screen-recorder-heard"]}>
                 <div className={styles["heard-title"]}>
-                    <span className={styles["heard-title-text"]}>录屏管理</span>
+                    <span className={styles["heard-title-text"]}>{t("ScreenRecorderList.screenRecorder")}</span>
                     <span className={classNames("content-ellipsis", styles["heard-subTitle-text"])}>
-                        本录屏在 Windows 下，会同时录制所有屏幕，合并在一个文件中；在 MacOS 下多屏会生成多个文件
+                        {t("ScrecorderModal.screenRecorderDesc")}
                     </span>
                 </div>
                 <div className={styles["heard-extra"]}>
@@ -388,29 +390,33 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         }}
                     >
                         <Form.Item
-                            label='帧率'
+                            label={t("ScrecorderModal.framerate")}
                             tooltip={{
-                                title: "帧率即每秒截屏次数",
+                                title: t("ScrecorderModal.framerateTooltip"),
                                 icon: <InformationCircleIcon style={{cursor: "auto"}} />
                             }}
                             name='Framerate'
                         >
                             <YakitSelect
-                                options={FramerateData}
+                                options={FramerateData(t)}
                                 style={{width: 120}}
                                 size='small'
                                 disabled={screenRecorderInfo.isRecording}
                             />
                         </Form.Item>
-                        <Form.Item label='倍速' name='CoefficientPTS'>
+                        <Form.Item label={t("ScrecorderModal.speed")} name='CoefficientPTS'>
                             <YakitSelect
-                                options={CoefficientPTSData}
+                                options={CoefficientPTSData(t)}
                                 style={{width: 120}}
                                 size='small'
                                 disabled={screenRecorderInfo.isRecording}
                             />
                         </Form.Item>
-                        <Form.Item label='鼠标捕捉' valuePropName='checked' name='DisableMouse'>
+                        <Form.Item
+                            label={t("ScrecorderModal.mouseCapture")}
+                            valuePropName='checked'
+                            name='DisableMouse'
+                        >
                             <YakitSwitch disabled={screenRecorderInfo.isRecording} />
                         </Form.Item>
                         <Divider type='vertical' style={{margin: 0, height: 16, marginRight: 16, top: 4}} />
@@ -423,12 +429,12 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 colors='danger'
                             >
                                 <StopIcon />
-                                停止录屏
+                                {t("ScreenRecorderList.stopRecording")}
                             </YakitButton>
                         ) : (
                             <YakitButton htmlType='submit' type='primary'>
                                 <PlayIcon style={{height: 16}} />
-                                开始录屏
+                                {t("ScrecorderModal.startRecording")}
                             </YakitButton>
                         )}
                     </Form>
@@ -450,10 +456,11 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 }}
                                 indeterminate={partiallySelected}
                             >
-                                全选
+                                {t("YakitCheckbox.selectAll")}
                             </YakitCheckbox>
                             <div className={styles["title-text"]} style={{marginLeft: 8}}>
-                                Total<span className={styles["title-number"]}>{total}</span>
+                                Total
+                                <span className={styles["title-number"]}>{total}</span>
                             </div>
                             <Divider type='vertical' style={{top: 2}} />
                             <div className={styles["title-text"]}>
@@ -463,7 +470,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         </div>
                         <div className={styles["content-heard-extra"]}>
                             <YakitInput.Search
-                                placeholder='请输入关键词搜索'
+                                placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                                 value={params.Keywords}
                                 onChange={(e) =>
                                     setParams({
@@ -490,7 +497,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     arrowPointAtCenter={true}
                                     content={
                                         <YakitMenu
-                                            data={batchMenuDataEnterprise}
+                                            data={batchMenuDataEnterprise(t)}
                                             selectedKeys={[]}
                                             width={92}
                                             onSelect={({key}) => onMenuSelect(key)}
@@ -504,7 +511,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                         disabled={selected.length === 0}
                                         className={classNames(styles["button-batch-operate"])}
                                     >
-                                        批量操作
+                                        {t("YakitButton.batchOperation")}
                                         <ChevronDownIcon />
                                     </YakitButton>
                                 </YakitPopover>
@@ -515,11 +522,11 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     className={classNames(styles["button-batch-remove"])}
                                     onClick={() => setDelShow(true)}
                                 >
-                                    批量删除
+                                    {t("YakitButton.batchDelete")}
                                 </YakitButton>
                             )}
                             <YakitButton type='outline1' colors='danger' onClick={() => setDelShow(true)}>
-                                清空
+                                {t("YakitButton.clear")}
                             </YakitButton>
                         </div>
                     </div>
@@ -558,8 +565,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             </div>
             <YakitHint
                 visible={delShow}
-                title='删除录屏'
-                content='删除录屏的同时会清除本地视频文件'
+                title={t("ScreenRecorderList.deleteTitle")}
+                content={t("ScreenRecorderList.deleteDesc")}
                 onOk={() => onBatchRemove()}
                 onCancel={() => setDelShow(false)}
             />
@@ -575,6 +582,7 @@ interface ScreenRecorderListItemProps {
     onRemoveScreenItem: (s: ScreenRecorder) => void
 }
 const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) => {
+    const {t} = useI18nNamespaces(["screenRecorder", "yakitUi"])
     const {item, isSelected, onSelect, onUpdateScreenList, onRemoveScreenItem} = props
     const [urlVideo, setUrlVideo] = useState<string>("")
     const [visible, setVisible] = useState<boolean>(false)
@@ -594,7 +602,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     setVideoItem(item)
                     setVisible(true)
                 } else {
-                    failed("目标文件已不存在!")
+                    failed(t("ScreenRecorderListItem.fileNotFound"))
                 }
             })
             .catch(() => {})
@@ -612,15 +620,15 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 setUrlVideo(`atom://${data.Filename}`)
             })
             .catch((err) => {
-                yakitNotify("error", "播放失败：" + err)
+                yakitNotify("error", t("ScreenRecorderListItem.playFailed", {error: err}))
             })
     })
     const onEdit = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: "编辑视频信息",
+            title: t("ScreenRecorderListItem.editVideoInfo"),
             type: "white",
             width: 720,
-            onOkText: "保存",
+            onOkText: t("YakitButton.save"),
             onOk: () => {
                 form.validateFields()
                     .then((val) => {
@@ -638,7 +646,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                                 m.destroy()
                             })
                             .catch((err) => {
-                                yakitNotify("error", "修改失败：" + err)
+                                yakitNotify("error", t("ScreenRecorderListItem.updateFailed", {error: err}))
                             })
                     })
                     .catch(() => {})
@@ -647,16 +655,20 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 <Form
                     form={form}
                     initialValues={{
-                        VideoName: item.VideoName || `视频-${item.Id}`,
+                        VideoName: item.VideoName || `${t("ScreenRecorderListItem.video")}-${item.Id}`,
                         NoteInfo: item.NoteInfo
                     }}
                     layout='vertical'
                     style={{padding: 24}}
                 >
-                    <Form.Item name='VideoName' label='视频名称' rules={[{required: true, message: "该项为必填"}]}>
+                    <Form.Item
+                        name='VideoName'
+                        label={t("ScreenRecorderListItem.videoName")}
+                        rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                    >
                         <YakitInput maxLength={50} />
                     </Form.Item>
-                    <Form.Item name='NoteInfo' label='备注'>
+                    <Form.Item name='NoteInfo' label={t("ScreenRecorderListItem.notes")}>
                         <YakitInput.TextArea rows={6} />
                     </Form.Item>
                 </Form>
@@ -675,10 +687,10 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
             ipcRenderer
                 .invoke("UploadScreenRecorders", paramsUpload)
                 .then((e) => {
-                    yakitNotify("success", "上传成功")
+                    yakitNotify("success", t("YakitNotification.uploaded"))
                 })
                 .catch((err) => {
-                    yakitNotify("error", "上传失败：" + err)
+                    yakitNotify("error", `${t("YakitNotification.uploadFailed", {colon: true})}${err}`)
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -686,7 +698,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     }, 200)
                 )
         } else {
-            yakitNotify("warning", "请先登录，登录后方可使用")
+            yakitNotify("warning", t("ScreenRecorderList.loginRequired"))
         }
     })
     const onRemove = useMemoizedFn(() => {
@@ -696,17 +708,20 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
             })
             .then((e) => {
                 onRemoveScreenItem(item)
-                yakitNotify("success", "删除成功")
+                yakitNotify("success", t("YakitNotification.deleted"))
             })
             .catch((err) => {
-                yakitNotify("error", "删除失败：" + err)
+                yakitNotify("error", `${t("YakitNotification.deleteFailed", {colon: true})}${err}`)
             })
     })
     return (
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
             <div className={styles["list-item-cover"]} onClick={() => onPlayVideo()}>
-                <img alt='暂无图片' src={item.Cover ? `data:image/png;base64,${item.Cover}` : noPictures} />
+                <img
+                    alt={t("ScreenRecorderListItem.noImage")}
+                    src={item.Cover ? `data:image/png;base64,${item.Cover}` : noPictures}
+                />
                 <div className={styles["list-item-cover-hover"]}>
                     <PlayIcon />
                 </div>
@@ -714,7 +729,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
 
             <div className={styles["list-item-info"]}>
                 <div className={classNames("content-ellipsis", styles["list-item-name"])} onClick={() => onPlayVideo()}>
-                    {item.VideoName || `视频-${item.Id}`}
+                    {item.VideoName || `${t("ScreenRecorderListItem.video")}-${item.Id}`}
                 </div>
                 <div className={styles["list-item-notes"]}>{item.NoteInfo || "No Description about it."}</div>
                 <div className={styles["list-item-extra"]}>
@@ -725,7 +740,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
                     <Divider type='vertical' style={{margin: "0 16px", top: 2}} />
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
-                        <Tooltip title='点击打开视频所在目录'>
+                        <Tooltip title={t("ScreenRecorderListItem.openDirectory")}>
                             <span
                                 className={classNames("content-ellipsis")}
                                 onClick={() => {
@@ -735,7 +750,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                                             if (flag) {
                                                 openABSFileLocated(item.Filename)
                                             } else {
-                                                failed("目标文件已不存在!")
+                                                failed(t("ScreenRecorderListItem.fileNotFound"))
                                             }
                                         })
                                         .catch(() => {})
@@ -759,7 +774,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     </>
                 )} */}
                 <Divider type='vertical' style={{margin: "0 16px"}} />
-                <YakitPopconfirm title={"删除录屏的同时会删除本地录屏文件"} onConfirm={() => onRemove()}>
+                <YakitPopconfirm title={t("ScreenRecorderListItem.deletePopconfirm")} onConfirm={() => onRemove()}>
                     <YakitButton
                         type='text'
                         size={"small"}
@@ -780,7 +795,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
             >
                 <ReactPlayerVideo
                     url={urlVideo}
-                    title={videoItem.VideoName || `视频-${videoItem.Id}`}
+                    title={videoItem.VideoName || `${t("ScreenRecorderListItem.video")}-${videoItem.Id}`}
                     onPreClick={() => onGetOneScreenRecorders("asc")}
                     onNextClick={() => onGetOneScreenRecorders("desc")}
                     isPre={videoItem.Before}

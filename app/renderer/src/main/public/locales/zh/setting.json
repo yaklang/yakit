@@ -1,0 +1,13 @@
+{
+  "SystemConfig": {
+    "systemSettings": "系统设置",
+    "watermark": "水印",
+    "on": "开",
+    "off": "关",
+    "watermarkContent": "水印内容",
+    "enterCustomWatermark": "请输入自定义水印内容",
+    "watermarkPlaceholder": "不超过 15 个字",
+    "default": "默认",
+    "custom": "自定义"
+  }
+}

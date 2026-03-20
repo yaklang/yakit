@@ -1,0 +1,22 @@
+{
+  "PluginEnvVariables": {
+    "title": "Plugin Global Variables",
+    "isPluginSubtitle": "Only variables used by this plugin are displayed, synchronized to global after editing",
+    "allPluginSubtitle": "Stores all plugin global variables, double-click value to modify, unconfigured variables won't show here",
+    "searchPlaceholder": "Please enter variable name keywords",
+    "key": "Variable Name",
+    "value": "Variable Value",
+    "operate": "Operate",
+    "enterKey": "Please enter variable name",
+    "modifyToSave": "Please modify the content and try again"
+  },
+  "PluginHubList": {
+    "online": "Plugin Hub",
+    "own": "My Plugins",
+    "local": "Local",
+    "setting": "Setting",
+    "recycle": "Recycle Bin",
+    "ownHint": "My Plugins",
+    "localHint": "Local Plugins"
+  }
+}

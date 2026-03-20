@@ -18,17 +18,18 @@ import {formatJson} from "../yakitStore/viewers/base"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import styles from "./DomainAssetPage.module.scss"
 const {ipcRenderer} = window.require("electron")
 
-const batchRefreshMenuData: YakitMenuItemProps[] = [
+const batchRefreshMenuData = (t: TFunction): YakitMenuItemProps[] => [
     {
         key: "noResetRefresh",
-        label: "仅刷新"
+        label: t("YakitButton.refreshOnly")
     },
     {
         key: "resetRefresh",
-        label: "重置查询条件刷新"
+        label: t("YakitButton.resetQueryAndRefresh")
     }
 ]
 
@@ -45,6 +46,7 @@ interface QueryDomainsRequest extends QueryGeneralRequest {
 }
 export interface DomainAssetPageProps {}
 export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
+    const {t} = useI18nNamespaces(["database", "yakitUi"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<Domain[]>([])
@@ -65,7 +67,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: "域名",
+            title: t("DomainAssetPage.domain"),
             dataKey: "DomainName",
             ellipsis: true,
             filterProps: {
@@ -98,9 +100,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
             render: (text) => text || "-"
         },
         {
-            title: "操作",
+            title: t("YakitTable.action"),
             dataKey: "action",
-            width: 60,
+            width: 80,
             fixed: "right",
             render: (_, record: Domain) => (
                 <>
@@ -384,7 +386,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                         </YakitPopconfirm>
                         <YakitDropdownMenu
                             menu={{
-                                data: batchRefreshMenuData,
+                                data: batchRefreshMenuData(t),
                                 onClick: ({key}) => {
                                     onRefreshMenuSelect(key)
                                 }

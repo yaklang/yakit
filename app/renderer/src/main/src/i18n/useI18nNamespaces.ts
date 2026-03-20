@@ -6,6 +6,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 
 type Vars = Record<string, string | number | boolean>
 type KeyOrKeys = string | string[]
+export type TFunction = (keys: KeyOrKeys, vars?: Vars, defaultValue?: string) => string
 
 export function useI18nNamespaces(namespaces: string[]) {
     const {t: tOriginal} = useTranslation(namespaces)
@@ -36,7 +37,7 @@ export function useI18nNamespaces(namespaces: string[]) {
         return () => i18n.off("languageChanged", handlerLanguageChanged)
     }, [nsArrayCom])
 
-    const t = useMemoizedFn((keys: KeyOrKeys, vars?: Vars, defaultValue?: string): string => {
+    const t: TFunction = useMemoizedFn((keys, vars, defaultValue) => {
         const keyList = Array.isArray(keys) ? keys : [keys]
         const cacheKey = vars ? null : keyList.join("|") + (defaultValue ?? "")
         if (cacheKey && cache.current[cacheKey]) {

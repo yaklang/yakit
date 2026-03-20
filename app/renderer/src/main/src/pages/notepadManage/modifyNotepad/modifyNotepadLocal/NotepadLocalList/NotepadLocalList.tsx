@@ -23,15 +23,18 @@ import {NotepadRemoteGV} from "@/enums/notepad"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineExportIcon, OutlineImportIcon, OutlinePlusIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Dropdown, Tooltip} from "antd"
-import {NotepadExport, NotepadImport} from "@/pages/notepadManage/notepadManage/notepadManageLocal/NotepadImportAndExport"
+import {
+    NotepadExport,
+    NotepadImport
+} from "@/pages/notepadManage/notepadManage/notepadManageLocal/NotepadImportAndExport"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {cloneDeep} from "lodash"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => {
     const {noteId} = props
@@ -59,7 +62,6 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
     const [inViewPort = true] = useInViewport(notepadLocalListRef)
     const isLoadedRef = useRef(false)
     const {t, i18n} = useI18nNamespaces(["yakitUi", "notepad"])
-    
 
     /** 首次可见时加载数据 */
     useEffect(() => {
@@ -191,16 +193,20 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                 </YakitAutoComplete>
                 <div className={styles["notepad-list-header-btns"]}>
                     <Tooltip title={t("YakitButton.import")}>
-                        <YakitButton 
-                            className={styles["icon-16"]} 
-                            type='text2' 
-                            icon={<OutlineImportIcon />} 
-                            size='small' 
-                            onClick={() => setImportVisible(true)} 
+                        <YakitButton
+                            className={styles["icon-16"]}
+                            type='text2'
+                            icon={<OutlineImportIcon />}
+                            size='small'
+                            onClick={() => setImportVisible(true)}
                         />
                     </Tooltip>
                     <YakitPopconfirm
-                        title={selectNumber > 0 ? t("NotepadLocalList.confirmDeleteSelected") : t("NotepadLocalList.confirmDeleteAll")}
+                        title={
+                            selectNumber > 0
+                                ? t("NotepadManageLocalList.confirmDeleteSelected")
+                                : t("NotepadManageLocalList.confirmDeleteAll")
+                        }
                         onConfirm={() => onRemove(getActionFilter())}
                     >
                         <Tooltip title={t("YakitButton.delete")}>
@@ -224,7 +230,13 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                         />
                     </Tooltip>
                     <Tooltip title={t("YakitButton.new")}>
-                        <YakitButton className={styles["icon-16"]} type='primary' icon={<OutlinePlusIcon />} size='small' onClick={() => goAddNotepad()} />
+                        <YakitButton
+                            className={styles["icon-16"]}
+                            type='primary'
+                            icon={<OutlinePlusIcon />}
+                            size='small'
+                            onClick={() => goAddNotepad()}
+                        />
                     </Tooltip>
                 </div>
             </div>
@@ -247,8 +259,17 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                                 overlay={
                                     <YakitMenu
                                         data={[
-                                            {key: "export", label: t("YakitButton.export"), itemIcon: <OutlineExportIcon />},
-                                            {key: "delete", label: t("YakitButton.delete"), type: "danger", itemIcon: <OutlineTrashIcon />}
+                                            {
+                                                key: "export",
+                                                label: t("YakitButton.export"),
+                                                itemIcon: <OutlineExportIcon />
+                                            },
+                                            {
+                                                key: "delete",
+                                                label: t("YakitButton.delete"),
+                                                type: "danger",
+                                                itemIcon: <OutlineTrashIcon />
+                                            }
                                         ]}
                                         onClick={({key}) => {
                                             key === "export" && onExport(singleFilter(rowData))
@@ -292,7 +313,11 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                 />
             </YakitSpin>
             {exportVisible && (
-                <NotepadExport filter={exportFilter} onClose={() => setExportVisible(false)} getContainer={getContainer()} />
+                <NotepadExport
+                    filter={exportFilter}
+                    onClose={() => setExportVisible(false)}
+                    getContainer={getContainer()}
+                />
             )}
             {importVisible && (
                 <NotepadImport

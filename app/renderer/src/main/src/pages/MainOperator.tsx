@@ -70,6 +70,7 @@ import {parseUrl} from "@/hook/useProxy"
 import {JSONParseLog} from "@/utils/tool"
 import {apiGetGlobalNetworkConfig} from "./spaceEngine/utils"
 import {setAIModal} from "./ai-agent/aiModelList/AIModelList"
+import {Trans} from "react-i18next"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -139,6 +140,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const {userInfo, setStoreUserInfo, avatarColor} = props
 
     // OSS远程头像删除
@@ -146,7 +148,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
         httpDeleteOSSResource({file_name: [imgName]}, true)
             .then(() => {})
             .catch((err) => {
-                failed("头像更换失败：" + err)
+                failed(t("SetUserInfo.avatarUpdateFailed", {error: err}))
             })
     })
 
@@ -165,7 +167,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 })
                     .then((result) => {
                         if (result.ok) {
-                            success("头像更换成功")
+                            success(t("SetUserInfo.avatarUpdateSuccess"))
                             setStoreUserInfo({
                                 ...userInfo,
                                 companyHeadImg: imgUrl
@@ -175,12 +177,12 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                         }
                     })
                     .catch((err) => {
-                        failed("头像更换失败：" + err)
+                        failed(t("SetUserInfo.avatarUpdateFailed", {error: err}))
                     })
                     .finally(() => {})
             })
             .catch((err) => {
-                failed("头像上传失败")
+                failed(t("SetUserInfo.avatarUploadFailed"))
             })
             .finally(() => {})
     })
@@ -195,7 +197,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 showUploadList={false}
                 beforeUpload={(f) => {
                     if (!FileType.includes(f.type)) {
-                        failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                        failed(t("SetUserInfo.avatarFileTypeLimit", {name: f.name}))
                         return false
                     }
                     setAvatar(f)
@@ -219,7 +221,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 <div className='user-name'>{userInfo.companyName}</div>
                 {userInfo.role === "admin" && (
                     <>
-                        <div className='permission-show'>管理员</div>
+                        <div className='permission-show'>{t("SetUserInfo.admin")}</div>
                         <span className='user-admin-icon'>
                             <EnterpriseLoginInfoIcon />
                         </span>
@@ -261,7 +263,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [ProxyModalLoading, setProxyModalLoading] = useState(false)
     const ProxyHistoryName = MITMConsts.MITMDefaultDownstreamProxyHistory
     const ProxyWebFuzzerName = "web_fuzzer_proxy_list"
-    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const {t, i18n} = useI18nNamespaces(["mitm", "layout", "yakitUi"])
 
     const remoteProxyHistory = useMemoizedFn(() => {
         const cacheData = {
@@ -681,7 +683,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
                     <YakitModal
                         visible={passwordShow}
-                        title={"修改密码"}
+                        title={t("Main.setPassword")}
                         destroyOnClose={true}
                         maskClosable={false}
                         bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -708,11 +710,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     <YakitHint
                         getContainer={chartCSDragAreaRef.current || undefined}
                         visible={showRenderCrash}
-                        title='渲染端崩溃提示'
-                        content='检测到渲染端有崩溃情况，点击查看日志即可查看崩溃日志，忽略后可在系统设置中进行查看'
-                        okButtonText='查看日志'
+                        title={t("Main.renderCrashTitle")}
+                        content={t("Main.renderCrashDesc")}
+                        okButtonText={t("Main.viewLog")}
                         onOk={() => handleShowRenderCrashCallback(true)}
-                        cancelButtonText='忽略'
+                        cancelButtonText={t("Main.ignore")}
                         onCancel={() => handleShowRenderCrashCallback(false)}
                     />
                 </Layout>
@@ -720,15 +722,20 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             {controlShow && <ControlOperation controlName={controlName} />}
             <YakitHintModal
                 visible={false}
-                title='收到远程连接请求'
+                title={t("Main.remoteRequestTitle")}
                 content={
                     <div>
-                        用户 <span style={{color: "#F28B44"}}>Alex-null</span>{" "}
-                        正在向你发起远程连接请求，是否同意对方连接？
+                        <Trans
+                            i18nKey='Main.remoteRequestContent'
+                            ns='layout'
+                            components={{
+                                code: <span style={{color: "var(--Colors-Use-Main-Primary)"}}></span>
+                            }}
+                        />
                     </div>
                 }
-                cancelButtonText='拒绝'
-                okButtonText='同意'
+                cancelButtonText={t("Main.refuse")}
+                okButtonText={t("Main.agree")}
                 onOk={() => {}}
                 onCancel={() => {}}
             />
@@ -736,12 +743,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             {/* irify-start */}
             <YakitHint
                 visible={isShowIRifyHint}
-                title='迁移数据'
-                content='由于IRify功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。'
+                title={t("Main.migrateDataTitle")}
+                content={t("Main.migrateDataDesc")}
                 footer={
                     <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "flex-end"}}>
                         <YakitButton size='max' type='outline2' onClick={() => setIsShowIRifyHint(false)}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton
                             size='max'
@@ -750,7 +757,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 setIsAllowIRifyUpdate(true)
                             }}
                         >
-                            确定
+                            {t("YakitButton.confirm")}
                         </YakitButton>
                     </div>
                 }

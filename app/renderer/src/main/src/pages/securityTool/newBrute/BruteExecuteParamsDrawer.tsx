@@ -13,6 +13,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface BruteExecuteParamsDrawerProps {
     extraParamsValue: BruteExecuteExtraFormValue
@@ -20,6 +21,7 @@ interface BruteExecuteParamsDrawerProps {
     onSave: (value: BruteExecuteExtraFormValue) => void
 }
 const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["brute", "yakitUi"])
     const {extraParamsValue, visible, onSave} = props
     const [form] = Form.useForm()
 
@@ -43,11 +45,11 @@ const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.
             visible={visible}
             onClose={onClose}
             width='60%'
-            title='额外参数'
+            title={t("BruteExecuteContent.extraParams")}
         >
             <Form size='small' labelWrap={true} labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
                 <BruteSettings visible={visible} form={form} />
-                <div className={styles["to-end"]}>已经到底啦～</div>
+                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
             </Form>
         </YakitDrawer>
     )
@@ -60,6 +62,7 @@ interface BruteSettingsProps {
 }
 /**弱口令检测 */
 export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["brute"])
     const {visible, form} = props
 
     const [userType, setUserType] = useState<string>()
@@ -105,7 +108,7 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
         <>
             <Form.Item label='选择的用户字典类型,隐藏' name='userSelectType' style={{display: "none"}} />
             <Form.Item
-                label='爆破用户字典'
+                label={t("BruteSettings.bruteUserDict")}
                 name='UsernamesDict'
                 valuePropName='contentValue'
                 trigger='setContentValue'
@@ -116,15 +119,17 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
             >
                 <SelectPayload visible={visible} selectValue={userType} setSelectValue={onSetUser} />
             </Form.Item>
-            <Form.Item label='爆破用户' name='usernames'>
-                <YakitInput.TextArea placeholder='请输入爆破用户，多个爆破用户换行分隔' rows={3} />
+            <Form.Item label={t("BruteSettings.bruteUser")} name='usernames'>
+                <YakitInput.TextArea placeholder={t("BruteSettings.bruteUserPlaceholder")} rows={3} />
             </Form.Item>
             <Form.Item label={" "} colon={false} name='replaceDefaultUsernameDict' valuePropName='checked'>
-                <YakitCheckbox disabled={usernamesDict.length === 0 && !usernames}>同时使用默认用户字典</YakitCheckbox>
+                <YakitCheckbox disabled={usernamesDict.length === 0 && !usernames}>
+                    {t("BruteSettings.useDefaultUserDict")}
+                </YakitCheckbox>
             </Form.Item>
             <Form.Item label='选择的密码字典类型,隐藏' name='passwordSelectType' style={{display: "none"}} />
             <Form.Item
-                label='爆破密码字典'
+                label={t("BruteSettings.brutePasswordDict")}
                 name='PasswordsDict'
                 valuePropName='contentValue'
                 trigger='setContentValue'
@@ -135,26 +140,41 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
             >
                 <SelectPayload visible={visible} selectValue={password} setSelectValue={onSetPassword} />
             </Form.Item>
-            <Form.Item label='爆破密码' name='passwords'>
-                <YakitInput.TextArea placeholder='请输入爆破密码，多个爆破密码换行分隔' rows={3} />
+            <Form.Item label={t("BruteSettings.brutePassword")} name='passwords'>
+                <YakitInput.TextArea placeholder={t("BruteSettings.brutePasswordPlaceholder")} rows={3} />
             </Form.Item>
             <Form.Item label={" "} colon={false} name='replaceDefaultPasswordDict' valuePropName='checked'>
-                <YakitCheckbox disabled={passwordsDict.length === 0 && !passwords}>同时使用默认密码字典</YakitCheckbox>
+                <YakitCheckbox disabled={passwordsDict.length === 0 && !passwords}>
+                    {t("BruteSettings.useDefaultPasswordDict")}
+                </YakitCheckbox>
             </Form.Item>
-            <Form.Item label='目标并发' name='Concurrent' help='同时爆破 n 个目标'>
+            <Form.Item
+                label={t("BruteSettings.targetConcurrent")}
+                name='Concurrent'
+                help={t("BruteSettings.targetConcurrentHelp")}
+            >
                 <YakitInputNumber min={1} type='horizontal' />
             </Form.Item>
-            <Form.Item label='目标内并发' name='TargetTaskConcurrent' help='每个目标同时执行多少爆破任务'>
+            <Form.Item
+                label={t("BruteSettings.innerTargetConcurrent")}
+                name='TargetTaskConcurrent'
+                help={t("BruteSettings.innerTargetConcurrentHelp")}
+            >
                 <YakitInputNumber min={1} type='horizontal' />
             </Form.Item>
-            <Form.Item label='自动停止' name='OkToStop' help='遇到第一个爆破结果时终止任务' valuePropName='checked'>
+            <Form.Item
+                label={t("BruteSettings.autoStop")}
+                name='OkToStop'
+                help={t("BruteSettings.autoStopHelp")}
+                valuePropName='checked'
+            >
                 <YakitSwitch />
             </Form.Item>
 
-            <Form.Item label='最小延迟' name='DelayMin'>
+            <Form.Item label={t("BruteSettings.minDelay")} name='DelayMin'>
                 <YakitInputNumber min={1} max={delayMax} type='horizontal' />
             </Form.Item>
-            <Form.Item label='最大延迟' name='DelayMax'>
+            <Form.Item label={t("BruteSettings.maxDelay")} name='DelayMax'>
                 <YakitInputNumber min={delayMin} type='horizontal' />
             </Form.Item>
         </>
@@ -169,6 +189,7 @@ interface SelectPayloadProps extends Omit<YakitSelectProps, "value" | "onChange"
     setSelectValue?: (s: string) => void
 }
 const SelectPayload: React.FC<SelectPayloadProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["brute"])
     const {visible, contentValue, setContentValue, selectValue, setSelectValue, ...restProps} = props
 
     const [valueSelect, setValueSelect] = useControllableValue<YakitSelectProps["value"]>(props, {
@@ -190,7 +211,7 @@ const SelectPayload: React.FC<SelectPayloadProps> = React.memo((props) => {
                 setData(data)
             })
             .catch((e: any) => {
-                yakitNotify("error", "获取字典列表失败" + e)
+                yakitNotify("error", t("SelectPayload.fetchDictFailed") + e)
             })
             .finally()
     }

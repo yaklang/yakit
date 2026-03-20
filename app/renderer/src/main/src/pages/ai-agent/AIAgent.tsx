@@ -37,6 +37,8 @@ import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitRes
 import {SplitView} from "../yakRunner/SplitView/SplitView"
 import {AIBottomDetails} from "./aiBottomDetails/AIBottomDetails"
 
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20260113"
 
@@ -59,6 +61,7 @@ const mergeUniqueChats = (prev: AIChatInfo[], next: AIChatInfo[]) => {
 const {ipcRenderer} = window.require("electron")
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     // #region ai-agent页面全局缓存
     // ai-agent-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
@@ -260,7 +263,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         },
         {
             onError: (error) => {
-                failed("获取知识库列表失败:" + error)
+                failed(t("AIAgent.getKnowledgeBaseFailed", {error: error + ""}))
             },
             onSuccess: (value) => {
                 if (value) {
@@ -320,15 +323,15 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 <YakitHint
                     getContainer={welcomeRef.current || undefined}
                     visible={delCacheVisible}
-                    title='提示'
+                    title={t("AIAgent.tip")}
                     content={
                         <>
-                            Memfit会话数据升级，会删除系统内的所有历史会话记录
+                            {t("AIAgent.memfitUpdateNotice")}
                             <br />
                             <br />
                             <YakitCheckbox checked={isDelCache} onChange={(e) => setIsDelCache(e.target.checked)}>
                                 <span style={{color: "var(--Colors-Use-Neutral-Text-4-Help-text)"}}>
-                                    是否清除数据库历史记录
+                                    {t("AIAgent.clearHistoryConfirm")}
                                 </span>
                             </YakitCheckbox>
                         </>

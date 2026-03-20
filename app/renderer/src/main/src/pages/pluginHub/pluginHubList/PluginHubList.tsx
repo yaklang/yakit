@@ -13,11 +13,12 @@ import {useStore} from "@/store"
 import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
-import { HubSideBarList } from "../defaultConstant"
-import { JSONParseLog } from "@/utils/tool"
+import {HubSideBarList} from "../defaultConstant"
+import {JSONParseLog} from "@/utils/tool"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -34,6 +35,7 @@ interface PluginHubListProps {
 }
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["pluginHub"])
     const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage, setAutoOpenDetailTab} = props
 
     const userinfo = useStore((s) => s.userInfo)
@@ -155,7 +157,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
      */
     const handleOpenHubListAndDetail = useMemoizedFn((info: string) => {
         try {
-            const data = JSONParseLog(info, {page: "PluginHubList", fun: "handleOpenHubListAndDetail"}) as unknown as PluginHubPageInfoProps
+            const data = JSONParseLog(info, {
+                page: "PluginHubList",
+                fun: "handleOpenHubListAndDetail"
+            }) as unknown as PluginHubPageInfoProps
             if (!data) return
             handleSpecifiedPageAndDetail(data)
         } catch (error) {}
@@ -211,6 +216,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         <div className={styles["plugin-hub-list"]}>
             <div className={styles["side-bar-list"]}>
                 <YakitSideTab
+                    key={i18n.language}
                     yakitTabs={HubSideBarList}
                     activeKey={active}
                     onActiveKey={(v) => {
@@ -220,6 +226,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                     show={show}
                     setShow={setShow}
                     barHint={barHint}
+                    t={t}
                 />
             </div>
 

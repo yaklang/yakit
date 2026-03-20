@@ -1,0 +1,26 @@
+{
+  "SpaceEnginePage": {
+    "scanPortList": "Scan Port List",
+    "logs": "Logs",
+    "taskStartSuccess": "Debug task started successfully, runtime ID: {id}"
+  },
+  "SpaceEngineFormContent": {
+    "spaceEngineVerifyFailed": "Space engine verification failed ",
+    "addThirdPartyApp": "Add Third-Party Application",
+    "pleaseConfigureApiKey": "Please configure Space Engine APIKey before using",
+    "setEngineFailed": "Set engine failed:",
+    "searchCondition": "Search Condition",
+    "remainingQuota": "Remaining Quota: ",
+    "unlimited": "Unlimited",
+    "zoomeyeBasicSyntax": "ZoomEye Basic Syntax",
+    "gotIt": "Got it",
+    "engine": "Engine",
+    "maxPage": "Max Pages",
+    "maxRecord": "Max Records",
+    "randomDelay": "Random Delay (s)",
+    "randomDelayHelp": "Random delay range (seconds), 0 means no delay",
+    "retryTimes": "Retry Times",
+    "scanVerification": "Scan Verification",
+    "scanVerificationHelp": "When enabled, Yakit's port scan will be used for verification"
+  }
+}

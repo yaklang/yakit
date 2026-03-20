@@ -7,8 +7,10 @@
         "save_as": "另存为",
         "doNotSave": "不保存",
         "save_template": "保存模板",
+        "saveUpdate": "保存更新",
         "edit": "编辑",
         "delete": "删除",
+        "batchDelete": "批量删除",
         "new": "新建",
         "add": "添加",
         "added": "已添加",
@@ -17,12 +19,14 @@
         "importResources": "导入资源",
         "importPlugin": "导入插件",
         "export": "导出",
+        "batchExport": "批量导出",
         "exportJson": "导出 JSON",
         "exportExcel": "导出Excel",
         "upload": "上传",
         "download": "下载",
         "downloadInstall": "下载安装",
         "oneClickDownload": "一键下载",
+        "batchDownload": "批量下载",
         "redownload": "重新下载",
         "refresh": "刷新",
         "manualRefresh": "手动刷新",
@@ -41,6 +45,8 @@
         "startScan": "开始扫描",
         "execute": "执行",
         "start_execution": "开始执行",
+        "autoRun": "自动执行",
+        "runNow": "立即执行",
         "startAudit": "开始审计",
         "reset": "重置",
         "resetParams": "重置参数",
@@ -68,8 +74,14 @@
         "restore": "复原",
         "share": "分享",
         "ImportTutorial": "导入教程",
-        "privacy_mode":"隐私模式",
-        "rename": "重命名"
+        "privacy_mode": "隐私模式",
+        "rename": "重命名",
+        "copy": "复制",
+        "advancedFilter": "高级筛选",
+        "newFolder": "新建文件夹",
+        "remove": "移除",
+        "batchRemove": "批量移除",
+        "keep": "保留"
     },
     "YakitNotification": {
         "unknown_error": "未知错误",
@@ -81,6 +93,7 @@
         "exportFailed": "导出失败{colon}",
         "saved": "保存成功",
         "saveFailed": "保存失败{colon}",
+        "saveSuccess": "存储成功",
         "deleted": "删除成功",
         "deleteFailed": "删除失败{colon}",
         "uploaded": "上传成功",
@@ -105,7 +118,12 @@
         "search_failed": "搜索失败{colon}",
         "complete_variable_before_add": "请将已添加【变量{index}】设置完成后再进行添加",
         "shareFailed": "分享失败{colon}",
-        "reName_success": "重命名成功"
+        "reName_success": "重命名成功",
+        "modifySuccess": "修改成功",
+        "modifyFailed": "修改失败{colon}",
+        "editFailed": "编辑失败{colon}",
+        "createSuccess": "新建成功",
+        "createFailed": "新建失败{colon}"
     },
     "YakitFormDragger": {
         "filePath": "文件路径",
@@ -160,7 +178,8 @@
     "YakitEmpty": {
         "noData": "暂无数据",
         "noMoreData": "暂无更多数据",
-        "end_of_list": "已经到底啦～"
+        "end_of_list": "已经到底啦～",
+        "searchEmpty": "搜索结果“空”"
     },
     "YakitDatePicker": {
         "oneMinute": "1分钟",
@@ -185,7 +204,9 @@
     },
     "YakitModal": {
         "friendlyReminder": "温馨提示",
-        "closePrompt": "关闭提示"
+        "closePrompt": "关闭提示",
+        "closeContent": "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+        "doNotRemindAgain": "不再提醒"
     },
     "YakitTag": {
         "critical": "严重",
@@ -198,9 +219,14 @@
         "loading": "加载中"
     },
     "YakitSelect": {
+        "pleaseSelect": "请选择...",
         "YakitSelectCustom": {
             "cache_field_save_error": "缓存字段保存失败："
         }
+    },
+    "YakitCheckbox": {
+        "selectAll": "全选",
+        "dontRemindAgain": "下次不再提醒"
     },
     "YakitEditor": {
         "getPlugin": "获取插件",

@@ -9,7 +9,9 @@ import {Form} from "antd"
 import classNames from "classnames"
 import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
 import styles from "./ScrecorderModal.module.scss"
-import {Screen_Recorder_Framerate,Screen_Recorder_CoefficientPTS} from "./ScreenRecorderList"
+import {Screen_Recorder_Framerate, Screen_Recorder_CoefficientPTS} from "./ScreenRecorderList"
+
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,7 +31,7 @@ export interface StartScrecorderParams {
     DisableMouse: boolean
 }
 
-export const FramerateData = [
+export const FramerateData = (t: TFunction) => [
     {
         value: "3",
         label: "3fps"
@@ -40,7 +42,7 @@ export const FramerateData = [
     },
     {
         value: "7",
-        label: "7fps(推荐)"
+        label: `7fps(${t("ScrecorderModal.recommended")})`
     },
     {
         value: "10",
@@ -64,22 +66,23 @@ export const FramerateData = [
     }
 ]
 
-export const CoefficientPTSData = [
+export const CoefficientPTSData = (t: TFunction) => [
     {
         value: 1,
-        label: "X1：1倍速"
+        label: `X1：1${t("ScrecorderModal.speed")}`
     },
     {
         value: 0.33,
-        label: "X3：3倍速"
+        label: `X3：3${t("ScrecorderModal.speed")}`
     },
     {
         value: 0.2,
-        label: "X5：5倍速"
-    },
+        label: `X5：5${t("ScrecorderModal.speed")}`
+    }
 ]
 
 export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["screenRecorder", "yakitUi"])
     const {onClose, token, onStartCallback, formStyle, footer, disabled} = props
     const [params, setParams] = useState<StartScrecorderParams>({
         CoefficientPTS: 1,
@@ -115,9 +118,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
     })
     return (
         <div className={styles["screcorder-modal-content"]}>
-            <div className={classNames(styles["tip"])}>
-                本录屏在 Windows 下，会同时录制所有屏幕，合并在一个文件中；在 MacOS 下多屏会生成多个文件
-            </div>
+            <div className={classNames(styles["tip"])}>{t("ScrecorderModal.screenRecorderDesc")}</div>
             <Form
                 layout='vertical'
                 style={{padding: "16px 24px 24px", ...formStyle}}
@@ -128,39 +129,39 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                 form={form}
             >
                 <Form.Item
-                    label='帧率'
-                    help='渗透测试过程记录推荐使用低帧率（5fps 以下）以免 CPU 占用过高'
+                    label={t("ScrecorderModal.framerate")}
+                    help={t("ScrecorderModal.framerateHelp")}
                     tooltip={{
-                        title: "帧率即每秒截屏次数",
+                        title: t("ScrecorderModal.framerateTooltip"),
                         icon: <InformationCircleIcon style={{cursor: "auto"}} />
                     }}
                     name='Framerate'
                 >
-                    <YakitSelect options={FramerateData} disabled={disabled} />
+                    <YakitSelect options={FramerateData(t)} disabled={disabled} />
                 </Form.Item>
                 <Form.Item
-                    label='倍速'
-                    help='直接录制倍速视频，免视频后期处理'
+                    label={t("ScrecorderModal.speed")}
+                    help={t("ScrecorderModal.speedHelp")}
                     name='CoefficientPTS'
                 >
-                    <YakitSelect options={CoefficientPTSData} disabled={disabled} />
+                    <YakitSelect options={CoefficientPTSData(t)} disabled={disabled} />
                 </Form.Item>
                 <div className={styles["disable-mouse"]}>
                     <Form.Item noStyle valuePropName='checked' name='DisableMouse'>
                         <YakitSwitch size='large' disabled={disabled} />
                     </Form.Item>
-                    鼠标捕捉
+                    {t("ScrecorderModal.mouseCapture")}
                 </div>
                 {footer ? (
                     footer
                 ) : (
                     <div className={styles["footer-btns"]}>
                         <YakitButton type='outline2' size='large' onClick={() => onClose()}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton htmlType='submit' type='primary' size='large'>
                             <PlayIcon style={{height: 16}} />
-                            开始录屏
+                            {t("ScrecorderModal.startRecording")}
                         </YakitButton>
                     </div>
                 )}

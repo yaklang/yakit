@@ -39,6 +39,7 @@ import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/Plugi
 import {ZoomeyeHelp} from "./ZoomeyeHelp"
 import {YakitRoute} from "@/enums/yakitRoute"
 import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface SpaceEnginePageProps {
     /**页面id */
@@ -46,6 +47,7 @@ interface SpaceEnginePageProps {
 }
 
 export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["spaceEngine", "yakitUi"])
     const {pageId} = props
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -77,16 +79,16 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const defaultTabs = useCreation(() => {
         if (scanBeforeSave) {
             return [
-                {tabName: "扫描端口列表", type: "port"},
-                {tabName: "日志", type: "log"},
+                {tabName: t("SpaceEnginePage.scanPortList"), type: "port"},
+                {tabName: t("SpaceEnginePage.logs"), type: "log"},
                 {tabName: "Console", type: "console"}
             ]
         }
         return [
-            {tabName: "日志", type: "log"},
+            {tabName: t("SpaceEnginePage.logs"), type: "log"},
             {tabName: "Console", type: "console"}
         ]
-    }, [scanBeforeSave])
+    }, [scanBeforeSave, i18n.language])
 
     const [streamInfo, spaceEngineStreamEvent] = useHoldGRPCStream({
         tabs: defaultTabs,
@@ -101,7 +103,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
             }, 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("SpaceEnginePage.taskStartSuccess", {id: rId}))
             setRuntimeId(rId)
         }
     })
@@ -170,13 +172,13 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         ? !isExpand && (
                               <>
                                   <YakitButton danger onClick={onStopExecute}>
-                                      停止
+                                      {t("YakitButton.stop")}
                                   </YakitButton>
                               </>
                           )
                         : !isExpand && (
                               <>
-                                  <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                  <YakitButton onClick={onExecuteInTop}>{t("YakitButton.execute")}</YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
                           )}
@@ -195,7 +197,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         wrapperCol={{span: 12}} //这样设置是为了让输入框居中
                         validateMessages={{
                             /* eslint-disable no-template-curly-in-string */
-                            required: "${label} 是必填字段"
+                            required: t("YakitForm.requiredField")
                         }}
                         labelWrap={true}
                         initialValues={getDefaultSpaceEngineStartParams()}
@@ -205,7 +207,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                             <div className={styles["space-engine-form-operate"]}>
                                 {isExecuting ? (
                                     <YakitButton danger onClick={onStopExecute} size='large'>
-                                        停止
+                                        {t("YakitButton.stop")}
                                     </YakitButton>
                                 ) : (
                                     <YakitButton
@@ -213,7 +215,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                                         htmlType='submit'
                                         size='large'
                                     >
-                                        开始执行
+                                        {t("YakitButton.start_execution")}
                                     </YakitButton>
                                 )}
                             </div>
@@ -234,6 +236,7 @@ interface SpaceEngineFormContentProps {
 }
 
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["spaceEngine"])
     const {disabled, inViewport} = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
     const [engineStatus, setEngineStatus] = useState<SpaceEngineStatus>()
@@ -249,7 +252,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 case "normal":
                     break
                 default:
-                    yakitNotify("error", "空间引擎校验失败" + value.Info || value.Status)
+                    yakitNotify(
+                        "error",
+                        t("SpaceEngineFormContent.spaceEngineVerifyFailed") + value.Info || value.Status
+                    )
                     onSetGlobalNetworkConfig(key)
                     break
             }
@@ -275,14 +281,14 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         })
 
         let m = showYakitModal({
-            title: "添加第三方应用",
+            title: t("SpaceEngineFormContent.addThirdPartyApp"),
             width: 600,
             closable: true,
             maskClosable: false,
             footer: null,
             content: (
                 <>
-                    <div className={styles["ai-describe"]}>请配置空间引擎APIKey后再进行使用</div>
+                    <div className={styles["ai-describe"]}>{t("SpaceEngineFormContent.pleaseConfigureApiKey")}</div>
 
                     <NewThirdPartyApplicationConfig
                         formValues={{
@@ -316,7 +322,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                                             })
                                             break
                                         default:
-                                            yakitNotify("error", "设置引擎失败:" + value.Info || value.Status)
+                                            yakitNotify(
+                                                "error",
+                                                t("SpaceEngineFormContent.setEngineFailed") + value.Info || value.Status
+                                            )
                                             break
                                     }
                                 })
@@ -331,22 +340,23 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     const codecItem: YakParamProps = useCreation(() => {
         return {
             Field: "Filter",
-            FieldVerbose: "搜索条件",
+            FieldVerbose: t("SpaceEngineFormContent.searchCondition"),
             Required: true,
             TypeVerbose: "yak",
             DefaultValue: "",
             Help: ""
         }
-    }, [])
+    }, [i18n.language])
     const engineExtra: ReactNode = useCreation(() => {
         if (!engineStatus) return null
         return (
             <span className={styles["engine-help"]}>
                 {engineStatus.Info ? `${engineStatus.Info}，` : ""}
-                剩余额度：{Number(engineStatus.Remain) === -1 ? "无限制" : engineStatus.Remain}
+                {t("SpaceEngineFormContent.remainingQuota")}
+                {Number(engineStatus.Remain) === -1 ? t("SpaceEngineFormContent.unlimited") : engineStatus.Remain}
                 {engineStatus.Type === "zoomeye" && (
                     <span className={styles["engine-help-zoomeye"]} onClick={() => onOpenHelpModal()}>
-                        <span>ZoomEye 基础语法</span> <OutlineQuestionmarkcircleIcon />
+                        <span>{t("SpaceEngineFormContent.zoomeyeBasicSyntax")}</span> <OutlineQuestionmarkcircleIcon />
                     </span>
                 )}
             </span>
@@ -354,11 +364,11 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     }, [engineStatus])
     const onOpenHelpModal = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: "ZoomEye 基础语法",
+            title: t("SpaceEngineFormContent.zoomeyeBasicSyntax"),
             type: "white",
             width: "60vw",
             cancelButtonProps: {style: {display: "none"}},
-            okText: "我知道了",
+            okText: t("SpaceEngineFormContent.gotIt"),
             onOk: () => m.destroy(),
             bodyStyle: {padding: "8px 24px"},
             content: <ZoomeyeHelp />
@@ -366,7 +376,12 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     })
     return (
         <>
-            <Form.Item name='Type' label='引擎' rules={[{required: true}]} extra={engineExtra}>
+            <Form.Item
+                name='Type'
+                label={t("SpaceEngineFormContent.engine")}
+                rules={[{required: true}]}
+                extra={engineExtra}
+            >
                 <YakitSelect
                     options={[
                         {label: "ZoomEye", value: "zoomeye"},
@@ -380,34 +395,34 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 />
             </Form.Item>
             <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled} />
-            <Form.Item name='MaxPage' label='最大页数' rules={[{required: true}]}>
+            <Form.Item name='MaxPage' label={t("SpaceEngineFormContent.maxPage")} rules={[{required: true}]}>
                 <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
-            <Form.Item name='MaxRecord' label='最大记录数' rules={[{required: true}]}>
+            <Form.Item name='MaxRecord' label={t("SpaceEngineFormContent.maxRecord")} rules={[{required: true}]}>
                 <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='RandomDelay'
-                label='随机延迟(秒)'
+                label={t("SpaceEngineFormContent.randomDelay")}
                 rules={[{required: true}]}
                 tooltip={{
                     icon: <OutlineInformationcircleIcon />,
-                    title: "随机延迟范围（秒），0 表示无延"
+                    title: t("SpaceEngineFormContent.randomDelayHelp")
                 }}
             >
                 <YakitInputNumber min={0} type='horizontal' disabled={disabled} />
             </Form.Item>
-            <Form.Item name='RetryTimes' label='重试次数' rules={[{required: true}]}>
+            <Form.Item name='RetryTimes' label={t("SpaceEngineFormContent.retryTimes")} rules={[{required: true}]}>
                 <YakitInputNumber min={0} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='ScanBeforeSave'
-                label='扫描验证'
+                label={t("SpaceEngineFormContent.scanVerification")}
                 rules={[{required: true}]}
                 valuePropName='checked'
                 tooltip={{
                     icon: <OutlineInformationcircleIcon />,
-                    title: "开启扫描后会用Yakit的端口扫描进行验证"
+                    title: t("SpaceEngineFormContent.scanVerificationHelp")
                 }}
             >
                 <YakitSwitch size='large' disabled={disabled} />

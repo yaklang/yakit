@@ -18,6 +18,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import classNames from "classnames"
 import {
     YakitMenuItemDividerProps,
@@ -96,6 +97,7 @@ export const portAssetFormatJson = (filterVal, jsonData) => {
 }
 
 export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
+    const {t} = useI18nNamespaces(["database", "yakitUi"])
     const [params, setParams] = useState<QueryPortsRequest>({
         ...cloneDeep(defQueryPortsRequest),
         State: props.closed ? "closed" : "open"
@@ -182,10 +184,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display: "flex", flexDirection: "row"}}>
             <div className={styles["portAsset"]}>
                 <div className={styles["portAsset-head"]}>
-                    <div className={styles["head-title"]}>端口资产列表</div>
+                    <div className={styles["head-title"]}>{t("PortAssetPage.PortAssetTable.title")}</div>
                     <div className={styles["head-extra"]}>
                         <YakitInput.Search
-                            placeholder='请输入网络地址、端口、服务指纹、title关键词搜索'
+                            placeholder={t("PortAssetPage.PortAssetTable.searchPlaceholder")}
                             style={{width: 320}}
                             onSearch={onSearch}
                             onPressEnter={() => onSearch(keywords)}
@@ -200,11 +202,11 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 data: [
                                     {
                                         key: "noResetRefresh",
-                                        label: "仅刷新"
+                                        label: t("YakitButton.refreshOnly")
                                     },
                                     {
                                         key: "resetRefresh",
-                                        label: "重置查询条件刷新"
+                                        label: t("YakitButton.resetQueryAndRefresh")
                                     }
                                 ],
                                 onClick: ({key}) => {
@@ -239,7 +241,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         {!advancedConfig && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 8px", marginRight: 12}} />
-                                <span style={{marginRight: 4}}>高级筛选</span>
+                                <span style={{marginRight: 4}}>{t("YakitButton.advancedFilter")}</span>
                                 <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
                             </>
                         )}
@@ -255,14 +257,18 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     tableTitleExtraOperate={
                         <>
                             <YakitPopconfirm
-                                title={selectNumber > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                                title={
+                                    selectNumber > 0
+                                        ? t("PortAssetPage.PortAssetTable.confirmDeleteSelected")
+                                        : t("PortAssetPage.PortAssetTable.confirmClearList")
+                                }
                                 onConfirm={() => {
                                     onRemove()
                                 }}
                                 placement='bottomRight'
                             >
                                 <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
-                                    {selectNumber > 0 ? "删除" : "清空"}
+                                    {selectNumber > 0 ? t("YakitButton.delete") : t("YakitButton.clear")}
                                 </YakitButton>
                             </YakitPopconfirm>
                         </>
@@ -340,6 +346,7 @@ interface PortAssetQueryProps {
 /**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
     const {loading, portsGroupList, visible, setVisible, queryList, setQueryList} = props
+    const {t} = useI18nNamespaces(["database", "yakitUi"])
     const [activeKey, setActiveKey] = useState<string[]>([]) // Collapse打开的key
 
     useEffect(() => {
@@ -367,12 +374,12 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
     return (
         <div className={classNames(styles["portAsset-query"])} style={{display: visible ? "" : "none"}}>
             <div className={styles["query-head"]}>
-                <span>高级筛选</span>
+                <span>{t("YakitButton.advancedFilter")}</span>
                 <YakitSwitch checked={visible} onChange={setVisible} />
             </div>
             <YakitSpin spinning={loading} wrapperClassName={styles["portAsset-query-loading"]}>
                 {portsGroupList.length === 0 ? (
-                    <YakitEmpty style={{paddingTop: 48}} title='暂无指纹信息' />
+                    <YakitEmpty style={{paddingTop: 48}} title={t("PortAssetPage.PortAssetQuery.noFingerprint")} />
                 ) : (
                     <YakitCollapse
                         activeKey={activeKey}
@@ -394,7 +401,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                                             setQueryList({...queryList})
                                         }}
                                     >
-                                        清空
+                                        {t("YakitButton.clear")}
                                     </YakitButton>
                                 }
                             >
@@ -434,10 +441,11 @@ export interface PortAssetDescriptionProp {
 
 export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
     const {port} = props
+    const {t} = useI18nNamespaces(["database"])
     return (
         <>
             <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={"端口资产详情"}>
-                <Descriptions.Item label='状态'>
+                <Descriptions.Item label={t("PortAssetPage.PortAssetDescription.state")}>
                     <YakitCopyText showText={port.State} />
                 </Descriptions.Item>
                 {port.HtmlTitle && (

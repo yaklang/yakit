@@ -25,6 +25,7 @@ const App: React.FC = memo(() => {
     const [ready, setReady] = useState(false)
 
     useEffect(() => {
+        ipcRenderer.send("engine-win-render-ok")
         const titleElement = document.getElementById("app-html-title")
         if (titleElement) {
             titleElement.textContent = getReleaseEditionName()

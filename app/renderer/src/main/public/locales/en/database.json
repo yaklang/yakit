@@ -1,0 +1,19 @@
+{
+  "DomainAssetPage": {
+    "domain": "Domain"
+  },
+  "PortAssetPage": {
+    "PortAssetTable": {
+      "title": "Port Asset List",
+      "searchPlaceholder": "Search by network address, port, service fingerprint, title keywords",
+      "confirmDeleteSelected": "Are you sure you want to delete selected data?",
+      "confirmClearList": "Are you sure you want to clear the list?"
+    },
+    "PortAssetQuery": {
+      "noFingerprint": "No fingerprint information available."
+    },
+    "PortAssetDescription": {
+      "state": "Status"
+    }
+  }
+}

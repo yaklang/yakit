@@ -16,6 +16,7 @@ import {
 } from "../utils/grpc"
 import {KVPair} from "@/models/kv"
 import {failed, yakitNotify} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./PluginEnvVariables.module.scss"
@@ -28,6 +29,7 @@ const DefaultEnvInfo: PluginEnvInfo = {
 
 /** @name 插件全局变量 */
 export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props, ref) => {
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
     const {isPlugin, keys} = props
 
     const pluginEnvVarRef = useRef<HTMLDivElement>(null)
@@ -225,11 +227,11 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     const handleOKEdit = useMemoizedFn(() => {
         if (modalLoading) return
         if (!editInfo || !editInfo.Key) {
-            failed("请填写变量名")
+            failed(t("PluginEnvVariables.enterKey"))
             return
         }
         if (!isNew.current && oldEnvInfo.current?.isLocal && oldEnvInfo.current?.Value === editInfo.Value) {
-            yakitNotify("error", "请修改内容后再次操作")
+            yakitNotify("error", t("PluginEnvVariables.modifyToSave"))
             return
         }
 
@@ -285,19 +287,20 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         >
             <div className={styles["plugin-env-variables-header"]}>
                 <div className={styles["header-title"]}>
-                    <div className={styles["title-style"]}>插件全局变量</div>
+                    <div className={styles["title-style"]}>{t("PluginEnvVariables.title")}</div>
                     <div className={styles["subtitle-style"]}>
                         {isPlugin
-                            ? "仅展示本插件使用到的变量，编辑后会同步到全局"
-                            : "存放所有插件全局变量，可双击变量值修改，但未配置的变量不会在此显示"}
+                            ? t("PluginEnvVariables.isPluginSubtitle")
+                            : t("PluginEnvVariables.allPluginSubtitle")}
                     </div>
                 </div>
 
                 <div className={styles["header-extra"]}>
                     <YakitInput.Search
                         size='large'
-                        placeholder='请输入变量名关键词'
+                        placeholder={t("PluginEnvVariables.searchPlaceholder")}
                         onSearch={handleSearch}
+                        onChange={(e) => handleSearch(e.target.value)}
                         allowClear
                     />
 
@@ -310,7 +313,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                 handleOpenEdit(false)
                             }}
                         >
-                            新建
+                            {t("YakitButton.new")}
                         </YakitButton>
                     )}
                 </div>
@@ -320,10 +323,10 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                 <div
                     className={classNames(styles["table-header"], {[styles["table-header-active-scroll"]]: showScroll})}
                 >
-                    <div className={styles["table-cell"]}>变量名</div>
-                    <div className={styles["table-cell"]}>变量值</div>
+                    <div className={styles["table-cell"]}>{t("PluginEnvVariables.key")}</div>
+                    <div className={styles["table-cell"]}>{t("PluginEnvVariables.value")}</div>
                     <div style={{maxWidth: 120}} className={styles["table-cell"]}>
-                        操作
+                        {t("PluginEnvVariables.operate")}
                     </div>
                 </div>
 
@@ -397,7 +400,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                 })}
                             </div>
                             {data.length === 0 && !loading && (
-                                <div className={styles["table-footer-empty"]}>暂无数据</div>
+                                <div className={styles["table-footer-empty"]}>{t("YakitEmpty.noData")}</div>
                             )}
                         </div>
                     </YakitSpin>
@@ -406,7 +409,9 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
             <YakitModal
                 type='white'
-                title={`${isNew.current ? "新建" : "编辑"}变量值`}
+                title={`${
+                    isNew.current ? t("YakitButton.add_new") : t("YakitButton.edit")
+                } ${t("PluginEnvVariables.value")}`}
                 centered={true}
                 maskClosable={false}
                 closable={true}
@@ -417,7 +422,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
             >
                 <div className={styles["edit-info-modal-body"]}>
                     <div className={styles["edit-info-item"]}>
-                        <div className={styles["item-title"]}>变量名: </div>
+                        <div className={styles["item-title"]}>{t("PluginEnvVariables.key")}: </div>
                         <YakitInput
                             value={editInfo?.Key}
                             disabled={!isNew.current}
@@ -428,7 +433,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                     </div>
 
                     <div className={styles["edit-info-item"]}>
-                        <div className={styles["item-title"]}>变量值: </div>
+                        <div className={styles["item-title"]}>{t("PluginEnvVariables.value")}: </div>
                         <YakitInput
                             value={editInfo?.Value}
                             allowClear

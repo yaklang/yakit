@@ -1,0 +1,33 @@
+{
+  "ScrecorderModal": {
+    "recommended": "推荐",
+    "speed": "倍速",
+    "screenRecorderDesc": "本录屏在 Windows 下，会同时录制所有屏幕，合并在一个文件中；在 MacOS 下多屏会生成多个文件",
+    "framerate": "帧率",
+    "framerateHelp": "渗透测试过程记录推荐使用低帧率（5fps 以下）以免 CPU 占用过高",
+    "framerateTooltip": "帧率即每秒截屏次数",
+    "speedHelp": "直接录制倍速视频，免视频后期处理",
+    "mouseCapture": "鼠标捕捉",
+    "startRecording": "开始录屏"
+  },
+  "ScreenRecorderList": {
+    "getListFailed": "获取列表数据失败：{error}",
+    "loginRequired": "请先登录，登录后方可使用",
+    "screenRecorder": "录屏管理",
+    "stopRecording": "停止录屏",
+    "deleteTitle": "删除录屏",
+    "deleteDesc": "删除录屏的同时会清除本地视频文件"
+  },
+  "ScreenRecorderListItem": {
+    "fileNotFound": "目标文件已不存在!",
+    "playFailed": "播放失败：{error}",
+    "editVideoInfo": "编辑视频信息",
+    "updateFailed": "修改失败：{error}",
+    "video": "视频",
+    "videoName": "视频名称",
+    "notes": "备注",
+    "noImage": "暂无图片",
+    "openDirectory": "点击打开视频所在目录",
+    "deletePopconfirm": "删除录屏的同时会删除本地录屏文件"
+  }
+}

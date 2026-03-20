@@ -1,4 +1,4 @@
-import React, {useEffect, useImperativeHandle, useState} from "react"
+import React, {useEffect, useImperativeHandle, useState, useMemo} from "react"
 import {Form, Spin} from "antd"
 import {useControllableValue, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "../../../utils/notification"
@@ -21,6 +21,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {FilterType} from "./MITMFiltersModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -63,6 +64,8 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
         setParams(props.filter || cloneDeep(defaultMITMBaseFilter))
     }, [props.filter])
 
+    const {t, i18n} = useI18nNamespaces(["mitm"])
+
     return (
         <Spin spinning={loading}>
             <Form
@@ -72,7 +75,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                     [styles["mitm-filters-form-hidden"]]: props.visible === false
                 })}
             >
-                <Form.Item label='包含 Hostname'>
+                <Form.Item label={t("MITMFilters.includeHostname")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.includeHostname}
@@ -81,7 +84,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label='排除 Hostname'>
+                <Form.Item label={t("MITMFilters.excludeHostname")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.excludeHostname || undefined}
@@ -90,7 +93,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label='包含 URL 路径' help={"可理解为 URI 匹配，例如 /main/index.php?a=123"}>
+                <Form.Item label={t("MITMFilters.includeUri")} help={t("MITMFilters.includeUriHelp")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.includeUri || undefined}
@@ -99,7 +102,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={"排除 URL 路径"} help={"可理解为 URI 过滤，例如 /main/index "}>
+                <Form.Item label={t("MITMFilters.excludeUri")} help={t("MITMFilters.excludeUriHelp")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.excludeUri || undefined}
@@ -108,7 +111,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={"包含文件后缀"}>
+                <Form.Item label={t("MITMFilters.includeSuffix")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.includeSuffix || undefined}
@@ -117,7 +120,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={"排除文件后缀"}>
+                <Form.Item label={t("MITMFilters.excludeSuffix")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.excludeSuffix || undefined}
@@ -126,7 +129,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         }}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={"排除 Content-Type"}>
+                <Form.Item label={t("MITMFilters.excludeContentTypes")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.excludeContentTypes || undefined}
@@ -136,7 +139,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                     ></YakitSelect>
                 </Form.Item>
                 {props.filterType === "filter" && (
-                    <Form.Item label={"过滤 JS"} help={"开启后过滤打包/构建产物的静态 JS"}>
+                    <Form.Item label={t("MITMFilters.filterJS")} help={t("MITMFilters.filterJSHelp")}>
                         <YakitSwitch
                             checked={!!params?.filterBundledStaticJS}
                             onChange={(checked) => {
@@ -145,7 +148,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                         ></YakitSwitch>
                     </Form.Item>
                 )}
-                <Form.Item label={"排除 HTTP 方法"}>
+                <Form.Item label={t("MITMFilters.excludeMethod")}>
                     <YakitSelect
                         mode='tags'
                         value={params?.excludeMethod || undefined}
@@ -201,6 +204,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
     return list.filter((i) => i.MatcherType && !isFilterItemEmpty(i))
 }
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
+    const {t} = useI18nNamespaces(["mitm"])
     const {visible = true} = props
 
     const [activeKey, setActiveKey] = useControllableValue<string | string[]>(props, {
@@ -225,7 +229,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
         const isEmptyIndex = filterData.findIndex((i) => isFilterItemEmpty(i))
         if (isEmptyIndex !== -1) {
             setActiveKey(`ID:${isEmptyIndex}`)
-            yakitNotify("error", "请将已添加条件配置完成后再新增")
+            yakitNotify("error", t("MITMAdvancedFilters.pleaseCompleteCondition"))
             return
         }
         const newFilterData = [...filterData, cloneDeep(defaultMITMAdvancedFilter)]
@@ -241,20 +245,22 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             })}
         >
             <div className={styles["filter-operation"]}>
-                <YakitInput.Search onSearch={(value) => {
-                    setSearchValue(value)
-                    if(!value) return
-                    const matchedKeys: string[] = []
-                    filterData.forEach((item, index) => {
-                        const hasMatch = item.Group.some(g => g.toLowerCase().includes(value.toLowerCase()))
-                        if (hasMatch) {
-                            matchedKeys.push(`ID:${index}`)
-                        }
-                    })
-                    setActiveKey(matchedKeys)
-                }} />
+                <YakitInput.Search
+                    onSearch={(value) => {
+                        setSearchValue(value)
+                        if (!value) return
+                        const matchedKeys: string[] = []
+                        filterData.forEach((item, index) => {
+                            const hasMatch = item.Group.some((g) => g.toLowerCase().includes(value.toLowerCase()))
+                            if (hasMatch) {
+                                matchedKeys.push(`ID:${index}`)
+                            }
+                        })
+                        setActiveKey(matchedKeys)
+                    }}
+                />
                 <YakitButton type='text' disabled={!!searchValue} onClick={onAddAdvancedSetting}>
-                    添加高级配置
+                    {t("MITMAdvancedFilters.addAdvancedConfig")}
                 </YakitButton>
             </div>
             {!!filterData.length ? (
@@ -267,14 +273,18 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     {filterData!.map((filterItem, index) => {
                         const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
 
-                        if(!!searchValue && filterItem.Group.every(g => !g.toLowerCase().includes(searchValue.toLowerCase()))) return null
+                        if (
+                            !!searchValue &&
+                            filterItem.Group.every((g) => !g.toLowerCase().includes(searchValue.toLowerCase()))
+                        )
+                            return null
 
                         return (
                             <YakitPanel
                                 header={
                                     <div className={styles["collapse-panel-header"]}>
                                         <span className={classNames(styles["header-id"])}>
-                                            <span>{`规则_${index}`}</span>
+                                            <span>{t("MITMAdvancedFilters.ruleIndex", {index})}</span>
                                         </span>
                                         <span>[{name}]</span>
                                         {filterItem.Group.length > 0 ? (
@@ -283,7 +293,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                                             </span>
                                         ) : (
                                             <YakitTag color='danger' size='small'>
-                                                暂未设置条件
+                                                {t("MITMAdvancedFilters.notSetCondition")}
                                             </YakitTag>
                                         )}
                                     </div>
@@ -316,8 +326,13 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             ) : (
                 <YakitEmpty
                     description={
-                        <YakitButton type='primary' disabled={!!searchValue} onClick={onAddAdvancedSetting} style={{marginTop: 12}}>
-                            添加高级配置
+                        <YakitButton
+                            type='primary'
+                            disabled={!!searchValue}
+                            onClick={onAddAdvancedSetting}
+                            style={{marginTop: 12}}
+                        >
+                            {t("MITMAdvancedFilters.addAdvancedConfig")}
                         </YakitButton>
                     }
                 />
@@ -358,10 +373,11 @@ const filterRangeOption: YakitSelectProps["options"] = [
     }
 ]
 export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["mitm"])
     const {item, onEdit, searchValue} = props
     const onAddGroup = useMemoizedFn(() => {
         if (isFilterItemEmpty(item)) {
-            yakitNotify("error", "请将已添加条件配置完成后再新增")
+            yakitNotify("error", t("MITMAdvancedFilters.pleaseCompleteCondition"))
             return
         } else {
             item.Group.push("")
@@ -371,14 +387,14 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
     return (
         <>
             <div className={classNames(styles["collapse-panel-condition"])}>
-                <LabelNodeItem label='使用范围'>
+                <LabelNodeItem label={t("MITMAdvancedFiltersItem.scope")}>
                     <YakitSelect
                         value={item.Field}
                         onSelect={(value) => onEdit("Field", value)}
                         options={filterRangeOption}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label='匹配类型'>
+                <LabelNodeItem label={t("MITMAdvancedFiltersItem.matcherType")}>
                     <YakitRadioButtons
                         value={item.MatcherType}
                         onChange={(e) => {
@@ -386,7 +402,7 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
                         }}
                         buttonStyle='solid'
                         options={[
-                            {label: "正则", value: "regexp"},
+                            {label: t("MITMAdvancedFiltersItem.regexp"), value: "regexp"},
                             {label: "glob", value: "glob"}
                         ]}
                     />

@@ -753,6 +753,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
                                     {label: t("InputHTTPCookieForm.do_not_set"), value: "none"}
                                 ]}
                                 buttonStyle='solid'
+                                wrapClassName={styles['sameSiteMode']}
                             />
                         </Form.Item>
                         <Form.Item label={t("InputHTTPCookieForm.expires_timestamp")} name='Expires'>

@@ -16,10 +16,11 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {Uint8ArrayToString} from "@/utils/str"
 import {isEmptyObject} from "@/utils/tool"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-const DefaultType: {label: string; value: string}[] = [
-    {value: "rmi", label: "RMI连接"},
-    {value: "rmi-handshake", label: "RMI握手"},
+const DefaultType = (t: TFunction): {label: string; value: string}[] => [
+    {value: "rmi", label: t("ReverseTable.rmiConnection")},
+    {value: "rmi-handshake", label: t("ReverseTable.rmiHandshake")},
     {value: "http", label: "HTTP"},
     {value: "https", label: "HTTPS"},
     {value: "tcp", label: "TCP"},
@@ -57,6 +58,7 @@ export interface ReverseTableProps {
 }
 
 export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
+    const {t} = useI18nNamespaces(["reverse", "yakitUi"])
     const {isPayload = false, total, data, isShowExtra = false, isExtra, onExtra, clearData} = props
     const maxWidth = isPayload ? 580 : 545
     const [loading, setLoading] = useState<boolean>(false)
@@ -155,7 +157,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                         <YakitSpin spinning={!!loading}>
                                             <div className='header-extra'>
                                                 <div className='extra-opt'>
-                                                    <div className='opt-title'>只看 Token</div>
+                                                    <div className='opt-title'>{t("ReverseTable.onlyShowToken")}</div>
                                                     <YakitSwitch
                                                         checked={hasToken}
                                                         onChange={(check) => {
@@ -175,7 +177,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                                         style={{width: 170}}
                                                         value={!types ? [] : types.split(",")}
                                                         
-                                                        options={DefaultType}
+                                                        options={DefaultType(t)}
                                                         onChange={(newValue: string[]) => {
                                                             setTypes(newValue.length === 0 ? "" : newValue.join(","))
                                                         }}
@@ -192,7 +194,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                                         clearData()
                                                     }}
                                                 >
-                                                    清空
+                                                    {t("YakitButton.clear")}
                                                 </YakitButton>
                                                 {isShowExtra && (
                                                     <YakitButton
@@ -219,10 +221,10 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                             renderKey='uuid'
                             columns={[
                                 {
-                                    title: "反连类型",
+                                    title: t("ReverseTable.reverseType"),
                                     dataKey: "type",
                                     render: (text) => {
-                                        const selectTag = DefaultType.filter((item) => item.value === text)
+                                        const selectTag = DefaultType(t).filter((item) => item.value === text)
                                         let label = ""
                                         if (selectTag.length !== 0) label = selectTag[0].label
                                         return (
@@ -238,11 +240,11 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                     filterProps: {
                                         filterMultiple: true,
                                         filtersType: "select",
-                                        filters: DefaultType
+                                        filters: DefaultType(t)
                                     }
                                 },
                                 {
-                                    title: "连接来源",
+                                    title: t("ReverseTable.connectionSource"),
                                     dataKey: "remote_addr",
                                     render: (text) => <YakitCopyText showText={text} />
                                 },
@@ -252,7 +254,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                     render: (text) => <YakitCopyText showText={text} />
                                 },
                                 {
-                                    title: "响应",
+                                    title: t("ReverseTable.response"),
                                     dataKey: "response_info"
                                 }
                             ]}
@@ -277,7 +279,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 style={{width: 200}}
                 value={!types ? [] : types.split(",")}
                 
-                options={DefaultType}
+                options={DefaultType(t)}
                 onChange={(newValue: string[]) => setTypes(newValue.length === 0 ? "" : newValue.join(","))}
                 maxTagCount='responsive'
             /> */}

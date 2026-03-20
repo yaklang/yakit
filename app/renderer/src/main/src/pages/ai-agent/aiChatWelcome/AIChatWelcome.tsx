@@ -373,7 +373,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const items = useMemo(() => {
             return [
                 {
-                    label: "知识库",
+                    label: t("AIChatWelcome.knowledgeBase"),
                     key: "knowledge",
                     children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
                     extra: [
@@ -407,7 +407,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 },
                 {
-                    label: "技能库",
+                    label: t("AIChatWelcome.skillBase"),
                     key: "skills",
                     children: <ForgeName ref={forgeNameRef} />,
                     extra: [
@@ -430,7 +430,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 },
                 {
-                    label: "工具库",
+                    label: t("AIChatWelcome.toolBase"),
                     key: "tools",
                     children: <AIToolList />,
                     extra: [
@@ -445,12 +445,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 }
             ]
-        }, [api, streams, installPlug])
+        }, [api, streams, installPlug, i18n.language])
 
         return (
             <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>
                 <div className={styles["open-file-tree-button"]} onClick={() => setOpenDrawer(!openDrawer)}>
-                    扩展资源
+                    {t("AIChatWelcome.expandResources")}
                     <YakitButton type='text2' icon={<OutlineOpenIcon />} />
                 </div>
 
@@ -466,7 +466,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     closable={false}
                     title={
                         <div className={styles["drawer-title"]}>
-                            <span>扩展资源</span>
+                            <span>{t("AIChatWelcome.expandResources")}</span>
                             <YakitButton
                                 onClick={() => setOpenDrawer(false)}
                                 type='text2'
@@ -486,7 +486,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                         <div className={styles["input-wrapper"]}>
                             <div className={styles["input-heard"]}>
                                 <div className={styles["title"]}>Memfit AI Agent</div>
-                                <div className={styles["subtitle"]}>{t("AIAgent.WelcomeHomeSubTitle")}</div>
+                                <div className={styles["subtitle"]}>{t("AIChatWelcome.WelcomeHomeSubTitle")}</div>
                             </div>
                             <div className={classNames(styles["input-body-wrapper"])}>
                                 <ReactResizeDetector
@@ -514,7 +514,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                             {checkItems.length > 0 ? (
                                 <div className={styles["suggestion-tips-wrapper"]}>
                                     <div className={styles["suggestion-tips-title"]}>
-                                        <span>你可能想问:</span>
+                                        <span>{t("AIChatWelcome.maybeYouWantToAsk")}</span>
                                         {loading ? (
                                             <YakitSpin size='small' wrapperClassName={styles["loading-spinner"]} />
                                         ) : (
@@ -526,7 +526,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                                     className={styles["line2-btn"]}
                                                     onClick={onSwitchQuestion}
                                                 >
-                                                    换一换
+                                                    {t("AIChatWelcome.refresh")}
                                                 </YakitButton>
                                             )
                                         )}
@@ -552,7 +552,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                 <AIUpAngleLeftIcon className={styles["recommend-up-left"]} />
                                 <AIUpAngleRightIcon className={styles["recommend-up-right"]} />
                                 <div className={styles["recommend-heard"]}>
-                                    <div className={styles["title"]}>首页推荐</div>
+                                    <div className={styles["title"]}>{t("AIChatWelcome.homeRecommend")}</div>
                                     <YakitButton
                                         icon={<OutlineRefreshIcon />}
                                         size='small'
@@ -560,7 +560,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                         className={styles["line2-btn"]}
                                         onClick={getRandomAIMaterials}
                                     >
-                                        换一换
+                                        {t("AIChatWelcome.refresh")}
                                     </YakitButton>
                                 </div>
                                 <YakitSpin spinning={loadingAIMaterials}>
@@ -598,6 +598,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 export default AIChatWelcome
 
 export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [isAutoHidden, setIsAutoHidden] = useState<boolean>(true)
     useEffect(() => {
         onGetSideSetting()
@@ -620,13 +621,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
         {wait: 200, leading: true}
     ).run
     return (
-        <Tooltip
-            title={
-                !isAutoHidden
-                    ? "已开启固定菜单栏，点击icon则可关闭"
-                    : "点击icon高亮后则开启固定菜单栏，菜单栏不会在失焦后自动关闭"
-            }
-        >
+        <Tooltip title={!isAutoHidden ? t("SideSettingButton.pinMenuOn") : t("SideSettingButton.pinMenuOff")}>
             <YakitButton
                 type={isAutoHidden ? "text2" : "outline1"}
                 icon={isAutoHidden ? <OutlinePinOffIcon /> : <OutlinePinIcon />}
@@ -638,6 +633,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
 })
 
 const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem, checkItems} = props
     return (
         <div className={styles["recommend-list-wrapper"]}>
@@ -652,7 +648,7 @@ const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
                     {title}
                 </div>
                 <YakitButton className={styles["more-btn"]} type='text' size='small' onClick={onMore}>
-                    更多
+                    {t("YakitButton.more")}
                     <OutlineArrowrightIcon />
                 </YakitButton>
             </div>

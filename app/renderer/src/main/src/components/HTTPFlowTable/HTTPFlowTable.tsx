@@ -4192,10 +4192,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                         }}
                                                         style={{padding: 0}}
                                                     >
-                                                        {t("HTTPFlowTable.advancedFilter")}
+                                                        {t("YakitButton.advancedFilter")}
                                                     </YakitButton>
                                                 ) : (
-                                                    <Tooltip title={t("HTTPFlowTable.advancedFilter")} placement='top'>
+                                                    <Tooltip title={t("YakitButton.advancedFilter")} placement='top'>
                                                         <YakitButton
                                                             type='text2'
                                                             icon={<OutlineFilterIcon />}

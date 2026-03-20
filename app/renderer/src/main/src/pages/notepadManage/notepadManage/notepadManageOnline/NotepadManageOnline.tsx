@@ -40,8 +40,10 @@ import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {failed} from "@/utils/notification"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["notepad", "yakitUi"])
     const userInfo = useStore((s) => s.userInfo)
     const emptyImageTarget = useEmptyImage("search")
     const {goAddNotepad} = useGoEditNotepad()
@@ -82,15 +84,15 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
     const columns: VirtualListColumns<API.GetNotepadList>[] = useCreation(() => {
         return [
             {
-                title: "文件名称",
+                title: t("NotepadManageOnline.fileName"),
                 dataIndex: "title"
             },
             {
-                title: "作者",
+                title: t("NotepadManageOnline.author"),
                 dataIndex: "userName"
             },
             {
-                title: "协作人",
+                title: t("NotepadManageOnline.collaborator"),
                 dataIndex: "collaborator",
                 render: (text, record) =>
                     (!!record.collaborator?.length && (
@@ -111,7 +113,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                     "-"
             },
             {
-                title: "最近更新时间",
+                title: t("NotepadManageOnline.updatedAt"),
                 dataIndex: sorterKey,
                 render: (text) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
                 filterProps: {
@@ -121,11 +123,11 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                                 data: [
                                     {
                                         key: "updated_at",
-                                        label: "最近更新时间"
+                                        label: t("NotepadManageOnline.updatedAt")
                                     },
                                     {
                                         key: "created_at",
-                                        label: "最近创建时间"
+                                        label: t("NotepadManageOnline.createdAt")
                                     }
                                 ],
                                 onClick: ({key}) => {
@@ -140,7 +142,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             }}
                         >
                             <YakitButton type='text2'>
-                                <span style={{marginRight: 8}}>{timeMap[sorterKey]}</span>
+                                <span style={{marginRight: 8}}>{timeMap(t)[sorterKey]}</span>
                                 {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
                             </YakitButton>
                         </YakitDropdownMenu>
@@ -148,7 +150,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 }
             },
             {
-                title: "操作",
+                title: t("YakitTable.action"),
                 dataIndex: "action",
                 width: 180,
                 render: (text, record) => {
@@ -175,7 +177,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 }
             }
         ]
-    }, [actionHashMapRef.current, sorterKey, timeSortVisible])
+    }, [actionHashMapRef.current, sorterKey, timeSortVisible, i18n.language])
     useEffect(() => {
         if (!userInfo.isLogin) return
         getList()
@@ -293,7 +295,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 setBatchDownInfo(res)
             })
             .catch((err) => {
-                failed(`下载失败：${err?.message || err}`)
+                failed(`${t("YakitNotification.downloadFailed", {colon: true})}${err?.message || err}`)
             })
             .finally(() =>
                 setTimeout(() => {
@@ -335,17 +337,19 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                         <FuncSearch
                             yakitCombinationSearchProps={{
                                 selectProps: {size: "small"},
-                                inputSearchModuleTypeProps: {size: "middle"}
+                                inputSearchModuleTypeProps: {
+                                    size: "middle",
+                                    placeholder: t("YakitInput.searchKeyWordPlaceholder")
+                                }
                             }}
                             value={search}
                             onChange={setSearch}
                             onSearch={onSearch}
                             includeSearchType={["keyword", "userName"]}
                         />
-                        <YakitPopconfirm
-                            title={selectNumber > 0 ? "确定要删除勾选文档吗?" : "确定要删除所有文档吗?"}
-                            onConfirm={onBatchRemove}
-                        >
+                        <YakitPopconfirm title={selectNumber > 0
+                                ? t("NotepadManageLocalList.confirmDeleteSelected")
+                                : t("NotepadManageLocalList.confirmDeleteAll")} onConfirm={onBatchRemove}>
                             <YakitButton
                                 type='outline2'
                                 danger
@@ -353,7 +357,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                                 disabled={totalRef.current === 0}
                                 loading={pageLoading}
                             >
-                                删除
+                                {t("YakitButton.delete")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitButton
@@ -363,22 +367,22 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             onClick={onBatchDown}
                             loading={pageLoading}
                         >
-                            批量下载
+                            {t("YakitButton.batchDownload")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
-                            新建
+                            {t("YakitButton.new")}
                         </YakitButton>
                     </div>
                 </div>
                 {totalRef.current === 0 || +response.pagemeta.total === 0 ? (
                     totalRef.current === 0 ? (
-                        <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
+                        <YakitEmpty style={{paddingTop: 48}} description={t("NotepadManageOnline.noData")} />
                     ) : (
                         <YakitEmpty
                             image={emptyImageTarget}
                             imageStyle={{margin: "96px auto 12px", height: 200}}
-                            title='搜索结果“空”'
+                            title={t("YakitEmpty.searchEmpty")}
                         />
                     )
                 ) : (

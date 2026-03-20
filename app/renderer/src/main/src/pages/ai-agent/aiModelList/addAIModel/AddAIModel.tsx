@@ -62,7 +62,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
     })
     return (
         <div>
-            <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 18}} className={styles["ai-start-model-form"]}>
+            <Form form={form} labelCol={{span: 3}} wrapperCol={{span: 21}} className={styles["ai-start-model-form"]}>
                 <Form.Item label='模型名称' name='Name' rules={[{required: true, message: "请输入模型名称"}]}>
                     <YakitInput disabled={!!defaultValues?.Name} />
                 </Form.Item>

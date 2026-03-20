@@ -59,7 +59,9 @@ import {isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {setClipboardText} from "@/utils/clipboard"
 import {useEeSystemConfig, useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
-import { useUploadInfoByEnpriTrace } from "@/components/layout/utils"
+import {useUploadInfoByEnpriTrace} from "@/components/layout/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {Trans} from "react-i18next"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -151,6 +153,7 @@ const typeFilter: FilterInfoProps[] = [
         itemIcon: <ProjectFolderOpenSvgIcon className={styles["floder-icon"]} />
     }
 ]
+
 /** 项目名过滤项对应展示内容 */
 const typeToName: {[key: string]: string} = {}
 for (let item of typeFilter) typeToName[item.key] = item.label
@@ -201,6 +204,8 @@ const DefaultProjectInfo: ProjectDescription = {
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["projectManage", "yakitUi"])
+
     const {engineMode, onFinish} = props
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -333,14 +338,16 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             <div className={styles["project-style"]} title={data.ProjectName}>
                                 {data.ProjectName}
                             </div>
-                            {(data?.OnlineSubTaskID || "").length > 0 && <YakitTag color="info">服务端</YakitTag>}
+                            {(data?.OnlineSubTaskID || "").length > 0 && (
+                                <YakitTag color='info'>{t("ProjectManage.server")}</YakitTag>
+                            )}
                         </div>
                     )
                 }
             },
             {
                 key: "ExternalProjectCode",
-                name: "项目编号",
+                name: t("ProjectManage.projectCode"),
                 style: {flex: 1, display: "none"},
                 render: (data) => {
                     return (
@@ -352,7 +359,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             },
             {
                 key: "ExternalModule",
-                name: "系统模块编号",
+                name: t("ProjectManage.moduleCode"),
                 style: {flex: 1, display: "none"},
                 render: (data) => {
                     return (
@@ -364,7 +371,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             },
             {
                 key: "Description",
-                name: "备注",
+                name: t("ProjectManage.description"),
                 style: {flex: 1},
                 render: (data) => {
                     try {
@@ -393,7 +400,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             },
             {
                 key: "DatabasePath",
-                name: "存储路径",
+                name: t("ProjectManage.storagePath"),
                 style: {flex: 1},
                 render: (data, index) => {
                     return (
@@ -415,7 +422,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 if (flag) {
                                                     openABSFileLocated(data.DatabasePath)
                                                 } else {
-                                                    failed("目标文件已不存在!")
+                                                    failed(t("ProjectManage.fileNotFound"))
                                                 }
                                             })
                                             .catch(() => {})
@@ -433,7 +440,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             },
             {
                 key: "FileSize",
-                name: "大小",
+                name: t("ProjectManage.size"),
                 style: {width: "10%"},
                 render: (data) => {
                     return <>{!data.Type || data.Type === getEnvTypeByProjects() ? data.FileSize : "-"}</>
@@ -500,7 +507,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             }
         })
         return header
-    }, [params, typeShow, timeShow])
+    }, [params, typeShow, timeShow, i18n.language])
 
     const [operateShow, setOperateShow] = useState<number>(-1)
     const projectOperate = useMemoizedFn((info: ProjectDescription) => {
@@ -520,12 +527,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             data: [
                                 {
                                     key: "newProject",
-                                    label: "新建子项目",
+                                    label: t("ProjectManage.newSubproject"),
                                     itemIcon: <ProjectDocumentTextSvgIcon className={styles["project-icon"]} />
                                 },
                                 {
                                     key: "newFolder",
-                                    label: "新建子文件夹",
+                                    label: t("ProjectManage.newSubfolder"),
                                     itemIcon: <ProjectFolderOpenSvgIcon className={styles["floder-icon"]} />
                                 }
                             ],
@@ -554,8 +561,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         }}
                         menu={{
                             data: [
-                                {key: "encryption", label: "加密导出"},
-                                {key: "plaintext", label: "明文导出"}
+                                {key: "encryption", label: t("ProjectManage.encryptedExport")},
+                                {key: "plaintext", label: t("ProjectManage.plaintextExport")}
                             ],
                             className: styles["dropdown-menu-body"],
                             onClick: ({key}) => {
@@ -656,7 +663,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         if (param.ProjectName) param.Type = getEnvTypeByProjects()
         // 查当前文件夹下的所有内容，应该用当前的父节点（也就是文件夹id）来获取所有的
         if (param.FolderId !== undefined) {
-             param.Type = ''
+            param.Type = ""
         }
         if (isIRify()) param.FrontendType = "ssa_project"
         setLoading(true)
@@ -693,7 +700,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const [delId, setDelId] = useState<{Id: number; Type: string}>({Id: -1, Type: "project"})
     const delProjectFolder = useMemoizedFn((isDel: boolean) => {
         if (delId.Id === -1) {
-            failed("该条项目无数据或无关键信息，无法删除!")
+            failed(t("ProjectManage.noDataToDelete"))
             return
         }
 
@@ -702,7 +709,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel, Type: getEnvTypeByProjects()})
             .then((e) => {
                 setStopUpdate(true)
-                info("删除成功")
+                info(t("YakitNotification.deleted"))
                 const projects = getData().Projects.filter((item) => +item.Id !== delId.Id)
                 const newData = {
                     ...getData(),
@@ -716,7 +723,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
             })
             .catch((e) => {
-                failed(`删除失败: ${e}`)
+                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
             })
             .finally(() => {
                 setDelId({Id: -1, Type: "project"})
@@ -738,7 +745,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 return
             case "encryption":
                 if (!data || !data.Id) {
-                    failed("该条项目无关键信息，无法导出!")
+                    failed(t("ProjectManage.noDataToExport"))
                     return
                 }
 
@@ -746,7 +753,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 return
             case "plaintext":
                 if (!data || !data.Id) {
-                    failed("该条项目无关键信息，无法导出!")
+                    failed(t("ProjectManage.noDataToExport"))
                     return
                 }
                 setTransferShow({
@@ -761,32 +768,32 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 return
             case "edit":
                 if (!data || !data.Id) {
-                    failed("该条项目无关键信息，请刷新列表后重试!")
+                    failed(t("ProjectManage.refreshAndRetry"))
                     return
                 }
                 setModalInfo({visible: true, isFolder: data?.Type === "file", project: data})
                 return
             case "copyPath":
                 if (!data || !data.DatabasePath) {
-                    failed("该条项目无数据或无关键信息，复制失败!")
+                    failed(t("ProjectManage.copyFailed"))
                     return
                 }
                 setClipboardText(data.DatabasePath)
                 return
             case "setCurrent":
                 if (!data || !data.Id) {
-                    failed("该条项目无数据或无关键信息，无法连接!")
+                    failed(t("ProjectManage.connectFailed"))
                     return
                 }
                 setLoading(true)
                 ipcRenderer
                     .invoke("SetCurrentProject", {Id: data.Id, Type: getEnvTypeByProjects()})
                     .then((e) => {
-                        info("已切换数据库")
+                        info(t("ProjectManage.switchDatabaseSuccess"))
                         onFinish()
                     })
                     .catch((e) => {
-                        failed("切换数据库失败：" + `${e}`)
+                        failed(t("ProjectManage.switchDatabaseFailed") + ": " + `${e}`)
                     })
                     .finally(() => {
                         setTimeout(() => {
@@ -796,7 +803,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 return
             case "openFile":
                 if (!data || !data?.Id || !data?.ProjectName) {
-                    failed("该条文件夹无数据或无关键信息，无法打开!")
+                    failed(t("ProjectManage.openFolderFailed"))
                     return
                 }
                 if (files.length === 2) return
@@ -861,7 +868,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
             await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId, Type: getEnvTypeByProjects()})
-            info("切换临时项目成功")
+            info(t("ProjectManage.switchTemporaryProjectSuccess"))
             onFinish()
         } catch (error) {
             yakitFailed(error + "")
@@ -892,7 +899,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         ipcRenderer
                             .invoke("UpdateProject", newProject)
                             .then((res) => {
-                                success("编辑项目成功")
+                                success(t("ProjectManage.editProjectSuccess"))
                                 setModalInfo({visible: false})
                                 setNewProjectInfo(res)
                                 setTimeout(() => {
@@ -900,7 +907,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 }, 300)
                             })
                             .catch((e) => {
-                                failed(`编辑项目失败：${e}`)
+                                failed(t("ProjectManage.editProjectFailed") + `: ${e}`)
                             })
                             .finally(() => {
                                 setTimeout(() => {
@@ -911,7 +918,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         ipcRenderer
                             .invoke("NewProject", newProject)
                             .then((res) => {
-                                success("创建新项目成功")
+                                success(t("ProjectManage.createProjectSuccess"))
                                 setModalInfo({visible: false})
                                 setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                                 setNewProjectInfo(res)
@@ -921,7 +928,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 }, 300)
                             })
                             .catch((e) => {
-                                failed(`创建新项目失败：${e}`)
+                                failed(t("ProjectManage.createProjectFailed") + `: ${e}`)
                             })
                             .finally(() => {
                                 setTimeout(() => {
@@ -945,13 +952,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             ipcRenderer
                                 .invoke("UpdateProject", newFolder)
                                 .then((res) => {
-                                    success("编辑文件夹成功")
+                                    success(t("ProjectManage.editFolderSuccess"))
                                     setModalInfo({visible: false})
                                     setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                                     setTimeout(() => update(), 300)
                                 })
                                 .catch((e) => {
-                                    failed(`编辑文件夹失败：${e}`)
+                                    failed(t("ProjectManage.editFolderFailed") + `: ${e}`)
                                 })
                                 .finally(() => {
                                     setTimeout(() => {
@@ -962,13 +969,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             ipcRenderer
                                 .invoke("NewProject", newFolder)
                                 .then(() => {
-                                    success("创建新文件夹成功")
+                                    success(t("ProjectManage.createFolderSuccess"))
                                     setModalInfo({visible: false})
                                     setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                                     setTimeout(() => update(), 300)
                                 })
                                 .catch((e) => {
-                                    failed(`创建新文件夹失败：${e}`)
+                                    failed(t("ProjectManage.createFolderFailed") + `: ${e}`)
                                 })
                                 .finally(() => {
                                     setTimeout(() => {
@@ -985,13 +992,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     ipcRenderer
                                         .invoke("UpdateProject", newFolder)
                                         .then((res) => {
-                                            success("编辑文件夹成功")
+                                            success(t("ProjectManage.editFolderSuccess"))
                                             setModalInfo({visible: false})
                                             setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                                             setTimeout(() => update(), 300)
                                         })
                                         .catch((e) => {
-                                            failed(`编辑文件夹失败：${e}`)
+                                            failed(t("ProjectManage.editFolderFailed") + `: ${e}`)
                                         })
                                         .finally(() => {
                                             setTimeout(() => {
@@ -1002,7 +1009,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     ipcRenderer
                                         .invoke("NewProject", newFolder)
                                         .then(({Id, ProjectName}: {Id: number; ProjectName: string}) => {
-                                            success("创建新文件夹成功")
+                                            success(t("ProjectManage.createFolderSuccess"))
                                             setModalInfo({visible: false})
                                             if (folderInfo.parent) {
                                                 setFiles([
@@ -1026,7 +1033,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             setTimeout(() => update(), 300)
                                         })
                                         .catch((e) => {
-                                            failed(`创建新文件夹失败：${e}`)
+                                            failed(t("ProjectManage.createFolderFailed") + `: ${e}`)
                                         })
                                         .finally(() => {
                                             setTimeout(() => {
@@ -1082,35 +1089,35 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             data: [
                 {
                     key: "setCurrent",
-                    label: "打开项目"
+                    label: t("ProjectManage.openProject")
                 },
                 {
                     key: "export",
-                    label: "导出",
+                    label: t("YakitButton.export"),
                     children: [
                         {
                             key: "encryption",
-                            label: "加密导出"
+                            label: t("ProjectManage.encryptedExport")
                         },
                         {
                             key: "plaintext",
-                            label: "明文导出"
+                            label: t("ProjectManage.plaintextExport")
                         }
                     ]
                 },
                 {
                     key: "edit",
-                    label: "编辑",
+                    label: t("YakitButton.edit"),
                     disabled: project?.ProjectName === "[default]"
                 },
                 {
                     key: "copyPath",
-                    label: "复制路径"
+                    label: t("ProjectManage.copyPath")
                 },
                 {type: "divider"},
                 {
                     key: "delete",
-                    label: "删除",
+                    label: t("YakitButton.delete"),
                     type: "danger",
                     disabled: project?.ProjectName === "[default]"
                 }
@@ -1139,14 +1146,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             <div className={styles["project-manage-container"]}>
                 <div className={styles["project-header"]}>
                     <div className={styles["header-title"]}>
-                        <div className={styles["title-style"]}>项目管理</div>
+                        <div className={styles["title-style"]}>{t("ProjectManage.title")}</div>
                         <div className={styles["total-style"]}>
                             Total <span className={styles["total-number"]}>{__data.ProjectToTal}</span>
                         </div>
                     </div>
                     <YakitInput.Search
                         size='large'
-                        placeholder='请输入项目名称'
+                        placeholder={t("ProjectManage.inputProjectName")}
                         value={params.ProjectName}
                         onChange={(e) =>
                             setParams({
@@ -1187,9 +1194,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     <div className={styles["title-style"]}>
                                         {latestProject?.ProjectName || "[default]"}
                                     </div>
-                                    <div className={styles["subtitle-style"]}>{`最近操作时间：${
-                                        latestProject ? formatTimestamp(latestProject?.UpdateAt) : "- -"
-                                    }`}</div>
+                                    <div className={styles["subtitle-style"]}>{`${t(
+                                        "ProjectManage.recentOperation"
+                                    )}：${latestProject ? formatTimestamp(latestProject?.UpdateAt) : "- -"}`}</div>
                                 </div>
                             </div>
 
@@ -1205,28 +1212,30 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         data: [
                                             {
                                                 key: "export",
-                                                label: "导出",
+                                                label: t("YakitButton.export"),
                                                 itemIcon: <OutlineExportIcon />,
                                                 children: [
-                                                    {key: "encryption", label: "加密导出"},
-                                                    {key: "plaintext", label: "明文导出"}
+                                                    {key: "encryption", label: t("ProjectManage.encryptedExport")},
+                                                    {key: "plaintext", label: t("ProjectManage.plaintextExport")}
                                                 ]
                                             },
                                             {
                                                 key: "edit",
-                                                label: "编辑",
-                                                disabled: latestProject?.ProjectName === "[default]" || (latestProject?.OnlineSubTaskID || "").length > 0 ,
+                                                label: t("YakitButton.edit"),
+                                                disabled:
+                                                    latestProject?.ProjectName === "[default]" ||
+                                                    (latestProject?.OnlineSubTaskID || "").length > 0,
                                                 itemIcon: <OutlinePencilaltIcon />
                                             },
                                             {
                                                 key: "copyPath",
-                                                label: "复制路径",
+                                                label: t("ProjectManage.copyPath"),
                                                 itemIcon: <OutlineDocumentduplicateIcon />
                                             },
                                             {type: "divider"},
                                             {
                                                 key: "delete",
-                                                label: "删除",
+                                                label: t("YakitButton.delete"),
                                                 type: "danger",
                                                 disabled: latestProject?.ProjectName === "[default]",
                                                 itemIcon: <OutlineTrashIcon />
@@ -1271,7 +1280,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
                                 <TemporaryProjectSvgIcon className={styles["temporary-project-icon"]} />
-                                临时项目
+                                {t("ProjectManage.temporaryProject")}
                             </div>
                             <div className={styles["icon-style"]}>
                                 <PlusBoldSvgIcon />
@@ -1286,7 +1295,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
                                 <DocumentAddSvgIcon />
-                                新建项目
+                                {t("ProjectManage.newProject")}
                             </div>
                             <div className={styles["icon-style"]}>
                                 <PlusBoldSvgIcon />
@@ -1301,7 +1310,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
                                 <FolderOpenSvgIcon />
-                                新建文件夹
+                                {t("ProjectManage.newFolder")}
                             </div>
                             <div className={styles["icon-style"]}>
                                 <PlusBoldSvgIcon />
@@ -1317,7 +1326,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
                                 <DocumentDownloadSvgIcon />
-                                导入
+                                {t("YakitButton.import")}
                             </div>
                             <div className={styles["icon-style"]}>
                                 <ImportSvgIcon />
@@ -1329,7 +1338,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
                 {search.name && (
                     <div className={styles["project-search"]}>
-                        搜索到 <span className={styles["total-style"]}>{search.total}</span> 条“{search.name}”相关内容
+                        <Trans
+                            i18nKey='ProjectManage.searchResult'
+                            ns='projectManage'
+                            components={{
+                                code: <span className={styles["total-style"]}></span>
+                            }}
+                            values={{name: search.name}}
+                        />
                     </div>
                 )}
 
@@ -1349,7 +1365,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 }, 500)
                             }}
                         >
-                            本地文件
+                            {t("ProjectManage.localFiles")}
                         </div>
                         <ChevronRightIcon className={styles["icon-style"]} />
                         <div
@@ -1402,7 +1418,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     </div>
                                 </div>
                                 {/* { engineMode !== "remote" &&  */}
-                                <div style={{width: 120}}>操作</div>
+                                <div style={{width: 120}}>{t("YakitTable.action")}</div>
                                 {/* } */}
                             </div>
 
@@ -1435,7 +1451,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                         <span className={styles["file-style"]}>
                                                                             {files[files.length - 1].ProjectName}
                                                                         </span>{" "}
-                                                                        内暂无项目内容
+                                                                        {t("ProjectManage.noProjectContent")}
                                                                     </div>
                                                                     <div className={styles["operate-btn"]}>
                                                                         <YakitButton
@@ -1447,7 +1463,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                                 )
                                                                             }
                                                                         >
-                                                                            新建项目
+                                                                            {t("ProjectManage.newProject")}
                                                                         </YakitButton>
                                                                         <YakitButton
                                                                             size='max'
@@ -1459,7 +1475,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                                 )
                                                                             }
                                                                         >
-                                                                            导入项目
+                                                                            {t("ProjectManage.importProject")}
                                                                         </YakitButton>
                                                                     </div>
                                                                 </>
@@ -1472,7 +1488,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                         <YakitEmpty
                                                             descriptionReactNode={
                                                                 <div className={styles["title-style"]}>
-                                                                    搜索结果“空”
+                                                                    {t("YakitEmpty.searchEmpty")}
                                                                 </div>
                                                             }
                                                         />
@@ -1542,7 +1558,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 )
                                             })
                                         )}
-                                        {loadMore && <div className={styles["table-loading-more"]}>正在加载中...</div>}
+                                        {loadMore && (
+                                            <div className={styles["table-loading-more"]}>
+                                                {t("ProjectManage.loading")}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1567,12 +1587,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
             <YakitHint
                 visible={delShow}
-                title={delId.Type === "file" ? "删除文件夹" : "删除项目"}
+                title={delId.Type === "file" ? t("ProjectManage.deleteFolder") : t("ProjectManage.deleteProject")}
                 content={
-                    delId.Type === "file" ? "删除文件夹是否同时清除文件夹里所有本地文件?" : "是否同时清除本地文件?"
+                    delId.Type === "file"
+                        ? t("ProjectManage.deleteFolderConfirm")
+                        : t("ProjectManage.deleteProjectConfirm")
                 }
-                okButtonText='保留'
-                cancelButtonText='清除'
+                okButtonText={t("YakitButton.keep")}
+                cancelButtonText={t("ProjectManage.clear")}
                 footerExtra={
                     <YakitButton
                         size='max'
@@ -1582,7 +1604,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             setDelId({Id: -1, Type: "project"})
                         }}
                     >
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                 }
                 onOk={() => delProjectFolder(false)}
@@ -1591,20 +1613,20 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
             <YakitHint
                 visible={inquireIntoProjectVisible}
-                title='提示'
-                content={`是否需要进入新建项目${newProjectInfo?.ProjectName}`}
+                title={t("ProjectManage.hint")}
+                content={`${t("ProjectManage.enterNewProject")} ${newProjectInfo?.ProjectName}`}
                 onOk={() => {
                     setLoading(true)
                     setInquireIntoProjectVisible(false)
                     ipcRenderer
                         .invoke("SetCurrentProject", {Id: newProjectInfo?.Id, Type: getEnvTypeByProjects()})
                         .then((e) => {
-                            info("已切换数据库")
+                            info(t("ProjectManage.switchDatabaseSuccess"))
                             setNewProjectInfo({Id: "", ProjectName: ""})
                             onFinish()
                         })
                         .catch((e) => {
-                            failed("切换数据库失败：" + `${e}`)
+                            failed(t("ProjectManage.switchDatabaseFailed") + ": " + `${e}`)
                         })
                         .finally(() => {
                             setTimeout(() => {
@@ -1620,8 +1642,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
             <YakitHint
                 visible={detectionTemporaryProjectVisible}
-                title='提示'
-                content='检测到有临时项目正在使用中，是否需要删除并创建新的临时项目'
+                title={t("ProjectManage.hint")}
+                content={t("ProjectManage.temporaryProjectInUse")}
                 onOk={async () => {
                     // 先删临时项目
                     await delTemporaryProject()
@@ -1683,6 +1705,7 @@ export interface FileProjectInfoProps extends ProjectDescription {
 }
 
 export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["projectManage", "yakitUi"])
     const {
         isNew = true,
         isFolder,
@@ -1846,21 +1869,21 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     const [isCheck, setIsCheck] = useState<boolean>(false)
     const {eeSystemConfig} = useEeSystemConfig()
     const headerTitle = useMemo(() => {
-        if (isNew && isFolder && !project) return "新建文件夹"
-        if (isNew && !isFolder && !project) return "新建项目"
-        if (isNew && isFolder && project) return "编辑文件夹"
-        if (isNew && !isFolder && project) return "编辑项目"
-        if (isExport) return "导出项目"
-        if (isImport) return "导入项目"
-        return "未知情况"
-    }, [isNew, isFolder, isExport, isImport, project])
+        if (isNew && isFolder && !project) return t("NewProjectAndFolder.newFolderTitle")
+        if (isNew && !isFolder && !project) return t("NewProjectAndFolder.newProjectTitle")
+        if (isNew && isFolder && project) return t("NewProjectAndFolder.editFolderTitle")
+        if (isNew && !isFolder && project) return t("NewProjectAndFolder.editProjectTitle")
+        if (isExport) return t("NewProjectAndFolder.exportProjectTitle")
+        if (isImport) return t("NewProjectAndFolder.importProjectTitle")
+        return t("NewProjectAndFolder.unknownCase")
+    }, [isNew, isFolder, isExport, isImport, project, i18n.language])
 
     const submitTitle = useMemo(() => {
-        if (isNew && !project) return "创建"
-        if (isExport) return "导出"
-        if (isImport) return "导入"
-        return "确定"
-    }, [isNew, isExport, isImport, project])
+        if (isNew && !project) return t("NewProjectAndFolder.create")
+        if (isExport) return t("YakitButton.export")
+        if (isImport) return t("YakitButton.import")
+        return t("YakitButton.ok")
+    }, [isNew, isExport, isImport, project, i18n.language])
 
     const [transferShow, setTransferShow] = useState<{
         isExport?: boolean
@@ -1880,7 +1903,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         const isHasDescription = Array.isArray(v?.Description) && v.Description.length > 0
 
         if (isHasDescription && !validateArray(v.Description) && !isCommunityEdition()) {
-            warn("请将备注信息填写完整")
+            warn(t("NewProjectAndFolder.completeRemarks"))
             return
         }
         if (!isCheck) setIsCheck(true)
@@ -1900,7 +1923,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }
 
             if (info.ProjectName.length > 100) {
-                failed("名称长度应小于100!")
+                failed(t("NewProjectAndFolder.nameTooLong"))
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -1930,7 +1953,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         }
         if (isExport) {
             if (!exportInfo.Id) {
-                failed("未获取到数据ID，请关闭弹窗后重试!")
+                failed(t("NewProjectAndFolder.noDataId"))
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -1939,7 +1962,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 return
             }
             if (exportInfo.Password.length > 15) {
-                failed("密码最多15位")
+                failed(t("NewProjectAndFolder.passwordTooLong"))
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -2010,7 +2033,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             })
                     })
                     .catch((e) => {
-                        failed(`无法解析路径内的文件名 ${e}`)
+                        failed(t("NewProjectAndFolder.parseFileNameFailed") + `: ${e}`)
                         setTimeout(() => {
                             setLoading(false)
                         }, 300)
@@ -2075,7 +2098,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             })
             ref.current.setVariableActiveKey([...(ref.current.variableActiveKey || []), `${variables?.length || 0}`])
         } else {
-            yakitFailed(`请将已添加【备注${index}】设置完成后再进行添加`)
+            yakitFailed(t("NewProjectAndFolder.pleaseCompleteRemark", {index}))
         }
     }
 
@@ -2124,14 +2147,18 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         <Form.Item
                             label={
                                 <div>
-                                    {`${isFolder ? "文件夹名称" : "项目名称"}`}{" "}
+                                    {`${
+                                        isFolder
+                                            ? t("NewProjectAndFolder.folderName")
+                                            : t("NewProjectAndFolder.projectName")
+                                    }`}{" "}
                                     <span className={styles["required-style"]}>*</span> :
                                 </div>
                             }
                         >
                             <YakitInput
                                 size='large'
-                                placeholder='未命名'
+                                placeholder={t("NewProjectAndFolder.unnamed")}
                                 className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !info.ProjectName
                                 })}
@@ -2144,13 +2171,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 label={
                                     !!project ? (
                                         <div className={styles["form-item-cascader"]}>
-                                            <div>{`所属文件夹 :`}</div>
+                                            <div>{`${t("NewProjectAndFolder.belongToFolder")} :`}</div>
                                             {dropShow && (
                                                 <div className={styles["hint-style"]}>{cascaderValue.join("/")}</div>
                                             )}
                                         </div>
                                     ) : (
-                                        "所属文件夹 :"
+                                        `${t("NewProjectAndFolder.belongToFolder")} :`
                                     )
                                 }
                             >
@@ -2180,13 +2207,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        项目编号 :<span className={styles["required-style"]}>*</span>
+                                        {t("ProjectManage.projectCode")} :
+                                        <span className={styles["required-style"]}>*</span>
                                     </div>
                                 }
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder='存在必须填写；如不存在，请填入“不存在”'
+                                    placeholder={t("NewProjectAndFolder.externalProjectCodePlaceholder")}
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalProjectCode
                                     })}
@@ -2199,18 +2227,19 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        系统模块编号 :<span className={styles["required-style"]}>*</span>
+                                        {t("ProjectManage.moduleCode")} :
+                                        <span className={styles["required-style"]}>*</span>
                                     </div>
                                 }
                                 help={
                                     <div className={styles["import-form-item-help-wrapper"]}>
-                                        若一个项目涉及多个系统模块，请分别创建项目
+                                        {t("NewProjectAndFolder.externalModuleHelp")}
                                     </div>
                                 }
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder='请输入系统模块编号，精确到系统模块。例如：qwe202501_2345'
+                                    placeholder={t("NewProjectAndFolder.externalModulePlaceholder")}
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalModule
                                     })}
@@ -2223,8 +2252,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        配置mysql地址
-                                        <Tooltip title='配置地址以后，所有数据都将存在配置的mysql地址里。参考 mysql://user:password@tcp(ip:port)/database_name'>
+                                        {t("NewProjectAndFolder.mysqlAddress")}
+                                        <Tooltip title={t("NewProjectAndFolder.mysqlAddressTooltip")}>
                                             <QuestionMarkCircleIcon className={styles["icon-question"]} />
                                         </Tooltip>{" "}
                                         :
@@ -2244,12 +2273,12 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         )}
                         <>
                             {isCommunityEdition() ? (
-                                <Form.Item label={"备注 :"}>
+                                <Form.Item label={`${t("NewProjectAndFolder.remark")} :`}>
                                     <YakitInput.TextArea
                                         autoSize={{minRows: 3, maxRows: 5}}
                                         showCount
                                         maxLength={100}
-                                        placeholder='请输入描述与备注'
+                                        placeholder={t("NewProjectAndFolder.inputDescription")}
                                         value={info.Description}
                                         onChange={(e) => setInfo({...info, Description: e.target.value})}
                                     />
@@ -2257,7 +2286,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             ) : (
                                 <>
                                     <div className={styles["remark-header"]}>
-                                        <div className={styles["title"]}>备注 :</div>
+                                        <div className={styles["title"]}>{t("NewProjectAndFolder.remark")} :</div>
                                         {/* 添加额外的元素 */}
                                         <span className={styles[""]}>
                                             <YakitButton
@@ -2268,7 +2297,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                                 }}
                                                 size='small'
                                             >
-                                                重置
+                                                {t("YakitButton.reset")}
                                             </YakitButton>
                                             <Divider type='vertical' style={{margin: 0}} />
                                             <YakitButton
@@ -2279,7 +2308,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                                 className={styles["btn-padding-right-0"]}
                                                 size='small'
                                             >
-                                                添加
+                                                {t("YakitButton.add")}
                                                 <PlusIcon />
                                             </YakitButton>
                                         </span>
@@ -2298,13 +2327,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 )}
                 {isExport && (
                     <>
-                        <Form.Item label={"项目名称 :"}>
+                        <Form.Item label={`${t("NewProjectAndFolder.projectName")} :`}>
                             <YakitInput disabled={true} size='large' value={exportInfo.ProjectName} />
                         </Form.Item>
                         <Form.Item
                             label={
                                 <div>
-                                    密码 <span className={styles["required-style"]}>*</span> :
+                                    {t("NewProjectAndFolder.password")}{" "}
+                                    <span className={styles["required-style"]}>*</span> :
                                 </div>
                             }
                             className={styles["export-form-item-password-wrapper"]}
@@ -2313,7 +2343,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !exportInfo.Password
                                 })}
-                                placeholder='为项目设置打开密码'
+                                placeholder={t("NewProjectAndFolder.passwordPlaceholder")}
                                 value={exportInfo.Password}
                                 onChange={(e) => setExportInfo({...exportInfo, Password: e.target.value})}
                             />
@@ -2325,12 +2355,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         <Form.Item
                             label={
                                 <div>
-                                    选择项目文件 <span className={styles["required-style"]}>*</span> :
+                                    {t("NewProjectAndFolder.selectProjectFile")}{" "}
+                                    <span className={styles["required-style"]}>*</span> :
                                 </div>
                             }
                             help={
                                 <div className={styles["import-form-item-help-wrapper"]}>
-                                    点击此处
+                                    {t("NewProjectAndFolder.clickHere")}
                                     <Upload
                                         multiple={false}
                                         maxCount={1}
@@ -2341,7 +2372,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         }}
                                     >
                                         <a className={styles["upload-btn"]} onClick={(e) => e.preventDefault()}>
-                                            上传文件
+                                            {t("NewProjectAndFolder.uploadFile")}
                                         </a>
                                     </Upload>
                                 </div>
@@ -2352,35 +2383,38 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     [styles["required-form-item-wrapper"]]: isCheck && !importInfo.ProjectFilePath
                                 })}
                                 size='large'
-                                placeholder='请输入绝对路径'
+                                placeholder={t("NewProjectAndFolder.inputAbsolute")}
                                 value={importInfo.ProjectFilePath}
                                 onChange={(e) => setImportInfo({...importInfo, ProjectFilePath: e.target.value})}
                             />
                         </Form.Item>
                         <Form.Item
-                            label={"项目名称 :"}
+                            label={`${t("NewProjectAndFolder.projectName")} :`}
                             help={
                                 <div className={styles["import-form-item-help-wrapper"]}>
-                                    项目名如果为空，则使用项目文件中的名字
+                                    {t("NewProjectAndFolder.projectNameImportEmpty")}
                                 </div>
                             }
                         >
                             <YakitInput
                                 size='large'
-                                placeholder='请输入项目名'
+                                placeholder={t("NewProjectAndFolder.inputProjectNameImport")}
                                 value={importInfo.LocalProjectName}
                                 onChange={(e) => setImportInfo({...importInfo, LocalProjectName: e.target.value})}
                             />
                         </Form.Item>
-                        <Form.Item label={"密码 :"} className={styles["export-form-item-password-wrapper"]}>
+                        <Form.Item
+                            label={`${t("NewProjectAndFolder.password")} :`}
+                            className={styles["export-form-item-password-wrapper"]}
+                        >
                             <YakitInput.Password
-                                placeholder='如无密码则不填'
+                                placeholder={t("NewProjectAndFolder.passwordImport")}
                                 value={importInfo.Password}
                                 onChange={(e) => setImportInfo({...importInfo, Password: e.target.value})}
                             />
                         </Form.Item>
                         {!parentNode && (
-                            <Form.Item label={"所属文件夹 :"}>
+                            <Form.Item label={`${t("NewProjectAndFolder.belongToFolder")} :`}>
                                 <Cascader
                                     options={data}
                                     fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
@@ -2409,7 +2443,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 <Form.Item label={""}>
                     <div className={styles["form-btn-wrapper"]}>
                         <YakitButton loading={loading} size='large' type='outline2' onClick={onClose}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton loading={loading} size='large' htmlType='submit'>
                             {submitTitle}
@@ -2454,6 +2488,7 @@ export interface ProjectIOProgress {
     Verbose: string
 }
 export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
+    const {t} = useI18nNamespaces(["projectManage", "yakitUi"])
     const {usedBy, isExport, isImport, data, visible, setVisible, onSuccess} = props
 
     const {isExportTemporaryProjectFlag, setIsExportTemporaryProjectFlag} = useTemporaryProjectStore()
@@ -2474,7 +2509,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
             return
         }
         if ((!isExport && !isImport) || !data) {
-            failed("数据出错，请点击取消后再次尝试!")
+            failed(t("NewProjectAndFolder.dataErrorRetry"))
             return
         }
 
@@ -2585,8 +2620,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
 
                         <div className={styles["modal-right-wrapper"]}>
                             <div className={styles["modal-right-title"]}>
-                                {isExport && "项目导出中..."}
-                                {isImport && "项目导入中..."}
+                                {isExport && t("TransferProject.projectExporting")}
+                                {isImport && t("TransferProject.projectImporting")}
                             </div>
                             <div className={styles["download-progress"]}>
                                 <Progress
@@ -2594,7 +2629,11 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                                     trailColor='var(--Colors-Use-Neutral-Bg)'
                                     percent={+percent.toFixed(2)}
                                     format={(p, sp) => {
-                                        return <div className={styles["progress-content-style"]}>{`进度 ${p}%`}</div>
+                                        return (
+                                            <div className={styles["progress-content-style"]}>{`${t(
+                                                "TransferProject.progress"
+                                            )} ${p}%`}</div>
+                                        )
                                     }}
                                 />
                             </div>
@@ -2614,7 +2653,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                             </div>
                             <div className={styles["modal-right-btn"]}>
                                 <YakitButton size='max' type='outline2' onClick={onClose}>
-                                    取消
+                                    {t("YakitButton.cancel")}
                                 </YakitButton>
                             </div>
                         </div>
@@ -2651,17 +2690,21 @@ interface SetVariableProjectItemProps {
 }
 
 const SetVariableProjectItem: React.FC<SetVariableProjectItemProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["projectManage"])
     const {name} = props
 
     return (
         <div className={styles["variable-project-item"]}>
             <Form.Item name={[name, "Key"]} noStyle wrapperCol={{span: 24}}>
-                <input placeholder='备注名称' className={styles["variable-item-input"]} />
+                <input placeholder={t("SetVariableProjectItem.remarkName")} className={styles["variable-item-input"]} />
             </Form.Item>
 
             <div className={styles["variable-item-textarea-body"]}>
                 <Form.Item name={[name, "Value"]} noStyle wrapperCol={{span: 24}}>
-                    <AutoTextarea className={styles["variable-item-textarea"]} placeholder='备注内容' />
+                    <AutoTextarea
+                        className={styles["variable-item-textarea"]}
+                        placeholder={t("SetVariableProjectItem.remarkContent")}
+                    />
                 </Form.Item>
                 <ResizerIcon className={styles["resizer-icon"]} />
             </div>
@@ -2681,6 +2724,7 @@ interface VariableProjectListProps {
  * 目前只有Project备注使用
  */
 const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef((props, ref) => {
+    const {t} = useI18nNamespaces(["projectManage", "yakitUi"])
     const {field, onDel, collapseWrapperClassName, extra} = props
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
@@ -2714,7 +2758,7 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                                 {fields.map(({key, name}, i) => (
                                     <YakitPanel
                                         key={`${key + ""}`}
-                                        header={`备注 ${name}`}
+                                        header={`${t("NewProjectAndFolder.remark")} ${name}`}
                                         className={styles["variable-list-panel"]}
                                         extra={
                                             <div className={styles["extra-wrapper"]}>
@@ -2747,7 +2791,7 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                                         icon={<PlusIcon />}
                                         block
                                     >
-                                        添加
+                                        {t("YakitButton.add")}
                                     </YakitButton>
                                 </>
                             )}

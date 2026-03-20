@@ -10,9 +10,11 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import { apiSystemConfig } from "@/components/layout/utils"
+import {apiSystemConfig} from "@/components/layout/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export interface SystemConfigProps {}
 export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
+    const {t} = useI18nNamespaces(["setting", "yakitUi"])
     const [form] = Form.useForm()
     const openWatermarkWatch = Form.useWatch("openWatermark", form)
     const isCustomizeWatermarkWatch = Form.useWatch("isCustomizeWatermark", form)
@@ -59,7 +61,7 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
                     data: paramsArr
                 }).then((res) => {
                     if (res.ok) {
-                        yakitNotify("success", "保存成功")
+                        yakitNotify("success", t("YakitNotification.saved"))
                     }
                 })
             })
@@ -67,7 +69,7 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
     })
     return (
         <div className={styles["systemSetting"]}>
-            <div className={styles["title-box"]}>系统设置</div>
+            <div className={styles["title-box"]}>{t("SystemConfig.systemSettings")}</div>
             <Form
                 form={form}
                 layout='horizontal'
@@ -82,12 +84,16 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
                     collectData: false
                 }}
             >
-                <Form.Item label='水印' name='openWatermark' valuePropName={"checked"}>
-                    <YakitSwitch checkedChildren='开' unCheckedChildren='关' size='large' />
+                <Form.Item label={t("SystemConfig.watermark")} name='openWatermark' valuePropName={"checked"}>
+                    <YakitSwitch
+                        checkedChildren={t("SystemConfig.on")}
+                        unCheckedChildren={t("SystemConfig.off")}
+                        size='large'
+                    />
                 </Form.Item>
                 {openWatermarkWatch && (
                     <Form.Item
-                        label='水印内容'
+                        label={t("SystemConfig.watermarkContent")}
                         name='isCustomizeWatermark'
                         style={{marginBottom: 10}}
                         extra={
@@ -99,9 +105,9 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
                                     wrapperCol={{span: 6}}
                                     style={{marginLeft: 30}}
                                     name='watermarkValue'
-                                    rules={[{required: true, message: "请输入自定义水印内容"}]}
+                                    rules={[{required: true, message: t("SystemConfig.enterCustomWatermark")}]}
                                 >
-                                    <YakitInput maxLength={15} placeholder='不超过15个字' />
+                                    <YakitInput maxLength={15} placeholder={t("SystemConfig.watermarkPlaceholder")} />
                                 </Form.Item>
                             )
                         }
@@ -110,11 +116,11 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
                             options={[
                                 {
                                     value: 0,
-                                    label: "默认"
+                                    label: t("SystemConfig.default")
                                 },
                                 {
                                     value: 1,
-                                    label: "自定义"
+                                    label: t("SystemConfig.custom")
                                 }
                             ]}
                         />
@@ -139,7 +145,7 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
                 </Form.Item> */}
                 <Form.Item wrapperCol={{span: 12, offset: 2}}>
                     <YakitButton type='primary' onClick={handleClickSave}>
-                        保存
+                        {t("YakitButton.save")}
                     </YakitButton>
                 </Form.Item>
             </Form>

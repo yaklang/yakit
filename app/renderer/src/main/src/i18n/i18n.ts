@@ -10,6 +10,7 @@ i18n.use(HttpBackend)
         ns: [
             "yakitUi",
             "yakitRoute",
+            "core",
             "layout",
             "plugin",
             "yakitStore",

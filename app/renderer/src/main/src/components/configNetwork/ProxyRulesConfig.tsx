@@ -430,7 +430,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                 cancelText={t("YakitButton.cancel")}
                 className={styles["proxy-rules-config-modal"]}
             >
-                <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
+                <Form form={form} layout={"horizontal"} labelCol={{span: 8}} wrapperCol={{span: 16}}>
                     {isEndpoints ? (
                         <>
                             <Form.Item
@@ -679,7 +679,7 @@ export const ProxyTest = memo(
                     className={styles["proxy-test-modal"]}
                 >
                     <div className={styles["proxy-test-modal-content"]}>
-                        <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
+                        <Form form={form} layout={"horizontal"} labelCol={{span: 8}} wrapperCol={{span: 16}}>
                             <Form.Item
                                 label={t("ProxyConfig.Points")}
                                 name='Proxy'
