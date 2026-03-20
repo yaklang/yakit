@@ -299,14 +299,21 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
     return (
         <div ref={wrapperRef} className={classNames("stream-markdown", wrapperClassName)}>
             <ErrorBoundary
+                resetKeys={[content, theme]}
                 FallbackComponent={({error, resetErrorBoundary}) => {
                     if (!error) {
-                        return <div>未知错误</div>
+                        return (
+                            <div>
+                                <div>未知错误</div>
+                                <button onClick={resetErrorBoundary}>重试</button>
+                            </div>
+                        )
                     }
                     return (
                         <div>
                             <p>ai-agent逻辑性崩溃，请关闭重试！</p>
                             <pre>{error?.message}</pre>
+                            <button onClick={resetErrorBoundary}>重试</button>
                         </div>
                     )
                 }}
