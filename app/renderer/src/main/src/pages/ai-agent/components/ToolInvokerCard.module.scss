@@ -113,6 +113,9 @@
             -webkit-box-orient: vertical;
         }
     }
+    .pre-wrapper {
+        position: relative;
+    }
     &-wrapper {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 8px;
@@ -125,7 +128,7 @@
         border: 1px solid var(--Colors-Use-Neutral-Border);
         background-color: var(--Colors-Use-Neutral-Bg);
         max-height: 100px;
-        position: relative;
+
         &:hover {
             .copy-btn {
                 display: flex;

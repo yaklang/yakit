@@ -424,19 +424,21 @@ export const PreWrapper: React.FC<PreWrapperProps> = memo((props) => {
     }, [code, isAtBottom, autoScrollBottom])
 
     return (
-        <pre
-            ref={containerRef}
-            className={classNames(styles["file-system-wrapper"], className)}
-            style={{
-                ...style,
-                overflow: isScroll ? "auto" : "hidden"
-            }}
-            onClick={() => setIsScroll(true)}
-        >
-            <code>{code}</code>
-            <div className={styles["copy-btn"]}>
-                <CopyComponents copyText={code} className={styles["copy-icon"]} />
-            </div>
-        </pre>
+        <div className={styles["pre-wrapper"]}>
+            <pre
+                ref={containerRef}
+                className={classNames(styles["file-system-wrapper"], className)}
+                style={{
+                    ...style,
+                    overflow: isScroll ? "auto" : "hidden"
+                }}
+                onClick={() => setIsScroll(true)}
+            >
+                <code>{code}</code>
+                <div className={styles["copy-btn"]}>
+                    <CopyComponents copyText={code} className={styles["copy-icon"]} />
+                </div>
+            </pre>
+        </div>
     )
 })

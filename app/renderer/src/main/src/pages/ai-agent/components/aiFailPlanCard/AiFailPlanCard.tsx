@@ -4,6 +4,7 @@ import ChatCard from "../ChatCard"
 import styles from "./AiFailPlanCard.module.scss"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {TaskErrorIcon} from "../../aiTree/icon"
+import {PreWrapper} from "../ToolInvokerCard"
 
 const AiFailPlanCard: FC<{item: FailTaskChatError}> = ({item}) => {
     const {content} = item
@@ -13,11 +14,7 @@ const AiFailPlanCard: FC<{item: FailTaskChatError}> = ({item}) => {
             <div className={styles["ai-fail-plan-card"]}>
                 <div className={styles["ai-fail-plan-card-title"]}>失败原因</div>
                 <div className={styles["ai-fail-plan-card-content"]}>
-                    {content && (
-                        <pre className={styles["ai-fail-plan-card-code"]}>
-                            <code>{content}</code>
-                        </pre>
-                    )}
+                    {content && <PreWrapper code={content} autoScrollBottom />}
                 </div>
             </div>
         </ChatCard>
