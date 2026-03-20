@@ -108,6 +108,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         if (!!reviewInfo) {
             chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
         }
+        emiter.emit("onRefreshAITaskHistoryList")
     })
     /**取消当前执行的子任务 */
     const onStopSubTask = useMemoizedFn(() => {
@@ -120,6 +121,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
         setTimeout(() => {
             handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
+            emiter.emit("onRefreshAITaskHistoryList")
         }, 200)
     })
     const onExtraAction = useMemoizedFn((type: "stopTask" | "stopSubTask") => {
@@ -135,12 +137,21 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
     })
     const onRecover = useMemoizedFn(() => {
-        const coordinatorId = getTaskInfo()?.coordinatorId
-        if (!coordinatorId) return
+        const info = getTaskInfo()
+        const coordinatorId = info?.coordinatorId
+        const taskId = info?.taskID
+        if (!coordinatorId || !taskId) return
+        // 选停止当前任务，再发送恢复的数据
         handleSendSyncMessage({
-            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
-            SyncJsonInput: JSON.stringify({coordinator_id: coordinatorId})
+            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+            SyncJsonInput: JSON.stringify({task_id: taskId})
         })
+        setTimeout(() => {
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
+                SyncJsonInput: JSON.stringify({coordinator_id: coordinatorId})
+            })
+        }, 200)
         emiter.emit("onRefreshAITaskHistoryList")
         if (!!reviewInfo) {
             chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
@@ -216,20 +227,18 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                 return (
                     <YakitPopconfirm
                         onConfirm={() => onExtraAction("stopTask")}
-                        title='是否确认取消整个任务，确认将停止执行'
+                        title='是否确认取消执行当前任务规划，确认将停止执行'
                         placement='top'
                     >
-                        <Tooltip overlay='终止任务' placement='top'>
-                            <YakitButton
-                                type='primary'
-                                icon={<OutlineExitIcon />}
-                                className={styles["task-button"]}
-                                radius='28px'
-                                size='large'
-                                colors='danger'
-                                {...btnProps}
-                            />
-                        </Tooltip>
+                        <YakitButton
+                            type='primary'
+                            icon={<OutlineExitIcon />}
+                            className={styles["task-button"]}
+                            radius='28px'
+                            size='large'
+                            colors='danger'
+                            {...btnProps}
+                        />
                     </YakitPopconfirm>
                 )
             case AITaskStatus.error:

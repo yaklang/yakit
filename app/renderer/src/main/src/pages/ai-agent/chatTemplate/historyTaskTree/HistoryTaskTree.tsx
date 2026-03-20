@@ -13,6 +13,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {OutlineLoadingIcon} from "@/assets/icon/outline"
 import {AIChatLeft} from "../AIAgentChatTemplate"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     const {data, handleTabChange} = props
@@ -36,11 +37,19 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         chatIPCData.execute && handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
     })
     const onRecover = useMemoizedFn((coordinatorId: string) => {
-        if (!coordinatorId) return
+        const taskId = getTaskInfo()?.taskID
+        if (!coordinatorId || !taskId) return
+        // 选停止当前任务，再发送恢复的数据
         handleSendSyncMessage({
-            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
-            SyncJsonInput: JSON.stringify({coordinator_id: coordinatorId})
+            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+            SyncJsonInput: JSON.stringify({task_id: taskId})
         })
+        setTimeout(() => {
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
+                SyncJsonInput: JSON.stringify({coordinator_id: coordinatorId})
+            })
+        }, 200)
         handleTabChange(AIChatLeft.TaskTree)
     })
     const getTaskInfo = useMemoizedFn(() => {
@@ -82,13 +91,20 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                                 icon={<OutlineLoadingIcon className={styles["icon-primary"]} />}
                                             />
                                         ) : (
-                                            <YakitButton
-                                                type='text'
-                                                onClick={() => onRecover(item.coordinator_id)}
-                                                style={{paddingRight: 0}}
+                                            <YakitPopconfirm
+                                                title='停掉当前正在执行的任务，恢复此任务'
+                                                onConfirm={() => onRecover(item.coordinator_id)}
                                             >
-                                                继续任务
-                                            </YakitButton>
+                                                <YakitButton
+                                                    type='text'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                    style={{paddingRight: 0}}
+                                                >
+                                                    继续任务
+                                                </YakitButton>
+                                            </YakitPopconfirm>
                                         )}
                                     </div>
                                 }
