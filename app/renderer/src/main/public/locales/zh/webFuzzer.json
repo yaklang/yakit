@@ -609,7 +609,9 @@
     "edit_name": "修改名称",
     "no_condition_set": "暂未设置条件",
     "ruleName": "规则名",
-    "ruleContent": "规则内容"
+    "ruleContent": "规则内容",
+    "multiValueHintWithComma": "，支持逗号、分号或换行分隔多个",
+    "multiValueHintWithoutComma": "，支持分号或换行分隔多个"
   },
   "ExtractorItem": {
     "match_regex_group": "匹配正则分组",

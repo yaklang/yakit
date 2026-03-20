@@ -1062,7 +1062,9 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
                                     placeholder={
                                         supportCommaSeparated
                                             ? t("YakitInput.please_enter") +
-                                              (includeCommaDelimiter ? "，支持逗号、分号或换行分隔多个" : "，支持分号或换行分隔多个")
+                                                                                            (includeCommaDelimiter
+                                                                                                    ? t("ExtractorCollapse.multiValueHintWithComma")
+                                                                                                    : t("ExtractorCollapse.multiValueHintWithoutComma"))
                                             : t("YakitInput.please_enter")
                                     }
                                     className={styles["matcher-item-textarea"]}
