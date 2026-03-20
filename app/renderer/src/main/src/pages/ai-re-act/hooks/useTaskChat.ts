@@ -58,6 +58,12 @@ function useTaskChat(params?: UseTaskChatParams) {
         setPlan([])
     })
 
+    /** 正在执行中的叶子任务的mapKey集合(已结束的叶子任务会被移除) */
+    const activeLeafTasks = useRef<Set<string>>(new Set())
+    const handleResetActiveLeafTasks = useMemoizedFn(() => {
+        activeLeafTasks.current.clear()
+    })
+
     /** 任务节点开始执行, 生成UI展示的信息 */
     const handleTaskStartNode = useMemoizedFn((res: AIOutputEvent, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
         try {
@@ -70,11 +76,41 @@ function useTaskChat(params?: UseTaskChatParams) {
                 type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
                 data: {
                     taskIndex: nodeInfo.task.index,
-                    taskName: nodeInfo.task.name
+                    taskName: nodeInfo.task.name,
+                    goal: nodeInfo.task.goal,
+                    status: AITaskStatus.inProgress
                 }
             }
+            if (nodeInfo.task.task_uuid) chatData.id = nodeInfo.task.task_uuid
+            activeLeafTasks.current.add(chatData.id)
             setContentMap(chatData.id, chatData)
             setElements((old) => [...old, {token: chatData.id, type: chatData.type, renderNum: 1, chatType: "task"}])
+        } catch (error) {}
+    })
+    /** 任务节点结束执行, 更新UI展示的信息 */
+    const handleTaskEndNode = useMemoizedFn((nodeInfo: AIAgentGrpcApi.ChangeTask) => {
+        try {
+            // 任务树根节点不进行节点展示
+            if (nodeInfo.task.index === "1") return
+            // 任务结束时, 如果没有task_uuid则不进行UI更新, 因为无法确定哪个节点结束了
+            if (!nodeInfo.task.task_uuid) return
+
+            // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
+            activeLeafTasks.current.delete(nodeInfo.task.task_uuid)
+
+            const taskNodeInfo = getContentMap(nodeInfo.task.task_uuid)
+            if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+                return
+            }
+            taskNodeInfo.data.status = nodeInfo.task.task_status
+            setElements((old) => {
+                return old.map((item) => {
+                    if (item.token === taskNodeInfo.id && item.type === taskNodeInfo.type) {
+                        return {...item, renderNum: item.renderNum + 1}
+                    }
+                    return item
+                })
+            })
         } catch (error) {}
     })
 
@@ -90,6 +126,23 @@ function useTaskChat(params?: UseTaskChatParams) {
 
     /** 将任务树中, 所有进行中的任务, 变更为中止状态 */
     const handleAbortTaskState = useMemoizedFn(() => {
+        const leafTasks = activeLeafTasks.current
+        for (let mapKey of leafTasks) {
+            const taskNodeInfo = getContentMap(mapKey)
+            if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+                continue
+            }
+            taskNodeInfo.data.status = AITaskStatus.error
+            setElements((old) => {
+                return old.map((item) => {
+                    if (item.token === taskNodeInfo.id && item.type === taskNodeInfo.type) {
+                        return {...item, renderNum: item.renderNum + 1}
+                    }
+                    return item
+                })
+            })
+        }
+        handleResetActiveLeafTasks()
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
@@ -448,6 +501,8 @@ function useTaskChat(params?: UseTaskChatParams) {
 
                 if (!!data && typeof data === "object" && data?.type === "pop_task") {
                     // 结束任务 & 请求更新任务树最新状态数据
+                    const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
+                    handleTaskEndNode(info)
                     sendRequest && sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN})
                 }
                 return
@@ -530,6 +585,7 @@ function useTaskChat(params?: UseTaskChatParams) {
 
     const handleResetData = useMemoizedFn(() => {
         handleResetPlanTree()
+        handleResetActiveLeafTasks()
         handleResetReview()
         chatContentEvent.handleResetData()
         setElements([])

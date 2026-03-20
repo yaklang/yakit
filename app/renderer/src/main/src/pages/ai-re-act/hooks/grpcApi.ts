@@ -360,7 +360,17 @@ export declare namespace AIAgentGrpcApi {
     }
     /** 改变任务状态 */
     export interface ChangeTask {
-        task: PlanTask
+        task: {
+            index: string
+            /** 任务名 */
+            name: string
+            /** 正文 */
+            goal: string
+            /** 后端供(push_task|pop_task)对应的唯一标识 */
+            task_uuid?: string
+            /** 后端供pop_task反馈的任务执行状态 */
+            task_status?: AITaskStatus
+        }
         type: string
     }
     /** 更新任务状态、收集任务总结 */
