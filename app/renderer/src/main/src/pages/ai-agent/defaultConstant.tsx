@@ -106,7 +106,8 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     TimelineItemLimit: 100,
     TimelineContentSizeLimit: 20,
     UserInteractLimit: 0,
-    TimelineSessionID: ""
+    TimelineSessionID: "",
+    AICallTokenLimit: 40
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -161,7 +162,7 @@ export enum AITabsEnum {
     File_System = "file-system",
     HTTP = "http",
     Risk = "risk",
-    Operation_Log = "operation-log",
+    Operation_Log = "operation-log"
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {

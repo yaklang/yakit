@@ -2,11 +2,6 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n} from "./grpcApi"
 import {AIChatIPCStartParams} from "./type"
 
-/** AI Token 消耗量(上传/下载) */
-export interface AITokenConsumption {
-    [key: string]: AIAgentGrpcApi.Consumption
-}
-
 /** 工具流式输出里的可选操作列表 */
 export interface ToolStreamSelectors {
     callToolId: string

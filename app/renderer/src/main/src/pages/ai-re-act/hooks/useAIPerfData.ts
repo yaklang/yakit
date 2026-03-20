@@ -25,19 +25,12 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
                 // 消耗Token
                 // 因为可能存在多个 ai 并发输出，所以这里的 token 量是一个集合
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Consumption
-                const onlyId = data.consumption_uuid || "system"
-
                 const consumption = getChatDataStore?.()?.aiPerfData?.consumption
                 if (consumption) {
-                    const info = consumption[onlyId]
-                    if (
-                        info &&
-                        info.input_consumption === data.input_consumption &&
-                        info.output_consumption === data.output_consumption
-                    ) {
-                        return
-                    }
-                    consumption[onlyId] = data
+                    // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+                    consumption.input_consumption = data.input_consumption
+                    consumption.output_consumption = data.output_consumption
+                    consumption.tier_consumption = {...data.tier_consumption}
                 }
                 return
             }
@@ -47,30 +40,48 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Pressure
                 const pressure = getChatDataStore?.()?.aiPerfData?.pressure
                 if (pressure) {
-                    pressure.push({...data, timestamp: Number(res.Timestamp) || 0})
-                    if (pressure.length > 100) pressure.shift()
+                    // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+                    const target = pressure[data.model_tier]
+                    if (!target) {
+                        pressure[data.model_tier] = [{...data, timestamp: Number(res.Timestamp) || 0}]
+                    } else {
+                        target.push({...data, timestamp: Number(res.Timestamp) || 0})
+                        // if (target.length > 100) target.shift()
+                    }
                 }
                 return
             }
 
             if (res.Type === "ai_first_byte_cost_ms") {
                 // 首字符响应耗时
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIFirstCostMS
                 const firstCost = getChatDataStore?.()?.aiPerfData?.firstCost
                 if (firstCost) {
-                    firstCost.push({...data, timestamp: Number(res.Timestamp) || 0})
-                    if (firstCost.length > 100) firstCost.shift()
+                    // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+                    const target = firstCost[data.model_tier]
+                    if (!target) {
+                        firstCost[data.model_tier] = [{...data, timestamp: Number(res.Timestamp) || 0}]
+                    } else {
+                        target.push({...data, timestamp: Number(res.Timestamp) || 0})
+                        // if (target.length > 100) target.shift()
+                    }
                 }
                 return
             }
 
             if (res.Type === "ai_total_cost_ms") {
                 // 总对话耗时
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AITotalCostMS
                 const totalCost = getChatDataStore?.()?.aiPerfData?.totalCost
                 if (totalCost) {
-                    totalCost.push({...data, timestamp: Number(res.Timestamp) || 0})
-                    if (totalCost.length > 100) totalCost.shift()
+                    // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
+                    const target = totalCost[data.model_tier]
+                    if (!target) {
+                        totalCost[data.model_tier] = [{...data, timestamp: Number(res.Timestamp) || 0}]
+                    } else {
+                        target.push({...data, timestamp: Number(res.Timestamp) || 0})
+                        // if (target.length > 100) target.shift()
+                    }
                 }
                 return
             }

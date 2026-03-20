@@ -1,5 +1,5 @@
 import {UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
-import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {ReActChatRenderItem} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
@@ -12,13 +12,13 @@ export interface AIChatData {
     /** 性能相关数据 */
     aiPerfData: {
         /** 消耗Token */
-        consumption: AITokenConsumption
+        consumption: AIAgentGrpcApi.Consumption
         /** 上下文压力 */
-        pressure: AIAgentGrpcApi.Pressure[]
+        pressure: Record<AIAgentGrpcApi.Pressure["model_tier"], AIAgentGrpcApi.Pressure[]>
         /** 首字符响应耗时 */
-        firstCost: AIAgentGrpcApi.AICostMS[]
+        firstCost: Record<AIAgentGrpcApi.AIFirstCostMS["model_tier"], AIAgentGrpcApi.AIFirstCostMS[]>
         /** 总对话耗时 */
-        totalCost: AIAgentGrpcApi.AICostMS[]
+        totalCost: Record<AIAgentGrpcApi.AITotalCostMS["model_tier"], AIAgentGrpcApi.AITotalCostMS[]>
     }
     /** 自由对话(ReAct)会话 */
     casualChat: UseChatIPCState["casualChat"] & {
