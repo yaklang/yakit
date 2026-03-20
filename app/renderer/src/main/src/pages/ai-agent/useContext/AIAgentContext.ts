@@ -17,7 +17,7 @@ export interface AIAgentContextDispatcher {
     setChats?: Dispatch<SetStateAction<AIChatInfo[]>>
     getChats?: () => AIChatInfo[]
     setActiveChat?: Dispatch<SetStateAction<AIChatInfo | undefined>>
-    loadHistoryData?: (next: boolean) => Promise<number>
+    loadHistoryData?: () => Promise<number>
     // getChatData?: (session: string) => AIChatData | undefined
 }
 

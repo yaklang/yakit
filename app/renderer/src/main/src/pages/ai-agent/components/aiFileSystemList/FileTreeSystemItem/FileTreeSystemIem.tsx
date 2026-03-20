@@ -56,7 +56,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
             },
             {
                 key: "closeFolder",
-                label: "关闭文件夹",
+                label: <span style={{color:'var(--Colors-Use-Error-Primary)'}}>移除</span>,
                 isHide: !(data.depth === 1 && isOpen)
             }
         ]

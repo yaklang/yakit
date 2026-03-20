@@ -40,6 +40,22 @@ import {AIBottomDetails} from "./aiBottomDetails/AIBottomDetails"
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = "20260113"
 
+const initialHistoryPagination = {
+    Page: 1,
+    Limit: 10,
+    OrderBy: "",
+    Order: "",
+    total: 0
+}
+
+const mergeUniqueChats = (prev: AIChatInfo[], next: AIChatInfo[]) => {
+    if (!next.length) return prev
+
+    const sessionIds = new Set(prev.map((item) => item.SessionID))
+    const uniqueNext = next.filter((item) => !sessionIds.has(item.SessionID))
+    return uniqueNext.length ? [...prev, ...uniqueNext] : prev
+}
+
 const {ipcRenderer} = window.require("electron")
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
@@ -48,14 +64,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
 
     // 历史对话
-    const [pagination, setPagination] = useState({
-        Page: 1,
-        Limit: 10,
-        OrderBy: "",
-        Order: "",
-        total: 0
-    })
+    const [_, setPagination, getPagination] = useGetSetState(cloneDeep(initialHistoryPagination))
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
+    const historyLoadingRef = useRef(false)
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
@@ -99,19 +110,32 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     }, [setting])
 
     const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
+        if (historyLoadingRef.current) {
+            return getPagination().total || 0
+        }
+
+        const currentPagination = getPagination()
+        const currentChats = getChats()
+        if (currentPagination.total > 0 && currentChats.length >= currentPagination.total) {
+            return currentPagination.total
+        }
+
+        historyLoadingRef.current = true
         try {
             const {Data, Total} = await grpcQueryAISession({
-                Pagination: pagination
+                Pagination: currentPagination
             })
-            setChats((prev) => [...prev, ...Data])
-            setPagination((prev) => ({
-                ...prev,
-                Page: pagination.Page + 1,
+            setChats((prev) => mergeUniqueChats(prev, Data))
+            setPagination({
+                ...currentPagination,
+                Page: currentPagination.Page + 1,
                 total: Total
-            }))
+            })
             return Total
         } catch {
-            return 0
+            return currentPagination.total || 0
+        } finally {
+            historyLoadingRef.current = false
         }
     })
 

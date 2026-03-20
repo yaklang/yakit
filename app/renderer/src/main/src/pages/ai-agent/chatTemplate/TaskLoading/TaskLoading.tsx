@@ -49,7 +49,7 @@ const TaskLoading: FC<{
         systemStream
     })
     return (
-        <div className={classNames(styles["task-loading-wrapper"], className)}>
+        <div className={classNames(styles["task-loading"], className)}>
             {taskStatus.loading && (
                 <>
                     <Loading

@@ -1,5 +1,5 @@
 import {ChatReferenceMaterialPayload, ReActChatElement} from "@/pages/ai-re-act/hooks/aiRender"
-import {type CSSProperties, useState, type FC, useRef, useEffect} from "react"
+import {type CSSProperties, useState, type FC, useRef, useEffect, useMemo} from "react"
 import styles from "./AIGroupStreamCard.module.scss"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -82,6 +82,7 @@ const AIStreamNode: FC<{
 }
 
 const BOTTOM_THRESHOLD = 10
+const STREAM_MASK_THRESHOLD = 170
 
 const AIGroupStreamCard: FC<{
     elements: ReActChatElement[]
@@ -92,6 +93,8 @@ const AIGroupStreamCard: FC<{
     const {stream} = useTypedStream({chatType: lastElement.chatType, token: lastElement.token, session})
     const {nodeLabel} = useAINodeLabel(stream?.data.NodeIdVerbose)
     const [expand, setExpand] = useState(true)
+    const content = stream?.data.content || ""
+    const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
     const contentRef = useRef<HTMLDivElement>(null)
     const [isScroll, setIsScroll] = useState(false)
     const allowAutoScrollRef = useRef<boolean>(true)
@@ -171,8 +174,9 @@ const AIGroupStreamCard: FC<{
                     {/* <OutlineSparklesColorsIcon /> */}
                     <span> {nodeLabel}</span>
                 </div>
-                <div className={classNames(styles["stream-text"], expand ? styles.collapsed : "")}>
-                    <p>{!expand && <span>{stream.data.content}</span>}</p>
+                <div className={styles["stream-text"]}>
+                    {shouldShowMask && <div className={styles["ai-mask"]} />}
+                    <p>{!expand && <span>{content}</span>}</p>
                 </div>
                 <YakitButton type='text' icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />} />
             </div>
