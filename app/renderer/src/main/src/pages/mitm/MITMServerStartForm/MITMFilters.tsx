@@ -209,7 +209,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
 type MITMAdvancedFilterSearchType = "ruleName" | "ruleContent"
 
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
-    const {t} = useI18nNamespaces(["mitm"])
+    const {t} = useI18nNamespaces(["mitm", "webFuzzer"])
     const {visible = true} = props
 
     const [activeKey, setActiveKey] = useControllableValue<string | string[]>(props, {
@@ -228,7 +228,6 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
     const [editNameVisible, setEditNameVisible] = useState(false)
     const [currentIndex, setCurrentIndex] = useState<number>(-1)
     const [draftRuleName, setDraftRuleName] = useState("")
-    const {t} = useI18nNamespaces(["webFuzzer"])
 
     const onEdit = useMemoizedFn((field: string, value, index: number) => {
         filterData[index][field] = value
