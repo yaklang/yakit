@@ -1,4 +1,4 @@
-import React, {useEffect, useImperativeHandle, useState, useMemo} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {Form, Spin} from "antd"
 import {useControllableValue, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "../../../utils/notification"
@@ -21,7 +21,10 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {FilterType} from "./MITMFiltersModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
+import { PencilAltIcon } from "@/assets/newIcon"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { YakitCombinationSearch } from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -300,18 +303,22 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
             })}
         >
             <div className={styles["filter-operation"]}>
-                <YakitInput.Search
-                    onSearch={(value) => {
-                        setSearchValue(value)
-                        if (!value) return
-                        const matchedKeys: string[] = []
-                        filterData.forEach((item, index) => {
-                            const hasMatch = item.Group.some((g) => g.toLowerCase().includes(value.toLowerCase()))
-                            if (hasMatch) {
-                                matchedKeys.push(`ID:${index}`)
-                            }
-                        })
-                        setActiveKey(matchedKeys)
+                <YakitCombinationSearch
+                    beforeOptionWidth={96}
+                    valueBeforeOption={searchType}
+                    addonBeforeOption={[
+                        {label: t("ExtractorCollapse.ruleName"), value: "ruleName"},
+                        {label: t("ExtractorCollapse.ruleContent"), value: "ruleContent"}
+                    ]}
+                    onSelectBeforeOption={(value) => {
+                        if(searchType === value) return
+                        setSearchType(value as MITMAdvancedFilterSearchType)
+                        setSearchValue("")
+                    }}
+                    wrapperClassName={classNames(styles["filter-content-search"])}
+                    inputSearchModuleTypeProps={{
+                        onSearch: setSearchValue,
+                        allowClear: true,
                     }}
                 />
                 <YakitButton type='text' disabled={!!searchValue} onClick={onAddAdvancedSetting}>
@@ -327,19 +334,57 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                 >
                     {filterData!.map((filterItem, index) => {
                         const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
-
-                        if (
-                            !!searchValue &&
-                            filterItem.Group.every((g) => !g.toLowerCase().includes(searchValue.toLowerCase()))
-                        )
-                            return null
-
+                        if (!!searchValue && !isMatchedSearch(filterItem, searchValue, index)) return null
+                        const displayName = filterItem.RuleName || `规则_${index}`
                         return (
                             <YakitPanel
                                 header={
                                     <div className={styles["collapse-panel-header"]}>
                                         <span className={classNames(styles["header-id"])}>
-                                            <span>{t("MITMAdvancedFilters.ruleIndex", {index})}</span>
+                                            <span>{displayName}</span>
+                                            <YakitPopover
+                                                overlayClassName={styles["edit-name-popover"]}
+                                                content={
+                                                    <div
+                                                        className={styles["edit-name-popover-content"]}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <div className={styles["edit-name-popover-content-title"]}>
+                                                            {t("ExtractorCollapse.edit_name")}
+                                                        </div>
+                                                        <YakitInput
+                                                            value={draftRuleName}
+                                                            onChange={(e) => {
+                                                                setDraftRuleName(e.target.value)
+                                                            }}
+                                                            onPressEnter={() => {
+                                                                setEditNameVisible(false)
+                                                                onCloseEditName()
+                                                            }}
+                                                            maxLength={20}
+                                                        />
+                                                    </div>
+                                                }
+                                                placement='top'
+                                                trigger={["click"]}
+                                                visible={editNameVisible && currentIndex === index}
+                                                onVisibleChange={(visible) => {
+                                                    setEditNameVisible(visible)
+                                                    if (!visible) {
+                                                        onCloseEditName()
+                                                    }
+                                                }}
+                                            >
+                                                <PencilAltIcon
+                                                    className={classNames({
+                                                        [styles["icon-active"]]: editNameVisible && currentIndex === index
+                                                    })}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onStartEditName(index, displayName)
+                                                    }}
+                                                />
+                                            </YakitPopover>
                                         </span>
                                         <span>[{name}]</span>
                                         {filterItem.Group.length > 0 ? (
