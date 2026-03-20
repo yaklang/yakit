@@ -119,7 +119,7 @@
         "complete_variable_before_add": "Please complete the settings for Variable {index} before adding another one",
         "shareFailed": "Share failed{colon}",
         "reName_success": "ReName Success",
-        "modifySuccess": "Modified successfully",
+        "modifySuccess": "Modification successfully",
         "modifyFailed": "Modifie failed{colon}",
         "editFailed": "Edit failed{colon}",
         "createSuccess": "Created successfully",
