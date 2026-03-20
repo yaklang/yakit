@@ -101,12 +101,18 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     })
 
     const button = useMemo(() => {
-        if (!hasTaskTree) return <YakitButton size='middle'>时间线</YakitButton>
+        if (!hasTaskTree && !chatIPCData.execute) return <YakitButton size='middle'>时间线</YakitButton>
         let options = [
-            {label: "任务树", value: AIChatLeft.TaskTree},
-            {label: "时间线", value: AIChatLeft.Timeline},
-            {label: "历史任务", value: AIChatLeft.HistoryTaskTree}
+            // {label: "任务树", value: AIChatLeft.TaskTree},
+            {label: "时间线", value: AIChatLeft.Timeline}
+            // {label: "历史任务", value: AIChatLeft.HistoryTaskTree}
         ]
+        if (hasTaskTree) {
+            options.unshift({label: "任务树", value: AIChatLeft.TaskTree})
+        }
+        if (chatIPCData.execute) {
+            options.push({label: "历史任务", value: AIChatLeft.HistoryTaskTree})
+        }
         return (
             <YakitRadioButtons
                 buttonStyle='solid'
@@ -117,7 +123,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                 onChange={({target}) => handleTabChange(target.value)}
             />
         )
-    }, [activeTab, handleTabChange, hasTaskTree, planHistoryList.total])
+    }, [activeTab, handleTabChange, hasTaskTree, planHistoryList.total, chatIPCData.execute])
     const extraProps = useCreation(() => {
         let p: Omit<YakitResizeBoxProps, "firstNode" | "secondNode"> = {}
         if (!length) {
@@ -227,7 +233,13 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     )
 
     const Footer = useCallback(
-        () => <TaskLoading className={styles["task-loading-footer"]} taskStatus={taskStatus} systemStream={systemStream} />,
+        () => (
+            <TaskLoading
+                className={styles["task-loading-footer"]}
+                taskStatus={taskStatus}
+                systemStream={systemStream}
+            />
+        ),
         [taskStatus, systemStream]
     )
 
@@ -242,7 +254,11 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const onScrollToIndex = useMemoizedFn((id) => {
         const index = streams.findIndex((item) => {
             if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
-                const chatItem = fetchChatDataStore()?.getContentMap({session, chatType: item.chatType, mapKey: item.token})
+                const chatItem = fetchChatDataStore()?.getContentMap({
+                    session,
+                    chatType: item.chatType,
+                    mapKey: item.token
+                })
                 if (!chatItem) return false
                 const taskIndex = (chatItem.data as AITaskStartInfo).taskIndex
                 return taskIndex === id
@@ -337,7 +353,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                         modalInfo={{
                                             time: Timestamp,
                                             title: info.AIModelName,
-                                            icon: info.AIService,
+                                            icon: info.AIService
                                         }}
                                         operationInfo={{aiFilePath}}
                                         fileList={fileList}

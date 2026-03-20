@@ -133,7 +133,7 @@ const AIContextToken: FC<{
                         <span className={styles["text"]}>
                             上下文压力<span className={styles["tip"]}>(峰值)</span>
                         </span>
-                        {maxIntelligentPressure && (
+                        {!!maxIntelligentPressure && (
                             <Tooltip title='高质模型'>
                                 <span
                                     className={classNames(styles["intelligent"], {
@@ -144,7 +144,7 @@ const AIContextToken: FC<{
                                 </span>
                             </Tooltip>
                         )}
-                        {maxLightweightPressure && (
+                        {!!maxLightweightPressure && (
                             <Tooltip title='轻量模型'>
                                 <span
                                     className={classNames(styles["lightweight"], {
@@ -166,12 +166,12 @@ const AIContextToken: FC<{
                             响应速度<span className={styles["tip"]}>(峰值)</span>
                         </span>
                         <Tooltip title='高质模型'>
-                            {maxIntelligentCost && (
+                            {!!maxIntelligentCost && (
                                 <span className={classNames(styles["intelligent"])}>{`${maxIntelligentCost}ms`}</span>
                             )}
                         </Tooltip>
                         <Tooltip title='轻量模型'>
-                            {maxLightweightCost && (
+                            {!!maxLightweightCost && (
                                 <span className={classNames(styles["lightweight"])}>{`${maxLightweightCost}ms`}</span>
                             )}
                         </Tooltip>
