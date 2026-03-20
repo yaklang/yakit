@@ -140,12 +140,14 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         const info = getTaskInfo()
         const coordinatorId = info?.coordinatorId
         const taskId = info?.taskID
-        if (!coordinatorId || !taskId) return
+        if (!coordinatorId) return
         // 选停止当前任务，再发送恢复的数据
-        handleSendSyncMessage({
-            syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-            SyncJsonInput: JSON.stringify({task_id: taskId})
-        })
+        !!taskId &&
+            handleSendSyncMessage({
+                syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+                SyncJsonInput: JSON.stringify({task_id: taskId})
+            })
+
         setTimeout(() => {
             handleSendSyncMessage({
                 syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
