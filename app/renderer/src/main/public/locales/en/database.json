@@ -10,10 +10,10 @@
       "confirmClearList": "Are you sure you want to clear the list?"
     },
     "PortAssetQuery": {
-      "noFingerprint": "暂无指纹信息"
+      "noFingerprint": "No fingerprint information available."
     },
     "PortAssetDescription": {
-      "state": "状态"
+      "state": "state"
     }
   }
 }
