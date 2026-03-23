@@ -113,10 +113,15 @@
             -webkit-box-orient: vertical;
         }
     }
-    .pre-wrapper {
-        position: relative;
+}
+
+.pre-wrapper {
+    position: relative;
+    code {
+        white-space: break-spaces;
     }
-    &-wrapper {
+
+    .file-system-wrapper {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 8px;
         font-size: 12px;
@@ -165,10 +170,8 @@
             }
         }
     }
-    code {
-        white-space: break-spaces;
-    }
 }
+
 .file-system-icon svg {
     width: 16px;
     height: 16px;
