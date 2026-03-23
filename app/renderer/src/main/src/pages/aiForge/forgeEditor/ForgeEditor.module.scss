@@ -1,3 +1,5 @@
+@use "../../../styles/mixin.scss" as mixin;
+
 // #region ForgeEditor
 .forge-editor {
     width: 100%;
@@ -17,6 +19,7 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
     .header-title {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 16px;
@@ -54,9 +57,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     .header-left {
         display: flex;
         align-items: center;
+
         .left-title {
             color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
@@ -64,14 +69,17 @@
             line-height: 16px;
         }
     }
+
     .header-right {
         display: flex;
         align-items: center;
         gap: 8px;
+
         .switch-wrapper {
             display: flex;
             align-items: center;
             gap: 8px;
+
             .switch-title {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 11px;
@@ -88,10 +96,12 @@
     width: 100%;
     overflow: hidden;
 }
+
 .right-pane {
     width: 100%;
     height: 100%;
 }
+
 .right-pane-hidden {
     display: none;
 }
@@ -99,6 +109,7 @@
 .right-pane-code-and-params {
     border-top: 1px solid var(--Colors-Use-Neutral-Border);
 }
+
 // #endregion
 
 // #region AIForgeEditorInfoForm
@@ -109,6 +120,7 @@
     border-right: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Basic-Background);
     display: flex;
+
     .editor-info-form {
         width: 360px;
         height: 100%;
@@ -119,6 +131,7 @@
         display: flex;
         flex-direction: column;
     }
+
     .editor-side-bar {
         width: 0px;
         height: 100%;
@@ -130,11 +143,13 @@
         flex-direction: column;
     }
 }
+
 .ai-forge-editor-info-hidden {
     .editor-info-form {
         width: 0px;
         opacity: 0;
     }
+
     .editor-side-bar {
         width: 28px;
         opacity: 1;
@@ -148,9 +163,11 @@
     flex-wrap: nowrap;
     gap: 4px;
     cursor: pointer;
+
     .expand-btn {
         border-radius: 50%;
     }
+
     .header-title {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
@@ -159,6 +176,7 @@
         letter-spacing: 0.5px;
     }
 }
+
 .editor-side-bar-header {
     padding: 8px 4px 4px 4px;
     display: flex;
@@ -166,9 +184,11 @@
     align-items: center;
     gap: 4px;
     cursor: pointer;
+
     .expand-btn {
         border-radius: 50%;
     }
+
     .header-title {
         text-align: center;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -183,6 +203,7 @@
     padding: 8px 12px 12px 12px;
     overflow: hidden auto;
 }
+
 .form-container {
     :global {
         .form-item-required {
@@ -195,10 +216,12 @@
 
         .ant-row.ant-form-item {
             gap: 2px;
+
             .ant-form-item-label {
                 padding-bottom: 0;
             }
-            .ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+
+            .ant-form-item-label>label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
                 display: none;
             }
         }
@@ -215,6 +238,7 @@
             }
         }
     }
+
     .item-select {
         :global {
             .ant-select-selector {
@@ -224,6 +248,7 @@
             }
         }
     }
+
     .item-select-prefix-icon {
         position: absolute;
         top: 0;
@@ -234,6 +259,7 @@
         padding-right: 8px;
         display: flex;
         align-items: center;
+
         svg {
             width: 16px;
             height: 16px;
@@ -244,36 +270,44 @@
 
 .forge-type-select {
     width: 100%;
+
     :global(.ant-select-selection-item) {
         height: 21px;
+
         .forge-type-select-option {
             padding: 0;
             align-items: center;
+
             .description-style {
                 display: none;
             }
         }
     }
 }
+
 .forge-type-select-dropdown {
     border-radius: 4px;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Basic-Background);
     box-shadow: 0px 8px 16px 0px rgba(133, 137, 158, 0.1);
 }
+
 .forge-type-select-option {
     width: 100%;
     padding: 4px;
     display: flex;
     align-items: center;
     gap: 8px;
+
     .header-icon {
         width: 16px;
+
         svg {
             width: 16px;
             height: 16px;
         }
     }
+
     .type-content {
         flex: 1;
         overflow: hidden;
@@ -284,6 +318,7 @@
         font-weight: 600;
     }
 }
+
 // #endregion
 
 // #region PromptAndActiveTextarea
@@ -294,10 +329,12 @@
     gap: 4px;
     border-radius: 4px 4px 0 0;
     background: var(--Colors-Use-Basic-Background);
+
     .textarea-header {
         display: flex;
         align-items: center;
         gap: 4px;
+
         .header-title {
             color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
@@ -305,8 +342,10 @@
             line-height: 16px;
             letter-spacing: 0.5px;
         }
+
         .header-hint-icon {
             cursor: pointer;
+
             svg {
                 width: 16px;
                 height: 16px;
@@ -314,6 +353,7 @@
             }
         }
     }
+
     .textarea-body {
         max-height: 120px !important;
     }
@@ -327,6 +367,7 @@
 .textarea-hint-icon-tooltip {
     padding-bottom: 2px;
 }
+
 // #endregion
 
 // #region AIForgeEditorPromptAndAction
@@ -338,6 +379,7 @@
     gap: 8px;
     overflow: hidden auto;
 }
+
 // #endregion
 
 // #region AIForgeEditorCodeAndParams
@@ -347,10 +389,12 @@
     overflow: hidden;
     display: flex;
 }
+
 .editor-code-wrapper {
     flex: 1;
     overflow: hidden;
 }
+
 .editor-params-preview-wrapper {
     width: 301px;
     height: 100%;
@@ -364,6 +408,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+
         .header-title {
             color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
@@ -377,12 +422,13 @@
             align-items: center;
         }
     }
+
     .params-preview-container {
         flex: 1;
         overflow: hidden auto;
 
         :global {
-            .ant-form-item-label > label {
+            .ant-form-item-label>label {
                 font-size: 12px;
             }
         }
@@ -390,21 +436,25 @@
         .custom-params-wrapper {
             padding: 0 12px;
         }
+
         .optional-params-wrapper {
             padding: 0 12px;
         }
+
         .additional-params-divider {
             margin: 16px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 4px;
+
             .text-style {
                 color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
             }
+
             .divider-style {
                 flex: 1;
                 overflow: hidden;
@@ -422,4 +472,226 @@
         }
     }
 }
+
+// #endregion
+
+// #region AIForgeEditorSkillFiles
+.ai-forge-editor-skill-milkdown {
+    width: 98%;
+    height: 100%;
+    overflow: auto;
+    background-color: var(--Colors-Use-Basic-Background);
+    margin: auto;
+    padding: 8px;
+
+    p {
+        margin-bottom: 0;
+    }
+
+    :global {
+        .milkdown .editor {
+            padding: 0;
+        }
+    }
+}
+
+// #endregion
+
+// #region AIForgeEditorSkillFiles
+.ai-forge-editor-skill-files {
+    height: 100%;
+    margin: 0 12px;
+
+    .fileTree-wrapper {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .fileTree-header {
+            padding: 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .title-style {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+            }
+
+            .extra {
+                display: flex;
+                gap: 8px;
+            }
+        }
+
+        .fileTree-tree {
+            padding: 0 12px;
+            flex: 1;
+            overflow: auto;
+        }
+    }
+
+}
+
+// #endregion
+
+// #region AIForgeSkillFileCont
+.ai-forge-skill-file-cont {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &-title {
+        padding: 12px;
+        padding-left: 10px;
+
+        &-icon {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            &-left {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                width: 0;
+                flex: 1;
+
+                img {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 4px;
+                }
+
+                p {
+                    margin: 0;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 14px;
+                    font-weight: 500;
+                    @include mixin.text-ellipsis;
+                }
+            }
+
+            &-right {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                // svg {
+                //     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                // }
+            }
+        }
+
+        &-path {
+            padding: 4px 0;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 16px;
+            @include mixin.text-ellipsis;
+        }
+    }
+
+    &-content {
+        width: 100%;
+        flex: 1;
+        height: 0;
+    }
+
+    &-empty {
+        width: 320px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: auto;
+        gap: 16px;
+
+        &-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+
+            &-text {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 32px;
+                font-weight: 500;
+                line-height: 40px;
+            }
+
+            &-subtitle {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                font-size: 16px;
+                line-height: 24px;
+                font-weight: 400;
+            }
+        }
+
+        &-content {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+
+            &-button {
+                width: 100%;
+                background: var(--Colors-Use-Neutral-Bg);
+                text-align: left;
+                display: flex;
+                justify-content: flex-start;
+            }
+
+            &-recent {
+                padding: 8px 0;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+
+                &-title {
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 500;
+                    line-height: 20px;
+                    letter-spacing: 0.1px;
+                }
+
+                &-list {
+                    &-item {
+                        width: 100%;
+                        height: 24px;
+                        padding: 0 4px;
+                        color: var(--Colors-Use-Main-Primary);
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                        letter-spacing: 0.5px;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        white-space: nowrap;
+
+                        span {
+                            color: var(--Colors-Use-Neutral-Disable);
+                            @include mixin.text-ellipsis;
+                        }
+
+                        &:hover {
+                            background: var(--Colors-Use-Neutral-Bg-Hover);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // #endregion

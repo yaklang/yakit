@@ -39,6 +39,12 @@ export interface FileNodeProps {
     icon: string
     // 是否新建
     isCreate?: boolean
+    // 是否重命名（yakRunner未使用、ai文件树在使用）
+    isRename?: boolean
+    // 是否被删除（yakRunner未使用、ai文件树在使用）
+    isDelete?: boolean
+    // 是否只读（yakRunner未使用、ai文件树在使用）
+    isReadOnly?: boolean
     // 层级
     depth: number
     // 底部占位

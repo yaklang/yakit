@@ -1,7 +1,8 @@
 const {ipcMain, shell} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
-const {yakProjects} = require("../filePath")
+const {yakProjects, yakTemp} = require("../filePath")
 const fs = require("fs")
+const path = require("path")
 
 module.exports = (win, getClient) => {
     // #region AI-Task
@@ -252,6 +253,11 @@ module.exports = (win, getClient) => {
         }
         let stream = getClient().ExportAIForge(params)
         handlerHelper.registerHandler(win, stream, exportAIForgeMap, token)
+    })
+
+    // 生成 yakit-projects 文件夹下 temp 里面的文件路径
+    ipcMain.handle("GenerateTempFilePath", async (e, fileName) => {
+        return path.join(yakTemp, fileName)
     })
     // #endregion
 

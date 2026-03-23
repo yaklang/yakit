@@ -26,6 +26,9 @@ export interface AIForgeEditorInfoFormProps {
     ref?: ForwardedRef<AIForgeEditorInfoFormRef>
     setType: Dispatch<SetStateAction<AIForge["ForgeType"]>>
     setContent: (content: string) => void
+    skillPath: string
+    setSkillPath: Dispatch<SetStateAction<string>>
+    createTemporarySkillDirectory: () => Promise<string>
 }
 
 export interface PromptAndActiveTextareaProps {
@@ -41,9 +44,27 @@ export interface AIForgeEditorPromptAndActionProps {
     setPromptAction: Dispatch<SetStateAction<ConfigTypeForgePromptAction>>
 }
 
+export interface AIForgeMilkdownProps extends AIForgeMilkdownBaseProps {}
+export interface AIForgeMilkdownBaseProps {
+    /** true 只读 */
+    readonly?: boolean
+    /** 值变化 */
+    onUpdateContent?: (nextMarkdown: string) => void
+    /** 默认值 */
+    defaultValue?: string
+    classNameWrapper?: string
+    onUpdateEditor?: (s: EditorMilkdownProps) => void
+}
+
 export interface AIForgeEditorCodeAndParamsProps {
     content: string
     setContent: (value: string) => void
     triggerParse?: boolean
     className?: string
+}
+
+export interface AIForgeEditorSkillFilesProps {
+    skillPath: string
+    setSkillPath: Dispatch<SetStateAction<string>>
+    createTemporarySkillDirectory: () => Promise<string>
 }

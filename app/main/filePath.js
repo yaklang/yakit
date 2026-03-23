@@ -125,6 +125,9 @@ const windowStatePatch = path.join(basicDir)
 /** yak 项目相关文件路径 */
 const yakProjects = path.join(YakitProjectPath, "projects")
 
+/** yak temp相关文件路径 */
+const yakTemp = path.join(YakitProjectPath, "temp")
+
 module.exports = {
     YakitProjectPath,
 
@@ -149,6 +152,8 @@ module.exports = {
     htmlTemplateDir,
     windowStatePatch,
     yakProjects,
+
+    yakTemp,
 
     yakOnlineRagLastest
 }

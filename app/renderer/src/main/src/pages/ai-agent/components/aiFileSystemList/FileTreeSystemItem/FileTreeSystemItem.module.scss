@@ -7,11 +7,32 @@
     gap: 2px;
     height: 22px;
     border-radius: 4px;
+
+    .file-tree-input-wrapper {
+        flex: 1;
+        padding: 0 4px;
+
+        .file-tree-input {
+            height: 16px;
+
+            .file-tree-input {
+                padding: 0px;
+                height: 16px;
+            }
+
+            input {
+                border: 0;
+            }
+        }
+    }
+
     span {
         font-size: 12px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
         @include mixin.text-ellipsis(1, false, false, true);
     }
+
+
     img {
         width: 16px;
         height: 16px;
