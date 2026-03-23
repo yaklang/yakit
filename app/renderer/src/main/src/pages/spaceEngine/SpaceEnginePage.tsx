@@ -1,15 +1,15 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, { ReactNode, useEffect, useRef, useState } from "react"
 import styles from "./SpaceEnginePage.module.scss"
-import {OutlineInformationcircleIcon, OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
-import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
-import {YakitRouteToPageInfo} from "@/routes/newRoute"
+import { OutlineInformationcircleIcon, OutlineQuestionmarkcircleIcon } from "@/assets/icon/outline"
+import { ExpandAndRetract, ExpandAndRetractExcessiveState } from "../plugins/operator/expandAndRetract/ExpandAndRetract"
+import { useCreation, useInViewport, useMemoizedFn } from "ahooks"
+import { PageNodeItemProps, usePageInfo } from "@/store/pageInfo"
+import { shallow } from "zustand/shallow"
+import { YakitRouteToPageInfo } from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
-import {Form} from "antd"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { Form } from "antd"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
     GetSpaceEngineStatusProps,
     apiCancelFetchPortAssetFromSpaceEngine,
@@ -20,26 +20,26 @@ import {
     apiSetGlobalNetworkConfig,
     handleAIConfig
 } from "./utils"
-import {yakitNotify} from "@/utils/notification"
+import { yakitNotify } from "@/utils/notification"
 import {
     GlobalNetworkConfig,
     ThirdPartyApplicationConfig,
     defaultParams
 } from "@/components/configNetwork/ConfigNetworkPage"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {OutputFormComponentsByType} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {YakParamProps} from "../plugins/pluginsType"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {SpaceEngineStartParams, SpaceEngineStatus, getDefaultSpaceEngineStartParams} from "@/models/SpaceEngine"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { OutputFormComponentsByType } from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import { YakParamProps } from "../plugins/pluginsType"
+import { YakitInputNumber } from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import { SpaceEngineStartParams, SpaceEngineStatus, getDefaultSpaceEngineStartParams } from "@/models/SpaceEngine"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {randomString} from "@/utils/randomUtil"
+import { randomString } from "@/utils/randomUtil"
 import classNames from "classnames"
-import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {ZoomeyeHelp} from "./ZoomeyeHelp"
-import {YakitRoute} from "@/enums/yakitRoute"
+import { PluginExecuteResult } from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import { ZoomeyeHelp } from "./ZoomeyeHelp"
+import { YakitRoute } from "@/enums/yakitRoute"
 import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 interface SpaceEnginePageProps {
     /**页面id */
@@ -47,9 +47,9 @@ interface SpaceEnginePageProps {
 }
 
 export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props) => {
-    const {t, i18n} = useI18nNamespaces(["spaceEngine", "yakitUi"])
-    const {pageId} = props
-    const {queryPagesDataById} = usePageInfo(
+    const { t, i18n } = useI18nNamespaces(["spaceEngine", "yakitUi"])
+    const { pageId } = props
+    const { queryPagesDataById } = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
         }),
@@ -79,14 +79,14 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const defaultTabs = useCreation(() => {
         if (scanBeforeSave) {
             return [
-                {tabName: t("SpaceEnginePage.scanPortList"), type: "port"},
-                {tabName: t("SpaceEnginePage.logs"), type: "log"},
-                {tabName: "Console", type: "console"}
+                { tabName: t("SpaceEnginePage.scanPortList"), type: "port" },
+                { tabName: t("SpaceEnginePage.logs"), type: "log" },
+                { tabName: "Console", type: "console" }
             ]
         }
         return [
-            {tabName: t("SpaceEnginePage.logs"), type: "log"},
-            {tabName: "Console", type: "console"}
+            { tabName: t("SpaceEnginePage.logs"), type: "log" },
+            { tabName: "Console", type: "console" }
         ]
     }, [scanBeforeSave, i18n.language])
 
@@ -103,7 +103,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
             }, 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", t("SpaceEnginePage.taskStartSuccess", {id: rId}))
+            yakitNotify("info", t("SpaceEnginePage.taskStartSuccess", { id: rId }))
             setRuntimeId(rId)
         }
     })
@@ -170,18 +170,18 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                 <div>
                     {isExecuting
                         ? !isExpand && (
-                              <>
-                                  <YakitButton danger onClick={onStopExecute}>
-                                      {t("YakitButton.stop")}
-                                  </YakitButton>
-                              </>
-                          )
+                            <>
+                                <YakitButton danger onClick={onStopExecute}>
+                                    {t("YakitButton.stop")}
+                                </YakitButton>
+                            </>
+                        )
                         : !isExpand && (
-                              <>
-                                  <YakitButton onClick={onExecuteInTop}>{t("YakitButton.execute")}</YakitButton>
-                                  <div className={styles["divider-style"]}></div>
-                              </>
-                          )}
+                            <>
+                                <YakitButton onClick={onExecuteInTop}>{t("YakitButton.execute")}</YakitButton>
+                                <div className={styles["divider-style"]}></div>
+                            </>
+                        )}
                 </div>
             </ExpandAndRetract>
             <div className={styles["space-engine-content"]}>
@@ -193,8 +193,8 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                     <Form
                         form={form}
                         onFinish={onStartExecute}
-                        labelCol={{span: 6}}
-                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                        labelCol={{ span: 6 }}
+                        wrapperCol={{ span: 12 }} //这样设置是为了让输入框居中
                         validateMessages={{
                             /* eslint-disable no-template-curly-in-string */
                             required: t("YakitForm.requiredField")
@@ -203,7 +203,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         initialValues={getDefaultSpaceEngineStartParams()}
                     >
                         <SpaceEngineFormContent disabled={isExecuting} inViewport={inViewport} />
-                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                        <Form.Item colon={false} label={" "} style={{ marginBottom: 0 }}>
                             <div className={styles["space-engine-form-operate"]}>
                                 {isExecuting ? (
                                     <YakitButton danger onClick={onStopExecute} size='large'>
@@ -236,8 +236,8 @@ interface SpaceEngineFormContentProps {
 }
 
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
-    const {t, i18n} = useI18nNamespaces(["spaceEngine"])
-    const {disabled, inViewport} = props
+    const { t, i18n } = useI18nNamespaces(["spaceEngine"])
+    const { disabled, inViewport } = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
     const [engineStatus, setEngineStatus] = useState<SpaceEngineStatus>()
     useEffect(() => {
@@ -367,10 +367,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             title: t("SpaceEngineFormContent.zoomeyeBasicSyntax"),
             type: "white",
             width: "60vw",
-            cancelButtonProps: {style: {display: "none"}},
+            cancelButtonProps: { style: { display: "none" } },
             okText: t("SpaceEngineFormContent.gotIt"),
             onOk: () => m.destroy(),
-            bodyStyle: {padding: "8px 24px"},
+            bodyStyle: { padding: "8px 24px" },
             content: <ZoomeyeHelp />
         })
     })
@@ -379,32 +379,33 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             <Form.Item
                 name='Type'
                 label={t("SpaceEngineFormContent.engine")}
-                rules={[{required: true}]}
+                rules={[{ required: true }]}
                 extra={engineExtra}
             >
                 <YakitSelect
                     options={[
-                        {label: "ZoomEye", value: "zoomeye"},
-                        {label: "Fofa", value: "fofa"},
-                        {label: "Hunter", value: "hunter"},
-                        {label: "Shodan", value: "shodan"},
-                        {label: "Quake", value: "quake"}
+                        { label: "ZoomEye", value: "zoomeye" },
+                        { label: "Fofa", value: "fofa" },
+                        { label: "Hunter", value: "hunter" },
+                        { label: "Shodan", value: "shodan" },
+                        { label: "Quake", value: "quake" },
+                        { label: "零零测绘", value: "zone" }
                     ]}
                     onSelect={onSelectType}
                     disabled={disabled}
                 />
             </Form.Item>
             <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled} />
-            <Form.Item name='MaxPage' label={t("SpaceEngineFormContent.maxPage")} rules={[{required: true}]}>
+            <Form.Item name='MaxPage' label={t("SpaceEngineFormContent.maxPage")} rules={[{ required: true }]}>
                 <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
-            <Form.Item name='MaxRecord' label={t("SpaceEngineFormContent.maxRecord")} rules={[{required: true}]}>
+            <Form.Item name='MaxRecord' label={t("SpaceEngineFormContent.maxRecord")} rules={[{ required: true }]}>
                 <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='RandomDelay'
                 label={t("SpaceEngineFormContent.randomDelay")}
-                rules={[{required: true}]}
+                rules={[{ required: true }]}
                 tooltip={{
                     icon: <OutlineInformationcircleIcon />,
                     title: t("SpaceEngineFormContent.randomDelayHelp")
@@ -412,13 +413,13 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             >
                 <YakitInputNumber min={0} type='horizontal' disabled={disabled} />
             </Form.Item>
-            <Form.Item name='RetryTimes' label={t("SpaceEngineFormContent.retryTimes")} rules={[{required: true}]}>
+            <Form.Item name='RetryTimes' label={t("SpaceEngineFormContent.retryTimes")} rules={[{ required: true }]}>
                 <YakitInputNumber min={0} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='ScanBeforeSave'
                 label={t("SpaceEngineFormContent.scanVerification")}
-                rules={[{required: true}]}
+                rules={[{ required: true }]}
                 valuePropName='checked'
                 tooltip={{
                     icon: <OutlineInformationcircleIcon />,

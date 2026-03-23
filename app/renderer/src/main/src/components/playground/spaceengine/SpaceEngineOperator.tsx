@@ -89,7 +89,10 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                     data={[
                         {label: "ZoomEye", value: "zoomeye"},
                         {label: "Fofa", value: "fofa"},
+                        {label: "Hunter", value: "hunter"},
                         {label: "Shodan", value: "shodan"},
+                        {label: "Quake", value: "quake"},
+                        {label: "零零测绘", value: "zone"},
                         {label: "不设置", value: ""},
                     ]}
                     setValue={Type => setParams({...params, Type})} value={params.Type}
