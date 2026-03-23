@@ -607,6 +607,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                         // 触发任务规划UI展示的回调
                         onTaskStart && onTaskStart()
                     }
+                    setCancelTaskLoading(false)
                     return
                 }
                 if (res.Type === "end_plan_and_execution") {

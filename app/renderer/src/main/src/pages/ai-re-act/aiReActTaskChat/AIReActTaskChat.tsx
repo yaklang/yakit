@@ -259,7 +259,11 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                             icon={<OutlinePlay2Icon />}
                             radius='28px'
                             size='large'
-                            onClick={onRecover}
+                            onClick={()=>{
+                                chatIPCEvents.handleCancelLoadingChange("task", true)
+                                onRecover()
+                            }}
+                            loading={cancelTaskLoading}
                             {...btnProps}
                         >
                             继续任务

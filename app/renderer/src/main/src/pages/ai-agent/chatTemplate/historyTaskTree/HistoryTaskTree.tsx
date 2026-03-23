@@ -33,6 +33,10 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         inViewPort && onSendPlayHistoryList()
     }, [inViewPort])
 
+    const cancelTaskLoading = useCreation(() => {
+        return chatIPCData.cancelTaskLoading
+    }, [chatIPCData.cancelTaskLoading])
+
     const onSendPlayHistoryList = useMemoizedFn(() => {
         chatIPCData.execute && handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
     })
@@ -45,6 +49,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                 syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
                 SyncJsonInput: JSON.stringify({task_id: taskId})
             })
+        chatIPCEvents.handleCancelLoadingChange("task", true)
         setTimeout(() => {
             handleSendSyncMessage({
                 syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
@@ -102,6 +107,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                                         e.stopPropagation()
                                                     }}
                                                     style={{paddingRight: 0}}
+                                                    loading={cancelTaskLoading}
                                                 >
                                                     继续任务
                                                 </YakitButton>
