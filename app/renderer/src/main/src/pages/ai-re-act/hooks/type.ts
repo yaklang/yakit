@@ -1,5 +1,12 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AIYakExecFileRecord, ReActChatRenderItem} from "./aiRender"
+import {
+    AIChatQSData,
+    AIStreamOutput,
+    AITaskInfoProps,
+    AIYakExecFileRecord,
+    ReActChatBaseInfo,
+    ReActChatRenderItem
+} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams, AITaskStatus} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
@@ -187,6 +194,10 @@ export interface UseChatIPCState {
     switchLoading: boolean
     /** 任务规划历史数据-任务树 */
     planHistoryList: AIAgentGrpcApi.PlanHistoryList
+    /** 用户主动取消问题的loading状态(自由对话) */
+    cancelCasualLoading: boolean
+    /** 用户主动取消问题的loading状态(任务规划) */
+    cancelTaskLoading: boolean
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -210,7 +221,7 @@ export interface AIChatSendParams {
 export interface TaskChatTaskInfo {
     taskID: string
     status: AITaskStatus
-    coordinatorId:AIOutputEvent["CoordinatorId"]
+    coordinatorId: AIOutputEvent["CoordinatorId"]
 }
 
 export interface UseChatIPCEvents {
@@ -241,6 +252,8 @@ export interface UseChatIPCEvents {
     handleTaskReviewRelease: (id: string) => void
     /** 删除会话操作的关联逻辑 */
     onDelChats: (session: string[]) => void
+    /** 用户主动取消问题的loading状态变换 */
+    handleCancelLoadingChange: (type: ReActChatBaseInfo["chatType"], status: boolean) => void
 }
 // #endregion
 

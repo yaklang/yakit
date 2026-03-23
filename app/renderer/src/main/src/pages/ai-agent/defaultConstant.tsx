@@ -273,14 +273,16 @@ export const defaultChatIPCData: UseChatIPCState = {
         total: 0,
         data: []
     },
-    casualStatus: {loading: false, title: ""},
+    casualStatus: { loading: false, title: "" },
     reActTimelines: [],
-    memoryList: {...DefaultMemoryList},
-    taskStatus: {loading: false, plan: "", task: ""},
+    memoryList: { ...DefaultMemoryList },
+    taskStatus: { loading: false, plan: "", task: "" },
     systemStream: "",
     focusMode: "",
     switchLoading: false,
-    planHistoryList: cloneDeep(DefaultPlanHistoryList)
+    planHistoryList: cloneDeep(DefaultPlanHistoryList),
+    cancelCasualLoading: false,
+    cancelTaskLoading: false
 }
 //#endregion
 

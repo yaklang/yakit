@@ -46,6 +46,7 @@ import {grpcQueryAIEvent} from "@/pages/ai-agent/grpc"
 import useAINodeLabel from "./useAINodeLabel"
 import {AIChatData} from "@/pages/ai-agent/type/aiChat"
 import {DeepPartial} from "@/pages/ai-agent/store/ChatDataStore"
+import {ReActChatBaseInfo} from "./aiRender"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -273,6 +274,10 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // #region 自由对话(ReAct)相关变量和hook
     const casualChatID = useRef(0)
+
+    /** 用户主动关闭当前问题的loading状态(自由对话) */
+    const [cancelCasualLoading, setCancelCasualLoading] = useState(false)
+
     /** 自由对话(ReAct)的loading状态 */
     const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>(cloneDeep(DefaultCasualLoadingStatus))
     const handleResetCasualChatLoading = useMemoizedFn(() => {
@@ -298,6 +303,9 @@ function useChatIPC(params?: UseChatIPCParams) {
         taskChatID.current = undefined
     })
 
+    /** 用户主动关闭当前问题的loading状态(任务规划) */
+    const [cancelTaskLoading, setCancelTaskLoading] = useState(false)
+
     /** 当前任务规划对应的数据流-CoordinatorId */
     const planCoordinatorId = useRef("")
     /** 任务规划的loading状态 */
@@ -318,6 +326,15 @@ function useChatIPC(params?: UseChatIPCParams) {
         sendRequest: sendRequest
     })
     // #endregion
+
+    /** 用户主动取消问题的loading状态变换 */
+    const handleCancelLoadingChange = useMemoizedFn((type: ReActChatBaseInfo["chatType"], status: boolean) => {
+        if (type === "reAct") {
+            setCancelCasualLoading(status)
+        } else {
+            setCancelTaskLoading(status)
+        }
+    })
 
     // #region 问题和问题队列相关逻辑
     /** 更新问题队列状态 */
@@ -466,6 +483,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetTaskChatID()
         handleResetTaskChatLoading()
 
+        setCancelCasualLoading(false)
+        setCancelTaskLoading(false)
         yakExecResultEvent.handleResetData()
         casualChatEvent.handleResetData()
         taskChatEvent.handleResetData()
@@ -750,6 +769,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                             setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                             if (taskChatID.current?.taskID === react_task_id) {
                                 taskChatID.current.status = react_task_now_status as AITaskStatus
+                                setCancelTaskLoading(false)
                             }
                         }
                         return
@@ -992,7 +1012,9 @@ function useChatIPC(params?: UseChatIPCParams) {
             systemStream,
             focusMode,
             switchLoading,
-            planHistoryList
+            planHistoryList,
+            cancelCasualLoading,
+            cancelTaskLoading
         }
     }, [
         execute,
@@ -1009,7 +1031,9 @@ function useChatIPC(params?: UseChatIPCParams) {
         systemStream,
         focusMode,
         switchLoading,
-        planHistoryList
+        planHistoryList,
+        cancelCasualLoading,
+        cancelTaskLoading
     ])
 
     const event: UseChatIPCEvents = useCreation(() => {
@@ -1024,7 +1048,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             onClose,
             onReset,
             handleTaskReviewRelease,
-            onDelChats
+            onDelChats,
+            handleCancelLoadingChange
         }
     }, [])
 

@@ -27,7 +27,6 @@ import {AIReviewType} from "../hooks/aiRender"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIInputEventSyncTypeEnum, AITaskStatus} from "../hooks/grpcApi"
 import {Tooltip} from "antd"
-import {AIReActTaskChatReviewProps} from "@/pages/ai-agent/aiAgentChat/type"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import emiter from "@/utils/eventBus/eventBus"
 
@@ -220,15 +219,23 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
     const {chatIPCEvents} = useChatIPCDispatcher()
     const {chatIPCData} = useChatIPCStore()
     const {taskChat} = chatIPCData
+
+    const cancelTaskLoading = useCreation(() => {
+        return chatIPCData.cancelTaskLoading
+    }, [chatIPCData.cancelTaskLoading])
     const getTaskInfo = useMemoizedFn(() => {
         return chatIPCEvents.fetchTaskChatID()
     })
+
     const renderBtn = useMemoizedFn(() => {
         switch (getTaskInfo()?.status) {
             case AITaskStatus.inProgress:
                 return (
                     <YakitPopconfirm
-                        onConfirm={() => onExtraAction("stopTask")}
+                        onConfirm={() => {
+                            chatIPCEvents.handleCancelLoadingChange("task", true)
+                            onExtraAction("stopTask")
+                        }}
                         title='是否确认取消执行当前任务规划，确认将停止执行'
                         placement='top'
                     >
@@ -239,6 +246,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                             radius='28px'
                             size='large'
                             colors='danger'
+                            loading={cancelTaskLoading}
                             {...btnProps}
                         />
                     </YakitPopconfirm>
