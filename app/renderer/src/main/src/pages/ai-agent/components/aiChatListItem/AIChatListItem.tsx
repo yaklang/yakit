@@ -82,8 +82,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         }
     }, [type])
 
-    const getTask = useMemoizedFn((id) => taskChat.plan.find((item) => item.index === id))
-
     const isStream = useCreation(() => {
         return item.type === AIChatQSDataTypeEnum.STREAM || item.type === AIChatQSDataTypeEnum.STREAM_GROUP
     }, [item.type])
@@ -151,11 +149,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                     )
                 }
             case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
-                const task = getTask(data.taskIndex)
                 const dividerCardProps = {
-                    status: task?.progress as AITaskStatus,
-                    desc: task?.goal,
-                    name: task?.name,
+                    status: data?.status as AITaskStatus,
+                    desc: data?.goal,
+                    name: data?.taskName,
                     success: 0,
                     error: 0
                 }
