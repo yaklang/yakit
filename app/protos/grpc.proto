@@ -7041,6 +7041,10 @@ message MITMContentReplacer {
   string EffectiveURL = 18;
 
   repeated int64 RegexpGroups = 19;
+  // 规则级后缀白名单：这些后缀下规则不生效
+  repeated string ExcludeSuffix = 20;
+  // 正则捕获组输出模板，支持 $1、\1、{1} 等格式，如 "$1个$3"
+  string RegexpResultTemplate = 21;
 }
 
 message RemoveHookParams {

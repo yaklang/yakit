@@ -1,5 +1,5 @@
-import {Col, Divider, Form, Row} from "antd"
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import { Col, Divider, Form, Row } from "antd"
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
 import {
@@ -11,34 +11,34 @@ import {
     MITMRuleFromModalProps,
     RuleContentProps
 } from "./MITMRuleType"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {AdjustmentsIcon, CheckIcon, PencilAltIcon, PlusCircleIcon} from "@/assets/newIcon"
-import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {YakEditor} from "@/utils/editors"
-import {editor} from "monaco-editor"
-import {StringToUint8Array} from "@/utils/str"
-import {failed} from "@/utils/notification"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {colorSelectNode} from "./MITMRule"
-import {ValidateStatus} from "antd/lib/form/FormItem"
-import {InternalTextAreaProps} from "@/components/yakitUI/YakitInput/YakitInputType"
-import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
-import {SizeType} from "antd/lib/config-provider/SizeContext"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {Trans} from "react-i18next"
+import { useDebounceEffect, useMemoizedFn } from "ahooks"
+import { AdjustmentsIcon, CheckIcon, PencilAltIcon, PlusCircleIcon } from "@/assets/newIcon"
+import { FuzzerResponse } from "@/pages/fuzzer/HTTPFuzzerPage"
+import { YakEditor } from "@/utils/editors"
+import { editor } from "monaco-editor"
+import { StringToUint8Array } from "@/utils/str"
+import { failed } from "@/utils/notification"
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
+import { YakitInputNumber } from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitAutoComplete } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import { HTTPCookieSetting, HTTPHeader } from "../MITMContentReplacerHeaderOperator"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { colorSelectNode } from "./MITMRule"
+import { ValidateStatus } from "antd/lib/form/FormItem"
+import { InternalTextAreaProps } from "@/components/yakitUI/YakitInput/YakitInputType"
+import { YakitSizeType } from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
+import { SizeType } from "antd/lib/config-provider/SizeContext"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { Trans } from "react-i18next"
 import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {RegexTester} from "./RegexTester"
+import { RegexTester } from "./RegexTester"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 /**
  * @description:MITMRule 新增或修改
@@ -48,8 +48,8 @@ const {ipcRenderer} = window.require("electron")
  * @param {Function} onClose 关闭回调
  */
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
-    const {modalVisible, onClose, currentItem, isEdit, rules, onSave, ruleUse} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
+    const { modalVisible, onClose, currentItem, isEdit, rules, onSave, ruleUse } = props
+    const { t, i18n } = useI18nNamespaces(["yakitUi", "mitm"])
 
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
@@ -82,16 +82,17 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const onOk = useMemoizedFn(() => {
         form.validateFields()
             .then((values: MITMContentReplacerRule) => {
-                const newValues = {...currentItem, ...values}
-                if (newValues.ExtraCookies.length > 0 || newValues.ExtraHeaders.length > 0 || !!newValues.Result) {
+                const newValues = { ...currentItem, ...values }
+                if ((newValues.ExtraCookies?.length || 0) > 0 || (newValues.ExtraHeaders?.length || 0) > 0 || !!newValues.Result) {
                     newValues.NoReplace = false
                 } else {
                     newValues.NoReplace = true
                 }
-                newValues.RegexpGroups = newValues.RegexpGroups.map((item) => Number(item))
+                newValues.RegexpGroups = (newValues.RegexpGroups || []).map((item) => Number(item))
+                newValues.ExcludeSuffix = newValues.ExcludeSuffix || []
                 onSave(newValues)
             })
-            .catch((errorInfo) => {})
+            .catch((errorInfo) => { })
     })
     const getRule = useMemoizedFn((val: string) => {
         form.setFieldsValue({
@@ -146,9 +147,9 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 width={720}
                 zIndex={1001}
                 onOk={() => onOk()}
-                bodyStyle={{padding: 0}}
+                bodyStyle={{ padding: 0 }}
             >
-                <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
+                <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} className={styles["modal-from"]}>
                     {/* <Form.Item
                         label='执行顺序'
                         name='Index'
@@ -179,7 +180,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                     <Form.Item
                         label={t("MITMRule.rule_content")}
                         name='Rule'
-                        rules={[{required: true, message: "该项为必填"}]}
+                        rules={[{ required: true, message: "该项为必填" }]}
                     >
                         <RuleContent getRule={getRule} ref={ruleContentRef} />
                     </Form.Item>
@@ -192,7 +193,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitSelect
                             mode='tags'
                             size='middle'
-                            wrapperStyle={{width: "100%"}}
+                            wrapperStyle={{ width: "100%" }}
                             value={regexpGroupsValue}
                             onChange={handleRegexpGroupsChange}
                             searchValue={regexpGroupsSearchVal}
@@ -201,10 +202,26 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         ></YakitSelect>
                     </Form.Item>
 
+                    <Form.Item
+                        label={t("MITMRuleFromModal.regexp_result_template")}
+                        name='RegexpResultTemplate'
+                        help={t("MITMRuleFromModal.regexp_result_template_tip")}
+                    >
+                        <YakitInput placeholder='$1个$2和$3 或 \1-\2 或 {1}_{2}' />
+                    </Form.Item>
+
+                    <Form.Item
+                        label={t("MITMRuleFromModal.exclude_suffix")}
+                        name='ExcludeSuffix'
+                        help={t("MITMRuleFromModal.exclude_suffix_tip")}
+                    >
+                        <YakitSelect mode='tags' size='middle' wrapperStyle={{ width: "100%" }} placeholder='.js .css .png' />
+                    </Form.Item>
+
                     <Row>
                         <Col span={5}>&nbsp;</Col>
                         <Col span={16}>
-                            <Divider dashed style={{marginTop: 0}} />
+                            <Divider dashed style={{ marginTop: 0 }} />
                         </Col>
                     </Row>
                     {ruleUse === "mitm" && (
@@ -217,8 +234,8 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                                 <YakitRadioButtons
                                     size='large'
                                     options={[
-                                        {label: t("MITMRuleFromModal.text"), value: 1},
-                                        {label: "HTTP Header/Cookie", value: 2}
+                                        { label: t("MITMRuleFromModal.text"), value: 1 },
+                                        { label: "HTTP Header/Cookie", value: 2 }
                                     ]}
                                     buttonStyle='solid'
                                 />
@@ -229,34 +246,34 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                                         <YakitInput placeholder={t("MITMRuleFromModal.enter_content_to_replace_tip")} />
                                     </Form.Item>
                                 )) || (
-                                    <>
-                                        <Form.Item label='HTTP Header' name='ExtraHeaders'>
-                                            <ExtraHTTPSelect
-                                                tip='Header'
-                                                onSave={getExtraHeaders}
-                                                list={headers}
-                                                onRemove={onRemoveExtraHeaders}
-                                            />
-                                        </Form.Item>
-                                        <Form.Item label='HTTP Cookie' name='ExtraCookies'>
-                                            <ExtraHTTPSelect
-                                                tip='Cookie'
-                                                onSave={getExtraCookies}
-                                                list={cookies.map((item) => ({
-                                                    ...item,
-                                                    Header: item.Key,
-                                                    Value: item.Value
-                                                }))}
-                                                onRemove={onRemoveExtraCookies}
-                                            />
-                                        </Form.Item>
-                                    </>
-                                )}
+                                        <>
+                                            <Form.Item label='HTTP Header' name='ExtraHeaders'>
+                                                <ExtraHTTPSelect
+                                                    tip='Header'
+                                                    onSave={getExtraHeaders}
+                                                    list={headers}
+                                                    onRemove={onRemoveExtraHeaders}
+                                                />
+                                            </Form.Item>
+                                            <Form.Item label='HTTP Cookie' name='ExtraCookies'>
+                                                <ExtraHTTPSelect
+                                                    tip='Cookie'
+                                                    onSave={getExtraCookies}
+                                                    list={cookies.map((item) => ({
+                                                        ...item,
+                                                        Header: item.Key,
+                                                        Value: item.Value
+                                                    }))}
+                                                    onRemove={onRemoveExtraCookies}
+                                                />
+                                            </Form.Item>
+                                        </>
+                                    )}
                             </>
                             <Row>
                                 <Col span={5}>&nbsp;</Col>
                                 <Col span={16}>
-                                    <Divider dashed style={{marginTop: 0}} />
+                                    <Divider dashed style={{ marginTop: 0 }} />
                                 </Col>
                             </Row>
                         </>
@@ -269,12 +286,12 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitInput />
                     </Form.Item>
                     <Form.Item label={t("MITMRuleFromModal.hit_color")} name='Color'>
-                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}} allowClear>
+                        <YakitSelect size='middle' wrapperStyle={{ width: "100%" }} allowClear>
                             {colorSelectNode(t)}
                         </YakitSelect>
                     </Form.Item>
                     <Form.Item label={t("MITMRuleFromModal.tag")} name='ExtraTag'>
-                        <YakitSelect size='middle' mode='tags' wrapperStyle={{width: "100%"}} />
+                        <YakitSelect size='middle' mode='tags' wrapperStyle={{ width: "100%" }} />
                     </Form.Item>
                 </Form>
             </YakitModal>
@@ -283,8 +300,8 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
 }
 
 const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
-    const {onSave, defaultCode} = props
-    const {t, i18n} = useI18nNamespaces(["mitm"])
+    const { onSave, defaultCode } = props
+    const { t, i18n } = useI18nNamespaces(["mitm"])
     const [codeValue, setCodeValue] = useState(defaultCode)
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
     const [selected, setSelected] = useState<string>("")
@@ -334,7 +351,7 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
                     Data: StringToUint8Array(_responseStr),
                     Selected: StringToUint8Array(selected)
                 })
-                .then((e: {PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string}) => {
+                .then((e: { PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string }) => {
                     setMatchedRegexp(e.SelectedRegexp)
                 })
                 .catch((e) => {
@@ -342,7 +359,7 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
                 })
         },
         [selected],
-        {wait: 500}
+        { wait: 500 }
     )
     return (
         <div className={styles["yakit-extract-regular-editor"]}>
@@ -379,8 +396,8 @@ interface RegexpInputProps {
 }
 
 export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
-    const {regexp, inputSize, tagSize = "middle", onSave, onSure, showCheck, initialTagShow} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    const { regexp, inputSize, tagSize = "middle", onSave, onSure, showCheck, initialTagShow } = props
+    const { t, i18n } = useI18nNamespaces(["yakitUi"])
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [tagShow, setTagShow] = useState<boolean>(initialTagShow || false)
     const [editMatchedRegexp, setEditMatchedRegexp] = useState<string>("")
@@ -404,7 +421,7 @@ export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
                         />
                         {showCheck && (
                             <>
-                                <Divider type='vertical' style={{top: 1}} />
+                                <Divider type='vertical' style={{ top: 1 }} />
                                 <CheckIcon
                                     onClick={() => {
                                         onSave(regexp)
@@ -415,18 +432,18 @@ export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
                     </div>
                 </YakitTag>
             )}
-            <div className={styles["yakit-editor-text-area"]} style={{display: isEdit ? "" : "none"}}>
+            <div className={styles["yakit-editor-text-area"]} style={{ display: isEdit ? "" : "none" }}>
                 <YakitInput.TextArea
                     value={editMatchedRegexp}
                     onChange={(e) => setEditMatchedRegexp(e.target.value)}
-                    autoSize={{minRows: 1, maxRows: 3}}
+                    autoSize={{ minRows: 1, maxRows: 3 }}
                     size={inputSize}
                 />
                 <div className={styles["yakit-editor-btn"]}>
                     <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
                         {t("YakitButton.cancel")}
                     </div>
-                    <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
+                    <Divider type='vertical' style={{ margin: "0 8px", top: 1 }} />
                     <div
                         className={styles["save-btn"]}
                         onClick={() => {
@@ -443,8 +460,8 @@ export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
 })
 
 const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
-    const {tip, onSave, list, onRemove} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
+    const { tip, onSave, list, onRemove } = props
+    const { t, i18n } = useI18nNamespaces(["yakitUi", "mitm"])
     const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
     const [initHeaderFormVal, setInitHeaderFormVal] = useState<HTTPHeader>()
     const [initCookieFormVal, setInitCookieFormVal] = useState<any>()
@@ -474,8 +491,8 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
                     <Trans
                         i18nKey='ExtraHTTPSelect.already_set_extra_count_tip'
                         ns='mitm'
-                        components={{count: <span className={styles.number} />}}
-                        values={{len: list.length, tip: tip}}
+                        components={{ count: <span className={styles.number} /> }}
+                        values={{ len: list.length, tip: tip }}
                     />
                 </div>
             </div>
@@ -488,14 +505,14 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
                     onSave={onSave}
                 />
             )) || (
-                <InputHTTPCookieForm
-                    initFormVal={initCookieFormVal}
-                    updateIndex={updateCookieIndex}
-                    visible={visibleHTTPHeader}
-                    setVisible={setVisibleHTTPHeader}
-                    onSave={onSave}
-                />
-            )}
+                    <InputHTTPCookieForm
+                        initFormVal={initCookieFormVal}
+                        updateIndex={updateCookieIndex}
+                        visible={visibleHTTPHeader}
+                        setVisible={setVisibleHTTPHeader}
+                        onSave={onSave}
+                    />
+                )}
 
             {list && list.length > 0 && (
                 <div className={styles["http-tags"]}>
@@ -513,7 +530,7 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
                                     })
                                     setUpdateHeaderIndex(index)
                                 } else {
-                                    setInitCookieFormVal({...item})
+                                    setInitCookieFormVal({ ...item })
                                     setUpdateCookieIndex(index)
                                 }
                                 setVisibleHTTPHeader(true)
@@ -529,8 +546,8 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
 })
 
 export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
-    const {visible, setVisible, onSave, initFormVal, updateIndex} = props
-    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
+    const { visible, setVisible, onSave, initFormVal, updateIndex } = props
+    const { t, i18n } = useI18nNamespaces(["mitm", "yakitUi"])
     const [form] = Form.useForm()
 
     useEffect(() => {
@@ -550,12 +567,12 @@ export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.mem
             zIndex={1002}
             footer={null}
             closable={true}
-            bodyStyle={{padding: 0}}
+            bodyStyle={{ padding: 0 }}
             destroyOnClose={true}
         >
             <Form
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
+                labelCol={{ span: 5 }}
+                wrapperCol={{ span: 14 }}
                 onFinish={(val: HTTPHeader) => {
                     onSave(val, updateIndex)
                     setVisible(false)
@@ -567,7 +584,7 @@ export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.mem
                 <Form.Item
                     label='HTTP Header'
                     name='Header'
-                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                    rules={[{ required: true, message: t("YakitForm.requiredField") }]}
                 >
                     <YakitAutoComplete
                         options={[
@@ -612,7 +629,7 @@ export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.mem
                             "X-Imforwards",
                             "X-Powered-By",
                             "X-Requested-With"
-                        ].map((ele) => ({value: ele, label: ele}))}
+                        ].map((ele) => ({ value: ele, label: ele }))}
                         filterOption={(inputValue, option) => {
                             if (option?.value && typeof option?.value === "string") {
                                 return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -637,8 +654,8 @@ export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.mem
 })
 
 const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((props) => {
-    const {visible, setVisible, onSave, initFormVal, updateIndex} = props
-    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
+    const { visible, setVisible, onSave, initFormVal, updateIndex } = props
+    const { t, i18n } = useI18nNamespaces(["mitm", "yakitUi"])
     const [form] = Form.useForm()
     const [advanced, setAdvanced] = useState(false)
 
@@ -676,12 +693,12 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
             footer={null}
             closable={true}
             width={600}
-            bodyStyle={{padding: 0}}
+            bodyStyle={{ padding: 0 }}
             destroyOnClose={true}
         >
             <Form
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
+                labelCol={{ span: 5 }}
+                wrapperCol={{ span: 14 }}
                 onFinish={(val: HTTPCookieSetting) => {
                     onSave(val, updateIndex)
                     setVisible(false)
@@ -693,7 +710,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
                 <Form.Item
                     label='Cookie Key'
                     name='Key'
-                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                    rules={[{ required: true, message: t("YakitForm.requiredField") }]}
                 >
                     <YakitAutoComplete
                         options={["JSESSION", "PHPSESSION", "SESSION", "admin", "test", "debug"].map((ele) => ({
@@ -712,7 +729,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
                 <Form.Item
                     label='Cookie Value'
                     name='Value'
-                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
+                    rules={[{ required: true, message: t("YakitForm.requiredField") }]}
                 >
                     <YakitInput />
                 </Form.Item>
@@ -747,10 +764,10 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
                             <YakitRadioButtons
                                 size='large'
                                 options={[
-                                    {label: t("InputHTTPCookieForm.default_policy"), value: "default"},
-                                    {label: t("InputHTTPCookieForm.lax_policy"), value: "lax"},
-                                    {label: t("InputHTTPCookieForm.strict_policy"), value: "strict"},
-                                    {label: t("InputHTTPCookieForm.do_not_set"), value: "none"}
+                                    { label: t("InputHTTPCookieForm.default_policy"), value: "default" },
+                                    { label: t("InputHTTPCookieForm.lax_policy"), value: "lax" },
+                                    { label: t("InputHTTPCookieForm.strict_policy"), value: "strict" },
+                                    { label: t("InputHTTPCookieForm.do_not_set"), value: "none" }
                                 ]}
                                 buttonStyle='solid'
                                 wrapClassName={styles['sameSiteMode']}
@@ -780,8 +797,8 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
             setRule(v)
         }
     }))
-    const {getRule, inputProps, defaultCode} = props
-    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
+    const { getRule, inputProps, defaultCode } = props
+    const { t, i18n } = useI18nNamespaces(["mitm", "yakitUi"])
     const [rule, setRule] = useState<string>("")
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const onGetRule = useMemoizedFn((val: string) => {
@@ -802,7 +819,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                         <AdjustmentsIcon className={styles["icon-adjustments"]} onClick={() => setRuleVisible(true)} />
                     }
                     onChange={(e) => {
-                        const {value} = e.target
+                        const { value } = e.target
                         setRule(value)
                         getRule(value)
                     }}
@@ -817,9 +834,9 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 zIndex={1002}
                 footer={null}
                 closable={true}
-                bodyStyle={{padding: 0}}
+                bodyStyle={{ padding: 0 }}
             >
-                <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={rule}/>
+                <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={rule} />
             </YakitModal>
         </>
     )

@@ -53,7 +53,11 @@
     "effective_url": "Effective URL",
     "url_specific_rule_tip": "The rule will only be effective for this URL; regular expressions are supported",
     "hit_color": "Hit Color",
-    "tag": "Tag"
+    "tag": "Tag",
+    "regexp_result_template": "Regex Output Template",
+    "regexp_result_template_tip": "Supports $1, \\1, {1} etc., e.g. $1个$2和$3",
+    "exclude_suffix": "Exclude Suffix",
+    "exclude_suffix_tip": "Rule is skipped when URL path suffix is in this list, e.g. .js .css"
   },
   "ExtractRegular": {
     "extract_selection_data_error": "Error extracting selection data:",

@@ -53,7 +53,11 @@
     "effective_url": "生效URL",
     "url_specific_rule_tip": "配置后规则只对该url生效，支持填写正则",
     "hit_color": "命中颜色",
-    "tag": "标记 Tag"
+    "tag": "标记 Tag",
+    "regexp_result_template": "正则输出模板",
+    "regexp_result_template_tip": "支持 $1、\\1、{1} 等格式，如 $1个$2和$3",
+    "exclude_suffix": "排除后缀",
+    "exclude_suffix_tip": "URL 路径后缀在此列表中时规则不生效，如 .js .css"
   },
   "ExtractRegular": {
     "extract_selection_data_error": "提取选择数据错误：",

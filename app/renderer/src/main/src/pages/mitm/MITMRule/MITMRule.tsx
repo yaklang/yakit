@@ -627,6 +627,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     Result: "",
                     Rule: "",
                     RegexpGroups: [],
+                    ExcludeSuffix: [],
+                    RegexpResultTemplate: "",
                     ExtraTag: [],
                     Disabled: false,
                     VerboseName: "RULE:" + randomString(10),
