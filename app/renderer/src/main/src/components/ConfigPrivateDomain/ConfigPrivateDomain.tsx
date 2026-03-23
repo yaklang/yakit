@@ -21,7 +21,7 @@ import {useUploadInfoByEnpriTrace} from "../layout/utils"
 import {JSONParseLog} from "@/utils/tool"
 import {RightOutlined} from "@ant-design/icons"
 import {LoginParamsProp} from "@/pages/Login"
-import { YakitSpin } from "../yakitUI/YakitSpin/YakitSpin"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -276,6 +276,32 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         }
     }
 
+    // 登录成功
+    const onLoginSuccess = useMemoizedFn(() => {
+        success("企业登录成功")
+        onClose && onClose()
+        onSuccee && onSuccee()
+        uploadProjectEvent.startUpload({
+            isUploadSyncData: true,
+            isUpdateGlobalConfig: enterpriseLogin
+        })
+    })
+
+    // 全局监听登录状态
+    useEffect(() => {
+        ipcRenderer.on("fetch-signin-ccb-data", (e, res: any) => {
+            const {ok, info} = res
+            if (ok) {
+                onLoginSuccess()
+            } else {
+                failed(info)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-signin-ccb-data")
+        }
+    }, [])
+
     const loginContentDom = useMemo(() => {
         // 企业版登录
         if (enterpriseLogin) {
@@ -374,46 +400,51 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 </>
             )
         } else {
-            return <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
-                <Form.Item
-                    name='BaseUrl'
-                    label='私有域地址'
-                    rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}
-                >
-                    <YakitAutoComplete
-                        ref={httpHistoryRef}
-                        cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
-                        initValue={defaultHttpUrl}
-                        placeholder='请输入你的私有域地址'
-                        defaultOpen={!enterpriseLogin}
-                    />
-                </Form.Item>
-                <Form.Item
-                    name='Proxy'
-                    label={
-                        <span className='form-label'>
-                            设置代理
-                            <Tooltip title='特殊情况无法访问插件商店时，可设置代理进行访问' overlayStyle={{width: 150}}>
-                                <InformationCircleIcon className='info-icon' />
-                            </Tooltip>
-                        </span>
-                    }
-                >
-                    <YakitAutoComplete
-                        ref={httpProxyRef}
-                        cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
-                        placeholder='设置代理'
-                    />
-                </Form.Item>
-                <div className='form-btns'>
-                    <YakitButton type='outline2' onClick={(e) => onClose && onClose()}>
-                        取消
-                    </YakitButton>
-                    <YakitButton type='primary' htmlType='submit' loading={loading}>
-                        确定
-                    </YakitButton>
-                </div>
-            </Form>
+            return (
+                <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
+                    <Form.Item
+                        name='BaseUrl'
+                        label='私有域地址'
+                        rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}
+                    >
+                        <YakitAutoComplete
+                            ref={httpHistoryRef}
+                            cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+                            initValue={defaultHttpUrl}
+                            placeholder='请输入你的私有域地址'
+                            defaultOpen={!enterpriseLogin}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name='Proxy'
+                        label={
+                            <span className='form-label'>
+                                设置代理
+                                <Tooltip
+                                    title='特殊情况无法访问插件商店时，可设置代理进行访问'
+                                    overlayStyle={{width: 150}}
+                                >
+                                    <InformationCircleIcon className='info-icon' />
+                                </Tooltip>
+                            </span>
+                        }
+                    >
+                        <YakitAutoComplete
+                            ref={httpProxyRef}
+                            cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
+                            placeholder='设置代理'
+                        />
+                    </Form.Item>
+                    <div className='form-btns'>
+                        <YakitButton type='outline2' onClick={(e) => onClose && onClose()}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' htmlType='submit' loading={loading}>
+                            确定
+                        </YakitButton>
+                    </div>
+                </Form>
+            )
         }
     }, [enterpriseLogin, defaultHttpUrl, form, isShowSkip, loading, isShowCCB, onClose, onFinish, onSuccee])
     return <div className='private-domain'>{loginContentDom}</div>
