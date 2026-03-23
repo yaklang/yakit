@@ -279,6 +279,45 @@ customFailureChecker = func(https, req, rsp, fail) {
 
 export const HotPatchTempDefault = [
     {
+        name: "响应解密（AES-CBC/Hex）",
+        nameUi: "HTTPFuzzerHotPatch.response_decrypt_aes_cbc_hex",
+        temp: `// 响应解密模板 - 适用于响应 body 为 Hex 编码的 AES-CBC 密文
+// key / iv 使用 Base64 编码，请替换为实际值
+key = "MTIzNDU2Nzg5MDEyMzQ1Ng=="  /* Base64("1234567890123456") */
+iv = "MTIzNDU2Nzg5MDEyMzQ1Ng=="
+key = codec.DecodeBase64(key)~
+iv = codec.DecodeBase64(iv)~
+
+hostFilter = ""  /* 仅解密指定 Host 的响应，留空则解密所有 */
+
+decrypt = func(req, rsp) {
+    if hostFilter != "" {
+        host = poc.GetHTTPPacketHeader(req, "Host")
+        if host != hostFilter {
+            return rsp
+        }
+    }
+    body = poc.GetHTTPPacketBody(rsp)
+    body = codec.DecodeHex(body)~
+    body = codec.AESCBCDecryptWithPKCS7Padding(key, body, iv)~
+    rsp = poc.ReplaceHTTPPacketBody(rsp, body)
+
+    /* 若响应头中有需解密的字段，可取消注释并修改头名： */
+    // headerParam = poc.GetHTTPPacketHeader(rsp, "headerParam")
+    // if headerParam != "" {
+    //     headerParam = codec.DecodeHex(headerParam)~
+    //     headerParam = codec.AESCBCDecryptWithPKCS7Padding(key, headerParam, iv)~
+    //     rsp = poc.ReplaceHTTPPacketHeader(rsp, "headerParam", headerParam)
+    // }
+    return rsp
+}
+
+afterRequest = func(https, originReq, req, originRsp, rsp) {
+    return decrypt(req, rsp)
+}`,
+        isDefault: true
+    },
+    {
         name: "爆破 AES-CBC",
         nameUi: "HTTPFuzzerHotPatch.bruteforce_aes_cbc",
         temp: `decode = func(param) {

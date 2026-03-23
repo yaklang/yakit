@@ -206,6 +206,7 @@
     "debugCancelled": "调试已取消",
     "debugFailed": "调试失败",
     "engineConsole": "引擎Console",
+    "response_decrypt_aes_cbc_hex": "响应解密（AES-CBC/Hex）",
     "bruteforce_aes_cbc": "爆破 AES-CBC",
     "bruteforce_rsa_oaep": "爆破 RSA-OAEP",
     "bruteforce_csrf_with_token": "爆破 CSRF（带有保护用 token）",
