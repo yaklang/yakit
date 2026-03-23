@@ -206,6 +206,7 @@
     "debugCancelled": "Debug cancelled",
     "debugFailed": "Debug failed",
     "engineConsole": "Engine Console",
+    "response_decrypt_aes_cbc_hex": "Response Decrypt (AES-CBC/Hex)",
     "bruteforce_aes_cbc": "Brute-Force AES-CBC",
     "bruteforce_rsa_oaep": "Brute-Force RSA-OAEP",
     "bruteforce_csrf_with_token": "Brute-Force CSRF (with token protection)",
