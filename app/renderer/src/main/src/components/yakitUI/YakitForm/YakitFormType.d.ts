@@ -57,6 +57,8 @@ export interface YakitDraggerProps extends FileDraggerProps {
     cacheFilePathKey?: string
     /** 缓存文件夹所选路径Key */
     cacheFolderPathKey?: string
+    
+    helpClassName?: string
 }
 
 export interface YakitDraggerContentProps

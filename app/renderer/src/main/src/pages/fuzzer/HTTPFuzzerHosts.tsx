@@ -1,7 +1,8 @@
 import React, {useMemo, useState} from "react"
-import {Form, Space, Upload} from "antd"
+import {Form, Space} from "antd"
+import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {failed, yakitFailed} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import i18n from "@/i18n/i18n"
@@ -44,7 +45,7 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [params, setParams] = useState<{Key: string; Value: string}>({Key: "", Value: ""})
     const [configType, setConfigType] = useState<"input" | "upload">("input")
-    const [hostsContent, setHostsContent] = useState<string>("")
+    const supportedHostsFileExtList = [".txt", ".hosts"]
     const [fileName, setFileName] = useState<string>("")
 
     const typeOptions = useMemo(()=>[
@@ -56,19 +57,40 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
         saveABSFileToOpen("hosts_example.txt", hostsExampleTemplate)
     }
 
-    const parseHostsContent = (content: string): {Key: string; Value: string}[] => {
-        return content
-            .split(/\r?\n/)
-            .filter((line) => line.trim() && !line.trim().startsWith("#"))
-            .flatMap((line) => {
-                const parts = line.trim().split(/\s+/)
-                if (parts.length < 2) return []
-                const ip = parts[0]
-                return parts.slice(1).filter((d) => d && !d.startsWith("#")).map((domain) => ({Key: domain, Value: ip}))
-            })
+    const isSupportedHostsFile = (path: string) => {
+        const normalizedPath = path.trim().toLowerCase()
+        if (!normalizedPath) return false
+
+        const file = normalizedPath.split(/[\\/]/).pop() || ""
+        return file === "hosts" || supportedHostsFileExtList.some((ext) => file.endsWith(ext))
     }
 
-    const handleSubmit = () => {
+    const parseHostsContent = (content: string): {Key: string; Value: string}[] => {
+        const parsedHosts: {Key: string; Value: string}[] = []
+
+        content.split(/\r?\n/).forEach((line) => {
+            const trimmedLine = line.trim()
+            if (!trimmedLine || trimmedLine.startsWith("#")) return
+
+            const contentWithoutComment = trimmedLine.split("#")[0]?.trim()
+            if (!contentWithoutComment) return
+
+            const parts = contentWithoutComment.split(/\s+/).filter(Boolean)
+            if (parts.length < 2) return
+
+            const ip = parts[0]
+            const domains = parts.slice(1)
+            if (!domains.length) return
+
+            domains.forEach((domain) => {
+                parsedHosts.push({Key: domain, Value: ip})
+            })
+        })
+
+        return parsedHosts
+    }
+
+    const handleSubmit = async () => {
         if (configType === "input") {
             if (!params.Key || !params.Value) {
                 yakitFailed(t("HTTPFuzzerHostInput.domainRequired"))
@@ -76,10 +98,36 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
             }
             props.onAdd(params)
         } else {
-            if(hostsContent.trim()){
-                const parsedHosts = parseHostsContent(hostsContent)
-                parsedHosts.length && props.onBatchAdd?.(parsedHosts)
+            if (!fileName.trim()) {
+                yakitFailed(t("HTTPFuzzerHosts.fileRequired"))
+                return
             }
+            if (!isSupportedHostsFile(fileName)) {
+                yakitFailed(t("HTTPFuzzerHosts.unsupportedFileType", {accept: supportedHostsFileExtList.join(', ')}))
+                return
+            }
+            let currentHostsContent = ""
+            try {
+                currentHostsContent = await ipcRenderer.invoke("fetch-file-content", fileName)
+            } catch (error) {
+                yakitFailed(t("HTTPFuzzerHosts.fileReadFailed", {error: String(error)}))
+                return
+            }
+            if (!currentHostsContent.trim()) {
+                yakitFailed(t("HTTPFuzzerHosts.emptyOrUnreadableFile"))
+                return
+            }
+            const parsedHosts = parseHostsContent(currentHostsContent)
+            if (!parsedHosts.length) {
+                yakitFailed(t("HTTPFuzzerHosts.parseFailed"))
+                return
+            }
+            if (props.onBatchAdd) {
+                props.onBatchAdd(parsedHosts)
+            } else {
+                parsedHosts.forEach((item) => props.onAdd(item))
+            }
+            yakitNotify("success", t("HTTPFuzzerHosts.parseSuccess", {count: parsedHosts.length}))
         }
         props.onClose()
     }
@@ -124,25 +172,28 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
             </Form.Item>
             </> ) : (
             <Form.Item label={t("HTTPFuzzerHosts.hostsConfig")}>
-                <YakitInput value={fileName} readOnly />
-                <div style={{ display: 'flex', justifyContent:'space-between'}}>
-                <Upload
-                    multiple={false}
-                    maxCount={1}
-                    showUploadList={false}
-                    beforeUpload={(f) => {
-                        setFileName(f.name)
-                        ipcRenderer.invoke("fetch-file-content", (f as any).path)
-                        .then((res: string) => setHostsContent(res))
-                        return false
+                <YakitDragger
+                    isShowPathNumber={false}
+                    selectType='file'
+                    renderType='input'
+                    inputProps={{
+                        placeholder: t("HTTPFuzzerHosts.uploadPlaceholder")
                     }}
-                >
-                    <div className={styles["host_upload_tips"]}>
-                        {t("HTTPFuzzerHosts.dragOrUpload")} <YakitButton type="text">{t("HTTPFuzzerHosts.uploadFile")}</YakitButton>
-                    </div>
-                </Upload>
-                <YakitButton type="text" onClick={onDownloadExampleTemplate}>{t("HTTPFuzzerHosts.example")}</YakitButton>
-                </div>
+                    multiple={false}
+                    value={fileName}
+                    onChange={setFileName}
+                    help={t("HTTPFuzzerHosts.dragOrUpload")}
+                    showExtraHelp={
+                        <YakitButton
+                            style={{ marginLeft: 70 }}
+                            type="text" 
+                            onClick={onDownloadExampleTemplate}
+                        >
+                            {t("HTTPFuzzerHosts.example")}
+                        </YakitButton>
+                    }
+                    helpClassName={styles["dragger_help"]}
+                />
             </Form.Item>
             )}
             <Form.Item label={" "} colon={false}>
