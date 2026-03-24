@@ -20,6 +20,8 @@ import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/
 import {useUploadInfoByEnpriTrace} from "../layout/utils"
 import {JSONParseLog} from "@/utils/tool"
 import {RightOutlined} from "@ant-design/icons"
+import {LoginParamsProp} from "@/pages/Login"
+import { YakitSpin } from "../yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -112,8 +114,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             isUpdateGlobalConfig: enterpriseLogin
                         })
                     }
-                    // 首次登录强制修改密码
-                    if (!res.loginTime) {
+                    // 首次登录强制修改密码 非原生系统登录时不强制修改
+                    if (!res.loginTime && res.from_platform === "company") {
                         ipcRenderer.invoke("reset-password", {...res})
                     }
                 })
@@ -253,7 +255,24 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
 
     const fetchLogin = (type: string) => {
         if (type === "ccb") {
+            setLoading(true)
             // CCB 登录逻辑
+            NetWorkApi<LoginParamsProp, string>({
+                method: "get",
+                url: "auth/from",
+                params: {
+                    source: type
+                }
+            })
+                .then((res) => {
+                    if (res) ipcRenderer.send("user-sign-in", {url: res, type})
+                })
+                .catch((err) => {
+                    failed("登录错误:" + err)
+                })
+                .finally(() => {
+                    setTimeout(() => setLoading(false), 200)
+                })
         }
     }
 
@@ -262,27 +281,29 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         if (enterpriseLogin) {
             return isShowCCB ? (
                 <>
-                    <div className='login-title-show'>
-                        <div className='icon-box'>
-                            <img src={yakitImg} className='type-icon-img' />
+                    <YakitSpin spinning={loading}>
+                        <div className='login-title-show'>
+                            <div className='icon-box'>
+                                <img src={yakitImg} className='type-icon-img' />
+                            </div>
+                            <div className='title-box'>企业登录</div>
                         </div>
-                        <div className='title-box'>企业登录</div>
-                    </div>
-                    <div className='login-switch-box'>
-                        <div className='login-icon' onClick={() => fetchLogin("ccb")}>
-                            <div className='login-icon-text'>使用 CCB 账号登录</div>
-                            <RightOutlined className='icon-right' />
+                        <div className='login-switch-box'>
+                            <div className='login-icon' onClick={() => fetchLogin("ccb")}>
+                                <div className='login-icon-text'>使用 CCB 账号登录</div>
+                                <RightOutlined className='icon-right' />
+                            </div>
+                            <YakitButton
+                                size='max'
+                                type='outline2'
+                                onClick={() => {
+                                    setShowCCB(!isShowCCB)
+                                }}
+                            >
+                                切换登录方式
+                            </YakitButton>
                         </div>
-                        <YakitButton
-                            size='max'
-                            type="outline2"
-                            onClick={() => {
-                                setShowCCB(!isShowCCB)
-                            }}
-                        >
-                            切换登录方式
-                        </YakitButton>
-                    </div>
+                    </YakitSpin>
                 </>
             ) : (
                 <>
@@ -342,7 +363,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <div className='login-switch-box'>
                         <YakitButton
                             size='max'
-                            type="outline2"
+                            type='outline2'
                             onClick={() => {
                                 setShowCCB(!isShowCCB)
                             }}
@@ -353,7 +374,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 </>
             )
         } else {
-            ;<Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
+            return <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
                 <Form.Item
                     name='BaseUrl'
                     label='私有域地址'

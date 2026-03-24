@@ -49,7 +49,9 @@ module.exports = {
             const typeApi = {
                 github: "auth/from-github/callback",
                 wechat: "auth/from-wechat/callback",
-                qq: "auth/from-qq/callback"
+                qq: "auth/from-qq/callback",
+                // 等待后端给予
+                ccb: "?"
             }
 
             const {url = "", type} = arg
@@ -122,7 +124,7 @@ module.exports = {
                     authWindow = null
                 })
             }
-            if (type === "github") {
+            if (["github", "ccb"].includes(type)) {
                 if (server) {
                     // 关闭之前 HTTP 服务器
                     server.close()

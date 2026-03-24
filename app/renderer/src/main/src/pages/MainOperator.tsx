@@ -313,9 +313,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [loading, setLoading] = useState(false)
 
-    // 修改密码弹框
-    const [passwordShow, setPasswordShow] = useState<boolean>(false)
-
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
 
