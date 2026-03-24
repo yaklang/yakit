@@ -625,7 +625,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             data: userMenu.map((item) => {
                                                 const obj = cloneDeep(item)
                                                 // @ts-ignore
-                                                if (obj?.label) {
+                                                if (obj?.label && typeof obj.label === "string") {
                                                     // @ts-ignore
                                                     obj.label = t(obj.label)
                                                 }
