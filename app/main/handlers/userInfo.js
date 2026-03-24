@@ -20,8 +20,6 @@ module.exports = {
                 wechatHeadImg: info.from_platform === "wechat" ? info.head_img : null,
                 qqName: info.from_platform === "qq" ? info.name : null,
                 qqHeadImg: info.from_platform === "qq" ? info.head_img : null,
-                ccbName: info.from_platform === "ccb" ? info.name : null,
-                ccbHeadImg: info.from_platform === "ccb" ? info.head_img : null,
                 role: info.role,
                 user_id: info.user_id,
                 token: info.token,
@@ -37,8 +35,6 @@ module.exports = {
             USER_INFO.wechatHeadImg = user.wechatHeadImg
             USER_INFO.qqName = user.qqName
             USER_INFO.qqHeadImg = user.qqHeadImg
-            USER_INFO.ccbName = user.ccbName
-            USER_INFO.ccbHeadImg = user.ccbHeadImg
             USER_INFO.role = user.role
             USER_INFO.token = info.token
             USER_INFO.user_id = user.user_id
@@ -224,8 +220,6 @@ module.exports = {
                 wechatHeadImg: null,
                 qqName: null,
                 qqHeadImg: null,
-                ccbName: null,
-                ccbHeadImg: null,
                 role: info.role,
                 user_id: info.user_id,
                 token: info.token,
@@ -240,8 +234,6 @@ module.exports = {
             USER_INFO.wechatHeadImg = user.wechatHeadImg
             USER_INFO.qqName = user.qqName
             USER_INFO.qqHeadImg = user.qqHeadImg
-            USER_INFO.ccbName = user.ccbName
-            USER_INFO.ccbHeadImg = user.ccbHeadImg
             USER_INFO.role = user.role
             USER_INFO.token = info.token
             USER_INFO.user_id = user.user_id
@@ -275,8 +267,6 @@ module.exports = {
             USER_INFO.wechatHeadImg = null
             USER_INFO.qqName = null
             USER_INFO.qqHeadImg = null
-            USER_INFO.ccbName = null
-            USER_INFO.ccbHeadImg = null
             USER_INFO.role = null
             USER_INFO.token = null
             USER_INFO.user_id = ""
@@ -290,6 +280,7 @@ module.exports = {
         })
 
         ipcMain.on("sync-update-user", (event, user) => {
+            const isCCB = user.platform === "ccb"
             USER_INFO.isLogin = user.isLogin
             USER_INFO.platform = user.platform
             USER_INFO.githubName = user.githubName
@@ -298,13 +289,11 @@ module.exports = {
             USER_INFO.wechatHeadImg = user.wechatHeadImg
             USER_INFO.qqName = user.qqName
             USER_INFO.qqHeadImg = user.qqHeadImg
-            USER_INFO.ccbName = user.ccbName
-            USER_INFO.ccbHeadImg = user.ccbHeadImg
             USER_INFO.role = user.role
             USER_INFO.token = user.token
             USER_INFO.user_id = user.user_id
-            USER_INFO.companyName = user.companyName
-            USER_INFO.companyHeadImg = user.companyHeadImg
+            USER_INFO.companyName = isCCB ? user.ccbName : user.companyName 
+            USER_INFO.companyHeadImg = isCCB? user.ccbHeadImg : user.companyHeadImg
             event.returnValue = user
         })
 

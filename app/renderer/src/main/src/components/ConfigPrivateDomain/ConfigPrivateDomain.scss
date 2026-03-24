@@ -47,3 +47,34 @@
         }
     }
 }
+
+.login-switch-box {
+    text-align: right;
+    .login-icon {
+        cursor: pointer;
+        padding: 12px;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--Colors-Use-Neutral-Bg);
+        border-radius: 4px;
+
+        &:hover {
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
+
+            .icon-right {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+
+        .login-icon-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            display: flex;
+            align-items: center;
+        }
+    }
+}
