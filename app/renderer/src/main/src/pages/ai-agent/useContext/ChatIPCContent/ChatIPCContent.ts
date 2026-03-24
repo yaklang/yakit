@@ -12,6 +12,7 @@ export interface ChatIPCContextStore {
     reviewInfo?: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
+    syncIdInfoMap?: Map<string, boolean>
 }
 
 export interface AIChatIPCSendParams {
@@ -26,6 +27,7 @@ export interface AISendSyncMessageParams {
     syncType: AIInputEvent["SyncType"]
     SyncJsonInput?: AIInputEvent["SyncJsonInput"]
     params?: MakeOptional<AIStartParams, "UserQuery">
+    syncID?:string
 }
 export interface AISendConfigHotpatchParams {
     hotpatchType: AIInputEvent["HotpatchType"]

@@ -40,8 +40,12 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     const onSendPlayHistoryList = useMemoizedFn(() => {
         chatIPCData.execute && handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
     })
+    const getTaskId = useMemoizedFn(() => {
+        const taskInfo = getTaskInfo()
+        return taskInfo?.taskID || ""
+    })
     const onRecover = useMemoizedFn((coordinatorId: string) => {
-        const taskId = getTaskInfo()?.taskID
+        const taskId = getTaskId()
         if (!coordinatorId) return
         // 选停止当前任务，再发送恢复的数据
         !!taskId &&
@@ -98,7 +102,11 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                             />
                                         ) : (
                                             <YakitPopconfirm
-                                                title='停掉当前正在执行的任务，恢复此任务'
+                                                title={
+                                                    !!getTaskId()
+                                                        ? "停掉当前正在执行的任务，恢复此任务"
+                                                        : "是否确认恢复该此任务"
+                                                }
                                                 onConfirm={() => onRecover(item.coordinator_id)}
                                             >
                                                 <YakitButton

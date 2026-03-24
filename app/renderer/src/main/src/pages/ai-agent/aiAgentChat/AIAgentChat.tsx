@@ -169,6 +169,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         })
     }
 
+    const [syncIdInfoMap, {set: setSyncIdInfoMap, get: getSyncIdInfoMap, remove: removeSyncIdInfoMap}] = useMap<
+        string,
+        boolean
+    >(new Map())
+
+    const onSyncIDChange = useMemoizedFn((syncID: string) => {
+        const item = getSyncIdInfoMap(syncID)
+        if (!!item) {
+            removeSyncIdInfoMap(syncID)
+        }
+    })
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
@@ -176,6 +187,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
         setSessionChatName,
+        onSyncIDChange,
         cacheDataStore: aiChatDataStore
     })
     const {execute} = chatIPCData
@@ -212,14 +224,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     /**发送 IsSyncMessage 消息 */
     const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
         if (!activeID) return
-        const {syncType, SyncJsonInput, params} = data
+        const {syncType, SyncJsonInput, params, syncID} = data
         const info: AIInputEvent = {
             IsSyncMessage: true,
             SyncType: syncType,
             SyncJsonInput,
             Params: params,
-            SyncID: randomString(8)
+            SyncID: syncID || randomString(8)
         }
+        info.SyncID && setSyncIdInfoMap(info.SyncID, true)
         events.onSend({token: activeID, type: "", params: info})
     })
 
@@ -565,9 +578,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             chatIPCData,
             planReviewTreeKeywordsMap,
             reviewInfo,
-            reviewExpand
+            reviewExpand,
+            syncIdInfoMap
         }
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, syncIdInfoMap])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,

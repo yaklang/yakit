@@ -53,8 +53,16 @@ const {ipcRenderer} = window.require("electron")
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {cacheDataStore, setSessionChatName, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} =
-        params || {}
+    const {
+        cacheDataStore,
+        setSessionChatName,
+        onTaskStart,
+        onTaskReview,
+        onTaskReviewExtra,
+        onReviewRelease,
+        onEnd,
+        onSyncIDChange
+    } = params || {}
 
     const {getLabelByParams} = useAINodeLabel()
 
@@ -570,6 +578,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (res.CoordinatorId) {
                     updateCoordinatorIDs(res.CoordinatorId)
                 }
+                if (!!res.SyncID) {
+                    onSyncIDChange?.(res.SyncID)
+                }
 
                 // 记录会话中所有的RunTimeID
                 setRunTimeIDs((old) => {
@@ -607,6 +618,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                         // 触发任务规划UI展示的回调
                         onTaskStart && onTaskStart()
                     }
+                    sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN})
                     setCancelTaskLoading(false)
                     return
                 }

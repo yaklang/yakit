@@ -16,6 +16,5 @@ export interface AIRenderTaskFooterExtraProps {
     children?: ReactNode
     btnProps?: YakitButtonProp
     subTaskBtnProps?: YakitButtonProp
-    onExtraAction: (type: "stopTask" | "stopSubTask") => void
-    onRecover: () => void
+    onExtraAction: (type: "stopTask" | "stopSubTask" | "recover", syncID: string) => void
 }

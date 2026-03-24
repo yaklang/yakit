@@ -136,6 +136,9 @@ export interface UseChatIPCParams {
 
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
+
+    /** 同步信息返回 */
+    onSyncIDChange?: (syncID: string) => void
 }
 
 /** 会话文件系统-pin */

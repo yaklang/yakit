@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     AIReActTaskChatContentProps,
     AIReActTaskChatLeftSideProps,
@@ -29,6 +29,7 @@ import {AIInputEventSyncTypeEnum, AITaskStatus} from "../hooks/grpcApi"
 import {Tooltip} from "antd"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import emiter from "@/utils/eventBus/eventBus"
+import {randomString} from "@/utils/randomUtil"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat, setTimeLine} = props
@@ -110,10 +111,11 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         emiter.emit("onRefreshAITaskHistoryList")
     })
     /**取消当前执行的子任务 */
-    const onStopSubTask = useMemoizedFn(() => {
+    const onStopSubTask = useMemoizedFn((syncID: string) => {
         handleSendSyncMessage({
             syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
-            SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", skip_current_task: true})
+            SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", skip_current_task: true}),
+            syncID: syncID
         })
         if (!!reviewInfo) {
             chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
@@ -123,13 +125,16 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             emiter.emit("onRefreshAITaskHistoryList")
         }, 200)
     })
-    const onExtraAction = useMemoizedFn((type: "stopTask" | "stopSubTask") => {
+    const onExtraAction = useMemoizedFn((type: "stopTask" | "stopSubTask" | "recover", syncID: string) => {
         switch (type) {
             case "stopTask":
                 onStopTask()
                 break
             case "stopSubTask":
-                onStopSubTask()
+                onStopSubTask(syncID)
+                break
+            case "recover":
+                onRecover()
                 break
             default:
                 break
@@ -177,7 +182,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                     footerExtra={(node) => (
                         <AIRenderTaskFooterExtra
                             onExtraAction={onExtraAction}
-                            onRecover={onRecover}
                             btnProps={{size: "middle"}}
                             subTaskBtnProps={{
                                 size: "middle",
@@ -196,7 +200,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                     <div className={styles["footer"]}>
                         {!!getTaskId() && (
                             <>
-                                <AIRenderTaskFooterExtra onExtraAction={onExtraAction} onRecover={onRecover} />
+                                <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />
                             </>
                         )}
                         <YakitButton
@@ -215,10 +219,19 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
 })
 
 const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
-    const {onExtraAction, onRecover, btnProps, subTaskBtnProps, children} = props
+    const {onExtraAction, btnProps, subTaskBtnProps, children} = props
     const {chatIPCEvents} = useChatIPCDispatcher()
-    const {chatIPCData} = useChatIPCStore()
-    const {taskChat, taskStatus} = chatIPCData
+    const {chatIPCData, syncIdInfoMap} = useChatIPCStore()
+
+    const syncIdOfStopSubTask = useRef<string>("")
+
+    const taskChat = useCreation(() => {
+        return chatIPCData.taskChat
+    }, [chatIPCData.taskChat])
+
+    const taskStatus = useCreation(() => {
+        return chatIPCData.taskStatus
+    }, [chatIPCData.taskStatus])
 
     const cancelTaskLoading = useCreation(() => {
         return chatIPCData.cancelTaskLoading
@@ -234,7 +247,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                     <YakitPopconfirm
                         onConfirm={() => {
                             chatIPCEvents.handleCancelLoadingChange("task", true)
-                            onExtraAction("stopTask")
+                            onExtraAction("stopTask", "")
                         }}
                         title='是否确认取消执行当前任务规划，确认将停止执行'
                         placement='top'
@@ -261,7 +274,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                             size='large'
                             onClick={() => {
                                 chatIPCEvents.handleCancelLoadingChange("task", true)
-                                onRecover()
+                                onExtraAction("recover", "")
                             }}
                             loading={cancelTaskLoading}
                             {...btnProps}
@@ -290,7 +303,10 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
         <>
             {getTaskInfo()?.status === AITaskStatus.inProgress && taskChat.plan.length > 0 && (
                 <YakitPopconfirm
-                    onConfirm={() => onExtraAction("stopSubTask")}
+                    onConfirm={() => {
+                        syncIdOfStopSubTask.current = randomString(8)
+                        onExtraAction("stopSubTask", syncIdOfStopSubTask.current)
+                    }}
                     title='是否确认取消该子任务，取消后会按顺序执行下一个子任务'
                     placement='top'
                 >
@@ -301,6 +317,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                         radius='28px'
                         size='large'
                         colors='danger'
+                        loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
                         {...subTaskBtnProps}
                     >
                         跳过子任务
