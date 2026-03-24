@@ -104,7 +104,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         fileExtensionIsExist = false,
         showExtraHelp = "",
         cacheFilePathKey,
-        cacheFolderPathKey
+        cacheFolderPathKey,
+        helpClassName
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -525,7 +526,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             {selectType === "file" && (
                 <FileDragger onDrop={afterFileDrop}>
                     {renderContent(
-                        <div className={styles["form-item-help"]}>
+                        <div className={classNames(styles["form-item-help"], helpClassName)}>
                             <span>
                                 {help || t("YakitFormDragger.dragOrClickHere")}
                                 <span

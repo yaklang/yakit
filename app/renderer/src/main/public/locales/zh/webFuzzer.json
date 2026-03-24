@@ -689,6 +689,13 @@
     "uploadFile": "上传文件",
     "hostsConfig": "hosts 配置",
     "dragOrUpload": "可将文件拖入框内或",
-    "example":"示例模板"
+    "example":"示例模板",
+    "fileRequired": "请先选择一个 hosts 配置文件",
+    "unsupportedFileType": "仅支持导入以下文本文件：{accept}",
+    "fileReadFailed": "文件读取失败：{error}",
+    "emptyOrUnreadableFile": "文件内容为空或读取失败，请重新选择可解析的文本文件",
+    "parseFailed": "解析失败，未识别到有效的 hosts 配置",
+    "parseSuccess": "解析成功，已导入 {count} 条 hosts 配置",
+    "uploadPlaceholder": "路径支持手动输入,支持格式:txt/hosts"
   }
 }

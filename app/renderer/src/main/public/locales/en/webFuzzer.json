@@ -689,6 +689,13 @@
     "uploadFile": "Upload File",
     "hostsConfig": "hosts config",
     "dragOrUpload": "Drag file here or",
-    "example":"Sample Template"
+    "example":"Sample Template",
+    "fileRequired": "Please select a hosts config file first",
+    "unsupportedFileType": "Only the following text file types are supported: {accept}",
+    "fileReadFailed": "Failed to read file: {error}",
+    "emptyOrUnreadableFile": "The file is empty or could not be read. Please select a supported text file",
+    "parseFailed": "Parse failed. No valid hosts entries were found",
+    "parseSuccess": "Parse succeeded. Imported {count} hosts entries",
+    "uploadPlaceholder": "The path can be entered manually, and the supported format is txt/hosts"
   }
 }
