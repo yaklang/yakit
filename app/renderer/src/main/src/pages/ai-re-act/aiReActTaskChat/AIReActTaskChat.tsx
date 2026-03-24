@@ -218,7 +218,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
     const {onExtraAction, onRecover, btnProps, subTaskBtnProps, children} = props
     const {chatIPCEvents} = useChatIPCDispatcher()
     const {chatIPCData} = useChatIPCStore()
-    const {taskChat} = chatIPCData
+    const {taskChat, taskStatus} = chatIPCData
 
     const cancelTaskLoading = useCreation(() => {
         return chatIPCData.cancelTaskLoading
@@ -252,14 +252,14 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                     </YakitPopconfirm>
                 )
             case AITaskStatus.error:
-                return (
+                return !taskStatus.loading ? (
                     <Tooltip overlay='恢复任务' placement='top'>
                         <YakitButton
                             type='primary'
                             icon={<OutlinePlay2Icon />}
                             radius='28px'
                             size='large'
-                            onClick={()=>{
+                            onClick={() => {
                                 chatIPCEvents.handleCancelLoadingChange("task", true)
                                 onRecover()
                             }}
@@ -269,6 +269,18 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
                             继续任务
                         </YakitButton>
                     </Tooltip>
+                ) : (
+                    <YakitButton
+                        type='primary'
+                        icon={<OutlineExitIcon />}
+                        className={styles["task-button"]}
+                        radius='28px'
+                        size='large'
+                        colors='danger'
+                        loading={true}
+                    >
+                        停止任务中...
+                    </YakitButton>
                 )
             default:
                 return null
