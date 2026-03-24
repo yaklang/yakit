@@ -18,10 +18,12 @@ import {alterCustomSchema} from "./alertPlugin"
 import {getLocalFileLinkInfo} from "../CustomFile/utils"
 import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
 import {HttpUploadImgBaseRequest, httpUploadImgPath} from "@/apiUtils/http"
-import {callCommand} from "@milkdown/kit/utils"
+import {$prose, callCommand} from "@milkdown/kit/utils"
 import {insertImageBlockCommand} from "./imageBlock"
 import {fileCommand} from "./uploadPlugin"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import {keymap} from "prosemirror-keymap"
+import {splitBlock} from "@milkdown/kit/prose/commands"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -251,47 +253,57 @@ export const uploadFileInMilkdown = (
     option: {type: HttpUploadImgBaseRequest["type"]; notepadHash: string; userId: number}
 ) => {
     const {type, notepadHash, userId} = option
-        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
-        .then((data) => {
-            const filesLength = data.filePaths.length
-            if (filesLength) {
-                const path = data.filePaths[0].replace(/\\/g, "\\")
-                getLocalFileLinkInfo(path).then((res) => {
-                    if (res.size > FileMaxSize) {
-                        yakitNotify("error", "文件大小不能超过1G")
+    handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]}).then((data) => {
+        const filesLength = data.filePaths.length
+        if (filesLength) {
+            const path = data.filePaths[0].replace(/\\/g, "\\")
+            getLocalFileLinkInfo(path).then((res) => {
+                if (res.size > FileMaxSize) {
+                    yakitNotify("error", "文件大小不能超过1G")
+                    return
+                }
+                const index = path.lastIndexOf(".")
+                const fileType = path.substring(index, path.length)
+                if (imgTypes.includes(fileType)) {
+                    if (res.size > ImgMaxSize) {
+                        yakitNotify("error", "图片大小不能超过1M")
                         return
                     }
-                    const index = path.lastIndexOf(".")
-                    const fileType = path.substring(index, path.length)
-                    if (imgTypes.includes(fileType)) {
-                        if (res.size > ImgMaxSize) {
-                            yakitNotify("error", "图片大小不能超过1M")
-                            return
-                        }
-                        httpUploadImgPath({path, type, filedHash: notepadHash})
-                            .then((src) => {
-                                action(
-                                    callCommand(insertImageBlockCommand.key, {
-                                        src,
-                                        alt: path,
-                                        title: ""
-                                    })
-                                )
-                            })
-                            .catch((e) => {
-                                yakitNotify("error", `上传图片失败:${e}`)
-                            })
-                    } else {
-                        action(
-                            callCommand(fileCommand.key, {
-                                fileId: "0",
-                                path,
-                                notepadHash,
-                                uploadUserId: userId
-                            })
-                        )
-                    }
-                })
-            }
-        })
+                    httpUploadImgPath({path, type, filedHash: notepadHash})
+                        .then((src) => {
+                            action(
+                                callCommand(insertImageBlockCommand.key, {
+                                    src,
+                                    alt: path,
+                                    title: ""
+                                })
+                            )
+                        })
+                        .catch((e) => {
+                            yakitNotify("error", `上传图片失败:${e}`)
+                        })
+                } else {
+                    action(
+                        callCommand(fileCommand.key, {
+                            fileId: "0",
+                            path,
+                            notepadHash,
+                            uploadUserId: userId
+                        })
+                    )
+                }
+            })
+        }
+    })
 }
+
+// 👇 使用 keymap 和 splitBlock 完美解决换行塌陷
+export const customShiftEnterPlugin = $prose(() =>
+    keymap({
+        "Shift-Enter": (state, dispatch, view) => {
+            // splitBlock 是 ProseMirror 原生的普通 Enter 换行处理
+            // 它会生成新的段落 <p>，由于内部包含了完善的空节点占位符逻辑，在最后一行换行绝对不会发生塌陷和回跳
+            return splitBlock(state, dispatch, view)
+        }
+    })
+)

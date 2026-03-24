@@ -26,6 +26,7 @@ import {
 import directive from "remark-directive"
 import {useMemoizedFn} from "ahooks"
 import {aiCustomPlugin} from "./customPlugin"
+import {customShiftEnterPlugin} from "@/components/MilkdownEditor/utils/utils"
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -96,6 +97,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                             })
                         })
                         .use(remarkDirective)
+                        /** customShiftEnterPlugin 方法的注册顺序要先于commonmark，不然会失效，导致Shift-Enter尾部换行塌陷 */
+                        .use(customShiftEnterPlugin)
                         .use(commonmark)
                         .use(gfm)
                         .use(gapCursorPlugin)
