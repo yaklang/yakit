@@ -678,18 +678,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </AutoSpin>
 
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-                    <YakitModal
-                        visible={passwordShow}
-                        title={t("Main.setPassword")}
-                        destroyOnClose={true}
-                        maskClosable={false}
-                        bodyStyle={{padding: "10px 24px 24px 24px"}}
-                        width={520}
-                        onCancel={() => setPasswordShow(false)}
-                        footer={null}
-                    >
-                        <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-                    </YakitModal>
 
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />
