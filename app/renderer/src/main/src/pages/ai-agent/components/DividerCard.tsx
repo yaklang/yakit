@@ -3,7 +3,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useMemo, type FC} from "react"
 import {OutlineLoadingIcon, OutlineXcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import {TaskInProgressIcon, TaskSuccessIcon} from "../aiTree/icon"
+import {TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon} from "../aiTree/icon"
 import {AITaskStatus} from "@/pages/ai-re-act/hooks/grpcApi"
 
 interface SuccessStatus {
@@ -70,12 +70,22 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     </div>
                 ]
             case AITaskStatus.error:
-            case AITaskStatus.skipped:
                 return [
-                    <OutlineXcircleIcon className={styles["icon-danger"]} />,
+                    <TaskErrorIcon key='error' />,
                     <div className={styles["divider-content-text"]}>
                         <span>{name}</span>
                         <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='danger'>
+                            <OutlineXIcon />
+                            <p className={styles["divider-content-error-text"]}>{desc}</p>
+                        </YakitTag>
+                    </div>
+                ]
+            case AITaskStatus.skipped:
+                return [
+                    <TaskSkippedIcon key='skipped' />,
+                    <div className={styles["divider-content-text"]}>
+                        <span>{name}</span>
+                        <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='white'>
                             <OutlineXIcon />
                             <p className={styles["divider-content-error-text"]}>{desc}</p>
                         </YakitTag>

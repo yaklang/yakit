@@ -1,6 +1,6 @@
 import React, {memo, useMemo} from "react"
 import {AITreeNodeProps, AITreeProps} from "./type"
-import {TaskErrorIcon, TaskInProgressIcon, TaskSuccessIcon} from "./icon"
+import {TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon} from "./icon"
 import {OutlineExitIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useMemoizedFn} from "ahooks"
@@ -149,8 +149,9 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
             case "completed":
                 return [<TaskSuccessIcon key='success' />, getWrapper(styles["node-wrapper-success"])]
             case "aborted":
-            case "skipped":
                 return [<TaskErrorIcon key='error' />, getWrapper(styles["node-wrapper-error"])]
+            case "skipped":
+                return [<TaskSkippedIcon key='skipped' />, getWrapper(styles["node-wrapper-skipped"])]
             case "processing":
                 return [<TaskInProgressIcon key='in-progress' />, getWrapper(styles["node-wrapper-in-progress"])]
             default:
