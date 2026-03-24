@@ -44,6 +44,10 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         const taskInfo = getTaskInfo()
         return taskInfo?.taskID || ""
     })
+    const getCoordinatorId = useMemoizedFn(() => {
+        const taskInfo = getTaskInfo()
+        return taskInfo?.coordinatorId || ""
+    })
     const onRecover = useMemoizedFn((coordinatorId: string) => {
         const taskId = getTaskId()
         if (!coordinatorId) return
@@ -115,7 +119,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                                         e.stopPropagation()
                                                     }}
                                                     style={{paddingRight: 0}}
-                                                    loading={cancelTaskLoading}
+                                                    loading={getCoordinatorId()===item.coordinator_id&&cancelTaskLoading}
                                                 >
                                                     继续任务
                                                 </YakitButton>

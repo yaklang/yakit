@@ -54,6 +54,12 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         valuePropName: "expand",
         trigger: "setExpand"
     })
+
+    useEffect(() => {
+        if (activeTab === AIChatLeft.HistoryTaskTree && !chatIPCData.execute) {
+            setActiveTab(AIChatLeft.Timeline)
+        }
+    }, [chatIPCData.execute])
     const planHistoryList = useCreation(() => {
         return (
             chatIPCData.planHistoryList || {
