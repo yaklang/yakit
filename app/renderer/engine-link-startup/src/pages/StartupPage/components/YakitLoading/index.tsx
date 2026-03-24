@@ -737,7 +737,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                             "reclaimDatabaseSpace_start",
                                             "ready",
                                             "init"
-                                        ].includes(yakitStatus) && (
+                                        ].includes(yakitStatus) && false && (
                                             <>
                                                 <Divider type='vertical'></Divider>
                                                 <Tooltip
