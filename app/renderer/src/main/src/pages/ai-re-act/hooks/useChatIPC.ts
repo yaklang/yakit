@@ -89,7 +89,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 向进行中的grpc流接口发送请求 */
     const sendRequest = useMemoizedFn((request: AIInputEvent) => {
         if (!chatID.current) return
-        // console.log("send-ai-re-act---\n", chatID.current, request)
+        console.log("send-ai-re-act---\n", chatID.current, request)
         ipcRenderer.invoke("send-ai-re-act", chatID.current, request)
     })
 
@@ -589,7 +589,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 })
 
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
-                // console.log("onStart-res", res, ipcContent)
+                console.log("onStart-res", res, ipcContent)
 
                 if (res.Type === "structured" && res.NodeId === "session_title") {
                     // 生成会话的名称
@@ -607,7 +607,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                         taskChatID.current = {
                             taskID: startInfo["re-act_task"],
                             status: AITaskStatus.inProgress,
-                            coordinatorId: startInfo.coordinator_id
+                            coordinatorId: startInfo.coordinator_id // 取消任务规划需要的数据id
                         }
                         casualChatID.current -= 1
                         setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
@@ -618,7 +618,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                         // 触发任务规划UI展示的回调
                         onTaskStart && onTaskStart()
                     }
+                    /** 获取最新任务树状态 */
                     sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN})
+                    /** 恢复任务规划的时候，这个指令执行成功后，在这里取消loading */
                     setCancelTaskLoading(false)
                     return
                 }
