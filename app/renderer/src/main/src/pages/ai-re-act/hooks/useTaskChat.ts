@@ -16,6 +16,7 @@ import {AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent, AITaskStatus} f
 import {AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, AITaskInfoProps, ReActChatRenderItem} from "./aiRender"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useChatContent from "./useChatContent"
+import {has} from "lodash"
 
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
@@ -543,9 +544,14 @@ function useTaskChat(params?: UseTaskChatParams) {
             if (res.Type === "plan") {
                 // 更新正在执行的任务树
                 const tasks = JSON.parse(ipcContent) as {root_task: AIAgentGrpcApi.PlanTask}
-                planTree.current = cloneDeep(tasks.root_task)
-                const plans = genExecTasks(tasks.root_task)
-                setPlan(cloneDeep(plans))
+                if (has(tasks, "root_task")) {
+                    planTree.current = cloneDeep(tasks.root_task)
+                    const plans = genExecTasks(tasks.root_task)
+                    setPlan(cloneDeep(plans))
+                } else {
+                    setPlan([])
+                }
+
                 return
             }
 

@@ -89,7 +89,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 向进行中的grpc流接口发送请求 */
     const sendRequest = useMemoizedFn((request: AIInputEvent) => {
         if (!chatID.current) return
-        console.log("send-ai-re-act---\n", chatID.current, request)
+        // console.log("send-ai-re-act---\n", chatID.current, request)
         ipcRenderer.invoke("send-ai-re-act", chatID.current, request)
     })
 
@@ -589,7 +589,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 })
 
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
-                console.log("onStart-res", res, ipcContent)
+                // console.log("onStart-res", res, ipcContent)
 
                 if (res.Type === "structured" && res.NodeId === "session_title") {
                     // 生成会话的名称
