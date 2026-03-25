@@ -34,6 +34,10 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         inViewPort && onSendPlayHistoryList()
     }, [inViewPort])
 
+    const taskStatus = useCreation(() => {
+        return chatIPCData.taskStatus
+    }, [chatIPCData.taskStatus])
+
     const onSendPlayHistoryList = useMemoizedFn(() => {
         chatIPCData.execute && handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
     })
@@ -66,11 +70,6 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     const isShowLoading = useMemoizedFn((coordinatorId: string) => {
         const taskInfo = getTaskInfo()
         return taskInfo?.status === AITaskStatus.inProgress && taskInfo.coordinatorId === coordinatorId
-    })
-    const isExecuting = useMemoizedFn(() => {
-        const coordinatorIds = data.records.map((item) => item.coordinator_id)
-        const taskInfo = getTaskInfo()
-        return coordinatorIds.includes(taskInfo?.coordinatorId || "") && taskInfo?.status === AITaskStatus.inProgress
     })
     return (
         <div className={styles["history-task-tree-container"]} ref={historyContainerRef}>
@@ -105,7 +104,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                         ) : (
                                             <AIHistoryContinueTask
                                                 item={item}
-                                                isExecuting={isExecuting()}
+                                                isExecuting={taskStatus.loading}
                                                 onRecover={onRecover}
                                             />
                                         )}
@@ -149,7 +148,14 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
     return (
         <YakitPopconfirm
             title={!!getTaskId() ? "停掉当前正在执行的任务，恢复此任务" : "是否确认恢复该此任务"}
-            onConfirm={() => onRecover(item.coordinator_id)}
+            onConfirm={(e) => {
+                e?.stopPropagation()
+                onRecover(item.coordinator_id)
+            }}
+            onCancel={(e) => {
+                e?.stopPropagation()
+                setVisible(false)
+            }}
             visible={visible}
             onVisibleChange={(v) => {
                 if (isExecuting) return
