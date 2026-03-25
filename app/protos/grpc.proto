@@ -529,6 +529,7 @@ service Yak {
   rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
   rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
   rpc QueryMITMReplacerRules(QueryMITMReplacerRulesRequest) returns (QueryMITMReplacerRulesResponse);
+  rpc DeduplicateMITMReplacerRules(Empty) returns (DbOperateMessage);
   rpc GenerateURL(GenerateURLRequest) returns (GenerateURLResponse);
 
   rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
@@ -638,6 +639,8 @@ service Yak {
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
+  rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -746,6 +749,7 @@ service Yak {
   // AI相关
   rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
   rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
+  rpc AIConfigHealthCheck(AIConfigHealthCheckRequest) returns (AIConfigHealthCheckResponse);
   rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
   rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
   rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
@@ -1917,6 +1921,7 @@ message AIStartParams {
 
   // timeline sessionID  用于多轮对话保持上下文
   string TimelineSessionID = 31;
+
   // Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告
   int64 AICallTokenLimit = 34;
 }
@@ -2035,7 +2040,7 @@ message DeleteAISessionRequest {
 message AIForgeFilter {
   string ForgeName = 1;
   repeated string ForgeNames = 11;
-  string ForgeType = 2; // enum: yak or config
+  string ForgeType = 2; // enum: yak, config or skillmd
   string Keyword = 3;
   // tag
   repeated string Tag = 4;
@@ -2047,7 +2052,7 @@ message AIForge {
   int64 Id = 1;
   string ForgeName = 2;
   string ForgeContent = 3; // yak type is yak script, config type is empty
-  string ForgeType = 4; // yak or config
+  string ForgeType = 4; // yak, config or skillmd
   string Description = 5;
   string ParamsUIConfig = 6; // json config for UI
   string Params = 7; // cli parameters
@@ -2062,6 +2067,7 @@ message AIForge {
   string ResultPrompt = 16; // 结果提示语
   string ForgeVerboseName = 17; // 给用户看的展示名称
   string Author = 18;
+  string SkillPath = 19; // local path used to import/export serialized skill filesystem
 }
 
 message QueryAIForgeRequest {
@@ -2093,6 +2099,7 @@ message ImportAIForgeRequest {
 message GetAIForgeRequest {
   int64 ID = 1;
   string ForgeName = 2;
+  bool InflateSkillPath = 3; // restore stored skill filesystem into a temporary directory and return its path
 }
 
 message AIFocus {
@@ -3273,6 +3280,8 @@ message ExtractedDataFilter {
   repeated string TraceID = 1;
   repeated string RuleVerbose = 2;
   repeated int64 AnalyzedIds = 3;
+  string Keyword = 4; // 模糊搜索：规则名称、数据内容
+  repeated int64 Ids = 5;
 }
 
 message ExportMITMRuleExtractedDataRequest {
@@ -3287,6 +3296,17 @@ message ExportMITMRuleExtractedDataResponse {
   string Verbose = 4;
 }
 
+message DeleteMITMRuleExtractedDataRequest {
+  ExtractedDataFilter Filter = 1;
+}
+
+message DeduplicateMITMRuleExtractedDataRequest {
+  ExtractedDataFilter Filter = 1;
+}
+
+message DeduplicateMITMRuleExtractedDataResponse {
+  int64 DeletedCount = 1;
+}
 
 message ExportProjectRequest {
   string ProjectName = 1;
@@ -6926,6 +6946,7 @@ message MITMRequest {
   bool enableProxyAuth = 51;
   repeated string dnsServers = 52;
   repeated KVPair hosts = 53;
+  bool EnableHostsMappingBeforeDownstreamProxy = 68;
 
   // max content-length
   int64 maxContentLength = 55;
@@ -8463,6 +8484,20 @@ message ListAiModelResponse{
   repeated string ModelName = 1;
 }
 
+message AIConfigHealthCheckRequest{
+  ThirdPartyApplicationConfig Config = 1;
+  string Content = 2;
+}
+
+message AIConfigHealthCheckResponse{
+  int64 FirstByteCostMs = 1;
+  int64 TotalCostMs = 2;
+  string RawRequest = 3;
+  int32 ResponseStatusCode = 4;
+  string ResponseContent = 5;
+  string ErrorMessage = 6;
+}
+
 message AIProvider {
   int64 Id = 1;
   ThirdPartyApplicationConfig Config = 2;
@@ -8627,6 +8662,7 @@ message MITMV2Request{
   repeated string DnsServers = 13;
   repeated KVPair hosts = 14;
   repeated KVPair HostsMapping = 46;
+  bool EnableHostsMappingBeforeDownstreamProxy = 56;
 
   // max content-length
   int64 MaxContentLength = 15;
