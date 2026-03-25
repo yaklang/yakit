@@ -1,6 +1,6 @@
-import React, {memo, useEffect, useRef} from "react"
+import React, {memo, useEffect, useRef, useState} from "react"
 import styles from "./HistoryTaskTree.module.scss" // 假设你有对应的样式文件
-import {HistoryTaskTreeItemProps, HistoryTaskTreeProps} from "./HistoryTaskTreeType"
+import {AIHistoryContinueTaskProps, HistoryTaskTreeItemProps, HistoryTaskTreeProps} from "./HistoryTaskTreeType"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum, AITaskStatus} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -14,6 +14,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {OutlineLoadingIcon} from "@/assets/icon/outline"
 import {AIChatLeft} from "../AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {yakitNotify} from "@/utils/notification"
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     const {data, handleTabChange} = props
@@ -33,20 +34,12 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         inViewPort && onSendPlayHistoryList()
     }, [inViewPort])
 
-    const cancelTaskLoading = useCreation(() => {
-        return chatIPCData.cancelTaskLoading
-    }, [chatIPCData.cancelTaskLoading])
-
     const onSendPlayHistoryList = useMemoizedFn(() => {
         chatIPCData.execute && handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
     })
     const getTaskId = useMemoizedFn(() => {
         const taskInfo = getTaskInfo()
         return taskInfo?.taskID || ""
-    })
-    const getCoordinatorId = useMemoizedFn(() => {
-        const taskInfo = getTaskInfo()
-        return taskInfo?.coordinatorId || ""
     })
     const onRecover = useMemoizedFn((coordinatorId: string) => {
         const taskId = getTaskId()
@@ -73,6 +66,11 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     const isShowLoading = useMemoizedFn((coordinatorId: string) => {
         const taskInfo = getTaskInfo()
         return taskInfo?.status === AITaskStatus.inProgress && taskInfo.coordinatorId === coordinatorId
+    })
+    const isExecuting = useMemoizedFn(() => {
+        const coordinatorIds = data.records.map((item) => item.coordinator_id)
+        const taskInfo = getTaskInfo()
+        return coordinatorIds.includes(taskInfo?.coordinatorId || "") && taskInfo?.status === AITaskStatus.inProgress
     })
     return (
         <div className={styles["history-task-tree-container"]} ref={historyContainerRef}>
@@ -105,25 +103,11 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                                 icon={<OutlineLoadingIcon className={styles["icon-primary"]} />}
                                             />
                                         ) : (
-                                            <YakitPopconfirm
-                                                title={
-                                                    !!getTaskId()
-                                                        ? "停掉当前正在执行的任务，恢复此任务"
-                                                        : "是否确认恢复该此任务"
-                                                }
-                                                onConfirm={() => onRecover(item.coordinator_id)}
-                                            >
-                                                <YakitButton
-                                                    type='text'
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                    }}
-                                                    style={{paddingRight: 0}}
-                                                    loading={getCoordinatorId()===item.coordinator_id&&cancelTaskLoading}
-                                                >
-                                                    继续任务
-                                                </YakitButton>
-                                            </YakitPopconfirm>
+                                            <AIHistoryContinueTask
+                                                item={item}
+                                                isExecuting={isExecuting()}
+                                                onRecover={onRecover}
+                                            />
                                         )}
                                     </div>
                                 }
@@ -136,6 +120,57 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                 </YakitCollapse>
             )}
         </div>
+    )
+})
+
+const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
+    const {chatIPCEvents} = useChatIPCDispatcher()
+    const {chatIPCData} = useChatIPCStore()
+
+    const {item, isExecuting, onRecover} = props
+    const [visible, setVisible] = useState<boolean>(false)
+
+    const cancelTaskLoading = useCreation(() => {
+        return chatIPCData.cancelTaskLoading
+    }, [chatIPCData.cancelTaskLoading])
+
+    const getCoordinatorId = useMemoizedFn(() => {
+        const taskInfo = getTaskInfo()
+        return taskInfo?.coordinatorId || ""
+    })
+    const getTaskId = useMemoizedFn(() => {
+        const taskInfo = getTaskInfo()
+        return taskInfo?.taskID || ""
+    })
+    const getTaskInfo = useMemoizedFn(() => {
+        return chatIPCEvents.fetchTaskChatID()
+    })
+
+    return (
+        <YakitPopconfirm
+            title={!!getTaskId() ? "停掉当前正在执行的任务，恢复此任务" : "是否确认恢复该此任务"}
+            onConfirm={() => onRecover(item.coordinator_id)}
+            visible={visible}
+            onVisibleChange={(v) => {
+                if (isExecuting) return
+                setVisible(v)
+            }}
+        >
+            <YakitButton
+                type='text'
+                onClick={(e) => {
+                    e.stopPropagation()
+                    if (isExecuting) {
+                        yakitNotify("error", "请停止当前任务规划后再点击“继续任务”")
+                        return
+                    }
+                }}
+                style={{paddingRight: 0}}
+                loading={getCoordinatorId() === item.coordinator_id && cancelTaskLoading}
+            >
+                继续任务
+            </YakitButton>
+        </YakitPopconfirm>
     )
 })
 

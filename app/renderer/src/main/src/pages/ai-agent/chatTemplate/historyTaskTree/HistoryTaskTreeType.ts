@@ -11,3 +11,9 @@ export interface HistoryTaskTreeItemProps {
     // 历史任务的单条记录
     item: AIAgentGrpcApi.PlanHistory
 }
+
+export interface AIHistoryContinueTaskProps {
+    item: AIAgentGrpcApi.PlanHistory
+    isExecuting: boolean
+    onRecover: (coordinatorId: string) => void
+}

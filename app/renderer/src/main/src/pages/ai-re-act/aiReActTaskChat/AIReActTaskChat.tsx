@@ -123,7 +123,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         setTimeout(() => {
             handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
             emiter.emit("onRefreshAITaskHistoryList")
-        }, 200)
+        }, 500)
     })
     const onExtraAction = useMemoizedFn((type: "stopTask" | "stopSubTask" | "recover", syncID: string) => {
         switch (type) {
