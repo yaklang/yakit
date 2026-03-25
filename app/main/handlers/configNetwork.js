@@ -156,6 +156,21 @@ module.exports = (win, getClient) => {
         return await asyncListAIProviders(params)
     })
 
+    const asyncTestAIModel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().TestAIModel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("TestAIModel", async (e, params) => {
+        return await asyncTestAIModel(params)
+    })
+    
     const asyncQueryAIProvider = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryAIProvider(params, (err, data) => {
