@@ -41,9 +41,10 @@ import {
     SolidToolIcon
 } from "@/assets/icon/solid"
 import {MCPServerType} from "./type/aiMCP"
-import {DefaultMemoryList} from "../ai-re-act/hooks/defaultConstant"
+import {DefaultMemoryList, DefaultPlanHistoryList} from "../ai-re-act/hooks/defaultConstant"
 import {ColorsAIIcon} from "@/assets/icon/colors"
 import {AIGlobalConfig, AIModelTypeFileName} from "./aiModelList/utils"
+import {cloneDeep} from "lodash"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -272,13 +273,16 @@ export const defaultChatIPCData: UseChatIPCState = {
         total: 0,
         data: []
     },
-    casualStatus: {loading: false, title: ""},
+    casualStatus: { loading: false, title: "" },
     reActTimelines: [],
-    memoryList: {...DefaultMemoryList},
-    taskStatus: {loading: false, plan: "", task: ""},
+    memoryList: { ...DefaultMemoryList },
+    taskStatus: { loading: false, plan: "", task: "" },
     systemStream: "",
     focusMode: "",
-    switchLoading: false
+    switchLoading: false,
+    planHistoryList: cloneDeep(DefaultPlanHistoryList),
+    cancelCasualLoading: false,
+    cancelTaskLoading: false
 }
 //#endregion
 

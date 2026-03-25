@@ -119,15 +119,13 @@ export enum AIInputEventSyncTypeEnum {
     SYNC_TYPE_PLAN = "plan",
     SYNC_TYPE_CONSUMPTION = "consumption",
     SYNC_TYPE_PING = "ping",
-    SYNC_TYPE_SET_CONFIG = "set_config",
     SYNC_TYPE_PROCESS_EVENT = "sync_process_event",
     /** 获取队列信息 */
     SYNC_TYPE_QUEUE_INFO = "queue_info",
     /** 查看上下文 */
     SYNC_TYPE_TIMELINE = "timeline",
     SYNC_TYPE_KNOWLEDGE = "enhance_knowledge",
-    /**@deprecated 更新AI配置 更改为hotpatchType*/
-    SYNC_TYPE_UPDATE_CONFIG = "update_config",
+    SYNC_TYPE_UPDATE_CONFIG = "set_config",
     /** 获取当前会话的记忆列表 */
     SYNC_TYPE_MEMORY_CONTEXT = "memory_sync",
     SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_task",
@@ -137,13 +135,16 @@ export enum AIInputEventSyncTypeEnum {
     SYNC_TYPE_REACT_REMOVE_TASK = "react_remove_task",
     /** 清空队列 */
     SYNC_TYPE_REACT_CLEAR_TASK = "react_clear_task",
+    /** 恢复任务 */
+    SYNC_TYPE_RECOVERY_PLAN_AND_EXEC = "recovery_plan_and_exec",
     /** 取消指定任务 */
     SYNC_TYPE_REACT_CANCEL_TASK = "react_cancel_task",
     /** 取消指定的任务树上的某个节点 */
     SYNC_TYPE_SKIP_SUBTASK_IN_PLAN = "skip_subtask_in_plan",
     /** 重跑指定的任务树上的某个节点 */
-    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan"
-    /** */
+    SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan",
+    /** 获取历史任务列表 */
+    SYNC_TYPE_PLAN_EXEC_TASKS = "plan_exec_tasks"
 }
 
 export interface AIInputEvent {
@@ -359,7 +360,17 @@ export declare namespace AIAgentGrpcApi {
     }
     /** 改变任务状态 */
     export interface ChangeTask {
-        task: PlanTask
+        task: {
+            index: string
+            /** 任务名 */
+            name: string
+            /** 正文 */
+            goal: string
+            /** 后端供(push_task|pop_task)对应的唯一标识 */
+            task_uuid?: string
+            /** 后端供pop_task反馈的任务执行状态 */
+            task_status?: AITaskStatus
+        }
         type: string
     }
     /** 更新任务状态、收集任务总结 */
@@ -640,6 +651,39 @@ export declare namespace AIAgentGrpcApi {
             R_total: number
             T_total: number
         }
+    }
+
+    /** 任务规划历史数据-任务进度信息 */
+    export interface PlanHistoryProgress {
+        total_tasks: number
+        completed_tasks: number
+        skipped_tasks: number
+        aborted_tasks: number
+        current_index: number
+        current_task_index: string
+        current_task: string
+        current_goal: string
+        phase: "NotCompleted" | "Completed"
+        updated_at: number
+    }
+    /** 任务规划历史数据 */
+    export interface PlanHistory {
+        coordinator_id: string
+        created_at: string
+        created_at_unix: number
+        session_id: string
+        task_progress: PlanHistoryProgress
+        task_tree: AITaskInfoProps[]
+        updated_at: string
+        updated_at_unix: number
+        /** 任务树根节点的name(前端逻辑，仅供UI使用) */
+        root_task_name: string
+    }
+    /** 任务规划历史列表 */
+    export interface PlanHistoryList {
+        records: PlanHistory[]
+        total: number
+        session_id: string
     }
 }
 

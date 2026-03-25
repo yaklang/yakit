@@ -12,6 +12,7 @@ export interface ChatIPCContextStore {
     reviewInfo?: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
+    syncIdInfoMap?: Map<string, boolean>
 }
 
 export interface AIChatIPCSendParams {
@@ -26,6 +27,7 @@ export interface AISendSyncMessageParams {
     syncType: AIInputEvent["SyncType"]
     SyncJsonInput?: AIInputEvent["SyncJsonInput"]
     params?: MakeOptional<AIStartParams, "UserQuery">
+    syncID?:string
 }
 export interface AISendConfigHotpatchParams {
     hotpatchType: AIInputEvent["HotpatchType"]
@@ -57,7 +59,7 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     chatIPCEvents: {
         fetchToken: () => "",
         fetchAIRequest: () => undefined,
-        fetchTaskChatID: () => "",
+        fetchTaskChatID: () => undefined,
         onSwitchChat: () => {},
         onStart: () => {},
         onSend: () => {},
@@ -65,7 +67,8 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
         onReset: () => {},
         handleTaskReviewRelease: () => {},
         fetchChatDataStore: () => undefined,
-        onDelChats: () => {}
+        onDelChats: () => {},
+        handleCancelLoadingChange: () => {}
     },
     handleSendCasual: () => {},
     handleSendTask: () => {},

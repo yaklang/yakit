@@ -1,6 +1,13 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AIYakExecFileRecord, ReActChatRenderItem} from "./aiRender"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {
+    AIChatQSData,
+    AIStreamOutput,
+    AITaskInfoProps,
+    AIYakExecFileRecord,
+    ReActChatBaseInfo,
+    ReActChatRenderItem
+} from "./aiRender"
+import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams, AITaskStatus} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {Dispatch, SetStateAction} from "react"
@@ -129,6 +136,9 @@ export interface UseChatIPCParams {
 
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
+
+    /** 同步信息返回 */
+    onSyncIDChange?: (syncID: string) => void
 }
 
 /** 会话文件系统-pin */
@@ -185,6 +195,12 @@ export interface UseChatIPCState {
     focusMode: string
     /** 切换session时的loading状态 */
     switchLoading: boolean
+    /** 任务规划历史数据-任务树 */
+    planHistoryList: AIAgentGrpcApi.PlanHistoryList
+    /** 用户主动取消问题的loading状态(自由对话) */
+    cancelCasualLoading: boolean
+    /** 用户主动取消问题的loading状态(任务规划) */
+    cancelTaskLoading: boolean
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -204,13 +220,20 @@ export interface AIChatSendParams {
     extraValue?: AIChatIPCStartParams["extraValue"]
 }
 
+/** 任务规划的taskID和状态 */
+export interface TaskChatTaskInfo {
+    taskID: string
+    status: AITaskStatus
+    coordinatorId: AIOutputEvent["CoordinatorId"]
+}
+
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
     /** 获取当前执行接口流的请求参数 */
     fetchAIRequest: () => AIStartParams | undefined
-    /** 获取当前执行任务规划的问题id */
-    fetchTaskChatID: () => string
+    /** 获取当前执行任务规划的问题详情 */
+    fetchTaskChatID: () => TaskChatTaskInfo | undefined
     /** 获取当前外界传入的数据类实例 */
     fetchChatDataStore: () => UseChatIPCParams["cacheDataStore"]
     /** 切换历史会话展示 */
@@ -232,6 +255,8 @@ export interface UseChatIPCEvents {
     handleTaskReviewRelease: (id: string) => void
     /** 删除会话操作的关联逻辑 */
     onDelChats: (session: string[]) => void
+    /** 用户主动取消问题的loading状态变换 */
+    handleCancelLoadingChange: (type: ReActChatBaseInfo["chatType"], status: boolean) => void
 }
 // #endregion
 

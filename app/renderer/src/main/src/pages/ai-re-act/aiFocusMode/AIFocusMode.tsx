@@ -125,7 +125,6 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                                 })}
                             >
                                 <div className={styles["text"]}>{item.label}</div>
-                                <div className={styles["describe"]}> {item.describe}</div>
                             </div>
                         </Tooltip>
                     </YakitSelect.Option>

@@ -59,7 +59,8 @@ import {CustomMention} from "../Mention/CustomMention"
 import {useEffect} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import {slash, SlashView} from "../Slash/Slash"
-import { httpUploadImgPath } from "@/apiUtils/http"
+import {httpUploadImgPath} from "@/apiUtils/http"
+import {customShiftEnterPlugin} from "./utils"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -78,7 +79,6 @@ interface InitEditorHooksProps
     diffProps?: InitEditorHooksDiffProps
     localProps?: InitEditorHooksLocalProps
     inViewport?: boolean
-
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
     const {
@@ -385,6 +385,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                             }
                         })
                     })
+                    /** customShiftEnterPlugin 方法的注册顺序要先于commonmark，不然会失效，导致Shift-Enter尾部换行塌陷 */
+                    .use(customShiftEnterPlugin)
                     .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
                     .use(gfm)
                     .use(cursor)

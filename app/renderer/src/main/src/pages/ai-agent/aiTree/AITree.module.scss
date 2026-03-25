@@ -140,6 +140,12 @@
         --text-color: var(--Colors-Use-Error-Primary);
         --bg-hover-color: var(--Colors-Use-Error-Border);
     }
+    .node-wrapper-skipped {
+        margin-bottom: 4px;
+        --bg-color: var(--Colors-Use-Neutral-Border);
+        --text-color: var(--Colors-Use-Neutral-Disable);
+        --bg-hover-color: var(--yakit-colors-Neutral-40);
+    }
     .node-wrapper-in-progress {
         margin-bottom: 4px;
         --bg-color: var(--Colors-Use-Warning-Focus);
@@ -207,6 +213,15 @@
         .node-icon:not(.node-icon-parent-slash) + .node-icon-slash::after {
             height: 32px;
             left: -2px;
+        }
+    }
+
+    .status-icon {
+        width: 16px;
+        height: 16px;
+        svg {
+            width: 16px;
+            height: 16px;
         }
     }
 }
@@ -290,7 +305,7 @@
     background-color: var(--Colors-Use-Basic-Background);
     display: flex;
     align-items: center;
-    justify-content: center;    
+    justify-content: center;
     .center-wrapper {
         width: 100%;
         height: 100%;

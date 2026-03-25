@@ -7,7 +7,7 @@ import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat from "./useCasualChat"
 import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import useTaskChat from "./useTaskChat"
-import {genErrorLogData, handleGrpcDataPushLog} from "./utils"
+import {genErrorLogData, genExecTasks, handleGrpcDataPushLog} from "./utils"
 import {
     AIChatIPCNotifyMessage,
     AIChatIPCStartParams,
@@ -16,13 +16,21 @@ import {
     AIQuestionQueues,
     CasualLoadingStatus,
     PlanLoadingStatus,
+    TaskChatTaskInfo,
     UseCasualChatEvents,
     UseChatIPCEvents,
     UseChatIPCParams,
     UseChatIPCState,
     UseHookBaseParams
 } from "./type"
-import {AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {
+    AIAgentGrpcApi,
+    AIInputEvent,
+    AIInputEventSyncTypeEnum,
+    AIOutputEvent,
+    AIStartParams,
+    AITaskStatus
+} from "./grpcApi"
 import useAIChatLog from "./useAIChatLog"
 import cloneDeep from "lodash/cloneDeep"
 import {
@@ -30,6 +38,7 @@ import {
     DeafultAIQuestionQueues,
     DefaultCasualLoadingStatus,
     DefaultMemoryList,
+    DefaultPlanHistoryList,
     DefaultPlanLoadingStatus
 } from "./defaultConstant"
 import useThrottleState from "@/hook/useThrottleState"
@@ -37,14 +46,23 @@ import {grpcQueryAIEvent} from "@/pages/ai-agent/grpc"
 import useAINodeLabel from "./useAINodeLabel"
 import {AIChatData} from "@/pages/ai-agent/type/aiChat"
 import {DeepPartial} from "@/pages/ai-agent/store/ChatDataStore"
+import {ReActChatBaseInfo} from "./aiRender"
 
 const {ipcRenderer} = window.require("electron")
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {cacheDataStore, setSessionChatName, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} =
-        params || {}
+    const {
+        cacheDataStore,
+        setSessionChatName,
+        onTaskStart,
+        onTaskReview,
+        onTaskReviewExtra,
+        onReviewRelease,
+        onEnd,
+        onSyncIDChange
+    } = params || {}
 
     const {getLabelByParams} = useAINodeLabel()
 
@@ -213,6 +231,39 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // #endregion
 
+    // #region 历史任务规划列表相关逻辑
+    const [planHistoryList, setPlanHistoryList] = useState<AIAgentGrpcApi.PlanHistoryList>(
+        cloneDeep(DefaultPlanHistoryList)
+    )
+    const handlePlanHistoryListChange = useMemoizedFn((list: AIAgentGrpcApi.PlanHistoryList) => {
+        try {
+            const arr = cloneDeep(list.records)
+            if (!arr || arr.length === 0) {
+                setPlanHistoryList({...list})
+                return
+            }
+            const newArr = arr
+                .map((item) => {
+                    // 因为后端给过来的task_progress是一个json的string类型数据
+                    item.task_progress = JSON.parse(
+                        item.task_progress as unknown as string
+                    ) as AIAgentGrpcApi.PlanHistoryProgress
+                    // 因为后端给过来的task_tree是一个json的string类型数据，所以需要转换成树形结构的数据，供UI展示使用
+                    const tree = JSON.parse(item.task_tree as unknown as string) as AIAgentGrpcApi.PlanTask
+                    // 记录任务虎根节点的名字，供UI展示使用
+                    item.root_task_name = tree.name
+                    item.task_tree = genExecTasks(tree)
+                    return item
+                })
+                .filter((item) => item.task_progress.phase !== "Completed")
+            setPlanHistoryList({...list, records: newArr})
+        } catch (error) {}
+    })
+    const handleResetPlanHistoryList = useMemoizedFn(() => {
+        setPlanHistoryList(cloneDeep(DefaultPlanHistoryList))
+    })
+    // #endregion
+
     // #region 单次流执行时的输出展示数据
     // 日志
     const logEvents = useAIChatLog()
@@ -231,6 +282,10 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // #region 自由对话(ReAct)相关变量和hook
     const casualChatID = useRef(0)
+
+    /** 用户主动关闭当前问题的loading状态(自由对话) */
+    const [cancelCasualLoading, setCancelCasualLoading] = useState(false)
+
     /** 自由对话(ReAct)的loading状态 */
     const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>(cloneDeep(DefaultCasualLoadingStatus))
     const handleResetCasualChatLoading = useMemoizedFn(() => {
@@ -247,11 +302,17 @@ function useChatIPC(params?: UseChatIPCParams) {
     // #endregion
 
     // #region 任务规划相关变量和hook
-    /** 任务规划对应的问题ID */
-    const taskChatID = useRef("")
+    /** 任务规划对应的问题信息, 供UI使用，因为任务结束后，该变量不会清空 */
+    const taskChatID = useRef<TaskChatTaskInfo>()
     const fetchTaskChatID = useMemoizedFn(() => {
         return taskChatID.current
     })
+    const handleResetTaskChatID = useMemoizedFn(() => {
+        taskChatID.current = undefined
+    })
+
+    /** 用户主动关闭当前问题的loading状态(任务规划) */
+    const [cancelTaskLoading, setCancelTaskLoading] = useState(false)
 
     /** 当前任务规划对应的数据流-CoordinatorId */
     const planCoordinatorId = useRef("")
@@ -259,7 +320,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     const [taskStatus, setTaskStatus] = useState<PlanLoadingStatus>(cloneDeep(DefaultPlanLoadingStatus))
 
     const handleResetTaskChatLoading = useMemoizedFn(() => {
-        taskChatID.current = ""
         planCoordinatorId.current = ""
         setTaskStatus(cloneDeep(DefaultPlanLoadingStatus))
     })
@@ -274,6 +334,15 @@ function useChatIPC(params?: UseChatIPCParams) {
         sendRequest: sendRequest
     })
     // #endregion
+
+    /** 用户主动取消问题的loading状态变换 */
+    const handleCancelLoadingChange = useMemoizedFn((type: ReActChatBaseInfo["chatType"], status: boolean) => {
+        if (type === "reAct") {
+            setCancelCasualLoading(status)
+        } else {
+            setCancelTaskLoading(status)
+        }
+    })
 
     // #region 问题和问题队列相关逻辑
     /** 更新问题队列状态 */
@@ -396,6 +465,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         taskChatEvent.handleCloseGrpc()
         setExecute(false)
         handleResetCasualChatLoading()
+        handleResetTaskChatID()
         handleResetTaskChatLoading()
     })
 
@@ -416,9 +486,13 @@ function useChatIPC(params?: UseChatIPCParams) {
         handleResetReActTimelines()
         handleResetSystemStream()
         handleResetFocusMode()
+        handleResetPlanHistoryList()
         handleResetCasualChatLoading()
+        handleResetTaskChatID()
         handleResetTaskChatLoading()
 
+        setCancelCasualLoading(false)
+        setCancelTaskLoading(false)
         yakExecResultEvent.handleResetData()
         casualChatEvent.handleResetData()
         taskChatEvent.handleResetData()
@@ -504,6 +578,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (res.CoordinatorId) {
                     updateCoordinatorIDs(res.CoordinatorId)
                 }
+                if (!!res.SyncID) {
+                    onSyncIDChange?.(res.SyncID)
+                }
 
                 // 记录会话中所有的RunTimeID
                 setRunTimeIDs((old) => {
@@ -527,7 +604,11 @@ function useChatIPC(params?: UseChatIPCParams) {
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         // 设置任务规划对应的问题ID, 并清除自由对话(ReAct)的loading状态
-                        taskChatID.current = startInfo["re-act_task"]
+                        taskChatID.current = {
+                            taskID: startInfo["re-act_task"],
+                            status: AITaskStatus.inProgress,
+                            coordinatorId: startInfo.coordinator_id // 取消任务规划需要的数据id
+                        }
                         casualChatID.current -= 1
                         setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
                         // 标记grpc流里属于任务规划的流
@@ -537,6 +618,10 @@ function useChatIPC(params?: UseChatIPCParams) {
                         // 触发任务规划UI展示的回调
                         onTaskStart && onTaskStart()
                     }
+                    /** 获取最新任务树状态 */
+                    sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN})
+                    /** 恢复任务规划的时候，这个指令执行成功后，在这里取消loading */
+                    setCancelTaskLoading(false)
                     return
                 }
                 if (res.Type === "end_plan_and_execution") {
@@ -628,6 +713,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
+                if (res.Type === "structured" && res.NodeId === "plan_exec_tasks") {
+                    // 任务规划历史数据列表
+                    const list = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanHistoryList
+                    handlePlanHistoryListChange(list)
+                    return
+                }
+
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
                     aiPerfDataEvent.handleSetData(res)
@@ -690,6 +782,10 @@ function useChatIPC(params?: UseChatIPCParams) {
                             if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
                             casualChatID.current -= 1
                             setCasualStatus((old) => ({...old, loading: casualChatID.current > 0}))
+                            if (taskChatID.current?.taskID === react_task_id) {
+                                taskChatID.current.status = react_task_now_status as AITaskStatus
+                                setCancelTaskLoading(false)
+                            }
                         }
                         return
                     } else if (res.NodeId === "status") {
@@ -930,7 +1026,10 @@ function useChatIPC(params?: UseChatIPCParams) {
             taskStatus,
             systemStream,
             focusMode,
-            switchLoading
+            switchLoading,
+            planHistoryList,
+            cancelCasualLoading,
+            cancelTaskLoading
         }
     }, [
         execute,
@@ -946,7 +1045,10 @@ function useChatIPC(params?: UseChatIPCParams) {
         taskStatus,
         systemStream,
         focusMode,
-        switchLoading
+        switchLoading,
+        planHistoryList,
+        cancelCasualLoading,
+        cancelTaskLoading
     ])
 
     const event: UseChatIPCEvents = useCreation(() => {
@@ -961,7 +1063,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             onClose,
             onReset,
             handleTaskReviewRelease,
-            onDelChats
+            onDelChats,
+            handleCancelLoadingChange
         }
     }, [])
 

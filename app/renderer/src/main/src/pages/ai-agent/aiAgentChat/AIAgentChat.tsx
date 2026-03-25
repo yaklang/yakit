@@ -169,6 +169,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         })
     }
 
+    const [syncIdInfoMap, {set: setSyncIdInfoMap, get: getSyncIdInfoMap, remove: removeSyncIdInfoMap}] = useMap<
+        string,
+        boolean
+    >(new Map())
+
+    const onSyncIDChange = useMemoizedFn((syncID: string) => {
+        const item = getSyncIdInfoMap(syncID)
+        if (!!item) {
+            removeSyncIdInfoMap(syncID)
+        }
+    })
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
@@ -176,6 +187,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
         setSessionChatName,
+        onSyncIDChange,
         cacheDataStore: aiChatDataStore
     })
     const {execute} = chatIPCData
@@ -212,14 +224,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     /**发送 IsSyncMessage 消息 */
     const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
         if (!activeID) return
-        const {syncType, SyncJsonInput, params} = data
+        const {syncType, SyncJsonInput, params, syncID} = data
         const info: AIInputEvent = {
             IsSyncMessage: true,
             SyncType: syncType,
             SyncJsonInput,
             Params: params,
-            SyncID: randomString(8)
+            SyncID: syncID || randomString(8)
         }
+        info.SyncID && setSyncIdInfoMap(info.SyncID, true)
         events.onSend({token: activeID, type: "", params: info})
     })
 
@@ -565,9 +578,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             chatIPCData,
             planReviewTreeKeywordsMap,
             reviewInfo,
-            reviewExpand
+            reviewExpand,
+            syncIdInfoMap
         }
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand])
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, syncIdInfoMap])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -752,7 +766,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
     const {t} = useI18nNamespaces(["aiAgent"])
-    const {reviewInfo, planReviewTreeKeywordsMap, showCancelSubtask, onExtraAction} = props
+    const {reviewInfo, planReviewTreeKeywordsMap, footerExtra} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -772,35 +786,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                 >
                     {expand ? t("AIReActTaskChatReview.hideReview") : t("AIReActTaskChatReview.expandReview")}
                 </YakitButton>
-                <div className={styles["review-footer-extra"]}>
-                    {showCancelSubtask && (
-                        <YakitPopconfirm
-                            placement='top'
-                            onConfirm={() => onExtraAction("stopSubTask")}
-                            title={t("AIReActTaskChatReview.cancelSubtaskConfirm")}
-                        >
-                            <YakitButton type='outline2' icon={<RedoDotIcon />}>
-                                {t("AIReActTaskChatReview.skipSubtask")}
-                            </YakitButton>
-                        </YakitPopconfirm>
-                    )}
-                    {node}
-                    <YakitPopconfirm
-                        placement='top'
-                        onConfirm={() => onExtraAction("stopTask")}
-                        title={t("AIReActTaskChatReview.cancelTaskConfirm")}
-                    >
-                        <Tooltip overlay={t("AIReActTaskChatReview.terminateTask")} placement='top'>
-                            <YakitButton
-                                className={styles["task-button"]}
-                                radius='28px'
-                                colors='danger'
-                                type='primary'
-                                icon={<OutlineExitIcon />}
-                            />
-                        </Tooltip>
-                    </YakitPopconfirm>
-                </div>
+                <div className={styles["review-footer-extra"]}>{footerExtra(node)}</div>
             </div>
         )
     })
