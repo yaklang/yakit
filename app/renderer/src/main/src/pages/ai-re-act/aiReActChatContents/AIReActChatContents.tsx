@@ -167,7 +167,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
                 components={components}
                 atBottomThreshold={50}
-                increaseViewportBy={{top: 300, bottom: 300}}
+                increaseViewportBy={{top: 160, bottom: 160}}
                 className={styles["re-act-contents-list"]}
             />
         </div>
