@@ -670,7 +670,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                     rules: [{required: true, message: "请输入本地路径"}]
                                 }}
                                 multiple={false}
-                                selectType='file'
+                                selectType={commonImportExportProps?.extra?.apiKey === "ImportAIForge" ? "all" : "file"}
                                 fileExtensionIsExist={false}
                             />
                             <Form.Item label='密码' name='Password'>
