@@ -2109,6 +2109,7 @@ message AIFocus {
   string UsagePrompt = 4;
   string VerboseName = 5;
   string VerboseNameZh = 6;
+  string DescriptionZh = 7;
 }
 
 message QueryAIFocusRequest {
@@ -3298,8 +3299,6 @@ message ExportMITMRuleExtractedDataResponse {
 
 message DeleteMITMRuleExtractedDataRequest {
   ExtractedDataFilter Filter = 1;
-  int64 Id = 1;
-  repeated int64 Ids = 2;
 }
 
 message DeduplicateMITMRuleExtractedDataRequest {
