@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useImperativeHandle, useMemo, useRef} from "react"
-import {Form, Tooltip} from "antd"
+import {Form, Progress, Tooltip} from "antd"
 import {useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import styles from "./PluginTunHijack.module.scss"
 import {failed, info, success, warn, yakitNotify} from "@/utils/notification"
@@ -19,7 +19,13 @@ import {
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TraceSvgSvgIcon} from "@/assets/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineExclamationcircleIcon, OutlinePlay2Icon, OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {
+    OutlineExclamationcircleIcon,
+    OutlinePlay2Icon,
+    OutlineRefreshIcon,
+    OutlineSearchIcon,
+    OutlineStethoscopeIcon
+} from "@/assets/icon/outline"
 import {QuitIcon} from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -38,8 +44,23 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {v4 as uuidv4} from "uuid"
 import {setClipboardText} from "@/utils/clipboard"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
+const CONNECTIVITY_CHECK_PLUGIN_NAME = "TUN 劫持联通性检测"
+const CONNECTIVITY_CHECK_DEBUG_PARAMS: DebugPluginRequest = {
+    Code: "",
+    PluginType: "yak",
+    Input: "",
+    HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+    ExecParams: [],
+    PluginName: CONNECTIVITY_CHECK_PLUGIN_NAME
+}
 export const PluginTunHijackDef: PluginTunHijackRefProps = {
     updatePluginTunHijack: () => {},
     closeTunHijackError: () => {}
@@ -132,6 +153,180 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
         )
     })
 )
+
+const ConnectivityCheckAction: React.FC = React.memo(() => {
+    const {t} = useI18nNamespaces(["mitm", "yakitUi"])
+    const [connectivityVisible, setConnectivityVisible] = useState(false)
+    const [isConnectivityChecking, setIsConnectivityChecking] = useState(false)
+    const [connectivityRuntimeId, setConnectivityRuntimeId] = useState("")
+    const [connectivityProgress, setConnectivityProgress] = useState(0)
+    const connectivityTokenRef = useRef(randomString(40))
+    const isManualStopRef = useRef(false)
+    const connectivityProgressTimerRef = useRef<NodeJS.Timeout>()
+    const connectivityProgressStartTimeRef = useRef(0)
+
+    const clearConnectivityProgressTimer = useMemoizedFn(() => {
+        if (connectivityProgressTimerRef.current) {
+            clearInterval(connectivityProgressTimerRef.current)
+            connectivityProgressTimerRef.current = undefined
+        }
+    })
+
+    const startConnectivityFakeProgress = useMemoizedFn(() => {
+        clearConnectivityProgressTimer()
+        setConnectivityProgress(0)
+        connectivityProgressStartTimeRef.current = Date.now()
+        const maxTime = 5000
+        connectivityProgressTimerRef.current = setInterval(() => {
+            const maxProgress = 80;
+            const elapsed = Date.now() - connectivityProgressStartTimeRef.current
+            const nextProgress = Math.min(maxProgress, Math.floor((elapsed / maxTime) * maxProgress))
+
+            setConnectivityProgress((prev) => {
+                if (prev >= maxProgress) return maxProgress
+                return Math.max(prev, nextProgress)
+            })
+ 
+            if (nextProgress >= maxProgress) {
+                clearConnectivityProgressTimer()
+            }
+        }, 1000)
+    })
+
+    const [connectivityStreamInfo, connectivityStreamActions] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: connectivityTokenRef.current,
+        setRuntimeId: setConnectivityRuntimeId,
+        onEnd: () => {
+            clearConnectivityProgressTimer()
+            setConnectivityProgress(100)
+            if (!isManualStopRef.current) {
+                success(t("PluginTunHijack.connectivityCheckCompleted"))
+            }
+            isManualStopRef.current = false
+            setIsConnectivityChecking(false)
+        },
+        onError: () => {
+            clearConnectivityProgressTimer()
+            setIsConnectivityChecking(false)
+        }
+    })
+
+    const clearConnectivityCheck = useMemoizedFn(() => {
+        clearConnectivityProgressTimer()
+        connectivityStreamActions.reset()
+        connectivityStreamActions.stop()
+        setIsConnectivityChecking(false)
+        setConnectivityRuntimeId("")
+        setConnectivityProgress(0)
+    })
+
+    const runConnectivityCheck = useMemoizedFn(() => {
+        clearConnectivityCheck()
+        apiDebugPlugin({
+            params: CONNECTIVITY_CHECK_DEBUG_PARAMS,
+            token: connectivityTokenRef.current,
+            isShowStartInfo: false
+        })
+            .then(() => {
+                setIsConnectivityChecking(true)
+                startConnectivityFakeProgress()
+                connectivityStreamActions.start()
+            })
+            .catch(() => {
+                clearConnectivityProgressTimer()
+                connectivityStreamActions.stop()
+                setIsConnectivityChecking(false)
+            })
+    })
+
+    useEffect(() => {
+        return () => {
+            clearConnectivityProgressTimer()
+        }
+    }, [clearConnectivityProgressTimer])
+
+    const handleOpenConnectivityCheck = useMemoizedFn(async () => {
+        if (isConnectivityChecking) {
+            setConnectivityVisible(true)
+            return
+        }
+
+        try {
+            await grpcFetchLocalPluginDetail({Name: CONNECTIVITY_CHECK_PLUGIN_NAME}, true)
+        } catch (error) {
+            failed(
+                t("PluginTunHijack.connectivityCheckPluginNotFound", {
+                    name: CONNECTIVITY_CHECK_PLUGIN_NAME
+                })
+            )
+            return
+        }
+
+        setConnectivityVisible(true)
+        isManualStopRef.current = false
+        runConnectivityCheck()
+    })
+
+    const handleStopConnectivityCheck = useMemoizedFn(() => {
+        isManualStopRef.current = true
+        connectivityStreamActions.cancel()
+        clearConnectivityCheck()
+        setConnectivityVisible(false)
+    })
+
+    const handleCloseConnectivityCheck = useMemoizedFn(() => {
+        setConnectivityVisible(false)
+        if (!isConnectivityChecking) {
+            clearConnectivityCheck()
+        }
+    })
+
+    return (
+        <>
+            <Tooltip
+                title={
+                    isConnectivityChecking
+                        ? t("PluginTunHijack.connectivityChecking")
+                        : t("PluginTunHijack.connectivityCheck")
+                }
+            >
+                <YakitButton
+                    loading={isConnectivityChecking}
+                    type='text2'
+                    icon={<OutlineStethoscopeIcon />}
+                    className={styles["connectivity-check-button"]}
+                    onClick={handleOpenConnectivityCheck}
+                />
+            </Tooltip>
+            <YakitModal
+                maskClosable={false}
+                visible={connectivityVisible}
+                title={t("PluginTunHijack.connectivityCheck")}
+                footer={
+                    <div className={styles["connectivity-check-footer"]}>
+                        <YakitButton type='outline2' colors='danger' onClick={handleStopConnectivityCheck}>
+                            {t("YakitButton.stop")}
+                        </YakitButton>
+                    </div>
+                }
+                width={"50%"}
+                onCloseX={handleCloseConnectivityCheck}
+            >
+                <Progress className={styles["connectivity-check-progress"]} percent={connectivityProgress} />
+                <div className={styles["connectivity-check-result"]}>
+                    <PluginExecuteResult
+                        streamInfo={connectivityStreamInfo}
+                        runtimeId={connectivityRuntimeId}
+                        loading={isConnectivityChecking}
+                        defaultActiveKey="日志"
+                    />
+                </div>
+            </YakitModal>
+        </>
+    )
+})
 
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -355,6 +550,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                                     <OutlineRefreshIcon />
                                 </YakitButton>
                             )}
+                            <ConnectivityCheckAction />
                         </div>
                         <div className={styles["extra"]}>
                             {tableType === "route" && (

@@ -527,7 +527,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 tip={tip}
                 onSetTip={onSetTip}
             ></DownStreamAgentModal>
-            <Divider style={{margin: "8px 0"}} />
+            <Divider style={{margin: "8px 0 0 0"}} />
             <div className={style["mitm-server-body"]}>
                 <MITMServer
                     isHasParams={isHasParams}
