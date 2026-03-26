@@ -44,6 +44,7 @@ interface HistoryAIReActChatProps {
     setOpenTabsFlag: React.Dispatch<React.SetStateAction<boolean>>
     setSetting: React.Dispatch<React.SetStateAction<AIAgentSetting>>
     inViewport: boolean
+    className?: string
 }
 
 const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
@@ -61,7 +62,8 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
         setActiveChat,
         setOpenTabsFlag,
         inViewport,
-        setSetting
+        setSetting,
+        className
     } = props
 
     const [globalNetworkConfig, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
@@ -204,7 +206,11 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     }, [activeID, aiReActChatRef, data, events, globalNetworkConfig, loading, showFreeChat, chatWidth])
 
     return (
-        <div ref={refRef} className={styles["ai-wrapper"]} id='main-operator-page-body-db-http-request-aiReAct-chat'>
+        <div
+            ref={refRef}
+            className={classNames(styles["ai-wrapper"], className)}
+            id='main-operator-page-body-db-http-request-aiReAct-chat'
+        >
             {resultRender}
         </div>
     )
