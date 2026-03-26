@@ -305,7 +305,6 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     pageType?: HTTPHistorySourcePageType
     includeInUrl?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
-    onRefreshTags?: () => void
     titleHeight?: number
     containerClassName?: string
     /** RuntimeId 流量过滤条件(RuntimeId) */
@@ -662,7 +661,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         runTimeId,
         downstreamProxyStr = "",
         filterTagDom,
-        onRefreshTags,
         onSetTableTotal,
         onSetTableSelectNum,
         onSetHasNewData,
@@ -1278,7 +1276,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         // 升序
                         maxIdRef.current = newData[newData.length - 1].Id
                     }
-                    onRefreshTags?.()
                 } else if (type === "offset") {
                     if (resData.length <= 0) {
                         // 没有数据

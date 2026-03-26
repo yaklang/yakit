@@ -200,7 +200,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     const [curProcess, setCurProcess] = useState<string[]>([])
     const [processQueryparams, setProcessQueryparams] = useState<string>("")
     const [curTags, setCurTags] = useState<string[]>([])
-    const [refreshTagsFlag, setRefreshTagsFlag] = useState<string>("")
 
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
@@ -213,6 +212,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
 
             const processQuery = JSONParseLog(queryParams, {page: "HTTPHistoryFilter", fun: "processQuery"}) || {}
             delete processQuery.ProcessName
+            delete processQuery.Tags
             setProcessQueryparams(JSON.stringify(processQuery))
         } catch (error) {}
     })
@@ -265,7 +265,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                                 <HistoryProcess
                                     queryparamsStr={processQueryparams}
                                     refreshProcessFlag={refreshFlag}
-                                    refreshTagsFlag={refreshTagsFlag}
                                     curProcess={curProcess}
                                     curTags={curTags}
                                     onSetCurTags={setCurTags}
@@ -282,7 +281,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                     <div className={styles["HTTPHistoryFilter-right"]}>
                         <HTTPFlowFilterTable
                             onQueryParams={onQueryParams}
-                            onRefreshTags={() => setRefreshTagsFlag(uuidv4())}
                             includeInUrl={includeInUrl}
                             ProcessName={curProcess}
                             TagsFilter={curTags}
@@ -334,7 +332,6 @@ interface HTTPFlowTableProps {
     ProcessName?: string[]
     TagsFilter?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
-    onRefreshTags?: () => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
     onSetClickedHttpFlow?: (flow?: HTTPFlow) => void
     onSetFirstHttpFlow?: (flow?: HTTPFlow) => void
@@ -354,7 +351,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ProcessName,
         TagsFilter,
         onQueryParams,
-        onRefreshTags,
         onSetSelectedHttpFlowIds,
         onSetClickedHttpFlow,
         onSetFirstHttpFlow,
@@ -2070,7 +2066,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     const update = useMemoizedFn((page: number) => {
         const isInit = page === 1
-        const shouldRefreshTags = page > pagination.Page
         if (isInit) {
             setLoading(true)
         }
@@ -2101,9 +2096,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 const resData = res?.Data || []
                 const dataHasClassName: HTTPFlow[] = getClassNameData(resData)
                 const d = isInit ? dataHasClassName : data.concat(dataHasClassName)
-                if (shouldRefreshTags && resData.length > 0) {
-                    onRefreshTags?.()
-                }
                 setData(d)
                 setTotal(res.Total)
 

@@ -204,7 +204,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [curProcess, setCurProcess] = useState<string[]>([])
     const [processQueryparams, setProcessQueryparams] = useState<string>("")
     const [curTags, setCurTags] = useState<string[]>([])
-    const [refreshTagsFlag, setRefreshTagsFlag] = useState<string>("")
 
     const mitmContent = useContext(MITMContext)
 
@@ -223,6 +222,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const processQuery =
                 JSONParseLog(queryParams, {page: "HTTPHistory", fun: "onQueryParams-processQuery"}) || {}
             delete processQuery.ProcessName
+            delete processQuery.Tags
             setProcessQueryparams(JSON.stringify(processQuery))
             if (pageType === "MITM") {
                 emiter.emit(
@@ -461,7 +461,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         <HistoryProcess
                                             queryparamsStr={processQueryparams}
                                             refreshProcessFlag={refreshFlag}
-                                            refreshTagsFlag={refreshTagsFlag}
                                             curProcess={curProcess}
                                             curTags={curTags}
                                             onSetCurTags={setCurTags}
@@ -502,7 +501,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     includeInUrl={includeInUrl}
                                     curProcess={curProcess}
                                     curTags={curTags}
-                                    onRefreshTags={() => setRefreshTagsFlag(uuidv4())}
                                     onQueryParams={onQueryParams}
                                     setOnlyShowFirstNode={setOnlyShowFirstNode}
                                     setSecondNodeVisible={setSecondNodeVisible}
@@ -536,7 +534,6 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     includeInUrl?: string[]
     curProcess?: string[]
     curTags?: string[]
-    onRefreshTags?: () => void
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     downstreamProxyStr?: string
     onSetTableTotal?: (t: number) => void
@@ -561,7 +558,6 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         filterTagDom,
         curProcess,
         curTags,
-        onRefreshTags,
         onQueryParams,
         downstreamProxyStr,
         onSetTableTotal,
@@ -711,7 +707,6 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             pageType={pageType}
                             historyId={historyId}
                             onQueryParams={onQueryParams}
-                            onRefreshTags={onRefreshTags}
                             inViewport={inViewport}
                             downstreamProxyStr={downstreamProxy}
                             ProcessName={curProcess}
@@ -917,7 +912,6 @@ interface HistoryProcessProps {
     onSetCurProcess: (curProcess: string[]) => void
     curTags?: string[]
     onSetCurTags?: (curTags: string[]) => void
-    refreshTagsFlag?: string
     resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
 }
 export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
@@ -928,7 +922,6 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         curTags = [],
         onSetCurProcess,
         onSetCurTags,
-        refreshTagsFlag,
         resetTableAndEditorShow
     } = props
     const processRef = useRef<HTMLDivElement>(null)
@@ -1022,12 +1015,12 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         }
     })
 
-    const refreshTags = useMemoizedFn(() => {
+    const refreshTags = useMemoizedFn(async () => {
         setTagListLoading(true)
-        setTimeout(() => {
         ipcRenderer
             .invoke("HTTPFlowsFieldGroup", {
-                RefreshRequest: false
+                RefreshRequest: true,
+                IsAll: true
             })
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
                 const tags = (rsp.Tags || []).filter((item) => item.Value)
@@ -1043,19 +1036,12 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
             .finally(() => {
                 setTagListLoading(false)
             })    
-        }, 2000);
-        
     })
 
     useEffect(() => {
         if (!inViewport) return
         refreshTags()
     }, [inViewport])
-
-    useEffect(() => {
-        if (!refreshTagsFlag) return
-        refreshTags()
-    }, [refreshTagsFlag])
 
     const refreshAllFilters = useMemoizedFn((clearSelected?: boolean) => {
         if (clearSelected) {
